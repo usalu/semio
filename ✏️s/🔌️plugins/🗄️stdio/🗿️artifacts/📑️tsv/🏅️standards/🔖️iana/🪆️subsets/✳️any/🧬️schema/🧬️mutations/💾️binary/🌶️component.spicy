@@ -1,5 +1,7 @@
-module Semio_tsv_mutations;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_tsv_mutations;
+
+# Raw UTF-8 bytes of the hand-rolled stdio.tsv.mutations text. Not wrapped in the shared
+# `.semio` binary envelope.
 type Document = unit {
-    magic: bytes &size=19;
+    payload: bytes &eod;
 };

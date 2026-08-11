@@ -19,13 +19,20 @@ use crate::artifacts::gltf::schema::diff::{
     dec_node, dec_scene, enc_accessor, enc_animation, enc_asset, enc_buffer, enc_bytes, enc_gltf_snapshot,
     enc_material, enc_mesh, enc_node, enc_scene,
 };
+/// 🧪️ P2-FG3: real binary value codecs for `GltfMutation`'s `OpBinary` — reused verbatim from
+/// `🔺️diff/component.rs`'s `RealBinary*` regions (same intra-artifact reuse the TEXT `enc_*`/
+/// `dec_*` imports above already establish).
+use crate::artifacts::gltf::schema::diff::{
+    gltf_bin_err, read_bin_accessor, read_bin_animation, read_bin_asset, read_bin_blob, read_bin_buffer,
+    read_bin_gltf_snapshot, read_bin_material, read_bin_mesh, read_bin_node, read_bin_scene, write_bin_accessor,
+    write_bin_animation, write_bin_asset, write_bin_blob, write_bin_buffer, write_bin_gltf_snapshot,
+    write_bin_material, write_bin_mesh, write_bin_node, write_bin_scene,
+};
 use crate::artifacts::gltf::schema::snapshot::{
     GltfAccessor, GltfAnimation, GltfAsset, GltfBuffer, GltfMaterial, GltfMesh, GltfNode, GltfScene,
 };
 use crate::artifacts::gltf::GltfSnapshot;
-use protocol::{Mutation, OpText};
-#[cfg(test)]
-use protocol::OpBinary;
+use protocol::{Mutation, OpText, OpBinary};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -380,6 +387,52 @@ fn parse_gltf_mutation(line: &str) -> Result<GltfMutation, String> {
     }
 }
 
+/// 🧪️ P2-FG3: representative `GltfMutation` cases — one per variant (24 total, `NoMutation`
+/// through `SetAnimation`, `GltfMutation`'s own declaration order) — used by this artifact's own
+/// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests (⚙️engine/component.rs),
+/// mirroring json's own `demo_mutation_cases()` role in its pilot report.
+pub(crate) fn demo_mutation_cases() -> Vec<GltfMutation> {
+    vec![
+        GltfMutation::NoMutation,
+        GltfMutation::SetSnapshot { snapshot: crate::artifacts::gltf::engine::demo_gltf_snapshot() },
+        GltfMutation::SetAsset { asset: GltfAsset { version: "2.1".into(), generator: None, copyright: Some("(c)".into()), min_version: None, extensions: None, extras: None } },
+
+        GltfMutation::InsertScene { index: 1, scene: crate::artifacts::gltf::schema::snapshot::GltfScene { nodes: vec![1], name: Some("s".into()), ..Default::default() } },
+        GltfMutation::RemoveScene { index: 0 },
+        GltfMutation::SetScene { index: 0, scene: crate::artifacts::gltf::schema::snapshot::GltfScene { nodes: vec![9], name: None, ..Default::default() } },
+
+        GltfMutation::InsertNode { index: 1, node: GltfNode { mesh: Some(1), matrix: Some([0.0; 16]), ..GltfNode::default() } },
+        GltfMutation::RemoveNode { index: 0 },
+        GltfMutation::SetNode { index: 0, node: GltfNode { mesh: None, camera: Some(2), name: Some("n".into()), ..GltfNode::default() } },
+
+        GltfMutation::InsertMesh { index: 0, mesh: GltfMesh { name: Some("m".into()), ..GltfMesh::default() } },
+        GltfMutation::RemoveMesh { index: 0 },
+        GltfMutation::SetMesh { index: 0, mesh: GltfMesh { name: Some("renamed-mesh".into()), ..GltfMesh::default() } },
+
+        GltfMutation::InsertAccessor {
+            index: 0,
+            accessor: GltfAccessor { buffer_view: None, byte_offset: 0, component_type: crate::artifacts::gltf::engine::GltfComponentType::UnsignedByte, normalized: false, count: 1, kind: crate::artifacts::gltf::engine::GltfAccessorType::Scalar, max: None, min: None, sparse: None, name: None, extensions: None, extras: None },
+        },
+        GltfMutation::RemoveAccessor { index: 0 },
+        GltfMutation::SetAccessor {
+            index: 0,
+            accessor: GltfAccessor { buffer_view: Some(0), byte_offset: 4, component_type: crate::artifacts::gltf::engine::GltfComponentType::Float, normalized: true, count: 9, kind: crate::artifacts::gltf::engine::GltfAccessorType::Vec3, max: Some(vec![1.0]), min: Some(vec![-1.0]), sparse: None, name: None, extensions: None, extras: None },
+        },
+
+        GltfMutation::InsertMaterial { index: 0, material: GltfMaterial { name: Some("mat".into()), double_sided: true, ..GltfMaterial::default() } },
+        GltfMutation::RemoveMaterial { index: 0 },
+        GltfMutation::SetMaterial { index: 0, material: GltfMaterial { double_sided: true, ..GltfMaterial::default() } },
+
+        GltfMutation::InsertBuffer { index: 0, buffer: GltfBuffer { byte_length: 2, uri: Some("data:...".into()), name: None, extensions: None, extras: None }, bytes: vec![7, 8] },
+        GltfMutation::RemoveBuffer { index: 0 },
+        GltfMutation::SetBuffer { index: 0, buffer: GltfBuffer { byte_length: 8, uri: None, name: None, extensions: None, extras: None }, bytes: vec![1, 2, 3, 4, 5, 6, 7, 8] },
+
+        GltfMutation::InsertAnimation { index: 0, animation: GltfAnimation { name: Some("a".into()), ..GltfAnimation::default() } },
+        GltfMutation::RemoveAnimation { index: 0 },
+        GltfMutation::SetAnimation { index: 0, animation: GltfAnimation { name: Some("renamed-anim".into()), ..GltfAnimation::default() } },
+    ]
+}
+
 impl protocol::OpText for GltfMutation {
     fn print_op(&self) -> String {
         print_gltf_mutation(self)
@@ -389,15 +442,109 @@ impl protocol::OpText for GltfMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `GltfDiff`'s hand-rolled `DiffCodec`
-/// uses.
+/// ⚡️ P2-FG3: real binary op-frame — upgraded from the F6-era `print_op().into_bytes()` text-as-
+/// binary shortcut (18 standards, gltf among them, were still on this shortcut per the P2-W0
+/// census). Matches `../💾️binary/📡️component.protocol.semio`'s real fixed header exactly:
+/// `format u8` (the repo-wide `store::pack_rt::OP_BINARY_FORMAT` convention byte) + `tag u8` (this
+/// variant's own ordinal, `GltfMutation`'s declaration order, `NoMutation`=0) — both individually,
+/// genuinely protocol-walkable — then one opaque `payload bytes` tail (`§2.5`'s recursive/opaque-
+/// tail pattern: the payload itself IS real, fully structured binary on the Rust side via this
+/// artifact's own `write_bin_*`/`read_bin_*` value codecs, just not further protocol-walkable past
+/// the fixed 2-byte header, `protocol-prim-ref-recursion`).
 impl protocol::OpBinary for GltfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let mut w = dsl::ByteWriter::new();
+        w.write_u8(store::pack_rt::OP_BINARY_FORMAT);
+        let tag: u8 = match self {
+            GltfMutation::NoMutation => 0,
+            GltfMutation::SetSnapshot { .. } => 1,
+            GltfMutation::SetAsset { .. } => 2,
+            GltfMutation::InsertScene { .. } => 3,
+            GltfMutation::RemoveScene { .. } => 4,
+            GltfMutation::SetScene { .. } => 5,
+            GltfMutation::InsertNode { .. } => 6,
+            GltfMutation::RemoveNode { .. } => 7,
+            GltfMutation::SetNode { .. } => 8,
+            GltfMutation::InsertMesh { .. } => 9,
+            GltfMutation::RemoveMesh { .. } => 10,
+            GltfMutation::SetMesh { .. } => 11,
+            GltfMutation::InsertAccessor { .. } => 12,
+            GltfMutation::RemoveAccessor { .. } => 13,
+            GltfMutation::SetAccessor { .. } => 14,
+            GltfMutation::InsertMaterial { .. } => 15,
+            GltfMutation::RemoveMaterial { .. } => 16,
+            GltfMutation::SetMaterial { .. } => 17,
+            GltfMutation::InsertBuffer { .. } => 18,
+            GltfMutation::RemoveBuffer { .. } => 19,
+            GltfMutation::SetBuffer { .. } => 20,
+            GltfMutation::InsertAnimation { .. } => 21,
+            GltfMutation::RemoveAnimation { .. } => 22,
+            GltfMutation::SetAnimation { .. } => 23,
+        };
+        w.write_u8(tag);
+        match self {
+            GltfMutation::NoMutation => {}
+            GltfMutation::SetSnapshot { snapshot } => write_bin_gltf_snapshot(&mut w, snapshot),
+            GltfMutation::SetAsset { asset } => write_bin_asset(&mut w, asset),
+            GltfMutation::InsertScene { index, scene } => { w.write_varint_u64(*index as u64); write_bin_scene(&mut w, scene); }
+            GltfMutation::RemoveScene { index } => w.write_varint_u64(*index as u64),
+            GltfMutation::SetScene { index, scene } => { w.write_varint_u64(*index as u64); write_bin_scene(&mut w, scene); }
+            GltfMutation::InsertNode { index, node } => { w.write_varint_u64(*index as u64); write_bin_node(&mut w, node); }
+            GltfMutation::RemoveNode { index } => w.write_varint_u64(*index as u64),
+            GltfMutation::SetNode { index, node } => { w.write_varint_u64(*index as u64); write_bin_node(&mut w, node); }
+            GltfMutation::InsertMesh { index, mesh } => { w.write_varint_u64(*index as u64); write_bin_mesh(&mut w, mesh); }
+            GltfMutation::RemoveMesh { index } => w.write_varint_u64(*index as u64),
+            GltfMutation::SetMesh { index, mesh } => { w.write_varint_u64(*index as u64); write_bin_mesh(&mut w, mesh); }
+            GltfMutation::InsertAccessor { index, accessor } => { w.write_varint_u64(*index as u64); write_bin_accessor(&mut w, accessor); }
+            GltfMutation::RemoveAccessor { index } => w.write_varint_u64(*index as u64),
+            GltfMutation::SetAccessor { index, accessor } => { w.write_varint_u64(*index as u64); write_bin_accessor(&mut w, accessor); }
+            GltfMutation::InsertMaterial { index, material } => { w.write_varint_u64(*index as u64); write_bin_material(&mut w, material); }
+            GltfMutation::RemoveMaterial { index } => w.write_varint_u64(*index as u64),
+            GltfMutation::SetMaterial { index, material } => { w.write_varint_u64(*index as u64); write_bin_material(&mut w, material); }
+            GltfMutation::InsertBuffer { index, buffer, bytes } => { w.write_varint_u64(*index as u64); write_bin_buffer(&mut w, buffer); write_bin_blob(&mut w, bytes); }
+            GltfMutation::RemoveBuffer { index } => w.write_varint_u64(*index as u64),
+            GltfMutation::SetBuffer { index, buffer, bytes } => { w.write_varint_u64(*index as u64); write_bin_buffer(&mut w, buffer); write_bin_blob(&mut w, bytes); }
+            GltfMutation::InsertAnimation { index, animation } => { w.write_varint_u64(*index as u64); write_bin_animation(&mut w, animation); }
+            GltfMutation::RemoveAnimation { index } => w.write_varint_u64(*index as u64),
+            GltfMutation::SetAnimation { index, animation } => { w.write_varint_u64(*index as u64); write_bin_animation(&mut w, animation); }
+        }
+        Ok(w.into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut r = dsl::ByteReader::new(bytes);
+        let format = r.read_u8().map_err(gltf_bin_err)?;
+        if format != store::pack_rt::OP_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "gltf op format", offset: 0, detail: format!("expected format {}, got {format}", store::pack_rt::OP_BINARY_FORMAT) });
+        }
+        let tag = r.read_u8().map_err(gltf_bin_err)?;
+        let idx = |r: &mut dsl::ByteReader| -> Result<usize, protocol::ProtocolError> { Ok(r.read_varint_u64().map_err(gltf_bin_err)? as usize) };
+        Ok(match tag {
+            0 => GltfMutation::NoMutation,
+            1 => GltfMutation::SetSnapshot { snapshot: read_bin_gltf_snapshot(&mut r).map_err(gltf_bin_err)? },
+            2 => GltfMutation::SetAsset { asset: read_bin_asset(&mut r).map_err(gltf_bin_err)? },
+            3 => { let index = idx(&mut r)?; GltfMutation::InsertScene { index, scene: read_bin_scene(&mut r).map_err(gltf_bin_err)? } }
+            4 => GltfMutation::RemoveScene { index: idx(&mut r)? },
+            5 => { let index = idx(&mut r)?; GltfMutation::SetScene { index, scene: read_bin_scene(&mut r).map_err(gltf_bin_err)? } }
+            6 => { let index = idx(&mut r)?; GltfMutation::InsertNode { index, node: read_bin_node(&mut r).map_err(gltf_bin_err)? } }
+            7 => GltfMutation::RemoveNode { index: idx(&mut r)? },
+            8 => { let index = idx(&mut r)?; GltfMutation::SetNode { index, node: read_bin_node(&mut r).map_err(gltf_bin_err)? } }
+            9 => { let index = idx(&mut r)?; GltfMutation::InsertMesh { index, mesh: read_bin_mesh(&mut r).map_err(gltf_bin_err)? } }
+            10 => GltfMutation::RemoveMesh { index: idx(&mut r)? },
+            11 => { let index = idx(&mut r)?; GltfMutation::SetMesh { index, mesh: read_bin_mesh(&mut r).map_err(gltf_bin_err)? } }
+            12 => { let index = idx(&mut r)?; GltfMutation::InsertAccessor { index, accessor: read_bin_accessor(&mut r).map_err(gltf_bin_err)? } }
+            13 => GltfMutation::RemoveAccessor { index: idx(&mut r)? },
+            14 => { let index = idx(&mut r)?; GltfMutation::SetAccessor { index, accessor: read_bin_accessor(&mut r).map_err(gltf_bin_err)? } }
+            15 => { let index = idx(&mut r)?; GltfMutation::InsertMaterial { index, material: read_bin_material(&mut r).map_err(gltf_bin_err)? } }
+            16 => GltfMutation::RemoveMaterial { index: idx(&mut r)? },
+            17 => { let index = idx(&mut r)?; GltfMutation::SetMaterial { index, material: read_bin_material(&mut r).map_err(gltf_bin_err)? } }
+            18 => { let index = idx(&mut r)?; let buffer = read_bin_buffer(&mut r).map_err(gltf_bin_err)?; let bytes = read_bin_blob(&mut r).map_err(gltf_bin_err)?; GltfMutation::InsertBuffer { index, buffer, bytes } }
+            19 => GltfMutation::RemoveBuffer { index: idx(&mut r)? },
+            20 => { let index = idx(&mut r)?; let buffer = read_bin_buffer(&mut r).map_err(gltf_bin_err)?; let bytes = read_bin_blob(&mut r).map_err(gltf_bin_err)?; GltfMutation::SetBuffer { index, buffer, bytes } }
+            21 => { let index = idx(&mut r)?; GltfMutation::InsertAnimation { index, animation: read_bin_animation(&mut r).map_err(gltf_bin_err)? } }
+            22 => GltfMutation::RemoveAnimation { index: idx(&mut r)? },
+            23 => { let index = idx(&mut r)?; GltfMutation::SetAnimation { index, animation: read_bin_animation(&mut r).map_err(gltf_bin_err)? } }
+            other => return Err(protocol::ProtocolError::Malformed { what: "gltf op tag", offset: 0, detail: format!("unknown tag {other}") }),
+        })
     }
 }
 //#endregion OpCodecs

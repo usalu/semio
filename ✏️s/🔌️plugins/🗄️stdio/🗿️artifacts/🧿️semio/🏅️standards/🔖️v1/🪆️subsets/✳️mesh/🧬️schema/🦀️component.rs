@@ -1,7 +1,7 @@
 //! 🧬️ SemioMeshArtifact schema — full artifact state, mirrors `SemioMeshSnapshot` field for
-//! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
+//! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioMesh, SemioMaterial};
+use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioMesh, SemioMaterial, SemioTexture};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -17,6 +17,9 @@ pub struct SemioMeshArtifact {
     #[state(persistent)]
     #[serde(default)]
     pub materials: Vec<SemioMaterial>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub textures: Vec<SemioTexture>,
 }
 
 impl Default for SemioMeshArtifact {
@@ -29,6 +32,7 @@ impl SemioMeshArtifact {
             schema: self.schema.clone(),
             meshes: self.meshes.clone(),
             materials: self.materials.clone(),
+            textures: self.textures.clone(),
         }
     }
     pub fn from_snapshot(snapshot: SemioMeshSnapshot) -> Self {
@@ -36,12 +40,14 @@ impl SemioMeshArtifact {
             schema: snapshot.schema,
             meshes: snapshot.meshes,
             materials: snapshot.materials,
+            textures: snapshot.textures,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioMeshSnapshot) {
         self.schema = snapshot.schema;
         self.meshes = snapshot.meshes;
         self.materials = snapshot.materials;
+        self.textures = snapshot.textures;
     }
 }
 

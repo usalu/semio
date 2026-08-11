@@ -1,10 +1,9 @@
-/** 🧬️ Semio_semio_mesh_mutations schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_mesh_mutations
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_mesh_mutationsEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_mesh_mutations {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_mesh_mutationsEntry[];
+/** 🧬️ `s.stdio.semio.mesh` OpText grammar — real hand-rolled grammar (see
+ * `impl protocol::OpText for SemioMeshMutation` in the sibling `../🦀️component.rs`): either the
+ * literal `"no-mutation"`, or `"keyword arg=value ..."` (space-separated), one keyword per
+ * `SemioMeshMutation` variant (kebab-case). */
+export interface SemioMeshMutationTextArg { name: string; value: string; }
+export interface SemioMeshMutationText {
+  keyword: string;
+  args: SemioMeshMutationTextArg[];
 }

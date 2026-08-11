@@ -1,3 +1,48 @@
-dialect protocol stdio.dwg.diff
-magic = %x00
-payload = *OCTET
+dialect protocol
+protocol stdio.dwg.ac1018.diff
+version 1
+schema stdio.dwg.diff
+start diff
+
+# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: `protocol::DiffCodec`
+# for `DwgDiff` (ac1018) is CONFIRMED ALREADY REAL — `#[derive(dsl::DslDiff)]` (../🦀️component.rs)
+# generates `encode_diff`/`decode_diff` that call `store::pack_rt::encode_document`/
+# `decode_document`, never `print_diff().into_bytes()` (the F6-era text-as-binary shortcut).
+# `DwgDiff` is a plain struct with zero `Option<Option<T>>` tri-state fields and zero
+# data-carrying enums anywhere in its type tree — the same clean full-derive-path shape
+# `stdio.binary`'s own `BinaryDiff` and `stdio.txt`'s own `TxtDiff` already hit, per this
+# program's F6 finding. `encode_document` wraps the record in the FULL `.spk` binary document
+# container (magic + 32-byte header + a sequence of framed, individually-CRC'd,
+# deflate-compressed segments + a fixed 84-byte footer) — the SAME framework-generic container
+# every `DslDiff`-derived type in the whole repo routes through (confirmed against
+# `📖️grammar/🦀️component.rs`'s own `protocol_parse_print_round_trip_retains_body`/
+# `protocol_parses_rich_struct_enum_segment_forms` tests, which use this identical
+# magic/header-size/footer-size triple). Copied verbatim per the recipe's own §2.4 worked
+# example — this exact shape is the copy-paste answer for every `.spk`-routed diff, only the
+# magic inside a real `.pack.semio`/framing header would legitimately differ (it won't here — the
+# container is framework-generic, not artifact-specific). Segment PAYLOAD bytes are
+# deflate-compressed — an honest opaque boundary at this description layer, same treatment this
+# program gives every other compressed byte run; the Rust `encode_diff`/`decode_diff` side is
+# genuinely, fully structured (round-trip tested independently by
+# `diff_codec_text_binary_roundtrip_law`). The 84-byte footer stays one opaque fixed trailer —
+# `Block::Footer` has no field-level detail in this dialect at all.
+framing magic 0x8953504B0D0A1A0A
+header fixed 24
+field version_major u16
+field version_minor u16
+field required_flags u32
+field optional_flags u32
+field header_crc32 u32
+field reserved fixed 8
+
+repeat segments {
+  tag u8
+  trailer u32
+  until 0
+  arm 3 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+  arm 4 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+  arm 1 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+  arm 0 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+}
+
+footer fixed 84

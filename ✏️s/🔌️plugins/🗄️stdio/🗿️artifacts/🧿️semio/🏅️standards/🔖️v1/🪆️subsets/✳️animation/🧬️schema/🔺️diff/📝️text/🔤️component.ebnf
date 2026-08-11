@@ -1,3 +1,4 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.animation.diff" ;
+(* ebnf stdio.semio.animation.diff *)
+document = header, body ;
+header = 'schema', space, 'stdio.semio.animation.diff', newline ;
+body = timelines_triple ;

@@ -1,1 +1,17 @@
-Hello, stdio.stl!
+semio stdio.stl.dsl v1
+solid demo
+  facet normal 0 0 1
+    outer loop
+      vertex 0 0 0
+      vertex 1 0 0
+      vertex 0 1 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 0 0 1
+      vertex 1 0 1
+      vertex 0 1 1
+    endloop
+  endfacet
+endsolid demo

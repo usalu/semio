@@ -1,3 +1,3 @@
-dialect protocol stdio.semio.presentation.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.presentation.snapshot"
+protocol stdio.semio.presentation.snapshot.binary
+envelope = envelope_id_len:u32 envelope_id:bytes[envelope_id_len] component:u8 version:u32 payload_len:u64 payload:bytes[payload_len]
+; payload = serde_json(SemioPresentationSnapshot) verbatim

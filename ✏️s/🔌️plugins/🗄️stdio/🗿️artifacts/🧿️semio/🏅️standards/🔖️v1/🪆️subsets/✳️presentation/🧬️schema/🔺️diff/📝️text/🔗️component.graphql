@@ -1,9 +1,2 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_semio_presentation_diffEntry {
-  key: String!
-  value: String!
-}
-type Semio_semio_presentation_diff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_presentation_diffEntry!]! @state(class: PERSISTENT)
-}
+type PresentationDiffToken { key: String!, tripleRaw: String! }
+type SemioPresentationDiffLine { tokens: [PresentationDiffToken!]! }

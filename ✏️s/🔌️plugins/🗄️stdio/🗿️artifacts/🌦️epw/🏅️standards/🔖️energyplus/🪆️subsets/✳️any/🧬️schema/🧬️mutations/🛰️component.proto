@@ -1,7 +1,35 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.s_stdio_epw.mutations;
+package semio.s_stdio_epw.mutation;
+
+import "s_stdio_epw/snapshot.proto";
+
+message SetSnapshot { semio.s_stdio_epw.snapshot.EpwSnapshot snapshot = 1; }
+message SetLocation { semio.s_stdio_epw.snapshot.EpwLocation location = 1; }
+message SetDesignConditions { string value = 1; }
+message SetTypicalExtremePeriods { string value = 1; }
+message SetGroundTemperatures { string value = 1; }
+message SetHolidaysDst { string value = 1; }
+message SetComments1 { string value = 1; }
+message SetComments2 { string value = 1; }
+message SetDataPeriods { semio.s_stdio_epw.snapshot.EpwDataPeriods data_periods = 1; }
+message InsertRecord { uint64 index = 1; semio.s_stdio_epw.snapshot.EpwRecord record = 2; }
+message RemoveRecord { uint64 index = 1; }
+message SetRecordField { uint64 record_index = 1; uint64 field_index = 2; string value = 3; }
+
 message EpwMutation {
-  string schema = 1;
-  string entries_wire = 2;
+  oneof mutation {
+    bool no_mutation = 1;
+    SetSnapshot set_snapshot = 2;
+    SetLocation set_location = 3;
+    SetDesignConditions set_design_conditions = 4;
+    SetTypicalExtremePeriods set_typical_extreme_periods = 5;
+    SetGroundTemperatures set_ground_temperatures = 6;
+    SetHolidaysDst set_holidays_dst = 7;
+    SetComments1 set_comments_1 = 8;
+    SetComments2 set_comments_2 = 9;
+    SetDataPeriods set_data_periods = 10;
+    InsertRecord insert_record = 11;
+    RemoveRecord remove_record = 12;
+    SetRecordField set_record_field = 13;
+  }
 }

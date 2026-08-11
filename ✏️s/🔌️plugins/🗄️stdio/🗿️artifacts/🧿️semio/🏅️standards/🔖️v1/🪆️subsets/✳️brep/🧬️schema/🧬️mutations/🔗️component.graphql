@@ -1,9 +1,50 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioBrepMutationEntry {
-  key: String!
-  value: String!
+# 🧬️ SemioBrepMutation facet mirror — see the `🦀️component.rs` sibling for the real source of truth.
+
+enum BrepMutationKind {
+  NO_MUTATION
+  SET_SNAPSHOT
+  ADD_VERTEX
+  REMOVE_VERTEX
+  SET_VERTEX_POINT
+  ADD_EDGE
+  REMOVE_EDGE
+  SET_EDGE_ENDPOINTS
+  SET_EDGE_CURVE
+  ADD_LOOP
+  REMOVE_LOOP
+  SET_LOOP_EDGES
+  ADD_FACE
+  REMOVE_FACE
+  SET_FACE_SURFACE
+  SET_FACE_ORIENTATION
+  SET_FACE_LOOPS
+  ADD_SHELL
+  REMOVE_SHELL
+  SET_SHELL_FACES
+  ADD_SOLID
+  REMOVE_SOLID
+  SET_SOLID_SHELLS
 }
+
 type SemioBrepMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioBrepMutationEntry!]! @state(class: PERSISTENT)
+  mutation: BrepMutationKind!
+  snapshot: SemioBrepSnapshot
+  id: String
+  point: SemioPoint3
+  vertex: BrepVertex
+  edge: BrepEdge
+  startVertex: String
+  endVertex: String
+  curve: BrepCurve
+  brepLoop: BrepLoop
+  edges: [BrepLoopEdge!]
+  face: BrepFace
+  surface: BrepSurface
+  orientation: Boolean
+  outerLoop: String
+  innerLoops: [String!]
+  shell: BrepShell
+  faces: [BrepShellFace!]
+  solid: BrepSolid
+  shells: [BrepSolidShell!]
 }

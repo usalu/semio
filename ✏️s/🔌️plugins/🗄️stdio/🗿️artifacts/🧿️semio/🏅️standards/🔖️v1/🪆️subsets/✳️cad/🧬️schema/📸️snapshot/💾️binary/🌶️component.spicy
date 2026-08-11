@@ -1,5 +1,13 @@
-module Semio_semio_cad_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=24;
+module Stdio_semio_cad_snapshot;
+
+# Shared `.semio` binary envelope wrapping a `s.stdio.semio.cad` snapshot payload -- a NEUTRAL
+# semio type, not an on-disk file format: the payload genuinely IS serde_json::to_vec(
+# SemioCadSnapshot) verbatim (store::ArtifactPack), so it is modeled as UTF-8 JSON text here
+# rather than a fabricated fixed binary schema; see ../🔣️component.json for the real payload shape.
+
+public type Envelope = unit {
+    magic: bytes &size=8;                                   # 0x89 "SEM" CR LF SUB LF
+    token_len: uint32 &byte-order=spicy::ByteOrder::Little;
+    token: bytes &size=self.token_len;                      # ASCII "semio.cad.pack v1"
+    payload: bytes &eod;                                    # UTF-8 JSON, see ../🔣️component.json
 };

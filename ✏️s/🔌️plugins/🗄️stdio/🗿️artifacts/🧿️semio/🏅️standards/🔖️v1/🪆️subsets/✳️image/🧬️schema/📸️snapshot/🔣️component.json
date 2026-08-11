@@ -1,10 +1,34 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.image/snapshot.json",
   "title": "SemioImageSnapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "width/height/colorspace/bitDepth + frames{delayMs, rgba8} + icc + metadata entries.",
   "type": "object",
+  "required": ["schema", "width", "height", "colorspace", "bitDepth", "frames", "metadata"],
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "width": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "height": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "colorspace": { "enum": ["rgb", "rgba", "grayscale", "grayscaleAlpha", "indexed"], "x-semio-state": "persistent" },
+    "bitDepth": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-state": "persistent" },
+    "frames": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": {
+        "type": "object",
+        "properties": {
+          "delayMs": { "type": "integer", "minimum": 0 },
+          "rgba8": { "type": "string", "contentEncoding": "hex" }
+        }
+      }
+    },
+    "icc": { "type": ["string", "null"], "contentEncoding": "hex", "x-semio-state": "persistent" },
+    "metadata": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": {
+        "type": "object",
+        "properties": { "key": { "type": "string" }, "value": { "type": "string" } }
+      }
+    }
   }
 }

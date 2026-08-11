@@ -1,7 +1,4 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_semio_animation_diff.text;
-message Semio_semio_animation_diff {
-  string schema = 1;
-  string entries_wire = 2;
-}
+package semio.stdio_semio_animation.diff_text;
+message SemioAnimationDiff { optional IndexedTripleDiff timelines = 1; }
+message IndexedTripleDiff { repeated uint64 removed = 1; repeated bytes modified = 2; repeated bytes added = 3; }

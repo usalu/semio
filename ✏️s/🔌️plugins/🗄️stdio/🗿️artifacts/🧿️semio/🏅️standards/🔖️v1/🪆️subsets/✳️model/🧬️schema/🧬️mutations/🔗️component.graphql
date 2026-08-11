@@ -1,9 +1,27 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioModelMutationEntry {
-  key: String!
-  value: String!
+# SemioModelMutation union mirror -- named-variant vocabulary, discriminated on `mutation`.
+
+enum SemioModelMutationTag {
+  NO_MUTATION SET_SNAPSHOT
+  INSERT_SPATIAL_NODE REMOVE_SPATIAL_NODE SET_SPATIAL_NODE
+  INSERT_ELEMENT REMOVE_ELEMENT SET_ELEMENT
+  INSERT_RELATION REMOVE_RELATION SET_RELATION
 }
+
 type SemioModelMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioModelMutationEntry!]! @state(class: PERSISTENT)
+  mutation: SemioModelMutationTag!
+  snapshot: SemioModelSnapshot
+  node: SpatialNode
+  element: SemioModelElement
+  relation: ModelRelation
+  id: String
+  kind: String
+  name: String
+  parentId: String
+  placement: SemioTransform
+  class: ElementClass
+  geometry: GeometryRef
+  spatialId: String
+  psets: [PropertySet!]
+  from: String
+  to: String
 }

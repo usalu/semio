@@ -1,10 +1,47 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.html/mutations.json",
+  "$id": "https://semio.tech/schema/s.stdio.html/mutation.json",
   "title": "HtmlMutation",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
-  "type": "object",
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+  "oneOf": [
+    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
+    { "type": "object", "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } } },
+    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "setDoctype" }, "doctype": { "type": "string" } } },
+    {
+      "type": "object",
+      "required": ["mutation", "parent", "index", "node"],
+      "properties": {
+        "mutation": { "const": "insertNode" },
+        "parent": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "index": { "type": "integer", "minimum": 0 },
+        "node": { "type": "object" }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "parent", "index"],
+      "properties": {
+        "mutation": { "const": "removeNode" },
+        "parent": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "index": { "type": "integer", "minimum": 0 }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "path", "name"],
+      "properties": { "mutation": { "const": "setElementName" }, "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } }, "name": { "type": "string" } }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "path", "name"],
+      "description": "value: absent = remove the attribute, null = valueless, string = set.",
+      "properties": {
+        "mutation": { "const": "setAttribute" },
+        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "name": { "type": "string" },
+        "value": { "type": ["string", "null"] }
+      }
+    },
+    { "type": "object", "required": ["mutation", "path", "text"], "properties": { "mutation": { "const": "setText" }, "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } }, "text": { "type": "string" } } },
+    { "type": "object", "required": ["mutation", "path", "text"], "properties": { "mutation": { "const": "setComment" }, "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } }, "text": { "type": "string" } } },
+    { "type": "object", "required": ["mutation", "path", "text"], "properties": { "mutation": { "const": "setRawText" }, "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } }, "text": { "type": "string" } } }
+  ]
 }

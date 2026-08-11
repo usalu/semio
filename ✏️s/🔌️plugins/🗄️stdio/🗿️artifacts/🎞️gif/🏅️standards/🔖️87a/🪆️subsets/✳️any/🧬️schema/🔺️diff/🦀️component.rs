@@ -459,6 +459,42 @@ impl DiffAlgebra<GifSnapshot> for GifDiff {
 pub fn diff_set_snapshot(base: &GifSnapshot, snapshot: &GifSnapshot) -> GifDiff {
     <GifDiff as DiffAlgebra<GifSnapshot>>::between(base, snapshot)
 }
+
+/// 🧪️ P2-FG2: representative `GifDiff` cases for `diff_grammar_conformance_law`/
+/// `protocol_walk_law` (`../../../../⚙️engine/🦀️component.rs`'s `conformance_laws` module) —
+/// the empty diff, plus a real `between()` result exercising every scalar field, the `gct`
+/// tri-state (both `Some(Some(_))` and `Some(None)`), and the `images` collection triple's
+/// `removed`/`modified`/`added` all at once (mirrors png's own `demo_diff_cases()`).
+pub(crate) fn demo_diff_cases() -> Vec<GifDiff> {
+    let img = |seed: u8, w: u32, h: u32| GifImage {
+        left: 0, top: 0, width: w, height: h,
+        interlace: false,
+        lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] }),
+        indices: vec![0u8; (w * h) as usize],
+    };
+    let a = GifSnapshot {
+        width: 4, height: 4,
+        gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 1, g: 2, b: 3 }; 2] }),
+        images: vec![img(1, 2, 2), img(2, 2, 2)],
+        ..GifSnapshot::default()
+    };
+    let mut ib0 = img(1, 2, 2);
+    ib0.interlace = true;
+    ib0.lct = None;
+    let b = GifSnapshot {
+        width: 8, height: 8,
+        gct: None,
+        background_color_index: 3,
+        pixel_aspect_ratio: 5,
+        images: vec![ib0, img(6, 3, 3), img(7, 3, 3)],
+        ..GifSnapshot::default()
+    };
+    vec![
+        GifDiff::default(),
+        diff_set_snapshot(&a, &b),
+        diff_set_snapshot(&b, &a),
+    ]
+}
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec
@@ -650,6 +686,151 @@ fn dec_images_diff(body: &str) -> Result<GifImagesDiff, String> {
 }
 //#endregion 🔖️DiffValueCodecs
 
+//#region 🔖️RealBinaryPrimitives
+/// 🧪️ P2-FG2: real binary value codecs for `GifDiff`'s nested types — mirrors the text codecs
+/// above field-for-field, using `dsl::ByteWriter`/`dsl::ByteReader` (the same real
+/// LEB128-varint/length-prefixed framework primitives png's own upgraded `PngDiff` binary frame
+/// uses, `📷️png/…/🔺️diff/🦀️component.rs`'s `RealBinaryPrimitives`/`RealBinaryDiffFrame`
+/// regions — `dsl`/`store`/`protocol` all alias the same kernel crate root, reachable with no
+/// `use` needed beyond the absolute path).
+fn write_bin_rgb(w: &mut dsl::ByteWriter, c: &GifRgb) {
+    w.write_u8(c.r);
+    w.write_u8(c.g);
+    w.write_u8(c.b);
+}
+fn read_bin_rgb(r: &mut dsl::ByteReader) -> Result<GifRgb, dsl::PackError> {
+    Ok(GifRgb { r: r.read_u8()?, g: r.read_u8()?, b: r.read_u8()? })
+}
+fn write_bin_color_table(w: &mut dsl::ByteWriter, t: &GifColorTable) {
+    w.write_u8(if t.sorted { 1 } else { 0 });
+    write_bin_vec(w, &t.colors, write_bin_rgb);
+}
+fn read_bin_color_table(r: &mut dsl::ByteReader) -> Result<GifColorTable, dsl::PackError> {
+    let sorted = r.read_u8()? != 0;
+    let colors = read_bin_vec(r, read_bin_rgb)?;
+    Ok(GifColorTable { sorted, colors })
+}
+fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
+    w.write_varint_u64(bytes.len() as u64);
+    w.write_bytes(bytes);
+}
+fn read_bin_blob(r: &mut dsl::ByteReader) -> Result<Vec<u8>, dsl::PackError> {
+    let len = r.read_varint_u64()? as usize;
+    Ok(r.read_bytes(len)?.to_vec())
+}
+fn write_bin_image(w: &mut dsl::ByteWriter, f: &GifImage) {
+    w.write_u32_le(f.left);
+    w.write_u32_le(f.top);
+    w.write_u32_le(f.width);
+    w.write_u32_le(f.height);
+    w.write_u8(if f.interlace { 1 } else { 0 });
+    write_bin_option(w, &f.lct, write_bin_color_table);
+    write_bin_blob(w, &f.indices);
+}
+fn read_bin_image(r: &mut dsl::ByteReader) -> Result<GifImage, dsl::PackError> {
+    Ok(GifImage {
+        left: r.read_u32_le()?, top: r.read_u32_le()?, width: r.read_u32_le()?, height: r.read_u32_le()?,
+        interlace: r.read_u8()? != 0,
+        lct: read_bin_option(r, read_bin_color_table)?,
+        indices: read_bin_blob(r)?,
+    })
+}
+/// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
+fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+    match v {
+        None => w.write_u8(0),
+        Some(val) => { w.write_u8(1); write_value(w, val); }
+    }
+}
+fn read_bin_option<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(None),
+        1 => Ok(Some(read_value(r)?)),
+        other => Err(dsl::PackError::Malformed { what: "gif87a binary option tag", offset: 0, detail: format!("unknown tag {other}") }),
+    }
+}
+fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
+    w.write_varint_u64(items.len() as u64);
+    for item in items {
+        write_item(w, item);
+    }
+}
+fn read_bin_vec<T>(r: &mut dsl::ByteReader, mut read_item: impl FnMut(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
+    let n = r.read_varint_u64()? as usize;
+    let mut out = Vec::with_capacity(n);
+    for _ in 0..n {
+        out.push(read_item(r)?);
+    }
+    Ok(out)
+}
+/// 🧩 3-way flag (`0`=unchanged, `1`=cleared-to-`None`, `2`=set-to-`Some(value)`) for every
+/// TRI-STATE `Option<Option<T>>` field — matches png's own doc comment for why this avoids
+/// chaining two `if`-guarded conditional fields at the protocol-description level (`Cond::eval`
+/// errors on a field that was itself only conditionally decoded); the Rust codec itself has no
+/// such limitation, but keeps the same 3-way-flag SHAPE for parity with the protocol file.
+fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+    match v {
+        None => w.write_u8(0),
+        Some(None) => w.write_u8(1),
+        Some(Some(val)) => { w.write_u8(2); write_value(w, val); }
+    }
+}
+fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(None),
+        1 => Ok(Some(None)),
+        2 => Ok(Some(Some(read_value(r)?))),
+        other => Err(dsl::PackError::Malformed { what: "gif87a diff tri-flag", offset: 0, detail: format!("unknown flag {other}") }),
+    }
+}
+fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+    protocol::ProtocolError::Malformed { what: "gif87a diff binary", offset: 0, detail: e.to_string() }
+}
+//#endregion 🔖️RealBinaryPrimitives
+
+//#region 🔖️RealBinaryDiffFrame
+/// 🧪️ P2-FG2: real binary encoding for `GifImageDiff`/`GifImagesDiff` — the collection triple
+/// produces one opaque `Vec<u8>` blob matching `../💾️binary/📡️component.protocol.semio`'s
+/// `Array(u8, Field(images_len))` field (the blob's own internal removed/modified/added shape
+/// isn't further protocol-walkable — see that file's own doc comment); the Rust codec here IS
+/// genuinely, fully structured (real varint counts, real per-item recursive encoding), never
+/// text-as-bytes.
+fn write_bin_image_diff(w: &mut dsl::ByteWriter, d: &GifImageDiff) {
+    write_bin_option(w, &d.left, |w, v| w.write_u32_le(*v));
+    write_bin_option(w, &d.top, |w, v| w.write_u32_le(*v));
+    write_bin_option(w, &d.width, |w, v| w.write_u32_le(*v));
+    write_bin_option(w, &d.height, |w, v| w.write_u32_le(*v));
+    write_bin_option(w, &d.interlace, |w, v| w.write_u8(if *v { 1 } else { 0 }));
+    write_bin_tri_flag(w, &d.lct, write_bin_color_table);
+    write_bin_option(w, &d.indices, |w, v| write_bin_blob(w, v));
+}
+fn read_bin_image_diff(r: &mut dsl::ByteReader) -> Result<GifImageDiff, dsl::PackError> {
+    Ok(GifImageDiff {
+        left: read_bin_option(r, |r| r.read_u32_le())?,
+        top: read_bin_option(r, |r| r.read_u32_le())?,
+        width: read_bin_option(r, |r| r.read_u32_le())?,
+        height: read_bin_option(r, |r| r.read_u32_le())?,
+        interlace: read_bin_option(r, |r| Ok(r.read_u8()? != 0))?,
+        lct: read_bin_tri_flag(r, read_bin_color_table)?,
+        indices: read_bin_option(r, read_bin_blob)?,
+    })
+}
+fn enc_images_diff_bin(d: &GifImagesDiff) -> Vec<u8> {
+    let mut w = dsl::ByteWriter::new();
+    write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
+    write_bin_vec(&mut w, &d.modified, |w, m: &GifImageModified| { w.write_varint_u64(m.index as u64); write_bin_image_diff(w, &m.diff); });
+    write_bin_vec(&mut w, &d.added, |w, a: &GifImageAdded| { w.write_varint_u64(a.index as u64); write_bin_image(w, &a.image); });
+    w.into_bytes()
+}
+fn dec_images_diff_bin(bytes: &[u8]) -> Result<GifImagesDiff, dsl::PackError> {
+    let mut r = dsl::ByteReader::new(bytes);
+    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
+    let modified = read_bin_vec(&mut r, |r| { let index = r.read_varint_u64()? as usize; let diff = read_bin_image_diff(r)?; Ok(GifImageModified { index, diff }) })?;
+    let added = read_bin_vec(&mut r, |r| { let index = r.read_varint_u64()? as usize; let image = read_bin_image(r)?; Ok(GifImageAdded { index, image }) })?;
+    Ok(GifImagesDiff { removed, modified, added })
+}
+//#endregion 🔖️RealBinaryDiffFrame
+
 //#region 🔖️TopLevel
 fn print_gif_diff(d: &GifDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
@@ -685,16 +866,39 @@ impl protocol::DiffCodec for GifDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_gif_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim (same simplification `WriterDiff`/gif89a's hand-rolled
-    /// `DiffCodec` use): satisfies every `DiffCodec` law (round-trips, deterministic) without
-    /// inventing a second, denser wire format; a future agent MAY tighten this to a true packed
-    /// encoding later without changing the trait contract.
+    /// ⚡️ P2-FG2: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
+    /// text-as-binary shortcut (100% of stdio's `DiffCodec` impls were still on that shortcut
+    /// per the P2-W0 census; the FG1 wave's own closer report flagged leaving this un-upgraded
+    /// as a real defect to not repeat). Matches `../💾️binary/📡️component.protocol.semio`'s real
+    /// flag-per-field layout exactly, field for field, in struct order (2-way flag for plain
+    /// `Option<T>` fields, 3-way flag for the tri-state `gct` field).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let mut w = dsl::ByteWriter::new();
+        write_bin_option(&mut w, &self.width, |w, v| w.write_u32_le(*v));
+        write_bin_option(&mut w, &self.height, |w, v| w.write_u32_le(*v));
+        write_bin_tri_flag(&mut w, &self.gct, |w, v| {
+            let mut inner = dsl::ByteWriter::new();
+            write_bin_color_table(&mut inner, v);
+            write_bin_blob(w, &inner.into_bytes());
+        });
+        write_bin_option(&mut w, &self.background_color_index, |w, v| w.write_u8(*v));
+        write_bin_option(&mut w, &self.pixel_aspect_ratio, |w, v| w.write_u8(*v));
+        write_bin_option(&mut w, &self.images, |w, v| write_bin_blob(w, &enc_images_diff_bin(v)));
+        Ok(w.into_bytes())
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let mut r = dsl::ByteReader::new(bytes);
+        let width = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
+        let height = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
+        let gct = read_bin_tri_flag(&mut r, |r| {
+            let blob = read_bin_blob(r)?;
+            let mut inner = dsl::ByteReader::new(&blob);
+            read_bin_color_table(&mut inner)
+        }).map_err(diff_pack_err)?;
+        let background_color_index = read_bin_option(&mut r, |r| r.read_u8()).map_err(diff_pack_err)?;
+        let pixel_aspect_ratio = read_bin_option(&mut r, |r| r.read_u8()).map_err(diff_pack_err)?;
+        let images = read_bin_option(&mut r, |r| dec_images_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
+        Ok(GifDiff { width, height, gct, background_color_index, pixel_aspect_ratio, images })
     }
 }
 //#endregion 🔖️TopLevel

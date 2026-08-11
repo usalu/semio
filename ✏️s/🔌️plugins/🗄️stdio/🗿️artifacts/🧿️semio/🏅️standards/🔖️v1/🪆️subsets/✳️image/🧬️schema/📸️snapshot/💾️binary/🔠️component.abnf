@@ -1,3 +1,8 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.image.snapshot"
+; Real wire grammar for `s.stdio.semio.image`'s binary (`ArtifactPack`) form --
+; `store::semio_format::wrap_binary`/`unwrap_binary`. Honest boundary: `snapshot-json` is this
+; NEUTRAL semio subset's own serde_json bytes, not a format-specific byte layout.
+semio-binary  = magic token-len token snapshot-json
+magic         = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A   ; 0x89 'S' 'E' 'M' CR LF SUB LF
+token-len     = 4OCTET                                     ; u32 LE byte count of `token`
+token         = *OCTET                                     ; "s.stdio.semio.image.pack v1", utf-8
+snapshot-json = *OCTET                                     ; SemioImageSnapshot serde_json bytes

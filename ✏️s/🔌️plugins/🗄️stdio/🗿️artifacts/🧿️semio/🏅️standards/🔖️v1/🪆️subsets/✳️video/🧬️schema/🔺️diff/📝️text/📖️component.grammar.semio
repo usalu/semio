@@ -1,5 +1,28 @@
 dialect grammar stdio.semio.video.diff
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.video.diff"
+; One line, empty if unchanged. `streams=` is followed by an index-keyed triple:
+; [removed-list];[modified-list];[added-list]. See `🔺️diff/🦀️component.rs` `enc_streams_diff`/
+; `enc_stream_diff`/`enc_sample_diff` for the exact hand-rolled codec this grammar documents.
+root = diff
+diff = "" / stream-token
+stream-token = "streams=" triple
+triple = "[" index-list "];[" modified-list "];[" added-list "]"
+index-list = index *("," index)
+index = 1*DIGIT
+modified-list = modified-entry *("," modified-entry)
+modified-entry = index ":" stream-diff
+added-list = added-entry *("," added-entry)
+added-entry = index ":" stream
+stream-diff = "[" opt-kind "," opt-codec "," opt-width "," opt-height "," opt-rate "," opt-samples "]"
+opt-kind = "[0]" / "[1," kind "]"
+kind = "V" / "A" / "S"
+opt-samples = "[0]" / "[1," triple "]" ; nested samples triple, same shape as the outer triple
+stream = "[" kind "," hex-string "," DIGIT "," DIGIT "," rational "," sample-list "]"
+sample = "[" 1*DIGIT "," bool "," hex-string "]"
+sample-list = "[" sample *("," sample) "]" / "[]"
+rational = "[" 1*DIGIT "," 1*DIGIT "]"
+bool = "0" / "1"
+hex-string = *2HEXDIG
+opt-width = "[0]" / "[1," 1*DIGIT "]"
+opt-height = "[0]" / "[1," 1*DIGIT "]"
+opt-codec = "[0]" / "[1," hex-string "]"
+opt-rate = "[0]" / "[1," rational "]"

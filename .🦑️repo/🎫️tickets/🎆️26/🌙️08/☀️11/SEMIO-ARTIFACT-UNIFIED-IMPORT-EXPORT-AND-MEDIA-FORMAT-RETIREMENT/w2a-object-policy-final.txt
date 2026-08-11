@@ -1,0 +1,23 @@
+=== object-subset-scoped policy lines (final run) ===
+  taxonomy/emoji-prefix  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/📄set-snapshot  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+  os-state-authority/item-scope-global  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🎹️composer/🦀️component.rs:118  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🎹️composer/🦀️component.rs:118" declares item-scope OnceLock<…> outside the OS product
+
+=== total breach line count (repo-wide) ===
+21548
+
+=== tail of full run (summary/exit) ===
+  os-state-authority/item-scope-global  ✏️s/🔨️modules/📜️imperative/📇️registry/🦀️component.rs:45  "✏️s/🔨️modules/📜️imperative/📇️registry/🦀️component.rs:45" declares item-scope OnceLock<…> outside the OS product
+  os-state-authority/item-scope-global  ✏️s/🔨️modules/📜️imperative/📇️registry/🦀️component.rs:46  "✏️s/🔨️modules/📜️imperative/📇️registry/🦀️component.rs:46" declares item-scope OnceLock<…> outside the OS product
+  os-state-authority/item-scope-global  ✏️s/🔨️modules/📜️imperative/📇️registry/🦀️component.rs:47  "✏️s/🔨️modules/📜️imperative/📇️registry/🦀️component.rs:47" declares item-scope OnceLock<…> outside the OS product
+  os-state-authority/item-scope-global  🧰️framework/🔨️modules/🚪️io/🦀️component.rs:199  "🧰️framework/🔨️modules/🚪️io/🦀️component.rs:199" declares item-scope OnceLock<…> outside the OS product
+  os-state-authority/item-scope-global  🧰️framework/🔨️modules/🚪️io/🦀️component.rs:284  "🧰️framework/🔨️modules/🚪️io/🦀️component.rs:284" declares item-scope OnceLock<…> outside the OS product
+  os-state-authority/item-scope-global  🧰️framework/🔨️modules/🚪️io/🦀️component.rs:368  "🧰️framework/🔨️modules/🚪️io/🦀️component.rs:368" declares item-scope OnceLock<…> outside the OS product
+  os-state-authority/item-scope-global  🧰️framework/🔨️modules/🚪️io/🦀️component.rs:564  "🧰️framework/🔨️modules/🚪️io/🦀️component.rs:564" declares item-scope OnceLock<…> outside the OS product
+  os-state-authority/authority-struct-map  🧰️framework/🔨️modules/🧬️schema/🦀️component.rs:118  "🧰️framework/🔨️modules/🧬️schema/🦀️component.rs:118" ArtifactSchemaRegistry holds a HashMap/BTreeMap field outside the OS product
+  os-state-authority/authority-struct-map  🧰️framework/🔨️modules/🧬️schema/🦀️component.rs:283  "🧰️framework/🔨️modules/🧬️schema/🦀️component.rs:283" AppSchemaRegistry holds a HashMap/BTreeMap field outside the OS product
+  budget/no-budget-null  📜️script.ts:3884  "📜️script.ts:3884" passes budgetMs: null — use orchestratorBudgetOpts() or daemonBudgetOpts() instead
+  budget/no-budget-null  📜️script.ts:3901  "📜️script.ts:3901" passes budgetMs: null — use orchestratorBudgetOpts() or daemonBudgetOpts() instead
+  budget/no-budget-null  📜️script.ts:3906  "📜️script.ts:3906" passes budgetMs: null — use orchestratorBudgetOpts() or daemonBudgetOpts() instead
+  budget/no-budget-null  📜️script.ts:3907  "📜️script.ts:3907" passes budgetMs: null — use orchestratorBudgetOpts() or daemonBudgetOpts() instead
+
+full breach set (including non-blocking priorities): /Users/ueli/Documents/semio/.🦑️repo/⚡️cache/breaches/compose.json

@@ -1,5 +1,7 @@
-module Semio_semio_brep_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_semio_brep_snapshot;
+
+# `pack` payload: JSON-pack bytes of a SemioBrepSnapshot (see ../../🔣️component.json for its
+# structure), same envelope framing every stdio semio subset's binary pack form uses.
 type Document = unit {
-    magic: bytes &size=25;
+    payload: bytes &eod;
 };

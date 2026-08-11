@@ -1,5 +1,10 @@
 dialect grammar stdio.semio.animation.diff
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
 root = document
-document = marker
-marker = "stdio.semio.animation.diff"
+document = header body
+header = 'schema' SP 'stdio.semio.animation.diff' NL
+body = timelines_triple
+timelines_triple = 'timelines{' removed ';' modified ';' added '}'
+removed = index*
+modified = (index ':' timeline_diff)*
+added = (index ':' timeline)*
+timeline_diff = '[' (name_tristate ',')? (channels_triple)? ']'

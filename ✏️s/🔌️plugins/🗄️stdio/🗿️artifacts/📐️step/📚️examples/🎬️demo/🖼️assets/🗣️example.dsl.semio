@@ -1,1 +1,12 @@
-Hello, stdio.step!
+semio stdio.step.dsl v1
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION((''),'2;1');
+FILE_NAME('semio.step','2026-08-11T00:00:00',('Ueli'),('semio'),'semio','','');
+FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));
+ENDSEC;
+DATA;
+#1=CARTESIAN_POINT('',(0.,0.,0.));
+#2=CARTESIAN_POINT('',(10.,0.,0.));
+ENDSEC;
+END-ISO-10303-21;

@@ -322,6 +322,39 @@ pub fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
 pub fn empty_bmp_snapshot() -> BmpSnapshot {
     BmpSnapshot::default()
 }
+
+/// 🎬 P2-FG2: canonical demo snapshot — the same value the real `.dsl.semio`/`.pack.semio`
+/// fixtures under `📚️examples/🎬️demo/🖼️assets/` are genuine `print_dsl`/`encode_pack` output
+/// of (regenerated this wave via a real `encode_bmp`/`print_dsl`/`encode_pack` call, replacing
+/// the pre-existing fake "hello" placeholder text). 4x2 24-bit `BI_RGB`, bottom-up, 8 distinct
+/// non-solid RGBA pixels (`row_bytes(4, 24) == 12`, already a multiple of 4, so this fixture
+/// does NOT exercise row padding — `gradient_checkerboard_24bit_round_trip`'s own 6-wide fixture
+/// already covers that) — `header_size`/`planes`/`bits_per_pixel`/`compression` are exactly
+/// what `encode_bmp` always hardcodes (40/1/24/0, see its own `EncodeScopeNote`), so this
+/// snapshot is safe against `encode_bmp`'s own canonicalization (any other value here would
+/// silently "self-correct" on the first decode and break `fixture_honesty_law`'s
+/// `parse_dsl(fixture) == demo()` identity). No palette (bpp=24 has none).
+pub fn demo_bmp_snapshot() -> BmpSnapshot {
+    BmpSnapshot {
+        schema: STDIO_BMP_DOCUMENT_SCHEMA.into(),
+        header_size: 40,
+        width: 4,
+        height: 2,
+        row_order: BmpRowOrder::BottomUp,
+        planes: 1,
+        bits_per_pixel: 24,
+        compression: 0,
+        image_size: row_bytes(4, 24) as u32 * 2,
+        x_pixels_per_meter: 2835,
+        y_pixels_per_meter: 2835,
+        colors_used: 0,
+        colors_important: 0,
+        palette: Vec::new(),
+        pixels: vec![
+            255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 0, 255, 0, 255, 255, 255, 255, 0, 255, 255, 128, 128, 128, 255, 0, 0, 0, 255,
+        ],
+    }
+}
 //#endregion Codec
 
 //#region 🔖️Register
@@ -330,20 +363,87 @@ pub fn register() {
     crate::artifacts::bmp::composer::register();
     register_artifact_schema();
     register_pilot_languages();
+    register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA));
 }
 
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (bmp).
+/// 📇️ P2-FG2: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion API) —
+/// real, non-fabricated calls (unlike json/csv/zip/png's hand-rolled types, `BmpSnapshot`/
+/// `BmpDiff` DO carry genuine derived `RecordSpec` constructors:
+/// `#[derive(dsl::DslRecord)]`/`#[derive(dsl::DslDiff)]` emit `__dsl_spec`/`__dsl_diff_spec`
+/// respectively, see ../🪆️subsets/✳️any/🧬️schema/📸️snapshot and 🔺️diff's own doc comments).
+/// Covers both the document's own schema id and its `"<doc>#diff"` diff schema id, per design
+/// ruling B-R4, `stdio.txt`'s own exemplar pattern. `#[cfg]`-gated to match
+/// `os_dsl::registry`'s own `#[cfg(not(target_arch = "wasm32"))]` — the registry simply does not
+/// exist as a compiled item on `wasm32`. `BmpMutation`'s own mutations facet is skipped
+/// (`dsl::DslOps` gives per-variant specs via `DslVariants`, no single canonical id to register
+/// under — `register-schema-spec-one-spec-per-artifact`, this ticket's own recipe §5).
+#[cfg(not(target_arch = "wasm32"))]
+pub fn register_schema_specs() {
+    dsl::registry::register_schema_spec("stdio.bmp", BmpSnapshot::__dsl_spec);
+    dsl::registry::register_schema_spec("stdio.bmp#diff", crate::artifacts::bmp::schema::diff::BmpDiff::__dsl_diff_spec);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn register_schema_specs() {}
+
+/// 📌️ Registers the full 5-role `LanguageSpec` set (Document/Ops/Diff/Pack/Spr — this ticket's
+/// own recipe §4 checklist item, json's own exemplar shape) for handcrafted facet grammars
+/// (text) and protocols (binary) — was a single Document-only registration before this wave.
 pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.bmp",
-        extension: Some("bin"),
+        extension: Some("bmp"),
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::bmp::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::bmp::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::artifacts::bmp::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::bmp::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.bmp"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.bmp.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::bmp::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::bmp::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::bmp::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::bmp::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.bmp.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.bmp.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::bmp::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::bmp::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        // 🎫️ The 5-role scheme has no dedicated "diff binary" role even when a real diff
+        // protocol file exists (this ticket's own recipe §4 checklist item) — `BmpDiff`'s own
+        // `.spk`-container protocol IS real (see ../🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/
+        // 📡️component.protocol.semio), just not registered here.
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("stdio.bmp.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.bmp.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::bmp::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::bmp::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.bmp.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.bmp.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::bmp::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::bmp::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.bmp.spr"),
     });
 }
 
@@ -590,6 +690,7 @@ mod tests {
         assert!(err.contains("signature"));
     }
 
+
     //#region 🔖️CodecRetentionLaw
     /// 🔬 `codec_retention_law`: decode(encode(snap)) is byte-preserving for every field encode
     /// actually controls — `row_order` (both directions), metadata (`x/y_pixels_per_meter`,
@@ -638,5 +739,150 @@ mod tests {
         assert_eq!(decoded_td.pixels, pixels, "canonical pixels (row 0 = top) must match regardless of row_order");
     }
     //#endregion 🔖️CodecRetentionLaw
+
+    //#region 🔖️ConformanceLaws
+    /// 🧪️ P2-FG2: per-artifact conformance laws (this ticket's own recipe §4 checklist item) —
+    /// grammar/protocol parseability, `Recognizer` against real fixtures AND real `print_op`/
+    /// `print_diff` output, `walk_protocol` against real `encode_pack`/`encode_op`/
+    /// `encode_diff` bytes, and the fixture-honesty round-trip. Lives here (the engine's own
+    /// test region), not any framework file — `m5` auto-discovers the snapshot grammar+
+    /// `.dsl.semio`/protocol+`.pack.semio` pairs independently
+    /// (`🧪️fixture-sweep/🦀️component.rs`'s `m5_auto_discovery`); these tests are this
+    /// artifact's OWN early-warning, plus direct coverage of the mutations/diff facets that
+    /// harness does not auto-discover at all. Mirrors `stdio.png`'s own `conformance_laws`
+    /// module verbatim in shape.
+    mod conformance_laws {
+        use super::*;
+        use crate::artifacts::bmp::schema::{diff, mutations, snapshot};
+        use protocol::{DiffCodec, OpBinary, OpText};
+
+        /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio`
+        /// files parse under the real dialect — independent of, and cheaper than, the two
+        /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a
+        /// clearer message).
+        #[test]
+        fn committed_facet_files_parse() {
+            for (label, text) in [
+                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
+            ] {
+                let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+                assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+            }
+            for (label, text) in [
+                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
+            ] {
+                dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+            }
+        }
+
+        /// ✅️ `grammar_conformance_law`: the snapshot grammar (a hex-dump grammar — BMP has no
+        /// textual syntax of its own, see that file's own doc comment) recognizes real
+        /// `print_dsl` output for the demo snapshot — same preamble-stripped body
+        /// reconstruction `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture`
+        /// uses, so this is a direct proof this artifact will pass that harness once
+        /// graduated, not merely an analogue.
+        #[test]
+        fn grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            let text = store::ArtifactDsl::print_dsl(&demo_bmp_snapshot());
+            let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
+            let reconstructed = format!("{}\n{body}", envelope.envelope_id());
+            assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+        }
+
+        /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
+        /// output for every `BmpMutation` variant (`mutations::demo_mutation_cases()`).
+        #[test]
+        fn ops_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for mutation in mutations::demo_mutation_cases() {
+                let printed = mutation.print_op();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
+            }
+        }
+
+        /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff`
+        /// output for every representative `BmpDiff` (`diff::demo_diff_cases()`), incl. the
+        /// empty diff and every collection-triple shape.
+        #[test]
+        fn diff_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for d in diff::demo_diff_cases() {
+                let printed = d.print_diff();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
+            }
+        }
+
+        /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
+        /// snapshot pack (`encode_pack`, envelope-unwrapped first, matching how
+        /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
+        /// mutation's `encode_op`, and every demo diff's `encode_diff` — asserting `consumed
+        /// == bytes.len()`.
+        #[test]
+        fn protocol_walk_law() {
+            let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+            let packed = store::ArtifactPack::encode_pack(&demo_bmp_snapshot());
+            let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
+            let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+            assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
+
+            let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+            for mutation in mutations::demo_mutation_cases() {
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
+            }
+
+            let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+            for d in diff::demo_diff_cases() {
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
+            }
+        }
+
+        /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are
+        /// GENUINE `print_dsl`/`encode_pack` output of `demo_bmp_snapshot()` —
+        /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and
+        /// the pack twin — so the fixtures can never silently drift back to a fake again (the
+        /// pre-this-wave committed fixture WAS a fake "hello" placeholder — see
+        /// `demo_bmp_snapshot`'s own doc comment).
+        #[test]
+        fn fixture_honesty_law() {
+            const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+
+            let demo = demo_bmp_snapshot();
+
+            let parsed = <BmpSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_bmp_snapshot()");
+            assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_bmp_snapshot()) drifted from the shipped .dsl.semio fixture");
+
+            let decoded = <BmpSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_bmp_snapshot()");
+            assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_bmp_snapshot()) drifted from the shipped .pack.semio fixture");
+        }
+
+        /// ✅️ `schema_spec_registration_resolves`: `register_schema_specs` genuinely resolves
+        /// both the snapshot AND diff schema ids through `dsl::registry::full_resolver()` once
+        /// called (real `BmpSnapshot::__dsl_spec`/`BmpDiff::__dsl_diff_spec`, not fabricated).
+        #[test]
+        #[cfg(not(target_arch = "wasm32"))]
+        fn schema_spec_registration_resolves() {
+            use dsl::os_pack::cli::SchemaResolver;
+            register_schema_specs();
+            let resolver = dsl::registry::full_resolver();
+            assert!(resolver.resolve("stdio.bmp").is_some(), "stdio.bmp must resolve");
+            assert!(resolver.resolve("stdio.bmp#diff").is_some(), "stdio.bmp#diff must resolve");
+        }
+    }
+    //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests

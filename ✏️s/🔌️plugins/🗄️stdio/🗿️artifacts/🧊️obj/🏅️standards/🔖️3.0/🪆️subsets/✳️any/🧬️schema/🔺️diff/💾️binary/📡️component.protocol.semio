@@ -1,7 +1,41 @@
-dialect protocol stdio.obj.diff
-; ObjDiff's wire binary IS its serde_json encoding (protocol::OpBinary — no bespoke
-; binary layout); shares the same envelope shape as every other .semio binary facet.
-magic = %x89.53.45.4D.0D.0A.1A.0A
-token-len = U32LE
-token = *OCTET                      ; UTF-8 "stdio.obj.diff v1"
-payload = *OCTET                    ; UTF-8 JSON bytes of ObjDiff (see ../📝️text/📖️component.grammar.semio)
+dialect protocol
+protocol stdio.obj.diff
+version 1
+schema stdio.obj.diff
+start diff
+
+# P2-FG1 fixup wave: REAL binary diff frame, replacing the OLDER `Ok(self.print_diff().into_bytes())`
+# text-as-binary shortcut (`../🦀️component.rs`'s upgraded `DiffCodec::encode_diff`/`decode_diff`,
+# `#region 🔖️TopLevel`) — `obj` was one of 4 stdio standards (alongside stl/step/ifc4) the FG1
+# wave's own verify agent found still on that shortcut, despite md/xml/dxf proving the real
+# upgrade achievable THIS SAME WAVE for equally-flat/recursive types. `ObjDiff` is hand-rolled
+# (§3b tri-state blocker documented at the top of `../🦀️component.rs` —
+# `ObjVertexDiff::w`/`ObjTexCoordDiff::w`/`ObjDiff::mtllib` are all `Option<Option<T>>`, which
+# `#[derive(dsl::DslDiff)]`'s `classify_field` cannot express), so this still does NOT route
+# through the framework-generic `.spk` document container the way a genuinely `DslDiff`-derived
+# diff type would.
+#
+# `format u8` (`store::pack_rt::OP_BINARY_FORMAT` convention) + `flags_lo u8` + `flags_hi u8` (a
+# 10-bit presence mask across TWO bytes — `ObjDiff` has TEN independently optional top-level
+# fields, one more than a single `flags u8` byte can hold, unlike dxf's four-field `DxfDiff`:
+# flags_lo bit0=vertices bit1=texcoords bit2=normals bit3=faces bit4=groups bit5=objects
+# bit6=mtllib bit7=usemtl; flags_hi bit0=smoothing_groups bit1=unknown_statements) are the three
+# REAL fixed header fields; each PRESENT field's own payload follows as one opaque trailing
+# `bytes` chain — genuinely field-by-field structured, varint/fixed-8-byte-f64 binary at the Rust
+# layer (`enc_vertices_diff_bin`/`enc_texcoords_diff_bin`/`enc_normals_diff_bin`/
+# `enc_faces_diff_bin`/`enc_groups_diff_bin`/`enc_objects_diff_bin`/`write_option_bin`/
+# `write_vec_bin` in `../🦀️component.rs`'s `#region 🔖️CollectionBinaryCodecs`), not re-modeled
+# field-by-field HERE because `Prim::Ref` unconditionally errors on this kind of
+# collection-of-records structure during `walk_protocol` (`protocol-prim-ref-recursion` /
+# `protocol-array-of-records`, the recipe's own consolidated gap table — every pilot with a
+# collection-triple diff independently hit and worked around the same wall, same as dxf's own
+# `DxfDiff` protocol file's identical framing). `ObjDiff`'s own value/struct layer (vertex,
+# texcoord, normal, face, group, object, usemtl/smoothing/unknown ranges) is genuinely FLAT — no
+# further nested `Vec<Record>` inside those — so unlike md's recursive block tree, nothing at the
+# scalar layer needs opacity; only the collection-triple SHAPE itself does.
+framing record
+header fixed 3
+field format u8
+field flags_lo u8
+field flags_hi u8
+chain payload bytes

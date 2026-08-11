@@ -1,5 +1,5 @@
-//! 🏗️ SemioDrawingBuilder — 🚧 scaffolded by W1b: local `ArtifactBuilder` round-tripping the
-//! minimal snapshot. W2 adds typed constructors + the real mutation vocabulary.
+//! 🏗️ SemioDrawingBuilder — real `ArtifactBuilder` impl over the full canvas/styles/layers
+//! snapshot and the 18-variant `SemioDrawingMutation` vocabulary (schema/mutations).
 
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;

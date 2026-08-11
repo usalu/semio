@@ -1,3 +1,10 @@
-dialect protocol stdio.semio.model.mutations
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.model.mutations"
+dialect protocol
+protocol stdio.semio.model.mutation
+version 1
+schema stdio.semio.model.mutation
+; `SemioModelMutation`'s hand-rolled `OpBinary` (🧬️mutations/🦀️component.rs §OpCodecs) -- plain
+; `serde_json::to_vec`/`from_slice` of the whole tagged enum. NO envelope framing.
+start frame
+segment json_bytes eos bytes
+; json_bytes decodes as UTF-8 text matching ../📝️text/📖️component.grammar.semio's `line`
+; production -- this is genuinely the entire wire format, not an unstructured stub.

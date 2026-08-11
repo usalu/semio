@@ -1,6 +1,64 @@
-dialect grammar stdio.dwg.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.dwg' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.dwg.ac1024.mutations
+start op
+comment none
+
+# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: real one-line
+# `OpText` grammar matching `DwgMutation`'s (ac1024) GENERIC `dsl::DslOps`-derived `print_op`/
+# `parse_op` (../🦀️component.rs `OpCodecs` region — same mechanism as ac1018's own sibling
+# grammar and `stdio.binary`/`stdio.txt`'s already-real mutations grammars). Every keyword/field
+# below is copied verbatim from real, directly-observed `print_op()` output for every
+# `DwgMutation::demo_mutation_cases()` variant (temp `[DEBUG]` test, run once, deleted before
+# landing):
+#   no-mutation
+#   set-snapshot snapshot { schema=stdio.dwg version=AC1024 maintenance-version=2 codepage=30 bytes="QUMxMDI0AAAAAAAAAAAAAAAAAh4AAA==" decode-status=sections-decompressed section-names=[ "AcDb:Header" "AcDb:Classes" ] sections=[ name="AcDb:Header" compressed=true declared-size=100 pages=[ page-number=0 file-address=512 compressed-size=50 decoded="aGVhZGVyLWJ5dGVz" ] name="AcDb:Classes" ... ] }
+#   set-version-info version=AC1024 maintenance-version=9 codepage=65001
+#   insert-section index=1 section { name="AcDb:Template" compressed=true declared-size=10 pages=[ page-number=9 file-address=2304 compressed-size=10 decoded="bmV3" ] }
+#   remove-section name="AcDb:Classes"
+#   set-section-data name="AcDb:Header" compressed=false declared-size=999 pages=[ page-number=0 file-address=2457 compressed-size=5 decoded="cGF0Y2hlZA==" ]
+# `keyed_field_rank` order throughout: scalar fields (decl order) before `List`/`Block` fields
+# (decl order). `#[dsl(block)]` fields (`SetSnapshot.snapshot`, `InsertSection.section`) print
+# `{ ... }`; plain (non-block) nested-record/list fields print flat, no delimiter of their own.
+# List-of-record items (`section-names`/`sections`/`pages`) have NO separator between items — the
+# next item's own leading key IS the structural boundary (same convention `stdio.txt`'s
+# `lines-field` list-of-record items use).
+op = no-mutation | set-snapshot | set-version-info | insert-section | remove-section | set-section-data
+
+text-value = IDENT | TEXT
+bit = "true" | "false"
+
+# `DwgDecodeStatus` (`#[derive(dsl::DslScalar)]`) prints its bare kebab-case variant tag.
+decode-status-value = "sentinel-only" | "sections-located" | "sections-decompressed"
+
+no-mutation = "no-mutation"
+
+set-snapshot = "set-snapshot" "snapshot" "{" snapshot-fields "}"
+snapshot-fields = schema-field version-field maintenance-version-field codepage-field bytes-field decode-status-field section-names-field sections-field
+schema-field = "schema" "=" text-value
+version-field = "version" "=" text-value
+maintenance-version-field = "maintenance-version" "=" INT
+codepage-field = "codepage" "=" INT
+bytes-field = "bytes" "=" TEXT
+decode-status-field = "decode-status" "=" decode-status-value
+section-names-field = "section-names" "=" "[" text-value* "]"
+sections-field = "sections" "=" "[" section-item* "]"
+
+# One `DwgSection` list item — plain (non-block) nested record, printed flat inside the enclosing
+# `[ ... ]`. `pages` is itself a `Vec<DwgSectionPage>` — one more nested list, no separator.
+section-item = "name" "=" text-value "compressed" "=" bit "declared-size" "=" INT "pages" "=" "[" section-page* "]"
+section-page = "page-number" "=" INT "file-address" "=" INT "compressed-size" "=" INT "decoded" "=" TEXT error-field?
+# `error: Option<String>` — present only when Some (a page whose D2 decompression genuinely
+# failed); `text-value`, not always-quoted, since `scalar_to_text`'s bare-vs-quoted rule applies
+# uniformly to every `String`/`Option<String>` field regardless of nesting depth.
+error-field = "error" "=" text-value
+
+set-version-info = "set-version-info" "version" "=" text-value "maintenance-version" "=" INT "codepage" "=" INT
+
+# `InsertSection.section: DwgSection` is `#[dsl(block)]` — printed `section { ... }`.
+insert-section = "insert-section" "index" "=" INT "section" "{" section-item "}"
+
+remove-section = "remove-section" "name" "=" text-value
+
+# `SetSectionData`'s `pages: Vec<DwgSectionPage>` is a plain (non-block) enum-variant field —
+# printed flat, no braces (unlike `InsertSection.section`).
+set-section-data = "set-section-data" "name" "=" text-value "compressed" "=" bit "declared-size" "=" INT "pages" "=" "[" section-page* "]"

@@ -1,3 +1,5 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.html.mutations"
+; abnf stdio.html mutations (binary representation)
+document = op-text
+; op-text = UTF-8 bytes of print_op's output verbatim (protocol::OpBinary::encode_op is a pure
+; passthrough of the text form) -- see the sibling ../📝️text/📖️component.grammar.semio.
+op-text = *OCTET

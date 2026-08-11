@@ -1,5 +1,11 @@
-module Semio_semio_image_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=26;
+module SemioImageSnapshotBinary;
+
+# Real binary wire layout for `s.stdio.semio.image`'s ArtifactPack form
+# (`store::semio_format::wrap_binary`). Honest boundary: `snapshot_json` is this NEUTRAL semio
+# subset's own serde_json bytes, not a format-specific byte layout.
+public type SemioBinary = unit {
+    magic:         bytes &size=8;
+    token_len:     uint32 &byte-order=spicy::ByteOrder::Little;
+    token:         bytes &size=self.token_len;
+    snapshot_json: bytes &eod;
 };

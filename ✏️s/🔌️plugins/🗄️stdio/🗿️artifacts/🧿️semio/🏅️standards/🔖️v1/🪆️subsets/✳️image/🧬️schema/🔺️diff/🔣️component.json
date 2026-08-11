@@ -1,10 +1,29 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.image/diff.json",
   "title": "SemioImageDiff",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Sparse per-field diff; width/height/colorspace/bitDepth scalars, tri-state icc, frames (index-keyed triple) and metadata (name-keyed triple).",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "width": { "type": "integer" },
+    "height": { "type": "integer" },
+    "colorspace": { "enum": ["rgb", "rgba", "grayscale", "grayscaleAlpha", "indexed"] },
+    "bitDepth": { "type": "integer" },
+    "icc": { "type": ["string", "null"], "contentEncoding": "hex" },
+    "frames": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "diff": { "type": "object", "properties": { "delayMs": { "type": "integer" }, "rgba8": { "type": "string" } } } } } },
+        "added": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "item": { "type": "object" } } } }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "key": { "type": "string" }, "diff": { "type": "string" } } } },
+        "added": { "type": "array", "items": { "type": "object", "properties": { "key": { "type": "string" }, "value": { "type": "string" } } } }
+      }
+    }
   }
 }

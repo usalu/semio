@@ -1,10 +1,6 @@
 {
   "$id": "https://semio.tech/schema/stdio.semio.animation.diff/text.json",
-  "title": "Semio_semio_animation_diff",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "title": "SemioAnimationDiffText",
   "type": "object",
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+  "properties": { "timelines": { "$ref": "#/$defs/indexedTripleDiff" } }
 }

@@ -1083,6 +1083,44 @@ impl DiffAlgebra<GltfSnapshot> for GltfDiff {
     }
 }
 
+/// 🧪️ P2-FG3: representative `GltfDiff` cases — the empty (`None`-everywhere) diff PLUS one
+/// genuinely rich diff exercising every one of `GltfDiff`'s 21 top-level clauses at once (built
+/// via the real `DiffAlgebra::between` over `demo_gltf_snapshot()` vs. a hand-tweaked variant, so
+/// every collection's `added`/`modified` entries are real, not fabricated) — used by this
+/// artifact's own `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests
+/// (⚙️engine/component.rs), mirroring json's own `demo_diff_cases()` role in its pilot report.
+pub fn demo_diff_cases() -> Vec<GltfDiff> {
+    let base = crate::artifacts::gltf::engine::demo_gltf_snapshot();
+    let mut other = base.clone();
+    other.document.asset.generator = Some("semio-fg3".into());
+    other.document.scene = Some(1);
+    other.document.scenes.push(GltfScene { nodes: vec![], name: Some("second-scene".into()), ..Default::default() });
+    other.document.nodes[0].name = Some("renamed-node".into());
+    other.document.meshes.push(GltfMesh::default());
+    other.document.accessors[0].count = 6;
+    other.document.buffer_views.push(GltfBufferView { buffer: 0, byte_offset: 0, byte_length: 12, byte_stride: None, target: None, name: None, extensions: None, extras: None });
+    other.document.buffers.push(GltfBuffer { byte_length: 4, uri: None, name: Some("extra".into()), extensions: None, extras: None });
+    other.buffers.push(vec![1, 2, 3, 4]);
+    other.document.materials[0].double_sided = true;
+    other.document.textures.push(crate::artifacts::gltf::schema::snapshot::GltfTexture { sampler: None, source: None, name: Some("tex2".into()), extensions: None, extras: None });
+    other.document.images.push(crate::artifacts::gltf::schema::snapshot::GltfImage { uri: Some("second.png".into()), ..Default::default() });
+    other.document.samplers.push(crate::artifacts::gltf::schema::snapshot::GltfSampler::default());
+    other.document.skins.push(crate::artifacts::gltf::schema::snapshot::GltfSkin { joints: vec![0], ..Default::default() });
+    other.document.animations.push(GltfAnimation::default());
+    other.document.cameras.push(GltfCamera {
+        projection: GltfCameraProjection::Orthographic(GltfOrthographic { xmag: 1.0, ymag: 1.0, zfar: 10.0, znear: 0.1, extensions: None, extras: None }),
+        name: Some("ortho-cam".into()),
+        extensions: None,
+        extras: None,
+    });
+    other.document.extensions_used.push("KHR_texture_transform".into());
+    other.document.extensions = Some(GltfJson::Bool(true));
+    other.document.extras = None;
+    other.source_form = GltfSourceForm::Glb;
+    let rich = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&base, &other);
+    vec![GltfDiff::default(), rich]
+}
+
 /// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
 pub fn diff_set_snapshot(base: &GltfSnapshot, snapshot: &GltfSnapshot) -> GltfDiff {
     <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(base, snapshot)
@@ -2223,6 +2261,862 @@ pub(crate) fn dec_gltf_snapshot(s: &str) -> Result<GltfSnapshot, String> {
 }
 //#endregion 🔖️Document
 
+//#region 🔖️RealBinaryPrimitives
+/// 🧪️ P2-FG3: real binary value codecs for `GltfDiff`/`GltfMutation` — mirrors the text codecs
+/// above field-for-field, using `dsl::ByteWriter`/`dsl::ByteReader` (the same real LEB128-varint/
+/// length-prefixed framework primitives png's/gif89a's own upgraded binary frames use,
+/// `🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs`'s `RealBinaryPrimitives`/
+/// `RealBinaryDiffFrame` regions — `dsl`/`store`/`protocol` all alias the same kernel crate root,
+/// reachable with no `use` needed beyond the absolute path). `pub(crate)` so `🧬️mutations/
+/// 🦀️component.rs`'s hand-rolled `OpBinary` can reuse every one of these the same way it already
+/// reuses this module's TEXT `enc_*`/`dec_*` primitives.
+pub(crate) fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
+    w.write_varint_u64(bytes.len() as u64);
+    w.write_bytes(bytes);
+}
+pub(crate) fn read_bin_blob(r: &mut dsl::ByteReader) -> Result<Vec<u8>, dsl::PackError> {
+    let len = r.read_varint_u64()? as usize;
+    Ok(r.read_bytes(len)?.to_vec())
+}
+pub(crate) fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
+    write_bin_blob(w, s.as_bytes());
+}
+pub(crate) fn read_bin_str(r: &mut dsl::ByteReader) -> Result<String, dsl::PackError> {
+    let bytes = read_bin_blob(r)?;
+    String::from_utf8(bytes).map_err(|e| dsl::PackError::Malformed { what: "gltf binary utf8 string", offset: 0, detail: e.to_string() })
+}
+/// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
+pub(crate) fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+    match v {
+        None => w.write_u8(0),
+        Some(val) => { w.write_u8(1); write_value(w, val); }
+    }
+}
+pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(None),
+        1 => Ok(Some(read_value(r)?)),
+        other => Err(dsl::PackError::Malformed { what: "gltf binary option tag", offset: 0, detail: format!("unknown tag {other}") }),
+    }
+}
+/// 🧩 3-way flag (`0`=unchanged/absent, `1`=cleared-to-`None`, `2`=set-to-`Some(value)`) for every
+/// TRI-STATE `Option<Option<T>>` field — same shape as png's/gif's own doc comment (avoids
+/// chaining two `if`-guarded conditional fields at the PROTOCOL-DESCRIPTION level,
+/// `protocol-cond-cannot-chain`; the Rust codec here has no such limitation but keeps the same
+/// 3-way-flag SHAPE for parity with `../💾️binary/📡️component.protocol.semio`).
+pub(crate) fn write_bin_tri<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+    match v {
+        None => w.write_u8(0),
+        Some(None) => w.write_u8(1),
+        Some(Some(val)) => { w.write_u8(2); write_value(w, val); }
+    }
+}
+pub(crate) fn read_bin_tri<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(None),
+        1 => Ok(Some(None)),
+        2 => Ok(Some(Some(read_value(r)?))),
+        other => Err(dsl::PackError::Malformed { what: "gltf binary tri-flag", offset: 0, detail: format!("unknown flag {other}") }),
+    }
+}
+pub(crate) fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
+    w.write_varint_u64(items.len() as u64);
+    for item in items {
+        write_item(w, item);
+    }
+}
+pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader, mut read_item: impl FnMut(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
+    let n = r.read_varint_u64()? as usize;
+    let mut out = Vec::with_capacity(n.min(1 << 20));
+    for _ in 0..n {
+        out.push(read_item(r)?);
+    }
+    Ok(out)
+}
+pub(crate) fn write_bin_f64_array<const N: usize>(w: &mut dsl::ByteWriter, v: &[f64; N]) {
+    for x in v {
+        w.write_f64_le(*x);
+    }
+}
+pub(crate) fn read_bin_f64_array<const N: usize>(r: &mut dsl::ByteReader) -> Result<[f64; N], dsl::PackError> {
+    let mut out = [0.0f64; N];
+    for slot in out.iter_mut() {
+        *slot = r.read_f64_le()?;
+    }
+    Ok(out)
+}
+pub(crate) fn write_bin_f64_vec(w: &mut dsl::ByteWriter, v: &[f64]) {
+    write_bin_vec(w, v, |w, x| w.write_f64_le(*x));
+}
+pub(crate) fn read_bin_f64_vec(r: &mut dsl::ByteReader) -> Result<Vec<f64>, dsl::PackError> {
+    read_bin_vec(r, |r| r.read_f64_le())
+}
+pub(crate) fn write_bin_usize_vec(w: &mut dsl::ByteWriter, v: &[usize]) {
+    write_bin_vec(w, v, |w, x: &usize| w.write_varint_u64(*x as u64));
+}
+pub(crate) fn read_bin_usize_vec(r: &mut dsl::ByteReader) -> Result<Vec<usize>, dsl::PackError> {
+    read_bin_vec(r, |r| Ok(r.read_varint_u64()? as usize))
+}
+pub(crate) fn write_bin_string_vec(w: &mut dsl::ByteWriter, v: &[String]) {
+    write_bin_vec(w, v, |w, s: &String| write_bin_str(w, s));
+}
+pub(crate) fn read_bin_string_vec(r: &mut dsl::ByteReader) -> Result<Vec<String>, dsl::PackError> {
+    read_bin_vec(r, read_bin_str)
+}
+pub(crate) fn write_bin_attr_pairs(w: &mut dsl::ByteWriter, v: &[(String, usize)]) {
+    write_bin_vec(w, v, |w, (k, idx): &(String, usize)| { write_bin_str(w, k); w.write_varint_u64(*idx as u64); });
+}
+pub(crate) fn read_bin_attr_pairs(r: &mut dsl::ByteReader) -> Result<Vec<(String, usize)>, dsl::PackError> {
+    read_bin_vec(r, |r| Ok((read_bin_str(r)?, r.read_varint_u64()? as usize)))
+}
+pub(crate) fn gltf_bin_err(e: dsl::PackError) -> protocol::ProtocolError {
+    protocol::ProtocolError::Malformed { what: "gltf binary", offset: 0, detail: e.to_string() }
+}
+//#endregion 🔖️RealBinaryPrimitives
+
+//#region 🔖️RealBinaryJsonCodec
+/// 🌳 `GltfJson` -- genuinely recursive real binary: tag `u8` (0=Null,1=Bool,2=Number,3=String,
+/// 4=Array,5=Object) then the payload, matching `enc_json`/`dec_json`'s own tag scheme.
+pub(crate) fn write_bin_json(w: &mut dsl::ByteWriter, v: &GltfJson) {
+    match v {
+        GltfJson::Null => w.write_u8(0),
+        GltfJson::Bool(b) => { w.write_u8(1); w.write_u8(if *b { 1 } else { 0 }); }
+        GltfJson::Number(n) => { w.write_u8(2); w.write_f64_le(*n); }
+        GltfJson::String(s) => { w.write_u8(3); write_bin_str(w, s); }
+        GltfJson::Array(items) => { w.write_u8(4); write_bin_vec(w, items, write_bin_json); }
+        GltfJson::Object(members) => {
+            w.write_u8(5);
+            write_bin_vec(w, members, |w, (k, v): &(String, GltfJson)| { write_bin_str(w, k); write_bin_json(w, v); });
+        }
+    }
+}
+pub(crate) fn read_bin_json(r: &mut dsl::ByteReader) -> Result<GltfJson, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(GltfJson::Null),
+        1 => Ok(GltfJson::Bool(r.read_u8()? != 0)),
+        2 => Ok(GltfJson::Number(r.read_f64_le()?)),
+        3 => Ok(GltfJson::String(read_bin_str(r)?)),
+        4 => Ok(GltfJson::Array(read_bin_vec(r, read_bin_json)?)),
+        5 => Ok(GltfJson::Object(read_bin_vec(r, |r| Ok((read_bin_str(r)?, read_bin_json(r)?)))?)),
+        other => Err(dsl::PackError::Malformed { what: "gltf json binary tag", offset: 0, detail: format!("unknown tag {other}") }),
+    }
+}
+pub(crate) fn write_bin_json_opt(w: &mut dsl::ByteWriter, v: &Option<GltfJson>) {
+    write_bin_option(w, v, write_bin_json);
+}
+pub(crate) fn read_bin_json_opt(r: &mut dsl::ByteReader) -> Result<Option<GltfJson>, dsl::PackError> {
+    read_bin_option(r, read_bin_json)
+}
+//#endregion 🔖️RealBinaryJsonCodec
+
+//#region 🔖️RealBinaryUnitEnumCodecs
+/// 🔢️ Real spec numeric code (5120..5126), matching `GltfComponentType::code`/`from_code` exactly
+/// -- NOT a re-derived discriminant table (the spec code IS this enum's real wire value, same one
+/// the artifact's own `serde` impl emits).
+pub(crate) fn write_bin_component_type(w: &mut dsl::ByteWriter, t: GltfComponentType) {
+    w.write_u32_le(t.code() as u32);
+}
+pub(crate) fn read_bin_component_type(r: &mut dsl::ByteReader) -> Result<GltfComponentType, dsl::PackError> {
+    GltfComponentType::from_code(r.read_u32_le()? as u64).map_err(|e| dsl::PackError::Malformed { what: "gltf component_type", offset: 0, detail: e })
+}
+/// 🔢️ Compact `u8` discriminants for the remaining small unit-variant enums (real spec strings
+/// only exist on the TEXT side; the binary frame is free to use its own dense encoding since
+/// nothing outside this codec pair ever reads these bytes directly).
+pub(crate) fn write_bin_accessor_type(w: &mut dsl::ByteWriter, t: GltfAccessorType) {
+    w.write_u8(match t { GltfAccessorType::Scalar => 0, GltfAccessorType::Vec2 => 1, GltfAccessorType::Vec3 => 2, GltfAccessorType::Vec4 => 3, GltfAccessorType::Mat2 => 4, GltfAccessorType::Mat3 => 5, GltfAccessorType::Mat4 => 6 });
+}
+pub(crate) fn read_bin_accessor_type(r: &mut dsl::ByteReader) -> Result<GltfAccessorType, dsl::PackError> {
+    Ok(match r.read_u8()? {
+        0 => GltfAccessorType::Scalar, 1 => GltfAccessorType::Vec2, 2 => GltfAccessorType::Vec3, 3 => GltfAccessorType::Vec4,
+        4 => GltfAccessorType::Mat2, 5 => GltfAccessorType::Mat3, 6 => GltfAccessorType::Mat4,
+        other => return Err(dsl::PackError::Malformed { what: "gltf accessor_type", offset: 0, detail: format!("unknown tag {other}") }),
+    })
+}
+pub(crate) fn write_bin_alpha_mode(w: &mut dsl::ByteWriter, m: GltfAlphaMode) {
+    w.write_u8(match m { GltfAlphaMode::Opaque => 0, GltfAlphaMode::Mask => 1, GltfAlphaMode::Blend => 2 });
+}
+pub(crate) fn read_bin_alpha_mode(r: &mut dsl::ByteReader) -> Result<GltfAlphaMode, dsl::PackError> {
+    Ok(match r.read_u8()? { 0 => GltfAlphaMode::Opaque, 1 => GltfAlphaMode::Mask, 2 => GltfAlphaMode::Blend, other => return Err(dsl::PackError::Malformed { what: "gltf alpha_mode", offset: 0, detail: format!("unknown tag {other}") }) })
+}
+pub(crate) fn write_bin_interpolation(w: &mut dsl::ByteWriter, i: GltfInterpolation) {
+    w.write_u8(match i { GltfInterpolation::Linear => 0, GltfInterpolation::Step => 1, GltfInterpolation::CubicSpline => 2 });
+}
+pub(crate) fn read_bin_interpolation(r: &mut dsl::ByteReader) -> Result<GltfInterpolation, dsl::PackError> {
+    Ok(match r.read_u8()? { 0 => GltfInterpolation::Linear, 1 => GltfInterpolation::Step, 2 => GltfInterpolation::CubicSpline, other => return Err(dsl::PackError::Malformed { what: "gltf interpolation", offset: 0, detail: format!("unknown tag {other}") }) })
+}
+pub(crate) fn write_bin_animation_path(w: &mut dsl::ByteWriter, p: GltfAnimationPath) {
+    w.write_u8(match p { GltfAnimationPath::Translation => 0, GltfAnimationPath::Rotation => 1, GltfAnimationPath::Scale => 2, GltfAnimationPath::Weights => 3 });
+}
+pub(crate) fn read_bin_animation_path(r: &mut dsl::ByteReader) -> Result<GltfAnimationPath, dsl::PackError> {
+    Ok(match r.read_u8()? { 0 => GltfAnimationPath::Translation, 1 => GltfAnimationPath::Rotation, 2 => GltfAnimationPath::Scale, 3 => GltfAnimationPath::Weights, other => return Err(dsl::PackError::Malformed { what: "gltf animation_path", offset: 0, detail: format!("unknown tag {other}") }) })
+}
+pub(crate) fn write_bin_source_form(w: &mut dsl::ByteWriter, f: GltfSourceForm) {
+    w.write_u8(match f { GltfSourceForm::Json => 0, GltfSourceForm::Glb => 1 });
+}
+pub(crate) fn read_bin_source_form(r: &mut dsl::ByteReader) -> Result<GltfSourceForm, dsl::PackError> {
+    Ok(match r.read_u8()? { 0 => GltfSourceForm::Json, 1 => GltfSourceForm::Glb, other => return Err(dsl::PackError::Malformed { what: "gltf source_form", offset: 0, detail: format!("unknown tag {other}") }) })
+}
+//#endregion 🔖️RealBinaryUnitEnumCodecs
+
+//#region 🔖️RealBinaryAssetSceneNodeGroupCodecs
+pub(crate) fn write_bin_asset(w: &mut dsl::ByteWriter, a: &GltfAsset) {
+    write_bin_str(w, &a.version);
+    write_bin_option(w, &a.generator, |w, v| write_bin_str(w, v));
+    write_bin_option(w, &a.copyright, |w, v| write_bin_str(w, v));
+    write_bin_option(w, &a.min_version, |w, v| write_bin_str(w, v));
+    write_bin_json_opt(w, &a.extensions);
+    write_bin_json_opt(w, &a.extras);
+}
+pub(crate) fn read_bin_asset(r: &mut dsl::ByteReader) -> Result<GltfAsset, dsl::PackError> {
+    Ok(GltfAsset {
+        version: read_bin_str(r)?,
+        generator: read_bin_option(r, read_bin_str)?,
+        copyright: read_bin_option(r, read_bin_str)?,
+        min_version: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
+    })
+}
+pub(crate) fn write_bin_asset_diff(w: &mut dsl::ByteWriter, d: &GltfAssetDiff) {
+    write_bin_option(w, &d.version, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.generator, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.copyright, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.min_version, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.extensions, write_bin_json);
+    write_bin_tri(w, &d.extras, write_bin_json);
+}
+pub(crate) fn read_bin_asset_diff(r: &mut dsl::ByteReader) -> Result<GltfAssetDiff, dsl::PackError> {
+    Ok(GltfAssetDiff {
+        version: read_bin_option(r, read_bin_str)?,
+        generator: read_bin_tri(r, read_bin_str)?,
+        copyright: read_bin_tri(r, read_bin_str)?,
+        min_version: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
+    })
+}
+pub(crate) fn write_bin_scene(w: &mut dsl::ByteWriter, sc: &GltfScene) {
+    write_bin_usize_vec(w, &sc.nodes);
+    write_bin_option(w, &sc.name, |w, v| write_bin_str(w, v));
+    write_bin_json_opt(w, &sc.extensions);
+    write_bin_json_opt(w, &sc.extras);
+}
+pub(crate) fn read_bin_scene(r: &mut dsl::ByteReader) -> Result<GltfScene, dsl::PackError> {
+    Ok(GltfScene { nodes: read_bin_usize_vec(r)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
+}
+pub(crate) fn write_bin_scene_diff(w: &mut dsl::ByteWriter, d: &GltfSceneDiff) {
+    write_bin_option(w, &d.nodes, |w, v| write_bin_usize_vec(w, v));
+    write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.extensions, write_bin_json);
+    write_bin_tri(w, &d.extras, write_bin_json);
+}
+pub(crate) fn read_bin_scene_diff(r: &mut dsl::ByteReader) -> Result<GltfSceneDiff, dsl::PackError> {
+    Ok(GltfSceneDiff { nodes: read_bin_option(r, read_bin_usize_vec)?, name: read_bin_tri(r, read_bin_str)?, extensions: read_bin_tri(r, read_bin_json)?, extras: read_bin_tri(r, read_bin_json)? })
+}
+pub(crate) fn write_bin_node(w: &mut dsl::ByteWriter, n: &GltfNode) {
+    write_bin_usize_vec(w, &n.children);
+    write_bin_option(w, &n.mesh, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &n.camera, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &n.skin, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &n.matrix, |w, v| write_bin_f64_array::<16>(w, v));
+    write_bin_option(w, &n.translation, |w, v| write_bin_f64_array::<3>(w, v));
+    write_bin_option(w, &n.rotation, |w, v| write_bin_f64_array::<4>(w, v));
+    write_bin_option(w, &n.scale, |w, v| write_bin_f64_array::<3>(w, v));
+    write_bin_f64_vec(w, &n.weights);
+    write_bin_option(w, &n.name, |w, v| write_bin_str(w, v));
+    write_bin_json_opt(w, &n.extensions);
+    write_bin_json_opt(w, &n.extras);
+}
+pub(crate) fn read_bin_node(r: &mut dsl::ByteReader) -> Result<GltfNode, dsl::PackError> {
+    Ok(GltfNode {
+        children: read_bin_usize_vec(r)?,
+        mesh: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        camera: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        skin: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        matrix: read_bin_option(r, read_bin_f64_array::<16>)?,
+        translation: read_bin_option(r, read_bin_f64_array::<3>)?,
+        rotation: read_bin_option(r, read_bin_f64_array::<4>)?,
+        scale: read_bin_option(r, read_bin_f64_array::<3>)?,
+        weights: read_bin_f64_vec(r)?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
+    })
+}
+pub(crate) fn write_bin_node_diff(w: &mut dsl::ByteWriter, d: &GltfNodeDiff) {
+    write_bin_option(w, &d.children, |w, v| write_bin_usize_vec(w, v));
+    write_bin_tri(w, &d.mesh, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_tri(w, &d.camera, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_tri(w, &d.skin, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_tri(w, &d.matrix, |w, v| write_bin_f64_array::<16>(w, v));
+    write_bin_tri(w, &d.translation, |w, v| write_bin_f64_array::<3>(w, v));
+    write_bin_tri(w, &d.rotation, |w, v| write_bin_f64_array::<4>(w, v));
+    write_bin_tri(w, &d.scale, |w, v| write_bin_f64_array::<3>(w, v));
+    write_bin_option(w, &d.weights, |w, v| write_bin_f64_vec(w, v));
+    write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.extensions, write_bin_json);
+    write_bin_tri(w, &d.extras, write_bin_json);
+}
+pub(crate) fn read_bin_node_diff(r: &mut dsl::ByteReader) -> Result<GltfNodeDiff, dsl::PackError> {
+    Ok(GltfNodeDiff {
+        children: read_bin_option(r, read_bin_usize_vec)?,
+        mesh: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        camera: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        skin: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        matrix: read_bin_tri(r, read_bin_f64_array::<16>)?,
+        translation: read_bin_tri(r, read_bin_f64_array::<3>)?,
+        rotation: read_bin_tri(r, read_bin_f64_array::<4>)?,
+        scale: read_bin_tri(r, read_bin_f64_array::<3>)?,
+        weights: read_bin_option(r, read_bin_f64_vec)?,
+        name: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
+    })
+}
+//#endregion 🔖️RealBinaryAssetSceneNodeGroupCodecs
+
+//#region 🔖️RealBinaryMeshAccessorMaterialGroupCodecs
+pub(crate) fn write_bin_primitive(w: &mut dsl::ByteWriter, p: &GltfPrimitive) {
+    write_bin_attr_pairs(w, &p.attributes);
+    write_bin_option(w, &p.indices, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &p.material, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &p.mode, |w, v| w.write_varint_u64(*v));
+    write_bin_json_opt(w, &p.extensions);
+    write_bin_json_opt(w, &p.extras);
+}
+pub(crate) fn read_bin_primitive(r: &mut dsl::ByteReader) -> Result<GltfPrimitive, dsl::PackError> {
+    Ok(GltfPrimitive {
+        attributes: read_bin_attr_pairs(r)?,
+        indices: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        material: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        mode: read_bin_option(r, |r| r.read_varint_u64())?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
+    })
+}
+pub(crate) fn write_bin_primitive_vec(w: &mut dsl::ByteWriter, v: &[GltfPrimitive]) {
+    write_bin_vec(w, v, write_bin_primitive);
+}
+pub(crate) fn read_bin_primitive_vec(r: &mut dsl::ByteReader) -> Result<Vec<GltfPrimitive>, dsl::PackError> {
+    read_bin_vec(r, read_bin_primitive)
+}
+pub(crate) fn write_bin_mesh(w: &mut dsl::ByteWriter, m: &GltfMesh) {
+    write_bin_primitive_vec(w, &m.primitives);
+    write_bin_f64_vec(w, &m.weights);
+    write_bin_option(w, &m.name, |w, v| write_bin_str(w, v));
+    write_bin_json_opt(w, &m.extensions);
+    write_bin_json_opt(w, &m.extras);
+}
+pub(crate) fn read_bin_mesh(r: &mut dsl::ByteReader) -> Result<GltfMesh, dsl::PackError> {
+    Ok(GltfMesh { primitives: read_bin_primitive_vec(r)?, weights: read_bin_f64_vec(r)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
+}
+pub(crate) fn write_bin_mesh_diff(w: &mut dsl::ByteWriter, d: &GltfMeshDiff) {
+    write_bin_option(w, &d.primitives, |w, v| write_bin_primitive_vec(w, v));
+    write_bin_option(w, &d.weights, |w, v| write_bin_f64_vec(w, v));
+    write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.extensions, write_bin_json);
+    write_bin_tri(w, &d.extras, write_bin_json);
+}
+pub(crate) fn read_bin_mesh_diff(r: &mut dsl::ByteReader) -> Result<GltfMeshDiff, dsl::PackError> {
+    Ok(GltfMeshDiff { primitives: read_bin_option(r, read_bin_primitive_vec)?, weights: read_bin_option(r, read_bin_f64_vec)?, name: read_bin_tri(r, read_bin_str)?, extensions: read_bin_tri(r, read_bin_json)?, extras: read_bin_tri(r, read_bin_json)? })
+}
+pub(crate) fn write_bin_sparse_indices(w: &mut dsl::ByteWriter, v: &GltfSparseIndices) {
+    w.write_varint_u64(v.buffer_view as u64);
+    w.write_varint_u64(v.byte_offset as u64);
+    write_bin_component_type(w, v.component_type);
+}
+pub(crate) fn read_bin_sparse_indices(r: &mut dsl::ByteReader) -> Result<GltfSparseIndices, dsl::PackError> {
+    Ok(GltfSparseIndices { buffer_view: r.read_varint_u64()? as usize, byte_offset: r.read_varint_u64()? as usize, component_type: read_bin_component_type(r)? })
+}
+pub(crate) fn write_bin_sparse_values(w: &mut dsl::ByteWriter, v: &GltfSparseValues) {
+    w.write_varint_u64(v.buffer_view as u64);
+    w.write_varint_u64(v.byte_offset as u64);
+}
+pub(crate) fn read_bin_sparse_values(r: &mut dsl::ByteReader) -> Result<GltfSparseValues, dsl::PackError> {
+    Ok(GltfSparseValues { buffer_view: r.read_varint_u64()? as usize, byte_offset: r.read_varint_u64()? as usize })
+}
+pub(crate) fn write_bin_sparse_accessor(w: &mut dsl::ByteWriter, v: &GltfSparseAccessor) {
+    w.write_varint_u64(v.count as u64);
+    write_bin_sparse_indices(w, &v.indices);
+    write_bin_sparse_values(w, &v.values);
+}
+pub(crate) fn read_bin_sparse_accessor(r: &mut dsl::ByteReader) -> Result<GltfSparseAccessor, dsl::PackError> {
+    Ok(GltfSparseAccessor { count: r.read_varint_u64()? as usize, indices: read_bin_sparse_indices(r)?, values: read_bin_sparse_values(r)? })
+}
+pub(crate) fn write_bin_accessor(w: &mut dsl::ByteWriter, a: &GltfAccessor) {
+    write_bin_option(w, &a.buffer_view, |w, v| w.write_varint_u64(*v as u64));
+    w.write_varint_u64(a.byte_offset as u64);
+    write_bin_component_type(w, a.component_type);
+    w.write_u8(if a.normalized { 1 } else { 0 });
+    w.write_varint_u64(a.count as u64);
+    write_bin_accessor_type(w, a.kind);
+    write_bin_option(w, &a.max, |w, v| write_bin_f64_vec(w, v));
+    write_bin_option(w, &a.min, |w, v| write_bin_f64_vec(w, v));
+    write_bin_option(w, &a.sparse, write_bin_sparse_accessor);
+    write_bin_option(w, &a.name, |w, v| write_bin_str(w, v));
+    write_bin_json_opt(w, &a.extensions);
+    write_bin_json_opt(w, &a.extras);
+}
+pub(crate) fn read_bin_accessor(r: &mut dsl::ByteReader) -> Result<GltfAccessor, dsl::PackError> {
+    Ok(GltfAccessor {
+        buffer_view: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        byte_offset: r.read_varint_u64()? as usize,
+        component_type: read_bin_component_type(r)?,
+        normalized: r.read_u8()? != 0,
+        count: r.read_varint_u64()? as usize,
+        kind: read_bin_accessor_type(r)?,
+        max: read_bin_option(r, read_bin_f64_vec)?,
+        min: read_bin_option(r, read_bin_f64_vec)?,
+        sparse: read_bin_option(r, read_bin_sparse_accessor)?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
+    })
+}
+pub(crate) fn write_bin_accessor_diff(w: &mut dsl::ByteWriter, d: &GltfAccessorDiff) {
+    write_bin_tri(w, &d.buffer_view, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &d.byte_offset, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &d.component_type, |w, v| write_bin_component_type(w, *v));
+    write_bin_option(w, &d.normalized, |w, v| w.write_u8(if *v { 1 } else { 0 }));
+    write_bin_option(w, &d.count, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &d.kind, |w, v| write_bin_accessor_type(w, *v));
+    write_bin_tri(w, &d.max, |w, v| write_bin_f64_vec(w, v));
+    write_bin_tri(w, &d.min, |w, v| write_bin_f64_vec(w, v));
+    write_bin_tri(w, &d.sparse, write_bin_sparse_accessor);
+    write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.extensions, write_bin_json);
+    write_bin_tri(w, &d.extras, write_bin_json);
+}
+pub(crate) fn read_bin_accessor_diff(r: &mut dsl::ByteReader) -> Result<GltfAccessorDiff, dsl::PackError> {
+    Ok(GltfAccessorDiff {
+        buffer_view: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        byte_offset: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        component_type: read_bin_option(r, read_bin_component_type)?,
+        normalized: read_bin_option(r, |r| Ok(r.read_u8()? != 0))?,
+        count: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        kind: read_bin_option(r, read_bin_accessor_type)?,
+        max: read_bin_tri(r, read_bin_f64_vec)?,
+        min: read_bin_tri(r, read_bin_f64_vec)?,
+        sparse: read_bin_tri(r, read_bin_sparse_accessor)?,
+        name: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
+    })
+}
+pub(crate) fn write_bin_texture_info(w: &mut dsl::ByteWriter, v: &GltfTextureInfo) {
+    w.write_varint_u64(v.index as u64);
+    w.write_varint_u64(v.tex_coord);
+    write_bin_json_opt(w, &v.extensions);
+    write_bin_json_opt(w, &v.extras);
+}
+pub(crate) fn read_bin_texture_info(r: &mut dsl::ByteReader) -> Result<GltfTextureInfo, dsl::PackError> {
+    Ok(GltfTextureInfo { index: r.read_varint_u64()? as usize, tex_coord: r.read_varint_u64()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
+}
+pub(crate) fn write_bin_normal_texture_info(w: &mut dsl::ByteWriter, v: &GltfNormalTextureInfo) {
+    w.write_varint_u64(v.index as u64);
+    w.write_varint_u64(v.tex_coord);
+    w.write_f64_le(v.scale);
+    write_bin_json_opt(w, &v.extensions);
+    write_bin_json_opt(w, &v.extras);
+}
+pub(crate) fn read_bin_normal_texture_info(r: &mut dsl::ByteReader) -> Result<GltfNormalTextureInfo, dsl::PackError> {
+    Ok(GltfNormalTextureInfo { index: r.read_varint_u64()? as usize, tex_coord: r.read_varint_u64()?, scale: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
+}
+pub(crate) fn write_bin_occlusion_texture_info(w: &mut dsl::ByteWriter, v: &GltfOcclusionTextureInfo) {
+    w.write_varint_u64(v.index as u64);
+    w.write_varint_u64(v.tex_coord);
+    w.write_f64_le(v.strength);
+    write_bin_json_opt(w, &v.extensions);
+    write_bin_json_opt(w, &v.extras);
+}
+pub(crate) fn read_bin_occlusion_texture_info(r: &mut dsl::ByteReader) -> Result<GltfOcclusionTextureInfo, dsl::PackError> {
+    Ok(GltfOcclusionTextureInfo { index: r.read_varint_u64()? as usize, tex_coord: r.read_varint_u64()?, strength: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
+}
+pub(crate) fn write_bin_pbr(w: &mut dsl::ByteWriter, v: &GltfPbrMetallicRoughness) {
+    write_bin_f64_array::<4>(w, &v.base_color_factor);
+    write_bin_option(w, &v.base_color_texture, write_bin_texture_info);
+    w.write_f64_le(v.metallic_factor);
+    w.write_f64_le(v.roughness_factor);
+    write_bin_option(w, &v.metallic_roughness_texture, write_bin_texture_info);
+    write_bin_json_opt(w, &v.extensions);
+    write_bin_json_opt(w, &v.extras);
+}
+pub(crate) fn read_bin_pbr(r: &mut dsl::ByteReader) -> Result<GltfPbrMetallicRoughness, dsl::PackError> {
+    Ok(GltfPbrMetallicRoughness {
+        base_color_factor: read_bin_f64_array::<4>(r)?,
+        base_color_texture: read_bin_option(r, read_bin_texture_info)?,
+        metallic_factor: r.read_f64_le()?,
+        roughness_factor: r.read_f64_le()?,
+        metallic_roughness_texture: read_bin_option(r, read_bin_texture_info)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
+    })
+}
+pub(crate) fn write_bin_material(w: &mut dsl::ByteWriter, m: &GltfMaterial) {
+    write_bin_option(w, &m.name, |w, v| write_bin_str(w, v));
+    write_bin_option(w, &m.pbr_metallic_roughness, write_bin_pbr);
+    write_bin_option(w, &m.normal_texture, write_bin_normal_texture_info);
+    write_bin_option(w, &m.occlusion_texture, write_bin_occlusion_texture_info);
+    write_bin_option(w, &m.emissive_texture, write_bin_texture_info);
+    write_bin_f64_array::<3>(w, &m.emissive_factor);
+    write_bin_alpha_mode(w, m.alpha_mode);
+    w.write_f64_le(m.alpha_cutoff);
+    w.write_u8(if m.double_sided { 1 } else { 0 });
+    write_bin_json_opt(w, &m.extensions);
+    write_bin_json_opt(w, &m.extras);
+}
+pub(crate) fn read_bin_material(r: &mut dsl::ByteReader) -> Result<GltfMaterial, dsl::PackError> {
+    Ok(GltfMaterial {
+        name: read_bin_option(r, read_bin_str)?,
+        pbr_metallic_roughness: read_bin_option(r, read_bin_pbr)?,
+        normal_texture: read_bin_option(r, read_bin_normal_texture_info)?,
+        occlusion_texture: read_bin_option(r, read_bin_occlusion_texture_info)?,
+        emissive_texture: read_bin_option(r, read_bin_texture_info)?,
+        emissive_factor: read_bin_f64_array::<3>(r)?,
+        alpha_mode: read_bin_alpha_mode(r)?,
+        alpha_cutoff: r.read_f64_le()?,
+        double_sided: r.read_u8()? != 0,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
+    })
+}
+pub(crate) fn write_bin_material_diff(w: &mut dsl::ByteWriter, d: &GltfMaterialDiff) {
+    write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.pbr_metallic_roughness, write_bin_pbr);
+    write_bin_tri(w, &d.normal_texture, write_bin_normal_texture_info);
+    write_bin_tri(w, &d.occlusion_texture, write_bin_occlusion_texture_info);
+    write_bin_tri(w, &d.emissive_texture, write_bin_texture_info);
+    write_bin_option(w, &d.emissive_factor, |w, v| write_bin_f64_array::<3>(w, v));
+    write_bin_option(w, &d.alpha_mode, |w, v| write_bin_alpha_mode(w, *v));
+    write_bin_option(w, &d.alpha_cutoff, |w, v| w.write_f64_le(*v));
+    write_bin_option(w, &d.double_sided, |w, v| w.write_u8(if *v { 1 } else { 0 }));
+    write_bin_tri(w, &d.extensions, write_bin_json);
+    write_bin_tri(w, &d.extras, write_bin_json);
+}
+pub(crate) fn read_bin_material_diff(r: &mut dsl::ByteReader) -> Result<GltfMaterialDiff, dsl::PackError> {
+    Ok(GltfMaterialDiff {
+        name: read_bin_tri(r, read_bin_str)?,
+        pbr_metallic_roughness: read_bin_tri(r, read_bin_pbr)?,
+        normal_texture: read_bin_tri(r, read_bin_normal_texture_info)?,
+        occlusion_texture: read_bin_tri(r, read_bin_occlusion_texture_info)?,
+        emissive_texture: read_bin_tri(r, read_bin_texture_info)?,
+        emissive_factor: read_bin_option(r, read_bin_f64_array::<3>)?,
+        alpha_mode: read_bin_option(r, read_bin_alpha_mode)?,
+        alpha_cutoff: read_bin_option(r, |r| r.read_f64_le())?,
+        double_sided: read_bin_option(r, |r| Ok(r.read_u8()? != 0))?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
+    })
+}
+//#endregion 🔖️RealBinaryMeshAccessorMaterialGroupCodecs
+
+//#region 🔖️RealBinaryBufferGroupCodecs
+pub(crate) fn write_bin_buffer(w: &mut dsl::ByteWriter, b: &GltfBuffer) {
+    w.write_varint_u64(b.byte_length as u64);
+    write_bin_option(w, &b.uri, |w, v| write_bin_str(w, v));
+    write_bin_option(w, &b.name, |w, v| write_bin_str(w, v));
+    write_bin_json_opt(w, &b.extensions);
+    write_bin_json_opt(w, &b.extras);
+}
+pub(crate) fn read_bin_buffer(r: &mut dsl::ByteReader) -> Result<GltfBuffer, dsl::PackError> {
+    Ok(GltfBuffer { byte_length: r.read_varint_u64()? as usize, uri: read_bin_option(r, read_bin_str)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
+}
+pub(crate) fn write_bin_buffer_diff(w: &mut dsl::ByteWriter, d: &GltfBufferDiff) {
+    write_bin_option(w, &d.byte_length, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_tri(w, &d.uri, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.extensions, write_bin_json);
+    write_bin_tri(w, &d.extras, write_bin_json);
+}
+pub(crate) fn read_bin_buffer_diff(r: &mut dsl::ByteReader) -> Result<GltfBufferDiff, dsl::PackError> {
+    Ok(GltfBufferDiff { byte_length: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?, uri: read_bin_tri(r, read_bin_str)?, name: read_bin_tri(r, read_bin_str)?, extensions: read_bin_tri(r, read_bin_json)?, extras: read_bin_tri(r, read_bin_json)? })
+}
+pub(crate) fn write_bin_buffer_view(w: &mut dsl::ByteWriter, v: &GltfBufferView) {
+    w.write_varint_u64(v.buffer as u64);
+    w.write_varint_u64(v.byte_offset as u64);
+    w.write_varint_u64(v.byte_length as u64);
+    write_bin_option(w, &v.byte_stride, |w, x| w.write_varint_u64(*x as u64));
+    write_bin_option(w, &v.target, |w, x| w.write_varint_u64(*x));
+    write_bin_option(w, &v.name, |w, x| write_bin_str(w, x));
+    write_bin_json_opt(w, &v.extensions);
+    write_bin_json_opt(w, &v.extras);
+}
+pub(crate) fn read_bin_buffer_view(r: &mut dsl::ByteReader) -> Result<GltfBufferView, dsl::PackError> {
+    Ok(GltfBufferView {
+        buffer: r.read_varint_u64()? as usize,
+        byte_offset: r.read_varint_u64()? as usize,
+        byte_length: r.read_varint_u64()? as usize,
+        byte_stride: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        target: read_bin_option(r, |r| r.read_varint_u64())?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
+    })
+}
+//#endregion 🔖️RealBinaryBufferGroupCodecs
+
+//#region 🔖️RealBinaryTextureImageSamplerSkinGroupCodecs
+pub(crate) fn write_bin_texture(w: &mut dsl::ByteWriter, t: &GltfTexture) {
+    write_bin_option(w, &t.sampler, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &t.source, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &t.name, |w, v| write_bin_str(w, v));
+    write_bin_json_opt(w, &t.extensions);
+    write_bin_json_opt(w, &t.extras);
+}
+pub(crate) fn read_bin_texture(r: &mut dsl::ByteReader) -> Result<GltfTexture, dsl::PackError> {
+    Ok(GltfTexture { sampler: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?, source: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
+}
+pub(crate) fn write_bin_image(w: &mut dsl::ByteWriter, i: &GltfImage) {
+    write_bin_option(w, &i.uri, |w, v| write_bin_str(w, v));
+    write_bin_option(w, &i.mime_type, |w, v| write_bin_str(w, v));
+    write_bin_option(w, &i.buffer_view, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &i.name, |w, v| write_bin_str(w, v));
+    write_bin_json_opt(w, &i.extensions);
+    write_bin_json_opt(w, &i.extras);
+}
+pub(crate) fn read_bin_image(r: &mut dsl::ByteReader) -> Result<crate::artifacts::gltf::schema::snapshot::GltfImage, dsl::PackError> {
+    Ok(crate::artifacts::gltf::schema::snapshot::GltfImage {
+        uri: read_bin_option(r, read_bin_str)?,
+        mime_type: read_bin_option(r, read_bin_str)?,
+        buffer_view: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
+    })
+}
+pub(crate) fn write_bin_sampler(w: &mut dsl::ByteWriter, s: &GltfSampler) {
+    write_bin_option(w, &s.mag_filter, |w, v| w.write_varint_u64(*v));
+    write_bin_option(w, &s.min_filter, |w, v| w.write_varint_u64(*v));
+    w.write_varint_u64(s.wrap_s);
+    w.write_varint_u64(s.wrap_t);
+    write_bin_option(w, &s.name, |w, v| write_bin_str(w, v));
+    write_bin_json_opt(w, &s.extensions);
+    write_bin_json_opt(w, &s.extras);
+}
+pub(crate) fn read_bin_sampler(r: &mut dsl::ByteReader) -> Result<GltfSampler, dsl::PackError> {
+    Ok(GltfSampler {
+        mag_filter: read_bin_option(r, |r| r.read_varint_u64())?,
+        min_filter: read_bin_option(r, |r| r.read_varint_u64())?,
+        wrap_s: r.read_varint_u64()?,
+        wrap_t: r.read_varint_u64()?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
+    })
+}
+pub(crate) fn write_bin_skin(w: &mut dsl::ByteWriter, v: &GltfSkin) {
+    write_bin_option(w, &v.inverse_bind_matrices, |w, x| w.write_varint_u64(*x as u64));
+    write_bin_option(w, &v.skeleton, |w, x| w.write_varint_u64(*x as u64));
+    write_bin_usize_vec(w, &v.joints);
+    write_bin_option(w, &v.name, |w, x| write_bin_str(w, x));
+    write_bin_json_opt(w, &v.extensions);
+    write_bin_json_opt(w, &v.extras);
+}
+pub(crate) fn read_bin_skin(r: &mut dsl::ByteReader) -> Result<GltfSkin, dsl::PackError> {
+    Ok(GltfSkin {
+        inverse_bind_matrices: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        skeleton: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        joints: read_bin_usize_vec(r)?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
+    })
+}
+//#endregion 🔖️RealBinaryTextureImageSamplerSkinGroupCodecs
+
+//#region 🔖️RealBinaryAnimationGroupCodecs
+pub(crate) fn write_bin_animation_channel_target(w: &mut dsl::ByteWriter, t: &GltfAnimationChannelTarget) {
+    write_bin_option(w, &t.node, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_animation_path(w, t.path);
+    write_bin_json_opt(w, &t.extensions);
+    write_bin_json_opt(w, &t.extras);
+}
+pub(crate) fn read_bin_animation_channel_target(r: &mut dsl::ByteReader) -> Result<GltfAnimationChannelTarget, dsl::PackError> {
+    Ok(GltfAnimationChannelTarget { node: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?, path: read_bin_animation_path(r)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
+}
+pub(crate) fn write_bin_animation_channel(w: &mut dsl::ByteWriter, c: &GltfAnimationChannel) {
+    w.write_varint_u64(c.sampler as u64);
+    write_bin_animation_channel_target(w, &c.target);
+    write_bin_json_opt(w, &c.extensions);
+    write_bin_json_opt(w, &c.extras);
+}
+pub(crate) fn read_bin_animation_channel(r: &mut dsl::ByteReader) -> Result<GltfAnimationChannel, dsl::PackError> {
+    Ok(GltfAnimationChannel { sampler: r.read_varint_u64()? as usize, target: read_bin_animation_channel_target(r)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
+}
+pub(crate) fn write_bin_animation_sampler(w: &mut dsl::ByteWriter, s: &GltfAnimationSampler) {
+    w.write_varint_u64(s.input as u64);
+    write_bin_interpolation(w, s.interpolation);
+    w.write_varint_u64(s.output as u64);
+    write_bin_json_opt(w, &s.extensions);
+    write_bin_json_opt(w, &s.extras);
+}
+pub(crate) fn read_bin_animation_sampler(r: &mut dsl::ByteReader) -> Result<GltfAnimationSampler, dsl::PackError> {
+    Ok(GltfAnimationSampler { input: r.read_varint_u64()? as usize, interpolation: read_bin_interpolation(r)?, output: r.read_varint_u64()? as usize, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
+}
+pub(crate) fn write_bin_animation(w: &mut dsl::ByteWriter, a: &GltfAnimation) {
+    write_bin_vec(w, &a.channels, write_bin_animation_channel);
+    write_bin_vec(w, &a.samplers, write_bin_animation_sampler);
+    write_bin_option(w, &a.name, |w, v| write_bin_str(w, v));
+    write_bin_json_opt(w, &a.extensions);
+    write_bin_json_opt(w, &a.extras);
+}
+pub(crate) fn read_bin_animation(r: &mut dsl::ByteReader) -> Result<GltfAnimation, dsl::PackError> {
+    Ok(GltfAnimation {
+        channels: read_bin_vec(r, read_bin_animation_channel)?,
+        samplers: read_bin_vec(r, read_bin_animation_sampler)?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
+    })
+}
+//#endregion 🔖️RealBinaryAnimationGroupCodecs
+
+//#region 🔖️RealBinaryCameraGroupCodecs
+pub(crate) fn write_bin_perspective(w: &mut dsl::ByteWriter, p: &GltfPerspective) {
+    write_bin_option(w, &p.aspect_ratio, |w, v| w.write_f64_le(*v));
+    w.write_f64_le(p.yfov);
+    write_bin_option(w, &p.zfar, |w, v| w.write_f64_le(*v));
+    w.write_f64_le(p.znear);
+    write_bin_json_opt(w, &p.extensions);
+    write_bin_json_opt(w, &p.extras);
+}
+pub(crate) fn read_bin_perspective(r: &mut dsl::ByteReader) -> Result<GltfPerspective, dsl::PackError> {
+    Ok(GltfPerspective { aspect_ratio: read_bin_option(r, |r| r.read_f64_le())?, yfov: r.read_f64_le()?, zfar: read_bin_option(r, |r| r.read_f64_le())?, znear: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
+}
+pub(crate) fn write_bin_orthographic(w: &mut dsl::ByteWriter, o: &GltfOrthographic) {
+    w.write_f64_le(o.xmag);
+    w.write_f64_le(o.ymag);
+    w.write_f64_le(o.zfar);
+    w.write_f64_le(o.znear);
+    write_bin_json_opt(w, &o.extensions);
+    write_bin_json_opt(w, &o.extras);
+}
+pub(crate) fn read_bin_orthographic(r: &mut dsl::ByteReader) -> Result<GltfOrthographic, dsl::PackError> {
+    Ok(GltfOrthographic { xmag: r.read_f64_le()?, ymag: r.read_f64_le()?, zfar: r.read_f64_le()?, znear: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
+}
+/// 🔀️ `GltfCameraProjection` real data-carrying enum -- tag `u8` (0=Perspective, 1=Orthographic).
+pub(crate) fn write_bin_camera_projection(w: &mut dsl::ByteWriter, p: &GltfCameraProjection) {
+    match p {
+        GltfCameraProjection::Perspective(v) => { w.write_u8(0); write_bin_perspective(w, v); }
+        GltfCameraProjection::Orthographic(v) => { w.write_u8(1); write_bin_orthographic(w, v); }
+    }
+}
+pub(crate) fn read_bin_camera_projection(r: &mut dsl::ByteReader) -> Result<GltfCameraProjection, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(GltfCameraProjection::Perspective(read_bin_perspective(r)?)),
+        1 => Ok(GltfCameraProjection::Orthographic(read_bin_orthographic(r)?)),
+        other => Err(dsl::PackError::Malformed { what: "gltf camera_projection", offset: 0, detail: format!("unknown tag {other}") }),
+    }
+}
+pub(crate) fn write_bin_camera(w: &mut dsl::ByteWriter, c: &GltfCamera) {
+    write_bin_camera_projection(w, &c.projection);
+    write_bin_option(w, &c.name, |w, v| write_bin_str(w, v));
+    write_bin_json_opt(w, &c.extensions);
+    write_bin_json_opt(w, &c.extras);
+}
+pub(crate) fn read_bin_camera(r: &mut dsl::ByteReader) -> Result<GltfCamera, dsl::PackError> {
+    Ok(GltfCamera { projection: read_bin_camera_projection(r)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
+}
+//#endregion 🔖️RealBinaryCameraGroupCodecs
+
+//#region 🔖️RealBinaryGenericCollectionCodec
+/// 🧮️ Generic index-keyed collection triple real binary codec, shared by every one of the 14
+/// top-level arrays -- mirrors `enc_collection`/`dec_collection`'s TEXT shape exactly, real varint
+/// counts + real per-item recursive encoding (never text-as-bytes).
+pub(crate) fn write_bin_collection<T, D>(w: &mut dsl::ByteWriter, c: &GltfCollectionDiff<T, D>, write_item: impl Fn(&mut dsl::ByteWriter, &T), write_diff: impl Fn(&mut dsl::ByteWriter, &D)) {
+    write_bin_vec(w, &c.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
+    write_bin_vec(w, &c.modified, |w, m: &GltfModified<D>| { w.write_varint_u64(m.index as u64); write_diff(w, &m.diff); });
+    write_bin_vec(w, &c.added, |w, a: &GltfAdded<T>| { w.write_varint_u64(a.index as u64); write_item(w, &a.item); });
+}
+pub(crate) fn read_bin_collection<T, D>(r: &mut dsl::ByteReader, read_item: impl Fn(&mut dsl::ByteReader) -> Result<T, dsl::PackError>, read_diff: impl Fn(&mut dsl::ByteReader) -> Result<D, dsl::PackError>) -> Result<GltfCollectionDiff<T, D>, dsl::PackError> {
+    let removed = read_bin_usize_vec(r)?;
+    let modified = read_bin_vec(r, |r| { let index = r.read_varint_u64()? as usize; let diff = read_diff(r)?; Ok(GltfModified { index, diff }) })?;
+    let added = read_bin_vec(r, |r| { let index = r.read_varint_u64()? as usize; let item = read_item(r)?; Ok(GltfAdded { index, item }) })?;
+    Ok(GltfCollectionDiff { removed, modified, added })
+}
+/// 🧵 A single opaque length-prefixed blob wrapping one collection's real binary encoding --
+/// matches `../💾️binary/📡️component.protocol.semio`'s `Array(u8, Field(<name>_len))` fields (the
+/// blob's OWN internal removed/modified/added shape isn't further protocol-walkable,
+/// `protocol-prim-ref-recursion`/`protocol-array-of-records`, same documented limitation as every
+/// other stdio pilot's own nested-payload field).
+pub(crate) fn write_bin_collection_blob<T, D>(c: &GltfCollectionDiff<T, D>, write_item: impl Fn(&mut dsl::ByteWriter, &T), write_diff: impl Fn(&mut dsl::ByteWriter, &D)) -> Vec<u8> {
+    let mut inner = dsl::ByteWriter::new();
+    write_bin_collection(&mut inner, c, write_item, write_diff);
+    inner.into_bytes()
+}
+pub(crate) fn read_bin_collection_blob<T, D>(bytes: &[u8], read_item: impl Fn(&mut dsl::ByteReader) -> Result<T, dsl::PackError>, read_diff: impl Fn(&mut dsl::ByteReader) -> Result<D, dsl::PackError>) -> Result<GltfCollectionDiff<T, D>, dsl::PackError> {
+    let mut inner = dsl::ByteReader::new(bytes);
+    read_bin_collection(&mut inner, read_item, read_diff)
+}
+//#endregion 🔖️RealBinaryGenericCollectionCodec
+
+//#region 🔖️RealBinaryDocumentCodec
+/// 🌍 Whole [`GltfDocument`]/[`GltfSnapshot`] real binary -- needed by `GltfMutation::SetSnapshot`'s
+/// hand-rolled `OpBinary` (🧬️mutations/component.rs) AND by `📸️snapshot/🦀️component.rs`'s
+/// `ArtifactPack` impl (which now routes the canonical `.pack.semio` payload through
+/// `⚙️engine/component.rs`'s real `encode_glb`/`decode_glb` GLB container instead -- this whole-
+/// document binary pair stays for `SetSnapshot`'s own op-frame use, positioned here since it's
+/// built entirely out of this file's own item encoders, same shape json/csv/zip's pilots use).
+pub(crate) fn write_bin_document(w: &mut dsl::ByteWriter, d: &GltfDocument) {
+    write_bin_asset(w, &d.asset);
+    write_bin_option(w, &d.scene, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_vec(w, &d.scenes, write_bin_scene);
+    write_bin_vec(w, &d.nodes, write_bin_node);
+    write_bin_vec(w, &d.meshes, write_bin_mesh);
+    write_bin_vec(w, &d.accessors, write_bin_accessor);
+    write_bin_vec(w, &d.buffer_views, write_bin_buffer_view);
+    write_bin_vec(w, &d.buffers, write_bin_buffer);
+    write_bin_vec(w, &d.materials, write_bin_material);
+    write_bin_vec(w, &d.textures, write_bin_texture);
+    write_bin_vec(w, &d.images, write_bin_image);
+    write_bin_vec(w, &d.samplers, write_bin_sampler);
+    write_bin_vec(w, &d.skins, write_bin_skin);
+    write_bin_vec(w, &d.animations, write_bin_animation);
+    write_bin_vec(w, &d.cameras, write_bin_camera);
+    write_bin_string_vec(w, &d.extensions_used);
+    write_bin_string_vec(w, &d.extensions_required);
+    write_bin_json_opt(w, &d.extensions);
+    write_bin_json_opt(w, &d.extras);
+}
+pub(crate) fn read_bin_document(r: &mut dsl::ByteReader) -> Result<GltfDocument, dsl::PackError> {
+    Ok(GltfDocument {
+        asset: read_bin_asset(r)?,
+        scene: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        scenes: read_bin_vec(r, read_bin_scene)?,
+        nodes: read_bin_vec(r, read_bin_node)?,
+        meshes: read_bin_vec(r, read_bin_mesh)?,
+        accessors: read_bin_vec(r, read_bin_accessor)?,
+        buffer_views: read_bin_vec(r, read_bin_buffer_view)?,
+        buffers: read_bin_vec(r, read_bin_buffer)?,
+        materials: read_bin_vec(r, read_bin_material)?,
+        textures: read_bin_vec(r, read_bin_texture)?,
+        images: read_bin_vec(r, read_bin_image)?,
+        samplers: read_bin_vec(r, read_bin_sampler)?,
+        skins: read_bin_vec(r, read_bin_skin)?,
+        animations: read_bin_vec(r, read_bin_animation)?,
+        cameras: read_bin_vec(r, read_bin_camera)?,
+        extensions_used: read_bin_string_vec(r)?,
+        extensions_required: read_bin_string_vec(r)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
+    })
+}
+pub(crate) fn write_bin_gltf_snapshot(w: &mut dsl::ByteWriter, s: &GltfSnapshot) {
+    write_bin_str(w, &s.schema);
+    write_bin_document(w, &s.document);
+    write_bin_vec(w, &s.buffers, |w, b: &Vec<u8>| write_bin_blob(w, b));
+    write_bin_source_form(w, s.source_form);
+}
+pub(crate) fn read_bin_gltf_snapshot(r: &mut dsl::ByteReader) -> Result<GltfSnapshot, dsl::PackError> {
+    Ok(GltfSnapshot {
+        schema: read_bin_str(r)?,
+        document: read_bin_document(r)?,
+        buffers: read_bin_vec(r, read_bin_blob)?,
+        source_form: read_bin_source_form(r)?,
+    })
+}
+//#endregion 🔖️RealBinaryDocumentCodec
+
 //#region 🔖️TopLevel
 fn print_gltf_diff(d: &GltfDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
@@ -2288,15 +3182,76 @@ impl protocol::DiffCodec for GltfDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_gltf_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`'s hand-rolled
-    /// codecs use (and the repo's only other hand-rolled `DiffCodec`, `WriterDiff`) — satisfies
-    /// every `DiffCodec` law without inventing a second wire format.
+    /// ⚡️ P2-FG3: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
+    /// text-as-binary shortcut (100% of stdio's `DiffCodec` impls were still on that shortcut per
+    /// the P2-W0 census; the FG1 wave's own closer report flagged leaving this un-upgraded as a
+    /// real defect to not repeat, and FG2's gif89a upgrade is this file's literal template).
+    /// Matches `../💾️binary/📡️component.protocol.semio`'s real flag-per-field layout exactly,
+    /// field for field, in `GltfDiff`'s own struct declaration order (2-way flag for plain
+    /// `Option<T>` fields, 3-way flag for the 3 tri-state fields `scene`/`extensions`/`extras`).
+    /// Every one of the 14 collection fields is one length-prefixed blob wrapping its own real
+    /// binary `removed`/`modified`/`added` encoding (`write_bin_collection_blob`) — the blob's
+    /// OWN internal shape isn't further protocol-walkable (`Prim::Ref` recursion gap), but this
+    /// Rust side IS genuinely, fully structured real binary throughout, never text-as-bytes.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let mut w = dsl::ByteWriter::new();
+        // `asset`/`extensions_used`/`extensions_required`/`extensions`/`extras` are each wrapped
+        // in a length-prefixed blob (matching `../💾️binary/📡️component.protocol.semio`'s
+        // `Array(u8, Field(<name>_len))` shape exactly) — NOT bare-inline like `scene`/
+        // `source_form`'s fixed-width payloads — because they are NOT the last field in the frame
+        // and their own internal shape has no fixed width `walk_protocol` could otherwise skip
+        // past without knowing its byte length up front.
+        write_bin_option(&mut w, &self.asset, |w, v| write_bin_blob(w, &{ let mut inner = dsl::ByteWriter::new(); write_bin_asset_diff(&mut inner, v); inner.into_bytes() }));
+        write_bin_tri(&mut w, &self.scene, |w, v| w.write_varint_u64(*v as u64));
+        write_bin_option(&mut w, &self.scenes, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_scene, write_bin_scene_diff)));
+        write_bin_option(&mut w, &self.nodes, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_node, write_bin_node_diff)));
+        write_bin_option(&mut w, &self.meshes, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_mesh, write_bin_mesh_diff)));
+        write_bin_option(&mut w, &self.accessors, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_accessor, write_bin_accessor_diff)));
+        write_bin_option(&mut w, &self.buffer_views, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_buffer_view, write_bin_buffer_view)));
+        write_bin_option(&mut w, &self.buffers, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_buffer, write_bin_buffer_diff)));
+        write_bin_option(&mut w, &self.buffer_bytes, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, |w, b: &Vec<u8>| write_bin_blob(w, b), |w, b: &Vec<u8>| write_bin_blob(w, b))));
+        write_bin_option(&mut w, &self.materials, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_material, write_bin_material_diff)));
+        write_bin_option(&mut w, &self.textures, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_texture, write_bin_texture)));
+        write_bin_option(&mut w, &self.images, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_image, write_bin_image)));
+        write_bin_option(&mut w, &self.samplers, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_sampler, write_bin_sampler)));
+        write_bin_option(&mut w, &self.skins, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_skin, write_bin_skin)));
+        write_bin_option(&mut w, &self.animations, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_animation, write_bin_animation)));
+        write_bin_option(&mut w, &self.cameras, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_camera, write_bin_camera)));
+        write_bin_option(&mut w, &self.extensions_used, |w, v| write_bin_blob(w, &{ let mut inner = dsl::ByteWriter::new(); write_bin_string_vec(&mut inner, v); inner.into_bytes() }));
+        write_bin_option(&mut w, &self.extensions_required, |w, v| write_bin_blob(w, &{ let mut inner = dsl::ByteWriter::new(); write_bin_string_vec(&mut inner, v); inner.into_bytes() }));
+        write_bin_tri(&mut w, &self.extensions, |w, v| write_bin_blob(w, &{ let mut inner = dsl::ByteWriter::new(); write_bin_json(&mut inner, v); inner.into_bytes() }));
+        write_bin_tri(&mut w, &self.extras, |w, v| write_bin_blob(w, &{ let mut inner = dsl::ByteWriter::new(); write_bin_json(&mut inner, v); inner.into_bytes() }));
+        write_bin_option(&mut w, &self.source_form, |w, v| write_bin_source_form(w, *v));
+        Ok(w.into_bytes())
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let mut r = dsl::ByteReader::new(bytes);
+        let asset = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; let mut inner = dsl::ByteReader::new(&b); read_bin_asset_diff(&mut inner) }).map_err(gltf_bin_err)?;
+        let scene = read_bin_tri(&mut r, |r| Ok(r.read_varint_u64()? as usize)).map_err(gltf_bin_err)?;
+        let scenes = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_scene, read_bin_scene_diff) }).map_err(gltf_bin_err)?;
+        let nodes = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_node, read_bin_node_diff) }).map_err(gltf_bin_err)?;
+        let meshes = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_mesh, read_bin_mesh_diff) }).map_err(gltf_bin_err)?;
+        let accessors = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_accessor, read_bin_accessor_diff) }).map_err(gltf_bin_err)?;
+        let buffer_views = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_buffer_view, read_bin_buffer_view) }).map_err(gltf_bin_err)?;
+        let buffers = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_buffer, read_bin_buffer_diff) }).map_err(gltf_bin_err)?;
+        let buffer_bytes = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_blob, read_bin_blob) }).map_err(gltf_bin_err)?;
+        let materials = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_material, read_bin_material_diff) }).map_err(gltf_bin_err)?;
+        let textures = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_texture, read_bin_texture) }).map_err(gltf_bin_err)?;
+        let images = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_image, read_bin_image) }).map_err(gltf_bin_err)?;
+        let samplers = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_sampler, read_bin_sampler) }).map_err(gltf_bin_err)?;
+        let skins = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_skin, read_bin_skin) }).map_err(gltf_bin_err)?;
+        let animations = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_animation, read_bin_animation) }).map_err(gltf_bin_err)?;
+        let cameras = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; read_bin_collection_blob(&b, read_bin_camera, read_bin_camera) }).map_err(gltf_bin_err)?;
+        let extensions_used = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; let mut inner = dsl::ByteReader::new(&b); read_bin_string_vec(&mut inner) }).map_err(gltf_bin_err)?;
+        let extensions_required = read_bin_option(&mut r, |r| { let b = read_bin_blob(r)?; let mut inner = dsl::ByteReader::new(&b); read_bin_string_vec(&mut inner) }).map_err(gltf_bin_err)?;
+        let extensions = read_bin_tri(&mut r, |r| { let b = read_bin_blob(r)?; let mut inner = dsl::ByteReader::new(&b); read_bin_json(&mut inner) }).map_err(gltf_bin_err)?;
+        let extras = read_bin_tri(&mut r, |r| { let b = read_bin_blob(r)?; let mut inner = dsl::ByteReader::new(&b); read_bin_json(&mut inner) }).map_err(gltf_bin_err)?;
+        let source_form = read_bin_option(&mut r, read_bin_source_form).map_err(gltf_bin_err)?;
+        Ok(GltfDiff {
+            asset, scene, scenes, nodes, meshes, accessors, buffer_views, buffers, buffer_bytes, materials,
+            textures, images, samplers, skins, animations, cameras, extensions_used, extensions_required,
+            extensions, extras, source_form,
+        })
     }
 }
 //#endregion 🔖️TopLevel

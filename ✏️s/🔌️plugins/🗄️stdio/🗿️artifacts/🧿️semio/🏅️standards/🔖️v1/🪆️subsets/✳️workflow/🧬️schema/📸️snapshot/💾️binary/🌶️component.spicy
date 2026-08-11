@@ -1,5 +1,10 @@
-module Semio_semio_workflow_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Semio_workflow_snapshot;
+# `s.stdio.semio.workflow` snapshot binary wire format — `store::semio_format` binary envelope
+# (envelope_id + component tag + version) wrapping a `serde_json::to_vec(SemioWorkflowSnapshot)`
+# payload verbatim. See the module doc comment on `📸️snapshot/💾️binary/🥋️component.ksy`.
 type Document = unit {
-    magic: bytes &size=29;
+    envelope_id: bytes &size=20;
+    component_tag: uint8;
+    version: uint8;
+    json_payload: bytes &eod;
 };

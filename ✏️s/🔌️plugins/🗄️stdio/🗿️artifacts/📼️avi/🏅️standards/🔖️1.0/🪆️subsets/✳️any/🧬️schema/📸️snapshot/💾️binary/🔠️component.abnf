@@ -1,3 +1,21 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.avi.snapshot"
+; abnf stdio.avi snapshot (binary) — shared `.semio` envelope wrapping the REAL little-endian
+; RIFF/AVI 1.0 file bytes (store::semio_format::wrap_binary).
+document      = envelope-magic token-len token riff-avi
+envelope-magic = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A
+token-len     = 4OCTET                                 ; u32 little-endian
+token         = 18OCTET                                ; UTF-8 "stdio.avi.pack v1"
+
+riff-avi      = "RIFF" riff-size "AVI " *riff-entry
+riff-size     = 4OCTET                                 ; u32 little-endian
+riff-entry    = riff-list / riff-chunk
+riff-list     = "LIST" 4OCTET 4ALPHA *riff-entry        ; size, list-type, children
+riff-chunk    = 4ALPHA 4OCTET *OCTET [pad-byte]         ; fourcc, size (LE), data, even-pad
+
+; hdrl: avih (56 bytes, 14 DWORDs) + strl* (strh 64 bytes + strf, format-dependent).
+avih-body     = 10(4OCTET) 4(4OCTET)                    ; 10 typed fields + dwReserved[4]
+strh-body     = 4ALPHA 4ALPHA 4OCTET 2OCTET 2OCTET 4OCTET 4OCTET 4OCTET 4OCTET 4OCTET 4OCTET 4OCTET 4OCTET 4(4OCTET)
+bitmapinfo-body = 4OCTET 4OCTET 4OCTET 2OCTET 2OCTET 4ALPHA 4OCTET 4OCTET 4OCTET 4OCTET 4OCTET
+
+; idx1: AVIOLDINDEX, 16-byte entries.
+idx1-entry    = 4ALPHA 4OCTET 4OCTET 4OCTET             ; ckid, flags, offset, size
+pad-byte      = %x00

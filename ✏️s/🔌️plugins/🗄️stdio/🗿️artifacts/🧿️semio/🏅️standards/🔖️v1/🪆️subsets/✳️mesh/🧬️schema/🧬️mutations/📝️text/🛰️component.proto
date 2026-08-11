@@ -1,7 +1,11 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_semio_mesh_mutations.text;
-message Semio_semio_mesh_mutations {
-  string schema = 1;
-  string entries_wire = 2;
+// 🛰️ Proto mirror of `s.stdio.semio.mesh`'s hand-rolled OpText TEXT grammar.
+package semio.s_stdio_semio_mesh.mutations.text;
+message Stdio_semio_mesh_mutation_text_arg {
+  string name = 1;
+  string value = 2;
+}
+message Stdio_semio_mesh_mutation_text {
+  string keyword = 1;
+  repeated Stdio_semio_mesh_mutation_text_arg args = 2;
 }

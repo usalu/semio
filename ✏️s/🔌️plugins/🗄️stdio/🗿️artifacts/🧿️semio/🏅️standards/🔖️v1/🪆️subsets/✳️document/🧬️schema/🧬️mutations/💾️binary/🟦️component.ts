@@ -1,10 +1,4 @@
-/** 🧬️ Semio_semio_document_mutations schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_document_mutations
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_document_mutationsEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_document_mutations {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_document_mutationsEntry[];
-}
+/** 💾️ Binary form marker for `s.stdio.semio.document.mutations`: the text op's UTF-8 bytes
+ * verbatim (see the sibling `🦀️component.rs` marker and `SemioDocumentMutation`'s real `OpBinary`
+ * impl for the source of truth). */
+export const BINARY_MAGIC = "s.stdio.semio.document.mutations";

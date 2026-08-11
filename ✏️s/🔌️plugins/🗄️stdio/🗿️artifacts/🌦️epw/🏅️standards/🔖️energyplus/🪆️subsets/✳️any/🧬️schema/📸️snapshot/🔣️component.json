@@ -1,10 +1,72 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.epw/snapshot.json",
+  "$id": "https://semio.tech/schema/s.stdio.epw/snapshot.epw",
   "title": "EpwSnapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
   "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "location", "designConditions", "typicalExtremePeriods", "groundTemperatures", "holidaysDst", "comments1", "comments2", "dataPeriods", "records"],
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "location": { "$ref": "#/$defs/EpwLocation", "x-semio-state": "persistent" },
+    "designConditions": { "type": "string", "x-semio-state": "persistent" },
+    "typicalExtremePeriods": { "type": "string", "x-semio-state": "persistent" },
+    "groundTemperatures": { "type": "string", "x-semio-state": "persistent" },
+    "holidaysDst": { "type": "string", "x-semio-state": "persistent" },
+    "comments1": { "type": "string", "x-semio-state": "persistent" },
+    "comments2": { "type": "string", "x-semio-state": "persistent" },
+    "dataPeriods": { "$ref": "#/$defs/EpwDataPeriods", "x-semio-state": "persistent" },
+    "records": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/EpwRecord" } }
+  },
+  "$defs": {
+    "EpwLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["city", "stateProvince", "country", "source", "wmo", "latitude", "longitude", "timeZone", "elevation"],
+      "properties": {
+        "city": { "type": "string" }, "stateProvince": { "type": "string" }, "country": { "type": "string" },
+        "source": { "type": "string" }, "wmo": { "type": "string" }, "latitude": { "type": "string" },
+        "longitude": { "type": "string" }, "timeZone": { "type": "string" }, "elevation": { "type": "string" }
+      }
+    },
+    "EpwDataPeriod": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "startDayOfWeek", "startDate", "endDate"],
+      "properties": {
+        "name": { "type": "string" }, "startDayOfWeek": { "type": "string" },
+        "startDate": { "type": "string" }, "endDate": { "type": "string" }
+      }
+    },
+    "EpwDataPeriods": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recordsPerHour", "periods"],
+      "properties": {
+        "recordsPerHour": { "type": "integer", "minimum": 0 },
+        "periods": { "type": "array", "items": { "$ref": "#/$defs/EpwDataPeriod" } }
+      }
+    },
+    "EpwRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "One hourly EPW data record — all 35 spec columns, in spec order.",
+      "required": ["year", "month", "day", "hour", "minute", "dataSourceUncertainty", "dryBulbTemp", "dewPointTemp", "relativeHumidity", "atmosphericPressure", "extraterrestrialHorizontalRadiation", "extraterrestrialDirectNormalRadiation", "horizontalInfraredRadiation", "globalHorizontalRadiation", "directNormalRadiation", "diffuseHorizontalRadiation", "globalHorizontalIlluminance", "directNormalIlluminance", "diffuseHorizontalIlluminance", "zenithLuminance", "windDirection", "windSpeed", "totalSkyCover", "opaqueSkyCover", "visibility", "ceilingHeight", "presentWeatherObservation", "presentWeatherCodes", "precipitableWater", "aerosolOpticalDepth", "snowDepth", "daysSinceLastSnowfall", "albedo", "liquidPrecipDepth", "liquidPrecipQuantity"],
+      "properties": {
+        "year": { "type": "string" }, "month": { "type": "string" }, "day": { "type": "string" },
+        "hour": { "type": "string" }, "minute": { "type": "string" }, "dataSourceUncertainty": { "type": "string" },
+        "dryBulbTemp": { "type": "string" }, "dewPointTemp": { "type": "string" }, "relativeHumidity": { "type": "string" },
+        "atmosphericPressure": { "type": "string" }, "extraterrestrialHorizontalRadiation": { "type": "string" },
+        "extraterrestrialDirectNormalRadiation": { "type": "string" }, "horizontalInfraredRadiation": { "type": "string" },
+        "globalHorizontalRadiation": { "type": "string" }, "directNormalRadiation": { "type": "string" },
+        "diffuseHorizontalRadiation": { "type": "string" }, "globalHorizontalIlluminance": { "type": "string" },
+        "directNormalIlluminance": { "type": "string" }, "diffuseHorizontalIlluminance": { "type": "string" },
+        "zenithLuminance": { "type": "string" }, "windDirection": { "type": "string" }, "windSpeed": { "type": "string" },
+        "totalSkyCover": { "type": "string" }, "opaqueSkyCover": { "type": "string" }, "visibility": { "type": "string" },
+        "ceilingHeight": { "type": "string" }, "presentWeatherObservation": { "type": "string" },
+        "presentWeatherCodes": { "type": "string" }, "precipitableWater": { "type": "string" },
+        "aerosolOpticalDepth": { "type": "string" }, "snowDepth": { "type": "string" },
+        "daysSinceLastSnowfall": { "type": "string" }, "albedo": { "type": "string" },
+        "liquidPrecipDepth": { "type": "string" }, "liquidPrecipQuantity": { "type": "string" }
+      }
+    }
   }
 }

@@ -1,9 +1,8 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioDocumentArtifactEntry {
-  key: String!
-  value: String!
-}
+# Full artifact state, mirrors SemioDocumentSnapshot field for field (see
+# 📸️snapshot/🔗️component.graphql for the real per-field types).
 type SemioDocumentArtifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioDocumentArtifactEntry!]! @state(class: PERSISTENT)
+  styles: [DocStyle!]! @state(class: PERSISTENT)
+  images: [DocImage!]! @state(class: PERSISTENT)
+  blocks: [DocBlock!]! @state(class: PERSISTENT)
 }

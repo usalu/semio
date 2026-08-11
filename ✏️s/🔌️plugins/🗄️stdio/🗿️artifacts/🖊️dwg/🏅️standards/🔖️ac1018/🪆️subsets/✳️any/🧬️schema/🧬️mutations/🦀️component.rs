@@ -160,6 +160,31 @@ impl protocol::OpBinary for DwgMutation {
 }
 //#endregion OpCodecs
 
+//#region 🔖️DemoCases
+/// 🎬️ Representative `DwgMutation` cases, one per variant — reused by `op_text_binary_roundtrip_law`
+/// below AND by `⚙️engine`'s `conformance_laws::ops_grammar_conformance_law`/`protocol_walk_law`
+/// (mirrors `BinaryMutation::demo_mutation_cases`, `💾️binary/…/🧬️mutations/🦀️component.rs`).
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<DwgMutation> {
+    vec![
+        DwgMutation::NoMutation,
+        DwgMutation::SetSnapshot {
+            snapshot: DwgSnapshot {
+                schema: "stdio.dwg".into(),
+                version: "AC1018".into(),
+                maintenance_version: 2,
+                codepage: 30,
+                bytes: b"AC1018\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00".to_vec(),
+                section_names: vec!["AcDb:Header".into(), "AcDb:Classes".into()],
+            },
+        },
+        DwgMutation::SetVersionInfo { version: "AC1018".into(), maintenance_version: 5, codepage: 1252 },
+        DwgMutation::InsertSectionName { index: 1, name: "AcDb:Template".into() },
+        DwgMutation::RemoveSectionName { name: "AcDb:Classes".into() },
+    ]
+}
+//#endregion 🔖️DemoCases
+
 //#region Tests
 #[cfg(test)]
 mod tests {
@@ -398,15 +423,7 @@ mod tests {
     /// `DslVariants`), every variant incl. `SetSnapshot`'s nested-record payload.
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = base_snapshot();
-        let variants = vec![
-            DwgMutation::NoMutation,
-            DwgMutation::SetSnapshot { snapshot: base.clone() },
-            DwgMutation::SetVersionInfo { version: "AC1018".into(), maintenance_version: 5, codepage: 1252 },
-            DwgMutation::InsertSectionName { index: 1, name: "AcDb:Template".into() },
-            DwgMutation::RemoveSectionName { name: "AcDb:Classes".into() },
-        ];
-        for m in variants {
+        for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = DwgMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

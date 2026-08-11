@@ -1,9 +1,2 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_semio_brep_snapshotEntry {
-  key: String!
-  value: String!
-}
-type Semio_semio_brep_snapshot {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_brep_snapshotEntry!]! @state(class: PERSISTENT)
-}
+# stdio.semio.brep snapshot text grammar schema
+type Document { schema: String! payload: String! }

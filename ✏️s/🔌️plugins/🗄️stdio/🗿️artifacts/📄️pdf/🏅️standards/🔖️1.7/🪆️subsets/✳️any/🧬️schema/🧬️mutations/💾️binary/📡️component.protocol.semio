@@ -1,6 +1,32 @@
-dialect protocol stdio.pdf.1.7.mutations
+dialect protocol
+protocol stdio.pdf.1.7.mutations
+version 1
+schema stdio.pdf.1.7.op
+start record
 
-; -- No dedicated wire magic -- `OpBinary::encode_op` is `serde_json::to_vec(self)`, the UTF-8
-; -- bytes of the SAME JSON text ../📝️text/📖️component.grammar.semio describes (tagged by
-; -- "mutation").
-utf8-json-text = 1*OCTET
+# P2-FG3: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching this file's own
+# `header fixed 2` + `chain payload bytes` shape -- upgraded from F6's `print_op().into_bytes()`
+# text-as-binary shortcut (../../🦀️component.rs's old `OpBinary::encode_op`, per the mandatory
+# FG1/FG2 binary-frame lesson: every standard's `OpBinary` gets a REAL frame, not just a
+# fixed-header-then-text-bytes cosmetic wrapper -- the payload past `format`/`tag` is genuine
+# LEB128-varint/length-prefixed binary, `enc_pdf_object_bin`/`enc_pdf_snapshot_bin`/... in that
+# same file's `OpBinaryCodec` region, reusing the diff facet's own `pub(crate)` binary primitives
+# the same way its text `OpText` reuses the diff facet's text primitives). `tag` is the
+# `PdfMutation` variant ordinal, in the SAME 0-14 order `print_pdf_mutation`'s own keyword match
+# uses (`NoMutation`=0, `SetSnapshot`=1, `InsertPage`=2, `RemovePage`=3, `SetPageMediaBox`=4,
+# `SetPageCropBox`=5, `AppendPageContent`=6, `SetInfo`=7, `InsertObject`=8, `RemoveObject`=9,
+# `SetObjectValue`=10, `SetDictEntry`=11, `RemoveDictEntry`=12, `SetTrailerEntry`=13,
+# `RemoveTrailerEntry`=14).
+#
+# The recursive/data-carrying payload (`PdfObject`, `PdfSnapshot`, `PdfPathSegment` chains) is NOT
+# re-modeled field-by-field here -- `Prim::Ref` (the only construct that could describe it)
+# unconditionally errors during `walk_protocol` (`protocol-prim-ref-recursion`, hit by every
+# stdio pilot's own recursive mutation/diff payload). This is the same honest-boundary treatment
+# every other upgraded pilot's opaque payload tail uses: the Rust `encode_op`/`decode_op` side is
+# genuinely, fully recursive binary and round-trip tested independently (`op_text_binary_
+# roundtrip_law`).
+framing record
+header fixed 2
+field format u8
+field tag u8
+chain payload bytes

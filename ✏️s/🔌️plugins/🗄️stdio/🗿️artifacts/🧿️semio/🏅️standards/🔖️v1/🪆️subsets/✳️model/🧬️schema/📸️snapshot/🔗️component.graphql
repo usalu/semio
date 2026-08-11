@@ -1,9 +1,48 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioModelSnapshotEntry {
-  key: String!
-  value: String!
+# SemioModelSnapshot schema mirror -- spatial hierarchy + elements + relations, from ifc/4.
+
+type SemioPoint3 { x: Float! y: Float! z: Float! }
+type SemioQuaternion { x: Float! y: Float! z: Float! w: Float! }
+type SemioTransform { translation: SemioPoint3! rotation: SemioQuaternion! scale: SemioPoint3! }
+
+enum SpatialKind { SITE BUILDING STOREY SPACE }
+
+type SpatialNode {
+  id: String!
+  kind: SpatialKind!
+  name: String!
+  parentId: String
+  placement: SemioTransform!
 }
+
+enum ElementClassTag { WALL SLAB COLUMN BEAM DOOR WINDOW ROOF STAIR FURNITURE OTHER }
+type ElementClass { kind: ElementClassTag! name: String }
+
+enum GeometryRefTag { NONE BREP MESH }
+type GeometryRef { kind: GeometryRefTag! brepId: String meshId: String }
+
+enum PsetValueTag { TEXT NUMBER BOOLEAN }
+type PsetValue { kind: PsetValueTag! value: String }
+
+type Property { key: String! value: PsetValue! }
+type PropertySet { name: String! properties: [Property!]! }
+
+type SemioModelElement {
+  id: String!
+  class: ElementClass!
+  placement: SemioTransform!
+  geometry: GeometryRef!
+  spatialId: String
+  psets: [PropertySet!]!
+}
+
+enum RelationKindTag { AGGREGATES CONTAINED_IN CONNECTS_TO FILLS_VOID VOIDS_ELEMENT OTHER }
+type RelationKind { kind: RelationKindTag! label: String }
+
+type ModelRelation { id: String! kind: RelationKind! from: String! to: String! }
+
 type SemioModelSnapshot {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioModelSnapshotEntry!]! @state(class: PERSISTENT)
+  spatial: [SpatialNode!]! @state(class: PERSISTENT)
+  elements: [SemioModelElement!]! @state(class: PERSISTENT)
+  relations: [ModelRelation!]! @state(class: PERSISTENT)
 }

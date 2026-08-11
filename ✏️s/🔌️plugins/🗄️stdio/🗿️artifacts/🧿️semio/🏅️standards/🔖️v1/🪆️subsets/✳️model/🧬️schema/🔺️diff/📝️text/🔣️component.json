@@ -1,10 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.semio.model.diff/text.json",
-  "title": "Semio_semio_model_diff",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
-  "type": "object",
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+  "$id": "https://semio.tech/schema/stdio.semio.model/diff/text.json",
+  "title": "SemioModelDiffText",
+  "type": "string",
+  "description": "Single-line hand-rolled print_diff()/parse_diff() grammar, no envelope."
 }

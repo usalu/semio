@@ -1,3 +1,7 @@
 dialect protocol stdio.semio.mesh.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.mesh.snapshot"
+; shared `.semio` binary envelope (store::semio_format::wrap_binary) wrapping the REAL
+; SemioMeshSnapshot JSON payload this subset's `ArtifactPack` impl produces/consumes.
+envelope-magic = %x89.53.45.4D.0D.0A.1A.0A
+token-len = U32LE
+token = UTF8(22)                    ; "stdio.semio.mesh.pack v1"
+json-payload = BYTES(*)             ; serde_json::to_vec(SemioMeshSnapshot) — meshes/materials/textures, see ../🦀️component.rs

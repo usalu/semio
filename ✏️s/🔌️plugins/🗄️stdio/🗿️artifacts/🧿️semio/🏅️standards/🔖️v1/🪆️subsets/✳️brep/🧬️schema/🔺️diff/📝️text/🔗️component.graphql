@@ -1,9 +1,2 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_semio_brep_diffEntry {
-  key: String!
-  value: String!
-}
-type Semio_semio_brep_diff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_brep_diffEntry!]! @state(class: PERSISTENT)
-}
+# stdio.semio.brep diff text grammar schema
+type Document { line: String! }

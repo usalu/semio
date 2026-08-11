@@ -651,6 +651,24 @@ pub fn decode_deflate_snapshot(data: &[u8]) -> Result<DeflateSnapshot, String> {
 pub fn empty_deflate_snapshot() -> DeflateSnapshot {
     DeflateSnapshot::default()
 }
+
+/// 📄️ The demo `stdio.deflate` document — a genuine, non-empty RFC1950 container: a real
+/// preset-dictionary id (exercises the FDICT-gated `dict_id` field) plus repetitive text payload
+/// (round-trips through this artifact's own `deflate_raw`/`inflate_raw`). Single source of truth
+/// for `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🗜️example.zz`/`🎒️example.pack.semio`
+/// (all three are literally this snapshot's `print_dsl`/`encode_deflate_snapshot`/`encode_pack`
+/// output, asserted equal by `fixture_honesty_law` below) and for the conformance laws' own demo
+/// case.
+pub fn demo_deflate_snapshot() -> DeflateSnapshot {
+    DeflateSnapshot {
+        schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
+        compression_method: 8,
+        window_bits: 7,
+        compression_level_hint: DeflateLevelHint::Default,
+        dict_id: Some(0x1234_5678),
+        payload: b"the quick brown fox jumps over the lazy dog".to_vec(),
+    }
+}
 //#endregion DocumentHelpers
 
 //#region Register
@@ -659,12 +677,46 @@ pub fn register() {
     crate::artifacts::deflate::composer::register();
     register_artifact_schema();
     register_pilot_languages();
+    register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<DeflateSnapshot, DeflateMutation>(
         STDIO_DEFLATE_DOCUMENT_SCHEMA,
     ));
 }
 
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
+/// 📇️ P2-FG2: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion API) —
+/// real, non-fabricated call: `DeflateSnapshot` derives `#[derive(dsl::DslRecord)]`, so
+/// `__dsl_spec` genuinely exists (../🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs). Only
+/// the snapshot schema id is registered — `DeflateDiff` has NO derivable `RecordSpec` (see
+/// `register_pilot_languages`'s own doc comment), so `"stdio.deflate#diff"` is deliberately not
+/// called here, matching the recipe's own "skip rather than fabricate" rule. `#[cfg]`-gated to
+/// match `os_dsl::registry`'s own `#[cfg(not(target_arch = "wasm32"))]` — the registry simply
+/// does not exist as a compiled item on `wasm32`.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn register_schema_specs() {
+    dsl::registry::register_schema_spec("stdio.deflate", DeflateSnapshot::__dsl_spec);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn register_schema_specs() {}
+
+/// 📌️ P2-FG2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the recipe's
+/// exemplar pattern (`📖️grammar-recipe.md` §4's deliverable checklist, json's own
+/// `register_pilot_languages`) — `stdio.deflate`/`.op`/`.diff`/`.pack`/`.spr`, all
+/// `dsl::passthrough_hooks`. `diff`'s `protocol` slot stays `None` matching the exemplar's own
+/// shape exactly (the role scheme has no dedicated "diff binary" role even though
+/// `🔺️diff/💾️binary/📡️component.protocol.semio` is a real, conformance-tested file — its binary
+/// form is exercised directly by `protocol_walk_law` below, just not wired through a 6th
+/// `LanguageRole`).
+///
+/// `register_schema_spec` (P2-M3's `FullResolver` insertion API, see `register_schema_specs`
+/// below) is called for the SNAPSHOT schema id only — `DeflateSnapshot` derives `dsl::DslRecord`
+/// for real (a genuine `fn() -> RecordSpec` exists via `__dsl_spec`), unlike json/csv/zip/png's
+/// fully hand-rolled types. `DeflateDiff` does NOT derive `dsl::DslDiff` (its `dict_id:
+/// Option<Option<u32>>` tri-state field blocks the derive — `dsl_derive::classify_field` peels
+/// exactly one `Option<..>` layer, confirmed via real `cargo check`, per
+/// `🔺️diff/🦀️component.rs`'s own doc comment) and so has no derivable `RecordSpec` either — the
+/// call is skipped for `"stdio.deflate#diff"` rather than fabricated, filed as `mechanism_gaps`
+/// in this wave's report.
 pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.deflate",
@@ -675,6 +727,46 @@ pub fn register_pilot_languages() {
         protocol: Some(crate::artifacts::deflate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::deflate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.deflate"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.deflate.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::deflate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::deflate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::deflate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::deflate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.deflate.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.deflate.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::deflate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::deflate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("stdio.deflate.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.deflate.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::deflate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::deflate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.deflate.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.deflate.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::deflate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::deflate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.deflate.spr"),
     });
 }
 
@@ -828,5 +920,138 @@ mod tests {
         bytes[1] ^= 0x01; // flip a FCHECK bit
         assert!(decode_deflate_snapshot(&bytes).is_err());
     }
+
+    //#region 🔖️ConformanceLaws
+    /// 🧪️ P2-FG2: per-artifact conformance laws (recipe §4 deliverable item 6) — grammar/protocol
+    /// parseability, `Recognizer` against real fixtures AND real `print_op`/`print_diff` output,
+    /// `walk_protocol` against real `encode_pack`/`encode_op`/`encode_diff` bytes, and the
+    /// fixture-honesty round-trip. Lives here (the engine's own test region), not any framework
+    /// file — `m5` auto-discovers the snapshot grammar+`.dsl.semio`/protocol+`.pack.semio` pairs
+    /// independently; these tests are this artifact's OWN early-warning, plus direct coverage of
+    /// the mutations/diff facets that harness does not auto-discover at all.
+    mod conformance_laws {
+        use super::*;
+        use crate::artifacts::deflate::schema::{diff, mutations, snapshot};
+        use protocol::{DiffCodec, OpBinary, OpText};
+
+        /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
+        /// parse under the real dialect — independent of, and cheaper than, the two
+        /// `recognize`/`walk_protocol` laws below.
+        #[test]
+        fn committed_facet_files_parse() {
+            for (label, text) in [
+                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
+            ] {
+                let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+                assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+            }
+            for (label, text) in [
+                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
+            ] {
+                dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+            }
+        }
+
+        /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output
+        /// for the demo snapshot (a non-empty payload + a real preset-dictionary id).
+        #[test]
+        fn grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            let text = store::ArtifactDsl::print_dsl(&demo_deflate_snapshot());
+            let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
+            let reconstructed = format!("{}\n{body}", envelope.envelope_id());
+            assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+        }
+
+        /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
+        /// output for every `DeflateMutation` demo case (`mutations::demo_mutation_cases()`).
+        #[test]
+        fn ops_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for mutation in mutations::demo_mutation_cases() {
+                let printed = mutation.print_op();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
+            }
+        }
+
+        /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff`
+        /// output for every representative `DeflateDiff` (`diff::demo_diff_cases()`), incl. the
+        /// empty-line diff and both `dict_id` tri-state directions.
+        #[test]
+        fn diff_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for d in diff::demo_diff_cases() {
+                let printed = d.print_diff();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
+            }
+        }
+
+        /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
+        /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
+        /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed ==
+        /// bytes.len()`.
+        #[test]
+        fn protocol_walk_law() {
+            let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+            let packed = store::ArtifactPack::encode_pack(&demo_deflate_snapshot());
+            let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
+            let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+            assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
+
+            let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+            for mutation in mutations::demo_mutation_cases() {
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
+            }
+
+            let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+            for d in diff::demo_diff_cases() {
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
+            }
+        }
+
+        /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
+        /// `print_dsl`/`encode_pack` output of `demo_deflate_snapshot()` — `parse_dsl(fixture) ==
+        /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin.
+        #[test]
+        fn fixture_honesty_law() {
+            const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+
+            let demo = demo_deflate_snapshot();
+
+            let parsed = <DeflateSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_deflate_snapshot()");
+            assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_deflate_snapshot()) drifted from the shipped .dsl.semio fixture");
+
+            let decoded = <DeflateSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_deflate_snapshot()");
+            assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_deflate_snapshot()) drifted from the shipped .pack.semio fixture");
+        }
+
+        /// ✅️ `schema_spec_registration_resolves`: `register_schema_specs` genuinely resolves the
+        /// snapshot schema id through `dsl::registry::full_resolver()` once called (real
+        /// `DeflateSnapshot::__dsl_spec`, not fabricated — see that fn's own doc comment for why
+        /// the diff id is deliberately NOT registered).
+        #[test]
+        #[cfg(not(target_arch = "wasm32"))]
+        fn schema_spec_registration_resolves() {
+            use dsl::os_pack::cli::SchemaResolver;
+            register_schema_specs();
+            let resolver = dsl::registry::full_resolver();
+            assert!(resolver.resolve("stdio.deflate").is_some(), "stdio.deflate must resolve");
+        }
+    }
+    //#endregion 🔖️ConformanceLaws
 }
 //#endregion Tests

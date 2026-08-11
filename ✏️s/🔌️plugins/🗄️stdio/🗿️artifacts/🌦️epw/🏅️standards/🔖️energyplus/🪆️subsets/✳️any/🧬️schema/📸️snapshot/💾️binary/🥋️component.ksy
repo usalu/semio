@@ -1,8 +1,22 @@
 meta:
-  id: epw_snapshot
+  id: stdio_epw_snapshot
   endian: le
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  Shared `.semio` binary envelope (store::semio_format::wrap_binary) wrapping a
+  `stdio.epw` payload: the UTF-8 bytes of the same EPW document the text facet
+  parses (see sibling ../📝️text/📖️component.grammar.semio).
 seq:
   - id: magic
-    contents: "stdio.epw.snapshot"
+    contents: [0x89, 0x53, 0x45, 0x4d, 0x0d, 0x0a, 0x1a, 0x0a]
+  - id: token_len
+    type: u4
+  - id: token
+    type: str
+    size: token_len
+    encoding: UTF-8
+    doc: "stdio.epw.pack v1"
+  - id: payload
+    type: str
+    size-eos: true
+    encoding: UTF-8
+    doc: EPW text (the `file` production), CRLF line endings.

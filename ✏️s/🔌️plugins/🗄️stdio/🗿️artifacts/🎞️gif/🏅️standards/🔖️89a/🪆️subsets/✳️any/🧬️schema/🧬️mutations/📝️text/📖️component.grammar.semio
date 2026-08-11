@@ -1,6 +1,82 @@
-dialect grammar stdio.gif.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.gif' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.gif.89a.mutations
+start op
+
+# Real one-line op-text form this artifact's `dsl::DslOps`-derived `OpText::print_op`/
+# `parse_op` (../🦀️component.rs, `dsl::print`/`dsl::parse` over the derived `DslVariants`
+# spec) ACTUALLY emits — captured verbatim from a real `mutation.print_op()` call over every
+# variant (P2-FG2 debug probe, deleted after capture; see this artifact's report and 87a's own
+# sibling grammar's identical shape). Kebab-case keyword + kebab-case `field=value` tokens; a
+# `#[dsl(block)]`/struct-valued field prints as `field { inner-fields }`; ANY `Option<T>`
+# field (block-struct OR plain scalar — e.g. `loop_count`/`transparent_index`) is OMITTED
+# ENTIRELY, not even a marker, when `None` (confirmed live: `SetFrameTransparency {
+# transparent_index: None }` prints as bare `"...index=0"`, no `transparent-index` token at
+# all — this dialect's mutations text form has no tri-state bracket tag, unlike the DIFF
+# codec's own SEPARATE hand-rolled `[0]`/`[1,value]` grammar). A `Vec<StructT>` field prints
+# as `field=[ item-fields item-fields ... ]` — items back-to-back with NO separator (the
+# parser relies on each item's own FIXED field count); a `Vec<String>` field prints as
+# `field=[ bare-value bare-value ... ]` (no per-item key, just the raw string tokens); a fixed
+# `[u8; N]` field (`GifAppExtension::identifier`/`auth_code`) prints as `field=v1,v2,...,vN` —
+# comma-separated raw ints, NO enclosing brackets at all. A plain `String` field (not
+# `#[dsl(base64)]`-tagged) prints as a BARE, unquoted `IDENT` token (the shared lexer's
+# `is_ident_continue` allows `.`/`-`/`_`/`/` — confirmed by reading `🔍️lexer/🦀️component.rs`
+# directly, NOT assumed — so `schema=stdio.gif.89a` lexes as one `Ident`); only a
+# `#[dsl(base64)]`-tagged `Vec<u8>` payload (`indices`/`data`) prints QUOTED, matching
+# `Terminal(TEXT)`. `GifDisposal` (a plain unit-variant enum) prints as its own bare kebab-case
+# keyword (`unspecified`/`do-not-dispose`/`restore-to-background`/`restore-to-previous`).
+comment none
+
+op = no-mutation-op | set-snapshot-op | set-screen-size-op | set-global-color-table-op | set-background-color-index-op | set-pixel-aspect-ratio-op | set-loop-count-op | insert-frame-op | remove-frame-op | move-frame-op | set-frame-geometry-op | set-frame-pixels-op | set-frame-interlace-op | set-frame-delay-op | set-frame-disposal-op | set-frame-transparency-op | set-frame-user-input-op | insert-comment-op | remove-comment-op | add-app-extension-op | remove-app-extension-op
+
+no-mutation-op = "no-mutation"
+set-snapshot-op = "set-snapshot" "snapshot" "{" snapshot-fields "}"
+set-screen-size-op = "set-screen-size" "width" "=" INT "height" "=" INT
+set-global-color-table-op = "set-global-color-table" gct-clause?
+set-background-color-index-op = "set-background-color-index" "index" "=" INT
+set-pixel-aspect-ratio-op = "set-pixel-aspect-ratio" "ratio" "=" INT
+set-loop-count-op = "set-loop-count" loop-count-clause?
+insert-frame-op = "insert-frame" "index" "=" INT "frame" "{" frame-fields "}"
+remove-frame-op = "remove-frame" "index" "=" INT
+move-frame-op = "move-frame" "from" "=" INT "to" "=" INT
+set-frame-geometry-op = "set-frame-geometry" "index" "=" INT "left" "=" INT "top" "=" INT "width" "=" INT "height" "=" INT
+set-frame-pixels-op = "set-frame-pixels" "index" "=" INT "indices" "=" TEXT
+set-frame-interlace-op = "set-frame-interlace" "index" "=" INT "interlace" "=" BOOL
+set-frame-delay-op = "set-frame-delay" "index" "=" INT "delay-cs" "=" INT
+set-frame-disposal-op = "set-frame-disposal" "index" "=" INT "disposal" "=" disposal-word
+set-frame-transparency-op = "set-frame-transparency" "index" "=" INT transparent-index-clause?
+set-frame-user-input-op = "set-frame-user-input" "index" "=" INT "user-input" "=" BOOL
+insert-comment-op = "insert-comment" "index" "=" INT "text" "=" IDENT
+remove-comment-op = "remove-comment" "index" "=" INT
+add-app-extension-op = "add-app-extension" "index" "=" INT "extension" "{" app-extension-fields "}"
+remove-app-extension-op = "remove-app-extension" "index" "=" INT
+
+# `GifSnapshot` (89a)'s own derived record shape — non-block scalar fields FIRST (declaration
+# order), block/`Vec`-of-struct fields LAST (declaration order among those): `gct` an optional
+# Global Color Table block, `frames`/`comments`/`app-extensions` the three flattened lists.
+snapshot-fields = "schema" "=" IDENT "width" "=" INT "height" "=" INT "background-color-index" "=" INT "pixel-aspect-ratio" "=" INT loop-count-clause? gct-clause? "frames" "=" "[" frame-fields* "]" "comments" "=" "[" IDENT* "]" "app-extensions" "=" "[" app-extension-fields* "]"
+
+loop-count-clause = "loop-count" "=" INT
+gct-clause = "gct" "{" color-table-fields "}"
+lct-clause = "lct" "{" color-table-fields "}"
+color-table-fields = "sorted" "=" BOOL "colors" "=" "[" rgb-item* "]"
+rgb-item = "r" "=" INT "g" "=" INT "b" "=" INT
+
+transparent-index-clause = "transparent-index" "=" INT
+disposal-word = "unspecified" | "do-not-dispose" | "restore-to-background" | "restore-to-previous"
+
+plain-text-clause = "plain-text" "{" plain-text-fields "}"
+plain-text-fields = "left" "=" INT "top" "=" INT "width" "=" INT "height" "=" INT "cell-width" "=" INT "cell-height" "=" INT "fg-color-index" "=" INT "bg-color-index" "=" INT "text" "=" IDENT
+
+# `GifFrame`'s own derived record shape — scalar fields first (`left`/`top`/`width`/`height`/
+# `interlace`/`indices`/`delay-cs`/`disposal`/`transparent-index`(scalar option)/`user-input`),
+# the two block fields (`lct`, `plain-text`) last, each omitted entirely when absent. Reused
+# both for `insert-frame`'s mandatory `frame { ... }` payload and for each flattened item
+# inside a snapshot's `frames=[ ... ]` list.
+frame-fields = "left" "=" INT "top" "=" INT "width" "=" INT "height" "=" INT "interlace" "=" BOOL "indices" "=" TEXT "delay-cs" "=" INT "disposal" "=" disposal-word transparent-index-clause? "user-input" "=" BOOL lct-clause? plain-text-clause?
+
+# `GifAppExtension`'s own derived record shape — `identifier`/`auth_code` are fixed-size byte
+# arrays (`[u8; 8]`/`[u8; 3]`), printed as bare comma-separated ints with NO enclosing
+# brackets; `data` is the one `#[dsl(base64)]`-tagged `Vec<u8>` payload.
+app-extension-fields = "identifier" "=" byte8-list "auth-code" "=" byte3-list "data" "=" TEXT
+byte8-list = INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT
+byte3-list = INT "," INT "," INT

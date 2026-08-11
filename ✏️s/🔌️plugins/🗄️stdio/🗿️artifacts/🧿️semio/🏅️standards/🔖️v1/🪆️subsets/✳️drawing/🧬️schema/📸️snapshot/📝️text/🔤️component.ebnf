@@ -1,3 +1,5 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.drawing.snapshot" ;
+(* ebnf stdio.semio.drawing snapshot text -- preamble line + hex-encoded JSON body *)
+document = preamble, newline, hex body ;
+preamble = "semio stdio.semio.drawing.dsl v1" ;
+hex body = { hex digit } ;
+hex digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" ;

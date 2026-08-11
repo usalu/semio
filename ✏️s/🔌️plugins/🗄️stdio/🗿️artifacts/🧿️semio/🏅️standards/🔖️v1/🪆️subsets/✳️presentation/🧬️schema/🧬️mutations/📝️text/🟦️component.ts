@@ -1,10 +1,3 @@
-/** 🧬️ Semio_semio_presentation_mutations schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_presentation_mutations
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_presentation_mutationsEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_presentation_mutations {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_presentation_mutationsEntry[];
-}
+export type PresentationMutationKeyword =
+  'no-mutation' | 'set-snapshot' | 'insert-slide' | 'remove-slide' | 'set-slide-layout' | 'set-slide-notes' | 'insert-shape' | 'remove-shape' | 'set-shape-frame' | 'set-textbox-blocks' | 'insert-master' | 'remove-master' | 'insert-layout' | 'remove-layout' | 'set-layout-master';
+export interface PresentationMutationArg { name: string; value: string; }

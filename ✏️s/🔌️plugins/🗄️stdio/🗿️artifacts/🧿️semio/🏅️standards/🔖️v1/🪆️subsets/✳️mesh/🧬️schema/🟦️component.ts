@@ -1,10 +1,11 @@
-/** 🧬️ SemioMeshArtifact schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioMeshArtifact
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface SemioMeshArtifactEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ SemioMeshArtifact schema — full artifact state, mirrors `SemioMeshSnapshot` field for
+ * field (see `📸️snapshot/🟦️component.ts` for the nested `SemioMesh`/`SemioMaterial`/`SemioTexture`
+ * shapes). */
+import type { SemioMesh, SemioMaterial, SemioTexture } from "./📸️snapshot/🟦️component";
+
 export interface SemioMeshArtifact {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioMeshArtifactEntry[];
+  /** @state persistent */ meshes: SemioMesh[];
+  /** @state persistent */ materials: SemioMaterial[];
+  /** @state persistent */ textures: SemioTexture[];
 }

@@ -1,47 +1,54 @@
-dialect protocol stdio.ply.snapshot
-; Real PLY binary-body protocol (`binary_little_endian` / `binary_big_endian`). The header
-; (magic/format/comment/element/property declarations) is ALWAYS ASCII text — see the sibling
-; `📝️text/📖️component.grammar.semio` for its full grammar — terminated by the literal line
-; `end_header\n`; only the BODY that follows is binary. This file's `body` section is therefore
-; genuinely schema-driven at the byte level: each element's row width and shape is exactly what
-; the header just declared (arbitrary named elements, scalar or count-prefixed list properties,
-; 8 possible per-cell widths) — a real self-describing binary layout, honestly captured below as
-; a byte-cursor walk keyed by the header's own declarations rather than a fixed struct.
+dialect protocol
+protocol stdio.ply.snapshot
+version 1
+schema stdio.ply
+start file
 
-header = magic format-decl (comment-decl / element-decl)* end-marker
-magic = %x70.6c.79 %x0a                      ; "ply\n"
-format-decl = %x66.6f.72.6d.61.74 SP format-kind SP version %x0a
-format-kind = %x61.73.63.69.69 / %x62.69.6e.61.72.79.5f.6c.69.74.74.6c.65.5f.65.6e.64.69.61.6e / %x62.69.6e.61.72.79.5f.62.69.67.5f.65.6e.64.69.61.6e
-version = %x31.2e.30                          ; "1.0"
-comment-decl = %x63.6f.6d.6d.65.6e.74 [ SP *CHAR ] %x0a
-element-decl = element-line property-line*
-element-line = %x65.6c.65.6d.65.6e.74 SP name SP count %x0a
-property-line = scalar-property / list-property
-scalar-property = %x70.72.6f.70.65.72.74.79 SP scalar-kind SP name %x0a
-list-property = %x70.72.6f.70.65.72.74.79 SP %x6c.69.73.74 SP scalar-kind SP scalar-kind SP name %x0a
-scalar-kind = char-kind / uchar-kind / short-kind / ushort-kind / int-kind / uint-kind / float-kind / double-kind
-end-marker = %x65.6e.64.5f.68.65.61.64.65.72 %x0a  ; "end_header\n"
-
-; 📦 One binary octet-width per scalar kind (endianness selected by `format-kind` above, applied
-; uniformly to every multi-byte kind for the whole body — this is exactly the two `PlyFormat`
-; binary variants' real width table, mirrored 1:1 from the Rust engine's `scalar_type_size`):
-char-kind = 1OCTET      ; i8
-uchar-kind = 1OCTET     ; u8
-short-kind = 2OCTET     ; i16
-ushort-kind = 2OCTET    ; u16
-int-kind = 4OCTET       ; i32
-uint-kind = 4OCTET      ; u32
-float-kind = 4OCTET     ; f32
-double-kind = 8OCTET    ; f64
-
-; 🧮 Body: for each `element-decl` in header order, `count` repetitions of one row; a row is one
-; cell per `property-line` in declared order — a plain `scalar-kind`-width read for a scalar
-; property, or a `scalar-kind`-width count read (the list's own `count-kind`) followed by that
-; many `scalar-kind`-width value reads (the list's `value-kind`) for a list property. This walk
-; is genuinely header-driven (row width is NOT fixed across the file, only within one element),
-; matching the Rust engine's `decode_body_binary` byte-for-byte.
-body = *row
-row = *cell
-cell = scalar-cell / list-cell
-scalar-cell = scalar-kind
-list-cell = scalar-kind *scalar-kind          ; count-kind width, then N × value-kind width
+# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG3: `stdio.ply`'s Pack
+# facet (post-SEMIO-envelope-unwrap payload) is `encode_ply_with_format(self, self.format)`'s
+# real on-disk bytes — genuinely one of THREE variants (`ascii` / `binary_little_endian` /
+# `binary_big_endian`), see `../../🦀️component.rs` (fixed this wave — `encode_pack_with`
+# previously called the ascii-forcing `encode_ply(self)` unconditionally, silently discarding
+# `self.format` on every Pack round-trip; see this wave's own report).
+#
+# THIS IS THE DOCUMENTED, PRE-APPROVED M2 SCOPE BOUNDARY (`📖️grammar-recipe.md` §6, restated
+# verbatim in this FG3 brief, which explicitly names `ply` alongside `pdf/1.7` for this EXACT
+# reason): "PLY's per-file schema selecting its own binary field list from an ASCII header —
+# deferred. Document these fields as bounded-but-schema-external; real semantic resolution stays
+# in Rust." Verified live, not assumed, before falling back to this treatment:
+#   - `Prim`'s real primitive set (`🗣️dsl/📖️grammar/🦀️component.rs`) has NO "scan forward until
+#     this LITERAL MULTI-BYTE STRING" construct — `MarkerScan(u8)` only scans past a run of ONE
+#     repeated fill byte then reads ONE discriminator byte (JPG's `0xFF...0xFF <code>` shape);
+#     `backward <name> magic 0x...` only locates a FIXED-width magic by scanning BACKWARD from
+#     EOF (ZIP's EOCD). Neither can locate the literal ASCII line `end_header\n` that terminates
+#     PLY's header, which is otherwise unboundedly long (arbitrary element/property/comment
+#     count, arbitrary name lengths).
+#   - No construct lets a value the GRAMMAR side already parsed (element/property declarations,
+#     read from ASCII TEXT) parameterize a PROTOCOL field's width/count/presence — `Count::Field`
+#     only reaches an earlier field in the SAME protocol walk's own local env, never across
+#     dialects. This is the identical root cause PDF 1.7's own sibling protocol file documents
+#     for its `/W`-array xref-row-width gap.
+#   - `Prim::Ref` to a struct/enum unconditionally errors at walk time regardless
+#     (`protocol-prim-ref-recursion`) — even if the header's END could be located, a per-file
+#     dynamic property LIST (arbitrary count of arbitrarily-typed columns) has no protocol-
+#     description shape at all; see `protocol-array-of-records`'s own generalization of this gap.
+#
+# What IS genuinely universal, byte-checked, author-time-fixed across EVERY real `.ply` file
+# regardless of which of the 3 format variants or what schema it declares: the 4-byte magic
+# `"ply\n"` (`split_header`'s own `b"end_header"` scan starts searching from byte 0;
+# `header_text`'s own first `out.push_str("ply\n")` — ../../⚙️engine/🦀️component.rs). Modeled as a
+# real, individually walked+validated field; everything past it (the `format`/`comment`/
+# `element`/`property` header lines, the `end_header\n` terminator, and the body — ASCII numeric
+# text OR one of the two binary cell layouts, depending on the header's own `format` line) is ONE
+# opaque trailing chain, honestly bounded but schema-external — same treatment DWG ac1024's own
+# sibling protocol file gives its irreducible encrypted+compressed pipeline (`📖️grammar-recipe.md`
+# §6's own DWG bullet).
+#
+# `framing record` (NOT `framing magic ...`) deliberately, matching DWG ac1018/ac1024's own
+# documented reason (`protocol-framing-magic-fixed-8-bytes`): `Framing::Magic` unconditionally
+# reads/compares EXACTLY 8 raw bytes regardless of a shorter declared literal's own width — ply's
+# real magic is only 4 bytes ("ply\n"), so `framing magic 0x706c790a` would incorrectly demand 8.
+framing record
+header fixed 4
+field magic fixed 4
+chain body bytes

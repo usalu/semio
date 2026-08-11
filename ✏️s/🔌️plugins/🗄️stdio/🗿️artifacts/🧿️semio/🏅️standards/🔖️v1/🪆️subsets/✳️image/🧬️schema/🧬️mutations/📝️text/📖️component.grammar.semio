@@ -1,5 +1,27 @@
-dialect grammar stdio.semio.image.mutations
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.image.mutations"
+dialect grammar
+grammar s.stdio.semio.image.mutations.text
+extension semio
+start op
+
+op = "no"
+   / "setSnapshot:" snapshot
+   / "setDimensions:" 1*DIGIT "," 1*DIGIT
+   / "setColorspace:" colorspace-char
+   / "setBitDepth:" 1*DIGIT
+   / "setIcc:" option
+   / "insertFrame:" 1*DIGIT "," frame
+   / "removeFrame:" 1*DIGIT
+   / "moveFrame:" 1*DIGIT "," 1*DIGIT
+   / "setFrameDelay:" 1*DIGIT "," 1*DIGIT
+   / "setFramePixels:" 1*DIGIT "," *HEXDIG
+   / "setMetadataEntry:" *HEXDIG "," *HEXDIG
+   / "removeMetadataEntry:" *HEXDIG
+snapshot = "[" 1*DIGIT "," 1*DIGIT "," colorspace-char "," 1*DIGIT "," option ","
+           "[" [ frame *( "," frame ) ] "]" "," "[" [ entry *( "," entry ) ] "]" "]"
+frame = "[" 1*DIGIT "," *HEXDIG "]"
+entry = *HEXDIG "," *HEXDIG
+option = "[0]" / "[1," *HEXDIG "]"
+colorspace-char = "r" / "a" / "g" / "y" / "i"
+
+; -- real hand-rolled OpText/OpBinary grammar (see the mutations `🦀️component.rs` sibling's
+; -- `🔖️OpCodecs` region). `OpBinary::encode_op` = this grammar's UTF-8 bytes, verbatim.

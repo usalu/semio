@@ -1,10 +1,57 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.epw/diff.json",
+  "$id": "https://semio.tech/schema/s.stdio.epw/diff.epw",
   "title": "EpwDiff",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "location": { "$ref": "https://semio.tech/schema/s.stdio.epw/snapshot.epw#/$defs/EpwLocation" },
+    "designConditions": { "type": "string" },
+    "typicalExtremePeriods": { "type": "string" },
+    "groundTemperatures": { "type": "string" },
+    "holidaysDst": { "type": "string" },
+    "comments1": { "type": "string" },
+    "comments2": { "type": "string" },
+    "dataPeriods": { "$ref": "https://semio.tech/schema/s.stdio.epw/snapshot.epw#/$defs/EpwDataPeriods" },
+    "records": { "$ref": "#/$defs/EpwRecordsDiff" }
+  },
+  "$defs": {
+    "EpwRecordDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Sparse per-column patch over EpwRecord's 35 fields; every column independently optional.",
+      "properties": {
+        "year": { "type": "string" }, "month": { "type": "string" }, "day": { "type": "string" },
+        "hour": { "type": "string" }, "minute": { "type": "string" }, "dataSourceUncertainty": { "type": "string" },
+        "dryBulbTemp": { "type": "string" }, "dewPointTemp": { "type": "string" }, "relativeHumidity": { "type": "string" },
+        "atmosphericPressure": { "type": "string" }, "extraterrestrialHorizontalRadiation": { "type": "string" },
+        "extraterrestrialDirectNormalRadiation": { "type": "string" }, "horizontalInfraredRadiation": { "type": "string" },
+        "globalHorizontalRadiation": { "type": "string" }, "directNormalRadiation": { "type": "string" },
+        "diffuseHorizontalRadiation": { "type": "string" }, "globalHorizontalIlluminance": { "type": "string" },
+        "directNormalIlluminance": { "type": "string" }, "diffuseHorizontalIlluminance": { "type": "string" },
+        "zenithLuminance": { "type": "string" }, "windDirection": { "type": "string" }, "windSpeed": { "type": "string" },
+        "totalSkyCover": { "type": "string" }, "opaqueSkyCover": { "type": "string" }, "visibility": { "type": "string" },
+        "ceilingHeight": { "type": "string" }, "presentWeatherObservation": { "type": "string" },
+        "presentWeatherCodes": { "type": "string" }, "precipitableWater": { "type": "string" },
+        "aerosolOpticalDepth": { "type": "string" }, "snowDepth": { "type": "string" },
+        "daysSinceLastSnowfall": { "type": "string" }, "albedo": { "type": "string" },
+        "liquidPrecipDepth": { "type": "string" }, "liquidPrecipQuantity": { "type": "string" }
+      }
+    },
+    "EpwRecordModified": {
+      "type": "object", "additionalProperties": false, "required": ["index", "diff"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "diff": { "$ref": "#/$defs/EpwRecordDiff" } }
+    },
+    "EpwRecordAdded": {
+      "type": "object", "additionalProperties": false, "required": ["index", "record"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "record": { "$ref": "https://semio.tech/schema/s.stdio.epw/snapshot.epw#/$defs/EpwRecord" } }
+    },
+    "EpwRecordsDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/EpwRecordModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/EpwRecordAdded" } }
+      }
+    }
   }
 }

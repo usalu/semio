@@ -1,9 +1,9 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_semio_mesh_mutationsEntry {
-  key: String!
+# 🔗️ GraphQL mirror of `s.stdio.semio.mesh`'s hand-rolled OpText TEXT grammar.
+type SemioMeshMutationTextArg {
+  name: String!
   value: String!
 }
-type Semio_semio_mesh_mutations {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_mesh_mutationsEntry!]! @state(class: PERSISTENT)
+type SemioMeshMutationText {
+  keyword: String!   # "no-mutation" | "set-snapshot" | "add-mesh" | ... (16 total)
+  args: [SemioMeshMutationTextArg!]!
 }

@@ -1,10 +1,3 @@
-/** 🧬️ Semio_semio_object_diff schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_object_diff
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_object_diffEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_object_diff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_object_diffEntry[];
-}
+/** 📝️ Text representation for `stdio.semio.object` (diff): the hand-rolled single-line
+ * `root=<enc>`/`objects=<enc>` `DiffCodec` wire form. */
+export type SemioObjectDiffText = string;

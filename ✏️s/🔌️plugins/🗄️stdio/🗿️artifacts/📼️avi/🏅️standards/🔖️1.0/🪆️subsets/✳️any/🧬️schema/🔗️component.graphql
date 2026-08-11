@@ -1,9 +1,8 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type AviArtifactEntry {
-  key: String!
-  value: String!
-}
+# AviArtifact — full artifact state, mirrors AviSnapshot field for field.
 type AviArtifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [AviArtifactEntry!]! @state(class: PERSISTENT)
+  mainHeader: AviMainHeader! @state(class: PERSISTENT)
+  streams: [AviStream!]! @state(class: PERSISTENT)
+  idx1Present: Boolean! @state(class: PERSISTENT)
+  unknownChunks: [RiffChunk!]! @state(class: PERSISTENT)
 }

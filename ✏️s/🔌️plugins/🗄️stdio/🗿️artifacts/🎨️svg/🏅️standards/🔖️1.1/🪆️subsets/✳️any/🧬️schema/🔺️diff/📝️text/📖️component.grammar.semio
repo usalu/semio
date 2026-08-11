@@ -1,8 +1,70 @@
-dialect grammar stdio.svg.diff
-root = document
-document = payload
-; SvgDiff's text representation IS its JSON serialization (see the sibling
-; ../🔣️component.json for the SvgDiff JSON Schema) -- serde(rename_all = "camelCase"),
-; tag-discriminated unions via a "kind" field. No custom textual grammar beyond JSON's own
-; (well-known, not reproduced here).
-payload = json-value
+dialect grammar
+grammar stdio.svg.diff
+extension svg
+start document
+comment none
+
+# P2-FG3: real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `../../🦀️component.rs` (`print_svg_diff`/`parse_svg_diff`), replacing the F6-era placeholder that
+# described a serde-JSON `SvgDiff` wire struct the codec never emits. Every keyword/tag token below
+# is copied verbatim from the real `format!(...)` call sites. `SvgDiff` mirrors `XmlDiff`'s exact
+# shape field-for-field (`declaration`/`doctype`/`root`, same `Element`/`Text`/`Replace`
+# `SvgNodeDiff` tree) -- per Phase 1's explicit design decision svg declares its OWN diff types even
+# though it reuses xml's node model (`../🦀️component.rs`'s own doc comment) -- so this grammar
+# restates `📰xml`'s own diff grammar's shape verbatim (not `use`d, cross-artifact `use` doesn't
+# resolve at recognize time yet, `📖️grammar-recipe.md` §2.1), with only the `grammar`/`extension`
+# ids differing.
+#
+# `comment none`: kept for consistency with the sibling ../../📸️snapshot/📝️text grammar; not
+# strictly required by any token this grammar's own alphabet produces (hex payloads are
+# lowercase-only, never containing `#`).
+#
+# `hex` (bare `hex`, referenced below but deliberately NOT defined as a production in this file) is
+# the framework's built-in `hex` MACRO -- see the mandatory-macro rationale in
+# `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2 (a hand-rolled `{INT|IDENT}*` production never
+# backtracks and would silently swallow a following bareword literal like `declaration`/`doctype`).
+document = declaration-tok? doctype-tok? root-tok?
+declaration-tok = "declaration" "=" opt-declaration
+doctype-tok = "doctype" "=" opt-hex
+root-tok = "root" "=" node-diff
+
+# `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4): `[0]` (unchanged/None) /
+# `[1,<value>]` (Some).
+opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
+opt-bool = "[" "0" "]" | "[" "1" "," bool-lit "]"
+bool-lit = "0" | "1"
+
+# `enc_declaration`/`dec_declaration`: `[hex(version),opt-hex(encoding),opt-bool(standalone)]`.
+opt-declaration = "[" "0" "]" | "[" "1" "," declaration-lit "]"
+declaration-lit = "[" hex "," opt-hex "," opt-bool "]"
+
+# `enc_node_diff`/`dec_node_diff` -- `SvgNodeDiff` itself needs a tag (`E`=Element, `T`=Text,
+# `R`=Replace) since, unlike a bare `XmlNode`, it appears standalone (not always inside a bracketed
+# container) at the top-level `root=` token position. Genuinely recursive: `E`'s children slot
+# references `node-diff` (via `child-modified-item`) which references `node-diff` back through
+# `children-diff-body` -- the same self-recursion `📖️grammar-recipe.md` §1.3(g) documents as
+# already-proven-safe.
+node-diff = "E" "[" opt-hex "," opt-attrs-diff "," opt-children-diff "]" | "T" "[" opt-hex "]" | "R" "[" opt-xml-node "]"
+opt-attrs-diff = "[" "0" "]" | "[" "1" "," attrs-diff-body "]"
+opt-children-diff = "[" "0" "]" | "[" "1" "," children-diff-body "]"
+opt-xml-node = "[" "0" "]" | "[" "1" "," xml-node "]"
+
+# `enc_attrs_diff`/`dec_attrs_diff` -- `[removed];[modified];[added]`, name-keyed
+# (`📖️grammar-recipe.md` §1.4's name-keyed collection-triple shape).
+attrs-diff-body = "[" attr-removed-item* "]" ";" "[" attr-modified-item* "]" ";" "[" attr-added-item* "]"
+attr-removed-item = hex ","?
+attr-modified-item = hex ":" hex ","?
+attr-added-item = INT ":" hex ":" hex ","?
+
+# `enc_children_diff`/`dec_children_diff` -- `[removed];[modified];[added]`, index-keyed.
+children-diff-body = "[" child-removed-item* "]" ";" "[" child-modified-item* "]" ";" "[" child-added-item* "]"
+child-removed-item = INT ","?
+child-modified-item = INT ":" node-diff ","?
+child-added-item = INT ":" xml-node ","?
+
+# `enc_xml_node`/`dec_xml_node` -- restated here (svg reuses xml's `XmlNode` type directly, per
+# Phase 1's own design, cited in this file's own header comment) so this leaf grammar is
+# self-contained, matching the repo's existing per-facet convention.
+xml-node = "E" "[" hex "," "[" attr-item* "]" "," "[" node-item* "]" "]" | "T" "[" hex "]" | "D" "[" hex "]" | "M" "[" hex "]" | "P" "[" hex "," hex "]"
+attr-item = "[" hex "," hex "]" ","?
+node-item = xml-node ","?

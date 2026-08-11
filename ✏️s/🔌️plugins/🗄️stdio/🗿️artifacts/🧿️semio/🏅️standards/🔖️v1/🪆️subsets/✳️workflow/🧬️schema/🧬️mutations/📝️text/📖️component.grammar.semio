@@ -1,5 +1,15 @@
-dialect grammar stdio.semio.workflow.mutations
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.workflow.mutations"
+dialect grammar
+grammar semio.workflow.mutations
+extension semio
+start op
+
+; -- Real wire grammar for SemioWorkflowMutation::print_op/parse_op (🧬️mutations/🦀️component.rs)
+; -- "keyword arg=value ..." (space-separated), reusing 🔺️diff's hex-string/bracket-triple value
+; -- codecs for node/edge/point2/port-ref payloads.
+op = "no-mutation" / ( keyword ( SP arg )* )
+keyword = "set-snapshot" / "insert-node" / "remove-node" / "set-node-kind" / "set-node-label"
+        / "set-node-position" / "set-node-param" / "remove-node-param" / "insert-edge"
+        / "remove-edge" / "set-edge-endpoints" / "set-edge-kind"
+arg = name "=" value
+name = 1*( %x61-7A / "-" )
+value = 1*( %x21-7E )   ; no raw spaces -- values are hex-string/bracket-encoded (see 🔺️diff)

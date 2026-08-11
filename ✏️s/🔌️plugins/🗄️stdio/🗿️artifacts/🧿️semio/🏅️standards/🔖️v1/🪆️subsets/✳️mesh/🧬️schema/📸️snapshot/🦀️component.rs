@@ -1,18 +1,96 @@
-//! 🧬️ SemioMeshSnapshot — meshes -> positions + a PBR material list — from gltf.
-//! 🚧 scaffolded by W1b: minimal honest fields only (not the full spec shape) — full
-//! implementation lands in W2/W3.
+//! 🧬️ SemioMeshSnapshot — meshes -> primitives{topology, positions/normals/uvs/colors, indices,
+//! material} + materials (PBR base_color/metallic/roughness) + textures{mime, bytes}. Informed by
+//! gltf 2.0's `GltfMesh`/`GltfPrimitive`/`GltfAccessor`/`GltfMaterial`, per the master plan's
+//! "Subset snapshot cores" table. Owned types (w1b-type-ownership.md): `SemioMesh`,
+//! `SemioPrimitive`, `SemioMaterial`, `SemioTexture` (`SemioPrimitive` was RESERVED at W1b —
+//! this file is where it lands).
 
-use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint3, SemioRgba};
+use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint3, SemioRgba, SemioUv};
 
-/// 🕸️ Owned by the `mesh` subset: `SemioMesh`, `SemioPrimitive` (folded into `SemioMesh.positions`
-/// for now — W2 splits into real indexed primitives), `SemioMaterial`.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+//#region 🔖️Topology
+/// 🔺️ Primitive draw mode — the gltf 2.0 `mode` enumeration, named (never a bare integer tag).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SemioMesh { pub id: String, pub positions: Vec<SemioPoint3>, pub material_id: Option<String> }
+pub enum SemioTopology {
+    Points,
+    Lines,
+    LineStrip,
+    Triangles,
+    TriangleStrip,
+    TriangleFan,
+}
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+impl Default for SemioTopology {
+    fn default() -> Self { Self::Triangles }
+}
+//#endregion 🔖️Topology
+
+//#region 🔖️Primitive
+/// 🔷️ One drawable primitive inside a `SemioMesh` — id-keyed (the strong entity gltf's
+/// `mesh.primitives` array lacks; every W2 subset id-keys its repeating structures per the
+/// schema-design.md recipe). `positions`/`normals`/`uvs`/`colors`/`indices` are weak, parallel
+/// buffer-shaped data — whole-value replaced in diffs, never sub-diffed per vertex.
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SemioMaterial { pub id: String, pub base_color: SemioRgba }
+pub struct SemioPrimitive {
+    pub id: String,
+    #[serde(default)]
+    pub topology: SemioTopology,
+    #[serde(default)]
+    pub positions: Vec<SemioPoint3>,
+    #[serde(default)]
+    pub normals: Vec<SemioPoint3>,
+    #[serde(default)]
+    pub uvs: Vec<SemioUv>,
+    #[serde(default)]
+    pub colors: Vec<SemioRgba>,
+    #[serde(default)]
+    pub indices: Vec<u32>,
+    #[serde(default)]
+    pub material_id: Option<String>,
+}
+//#endregion 🔖️Primitive
+
+//#region 🔖️Mesh
+/// 🕸️ A mesh is an id-keyed collection of `SemioPrimitive`s (gltf's `mesh.primitives`).
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SemioMesh {
+    pub id: String,
+    #[serde(default)]
+    pub primitives: Vec<SemioPrimitive>,
+}
+//#endregion 🔖️Mesh
+
+//#region 🔖️Material
+/// 🎨️ PBR metallic-roughness material (gltf's `material.pbrMetallicRoughness`, the spec-mandated
+/// field set per the master plan's row: "materials (PBR base_color/metallic/roughness)").
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SemioMaterial {
+    pub id: String,
+    #[serde(default)]
+    pub base_color: SemioRgba,
+    #[serde(default)]
+    pub metallic: f32,
+    #[serde(default)]
+    pub roughness: f32,
+}
+//#endregion 🔖️Material
+
+//#region 🔖️Texture
+/// 🖼️ Raw texture payload (gltf's `image` + embedded `bufferView`/data-uri collapsed into one
+/// typed-raw-retention entity — mime + bytes, per the master plan's row: "textures{mime, bytes}").
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SemioTexture {
+    pub id: String,
+    #[serde(default)]
+    pub mime: String,
+    #[serde(default)]
+    pub bytes: Vec<u8>,
+}
+//#endregion 🔖️Texture
 
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -34,6 +112,9 @@ pub struct SemioMeshSnapshot {
     #[state(persistent)]
     #[serde(default)]
     pub materials: Vec<SemioMaterial>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub textures: Vec<SemioTexture>,
 }
 
 impl Default for SemioMeshSnapshot {
@@ -42,15 +123,16 @@ impl Default for SemioMeshSnapshot {
             schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(),
             meshes: Default::default(),
             materials: Default::default(),
+            textures: Default::default(),
         }
     }
 }
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🚧 scaffolded by W1b: JSON-pack round trip (honest, genuinely working — not a per-format
-/// binary codec, since this subset's snapshot is a NEUTRAL semio type, not an on-disk file
-/// format). Wrapped in the same `store::semio_format` envelope every stdio artifact uses.
+/// 📦️ JSON-pack round trip (genuinely working — not a per-format binary codec, since this
+/// subset's snapshot is a NEUTRAL semio type, not an on-disk file format). Wrapped in the same
+/// `store::semio_format` envelope every stdio artifact uses.
 impl store::ArtifactDsl for SemioMeshSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str { STDIO_SEMIOMESH_DOCUMENT_SCHEMA }
@@ -119,9 +201,30 @@ impl store::ArtifactPack for SemioMeshSnapshot {
 mod tests {
     use super::*;
 
+    fn populated() -> SemioMeshSnapshot {
+        SemioMeshSnapshot {
+            schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(),
+            meshes: vec![SemioMesh {
+                id: "mesh-1".into(),
+                primitives: vec![SemioPrimitive {
+                    id: "prim-1".into(),
+                    topology: SemioTopology::Triangles,
+                    positions: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }],
+                    normals: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }; 3],
+                    uvs: vec![SemioUv { u: 0.0, v: 0.0 }; 3],
+                    colors: vec![SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }; 3],
+                    indices: vec![0, 1, 2],
+                    material_id: Some("mat-1".into()),
+                }],
+            }],
+            materials: vec![SemioMaterial { id: "mat-1".into(), base_color: SemioRgba { r: 0.8, g: 0.2, b: 0.2, a: 1.0 }, metallic: 0.1, roughness: 0.6 }],
+            textures: vec![SemioTexture { id: "tex-1".into(), mime: "image/png".into(), bytes: vec![0x89, 0x50, 0x4e, 0x47] }],
+        }
+    }
+
     #[test]
     fn json_pack_round_trips() {
-        let snap = SemioMeshSnapshot::default();
+        let snap = populated();
         let bytes = <SemioMeshSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioMeshSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
@@ -129,10 +232,16 @@ mod tests {
 
     #[test]
     fn dsl_text_round_trips() {
-        let snap = SemioMeshSnapshot::default();
+        let snap = populated();
         let text = <SemioMeshSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
+    }
+
+    #[test]
+    fn default_snapshot_has_no_meshes_materials_or_textures() {
+        let snap = SemioMeshSnapshot::default();
+        assert!(snap.meshes.is_empty() && snap.materials.is_empty() && snap.textures.is_empty());
     }
 }
 //#endregion 🔖️Tests

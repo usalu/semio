@@ -1,9 +1,5 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_semio_video_mutationsEntry {
-  key: String!
-  value: String!
-}
-type Semio_semio_video_mutations {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_video_mutationsEntry!]! @state(class: PERSISTENT)
+# 📝️ Text representation mirror for `stdio.semio.video` (mutations) — one line. Structural shape
+# is ../🔗️component.graphql's SemioVideoMutation.
+type SemioVideoMutationTextLine {
+  line: String!
 }

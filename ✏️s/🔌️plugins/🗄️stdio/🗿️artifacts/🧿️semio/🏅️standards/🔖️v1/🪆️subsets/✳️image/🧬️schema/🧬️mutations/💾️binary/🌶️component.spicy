@@ -1,5 +1,8 @@
-module Semio_semio_image_mutations;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=27;
+module SemioImageMutationBinary;
+
+# Real binary layout for `SemioImageMutation::encode_op`/`decode_op` — a documented
+# simplification (matching gif's own hand-rolled op codec): `encode_op` is the 📝️text sibling's
+# `op` grammar UTF-8 bytes, verbatim, with no separate binary framing.
+public type OpBinary = unit {
+    op_utf8: bytes &eod;
 };

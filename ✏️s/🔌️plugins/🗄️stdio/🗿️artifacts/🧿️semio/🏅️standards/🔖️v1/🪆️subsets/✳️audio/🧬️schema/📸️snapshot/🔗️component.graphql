@@ -1,9 +1,16 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioAudioSnapshotEntry {
+# 🧬️ SemioAudioSnapshot
+enum SemioAudioFormat { PCM8 PCM16 PCM24 PCM32 F32 F64 }
+type SemioAudioChannel {
+  samples: [Float!]!
+}
+type SemioAudioTag {
   key: String!
   value: String!
 }
 type SemioAudioSnapshot {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioAudioSnapshotEntry!]! @state(class: PERSISTENT)
+  sampleRate: Int! @state(class: PERSISTENT)
+  format: SemioAudioFormat! @state(class: PERSISTENT)
+  channels: [SemioAudioChannel!]! @state(class: PERSISTENT)
+  tags: [SemioAudioTag!]! @state(class: PERSISTENT)
 }

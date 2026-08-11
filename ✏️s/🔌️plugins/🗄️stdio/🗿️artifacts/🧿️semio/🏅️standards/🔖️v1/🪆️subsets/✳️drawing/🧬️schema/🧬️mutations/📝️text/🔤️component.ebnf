@@ -1,3 +1,12 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.drawing.mutations" ;
+(* ebnf stdio.semio.drawing mutation text -- real protocol::OpText grammar: one line of compact,
+   `mutation`-tagged JSON. See 🅰️component.g4 for the same shape in ANTLR form. *)
+document = json object ;
+json object = "{" , '"mutation"' , ":" , mutation tag , { "," , member } , "}" ;
+mutation tag = '"noMutation"' | '"setSnapshot"' | '"setCanvasSize"' | '"setCanvasBackground"'
+             | '"setStyle"' | '"removeStyle"' | '"insertLayer"' | '"removeLayer"'
+             | '"setLayerMeta"' | '"moveLayer"' | '"setGroupTransform"' | '"setPathSegments"'
+             | '"setNodeStyle"' | '"setText"' | '"setImage"' | '"insertNode"' | '"removeNode"'
+             | '"replaceNode"' ;
+member = json string , ":" , json value ;
+json value = json string | json number | json object | json array | "true" | "false" | "null" ;
+json array = "[" , [ json value , { "," , json value } ] , "]" ;

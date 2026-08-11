@@ -1,3 +1,7 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.document.diff" ;
+(* Space-separated key=value tokens; each value a [removed];[modified];[added] triple. *)
+document = { token, " " } ;
+token = "styles=" triple | "images=" triple | "blocks=" triple ;
+triple = "[", removed list, "];[", modified list, "];[", added list, "]" ;
+removed list = { key, "," } ;
+modified list = { key, ":", item diff, "," } ;
+added list = { item, "," } ;

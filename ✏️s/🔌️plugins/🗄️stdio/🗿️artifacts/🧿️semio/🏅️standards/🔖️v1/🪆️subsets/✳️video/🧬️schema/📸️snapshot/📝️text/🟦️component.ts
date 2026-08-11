@@ -1,10 +1,7 @@
-/** 🧬️ Semio_semio_video_snapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_video_snapshot
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_video_snapshotEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_video_snapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_video_snapshotEntry[];
+/** 📝️ Text representation mirror for `stdio.semio.video` (snapshot): envelope header line +
+ * hex(JSON) body. The JSON body's own structure is `../🟦️component.ts`'s `SemioVideoSnapshot`. */
+export interface SemioVideoSnapshotTextEnvelope {
+  header: "schema stdio.semio.video";
+  /** hex-encoded UTF-8 JSON, decodes as `SemioVideoSnapshot` (see ../🟦️component.ts) */
+  bodyHex: string;
 }

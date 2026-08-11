@@ -1,3 +1,5 @@
 dialect protocol stdio.semio.video.diff
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.video.diff"
+; encode_diff is the UTF-8 bytes of print_diff verbatim (protocol::DiffCodec's own documented
+; simplification, matching GifDiff/SvgDiff/DocxDiff) — no separate binary layout. See the sibling
+; 📝️text/📖️component.grammar.semio for the normative text grammar these bytes decode as.
+body = UTF8-OCTET *

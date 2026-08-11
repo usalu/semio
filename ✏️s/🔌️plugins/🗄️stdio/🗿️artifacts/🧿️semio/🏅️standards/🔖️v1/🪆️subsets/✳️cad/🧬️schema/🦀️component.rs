@@ -1,7 +1,7 @@
 //! 🧬️ SemioCadArtifact schema — full artifact state, mirrors `SemioCadSnapshot` field for
-//! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
+//! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{SemioCadSnapshot, CadEntity};
+use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{SemioCadSnapshot, CadBlock, CadEntityRecord, CadLayer};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +13,13 @@ pub struct SemioCadArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub entities: Vec<CadEntity>,
+    pub layers: Vec<CadLayer>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub blocks: Vec<CadBlock>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub entities: Vec<CadEntityRecord>,
 }
 
 impl Default for SemioCadArtifact {
@@ -24,17 +30,23 @@ impl SemioCadArtifact {
     pub fn to_snapshot(&self) -> SemioCadSnapshot {
         SemioCadSnapshot {
             schema: self.schema.clone(),
+            layers: self.layers.clone(),
+            blocks: self.blocks.clone(),
             entities: self.entities.clone(),
         }
     }
     pub fn from_snapshot(snapshot: SemioCadSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
+            layers: snapshot.layers,
+            blocks: snapshot.blocks,
             entities: snapshot.entities,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioCadSnapshot) {
         self.schema = snapshot.schema;
+        self.layers = snapshot.layers;
+        self.blocks = snapshot.blocks;
         self.entities = snapshot.entities;
     }
 }

@@ -1,8 +1,11 @@
 meta:
   id: semio_presentation_diff
-  endian: le
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  Binary = the UTF-8 bytes of the diff facet's own text grammar (space-separated
+  `masters=[...]  layouts=[...] slides=[...]` tokens) verbatim -- the same simplification the
+  hand-rolled `protocol::DiffCodec::encode_diff` impl uses (`self.print_diff().into_bytes()`).
 seq:
-  - id: magic
-    contents: "stdio.semio.presentation.diff"
+  - id: line_utf8
+    type: str
+    size-eos: true
+    encoding: UTF-8

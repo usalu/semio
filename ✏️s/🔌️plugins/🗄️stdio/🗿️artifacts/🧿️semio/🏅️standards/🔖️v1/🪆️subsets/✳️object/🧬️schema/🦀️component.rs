@@ -1,7 +1,7 @@
 //! 🧬️ SemioObjectArtifact schema — full artifact state, mirrors `SemioObjectSnapshot` field for
-//! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
+//! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{SemioObjectSnapshot, SemioValue};
+use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{SemioObjectNode, SemioObjectSnapshot, SemioValue};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -13,6 +13,8 @@ pub struct SemioObjectArtifact {
     pub schema: String,
     #[state(persistent)]
     pub root: SemioValue,
+    #[state(persistent)]
+    pub objects: Vec<SemioObjectNode>,
 }
 
 impl Default for SemioObjectArtifact {
@@ -24,17 +26,20 @@ impl SemioObjectArtifact {
         SemioObjectSnapshot {
             schema: self.schema.clone(),
             root: self.root.clone(),
+            objects: self.objects.clone(),
         }
     }
     pub fn from_snapshot(snapshot: SemioObjectSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             root: snapshot.root,
+            objects: snapshot.objects,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioObjectSnapshot) {
         self.schema = snapshot.schema;
         self.root = snapshot.root;
+        self.objects = snapshot.objects;
     }
 }
 

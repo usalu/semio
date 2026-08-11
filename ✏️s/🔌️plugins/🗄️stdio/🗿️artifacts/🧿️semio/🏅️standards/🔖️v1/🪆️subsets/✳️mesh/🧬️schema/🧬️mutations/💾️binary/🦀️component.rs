@@ -1,3 +1,4 @@
-//! 🚧 scaffolded by W1b — binary representation marker for `stdio.semio.mesh.mutations`. Full field-layout
-//! parse/print lands in W2/W3.
+//! 💾️ Binary representation marker for `stdio.semio.mesh.mutations` — `encode_op`/`decode_op`
+//! (`../../🦀️component.rs`'s `impl protocol::OpBinary for SemioMeshMutation`) are the TEXT bytes
+//! verbatim (`self.print_op().into_bytes()`), no additional framing.
 pub const BINARY_MAGIC: &str = "stdio.semio.mesh.mutations";

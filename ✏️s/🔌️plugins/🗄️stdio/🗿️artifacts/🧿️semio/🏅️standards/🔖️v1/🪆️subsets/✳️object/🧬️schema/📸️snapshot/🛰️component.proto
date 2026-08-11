@@ -1,7 +1,45 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// 🧬️ SemioObjectSnapshot facet mirror — mirrors the 🦀️component.rs sibling's real fields.
 package semio.s_stdio_semio_object.snapshot;
+
+message ObjectId {
+  string value = 1;
+}
+
+message SemioObjectEntry {
+  string key = 1;
+  SemioValue value = 2;
+}
+
+message SemioObjectNode {
+  ObjectId id = 1;
+  SemioValue value = 2;
+}
+
+message SemioValue {
+  oneof kind {
+    bool is_null = 1;
+    bool bool_value = 2;
+    string int_lexeme = 3;
+    string float_lexeme = 4;
+    string str_value = 5;
+    bytes bytes_value = 6;
+    SemioValueList list = 7;
+    SemioValueMap map = 8;
+    ObjectId ref_id = 9;
+  }
+}
+
+message SemioValueList {
+  repeated SemioValue items = 1;
+}
+
+message SemioValueMap {
+  repeated SemioObjectEntry entries = 1;
+}
+
 message SemioObjectSnapshot {
   string schema = 1;
-  string entries_wire = 2;
+  SemioValue root = 2;
+  repeated SemioObjectNode objects = 3;
 }

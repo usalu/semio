@@ -1,10 +1,3 @@
-/** 🧬️ Semio_semio_video_mutations schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_video_mutations
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_video_mutationsEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_video_mutations {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_video_mutationsEntry[];
-}
+/** 💾️ Binary envelope mirror for `stdio.semio.video` mutations: the UTF-8 bytes of the text op
+ * grammar (../📝️text/🟦️component.ts) verbatim — no separate binary framing. */
+export type SemioVideoMutationBinary = Uint8Array; // UTF-8 encoding of the text op grammar's one line

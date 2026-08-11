@@ -7,8 +7,10 @@
 //! apply-and-capture is never used.
 
 use crate::artifacts::ifc::schema::diff::{
-    self, dec_entity, dec_ifc_value, dec_ifc_value_list, dec_str, enc_entity, enc_ifc_value, enc_ifc_value_list,
-    enc_str, split_top_level, strip_brackets, IfcDiff,
+    self, dec_entity, dec_entity_bin, dec_entity_list_bin, dec_ifc_value, dec_ifc_value_bin, dec_ifc_value_list,
+    dec_ifc_value_list_bin, dec_str, enc_entity, enc_entity_bin, enc_entity_list_bin, enc_ifc_value, enc_ifc_value_bin,
+    enc_ifc_value_list, enc_ifc_value_list_bin, enc_str, read_str_bin, split_top_level, strip_brackets, write_str_bin,
+    IfcDiff,
 };
 use crate::artifacts::ifc::schema::snapshot::{IfcEntity, IfcHeader, IfcValue};
 use crate::artifacts::ifc::IfcSnapshot;
@@ -266,17 +268,182 @@ impl protocol::OpText for IfcMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification as `IfcDiff`'s hand-rolled codec.
+//#region 🔖️OpBinaryCodec
+/// 🧪️ P2-FG1: mutation-specific real binary primitives backing the upgraded `OpBinary` impl below
+/// — reuses `IfcDiff`'s `pub(crate)` recursive `enc_entity_bin`/`enc_ifc_value_list_bin`/
+/// `write_str_bin` primitives (`../../🔺️diff/🦀️component.rs`, imported above) for the SHARED
+/// `IfcEntity`/`IfcValue` shape (same intra-artifact-reuse split the TEXT codec above already
+/// uses), only `IfcHeader`/`IfcSnapshot`'s own binary shape is genuinely new here.
+fn enc_ifc_header_bin(h: &IfcHeader, out: &mut Vec<u8>) {
+    enc_ifc_value_list_bin(&h.file_description, out);
+    enc_ifc_value_list_bin(&h.file_name, out);
+    enc_ifc_value_list_bin(&h.file_schema, out);
+}
+fn dec_ifc_header_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcHeader, String> {
+    let file_description = dec_ifc_value_list_bin(reader)?;
+    let file_name = dec_ifc_value_list_bin(reader)?;
+    let file_schema = dec_ifc_value_list_bin(reader)?;
+    Ok(IfcHeader { file_description, file_name, file_schema })
+}
+fn enc_ifc_snapshot_bin(s: &IfcSnapshot, out: &mut Vec<u8>) {
+    write_str_bin(out, &s.schema);
+    enc_ifc_header_bin(&s.header, out);
+    enc_entity_list_bin(&s.entities, out);
+}
+fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcSnapshot, String> {
+    let schema = read_str_bin(reader)?;
+    let header = dec_ifc_header_bin(reader)?;
+    let entities = dec_entity_list_bin(reader)?;
+    Ok(IfcSnapshot { schema, header, entities })
+}
+//#endregion 🔖️OpBinaryCodec
+
+/// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut (`IfcMutation` was one of 4
+/// of stdio's 7 FG1 standards still on that shortcut per this wave's own P2-FG1 census). `tag` is
+/// the `IfcMutation` variant ordinal, same 0-10 order `parse_ifc_mutation`'s own keyword match
+/// uses. Every field is real (`id`/`index` varints, `IfcEntity`/`IfcValue` field-by-field via the
+/// reused diff-sibling primitives) — the only place the recursion bottoms out through a fully
+/// spec-expressible per-variant tag (`enc_ifc_value_bin`), never an opaque byte-chain fallback.
 impl protocol::OpBinary for IfcMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let tag: u8 = match self {
+            IfcMutation::NoMutation => 0,
+            IfcMutation::SetSnapshot { .. } => 1,
+            IfcMutation::SetFileDescription { .. } => 2,
+            IfcMutation::SetFileName { .. } => 3,
+            IfcMutation::SetFileSchema { .. } => 4,
+            IfcMutation::InsertEntity { .. } => 5,
+            IfcMutation::RemoveEntity { .. } => 6,
+            IfcMutation::SetEntityName { .. } => 7,
+            IfcMutation::SetEntityArg { .. } => 8,
+            IfcMutation::InsertEntityArg { .. } => 9,
+            IfcMutation::RemoveEntityArg { .. } => 10,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            IfcMutation::NoMutation => {}
+            IfcMutation::SetSnapshot { snapshot } => enc_ifc_snapshot_bin(snapshot, &mut out),
+            IfcMutation::SetFileDescription { values } => enc_ifc_value_list_bin(values, &mut out),
+            IfcMutation::SetFileName { values } => enc_ifc_value_list_bin(values, &mut out),
+            IfcMutation::SetFileSchema { values } => enc_ifc_value_list_bin(values, &mut out),
+            IfcMutation::InsertEntity { index, entity } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_entity_bin(entity, &mut out);
+            }
+            IfcMutation::RemoveEntity { id } => store::pack_rt::write_varint_u64(&mut out, *id),
+            IfcMutation::SetEntityName { id, name } => {
+                store::pack_rt::write_varint_u64(&mut out, *id);
+                write_str_bin(&mut out, name);
+            }
+            IfcMutation::SetEntityArg { id, index, value } => {
+                store::pack_rt::write_varint_u64(&mut out, *id);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_ifc_value_bin(value, &mut out);
+            }
+            IfcMutation::InsertEntityArg { id, index, value } => {
+                store::pack_rt::write_varint_u64(&mut out, *id);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_ifc_value_bin(value, &mut out);
+            }
+            IfcMutation::RemoveEntityArg { id, index } => {
+                store::pack_rt::write_varint_u64(&mut out, *id);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+            }
+        }
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(IfcMutation::NoMutation),
+            1 => {
+                let snapshot = dec_ifc_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                Ok(IfcMutation::SetSnapshot { snapshot })
+            }
+            2 => {
+                let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
+                Ok(IfcMutation::SetFileDescription { values })
+            }
+            3 => {
+                let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
+                Ok(IfcMutation::SetFileName { values })
+            }
+            4 => {
+                let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
+                Ok(IfcMutation::SetFileSchema { values })
+            }
+            5 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let entity = dec_entity_bin(&mut reader).map_err(|e| malformed("op entity", reader.position(), e))?;
+                Ok(IfcMutation::InsertEntity { index, entity })
+            }
+            6 => {
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                Ok(IfcMutation::RemoveEntity { id })
+            }
+            7 => {
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let name = read_str_bin(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                Ok(IfcMutation::SetEntityName { id, name })
+            }
+            8 => {
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let value = dec_ifc_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(IfcMutation::SetEntityArg { id, index, value })
+            }
+            9 => {
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let value = dec_ifc_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(IfcMutation::InsertEntityArg { id, index, value })
+            }
+            10 => {
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                Ok(IfcMutation::RemoveEntityArg { id, index })
+            }
+            other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
+        }
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG1: one representative `IfcMutation` per variant, real `print_op()`-conformance-law
+/// fodder (`ops_grammar_conformance_law`) and `protocol_walk_law` fodder — every `IfcValue` tag
+/// (incl. the recursive `Aggregate`/`TypedValue` cases) and `InsertEntity`'s bare `IfcEntity`
+/// payload are exercised at least once.
+pub(crate) fn demo_mutation_cases() -> Vec<IfcMutation> {
+    let demo_entity = |id: u64, name: &str, args: Vec<IfcValue>| IfcEntity { id, name: name.into(), args, complex: Vec::new() };
+    vec![
+        IfcMutation::NoMutation,
+        IfcMutation::SetSnapshot { snapshot: crate::artifacts::ifc::engine::demo_ifc_snapshot() },
+        IfcMutation::SetFileDescription { values: vec![IfcValue::String("demo".into())] },
+        IfcMutation::SetFileName { values: vec![IfcValue::String("demo.ifc".into())] },
+        IfcMutation::SetFileSchema { values: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])] },
+        IfcMutation::InsertEntity {
+            index: 1,
+            entity: demo_entity(99, "IFCSITE", vec![
+                IfcValue::Unset, IfcValue::Derived, IfcValue::Integer(-7), IfcValue::Real(3.25), IfcValue::String("hi".into()),
+                IfcValue::Enum("EDGE".into()), IfcValue::Reference(42), IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)]),
+                IfcValue::TypedValue("IFCLENGTHMEASURE".into(), vec![IfcValue::Real(3000.0)]),
+            ]),
+        },
+        IfcMutation::RemoveEntity { id: 2 },
+        IfcMutation::SetEntityName { id: 1, name: "IFCSLAB".into() },
+        IfcMutation::SetEntityArg { id: 1, index: 1, value: IfcValue::String("Wall-02".into()) },
+        IfcMutation::InsertEntityArg { id: 1, index: 2, value: IfcValue::Derived },
+        IfcMutation::RemoveEntityArg { id: 1, index: 0 },
+    ]
+}
+//#endregion 🔖️DemoCases
 
 //#region Tests
 #[cfg(test)]

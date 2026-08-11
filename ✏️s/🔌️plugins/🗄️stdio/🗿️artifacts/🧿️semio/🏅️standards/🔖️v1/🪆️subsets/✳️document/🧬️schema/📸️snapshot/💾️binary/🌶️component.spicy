@@ -1,5 +1,10 @@
-module Semio_semio_document_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module SemioDocumentSnapshot;
+# Pack binary form: store::semio_format envelope (magic + component tag + version + u32 length)
+# followed by exactly that many bytes of UTF-8 JSON (the snapshot re-encoded via serde).
 type Document = unit {
-    magic: bytes &size=29;
+    magic: bytes &size=4;
+    component_tag: uint8;
+    envelope_version: uint8;
+    body_len: uint32;
+    json_body: bytes &size=self.body_len;
 };

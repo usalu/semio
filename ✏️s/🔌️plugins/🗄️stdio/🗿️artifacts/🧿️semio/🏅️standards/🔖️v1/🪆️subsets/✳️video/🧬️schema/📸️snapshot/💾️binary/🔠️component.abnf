@@ -1,3 +1,6 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.video.snapshot"
+; stdio.semio.video snapshot binary layout: magic + version + u32le length + JSON body bytes.
+document = magic version length body
+magic = %x73.74.64.69.6f.2e.73.65.6d.69.6f.2e.76.69.64.65.6f ; "stdio.semio.video"
+version = OCTET
+length = 4OCTET ; u32, little-endian
+body = *OCTET ; JSON bytes, length octets long — structure normatively described by ../🔣️component.json

@@ -1,7 +1,23 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.s_stdio_tsv.mutations;
+package semio.s_stdio_tsv.mutation;
+
+import "s_stdio_tsv/snapshot.proto";
+
+message SetSnapshot { semio.s_stdio_tsv.snapshot.TsvSnapshot snapshot = 1; }
+message SetTrailingNewline { bool trailing_newline = 1; }
+message SetLineEnding { semio.s_stdio_tsv.snapshot.TsvLineEnding line_ending = 1; }
+message InsertRow { uint64 index = 1; semio.s_stdio_tsv.snapshot.TsvRow row = 2; }
+message RemoveRow { uint64 index = 1; }
+message SetCell { uint64 row_index = 1; uint64 field_index = 2; string value = 3; }
+
 message TsvMutation {
-  string schema = 1;
-  string entries_wire = 2;
+  oneof mutation {
+    bool no_mutation = 1;
+    SetSnapshot set_snapshot = 2;
+    SetTrailingNewline set_trailing_newline = 3;
+    SetLineEnding set_line_ending = 4;
+    InsertRow insert_row = 5;
+    RemoveRow remove_row = 6;
+    SetCell set_cell = 7;
+  }
 }

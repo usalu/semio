@@ -1,6 +1,58 @@
-dialect grammar stdio.dwg.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.dwg' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.dwg.ac1024.diff
+start diff
+comment none
+
+# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: real one-line
+# `print_diff`/`parse_diff` form — `DwgDiff` (ac1024) derives `dsl::DslDiff`, same generic
+# derive-driven printer as ac1018's own sibling grammar, applied to a richer struct whose one
+# collection field (`sections: Option<DwgSectionsDiff>`) is itself a plain (non-block, no
+# container keyword) nested RECORD — `stdio.zip`'s own hand-rolled `entries{[removed];...}` shape
+# reused here VIA THE GENERIC DERIVE, not hand-rolled: `sections=` is followed directly by that
+# nested record's own `removed=[...] modified=[...] added=[...]` fields, no wrapping delimiter.
+# Every token below is copied verbatim from real, directly-observed `print_diff()` output for
+# every `DwgDiff::demo_diff_cases()` case (temp `[DEBUG]` test, run once, deleted before landing):
+#   (empty diff) -> ""
+#   version=AC1032 maintenance-version=9 codepage=65001 bytes=[ 170 187 204 ] sections=removed=[ gone ] modified=[ name=stay diff=compressed=false declared-size=999 pages=[ page-number=0 file-address=2304 compressed-size=50 decoded="YWZ0ZXI=" page-number=1 file-address=2305 compressed-size=10 decoded="" error="truncated page" ] ] added=[ index=2 section=name=new compressed=true declared-size=5 pages=[ page-number=2 file-address=48 compressed-size=5 decoded="YnJhbmQgbmV3" ] ]
+#   version=AC1024 maintenance-version=2 codepage=30 bytes=[ 65 67 49 48 50 52 0 0 0 0 0 0 0 0 0 0 0 0 2 30 0 ]
+# (`removed`'s bare `gone` -- `is_bare_ident("gone") == true` -- proves `removed: Vec<String>`
+# list items use the same bare-vs-quoted `text-value` rule as every other string field, not an
+# always-quoted convention.)
+diff = version-field? maintenance-version-field? codepage-field? bytes-field? sections-field?
+
+text-value = IDENT | TEXT
+bit = "true" | "false"
+
+version-field = "version" "=" text-value
+maintenance-version-field = "maintenance-version" "=" INT
+codepage-field = "codepage" "=" INT
+# Same `Option<Vec<u8>>` -> `Shape::List(UInt)` derive quirk as ac1018's own sibling `bytes-field`
+# (the `#[dsl(base64)]` attribute is a documented no-op through the `Option` layer).
+bytes-field = "bytes" "=" "[" INT* "]"
+
+# `sections: Option<DwgSectionsDiff>` — no `#[dsl(block)]`, so no `{...}` wrapper: `sections=`
+# glues directly onto the nested record's own 3 keyed (all-`List`) fields, in declaration order.
+sections-field = "sections" "=" sections-diff
+sections-diff = removed-field modified-field added-field
+removed-field = "removed" "=" "[" text-value* "]"
+modified-field = "modified" "=" "[" section-modified* "]"
+added-field = "added" "=" "[" section-added* "]"
+
+# `DwgSectionModified{name, diff: DwgSectionDiff}` — `diff` is a plain (non-Option, non-block)
+# nested-record field: `diff=` glues directly onto `DwgSectionDiff`'s own optional fields (each
+# genuinely `Option<T>`, same "only present fields print" rule as the top-level `diff`).
+section-modified = "name" "=" text-value "diff" "=" section-diff-body
+section-diff-body = compressed-field? declared-size-field? pages-field?
+compressed-field = "compressed" "=" bit
+declared-size-field = "declared-size" "=" INT
+pages-field = "pages" "=" "[" section-page* "]"
+
+# One `DwgSectionPage` list item, no separator between items (next item's own `page-number=` key
+# is the boundary). `error: Option<String>` prints only when Some.
+section-page = "page-number" "=" INT "file-address" "=" INT "compressed-size" "=" INT "decoded" "=" TEXT error-field?
+error-field = "error" "=" text-value
+
+# `DwgSectionAdded{index, section: DwgSection}` — `section` is a plain nested-record field:
+# `section=` glues directly onto `DwgSection`'s own 4 fields, no delimiter.
+section-added = "index" "=" INT "section" "=" section-body
+section-body = "name" "=" text-value "compressed" "=" bit "declared-size" "=" INT "pages" "=" "[" section-page* "]"

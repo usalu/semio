@@ -1,0 +1,3042 @@
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate self as dsl_grammar;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate self as dsl_grammar;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:8:1
+  |
+8 | extern crate self as store;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+8 - extern crate self as store;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:9:1
+  |
+9 | extern crate self as protocol;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+9 - extern crate self as protocol;
+  |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:10:1
+   |
+10 | extern crate self as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+10 - extern crate self as pack;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1
+   |
+11 | extern crate self as spr;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+11 - extern crate self as spr;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | extern crate self as vcs;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+12 - extern crate self as vcs;
+   |
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11
+    |
+319 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11
+    |
+325 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unused imports: `Limits` and `TextError`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔤️token/🦀️component.rs:5:33
+  |
+5 | use crate::os_dsl::diagnostic::{Limits, TextError, TextSpan};
+  |                                 ^^^^^^  ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `self::span::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:41:11
+   |
+41 |   pub use self::span::*;
+   |           ^^^^^^^^^^^^^
+
+warning: unused import: `self::diagnostic::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:42:11
+   |
+42 |   pub use self::diagnostic::*;
+   |           ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `self::token::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:43:11
+   |
+43 |   pub use self::token::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused import: `self::lexer::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:44:11
+   |
+44 |   pub use self::lexer::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused import: `self::trust::*`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:45:11
+   |
+45 |   pub use self::trust::*;
+   |           ^^^^^^^^^^^^^^
+
+warning: unused imports: `ByteRange`, `ByteReader`, `ByteWriter`, `ChunkId`, `CodecId`, `CompressionCodec`, `KIND_CHUNK_TABLE`, `KIND_CHUNK`, `KIND_DOCUMENT`, `KIND_END`, `KIND_FIELD_INDEX`, `KIND_MANIFEST`, `KIND_PADDING`, `KIND_SCHEMA`, `KIND_SNAPSHOT`, `KIND_SYMBOLS`, `NoCompression`, `PackLimits`, `PackSink`, `PackSource`, `SegmentKind`, `crc32c`, `is_minimal_varint`, `read_varint_i64`, `read_varint_u64`, `write_varint_i64`, and `write_varint_u64`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🦀️component.rs:18:5
+   |
+18 |     crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+   |     ^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^^^               ^^^^^^^^^^^^^             ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^
+19 |     SegmentKind, KIND_CHUNK, KIND_CHUNK_TABLE, KIND_DOCUMENT, KIND_END, KIND_FIELD_INDEX, KIND_MANIFEST, KIND_PADDING, KIND_SCHEMA, KIND_SNAPSHOT, KIND_SYMBOLS,
+   |     ^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `ByteRange`, `ChunkId`, and `ContentHash`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧾️codec/🦀️component.rs:4:27
+  |
+4 | use crate::os_pack::ids::{ByteRange, ChunkId, CodecId, ContentHash};
+  |                           ^^^^^^^^^  ^^^^^^^           ^^^^^^^^^^^
+
+warning: unused imports: `SignatureVerifier` and `Signer`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:11:76
+   |
+11 | pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
+   |                                                                            ^^^^^^^^^^^^^^^^^  ^^^^^^
+
+warning: unused imports: `ActorId`, `ArtifactId`, `ArtifactVersion`, `ConflictRule`, `HybridLogicalTimestamp`, `MergeStrategyKind`, `MutationId`, `PayloadHash`, `SchemaId`, `SchemaVersion`, `StateClass`, `UndoPolicy`, `read_f64`, `read_str`, `read_varint_u64`, `write_f64`, `write_str`, and `write_varint_u64`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:30:31
+   |
+30 | ...::{ActorId, ConflictRule, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, MergeStrategyKind, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
+   |       ^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^
+
+warning: unused imports: `AckStage`, `ApplyOutcome`, `Bootstrap`, `ClientFrame`, `Lane`, `PresencePeer`, `PresencePoint`, `PresenceViewport`, `ServerFrame`, `decode_client_frame`, `decode_presence_peer`, `decode_server_frame`, `encode_client_frame`, `encode_presence_peer`, and `encode_server_frame`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:32:31
+   |
+32 | ...::{decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame, decode_presence_peer, encode_presence_peer, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresencePoint, PresenceViewport, ServerFrame};
+   |       ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^  ^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `Serialize`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:679:44
+    |
+679 |     use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    |                                            ^^^^^^^^^
+
+warning: unused import: `self::ids::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:191:11
+    |
+191 |   pub use self::ids::*;
+    |           ^^^^^^^^^^^^
+
+warning: unused import: `self::dictionary::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:11
+    |
+192 |   pub use self::dictionary::*;
+    |           ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `self::crypto::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:193:11
+    |
+193 |   pub use self::crypto::*;
+    |           ^^^^^^^^^^^^^^^
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+    |
+263 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `canonicalize` in the value namespace is first re-exported here
+...
+280 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `canonicalize` in the value namespace is also re-exported here
+    |
+    = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+    |
+263 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `test_support` in the type namespace is first re-exported here
+264 | pub use crate::os_store::*;
+    |         ------------------ but the name `test_support` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:263:9
+    |
+263 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Symbol` in the type namespace is first re-exported here
+...
+280 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `Symbol` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `cli` in the type namespace is first re-exported here
+...
+275 | pub use crate::os_semio::*;
+    |         ------------------ but the name `cli` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `ids` in the type namespace is first re-exported here
+266 | pub use crate::os_pack::*;
+    |         ----------------- but the name `ids` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `format` in the type namespace is first re-exported here
+266 | pub use crate::os_pack::*;
+    |         ----------------- but the name `format` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `io` in the type namespace is first re-exported here
+266 | pub use crate::os_pack::*;
+    |         ----------------- but the name `io` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:265:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `testkit` in the type namespace is first re-exported here
+266 | pub use crate::os_pack::*;
+    |         ----------------- but the name `testkit` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `OPTIONAL_CANONICAL` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `OPTIONAL_CANONICAL` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `REQUIRED_ENCRYPTED` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `REQUIRED_ENCRYPTED` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `read_varint_u64` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `read_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `write_varint_u64` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `write_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `recover_file` in the value namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `recover_file` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `RecoveryReport` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `RecoveryReport` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `VerificationLevel` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `VerificationLevel` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `WriteOptions` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `WriteOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `DecodeOptions` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `DecodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:266:9
+    |
+265 | pub use crate::os_spr::*;
+    |         ---------------- but the name `EncodeOptions` in the type namespace is also re-exported here
+266 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `EncodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:280:9
+    |
+264 | pub use crate::os_store::*;
+    |         ------------------ but the name `Alternative` in the type namespace is also re-exported here
+...
+280 | pub use crate::os_dsl::grammar::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ the name `Alternative` in the type namespace is first re-exported here
+
+warning: unused imports: `diagnostic::*`, `lexer::*`, `span::*`, `token::*`, and `trust::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:281:25
+    |
+281 | pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
+    |                         ^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^  ^^^^^^^^  ^^^^^^^^
+
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21
+    |
+585 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2350:19
+     |
+2244 | / impl<P, Mutation> ArtifactStore<P, Mutation>
+2245 | | where
+2246 | |     P: Clone + Serialize + DeserializeOwned + ArtifactPack,
+2247 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+2350 |       pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib) generated 46 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 23 suggestions)
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate semio_framework_os_kernel as pack;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate semio_framework_os_kernel as pack;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:7:1
+  |
+7 | extern crate semio_framework_os_kernel as spr;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+7 - extern crate semio_framework_os_kernel as spr;
+  |
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:445:31
+    |
+445 |         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError>;
+    |                               ^^^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+445 |         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError>;
+    |                                            ++++
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:454:22
+    |
+454 |         C::Snapshot: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+454 -         C::Snapshot: store::ArtifactPack,
+454 +         C::Snapshot: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:458:26
+    |
+458 |             C::Snapshot: store::ArtifactPack,
+    |                          ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+458 -             C::Snapshot: store::ArtifactPack,
+458 +             C::Snapshot: ArtifactPack,
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:460:36
+    |
+460 |             let typed_sources: Vec<ComposeSource> = sources
+    |                                    ^^^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+460 |             let typed_sources: Vec<ComposeSource<'_>> = sources
+    |                                                 ++++
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:471:25
+    |
+471 |             let bytes = store::ArtifactPack::encode_pack(&composed.snapshot);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+471 -             let bytes = store::ArtifactPack::encode_pack(&composed.snapshot);
+471 +             let bytes = ArtifactPack::encode_pack(&composed.snapshot);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:492:18
+    |
+492 |         D::From: store::ArtifactPack,
+    |                  ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+492 -         D::From: store::ArtifactPack,
+492 +         D::From: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:493:18
+    |
+493 |         D::Into: store::ArtifactPack,
+    |                  ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+493 -         D::Into: store::ArtifactPack,
+493 +         D::Into: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:497:22
+    |
+497 |             D::From: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+497 -             D::From: store::ArtifactPack,
+497 +             D::From: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:498:22
+    |
+498 |             D::Into: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+498 -             D::Into: store::ArtifactPack,
+498 +             D::Into: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:518:24
+    |
+518 |             let from = <D::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError {
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+518 -             let from = <D::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError {
+518 +             let from = <D::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:526:25
+    |
+526 |             let bytes = <D::Into as store::ArtifactPack>::encode_pack(&into);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+526 -             let bytes = <D::Into as store::ArtifactPack>::encode_pack(&into);
+526 +             let bytes = <D::Into as ArtifactPack>::encode_pack(&into);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:537:18
+    |
+537 |         S::From: store::ArtifactPack,
+    |                  ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+537 -         S::From: store::ArtifactPack,
+537 +         S::From: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:538:18
+    |
+538 |         S::Into: store::ArtifactPack,
+    |                  ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+538 -         S::Into: store::ArtifactPack,
+538 +         S::Into: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:542:22
+    |
+542 |             S::From: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+542 -             S::From: store::ArtifactPack,
+542 +             S::From: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:543:22
+    |
+543 |             S::Into: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+543 -             S::Into: store::ArtifactPack,
+543 +             S::Into: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:563:24
+    |
+563 |             let from = <S::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError {
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+563 -             let from = <S::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError {
+563 +             let from = <S::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:571:25
+    |
+571 |             let bytes = <S::Into as store::ArtifactPack>::encode_pack(&into);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+571 -             let bytes = <S::Into as store::ArtifactPack>::encode_pack(&into);
+571 +             let bytes = <S::Into as ArtifactPack>::encode_pack(&into);
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:624:33
+    |
+624 |         fn decompose(sources: &[DecomposeSource]) -> Decomposition<Self::Parts>;
+    |                                 ^^^^^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+624 |         fn decompose(sources: &[DecomposeSource<'_>]) -> Decomposition<Self::Parts>;
+    |                                                ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:636:27
+    |
+636 |         fn sniff(source: &AnalyzeSource) -> IoConfidence;
+    |                           ^^^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+636 |         fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence;
+    |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:637:31
+    |
+637 |         fn analyze(sources: &[AnalyzeSource]) -> Analysis<Self::Parts>;
+    |                               ^^^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+637 |         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts>;
+    |                                            ++++
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4362:61
+     |
+4362 |         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                             ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4362 -         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+4362 +         fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6076:41
+     |
+6076 |         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6076 -         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+6076 +         static INSTANCE_ACTORS: RefCell<HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6076:96
+     |
+6076 |         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+     |                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6076 -         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+6076 +         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(HashMap::new());
+     |
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5902:34
+     |
+5902 |             let VcsArtifactApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5913:34
+     |
+5913 |             let VcsArtifactApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5927:34
+     |
+5927 |             let VcsArtifactApp { app, cache, registry, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5937:34
+     |
+5937 |             let VcsArtifactApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5952:34
+     |
+5952 |             let VcsArtifactApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5871:34
+     |
+5871 |             let VcsArtifactApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5613:38
+     |
+5613 |                 let VcsArtifactApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5649:38
+     |
+5649 |                 let VcsArtifactApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5529:42
+     |
+5529 |                     let VcsArtifactApp { app, cache, .. } = self;
+     |                                          ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2229:17
+     |
+2229 |             let app = A::default();
+     |                 ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: `semio-framework-plugin` (lib) generated 35 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 30 suggestions)
+    Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+warning: unused import: `BinaryDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/⚙️engine/🦀️component.rs:3:48
+  |
+3 | use crate::artifacts::binary::{BinaryArtifact, BinaryDiff, BinaryMutation, BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
+  |                                                ^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:47:13
+   |
+47 |     let d = <BinaryMutation as protocol::Mutation<BinarySnapshot>>::diff(mutation, &*snapshot);
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+47 -     let d = <BinaryMutation as protocol::Mutation<BinarySnapshot>>::diff(mutation, &*snapshot);
+47 +     let d = <BinaryMutation as Mutation<BinarySnapshot>>::diff(mutation, &*snapshot);
+   |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+   = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+   = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:118:37
+    |
+118 | ...                   pub use component::*;
+    |                               ^^^^^^^^^^^^
+
+warning: unused import: `crate::artifacts::txt::schema::snapshot::LineEnding`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/⚙️engine/🦀️component.rs:3:5
+  |
+3 | use crate::artifacts::txt::schema::snapshot::LineEnding;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `TxtDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/⚙️engine/🦀️component.rs:4:42
+  |
+4 | use crate::artifacts::txt::{TxtArtifact, TxtDiff, TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:42:13
+   |
+42 |     let d = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &*snapshot);
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+42 -     let d = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &*snapshot);
+42 +     let d = <TxtMutation as Mutation<TxtSnapshot>>::diff(mutation, &*snapshot);
+   |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:28:25
+   |
+28 |         let native: Vec<AnalyzeSource> = sources
+   |                         ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+28 |         let native: Vec<AnalyzeSource<'_>> = sources
+   |                                      ++++
+
+warning: unused import: `component::*`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:273:37
+    |
+273 | ...                   pub use component::*;
+    |                               ^^^^^^^^^^^^
+
+warning: unused import: `JsonDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/⚙️engine/🦀️component.rs:3:44
+  |
+3 | use crate::artifacts::json::{JsonArtifact, JsonDiff, JsonMutation, JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+  |                                            ^^^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:462:46
+    |
+462 |     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    |                                              ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+462 -     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+462 +     fn parse_dsl(text: &str) -> Result<Self, TextError> {
+    |
+
+warning: unused import: `OpText`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:13:40
+   |
+13 | use protocol::{Mutation, MutationDiff, OpText};
+   |                                        ^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:428:37
+    |
+428 | ...                   pub use component::*;
+    |                               ^^^^^^^^^^^^
+
+warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:4:42
+  |
+4 | use crate::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🎹️composer/🦀️component.rs:40:27
+   |
+40 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+40 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:491:37
+    |
+491 | ...                   pub use component::*;
+    |                               ^^^^^^^^^^^^
+
+warning: unused import: `XmlDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/⚙️engine/🦀️component.rs:3:42
+  |
+3 | use crate::artifacts::xml::{XmlArtifact, XmlDiff, XmlMutation, XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:306:6
+    |
+306 | impl protocol::OpText for XmlMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+306 - impl protocol::OpText for XmlMutation {
+306 + impl OpText for XmlMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:604:37
+    |
+604 | ...                   pub use component::*;
+    |                               ^^^^^^^^^^^^
+
+warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:3:42
+  |
+3 | use crate::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🎹️composer/🦀️component.rs:39:27
+   |
+39 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+39 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:667:37
+    |
+667 | ...                   pub use component::*;
+    |                               ^^^^^^^^^^^^
+
+warning: unused import: `CsvDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/⚙️engine/🦀️component.rs:4:42
+  |
+4 | use crate::artifacts::csv::{CsvArtifact, CsvDiff, CsvMutation, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:728:37
+    |
+728 | fn read_bin_field_diff(r: &mut dsl::ByteReader) -> Result<CsvFieldDiff, dsl::PackError> {
+    |                                -----^^^^^^^^^^
+    |                                |
+    |                                expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+728 | fn read_bin_field_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvFieldDiff, dsl::PackError> {
+    |                                               ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:758:38
+    |
+758 | fn read_bin_record_diff(r: &mut dsl::ByteReader) -> Result<CsvRecordDiff, dsl::PackError> {
+    |                                 -----^^^^^^^^^^
+    |                                 |
+    |                                 expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+758 | fn read_bin_record_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordDiff, dsl::PackError> {
+    |                                                ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:787:39
+    |
+787 | fn read_bin_records_diff(r: &mut dsl::ByteReader) -> Result<CsvRecordsDiff, dsl::PackError> {
+    |                                  -----^^^^^^^^^^
+    |                                  |
+    |                                  expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+787 | fn read_bin_records_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordsDiff, dsl::PackError> {
+    |                                                 ++++
+
+warning: unused import: `MutationDiff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:11:26
+   |
+11 | use protocol::{Mutation, MutationDiff, OpText};
+   |                          ^^^^^^^^^^^^
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:66:16
+   |
+66 |     let diff = <CsvMutation as protocol::Mutation<CsvSnapshot>>::diff(mutation, snapshot);
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+66 -     let diff = <CsvMutation as protocol::Mutation<CsvSnapshot>>::diff(mutation, snapshot);
+66 +     let diff = <CsvMutation as Mutation<CsvSnapshot>>::diff(mutation, snapshot);
+   |
+
+warning: hidden lifetime parameters in types are deprecated
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:247:30
+    |
+247 | fn read_bin_str(r: &mut dsl::ByteReader) -> Result<String, dsl::PackError> {
+    |                         -----^^^^^^^^^^
+    |                         |
+    |                         expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+247 | fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
+    |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:256:43
+    |
+256 | pub(crate) fn read_bin_field(r: &mut dsl::ByteReader) -> Result<CsvField, dsl::PackError> {
+    |                                      -----^^^^^^^^^^
+    |                                      |
+    |                                      expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+256 | pub(crate) fn read_bin_field(r: &mut dsl::ByteReader<'_>) -> Result<CsvField, dsl::PackError> {
+    |                                                     ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:267:44
+    |
+267 | pub(crate) fn read_bin_record(r: &mut dsl::ByteReader) -> Result<CsvRecord, dsl::PackError> {
+    |                                       -----^^^^^^^^^^
+    |                                       |
+    |                                       expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+267 | pub(crate) fn read_bin_record(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecord, dsl::PackError> {
+    |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:283:35
+    |
+283 | fn read_bin_snapshot(r: &mut dsl::ByteReader) -> Result<CsvSnapshot, dsl::PackError> {
+    |                              -----^^^^^^^^^^
+    |                              |
+    |                              expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+283 | fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<CsvSnapshot, dsl::PackError> {
+    |                                             ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:780:37
+    |
+780 | ...                   pub use component::*;
+    |                               ^^^^^^^^^^^^
+
+warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:3:42
+  |
+3 | use crate::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `MdDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/⚙️engine/🦀️component.rs:8:40
+  |
+8 | use crate::artifacts::md::{MdArtifact, MdDiff, MdMutation, MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
+  |                                        ^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:217:6
+    |
+217 | impl protocol::OpText for MdMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+217 - impl protocol::OpText for MdMutation {
+217 + impl OpText for MdMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:935:37
+    |
+935 | ...                   pub use component::*;
+    |                               ^^^^^^^^^^^^
+
+warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:3:42
+  |
+3 | use crate::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `DeflateDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/⚙️engine/🦀️component.rs:4:50
+  |
+4 | use crate::artifacts::deflate::{DeflateArtifact, DeflateDiff, DeflateMutation, DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
+  |                                                  ^^^^^^^^^^^
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:55:13
+   |
+55 |     let d = <DeflateMutation as protocol::Mutation<DeflateSnapshot>>::diff(mutation, &*snapshot);
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+55 -     let d = <DeflateMutation as protocol::Mutation<DeflateSnapshot>>::diff(mutation, &*snapshot);
+55 +     let d = <DeflateMutation as Mutation<DeflateSnapshot>>::diff(mutation, &*snapshot);
+   |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:1090:37
+     |
+1090 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: unused import: `ZipDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/⚙️engine/🦀️component.rs:5:42
+  |
+5 | use crate::artifacts::zip::{ZipArtifact, ZipDiff, ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:107:18
+    |
+107 |     let __diff = <ZipMutation as protocol::Mutation<ZipSnapshot>>::diff(mutation, snapshot);
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+107 -     let __diff = <ZipMutation as protocol::Mutation<ZipSnapshot>>::diff(mutation, snapshot);
+107 +     let __diff = <ZipMutation as Mutation<ZipSnapshot>>::diff(mutation, snapshot);
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:24:27
+   |
+24 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+24 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:1245:37
+     |
+1245 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🎹️composer/🦀️component.rs:68:27
+   |
+68 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+68 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:1332:37
+     |
+1332 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:1460:37
+     |
+1460 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🎹️composer/🦀️component.rs:44:27
+   |
+44 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+44 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🎹️composer/🦀️component.rs:44:27
+   |
+44 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+44 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🎹️composer/🦀️component.rs:44:27
+   |
+44 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+44 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🎹️composer/🦀️component.rs:44:27
+   |
+44 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+44 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🎹️composer/🦀️component.rs:44:27
+   |
+44 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+44 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🎹️composer/🦀️component.rs:44:27
+   |
+44 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+44 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `IfcDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/⚙️engine/🦀️component.rs:3:42
+  |
+3 | use crate::artifacts::ifc::{IfcArtifact, IfcDiff, IfcMutation, IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:96:18
+   |
+96 |     let __diff = <IfcMutation as protocol::Mutation<IfcSnapshot>>::diff(mutation, snapshot);
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+96 -     let __diff = <IfcMutation as protocol::Mutation<IfcSnapshot>>::diff(mutation, snapshot);
+96 +     let __diff = <IfcMutation as Mutation<IfcSnapshot>>::diff(mutation, snapshot);
+   |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:260:6
+    |
+260 | impl protocol::OpText for IfcMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+260 - impl protocol::OpText for IfcMutation {
+260 + impl OpText for IfcMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:1716:37
+     |
+1716 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:2:42
+  |
+2 | use crate::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/⚙️engine/🦀️component.rs:13:5
+   |
+13 | use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:24:27
+   |
+24 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+24 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:1856:37
+     |
+1856 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🎹️composer/🦀️component.rs:38:27
+   |
+38 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+38 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🎹️composer/🦀️component.rs:32:27
+   |
+32 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+32 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🎹️composer/🦀️component.rs:32:27
+   |
+32 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+32 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `LasDiff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/⚙️engine/🦀️component.rs:16:42
+   |
+16 | use crate::artifacts::las::{LasArtifact, LasDiff, LasMutation, LasSnapshot, STDIO_LAS_DOCUMENT_SCHEMA};
+   |                                          ^^^^^^^
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:98:18
+   |
+98 |     let __diff = <LasMutation as protocol::Mutation<LasSnapshot>>::diff(mutation, snapshot);
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+98 -     let __diff = <LasMutation as protocol::Mutation<LasSnapshot>>::diff(mutation, snapshot);
+98 +     let __diff = <LasMutation as Mutation<LasSnapshot>>::diff(mutation, snapshot);
+   |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:2081:37
+     |
+2081 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: unused imports: `GltfAccessor`, `GltfBufferView`, `GltfBuffer`, `GltfJson`, `GltfMesh`, `GltfPrimitive`, `GltfSparseAccessor`, `GltfSparseIndices`, and `GltfSparseValues`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/⚙️engine/🦀️component.rs:9:5
+   |
+ 9 |     GltfAccessor, GltfBuffer, GltfBufferView, GltfDocument, GltfJson, GltfMesh, GltfPrimitive,
+   |     ^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^                ^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^
+10 |     GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues,
+   |                     ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+
+warning: unused import: `GltfDiff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/⚙️engine/🦀️component.rs:12:44
+   |
+12 | use crate::artifacts::gltf::{GltfArtifact, GltfDiff, GltfMutation, GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
+   |                                            ^^^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:689:47
+    |
+689 |     pub pbr_metallic_roughness: Option<Option<crate::artifacts::gltf::schema::snapshot::GltfPbrMetallicRoughness>>,
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+689 -     pub pbr_metallic_roughness: Option<Option<crate::artifacts::gltf::schema::snapshot::GltfPbrMetallicRoughness>>,
+689 +     pub pbr_metallic_roughness: Option<Option<GltfPbrMetallicRoughness>>,
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:691:39
+    |
+691 |     pub normal_texture: Option<Option<crate::artifacts::gltf::schema::snapshot::GltfNormalTextureInfo>>,
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+691 -     pub normal_texture: Option<Option<crate::artifacts::gltf::schema::snapshot::GltfNormalTextureInfo>>,
+691 +     pub normal_texture: Option<Option<GltfNormalTextureInfo>>,
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:693:42
+    |
+693 |     pub occlusion_texture: Option<Option<crate::artifacts::gltf::schema::snapshot::GltfOcclusionTextureInfo>>,
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+693 -     pub occlusion_texture: Option<Option<crate::artifacts::gltf::schema::snapshot::GltfOcclusionTextureInfo>>,
+693 +     pub occlusion_texture: Option<Option<GltfOcclusionTextureInfo>>,
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:695:41
+    |
+695 |     pub emissive_texture: Option<Option<crate::artifacts::gltf::schema::snapshot::GltfTextureInfo>>,
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+695 -     pub emissive_texture: Option<Option<crate::artifacts::gltf::schema::snapshot::GltfTextureInfo>>,
+695 +     pub emissive_texture: Option<Option<GltfTextureInfo>>,
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:699:28
+    |
+699 |     pub alpha_mode: Option<crate::artifacts::gltf::schema::snapshot::GltfAlphaMode>,
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+699 -     pub alpha_mode: Option<crate::artifacts::gltf::schema::snapshot::GltfAlphaMode>,
+699 +     pub alpha_mode: Option<GltfAlphaMode>,
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:841:50
+    |
+841 | pub type GltfImagesDiff = GltfWeakCollectionDiff<crate::artifacts::gltf::schema::snapshot::GltfImage>;
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+841 - pub type GltfImagesDiff = GltfWeakCollectionDiff<crate::artifacts::gltf::schema::snapshot::GltfImage>;
+841 + pub type GltfImagesDiff = GltfWeakCollectionDiff<GltfImage>;
+    |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:81:18
+   |
+81 |     let __diff = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(mutation, snapshot);
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+81 -     let __diff = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(mutation, snapshot);
+81 +     let __diff = <GltfMutation as Mutation<GltfSnapshot>>::diff(mutation, snapshot);
+   |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:383:6
+    |
+383 | impl protocol::OpText for GltfMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+383 - impl protocol::OpText for GltfMutation {
+383 + impl OpText for GltfMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:36:27
+   |
+36 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+36 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:2235:37
+     |
+2235 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: unused import: `ObjDiff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/⚙️engine/🦀️component.rs:27:42
+   |
+27 | use crate::artifacts::obj::{ObjArtifact, ObjDiff, ObjMutation, ObjSnapshot, STDIO_OBJ_DOCUMENT_SCHEMA};
+   |                                          ^^^^^^^
+
+warning: unused import: `MutationDiff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:30:26
+   |
+30 | use protocol::{Mutation, MutationDiff};
+   |                          ^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:131:16
+    |
+131 |     let diff = <ObjMutation as protocol::Mutation<ObjSnapshot>>::diff(mutation, snapshot);
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+131 -     let diff = <ObjMutation as protocol::Mutation<ObjSnapshot>>::diff(mutation, snapshot);
+131 +     let diff = <ObjMutation as Mutation<ObjSnapshot>>::diff(mutation, snapshot);
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:2398:37
+     |
+2398 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:3:42
+  |
+3 | use crate::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `PlyDiff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/⚙️engine/🦀️component.rs:14:42
+   |
+14 | use crate::artifacts::ply::{PlyArtifact, PlyDiff, PlyMutation, PlySnapshot, STDIO_PLY_DOCUMENT_SCHEMA};
+   |                                          ^^^^^^^
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:53:16
+   |
+53 |     let diff = <PlyMutation as protocol::Mutation<PlySnapshot>>::diff(mutation, snapshot);
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+53 -     let diff = <PlyMutation as protocol::Mutation<PlySnapshot>>::diff(mutation, snapshot);
+53 +     let diff = <PlyMutation as Mutation<PlySnapshot>>::diff(mutation, snapshot);
+   |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:221:6
+    |
+221 | impl protocol::OpText for PlyMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+221 - impl protocol::OpText for PlyMutation {
+221 + impl OpText for PlyMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:2552:37
+     |
+2552 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: unused import: `DxfDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/⚙️engine/🦀️component.rs:3:42
+  |
+3 | use crate::artifacts::dxf::{DxfArtifact, DxfDiff, DxfMutation, DxfSnapshot, STDIO_DXF_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:653:89
+    |
+653 | ...n::is_none")] pub vertices: Option<Vec<crate::artifacts::dxf::schema::snapshot::DxfVertex>>,
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+653 -     #[serde(default, skip_serializing_if = "Option::is_none")] pub vertices: Option<Vec<crate::artifacts::dxf::schema::snapshot::DxfVertex>>,
+653 +     #[serde(default, skip_serializing_if = "Option::is_none")] pub vertices: Option<Vec<DxfVertex>>,
+    |
+
+warning: unused import: `header_var_diff_between`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:28:5
+   |
+28 |     header_var_diff_between, layer_diff_between, linetype_diff_between, style_diff_between,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `MutationDiff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:33:26
+   |
+33 | use protocol::{Mutation, MutationDiff, OpText};
+   |                          ^^^^^^^^^^^^
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:94:16
+   |
+94 |     let diff = <DxfMutation as protocol::Mutation<DxfSnapshot>>::diff(mutation, snapshot);
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+94 -     let diff = <DxfMutation as protocol::Mutation<DxfSnapshot>>::diff(mutation, snapshot);
+94 +     let diff = <DxfMutation as Mutation<DxfSnapshot>>::diff(mutation, snapshot);
+   |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:301:6
+    |
+301 | impl protocol::OpText for DxfMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+301 - impl protocol::OpText for DxfMutation {
+301 + impl OpText for DxfMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:2706:37
+     |
+2706 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:3:42
+  |
+3 | use crate::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `StlDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/⚙️engine/🦀️component.rs:4:42
+  |
+4 | use crate::artifacts::stl::{StlArtifact, StlDiff, StlMutation, StlSnapshot, STDIO_STL_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:69:18
+   |
+69 |     let __diff = <StlMutation as protocol::Mutation<StlSnapshot>>::diff(mutation, snapshot);
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+69 -     let __diff = <StlMutation as protocol::Mutation<StlSnapshot>>::diff(mutation, snapshot);
+69 +     let __diff = <StlMutation as Mutation<StlSnapshot>>::diff(mutation, snapshot);
+   |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:24:27
+   |
+24 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+24 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:2860:37
+     |
+2860 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:3:42
+  |
+3 | use crate::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `SvgDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/⚙️engine/🦀️component.rs:3:42
+  |
+3 | use crate::artifacts::svg::{SvgArtifact, SvgDiff, SvgMutation, SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:372:6
+    |
+372 | impl protocol::OpText for SvgMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+372 - impl protocol::OpText for SvgMutation {
+372 + impl OpText for SvgMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:3038:37
+     |
+3038 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🎹️composer/🦀️component.rs:41:27
+   |
+41 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+41 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🎹️composer/🦀️component.rs:39:27
+   |
+39 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+39 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `MutationDiff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:10:26
+   |
+10 | use protocol::{Mutation, MutationDiff};
+   |                          ^^^^^^^^^^^^
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:87:16
+   |
+87 |     let diff = <BmpMutation as protocol::Mutation<BmpSnapshot>>::diff(mutation, snapshot);
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+87 -     let diff = <BmpMutation as protocol::Mutation<BmpSnapshot>>::diff(mutation, snapshot);
+87 +     let diff = <BmpMutation as Mutation<BmpSnapshot>>::diff(mutation, snapshot);
+   |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:3225:37
+     |
+3225 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: unused import: `DwgDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/⚙️engine/🦀️component.rs:3:42
+  |
+3 | use crate::artifacts::dwg::{DwgArtifact, DwgDiff, DwgMutation, DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA};
+  |                                          ^^^^^^^
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:63:18
+   |
+63 |     let __diff = <DwgMutation as protocol::Mutation<DwgSnapshot>>::diff(mutation, snapshot);
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+63 -     let __diff = <DwgMutation as protocol::Mutation<DwgSnapshot>>::diff(mutation, snapshot);
+63 +     let __diff = <DwgMutation as Mutation<DwgSnapshot>>::diff(mutation, snapshot);
+   |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:3379:37
+     |
+3379 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: unused import: `DwgDiff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/⚙️engine/🦀️component.rs:14:42
+   |
+14 | use crate::artifacts::dwg::{DwgArtifact, DwgDiff, DwgMutation, DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA};
+   |                                          ^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/⚙️engine/🦀️component.rs:96:34
+   |
+96 | fn read_literal_length(src: &mut ByteCursor, opcode: u8) -> Result<u32, String> {
+   |                                  ^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+96 | fn read_literal_length(src: &mut ByteCursor<'_>, opcode: u8) -> Result<u32, String> {
+   |                                            ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/⚙️engine/🦀️component.rs:112:36
+    |
+112 | fn read_compressed_bytes(src: &mut ByteCursor, opcode: u8, bits: u32) -> Result<u32, String> {
+    |                                    ^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+112 | fn read_compressed_bytes(src: &mut ByteCursor<'_>, opcode: u8, bits: u32) -> Result<u32, String> {
+    |                                              ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/⚙️engine/🦀️component.rs:134:30
+    |
+134 | fn two_byte_offset(src: &mut ByteCursor, plus: u32, existing_offset: u32) -> Result<(u8, u32), String> {
+    |                              ^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+134 | fn two_byte_offset(src: &mut ByteCursor<'_>, plus: u32, existing_offset: u32) -> Result<(u8, u32), String> {
+    |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/⚙️engine/🦀️component.rs:141:33
+    |
+141 | fn copy_bytes(n: u32, src: &mut ByteCursor, dec: &mut Vec<u8>) -> Result<u8, String> {
+    |                                 ^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+141 | fn copy_bytes(n: u32, src: &mut ByteCursor<'_>, dec: &mut Vec<u8>) -> Result<u8, String> {
+    |                                           ++++
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:69:18
+   |
+69 |     let __diff = <DwgMutation as protocol::Mutation<DwgSnapshot>>::diff(mutation, snapshot);
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+69 -     let __diff = <DwgMutation as protocol::Mutation<DwgSnapshot>>::diff(mutation, snapshot);
+69 +     let __diff = <DwgMutation as Mutation<DwgSnapshot>>::diff(mutation, snapshot);
+   |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:3495:37
+     |
+3495 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: unused import: `PngDiff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/⚙️engine/🦀️component.rs:16:18
+   |
+16 |     PngArtifact, PngDiff, PngMutation, PngSnapshot, STDIO_PNG_DOCUMENT_SCHEMA,
+   |                  ^^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:315:6
+    |
+315 | impl protocol::OpText for PngMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+315 - impl protocol::OpText for PngMutation {
+315 + impl OpText for PngMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:24:27
+   |
+24 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+24 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:3663:37
+     |
+3663 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: unused import: `diff::PdfDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/⚙️engine/🦀️component.rs:6:68
+  |
+6 | use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::{diff::PdfDiff, mutations::PdfMutation, snapshot::{PageDoc, PdfSnap...
+  |                                                                    ^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:34:18
+   |
+34 |     let __diff = <PdfMutation as protocol::Mutation<PdfSnapshot>>::diff(mutation, snapshot);
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+34 -     let __diff = <PdfMutation as protocol::Mutation<PdfSnapshot>>::diff(mutation, snapshot);
+34 +     let __diff = <PdfMutation as Mutation<PdfSnapshot>>::diff(mutation, snapshot);
+   |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:24:27
+   |
+24 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+24 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:3849:37
+     |
+3849 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🎹️composer/🦀️component.rs:39:27
+   |
+39 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+39 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🎹️composer/🦀️component.rs:39:27
+   |
+39 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+39 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/⚙️engine/🦀️component.rs:18:5
+   |
+18 | use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:136:18
+    |
+136 |     let __diff = <PdfMutation as protocol::Mutation<PdfSnapshot>>::diff(mutation, snapshot);
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+136 -     let __diff = <PdfMutation as protocol::Mutation<PdfSnapshot>>::diff(mutation, snapshot);
+136 +     let __diff = <PdfMutation as Mutation<PdfSnapshot>>::diff(mutation, snapshot);
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:162:39
+    |
+162 | ...   snapshot.objects.push(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfIndirectObject { id: *id, va...
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+162 -                 snapshot.objects.push(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfIndirectObject { id: *id, value: value.clone() });
+162 +                 snapshot.objects.push(PdfIndirectObject { id: *id, value: value.clone() });
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:171:47
+    |
+171 | ...   None => snapshot.objects.push(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfIndirectObject { id:...
+    |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+171 -                 None => snapshot.objects.push(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfIndirectObject { id: *id, value: value.clone() }),
+171 +                 None => snapshot.objects.push(PdfIndirectObject { id: *id, value: value.clone() }),
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:417:6
+    |
+417 | impl protocol::OpText for PdfMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+417 - impl protocol::OpText for PdfMutation {
+417 + impl OpText for PdfMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:24:27
+   |
+24 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+24 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4022:37
+     |
+4022 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🎹️composer/🦀️component.rs:52:27
+   |
+52 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+52 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🎹️composer/🦀️component.rs:38:27
+   |
+38 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+38 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🎹️composer/🦀️component.rs:34:27
+   |
+34 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+34 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🎹️composer/🦀️component.rs:34:27
+   |
+34 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+34 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🎹️composer/🦀️component.rs:38:27
+   |
+38 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+38 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🎹️composer/🦀️component.rs:41:27
+   |
+41 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+41 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `JpgDiff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/⚙️engine/🦀️component.rs:14:18
+   |
+14 |     JpgArtifact, JpgDiff, JpgMutation, JpgSnapshot, STDIO_JPG_DOCUMENT_SCHEMA,
+   |                  ^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/⚙️engine/🦀️component.rs:314:26
+    |
+314 | fn decode_block(br: &mut BitReader, dc_pred: &mut i32, dc_table: &HuffTable, ac_table: &HuffTable) -> Result<[i32; 64], JpgError> {
+    |                          ^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+314 | fn decode_block(br: &mut BitReader<'_>, dc_pred: &mut i32, dc_table: &HuffTable, ac_table: &HuffTable) -> Result<[i32; 64], JpgError> {
+    |                                   ++++
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:304:6
+    |
+304 | impl protocol::OpText for JpgMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+304 - impl protocol::OpText for JpgMutation {
+304 + impl OpText for JpgMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4329:37
+     |
+4329 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🎹️composer/🦀️component.rs:50:27
+   |
+50 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+50 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4506:37
+     |
+4506 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4625:37
+     |
+4625 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: unused import: `TiffDiff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/⚙️engine/🦀️component.rs:25:44
+   |
+25 | use crate::artifacts::tiff::{TiffArtifact, TiffDiff, TiffMutation, STDIO_TIFF_DOCUMENT_SCHEMA};
+   |                                            ^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4800:37
+     |
+4800 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🎹️composer/🦀️component.rs:36:27
+   |
+36 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+36 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:362:6
+    |
+362 | impl protocol::OpText for DocxMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+362 - impl protocol::OpText for DocxMutation {
+362 + impl OpText for DocxMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:24:27
+   |
+24 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+24 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4973:37
+     |
+4973 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🎹️composer/🦀️component.rs:41:27
+   |
+41 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+41 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🎹️composer/🦀️component.rs:42:27
+   |
+42 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+42 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `PptxDiff`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/⚙️engine/🦀️component.rs:15:143
+   |
+15 | ...ptxRun, PptxShape, PptxSlide, PptxTransform}, PptxArtifact, PptxDiff, PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
+   |                                                                ^^^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:277:6
+    |
+277 | impl protocol::OpText for PptxMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+277 - impl protocol::OpText for PptxMutation {
+277 + impl OpText for PptxMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:24:27
+   |
+24 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+24 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5185:37
+     |
+5185 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🎹️composer/🦀️component.rs:43:27
+   |
+43 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+43 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🎹️composer/🦀️component.rs:42:27
+   |
+42 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+42 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `XlsxDiff`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/⚙️engine/🦀️component.rs:9:114
+  |
+9 | use crate::artifacts::xlsx::{schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook}, XlsxArtifact, XlsxDiff, XlsxMutati...
+  |                                                                                                                  ^^^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:279:6
+    |
+279 | impl protocol::OpText for XlsxMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+279 - impl protocol::OpText for XlsxMutation {
+279 + impl OpText for XlsxMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:24:27
+   |
+24 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+24 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5407:37
+     |
+5407 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🎹️composer/🦀️component.rs:49:27
+   |
+49 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+49 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🎹️composer/🦀️component.rs:42:27
+   |
+42 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+42 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:375:6
+    |
+375 | impl protocol::OpText for BcfMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+375 - impl protocol::OpText for BcfMutation {
+375 + impl OpText for BcfMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:24:27
+   |
+24 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+24 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `component::*`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5627:37
+     |
+5627 | ...                   pub use component::*;
+     |                               ^^^^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🎹️composer/🦀️component.rs:25:27
+   |
+25 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+25 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `IoPayload`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:6:112
+  |
+6 |     ArtifactComposer, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId,...
+  |                                                                                                                ^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:22:27
+   |
+22 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+22 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🎹️composer/🦀️component.rs:24:27
+   |
+24 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+24 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🎹️composer/🦀️component.rs:24:27
+   |
+24 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+24 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🎹️composer/🦀️component.rs:27:27
+   |
+27 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+27 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🎹️composer/🦀️component.rs:23:27
+   |
+23 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+23 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:334:6
+    |
+334 | impl protocol::OpText for SemioMeshMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+334 - impl protocol::OpText for SemioMeshMutation {
+334 + impl OpText for SemioMeshMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🎹️composer/🦀️component.rs:25:27
+   |
+25 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+25 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/🔺️diff/🦀️component.rs:646:6
+    |
+646 | impl protocol::DiffCodec for SemioModelDiff {
+    |      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+646 - impl protocol::DiffCodec for SemioModelDiff {
+646 + impl DiffCodec for SemioModelDiff {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🎹️composer/🦀️component.rs:24:27
+   |
+24 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+24 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🎹️composer/🦀️component.rs:25:27
+   |
+25 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+25 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🧬️schema/🧬️mutations/🦀️component.rs:233:6
+    |
+233 | impl protocol::OpText for SemioVideoMutation {
+    |      ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+233 - impl protocol::OpText for SemioVideoMutation {
+233 + impl OpText for SemioVideoMutation {
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️workflow/🎹️composer/🦀️component.rs:25:27
+   |
+25 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+25 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `IoPayload`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:6:112
+  |
+6 |     ArtifactComposer, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId,...
+  |                                                                                                                ^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:22:27
+   |
+22 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+22 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `IoPayload`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:6:112
+  |
+6 |     ArtifactComposer, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId,...
+  |                                                                                                                ^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:22:27
+   |
+22 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+22 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `IoPayload`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:6:112
+  |
+6 |     ArtifactComposer, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId,...
+  |                                                                                                                ^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:22:27
+   |
+22 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+22 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `IoPayload`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:6:112
+  |
+6 |     ArtifactComposer, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId,...
+  |                                                                                                                ^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:22:27
+   |
+22 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+22 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `IoPayload`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:6:112
+  |
+6 |     ArtifactComposer, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId,...
+  |                                                                                                                ^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:22:27
+   |
+22 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+22 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `IoPayload`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:6:112
+  |
+6 |     ArtifactComposer, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId,...
+  |                                                                                                                ^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:22:27
+   |
+22 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+22 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `IoPayload`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:6:112
+  |
+6 |     ArtifactComposer, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId,...
+  |                                                                                                                ^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:22:27
+   |
+22 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+22 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:3772:5
+     |
+3772 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:3771:5
+     |
+3771 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: `#[warn(unused_attributes)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4252:5
+     |
+4252 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4251:5
+     |
+4251 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4429:5
+     |
+4429 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4428:5
+     |
+4428 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4723:5
+     |
+4723 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4722:5
+     |
+4722 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4896:5
+     |
+4896 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4895:5
+     |
+4895 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5108:5
+     |
+5108 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5107:5
+     |
+5107 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5330:5
+     |
+5330 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5329:5
+     |
+5329 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5550:5
+     |
+5550 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5549:5
+     |
+5549 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+error[E0599]: no method named `print_op` found for reference `&semio::standards::v1::subsets::workflow::schema::mutations::component::SemioWorkflowMutation` in the current scope
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️workflow/🧬️schema/🧬️mutations/🦀️component.rs:264:17
+    |
+264 |         Ok(self.print_op().into_bytes())
+    |                 ^^^^^^^^
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `OpText` which provides `print_op` is implemented but not in scope; perhaps you want to import it
+    |
+  7 + use crate::dsl::OpText;
+    |
+help: there is a method `into` with a similar name
+    |
+264 -         Ok(self.print_op().into_bytes())
+264 +         Ok(self.into().into_bytes())
+    |
+
+error[E0599]: no variant, associated function, or constant named `parse_op` found for enum `semio::standards::v1::subsets::workflow::schema::mutations::component::SemioWorkflowMutation` in the current scope
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️workflow/🧬️schema/🧬️mutations/🦀️component.rs:268:15
+    |
+ 27 | pub enum SemioWorkflowMutation {
+    | ------------------------------ variant, associated function, or constant `parse_op` not found for this enum
+...
+268 |         Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+    |               ^^^^^^^^ variant, associated function, or constant not found in `semio::standards::v1::subsets::workflow::schema::mutations::component::SemioWorkflowMutation`
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `OpText` which provides `parse_op` is implemented but not in scope; perhaps you want to import it
+    |
+  7 + use crate::dsl::OpText;
+    |
+
+error[E0599]: no method named `print_op` found for reference `&image::schema::mutations::component::SemioImageMutation` in the current scope
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🦀️component.rs:272:17
+    |
+272 |         Ok(self.print_op().into_bytes())
+    |                 ^^^^^^^^
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `OpText` which provides `print_op` is implemented but not in scope; perhaps you want to import it
+    |
+  6 + use crate::dsl::OpText;
+    |
+help: there is a method `into` with a similar name
+    |
+272 -         Ok(self.print_op().into_bytes())
+272 +         Ok(self.into().into_bytes())
+    |
+
+error[E0599]: no variant, associated function, or constant named `parse_op` found for enum `image::schema::mutations::component::SemioImageMutation` in the current scope
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🦀️component.rs:276:15
+    |
+ 20 | pub enum SemioImageMutation {
+    | --------------------------- variant, associated function, or constant `parse_op` not found for this enum
+...
+276 |         Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+    |               ^^^^^^^^ variant, associated function, or constant not found in `image::schema::mutations::component::SemioImageMutation`
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `OpText` which provides `parse_op` is implemented but not in scope; perhaps you want to import it
+    |
+  6 + use crate::dsl::OpText;
+    |
+
+error[E0599]: no method named `print_op` found for reference `&document::schema::mutations::component::SemioDocumentMutation` in the current scope
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/🧬️mutations/🦀️component.rs:632:17
+    |
+632 |         Ok(self.print_op().into_bytes())
+    |                 ^^^^^^^^
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `OpText` which provides `print_op` is implemented but not in scope; perhaps you want to import it
+    |
+ 16 + use crate::dsl::OpText;
+    |
+help: there is a method `into` with a similar name
+    |
+632 -         Ok(self.print_op().into_bytes())
+632 +         Ok(self.into().into_bytes())
+    |
+
+error[E0599]: no variant, associated function, or constant named `parse_op` found for enum `document::schema::mutations::component::SemioDocumentMutation` in the current scope
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/🧬️mutations/🦀️component.rs:636:15
+    |
+134 | pub enum SemioDocumentMutation {
+    | ------------------------------ variant, associated function, or constant `parse_op` not found for this enum
+...
+636 |         Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+    |               ^^^^^^^^ variant, associated function, or constant not found in `document::schema::mutations::component::SemioDocumentMutation`
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `OpText` which provides `parse_op` is implemented but not in scope; perhaps you want to import it
+    |
+ 16 + use crate::dsl::OpText;
+    |
+
+warning: unused import: `DiffCodec`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/🔺️diff/🦀️component.rs:18:16
+   |
+18 | use protocol::{DiffCodec, MutationDiff};
+   |                ^^^^^^^^^
+
+For more information about this error, try `rustc --explain E0599`.
+warning: `semio-s-plugin-stdio` (lib) generated 232 warnings
+error: could not compile `semio-s-plugin-stdio` (lib) due to 6 previous errors; 232 warnings emitted
+EXIT:101

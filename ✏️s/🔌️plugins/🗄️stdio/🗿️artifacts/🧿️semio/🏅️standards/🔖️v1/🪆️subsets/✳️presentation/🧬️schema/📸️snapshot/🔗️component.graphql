@@ -1,9 +1,30 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioPresentationSnapshotEntry {
-  key: String!
-  value: String!
+# 🧬️ SemioPresentationSnapshot — masters/layouts/slides -> shapes + notes.
+type SemioPoint2 { x: Float!, y: Float! }
+type SlideFrame { origin: SemioPoint2!, width: Float!, height: Float! }
+type SlidePictureImage { assetId: String!, mime: String!, bytes: [Int!]! }
+
+enum PlaceholderKindTag { TITLE, SUBTITLE, BODY, FOOTER, SLIDE_NUMBER, DATE_TIME, OTHER }
+type PlaceholderKind { kind: PlaceholderKindTag!, value: String }
+
+enum ShapeKind { TEXT_BOX, PICTURE, TABLE, PLACEHOLDER }
+type SlideShape {
+  shapeKind: ShapeKind!
+  frame: SlideFrame!
+  blocks: [DocBlock!]
+  image: SlidePictureImage
+  rows: [SlideTableRow!]
+  kind: PlaceholderKind
 }
+type SlideTableCell { blocks: [DocBlock!]! }
+type SlideTableRow { cells: [SlideTableCell!]! }
+
+type SlideMaster { id: String!, shapes: [SlideShape!]! }
+type SlideLayout { id: String!, masterId: String!, shapes: [SlideShape!]! }
+type Slide { id: String!, layoutId: String, shapes: [SlideShape!]!, notes: [DocBlock!]! }
+
 type SemioPresentationSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioPresentationSnapshotEntry!]! @state(class: PERSISTENT)
+  schema: String!
+  masters: [SlideMaster!]!
+  layouts: [SlideLayout!]!
+  slides: [Slide!]!
 }

@@ -1,19 +1,70 @@
-//! 🧬️ SemioVideoSnapshot — streams{codec, dims} + samples{pts, key, opaque bytes} — container-typed, payload-opaque.
-//! 🚧 scaffolded by W1b: minimal honest fields only (not the full spec shape) — full
-//! implementation lands in W2/W3.
-
-/// 🎥️ Owned by the `video` subset: `SemioVideoStream`, `SemioVideoSample` — container-typed,
-/// payload-opaque (honest boundary per the master plan).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SemioVideoStream { pub codec: String, pub width: u32, pub height: u32, #[serde(default)] pub samples: Vec<SemioVideoSample> }
-
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SemioVideoSample { pub pts: u64, pub key: bool, #[serde(default)] pub data: Vec<u8> }
+//! 🧬️ SemioVideoSnapshot — streams{kind, codec, width, height, rate:Rational, samples{pts, key,
+//! opaque data}} — container-typed, payload-opaque (honest boundary per the master plan: real,
+//! complete metadata for this subset's own shape; the compressed sample bytes themselves are
+//! never decoded here — that is W3/W4's container-format job, mp4/avi).
 
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+
+//#region 🔖️VideoModel
+/// 🎞️ Owned by the `video` subset (per `w1b-type-ownership.md`): `SemioVideoStream`,
+/// `SemioVideoSample`, plus this subset's own `SemioVideoStreamKind`/`SemioRational` (not shared
+/// engine types — `Rational` is video-specific, unlike `SemioPoint3`/`SemioTransform` etc).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum SemioVideoStreamKind {
+    #[default]
+    Video,
+    Audio,
+    Subtitle,
+}
+
+/// 🎚️ A frame/sample rate as an exact fraction — named struct, never a bare tuple (f6-final-summary.md
+/// §4.3: `dsl` has no blanket `DslField` impl for tuples of any arity).
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SemioRational {
+    pub num: i64,
+    pub den: i64,
+}
+
+impl Default for SemioRational {
+    /// 🎯️ `1/1`, not `0/0` — a rational's denominator must never default to zero.
+    fn default() -> Self {
+        Self { num: 1, den: 1 }
+    }
+}
+
+/// 🎯️ One decoded/encoded unit within a stream. `data` is the format's opaque compressed payload
+/// (honest boundary — never decoded by this subset).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SemioVideoSample {
+    pub pts: u64,
+    #[serde(default)]
+    pub key: bool,
+    #[serde(default)]
+    pub data: Vec<u8>,
+}
+
+/// 🎞️ One elementary stream (video/audio/subtitle track) inside the container.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SemioVideoStream {
+    #[serde(default)]
+    pub kind: SemioVideoStreamKind,
+    #[serde(default)]
+    pub codec: String,
+    #[serde(default)]
+    pub width: u32,
+    #[serde(default)]
+    pub height: u32,
+    #[serde(default)]
+    pub rate: SemioRational,
+    #[serde(default)]
+    pub samples: Vec<SemioVideoSample>,
+}
+//#endregion 🔖️VideoModel
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA: &str = "stdio.semio.video";
@@ -42,9 +93,11 @@ impl Default for SemioVideoSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🚧 scaffolded by W1b: JSON-pack round trip (honest, genuinely working — not a per-format
-/// binary codec, since this subset's snapshot is a NEUTRAL semio type, not an on-disk file
-/// format). Wrapped in the same `store::semio_format` envelope every stdio artifact uses.
+/// 🧬️ JSON-pack round trip wrapped in the repo-wide `store::semio_format` envelope (the same
+/// convention every neutral semio-subset snapshot uses — this subset's snapshot is not itself an
+/// on-disk file format, so there is no bespoke binary layout to hand-roll here; the honest
+/// per-field structure lives in the `SemioVideoDiff`/`SemioVideoMutation` grammars instead, which
+/// ARE hand-rolled below).
 impl store::ArtifactDsl for SemioVideoSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str { STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA }
@@ -113,9 +166,33 @@ impl store::ArtifactPack for SemioVideoSnapshot {
 mod tests {
     use super::*;
 
+    fn sample_snapshot() -> SemioVideoSnapshot {
+        SemioVideoSnapshot {
+            schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+            streams: vec![
+                SemioVideoStream {
+                    kind: SemioVideoStreamKind::Video,
+                    codec: "h264".into(),
+                    width: 1920,
+                    height: 1080,
+                    rate: SemioRational { num: 30, den: 1 },
+                    samples: vec![SemioVideoSample { pts: 0, key: true, data: vec![1, 2, 3] }],
+                },
+                SemioVideoStream {
+                    kind: SemioVideoStreamKind::Audio,
+                    codec: "aac".into(),
+                    width: 0,
+                    height: 0,
+                    rate: SemioRational { num: 48_000, den: 1_000 },
+                    samples: Vec::new(),
+                },
+            ],
+        }
+    }
+
     #[test]
     fn json_pack_round_trips() {
-        let snap = SemioVideoSnapshot::default();
+        let snap = sample_snapshot();
         let bytes = <SemioVideoSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioVideoSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
@@ -123,10 +200,16 @@ mod tests {
 
     #[test]
     fn dsl_text_round_trips() {
-        let snap = SemioVideoSnapshot::default();
+        let snap = sample_snapshot();
         let text = <SemioVideoSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
+    }
+
+    #[test]
+    fn stream_kind_defaults_to_video_and_rational_defaults_to_one_over_one() {
+        assert_eq!(SemioVideoStreamKind::default(), SemioVideoStreamKind::Video);
+        assert_eq!(SemioRational::default(), SemioRational { num: 1, den: 1 });
     }
 }
 //#endregion 🔖️Tests

@@ -1,14 +1,37 @@
-dialect grammar stdio.stl.snapshot
-; ASCII STL (https://en.wikipedia.org/wiki/STL_(file_format)). Envelope preamble line + its
-; trailing newline are stripped before this grammar runs (store::semio_format::split_text_preamble).
-root = solid
-solid = "solid" [SP name] NL facet* "endsolid" [SP name] NL?
-name = 1*(ALPHA / DIGIT / "_" / "-" / ".")
-facet = "facet" SP "normal" SP vector3 NL
-        "outer" SP "loop" NL
-        vertex vertex vertex
-        "endloop" NL
-        "endfacet" NL
-vertex = "vertex" SP vector3 NL
-vector3 = real SP real SP real
-real = ["-"] 1*DIGIT ["." 1*DIGIT] [("e" / "E") ["-" / "+"] 1*DIGIT]
+dialect grammar
+grammar stdio.stl.snapshot
+extension stl
+start document
+
+# FG1: real ASCII STL (https://en.wikipedia.org/wiki/STL_(file_format)) grammar — replaces the old
+# one-line-header ABNF placeholder (`dialect grammar stdio.stl.snapshot` -- 2 tokens on one line,
+# rejected by this dialect's parser -- plus `[SP name]`/`1*(ALPHA / DIGIT ...)`/`NL` bodies outside
+# this dialect's alphabet entirely). Models `decode_stl_ascii`/`encode_stl_ascii` exactly
+# (⚙️engine/component.rs:20-89, cited verbatim in W0's own recon row for this standard). Envelope
+# preamble line + its trailing newline are stripped before this grammar runs
+# (store::semio_format::split_text_preamble) — `document` starts with the bare envelope-id token,
+# matching the m5 harness's own reconstructed body shape (`dsl_body_from_fixture`,
+# `🧪️fixture-sweep/🦀️component.rs`) and json/csv/binary's own pilot precedent exactly.
+#
+# `solid`/`endsolid`'s name token is genuinely "rest of physical line, arbitrary text" — W0's own
+# documented gap for this exact standard (shared with obj's `o`/`g`), confirmed real by
+# `encode_stl_ascii`:77/87, which writes `solid_name` completely unescaped, no length limit, no
+# character restriction. M1's `LINE` raw-span terminal is this dialect's own worked citation for
+# THIS EXACT case (`📖️grammar/🦀️component.rs`'s `RawSpanEnd` doc comment literally reads: "`LINE`
+# -- rest of the current physical line ... obj's `o`/`g` names, stl's `solid <name>`/`endsolid
+# <name>`, dxf's opaque group-code value lines") — the honest primitive this artifact's W0 row
+# asked for, not a lossy re-join. Whitespace/newlines are lexer trivia stripped before recognition
+# (`Recognizer::recognize`), so no `ws`/`NL` production is needed anywhere below.
+artifact-mark = "stdio.stl"
+document = artifact-mark solid
+
+solid = "solid" LINE facet* "endsolid" LINE
+facet = "facet" "normal" vec3 "outer" "loop" vertex vertex vertex "endloop" "endfacet"
+vertex = "vertex" vec3
+vec3 = number number number
+
+# `f64` coordinates print via Rust's `Display` (`format!("{nx} {ny} {nz}")`), which never emits a
+# trailing `.0` for a whole-numbered float (`format!("{}", 0.0_f64)` == `"0"`) — so a coordinate
+# lexes as INT whenever its value happens to be integral, FLOAT otherwise. Same `INT | FLOAT` idiom
+# json's own `number` production uses, for the identical reason.
+number = INT | FLOAT

@@ -1,9 +1,35 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioModelDiffEntry {
-  key: String!
-  value: String!
+# SemioModelDiff schema mirror -- sparse per-field diff, id-keyed triples over spatial/elements/relations.
+
+type SpatialNodeDiff {
+  kind: SpatialKind
+  name: String
+  parentId: String
+  placement: SemioTransform
 }
+
+type SemioModelElementDiff {
+  class: ElementClass
+  placement: SemioTransform
+  geometry: GeometryRef
+  spatialId: String
+  psets: [PropertySet!]
+}
+
+type ModelRelationDiff {
+  kind: RelationKind
+  from: String
+  to: String
+}
+
 type SemioModelDiff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioModelDiffEntry!]! @state(class: PERSISTENT)
+  spatial: SpatialTripleDiff
+  elements: ElementsTripleDiff
+  relations: RelationsTripleDiff
 }
+
+type SpatialTripleDiff { removed: [String!]! modified: [SpatialModified!]! added: [SpatialNode!]! }
+type SpatialModified { key: String! diff: SpatialNodeDiff! }
+type ElementsTripleDiff { removed: [String!]! modified: [ElementModified!]! added: [SemioModelElement!]! }
+type ElementModified { key: String! diff: SemioModelElementDiff! }
+type RelationsTripleDiff { removed: [String!]! modified: [RelationModified!]! added: [ModelRelation!]! }
+type RelationModified { key: String! diff: ModelRelationDiff! }

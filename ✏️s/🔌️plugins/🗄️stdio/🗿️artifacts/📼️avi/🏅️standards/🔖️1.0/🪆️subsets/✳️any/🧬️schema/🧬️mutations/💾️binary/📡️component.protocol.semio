@@ -1,3 +1,2 @@
 dialect protocol stdio.avi.mutations
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.avi.mutations"
+document = json:UTF8(*)

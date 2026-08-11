@@ -1,8 +1,12 @@
 meta:
-  id: semio_object_diff
+  id: stdio_semio_object_diff
   endian: le
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  `DiffCodec::encode_diff`/`decode_diff` (`🦀️component.rs`): the text `print_diff` bytes verbatim
+  (`self.print_diff().into_bytes()`) -- NOT a distinct binary encoding, same simplification
+  `SvgDiff`/`GifDiff`/`JsonDiff` all use. See the sibling `../📝️text/📖️component.grammar.semio` for
+  the payload's real structure.
 seq:
-  - id: magic
-    contents: "stdio.semio.object.diff"
+  - id: payload
+    size-eos: true
+    doc: UTF-8 `root=<enc> objects=<enc>` line, see the text-facet grammar.

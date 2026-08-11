@@ -11,9 +11,9 @@ use crate::artifacts::docx::schema::diff::{
     enc_ct_entry, enc_list, enc_opc_part, enc_rel_owner_entry, enc_str, enc_style, encode_option, hex_decode, hex_encode,
     parse_usize, split_top_level, strip_brackets,
 };
-use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxStyle};
+use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
 use crate::artifacts::docx::DocxSnapshot;
-use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage};
+use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
 use protocol::{Mutation, OpText};
 #[cfg(test)]
 use protocol::OpBinary;
@@ -368,41 +368,456 @@ impl protocol::OpText for DocxMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification as `DocxDiff`'s hand-rolled codec.
+//#region 🔖️OpBinaryCodec
+/// 🧪️ FG-wave: real recursive binary primitives backing the upgraded `OpBinary` impl below --
+/// mirrors `📰xml/…/🧬️mutations/🦀️component.rs`'s own `enc_node_path_bin`/`enc_xml_snapshot_bin`
+/// shape, reusing `store::pack_rt::write_varint_u64`/`store::ByteReader` plus `DocxDiff`'s own
+/// `write_str_lp`/`read_str_lp`/`write_bytes_lp`/`read_bytes_lp`/`enc_block_bin`/`dec_block_bin`/
+/// `enc_style_bin`/`dec_style_bin`/`enc_opc_part_bin`/`dec_opc_part_bin`/`enc_rel_bin`/
+/// `dec_rel_bin` (`../🔺️diff/🦀️component.rs`, `pub(crate)` to this artifact).
+use crate::artifacts::docx::schema::diff::{
+    dec_block_bin, dec_opc_part_bin, dec_rel_bin, dec_style_bin, enc_block_bin, enc_opc_part_bin, enc_rel_bin, enc_style_bin, read_bytes_lp,
+    read_str_lp, write_bytes_lp, write_str_lp,
+};
+
+fn enc_path_segment_bin(seg: &DocxPathSegment, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, seg.block_index as u64);
+    store::pack_rt::write_varint_u64(out, seg.row as u64);
+    store::pack_rt::write_varint_u64(out, seg.cell as u64);
+}
+fn dec_path_segment_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxPathSegment, String> {
+    let block_index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let row = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let cell = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(DocxPathSegment { block_index, row, cell })
+}
+fn enc_block_path_bin(p: &DocxBlockPath, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, p.segments.len() as u64);
+    for seg in &p.segments {
+        enc_path_segment_bin(seg, out);
+    }
+    store::pack_rt::write_varint_u64(out, p.index as u64);
+}
+fn dec_block_path_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockPath, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut segments = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        segments.push(dec_path_segment_bin(reader)?);
+    }
+    let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(DocxBlockPath { segments, index })
+}
+
+/// 🌱 Full (non-diff) `OpcContentTypes`/`OpcPackage`/`DocxDocument`/`DocxSnapshot` binary codecs --
+/// only `SetSnapshot`'s whole-payload encoding needs these, mirroring this file's own
+/// `enc_opc_content_types`/`enc_opc_package`/`enc_docx_document`/`enc_docx_snapshot` text forms
+/// above. Owners sorted for a deterministic encoding, same `HashMap`-iteration-order caveat those
+/// text forms document.
+fn enc_opc_content_types_bin(ct: &OpcContentTypes, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, ct.defaults.len() as u64);
+    for e in &ct.defaults {
+        write_str_lp(out, &e.0);
+        write_str_lp(out, &e.1);
+    }
+    store::pack_rt::write_varint_u64(out, ct.overrides.len() as u64);
+    for e in &ct.overrides {
+        write_str_lp(out, &e.0);
+        write_str_lp(out, &e.1);
+    }
+}
+fn dec_opc_content_types_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcContentTypes, String> {
+    let default_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut defaults = Vec::with_capacity(default_count as usize);
+    for _ in 0..default_count {
+        defaults.push((read_str_lp(reader)?, read_str_lp(reader)?));
+    }
+    let override_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut overrides = Vec::with_capacity(override_count as usize);
+    for _ in 0..override_count {
+        overrides.push((read_str_lp(reader)?, read_str_lp(reader)?));
+    }
+    Ok(OpcContentTypes { defaults, overrides })
+}
+fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, pkg.parts.len() as u64);
+    for p in &pkg.parts {
+        enc_opc_part_bin(p, out);
+    }
+    enc_opc_content_types_bin(&pkg.content_types, out);
+    let mut owners: Vec<&String> = pkg.relationships.keys().collect();
+    owners.sort();
+    store::pack_rt::write_varint_u64(out, owners.len() as u64);
+    for owner in owners {
+        write_str_lp(out, owner);
+        let list = &pkg.relationships[owner];
+        store::pack_rt::write_varint_u64(out, list.len() as u64);
+        for r in list {
+            enc_rel_bin(r, out);
+        }
+    }
+}
+fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage, String> {
+    let part_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut parts = Vec::with_capacity(part_count as usize);
+    for _ in 0..part_count {
+        parts.push(dec_opc_part_bin(reader)?);
+    }
+    let content_types = dec_opc_content_types_bin(reader)?;
+    let owner_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut relationships = HashMap::with_capacity(owner_count as usize);
+    for _ in 0..owner_count {
+        let owner = read_str_lp(reader)?;
+        let rel_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+        let mut list = Vec::with_capacity(rel_count as usize);
+        for _ in 0..rel_count {
+            list.push(dec_rel_bin(reader)?);
+        }
+        relationships.insert(owner, list);
+    }
+    Ok(OpcPackage { parts, content_types, relationships })
+}
+fn enc_docx_document_bin(doc: &DocxDocument, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, doc.body.len() as u64);
+    for b in &doc.body {
+        enc_block_bin(b, out);
+    }
+    store::pack_rt::write_varint_u64(out, doc.styles.len() as u64);
+    for s in &doc.styles {
+        enc_style_bin(s, out);
+    }
+}
+fn dec_docx_document_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxDocument, String> {
+    let body_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut body = Vec::with_capacity(body_count as usize);
+    for _ in 0..body_count {
+        body.push(dec_block_bin(reader)?);
+    }
+    let style_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut styles = Vec::with_capacity(style_count as usize);
+    for _ in 0..style_count {
+        styles.push(dec_style_bin(reader)?);
+    }
+    Ok(DocxDocument { body, styles })
+}
+fn enc_docx_snapshot_bin(s: &DocxSnapshot, out: &mut Vec<u8>) {
+    write_str_lp(out, &s.schema);
+    enc_opc_package_bin(&s.opc, out);
+    enc_docx_document_bin(&s.document, out);
+}
+fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let opc = dec_opc_package_bin(reader)?;
+    let document = dec_docx_document_bin(reader)?;
+    Ok(DocxSnapshot { schema, opc, document })
+}
+//#endregion 🔖️OpBinaryCodec
+
+/// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
+/// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
+/// `DocxMutation` variant ordinal, in the same 0-12 order `print_docx_mutation`'s own keyword
+/// match uses.
 impl protocol::OpBinary for DocxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let tag: u8 = match self {
+            DocxMutation::NoMutation => 0,
+            DocxMutation::SetSnapshot { .. } => 1,
+            DocxMutation::InsertBlock { .. } => 2,
+            DocxMutation::RemoveBlock { .. } => 3,
+            DocxMutation::SetBlockContent { .. } => 4,
+            DocxMutation::SetRunText { .. } => 5,
+            DocxMutation::SetRunFormatting { .. } => 6,
+            DocxMutation::InsertStyle { .. } => 7,
+            DocxMutation::RemoveStyle { .. } => 8,
+            DocxMutation::SetStyleName { .. } => 9,
+            DocxMutation::SetStyleBasedOn { .. } => 10,
+            DocxMutation::SetPart { .. } => 11,
+            DocxMutation::RemovePart { .. } => 12,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            DocxMutation::NoMutation => {}
+            DocxMutation::SetSnapshot { snapshot } => enc_docx_snapshot_bin(snapshot, &mut out),
+            DocxMutation::InsertBlock { path, block } => {
+                enc_block_path_bin(path, &mut out);
+                enc_block_bin(block, &mut out);
+            }
+            DocxMutation::RemoveBlock { path } => enc_block_path_bin(path, &mut out),
+            DocxMutation::SetBlockContent { path, block } => {
+                enc_block_path_bin(path, &mut out);
+                enc_block_bin(block, &mut out);
+            }
+            DocxMutation::SetRunText { path, run_index, text } => {
+                enc_block_path_bin(path, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *run_index as u64);
+                write_str_lp(&mut out, text);
+            }
+            DocxMutation::SetRunFormatting { path, run_index, bold, italic, underline } => {
+                enc_block_path_bin(path, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *run_index as u64);
+                out.push(*bold as u8);
+                out.push(*italic as u8);
+                out.push(*underline as u8);
+            }
+            DocxMutation::InsertStyle { style } => enc_style_bin(style, &mut out),
+            DocxMutation::RemoveStyle { id } => write_str_lp(&mut out, id),
+            DocxMutation::SetStyleName { id, name } => {
+                write_str_lp(&mut out, id);
+                write_str_lp(&mut out, name);
+            }
+            DocxMutation::SetStyleBasedOn { id, based_on } => {
+                write_str_lp(&mut out, id);
+                out.push(if based_on.is_some() { 1 } else { 0 });
+                if let Some(based_on) = based_on {
+                    write_str_lp(&mut out, based_on);
+                }
+            }
+            DocxMutation::SetPart { path, content_type, bytes } => {
+                write_str_lp(&mut out, path);
+                write_str_lp(&mut out, content_type);
+                write_bytes_lp(&mut out, bytes);
+            }
+            DocxMutation::RemovePart { path } => write_str_lp(&mut out, path),
+        }
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(DocxMutation::NoMutation),
+            1 => {
+                let snapshot = dec_docx_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                Ok(DocxMutation::SetSnapshot { snapshot })
+            }
+            2 => {
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
+                Ok(DocxMutation::InsertBlock { path, block })
+            }
+            3 => {
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                Ok(DocxMutation::RemoveBlock { path })
+            }
+            4 => {
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
+                Ok(DocxMutation::SetBlockContent { path, block })
+            }
+            5 => {
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let run_index = reader.read_varint_u64().map_err(|e| malformed("op run_index", reader.position(), e.to_string()))? as usize;
+                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", reader.position(), e))?;
+                Ok(DocxMutation::SetRunText { path, run_index, text })
+            }
+            6 => {
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let run_index = reader.read_varint_u64().map_err(|e| malformed("op run_index", reader.position(), e.to_string()))? as usize;
+                let bold = reader.read_u8().map_err(|e| malformed("op bold", reader.position(), e.to_string()))? != 0;
+                let italic = reader.read_u8().map_err(|e| malformed("op italic", reader.position(), e.to_string()))? != 0;
+                let underline = reader.read_u8().map_err(|e| malformed("op underline", reader.position(), e.to_string()))? != 0;
+                Ok(DocxMutation::SetRunFormatting { path, run_index, bold, italic, underline })
+            }
+            7 => {
+                let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", reader.position(), e))?;
+                Ok(DocxMutation::InsertStyle { style })
+            }
+            8 => {
+                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                Ok(DocxMutation::RemoveStyle { id })
+            }
+            9 => {
+                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                Ok(DocxMutation::SetStyleName { id, name })
+            }
+            10 => {
+                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                let has = reader.read_u8().map_err(|e| malformed("op based_on presence", reader.position(), e.to_string()))?;
+                let based_on = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op based_on", reader.position(), e))?) } else { None };
+                Ok(DocxMutation::SetStyleBasedOn { id, based_on })
+            }
+            11 => {
+                let path = read_str_lp(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let content_type = read_str_lp(&mut reader).map_err(|e| malformed("op content_type", reader.position(), e))?;
+                let bytes = read_bytes_lp(&mut reader).map_err(|e| malformed("op bytes", reader.position(), e))?;
+                Ok(DocxMutation::SetPart { path, content_type, bytes })
+            }
+            12 => {
+                let path = read_str_lp(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                Ok(DocxMutation::RemovePart { path })
+            }
+            other => Err(malformed("op tag", 1, format!("unknown DocxMutation tag {other}"))),
+        }
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🧪️ FG-wave: representative `DocxMutation` values -- one per variant -- the single source of
+/// truth reused by this file's own `mutation_diff_law`/`inverse_law`/`op_text_binary_roundtrip_law`
+/// tests below AND by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
+/// conformance tests, same shape `📷️png/…/🧬️mutations/🦀️component.rs`'s own
+/// `demo_mutation_cases()` establishes.
+fn fixture() -> DocxSnapshot {
+    crate::artifacts::docx::engine::build_minimal_docx(DocxDocument {
+        body: vec![
+            DocxBlock::paragraph("first"),
+            DocxBlock::paragraph("second"),
+        ],
+        styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }],
+    })
+}
+
+fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> DocxBlockPath {
+    DocxBlockPath { segments: vec![DocxPathSegment { block_index, row, cell }], index }
+}
+
+//#region 🔖️Fixtures
+/// 🌱 `sweep_a`/`sweep_b`: differ in EVERY mutable field, both `document` and `opc`. Body uses
+/// different-length lists so the recipe's naive positional `between_indexed` shows
+/// removed+modified+added simultaneously (per this ticket's "known structural trap" note): a
+/// removed tail on `sweep_a`, a modified-in-every-field first paragraph, and an added tail on
+/// `sweep_b` (a table, exercising the recursive nested triple down to `blocks`). Styles (a
+/// name-keyed collection, order-independent) get one removed, one modified-in-every-field, one
+/// added. OPC content_types/parts/relationships each get one removed, one modified, one added.
+fn sweep_a() -> DocxSnapshot {
+    let mut opc = OpcPackage::empty();
+    opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
+    opc.content_types.set_default("xml", "application/xml");
+    opc.content_types.set_default("toRemove", "application/octet-stream");
+    opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", b"<w:document/>".to_vec());
+    opc.set_part("word/toModify.xml", "application/xml", b"old".to_vec());
+    opc.set_part("word/toRemove.xml", "application/xml", b"gone".to_vec());
+    opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
+    opc.add_relationship("", "rId9", "http://example/toRemove", "word/toRemove.xml");
+    opc.relationships.insert(
+        "word/document.xml".into(),
+        vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "media/old.png".into(), target_mode: OpcTargetMode::Internal }],
+    );
+    // 🎯️ A relationships OWNER present only in `a` (owned by the part that itself gets
+    // removed) -- exercises `relationships.removed` at the owner-key level, distinct from
+    // `""`'s own list merely losing one entry (which exercises `relationships.modified`).
+    opc.relationships.insert(
+        "word/toRemove.xml".into(),
+        vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/ownerToRemove".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }],
+    );
+
+    DocxSnapshot::from_parts(
+        opc,
+        DocxDocument {
+            body: vec![
+                DocxBlock::Paragraph(DocxParagraph { runs: vec![DocxRun { text: "old".into(), bold: false, ..Default::default() }], style: None, extra_paragraph_properties: Vec::new() }),
+                DocxBlock::paragraph("stay"),
+                DocxBlock::Table(DocxTable {
+                    rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("toDrop cell")], ..Default::default() }], ..Default::default() }],
+                    ..Default::default()
+                }),
+            ],
+            styles: vec![
+                DocxStyle { id: "keep".into(), name: "Keep".into(), based_on: None },
+                DocxStyle { id: "toModify".into(), name: "old".into(), based_on: None },
+                DocxStyle { id: "toRemove".into(), name: "Gone".into(), based_on: None },
+            ],
+        },
+    )
+}
+
+fn sweep_b() -> DocxSnapshot {
+    let mut opc = OpcPackage::empty();
+    opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
+    opc.content_types.set_default("xml", "application/xml");
+    opc.content_types.set_default("added", "application/octet-stream");
+    opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", b"<w:document/>changed".to_vec());
+    opc.set_part("word/toModify.xml", "application/xml", b"new".to_vec());
+    opc.set_part("word/added.xml", "application/xml", b"fresh".to_vec());
+    // 🩹 AFTER the `set_part` calls above (which already appended `toModify`'s override entry
+    // at position 1): a bare `set_override` on an EXISTING key updates its VALUE in place,
+    // never its position -- so this exercises `content_types.overrides.modified` (the value
+    // really differs from `sweep_a`'s "application/xml") without perturbing list order, which
+    // matters because `overrides` is order-sensitive `Vec<(String,String)>` equality (the OPC
+    // module's own type, not ours to change) and `between(a,b).apply(a)` only reconstructs
+    // survivors in `a`'s original relative order + appends -- this fixture is built so that
+    // convention already matches `sweep_b`'s own construction order.
+    opc.content_types.set_override("word/toModify.xml", "application/xml-modified");
+    opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
+    opc.relationships.insert(
+        "word/document.xml".into(),
+        vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "media/new.png".into(), target_mode: OpcTargetMode::Internal }],
+    );
+    opc.relationships.insert("word/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::Internal }]);
+
+    DocxSnapshot::from_parts(
+        opc,
+        DocxDocument {
+            // 🎯️ Length 2 vs `sweep_a`'s 3: per this ticket's "known structural trap" note, a
+            // single same-direction `between()` call can never show BOTH a top-level `removed`
+            // AND a top-level `added` (only one tail flavor per direction) -- so `a -> b`
+            // exercises `body.removed` (the dropped `Table`, index 2) + `body.modified[0]`
+            // (whose OWN nested `runs` diff exercises modified+added together, since ONE run
+            // survives-and-changes while a SECOND run is net-new); `b -> a` (the reverse
+            // direction, asserted separately in `field_sweep` below) exercises `body.added`
+            // (the very same `Table`, recursed structurally as the added item's payload).
+            body: vec![
+                DocxBlock::Paragraph(DocxParagraph {
+                    runs: vec![
+                        DocxRun { text: "new".into(), bold: true, ..Default::default() },
+                        DocxRun { text: "second run".into(), italic: true, ..Default::default() },
+                    ],
+                    style: Some("keep".into()),
+                    extra_paragraph_properties: Vec::new(),
+                }),
+                DocxBlock::paragraph("stay"),
+            ],
+            styles: vec![
+                DocxStyle { id: "keep".into(), name: "Keep".into(), based_on: None },
+                DocxStyle { id: "toModify".into(), name: "new".into(), based_on: Some("keep".into()) },
+                DocxStyle { id: "added".into(), name: "Added".into(), based_on: None },
+            ],
+        },
+    )
+}
+//#endregion 🔖️Fixtures
+
+/// 🧪️ The demo cases proper -- one representative `DocxMutation` per variant.
+pub(crate) fn demo_mutation_cases() -> Vec<DocxMutation> {
+    vec![
+        DocxMutation::NoMutation,
+        DocxMutation::SetSnapshot { snapshot: sweep_b() },
+        DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 1 }, block: DocxBlock::paragraph("x") },
+        DocxMutation::RemoveBlock { path: DocxBlockPath { segments: vec![], index: 0 } },
+        DocxMutation::SetBlockContent { path: DocxBlockPath { segments: vec![], index: 0 }, block: DocxBlock::paragraph("y") },
+        DocxMutation::SetRunText { path: DocxBlockPath { segments: vec![], index: 0 }, run_index: 0, text: "z".into() },
+        DocxMutation::SetRunFormatting { path: DocxBlockPath { segments: vec![], index: 0 }, run_index: 0, bold: true, italic: false, underline: true },
+        DocxMutation::InsertStyle { style: DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: None } },
+        DocxMutation::RemoveStyle { id: "Normal".into() },
+        DocxMutation::SetStyleName { id: "Normal".into(), name: "Body".into() },
+        DocxMutation::SetStyleBasedOn { id: "Normal".into(), based_on: Some("Heading1".into()) },
+        DocxMutation::SetPart { path: "word/numbering.xml".into(), content_type: "application/xml".into(), bytes: b"<w:numbering/>".to_vec() },
+        // 🎯️ `RemovePart` targets `word/styles.xml`, the LAST part in `fixture()`'s
+        // `opc.parts` (built after `word/document.xml` since `fixture()`'s document has a
+        // style) -- like svg's own `SetAttribute{value:None}` precedent (see that artifact's
+        // `sample_mutations` doc comment), OPC parts are a NAME-keyed collection (position
+        // carries no OPC-spec meaning), so `RemovePart`'s mutation-level inverse (`SetPart`,
+        // which treats a not-currently-present path as an APPEND) only restores the exact
+        // original Vec position when the removed item was already last -- exact positional
+        // restoration in the general case is only guaranteed at the DIFF level, same caveat
+        // as svg's.
+        DocxMutation::RemovePart { path: "word/styles.xml".into() },
+    ]
+}
+//#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::docx::schema::diff::{DocxBlockDiff, DocxOpcPartDiff, DocxPathSegment};
-    use crate::artifacts::docx::schema::snapshot::{DocxDocument, DocxParagraph, DocxRun, DocxTable, DocxTableCell, DocxTableRow};
-    use crate::artifacts::zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
+    use crate::artifacts::docx::schema::diff::{DocxBlockDiff, DocxOpcPartDiff};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
-
-    fn fixture() -> DocxSnapshot {
-        crate::artifacts::docx::engine::build_minimal_docx(DocxDocument {
-            body: vec![
-                DocxBlock::paragraph("first"),
-                DocxBlock::paragraph("second"),
-            ],
-            styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }],
-        })
-    }
-
-    fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> DocxBlockPath {
-        DocxBlockPath { segments: vec![DocxPathSegment { block_index, row, cell }], index }
-    }
 
     #[test]
     fn insert_then_remove_block_apply_and_inverse() {
@@ -533,143 +948,10 @@ mod tests {
         assert_eq!(after2, with_part);
     }
 
-    //#region 🔖️Fixtures
-    /// 🌱 `sweep_a`/`sweep_b`: differ in EVERY mutable field, both `document` and `opc`. Body uses
-    /// different-length lists so the recipe's naive positional `between_indexed` shows
-    /// removed+modified+added simultaneously (per this ticket's "known structural trap" note): a
-    /// removed tail on `sweep_a`, a modified-in-every-field first paragraph, and an added tail on
-    /// `sweep_b` (a table, exercising the recursive nested triple down to `blocks`). Styles (a
-    /// name-keyed collection, order-independent) get one removed, one modified-in-every-field, one
-    /// added. OPC content_types/parts/relationships each get one removed, one modified, one added.
-    fn sweep_a() -> DocxSnapshot {
-        let mut opc = OpcPackage::empty();
-        opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
-        opc.content_types.set_default("xml", "application/xml");
-        opc.content_types.set_default("toRemove", "application/octet-stream");
-        opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", b"<w:document/>".to_vec());
-        opc.set_part("word/toModify.xml", "application/xml", b"old".to_vec());
-        opc.set_part("word/toRemove.xml", "application/xml", b"gone".to_vec());
-        opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
-        opc.add_relationship("", "rId9", "http://example/toRemove", "word/toRemove.xml");
-        opc.relationships.insert(
-            "word/document.xml".into(),
-            vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "media/old.png".into(), target_mode: OpcTargetMode::Internal }],
-        );
-        // 🎯️ A relationships OWNER present only in `a` (owned by the part that itself gets
-        // removed) -- exercises `relationships.removed` at the owner-key level, distinct from
-        // `""`'s own list merely losing one entry (which exercises `relationships.modified`).
-        opc.relationships.insert(
-            "word/toRemove.xml".into(),
-            vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/ownerToRemove".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }],
-        );
-
-        DocxSnapshot::from_parts(
-            opc,
-            DocxDocument {
-                body: vec![
-                    DocxBlock::Paragraph(DocxParagraph { runs: vec![DocxRun { text: "old".into(), bold: false, ..Default::default() }], style: None, extra_paragraph_properties: Vec::new() }),
-                    DocxBlock::paragraph("stay"),
-                    DocxBlock::Table(DocxTable {
-                        rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("toDrop cell")], ..Default::default() }], ..Default::default() }],
-                        ..Default::default()
-                    }),
-                ],
-                styles: vec![
-                    DocxStyle { id: "keep".into(), name: "Keep".into(), based_on: None },
-                    DocxStyle { id: "toModify".into(), name: "old".into(), based_on: None },
-                    DocxStyle { id: "toRemove".into(), name: "Gone".into(), based_on: None },
-                ],
-            },
-        )
-    }
-
-    fn sweep_b() -> DocxSnapshot {
-        let mut opc = OpcPackage::empty();
-        opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
-        opc.content_types.set_default("xml", "application/xml");
-        opc.content_types.set_default("added", "application/octet-stream");
-        opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", b"<w:document/>changed".to_vec());
-        opc.set_part("word/toModify.xml", "application/xml", b"new".to_vec());
-        opc.set_part("word/added.xml", "application/xml", b"fresh".to_vec());
-        // 🩹 AFTER the `set_part` calls above (which already appended `toModify`'s override entry
-        // at position 1): a bare `set_override` on an EXISTING key updates its VALUE in place,
-        // never its position -- so this exercises `content_types.overrides.modified` (the value
-        // really differs from `sweep_a`'s "application/xml") without perturbing list order, which
-        // matters because `overrides` is order-sensitive `Vec<(String,String)>` equality (the OPC
-        // module's own type, not ours to change) and `between(a,b).apply(a)` only reconstructs
-        // survivors in `a`'s original relative order + appends -- this fixture is built so that
-        // convention already matches `sweep_b`'s own construction order.
-        opc.content_types.set_override("word/toModify.xml", "application/xml-modified");
-        opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
-        opc.relationships.insert(
-            "word/document.xml".into(),
-            vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "media/new.png".into(), target_mode: OpcTargetMode::Internal }],
-        );
-        opc.relationships.insert("word/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::Internal }]);
-
-        DocxSnapshot::from_parts(
-            opc,
-            DocxDocument {
-                // 🎯️ Length 2 vs `sweep_a`'s 3: per this ticket's "known structural trap" note, a
-                // single same-direction `between()` call can never show BOTH a top-level `removed`
-                // AND a top-level `added` (only one tail flavor per direction) -- so `a -> b`
-                // exercises `body.removed` (the dropped `Table`, index 2) + `body.modified[0]`
-                // (whose OWN nested `runs` diff exercises modified+added together, since ONE run
-                // survives-and-changes while a SECOND run is net-new); `b -> a` (the reverse
-                // direction, asserted separately in `field_sweep` below) exercises `body.added`
-                // (the very same `Table`, recursed structurally as the added item's payload).
-                body: vec![
-                    DocxBlock::Paragraph(DocxParagraph {
-                        runs: vec![
-                            DocxRun { text: "new".into(), bold: true, ..Default::default() },
-                            DocxRun { text: "second run".into(), italic: true, ..Default::default() },
-                        ],
-                        style: Some("keep".into()),
-                        extra_paragraph_properties: Vec::new(),
-                    }),
-                    DocxBlock::paragraph("stay"),
-                ],
-                styles: vec![
-                    DocxStyle { id: "keep".into(), name: "Keep".into(), based_on: None },
-                    DocxStyle { id: "toModify".into(), name: "new".into(), based_on: Some("keep".into()) },
-                    DocxStyle { id: "added".into(), name: "Added".into(), based_on: None },
-                ],
-            },
-        )
-    }
-    //#endregion 🔖️Fixtures
-
     //#region 🔖️MutationDiffLaw
-    fn sample_mutations() -> Vec<DocxMutation> {
-        vec![
-            DocxMutation::NoMutation,
-            DocxMutation::SetSnapshot { snapshot: sweep_b() },
-            DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 1 }, block: DocxBlock::paragraph("x") },
-            DocxMutation::RemoveBlock { path: DocxBlockPath { segments: vec![], index: 0 } },
-            DocxMutation::SetBlockContent { path: DocxBlockPath { segments: vec![], index: 0 }, block: DocxBlock::paragraph("y") },
-            DocxMutation::SetRunText { path: DocxBlockPath { segments: vec![], index: 0 }, run_index: 0, text: "z".into() },
-            DocxMutation::SetRunFormatting { path: DocxBlockPath { segments: vec![], index: 0 }, run_index: 0, bold: true, italic: false, underline: true },
-            DocxMutation::InsertStyle { style: DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: None } },
-            DocxMutation::RemoveStyle { id: "Normal".into() },
-            DocxMutation::SetStyleName { id: "Normal".into(), name: "Body".into() },
-            DocxMutation::SetStyleBasedOn { id: "Normal".into(), based_on: Some("Heading1".into()) },
-            DocxMutation::SetPart { path: "word/numbering.xml".into(), content_type: "application/xml".into(), bytes: b"<w:numbering/>".to_vec() },
-            // 🎯️ `RemovePart` targets `word/styles.xml`, the LAST part in `fixture()`'s
-            // `opc.parts` (built after `word/document.xml` since `fixture()`'s document has a
-            // style) -- like svg's own `SetAttribute{value:None}` precedent (see that artifact's
-            // `sample_mutations` doc comment), OPC parts are a NAME-keyed collection (position
-            // carries no OPC-spec meaning), so `RemovePart`'s mutation-level inverse (`SetPart`,
-            // which treats a not-currently-present path as an APPEND) only restores the exact
-            // original Vec position when the removed item was already last -- exact positional
-            // restoration in the general case is only guaranteed at the DIFF level, same caveat
-            // as svg's.
-            DocxMutation::RemovePart { path: "word/styles.xml".into() },
-        ]
-    }
-
     #[test]
     fn mutation_diff_law() {
-        for mutation in sample_mutations() {
+        for mutation in demo_mutation_cases() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
             let applied_via_diff = MutationDiff::apply(&diff_direct, &base);
@@ -686,7 +968,7 @@ mod tests {
     //#region 🔖️InverseLaw
     #[test]
     fn inverse_law() {
-        for mutation in sample_mutations() {
+        for mutation in demo_mutation_cases() {
             let base = fixture();
 
             let mut round_tripped = base.clone();

@@ -537,6 +537,39 @@ pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
 
 pub fn empty_gif_snapshot() -> GifSnapshot { GifSnapshot::default() }
 
+/// 🧪️ P2-FG2: real, deterministic demo `GifSnapshot` — a real GCT plus two real images (one
+/// with its own LCT, exercising every field a genuine encode/decode round-trip touches) — used
+/// by `conformance_laws` (below) and by the shipped `.dsl.semio`/`.pack.semio` fixtures
+/// (`../📚️examples/🎬️demo/🖼️assets/`), matching png's own `demo_png_snapshot()` precedent.
+pub fn demo_gif_snapshot() -> GifSnapshot {
+    let gct = GifColorTable { sorted: false, colors: vec![
+        GifRgb { r: 0, g: 0, b: 0 }, GifRgb { r: 255, g: 255, b: 255 },
+    ] };
+    let image_a = GifImage {
+        left: 0, top: 0, width: 2, height: 2,
+        interlace: false,
+        lct: None,
+        indices: vec![0, 1, 1, 0],
+    };
+    let image_b = GifImage {
+        left: 0, top: 0, width: 2, height: 2,
+        interlace: false,
+        lct: Some(GifColorTable { sorted: true, colors: vec![
+            GifRgb { r: 10, g: 20, b: 30 }, GifRgb { r: 200, g: 100, b: 50 },
+        ] }),
+        indices: vec![1, 0, 0, 1],
+    };
+    GifSnapshot {
+        schema: STDIO_GIF_DOCUMENT_SCHEMA.into(),
+        width: 2,
+        height: 2,
+        gct: Some(gct),
+        background_color_index: 0,
+        pixel_aspect_ratio: 0,
+        images: vec![image_a, image_b],
+    }
+}
+
 //#region Sniff
 /// 🔍️ Real magic-byte sniffing, shared by every `sniff()` this ticket touches across 87a/89a —
 /// binary sources check the raw header directly; text (hex DSL) sources strip whatever preamble
@@ -574,8 +607,78 @@ pub fn sniff_magic(source: &semio_framework_plugin::AnalyzeSource<'_>, magic: &[
 pub fn register() {
     crate::artifacts::gif::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::standards::v87a::subsets::any::schema::gif_artifact_schema_descriptor());
+    register_pilot_languages();
+    register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA));
 }
+
+//#region Registration
+/// 📌️ P2-FG2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the
+/// recipe's own exemplar pattern (`📄txt/…/⚙️engine/🦀️component.rs`'s
+/// `register_pilot_languages`) — `stdio.gif`/`.op`/`.diff`/`.pack`/`.spr`, all
+/// `dsl::passthrough_hooks`. `diff`'s `protocol` slot stays `None`, matching the exemplar's
+/// own shape exactly (the 5-role scheme has no dedicated "diff binary" role, even though
+/// `🔺️diff/💾️binary/📡️component.protocol.semio` is a real, conformance-tested file — its
+/// binary form is exercised directly by `protocol_walk_law` below).
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.gif", extension: Some("gif"), role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.gif"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.gif.op", extension: None, role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.gif.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.gif.diff", extension: None, role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("stdio.gif.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.gif.pack", extension: None, role: dsl::LanguageRole::Pack,
+        grammar: None, grammar_path: None,
+        protocol: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.gif.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.gif.spr", extension: None, role: dsl::LanguageRole::Spr,
+        grammar: None, grammar_path: None,
+        protocol: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.gif.spr"),
+    });
+}
+
+/// 📇️ P2-FG2: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion API) —
+/// real, non-fabricated call for `stdio.gif`: `GifSnapshot` DOES carry a genuine derived
+/// `RecordSpec` constructor (`#[derive(dsl::DslRecord)]` emits `__dsl_spec`, see
+/// `../🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`), matching txt's own real-call
+/// precedent. `GifDiff` has NO such call: it's hand-rolled (no `dsl::DslDiff` derive — the
+/// tri-state `gct`/nested `lct` fields block it, see `🔺️diff/🦀️component.rs`'s own doc
+/// comment), so `stdio.gif#diff` is deliberately NOT registered here — filed as this wave's
+/// own `mechanism_gaps` entry (`register-schema-spec-needs-recordspec`, already in the
+/// recipe's §5 consolidated table) rather than fabricating an unrelated spec to satisfy the
+/// API.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn register_schema_specs() {
+    dsl::registry::register_schema_spec("stdio.gif", GifSnapshot::__dsl_spec);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn register_schema_specs() {}
+//#endregion Registration
 
 pub struct GifEngine { artifact_state: GifArtifact, snapshot_state: GifSnapshot }
 impl GifEngine {
@@ -812,5 +915,121 @@ mod tests {
         let restored = deinterlace_rows(&interlaced, width, height);
         assert_eq!(restored, rows);
     }
+
+    //#region 🔖️ConformanceLaws
+    /// 🧪️ P2-FG2: per-artifact conformance laws (recipe §4 item 6) — grammar/protocol
+    /// parseability, `Recognizer` against real fixtures AND real `print_op`/`print_diff`
+    /// output, `walk_protocol` against real `encode_pack`/`encode_op`/`encode_diff` bytes, and
+    /// the fixture-honesty round-trip. Lives here (the engine's own test region), not any
+    /// framework file — mirrors png's own `conformance_laws` module shape verbatim.
+    mod conformance_laws {
+        use super::*;
+        use crate::artifacts::gif::standards::v87a::subsets::any::schema::{diff, mutations, snapshot};
+        use protocol::{DiffCodec, OpBinary, OpText};
+
+        /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio`
+        /// files parse under the real dialect.
+        #[test]
+        fn committed_facet_files_parse() {
+            for (label, text) in [
+                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
+            ] {
+                let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+                assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+            }
+            for (label, text) in [
+                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
+            ] {
+                dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+            }
+        }
+
+        /// ✅️ `grammar_conformance_law`: the snapshot grammar (a hex-dump grammar — GIF87a has
+        /// no textual syntax of its own, see that file's own doc comment) recognizes real
+        /// `print_dsl` output for the demo snapshot.
+        #[test]
+        fn grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            let text = store::ArtifactDsl::print_dsl(&demo_gif_snapshot());
+            let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
+            let reconstructed = format!("{}\n{body}", envelope.envelope_id());
+            assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+        }
+
+        /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
+        /// output for every `GifMutation` variant (`mutations::demo_mutation_cases()`).
+        #[test]
+        fn ops_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for mutation in mutations::demo_mutation_cases() {
+                let printed = mutation.print_op();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
+            }
+        }
+
+        /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff`
+        /// output for every representative `GifDiff` (`diff::demo_diff_cases()`).
+        #[test]
+        fn diff_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for d in diff::demo_diff_cases() {
+                let printed = d.print_diff();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
+            }
+        }
+
+        /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
+        /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
+        /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed ==
+        /// bytes.len()`.
+        #[test]
+        fn protocol_walk_law() {
+            let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+            let packed = store::ArtifactPack::encode_pack(&demo_gif_snapshot());
+            let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
+            let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+            assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
+
+            let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+            for mutation in mutations::demo_mutation_cases() {
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
+            }
+
+            let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+            for d in diff::demo_diff_cases() {
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
+            }
+        }
+
+        /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are
+        /// GENUINE `print_dsl`/`encode_pack` output of `demo_gif_snapshot()`.
+        #[test]
+        fn fixture_honesty_law() {
+            const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+
+            let demo = demo_gif_snapshot();
+
+            let parsed = <GifSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_gif_snapshot()");
+            assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_gif_snapshot()) drifted from the shipped .dsl.semio fixture");
+
+            let decoded = <GifSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_gif_snapshot()");
+            assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_gif_snapshot()) drifted from the shipped .pack.semio fixture");
+        }
+    }
+    //#endregion 🔖️ConformanceLaws
 }
 //#endregion Tests

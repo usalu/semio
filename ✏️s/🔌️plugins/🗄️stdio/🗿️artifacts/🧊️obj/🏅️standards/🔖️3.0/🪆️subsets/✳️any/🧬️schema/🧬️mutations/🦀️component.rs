@@ -26,6 +26,8 @@ use crate::artifacts::obj::schema::snapshot::{
     ObjFace, ObjNormal, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange,
     ObjVertex,
 };
+#[cfg(test)]
+use crate::artifacts::obj::schema::snapshot::{ObjFaceVertex, ObjGroup, ObjObject};
 use crate::artifacts::obj::ObjSnapshot;
 use protocol::{Mutation, MutationDiff};
 #[cfg(test)]
@@ -295,164 +297,170 @@ impl protocol::OpBinary for ObjMutation {
 }
 //#endregion OpCodecs
 
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG1: representative `ObjSnapshot`/`ObjMutation` fixtures — the single source of truth
+/// reused by `op_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
+/// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests (same convention P2-P1's
+/// json/zip pilots established: `mutations::demo_mutation_cases()`/`diff::demo_diff_cases()`).
+#[cfg(test)]
+pub(crate) fn base_snapshot() -> ObjSnapshot {
+    ObjSnapshot {
+        schema: "stdio.obj".into(),
+        vertices: vec![
+            ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None },
+            ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None },
+            ObjVertex { x: 0.0, y: 1.0, z: 0.0, w: None },
+        ],
+        texcoords: vec![ObjTexCoord { u: 0.0, v: 0.0, w: None }],
+        normals: vec![ObjNormal { x: 0.0, y: 0.0, z: 1.0 }],
+        faces: vec![ObjFace {
+            vertices: vec![
+                ObjFaceVertex { vertex: 0, texcoord: None, normal: None },
+                ObjFaceVertex { vertex: 1, texcoord: None, normal: None },
+                ObjFaceVertex { vertex: 2, texcoord: None, normal: None },
+            ],
+        }],
+        groups: vec![ObjGroup { name: "Base".into(), faces: vec![0] }],
+        objects: vec![ObjObject { name: "Obj".into(), faces: vec![0] }],
+        mtllib: Some("m.mtl".into()),
+        usemtl: vec![ObjUsemtlRange { face_index_from: 0, material: "Red".into() }],
+        smoothing_groups: vec![ObjSmoothingRange { face_index_from: 0, group: Some(1) }],
+        unknown_statements: vec![ObjUnknownStatement { line_index: 0, raw: "# c".into() }],
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<ObjMutation> {
+    vec![
+        ObjMutation::NoMutation,
+        ObjMutation::SetSnapshot { snapshot: sweep_b() },
+        ObjMutation::InsertVertex { index: 1, vertex: ObjVertex { x: 9.0, y: 9.0, z: 9.0, w: Some(1.0) } },
+        ObjMutation::RemoveVertex { index: 0 },
+        ObjMutation::SetVertex { index: 0, vertex: ObjVertex { x: 2.0, y: 2.0, z: 2.0, w: None } },
+        ObjMutation::InsertTexCoord { index: 0, texcoord: ObjTexCoord { u: 9.0, v: 9.0, w: Some(1.0) } },
+        ObjMutation::RemoveTexCoord { index: 0 },
+        ObjMutation::SetTexCoord { index: 0, texcoord: ObjTexCoord { u: 5.0, v: 5.0, w: None } },
+        ObjMutation::InsertNormal { index: 0, normal: ObjNormal { x: 1.0, y: 0.0, z: 0.0 } },
+        ObjMutation::RemoveNormal { index: 0 },
+        ObjMutation::SetNormal { index: 0, normal: ObjNormal { x: -1.0, y: 0.0, z: 0.0 } },
+        ObjMutation::InsertFace { index: 0, face: ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }, ObjFaceVertex { vertex: 1, texcoord: None, normal: None }, ObjFaceVertex { vertex: 2, texcoord: None, normal: None }] } },
+        ObjMutation::RemoveFace { index: 0 },
+        ObjMutation::SetFace { index: 0, face: ObjFace { vertices: vec![ObjFaceVertex { vertex: 2, texcoord: None, normal: None }, ObjFaceVertex { vertex: 1, texcoord: None, normal: None }, ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] } },
+        ObjMutation::SetGroup { name: "Base".into(), faces: vec![0, 0] },
+        ObjMutation::SetGroup { name: "New".into(), faces: vec![0] },
+        ObjMutation::RemoveGroup { name: "Base".into() },
+        ObjMutation::SetObject { name: "Obj".into(), faces: vec![0] },
+        ObjMutation::SetObject { name: "NewObj".into(), faces: vec![0] },
+        ObjMutation::RemoveObject { name: "Obj".into() },
+        ObjMutation::SetMtllib { mtllib: None },
+        ObjMutation::SetMtllib { mtllib: Some("new.mtl".into()) },
+        ObjMutation::SetUsemtl { usemtl: vec![ObjUsemtlRange { face_index_from: 0, material: "Blue".into() }] },
+        ObjMutation::SetSmoothingGroups { smoothing_groups: vec![] },
+        ObjMutation::SetUnknownStatements { unknown_statements: vec![] },
+    ]
+}
+
+/// 🧬️ Canonical "differs in every mutable field" snapshot A — every index-keyed collection
+/// has 2 items (a stable prefix item + one that will be modified); every name-keyed
+/// collection has 2 named entries (one that will be removed, one that will be modified).
+#[cfg(test)]
+pub(crate) fn sweep_a() -> ObjSnapshot {
+    ObjSnapshot {
+        schema: "stdio.obj".into(),
+        vertices: vec![
+            ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None },
+            ObjVertex { x: 1.0, y: 1.0, z: 1.0, w: None },
+        ],
+        texcoords: vec![
+            ObjTexCoord { u: 0.0, v: 0.0, w: None },
+            ObjTexCoord { u: 1.0, v: 1.0, w: Some(5.0) },
+        ],
+        normals: vec![
+            ObjNormal { x: 0.0, y: 0.0, z: 1.0 },
+            ObjNormal { x: 1.0, y: 1.0, z: 1.0 },
+        ],
+        faces: vec![
+            ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
+            ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
+        ],
+        groups: vec![
+            ObjGroup { name: "G1".into(), faces: vec![0] },
+            ObjGroup { name: "G2".into(), faces: vec![1] },
+        ],
+        objects: vec![
+            ObjObject { name: "O1".into(), faces: vec![0] },
+            ObjObject { name: "O2".into(), faces: vec![1] },
+        ],
+        mtllib: Some("a.mtl".into()),
+        usemtl: vec![ObjUsemtlRange { face_index_from: 0, material: "Red".into() }],
+        smoothing_groups: vec![ObjSmoothingRange { face_index_from: 0, group: Some(1) }],
+        unknown_statements: vec![ObjUnknownStatement { line_index: 0, raw: "# a".into() }],
+    }
+}
+/// 🧬️ Sweep B: every index-keyed collection keeps its stable-prefix item at index 0
+/// UNCHANGED, has its index-1 item MODIFIED in every field (including a tri-state
+/// `Some(None)` on `texcoords[1].w`), and gains a brand-new item at index 2 (ADDED — proven
+/// via `between(a,b)`, since `b` is the longer side). `between(b,a)` then proves REMOVED
+/// (the same extra item, from `b`'s perspective). Name-keyed `groups`/`objects` show
+/// removed+modified+added simultaneously from ONE `between(a,b)` call (name-keyed
+/// collections aren't subject to the flat/positional "only one tail" limitation).
+#[cfg(test)]
+pub(crate) fn sweep_b() -> ObjSnapshot {
+    ObjSnapshot {
+        schema: "stdio.obj".into(),
+        vertices: vec![
+            ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None },
+            ObjVertex { x: 9.0, y: 9.0, z: 9.0, w: Some(0.5) },
+            ObjVertex { x: 5.0, y: 5.0, z: 5.0, w: Some(1.0) },
+        ],
+        texcoords: vec![
+            ObjTexCoord { u: 0.0, v: 0.0, w: None },
+            ObjTexCoord { u: 2.0, v: 2.0, w: None },
+            ObjTexCoord { u: 5.0, v: 5.0, w: None },
+        ],
+        normals: vec![
+            ObjNormal { x: 0.0, y: 0.0, z: 1.0 },
+            ObjNormal { x: -1.0, y: -1.0, z: -1.0 },
+            ObjNormal { x: 0.0, y: 1.0, z: 0.0 },
+        ],
+        faces: vec![
+            ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
+            ObjFace { vertices: vec![ObjFaceVertex { vertex: 1, texcoord: Some(0), normal: Some(0) }] },
+            ObjFace { vertices: vec![ObjFaceVertex { vertex: 2, texcoord: None, normal: None }] },
+        ],
+        groups: vec![
+            ObjGroup { name: "G2".into(), faces: vec![1, 2] },
+            ObjGroup { name: "G3".into(), faces: vec![3] },
+        ],
+        objects: vec![
+            ObjObject { name: "O2".into(), faces: vec![1, 2] },
+            ObjObject { name: "O3".into(), faces: vec![3] },
+        ],
+        mtllib: None,
+        usemtl: vec![
+            ObjUsemtlRange { face_index_from: 0, material: "Blue".into() },
+            ObjUsemtlRange { face_index_from: 2, material: "Green".into() },
+        ],
+        smoothing_groups: vec![ObjSmoothingRange { face_index_from: 0, group: None }],
+        unknown_statements: vec![
+            ObjUnknownStatement { line_index: 5, raw: "# b".into() },
+            ObjUnknownStatement { line_index: 6, raw: "weird".into() },
+        ],
+    }
+}
+//#endregion 🔖️DemoCases
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::obj::schema::snapshot::{ObjFaceVertex, ObjGroup, ObjObject};
     use protocol::command::DiffAlgebra;
-
-    //#region 🔖️Fixtures
-    fn base_snapshot() -> ObjSnapshot {
-        ObjSnapshot {
-            schema: "stdio.obj".into(),
-            vertices: vec![
-                ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None },
-                ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None },
-                ObjVertex { x: 0.0, y: 1.0, z: 0.0, w: None },
-            ],
-            texcoords: vec![ObjTexCoord { u: 0.0, v: 0.0, w: None }],
-            normals: vec![ObjNormal { x: 0.0, y: 0.0, z: 1.0 }],
-            faces: vec![ObjFace {
-                vertices: vec![
-                    ObjFaceVertex { vertex: 0, texcoord: None, normal: None },
-                    ObjFaceVertex { vertex: 1, texcoord: None, normal: None },
-                    ObjFaceVertex { vertex: 2, texcoord: None, normal: None },
-                ],
-            }],
-            groups: vec![ObjGroup { name: "Base".into(), faces: vec![0] }],
-            objects: vec![ObjObject { name: "Obj".into(), faces: vec![0] }],
-            mtllib: Some("m.mtl".into()),
-            usemtl: vec![ObjUsemtlRange { face_index_from: 0, material: "Red".into() }],
-            smoothing_groups: vec![ObjSmoothingRange { face_index_from: 0, group: Some(1) }],
-            unknown_statements: vec![ObjUnknownStatement { line_index: 0, raw: "# c".into() }],
-        }
-    }
-
-    fn variants() -> Vec<ObjMutation> {
-        vec![
-            ObjMutation::NoMutation,
-            ObjMutation::SetSnapshot { snapshot: sweep_b() },
-            ObjMutation::InsertVertex { index: 1, vertex: ObjVertex { x: 9.0, y: 9.0, z: 9.0, w: Some(1.0) } },
-            ObjMutation::RemoveVertex { index: 0 },
-            ObjMutation::SetVertex { index: 0, vertex: ObjVertex { x: 2.0, y: 2.0, z: 2.0, w: None } },
-            ObjMutation::InsertTexCoord { index: 0, texcoord: ObjTexCoord { u: 9.0, v: 9.0, w: Some(1.0) } },
-            ObjMutation::RemoveTexCoord { index: 0 },
-            ObjMutation::SetTexCoord { index: 0, texcoord: ObjTexCoord { u: 5.0, v: 5.0, w: None } },
-            ObjMutation::InsertNormal { index: 0, normal: ObjNormal { x: 1.0, y: 0.0, z: 0.0 } },
-            ObjMutation::RemoveNormal { index: 0 },
-            ObjMutation::SetNormal { index: 0, normal: ObjNormal { x: -1.0, y: 0.0, z: 0.0 } },
-            ObjMutation::InsertFace { index: 0, face: ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }, ObjFaceVertex { vertex: 1, texcoord: None, normal: None }, ObjFaceVertex { vertex: 2, texcoord: None, normal: None }] } },
-            ObjMutation::RemoveFace { index: 0 },
-            ObjMutation::SetFace { index: 0, face: ObjFace { vertices: vec![ObjFaceVertex { vertex: 2, texcoord: None, normal: None }, ObjFaceVertex { vertex: 1, texcoord: None, normal: None }, ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] } },
-            ObjMutation::SetGroup { name: "Base".into(), faces: vec![0, 0] },
-            ObjMutation::SetGroup { name: "New".into(), faces: vec![0] },
-            ObjMutation::RemoveGroup { name: "Base".into() },
-            ObjMutation::SetObject { name: "Obj".into(), faces: vec![0] },
-            ObjMutation::SetObject { name: "NewObj".into(), faces: vec![0] },
-            ObjMutation::RemoveObject { name: "Obj".into() },
-            ObjMutation::SetMtllib { mtllib: None },
-            ObjMutation::SetUsemtl { usemtl: vec![ObjUsemtlRange { face_index_from: 0, material: "Blue".into() }] },
-            ObjMutation::SetSmoothingGroups { smoothing_groups: vec![] },
-            ObjMutation::SetUnknownStatements { unknown_statements: vec![] },
-        ]
-    }
-    //#endregion 🔖️Fixtures
-
-    //#region 🔖️FieldSweepFixtures
-    /// 🧬️ Canonical "differs in every mutable field" snapshot A — every index-keyed collection
-    /// has 2 items (a stable prefix item + one that will be modified); every name-keyed
-    /// collection has 2 named entries (one that will be removed, one that will be modified).
-    fn sweep_a() -> ObjSnapshot {
-        ObjSnapshot {
-            schema: "stdio.obj".into(),
-            vertices: vec![
-                ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None },
-                ObjVertex { x: 1.0, y: 1.0, z: 1.0, w: None },
-            ],
-            texcoords: vec![
-                ObjTexCoord { u: 0.0, v: 0.0, w: None },
-                ObjTexCoord { u: 1.0, v: 1.0, w: Some(5.0) },
-            ],
-            normals: vec![
-                ObjNormal { x: 0.0, y: 0.0, z: 1.0 },
-                ObjNormal { x: 1.0, y: 1.0, z: 1.0 },
-            ],
-            faces: vec![
-                ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
-                ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
-            ],
-            groups: vec![
-                ObjGroup { name: "G1".into(), faces: vec![0] },
-                ObjGroup { name: "G2".into(), faces: vec![1] },
-            ],
-            objects: vec![
-                ObjObject { name: "O1".into(), faces: vec![0] },
-                ObjObject { name: "O2".into(), faces: vec![1] },
-            ],
-            mtllib: Some("a.mtl".into()),
-            usemtl: vec![ObjUsemtlRange { face_index_from: 0, material: "Red".into() }],
-            smoothing_groups: vec![ObjSmoothingRange { face_index_from: 0, group: Some(1) }],
-            unknown_statements: vec![ObjUnknownStatement { line_index: 0, raw: "# a".into() }],
-        }
-    }
-    /// 🧬️ Sweep B: every index-keyed collection keeps its stable-prefix item at index 0
-    /// UNCHANGED, has its index-1 item MODIFIED in every field (including a tri-state
-    /// `Some(None)` on `texcoords[1].w`), and gains a brand-new item at index 2 (ADDED — proven
-    /// via `between(a,b)`, since `b` is the longer side). `between(b,a)` then proves REMOVED
-    /// (the same extra item, from `b`'s perspective). Name-keyed `groups`/`objects` show
-    /// removed+modified+added simultaneously from ONE `between(a,b)` call (name-keyed
-    /// collections aren't subject to the flat/positional "only one tail" limitation).
-    fn sweep_b() -> ObjSnapshot {
-        ObjSnapshot {
-            schema: "stdio.obj".into(),
-            vertices: vec![
-                ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None },
-                ObjVertex { x: 9.0, y: 9.0, z: 9.0, w: Some(0.5) },
-                ObjVertex { x: 5.0, y: 5.0, z: 5.0, w: Some(1.0) },
-            ],
-            texcoords: vec![
-                ObjTexCoord { u: 0.0, v: 0.0, w: None },
-                ObjTexCoord { u: 2.0, v: 2.0, w: None },
-                ObjTexCoord { u: 5.0, v: 5.0, w: None },
-            ],
-            normals: vec![
-                ObjNormal { x: 0.0, y: 0.0, z: 1.0 },
-                ObjNormal { x: -1.0, y: -1.0, z: -1.0 },
-                ObjNormal { x: 0.0, y: 1.0, z: 0.0 },
-            ],
-            faces: vec![
-                ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
-                ObjFace { vertices: vec![ObjFaceVertex { vertex: 1, texcoord: Some(0), normal: Some(0) }] },
-                ObjFace { vertices: vec![ObjFaceVertex { vertex: 2, texcoord: None, normal: None }] },
-            ],
-            groups: vec![
-                ObjGroup { name: "G2".into(), faces: vec![1, 2] },
-                ObjGroup { name: "G3".into(), faces: vec![3] },
-            ],
-            objects: vec![
-                ObjObject { name: "O2".into(), faces: vec![1, 2] },
-                ObjObject { name: "O3".into(), faces: vec![3] },
-            ],
-            mtllib: None,
-            usemtl: vec![
-                ObjUsemtlRange { face_index_from: 0, material: "Blue".into() },
-                ObjUsemtlRange { face_index_from: 2, material: "Green".into() },
-            ],
-            smoothing_groups: vec![ObjSmoothingRange { face_index_from: 0, group: None }],
-            unknown_statements: vec![
-                ObjUnknownStatement { line_index: 5, raw: "# b".into() },
-                ObjUnknownStatement { line_index: 6, raw: "weird".into() },
-            ],
-        }
-    }
-    //#endregion 🔖️FieldSweepFixtures
 
     //#region 🔖️MutationDiffLaw
     #[test]
     fn mutation_diff_law() {
         let base = base_snapshot();
-        for m in variants() {
+        for m in demo_mutation_cases() {
             let diff = m.diff(&base);
             let expected = diff.apply(&base);
 
@@ -469,7 +477,7 @@ mod tests {
     #[test]
     fn inverse_law() {
         let base = base_snapshot();
-        for m in variants() {
+        for m in demo_mutation_cases() {
             let mut forward = base.clone();
             apply_obj_mutation(&mut forward, &m);
             for inv in m.inverse(&base) {
@@ -631,11 +639,11 @@ mod tests {
     //#region 🔖️OpTextBinaryRoundtripLaw
     /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws over every `ObjMutation` variant (handcrafted
     /// impls over the `dsl::DslOps`-derived `DslVariants` — ticket `f6-recon-report.md` §2/§3;
-    /// `variants()` already covers every variant, incl. `SetSnapshot`'s whole nested `ObjSnapshot`
-    /// tree and every index-/name-keyed leaf payload type).
+    /// `demo_mutation_cases()` already covers every variant, incl. `SetSnapshot`'s whole nested
+    /// `ObjSnapshot` tree and every index-/name-keyed leaf payload type).
     #[test]
     fn op_text_binary_roundtrip_law() {
-        for m in variants() {
+        for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = ObjMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

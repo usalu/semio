@@ -1,4 +1,30 @@
-dialect protocol stdio.csv.diff
-; protocol::OpBinary raw JSON encoding of CsvDiff — NOT wrapped in the shared `.semio`
-; binary envelope (contrast with ../../📸️snapshot/💾️binary/component.protocol.semio)
-payload = *OCTET   ; UTF-8 JSON object (see ../📝️text/📖️component.grammar.semio)
+dialect protocol
+protocol stdio.csv.diff
+version 1
+schema stdio.csv.diff
+start diff
+
+# Real binary diff-frame `protocol::DiffCodec::encode_diff`/`decode_diff` NOW emit for CsvDiff —
+# upgraded, this program, from the F6-era `print_diff().into_bytes()` text-as-binary shortcut
+# (see this artifact's report). `CsvDiff` is a STRUCT (`has_header: Option<bool>`,
+# `records: Option<CsvRecordsDiff>`), not an enum, so there is no ordinal — instead this frame
+# uses one presence-flag byte PER OPTIONAL FIELD, directly modeling this dialect's real
+# conditional-field-presence mechanism (P2-M2 item 4): `has_header_flag`/`records_flag` are each
+# genuinely byte-walked, and each guarded field is read if-and-only-if its own flag is 1 — the
+# SAME shape this artifact's plan-mandated tri-state fields would need generalized to two flags
+# (`Some(None)` vs `Some(Some(v))` vs `None`) had `CsvDiff`'s own fields been tri-state (they are
+# single-level `Option<T>` here, not `Option<Option<T>>`).
+#
+# `records_blob` (present only when `records_flag == 1`) is this artifact's hand-rolled
+# recursive removed/modified/added COLLECTION-TRIPLE binary encoding — genuinely NOT expressible
+# by this dialect's `Array` (homogeneous single-`Prim`-element repeat only) or `Ref` (struct/enum
+# references still unconditionally error at walk time, confirmed unchanged since P2-M2), same
+# real limitation as the mutations protocol facet's own `snapshot`/`record` tail fields — see
+# this artifact's report, mechanism_gaps "csv-nested-record-array-unwalkable". Placed LAST so it
+# can honestly consume "rest of buffer" with no length prefix needed; every field before it IS
+# genuinely, individually byte-walked and validated.
+framing record
+field has_header_flag u8
+field has_header_value u8 if has_header_flag eq 1
+field records_flag u8
+field records_blob bytes if records_flag eq 1

@@ -1,3 +1,6 @@
-//! 🚧 scaffolded by W1b — binary representation marker for `stdio.semio.drawing.mutations`. Full field-layout
-//! parse/print lands in W2/W3.
-pub const BINARY_MAGIC: &str = "stdio.semio.drawing.mutations";
+//! 💾️ Binary representation codec surface for `stdio.semio.drawing` (mutation). The real
+//! encode/decode is `SemioDrawingMutation`'s hand-rolled `protocol::OpBinary` impl
+//! (../🦀️component.rs) -- `serde_json::to_vec`, no separate envelope.
+
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");

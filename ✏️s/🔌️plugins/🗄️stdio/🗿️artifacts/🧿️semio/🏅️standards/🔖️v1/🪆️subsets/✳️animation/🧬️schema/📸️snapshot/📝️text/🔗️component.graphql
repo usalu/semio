@@ -1,9 +1,6 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_semio_animation_snapshotEntry {
-  key: String!
-  value: String!
-}
-type Semio_semio_animation_snapshot {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_animation_snapshotEntry!]! @state(class: PERSISTENT)
-}
+# stdio.semio.animation.snapshot text grammar schema
+type Timeline { name: String channels: [Channel!]! }
+type Channel { target: Target! interpolation: Interpolation! keyframes: [Keyframe!]! }
+type Target { node: String! property: TargetProperty! }
+enum Interpolation { LINEAR STEP CUBIC_SPLINE }
+type Keyframe { t: Float! value: AnimValue! }

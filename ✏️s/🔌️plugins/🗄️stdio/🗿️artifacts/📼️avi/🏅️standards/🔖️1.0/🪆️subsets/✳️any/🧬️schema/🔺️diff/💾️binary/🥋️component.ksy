@@ -1,8 +1,11 @@
 meta:
-  id: avi_diff
-  endian: le
+  id: stdio_avi_diff
+  endian: be
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  Op-level binary framing for AviMutation (protocol::OpBinary in 🧬️mutations/🦀️component.rs) —
+  one JSON-serialized mutation per encoded op.
 seq:
-  - id: magic
-    contents: "stdio.avi.diff"
+  - id: json_utf8
+    type: str
+    size-eos: true
+    encoding: UTF-8

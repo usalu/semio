@@ -1,5 +1,7 @@
-//! 🧐️ SemioDrawingAnalyzer — 🚧 scaffolded by W1b: JSON-pack decode only. `sniff()` genuinely
-//! inspects the payload for this subset's document-schema marker (not an always-High/Low stub).
+//! 🧐️ SemioDrawingAnalyzer — real `ArtifactAnalyzer` impl over the full canvas/styles/layers
+//! snapshot. `sniff()` cheaply inspects the payload for this subset's document-schema marker
+//! (no alloc beyond the byte-window scan); `analyze()` does the real `ArtifactDsl`/`ArtifactPack`
+//! parse.
 
 use semio_framework_plugin::{ArtifactAnalyzer, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};

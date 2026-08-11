@@ -1,3 +1,10 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.document.snapshot"
+; Pack binary form: a store::semio_format envelope header (magic + component tag + version),
+; followed by the snapshot's JSON body verbatim as raw bytes (no further binary framing — the
+; envelope's own length-prefixed body carries the boundary).
+document   = envelope json-body
+envelope   = magic component version length
+magic      = %x53 %x45 %x4D %x49  ; "SEMI"
+component  = OCTET                ; store::semio_format::Component::Pack tag
+version    = OCTET
+length     = 4OCTET               ; big-endian u32 byte length of json-body
+json-body  = *OCTET                ; exactly `length` bytes of UTF-8 JSON

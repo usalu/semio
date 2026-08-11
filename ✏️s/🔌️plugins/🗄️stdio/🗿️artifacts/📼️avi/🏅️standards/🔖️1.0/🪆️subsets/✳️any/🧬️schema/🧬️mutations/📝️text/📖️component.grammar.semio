@@ -1,5 +1,6 @@
 dialect grammar stdio.avi.mutations
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
 root = document
-document = marker
-marker = "stdio.avi.mutations"
+; protocol::OpText (../🦀️component.rs): one compact single-line JSON object per op, tagged
+; by "mutation" (camelCase field names).
+document = json_line
+json_line = *(%x20-10FFFF)

@@ -1,3 +1,7 @@
-//! 🚧 scaffolded by W1b — binary representation marker for `stdio.semio.video.snapshot`. Full field-layout
-//! parse/print lands in W2/W3.
-pub const BINARY_MAGIC: &str = "stdio.semio.video.snapshot";
+//! 💾️ Binary representation grammar surface for `stdio.semio.video` (snapshot): magic + version +
+//! length-prefixed JSON body — actual encode/decode lives on `SemioVideoSnapshot`'s
+//! `store::ArtifactPack` impl in the facet root `🦀️component.rs`; this leaf carries the
+//! normative protocol description.
+
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");

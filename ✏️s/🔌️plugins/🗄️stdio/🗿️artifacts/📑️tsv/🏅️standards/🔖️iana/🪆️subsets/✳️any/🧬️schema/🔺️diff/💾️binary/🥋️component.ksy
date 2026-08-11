@@ -1,8 +1,11 @@
 meta:
-  id: tsv_diff
+  id: stdio_tsv_diff
   endian: le
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  Raw UTF-8 bytes of the hand-rolled `stdio.tsv.diff` text (see ../📝️text/📖️component.grammar.semio).
+  Not wrapped in the shared `.semio` binary envelope.
 seq:
-  - id: magic
-    contents: "stdio.tsv.diff"
+  - id: payload
+    type: str
+    size-eos: true
+    encoding: UTF-8

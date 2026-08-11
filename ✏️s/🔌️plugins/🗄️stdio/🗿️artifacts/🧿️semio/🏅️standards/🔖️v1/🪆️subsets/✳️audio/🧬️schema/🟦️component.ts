@@ -1,8 +1,7 @@
-/** 🧬️ SemioAudioArtifact schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioAudioArtifact
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
+/** 🧬️ SemioAudioArtifact schema. */
 export interface SemioAudioArtifactEntry {
-  key: string;
-  value: string;
+  name: string;
+  data: number[];
 }
 export interface SemioAudioArtifact {
   /** @state persistent */ schema: string;

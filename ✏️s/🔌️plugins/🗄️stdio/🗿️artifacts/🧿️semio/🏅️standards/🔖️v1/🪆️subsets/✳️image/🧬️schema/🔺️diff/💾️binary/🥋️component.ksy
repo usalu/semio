@@ -1,8 +1,11 @@
 meta:
-  id: semio_image_diff
-  endian: le
+  id: semio_image_diff_binary
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  Real binary layout for `SemioImageDiff::encode_diff`/`decode_diff` — a documented
+  simplification (matching gif's own hand-rolled `DiffCodec`): `encode_diff` is the
+  📝️text sibling's `line` grammar UTF-8 bytes, verbatim, with no separate binary framing.
 seq:
-  - id: magic
-    contents: "stdio.semio.image.diff"
+  - id: line_utf8
+    type: str
+    size: _io.size - _io.pos
+    encoding: UTF-8

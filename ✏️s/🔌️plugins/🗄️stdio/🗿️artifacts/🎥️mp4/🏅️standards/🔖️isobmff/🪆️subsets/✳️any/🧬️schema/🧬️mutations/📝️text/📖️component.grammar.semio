@@ -1,5 +1,7 @@
 dialect grammar stdio.mp4.mutations
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
 root = document
-document = marker
-marker = "stdio.mp4.mutations"
+; protocol::OpText::print_op/parse_op (../🦀️component.rs): one compact single-line JSON
+; object per op, tagged by "mutation" (camelCase field names, matching the Rust enum's
+; #[serde(tag="mutation", rename_all="camelCase")]).
+document = json_line
+json_line = *(%x20-10FFFF)  ; any non-newline UTF-8 text

@@ -1,3 +1,4 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.workflow.mutations"
+; abnf s.stdio.semio.workflow mutation BINARY wire format -- UTF-8 bytes of the mutation TEXT wire
+; format verbatim; see 🧬️mutations/📝️text/📖️component.grammar.semio for the real token grammar.
+document = op-line-utf8
+op-line-utf8 = *OCTET

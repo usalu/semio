@@ -1,8 +1,53 @@
-dialect grammar stdio.xml.mutations
-root = document
-document = payload
-; XmlMutation's text representation IS its JSON serialization (see the sibling
-; ../🔣️component.json for the XmlMutation JSON Schema) -- serde(rename_all = "camelCase"),
-; tag-discriminated unions via a "kind"/"mutation" field. No custom textual grammar beyond JSON's
-; own (well-known, not reproduced here).
-payload = json-value
+dialect grammar
+grammar stdio.xml.mutations
+extension xml
+start document
+comment none
+
+# P2-FG1: real one-line `OpText::print_op`/`parse_op` shape ALREADY emitted by
+# `../../🦀️component.rs` (`print_xml_mutation`/`parse_xml_mutation`), replacing the F6-era
+# placeholder that described a serde-JSON `XmlMutation` wire struct the Rust codec never emits (F6
+# moved every stdio op codec to `keyword key=value ...` text). Every keyword/field-name token below
+# is copied verbatim from the real `format!(...)` call sites.
+#
+# `hex` (bare `hex`, referenced below but deliberately NOT defined as a production in this file) is
+# the framework's built-in `hex` MACRO -- `Symbol::Ref` falls back production-name -> macro-name
+# automatically; see `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2 for why a hand-rolled
+# `{INT|IDENT}*` production is wrong here (no backtracking -- would silently swallow a following
+# bareword keyword like `index`/`value`/`name`).
+document = no-mutation | set-snapshot | set-declaration | set-doctype | insert-element | remove-element | set-attribute | set-text
+
+no-mutation = "no-mutation"
+set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
+set-declaration = "set-declaration" "declaration" "=" opt-declaration
+set-doctype = "set-doctype" "doctype" "=" opt-hex
+insert-element = "insert-element" "path" "=" path "index" "=" INT "node" "=" xml-node
+remove-element = "remove-element" "path" "=" path "index" "=" INT
+set-attribute = "set-attribute" "path" "=" path "name" "=" hex "value" "=" opt-hex
+set-text = "set-text" "path" "=" path "text" "=" hex
+
+# `enc_node_path`/`dec_node_path` -- `[i0,i1,...]`, a plain index chain (unlike json's tagged
+# `JsonPath`, `XmlNodePath` is always child-index-keyed, so no per-segment tag byte is needed).
+path = "[" path-item* "]"
+path-item = INT ","?
+
+# `enc_xml_snapshot`/`dec_xml_snapshot` -- `[hex(schema),opt(root),opt(doctype),opt(declaration)]`.
+snapshot-lit = "[" hex "," opt-xml-node "," opt-hex "," opt-declaration "]"
+
+# `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4).
+opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
+opt-bool = "[" "0" "]" | "[" "1" "," bool-lit "]"
+bool-lit = "0" | "1"
+opt-xml-node = "[" "0" "]" | "[" "1" "," xml-node "]"
+
+# `enc_declaration`/`dec_declaration` -- `[hex(version),opt-hex(encoding),opt-bool(standalone)]`.
+opt-declaration = "[" "0" "]" | "[" "1" "," declaration-lit "]"
+declaration-lit = "[" hex "," opt-hex "," opt-bool "]"
+
+# `enc_xml_node`/`dec_xml_node` -- restated here (same shape as
+# ../../🔺️diff/📝️text/📖️component.grammar.semio's own `xml-node`) so this leaf grammar is
+# self-contained, matching the repo's existing per-facet convention. Genuinely recursive: `E`'s
+# children slot references `xml-node` (via `node-item`) which references `xml-node` back.
+xml-node = "E" "[" hex "," "[" attr-item* "]" "," "[" node-item* "]" "]" | "T" "[" hex "]" | "D" "[" hex "]" | "M" "[" hex "]" | "P" "[" hex "," hex "]"
+attr-item = "[" hex "," hex "]" ","?
+node-item = xml-node ","?

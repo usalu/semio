@@ -1,57 +1,20 @@
 dialect grammar
-grammar pdf.1.7.snapshot
+grammar stdio.pdf.1.7.snapshot
 extension pdf
 start document
 
-document = header body
-header = "schema" SP "stdio.pdf.1.7" NL
-body = hex-encoded-pdf-bytes NL?
+# P2-FG3: real `store::ArtifactDsl::print_dsl`/`parse_dsl` shape for `stdio.pdf.1.7`
+# (../../../../../📸️snapshot/🦀️component.rs's `impl store::ArtifactDsl for PdfSnapshot`):
+# `print_dsl` hex-encodes the REAL `encode_pdf(self)` byte output (the actual `%PDF-1.7...` file
+# bytes, incl. the binary-marker comment line `%\xE2\xE3\xCF\xD3\n`), verbatim -- no COS-text
+# reserialization at the DSL-text layer, same design choice `stdio.pdf` (1.4) and binary/raw make.
+# Confirmed by direct read AND a real `[DEBUG]` dump of `print_dsl`, not assumed: preamble `semio
+# stdio.pdf.1.7.dsl v1`, body a CONTINUOUS run of lowercase hex digit pairs starting
+# `255044462d312e370a25e2e3cfd30a...` (= `%PDF-1.7\n%\xE2\xE3\xCF\xD3\n...` in hex).
+document = artifact-mark hex-body
+artifact-mark = "stdio.pdf.1.7"
 
-; -- The wrap_text envelope's body is the hex encoding of the REAL PDF file bytes (the codec
-; -- hex-encodes/decodes so an arbitrary binary PDF survives the text DSL round trip -- see
-; -- `PdfSnapshot::parse_dsl`/`print_dsl`). The grammar below (ISO 32000-1:2008 §7) is the ACTUAL
-; -- syntax of those decoded bytes -- not a placeholder, the real COS object grammar this
-; -- artifact's `⚙️engine` lexer/parser implements.
-hex-encoded-pdf-bytes = *hexdig
-hexdig = %x30-39 / %x41-46 / %x61-66
-
-; -- ISO 32000-1 §7.5: overall file structure.
-pdf-file = header-line body-section xref-section trailer-section
-header-line = "%PDF-" version EOL
-version = digit "." digit
-body-section = *indirect-object
-xref-section = "xref" EOL *xref-subsection
-xref-subsection = subsection-header *xref-entry
-subsection-header = int SP int EOL
-xref-entry = 10digit SP 5digit SP ("n" / "f") SP EOL
-trailer-section = "trailer" EOL dict EOL "startxref" EOL int EOL "%%EOF"
-
-; -- ISO 32000-1 §7.3: COS object grammar (mirrors this artifact's own `PdfObject` enum 1:1 --
-; -- Null/Bool/Int/Real/Str/Name/Array/Dict/Ref/Stream).
-indirect-object = int SP int SP "obj" EOL object EOL "endobj" EOL
-object = dict-or-stream / array / string / name / reference / real / integer / boolean / null
-
-null = "null"
-boolean = "true" / "false"
-integer = ["+" / "-"] 1*digit
-real = ["+" / "-"] *digit "." *digit
-name = "/" *name-char
-name-char = %x21-22 / %x24-2E / %x30-2F / %x3A-7E ; excludes delimiters, `#`-escapes not expanded here
-string = literal-string / hex-string
-literal-string = "(" *(string-char / nested-string) ")"
-nested-string = "(" *(string-char / nested-string) ")"
-string-char = %x20-27 / %x2A-5B / %x5D-7E / "\" escape
-escape = "n" / "r" / "t" / "b" / "f" / "(" / ")" / "\" / EOL / 1*3octaldig
-hex-string = "<" *hexdig ">"
-array = "[" *(SP object) SP "]"
-dict = "<<" *(SP name SP object) SP ">>"
-reference = int SP int SP "R"
-dict-or-stream = dict [SP "stream" EOL *OCTET EOL "endstream"]
-
-digit = %x30-39
-octaldig = %x30-37
-5digit = digit digit digit digit digit
-10digit = 5digit 5digit
-int = 1*digit
-SP = 1*(%x20 / %x09)
-EOL = %x0D.0A / %x0A / %x0D
+# See binary/raw's own grammar file's identical note (`📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2):
+# bare `hex`, no matching production -- `Symbol::Ref` falls back production-then-macro
+# (`Recognizer::match_macro_span`), backtracks correctly, unlike a hand-rolled `{INT|IDENT}*`.
+hex-body = hex

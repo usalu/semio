@@ -1,12 +1,50 @@
-dialect grammar stdio.deflate.diff
-; DeflateDiff wire form (protocol::OpText::print_op = serde_json::to_string): a sparse JSON
-; object, camelCase, only changed fields present (skip_serializing_if = Option::is_none).
-root = document
-document = "{" [ member *( "," member ) ] "}"
-member = compression-method / window-bits / compression-level-hint / dict-id / payload
-compression-method = %s"\"compressionMethod\":" 1*DIGIT
-window-bits = %s"\"windowBits\":" 1*DIGIT
-compression-level-hint = %s"\"compressionLevelHint\":" level-hint
-dict-id = %s"\"dictId\":" ( "null" / 1*DIGIT )   ; tri-state: absent=unchanged, null=cleared, number=set
-payload = %s"\"payload\":" "[" [ 1*DIGIT *( "," 1*DIGIT ) ] "]"
-level-hint = %s"\"fastest\"" / %s"\"fast\"" / %s"\"default\"" / %s"\"maximum\""
+dialect grammar
+grammar deflate.diff
+extension zz
+start document
+comment none
+
+# P2-FG2: real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `../../🦀️component.rs`'s `print_deflate_diff`/`parse_deflate_diff` (hand-rolled -- `dict_id:
+# Option<Option<u32>>` is a tri-state field, `dsl_derive::classify_field` peels exactly one
+# `Option<..>` layer before binding and no `impl<T: DslField> DslField for Option<T>` exists
+# anywhere in the `dsl` crate, so `#[derive(dsl::DslDiff)]` is not usable here -- same blocker
+# `XmlDiff`/`GifDiff` hit, confirmed via real `cargo check` per that file's own doc comment).
+# Every keyword/tag token below is copied verbatim from the real `format!(...)` call sites, not
+# invented. `comment none`: not strictly required by any token this grammar's own alphabet
+# produces (hex payloads are lowercase-only, never containing `#`), kept for consistency with the
+# sibling ../../📸️snapshot/📝️text grammar and because a `#` appearing in future demo/fixture
+# growth should fail loudly as a real parse mismatch, not silently vanish as a comment.
+#
+# `hex` (bare `hex`, referenced below but deliberately NOT defined as a production in this file)
+# is the framework's built-in `hex` MACRO -- see the mandatory-macro rationale in
+# `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2. Safe here even greedily: `payload-tok` is always
+# the LAST token in `document`'s sequence, so there is no following bareword literal for `hex`'s
+# own `Star`-less, largest-span-first macro match to swallow.
+document = compression-method-tok? window-bits-tok? level-tok? dict-id-tok? payload-tok?
+
+compression-method-tok = "compression-method" "=" INT
+window-bits-tok = "window-bits" "=" INT
+
+# `enc_level_hint`/`dec_level_hint` -- single-letter tag (`f`/`a`/`d`/`m`), a DIFFERENT
+# convention from the mutations facet's own bare kebab-case `DeflateLevelHint` tags (this diff
+# codec's own local grammar choice, `GifDisposal`'s `enc_disposal` precedent per the Rust doc
+# comment on `HandcraftedDiffCodec` in `../../🦀️component.rs`).
+level-tok = "level" "=" level-lit
+level-lit = "f" | "a" | "d" | "m"
+
+# `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4): `[0]`
+# (unchanged/None) / `[1,<value>]` (Some) -- `dict_id`'s OWN `Option<Option<u32>>` tri-state,
+# distinct from the plain-optional "field changed at all" wrapper every OTHER token here uses
+# (a token's mere PRESENCE on the line already means "field changed"; only `dict_id` needs a
+# second layer to distinguish "cleared" from "set").
+dict-id-tok = "dict-id" "=" opt-int
+opt-int = "[" "0" "]" | "[" "1" "," INT "]"
+
+# `payload`'s own `Option<Vec<u8>>` is the DIFF's plain "field changed at all" wrapper (NOT a
+# second tri-state -- `DeflateSnapshot::payload` itself is a bare, never-nullable `Vec<u8>`), so
+# its token is only present when the field changed, and its value is always lowercase hex, never
+# itself optional -- matches `hex_encode`'s own local grammar idiom (same reasoning
+# `DeflateSnapshot`'s own ../../📸️snapshot/🦀️component.rs `ArtifactDsl` impl gives for using hex
+# instead of base64 at THIS grammar layer: no external dependency, no escaping needed).
+payload-tok = "payload" "=" hex

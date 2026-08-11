@@ -1,7 +1,34 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_semio_workflow_snapshot.text;
-message Semio_semio_workflow_snapshot {
+// 🧬️ SemioWorkflowSnapshot schema (TEXT representation facet mirror) — real, matches the facet root.
+package semio.s_stdio_semio_workflow.snapshot.text;
+
+message SemioPoint2 {
+  double x = 1;
+  double y = 2;
+}
+message PortRef {
+  string node = 1;
+  string port = 2;
+}
+message WorkflowParam {
+  string key = 1;
+  string value = 2;
+}
+message WorkflowNode {
+  string id = 1;
+  string kind = 2;
+  string label = 3;
+  repeated WorkflowParam params = 4;
+  SemioPoint2 position = 5;
+}
+message WorkflowEdge {
+  string id = 1;
+  PortRef from = 2;
+  PortRef to = 3;
+  string kind = 4;
+}
+message SemioWorkflowSnapshot {
   string schema = 1;
-  string entries_wire = 2;
+  repeated WorkflowNode nodes = 2;
+  repeated WorkflowEdge edges = 3;
 }

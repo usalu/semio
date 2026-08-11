@@ -1,5 +1,29 @@
-dialect grammar stdio.html.diff
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
+dialect grammar
+grammar html.diff
 root = document
-document = marker
-marker = "stdio.html.diff"
+document = *(token SP)
+; HtmlDiff's real text representation is the hand-rolled `protocol::DiffCodec` grammar
+; `print_diff`/`parse_diff` implement (component.rs `#region HandcraftedDiffCodec`) -- a
+; space-separated `key=value` token line, NOT JSON. Restated here for a self-contained reading.
+token = "doctype=" tristate-str / "root=" node-diff
+tristate-str = "[0]" / "[1," hex-str "]"                    ; Option<String>
+hex-str = *HEXDIG                                            ; UTF-8 bytes, hex-encoded pairwise
+
+; -- HtmlNodeDiff (tag-prefixed: E=Element, T=Text, M=Comment, W=RawText, R=Replace) --
+node-diff = "E[" opt-hex-str "," opt-attrs-diff "," opt-children-diff "]"
+          / "T[" tristate-str "]"
+          / "M[" tristate-str "]"
+          / "W[" tristate-kind "," tristate-str "]"
+          / "R[" html-node "]"
+opt-hex-str = tristate-str
+opt-attrs-diff = "[0]" / "[1," attrs-diff "]"
+opt-children-diff = "[0]" / "[1," children-diff "]"
+tristate-kind = "[0]" / "[1,0]" / "[1,1]"                    ; Option<RawTextKind> (0=script,1=style)
+
+attrs-diff = "[" *(hex-str ",") "];[" *(hex-str ":" tristate-str ",") "];[" *(DIGIT "index" ":" hex-str ":" tristate-str ",") "]"
+children-diff = "[" *(DIGIT ",") "];[" *(DIGIT ":" node-diff ",") "];[" *(DIGIT ":" html-node ",") "]"
+
+; -- HtmlNode (its own recursive grammar, reused verbatim inside node-diff's Replace/added arms) --
+html-node = "E[" hex-str ",[" *(html-attr ",") "],[" *(html-node ",") "]]"
+          / "T[" hex-str "]" / "C[" hex-str "]" / "W[" DIGIT "," hex-str "]"
+html-attr = "[" hex-str "," tristate-str "]"

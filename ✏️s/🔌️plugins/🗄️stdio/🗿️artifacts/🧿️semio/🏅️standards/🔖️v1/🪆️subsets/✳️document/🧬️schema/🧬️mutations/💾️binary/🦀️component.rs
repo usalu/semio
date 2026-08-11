@@ -1,3 +1,4 @@
-//! 🚧 scaffolded by W1b — binary representation marker for `stdio.semio.document.mutations`. Full field-layout
-//! parse/print lands in W2/W3.
-pub const BINARY_MAGIC: &str = "stdio.semio.document.mutations";
+//! 💾️ Binary representation marker for `s.stdio.semio.document.mutations`: `OpBinary::encode_op`
+//! is the `print_op()` text bytes verbatim (see `🧬️mutations/🦀️component.rs`'s `OpCodecs` region)
+//! — no separate binary framing.
+pub const BINARY_MAGIC: &str = "s.stdio.semio.document.mutations";

@@ -1,3 +1,6 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.avi.snapshot" ;
+(* stdio.avi snapshot text form — whitespace-tolerant ASCII hex dump of the real RIFF bytes;
+   see ../💾️binary/🥋️component.ksy for the real grammar. *)
+document = hex_byte , { ws , hex_byte } ;
+hex_byte = hex_digit , hex_digit ;
+hex_digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" ;
+ws = { " " | "\t" | "\r" | "\n" } ;

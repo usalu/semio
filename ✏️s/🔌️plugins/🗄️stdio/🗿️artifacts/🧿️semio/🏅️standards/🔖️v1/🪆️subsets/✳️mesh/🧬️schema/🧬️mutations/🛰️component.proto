@@ -1,7 +1,50 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// 🧬️ SemioMeshMutation schema — real mirror of `🦀️component.rs`.
 package semio.s_stdio_semio_mesh.mutations;
+
+import "../📸️snapshot/🛰️component.proto";
+
+message SetSnapshot { semio.s_stdio_semio_mesh.snapshot.SemioMeshSnapshot snapshot = 1; }
+message AddMesh { semio.s_stdio_semio_mesh.snapshot.SemioMesh mesh = 1; }
+message RemoveMesh { string id = 1; }
+message AddPrimitive { string mesh_id = 1; semio.s_stdio_semio_mesh.snapshot.SemioPrimitive primitive = 2; }
+message RemovePrimitive { string mesh_id = 1; string primitive_id = 2; }
+message SetPrimitiveTopology { string mesh_id = 1; string primitive_id = 2; semio.s_stdio_semio_mesh.snapshot.SemioTopology topology = 3; }
+message SetPrimitiveGeometry {
+  string mesh_id = 1;
+  string primitive_id = 2;
+  repeated semio.s_stdio_semio_mesh.snapshot.SemioPoint3 positions = 3;
+  repeated semio.s_stdio_semio_mesh.snapshot.SemioPoint3 normals = 4;
+  repeated semio.s_stdio_semio_mesh.snapshot.SemioUv uvs = 5;
+  repeated semio.s_stdio_semio_mesh.snapshot.SemioRgba colors = 6;
+  repeated uint32 indices = 7;
+}
+message SetPrimitiveMaterial { string mesh_id = 1; string primitive_id = 2; optional string material_id = 3; }
+message AddMaterial { semio.s_stdio_semio_mesh.snapshot.SemioMaterial material = 1; }
+message RemoveMaterial { string id = 1; }
+message SetMaterialBaseColor { string id = 1; semio.s_stdio_semio_mesh.snapshot.SemioRgba base_color = 2; }
+message SetMaterialPbr { string id = 1; float metallic = 2; float roughness = 3; }
+message AddTexture { semio.s_stdio_semio_mesh.snapshot.SemioTexture texture = 1; }
+message RemoveTexture { string id = 1; }
+message SetTextureBytes { string id = 1; string mime = 2; bytes bytes_ = 3; }
+
 message SemioMeshMutation {
-  string schema = 1;
-  string entries_wire = 2;
+  oneof mutation {
+    bool no_mutation = 1;
+    SetSnapshot set_snapshot = 2;
+    AddMesh add_mesh = 3;
+    RemoveMesh remove_mesh = 4;
+    AddPrimitive add_primitive = 5;
+    RemovePrimitive remove_primitive = 6;
+    SetPrimitiveTopology set_primitive_topology = 7;
+    SetPrimitiveGeometry set_primitive_geometry = 8;
+    SetPrimitiveMaterial set_primitive_material = 9;
+    AddMaterial add_material = 10;
+    RemoveMaterial remove_material = 11;
+    SetMaterialBaseColor set_material_base_color = 12;
+    SetMaterialPbr set_material_pbr = 13;
+    AddTexture add_texture = 14;
+    RemoveTexture remove_texture = 15;
+    SetTextureBytes set_texture_bytes = 16;
+  }
 }

@@ -1,14 +1,16 @@
-dialect protocol stdio.step.snapshot
-; `StepSnapshot::encode_pack_with` is: a `SemioEnvelope` header (`wrap_binary`, envelope id
-; `stdio.step`, component `Pack`, version 1) followed by the UTF-8 bytes of the SAME Part-21 text
-; the DSL facet emits (`write_part21(&self.to_part21_document())`) — no separate packed binary
-; layout exists at this facet; the pack form is envelope-framed text, documented here rather than
-; hidden behind a placeholder. See the sibling text grammar
-; (`../📝️text/📖️component.grammar.semio`) for `exchange-file`'s own definition.
-root = pack-payload
-pack-payload = semio-envelope exchange-file-bytes
-semio-envelope = envelope-id component-tag version-tag
-envelope-id = 'stdio.step'
-component-tag = 'pack'
-version-tag = '1'
-exchange-file-bytes = utf8-bytes-of(exchange-file) ; `exchange-file` per the sibling text grammar
+# 📡️ P2-FG1: `StepSnapshot::encode_pack_with` wraps a `SemioEnvelope` header (`wrap_binary`,
+# envelope id `stdio.step`, component `Pack`, version 1) around the UTF-8 bytes of
+# `write_part21(&self.to_part21_document())` — the SAME Part-21 text the DSL facet emits. No packed
+# binary layout of its own exists at this facet; text-native, same shape as json's own snapshot
+# protocol (`framing record` + `chain payload utf8`). The SEMIO envelope itself is described ONCE,
+# framework-side (`🧰️framework/…/🧬️semio/📡️protocol/📡️component.protocol.semio`) — this file
+# describes ONLY the post-unwrap payload, per the recipe's own rule (cross-artifact `use` doesn't
+# resolve at walk time yet).
+dialect protocol
+protocol stdio.step.snapshot
+version 1
+schema stdio.step
+start body
+
+framing record
+chain payload utf8

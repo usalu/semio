@@ -1,3 +1,8 @@
 dialect protocol stdio.semio.animation.diff
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.animation.diff"
+magic = %x00
+body = timelines_triple
+timelines_triple = 'timelines{' removed ';' modified ';' added '}'
+removed = index*
+modified = (index ':' timeline_diff)*
+added = (index ':' timeline)*
+timeline_diff = '[' (name_tristate ',')? (channels_triple)? ']'

@@ -1,3 +1,6 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.html.snapshot"
+; abnf stdio.html snapshot (pack/binary payload)
+; payload is UTF-8 HTML5 text (this codec's canonical form -- HTML has no separate
+; "compact"/"pretty" distinction the way JSON does, since inter-tag whitespace is significant text
+; content) -- see ../📝️text/📖️component.grammar.semio for the full grammar.
+document = html-text
+html-text = *OCTET

@@ -1,8 +1,10 @@
 meta:
-  id: html_mutations
+  id: stdio_html_mutations
   endian: le
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  UTF-8 bytes of `print_op`'s hand-rolled `keyword arg=value ...` output, verbatim (see the
+  sibling ../📝️text/📖️component.grammar.semio) -- `encode_op`/`decode_op` are a pure text<->bytes
+  passthrough, no distinct binary framing.
 seq:
-  - id: magic
-    contents: "stdio.html.mutations"
+  - id: op_text
+    size-eos: true

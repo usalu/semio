@@ -1,5 +1,21 @@
 dialect grammar stdio.epw.snapshot
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.epw.snapshot"
+root = file
+; envelope preamble line + its trailing newline are stripped before this grammar runs
+; (store::semio_format::split_text_preamble). Real EnergyPlus Weather File (EPW) grammar:
+; https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html
+file = location CRLF design-conditions CRLF typical-extreme-periods CRLF ground-temperatures CRLF
+       holidays-dst CRLF comments-1 CRLF comments-2 CRLF data-periods CRLF (record CRLF)+
+location = "LOCATION" 9(COMMA field)               ; city,state,country,source,wmo,lat,lon,tz,elevation
+design-conditions = "DESIGN CONDITIONS" *(COMMA field)      ; retained verbatim, not structurally decoded
+typical-extreme-periods = "TYPICAL/EXTREME PERIODS" *(COMMA field)
+ground-temperatures = "GROUND TEMPERATURES" *(COMMA field)
+holidays-dst = "HOLIDAYS/DAYLIGHT SAVINGS" *(COMMA field)
+comments-1 = "COMMENTS 1" *(COMMA field)
+comments-2 = "COMMENTS 2" *(COMMA field)
+data-periods = "DATA PERIODS" COMMA count COMMA records-per-hour period*count
+period = COMMA field COMMA field COMMA field COMMA field   ; name,start-day-of-week,start-date,end-date
+record = field 34(COMMA field)                     ; exactly 35 columns, spec order (see ⚙️engine)
+field = *TEXTDATA
+COMMA = ","
+CRLF = "\r\n" / "\n"
+TEXTDATA = %x20-2B / %x2D-10FFFF                   ; any character except COMMA (0x2C)

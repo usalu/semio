@@ -1,10 +1,5 @@
-/** 🧬️ Semio_semio_mesh_mutations schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_mesh_mutations
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_mesh_mutationsEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_mesh_mutations {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_mesh_mutationsEntry[];
+/** 🧬️ `s.stdio.semio.mesh` OpBinary representation — identical to the TEXT grammar
+ * (`../📝️text/🟦️component.ts`), UTF-8 encoded, no additional framing. */
+export interface Stdio_semio_mesh_mutation_binary_envelope {
+  textUtf8: Uint8Array; // UTF-8 bytes of the print_op() text grammar
 }

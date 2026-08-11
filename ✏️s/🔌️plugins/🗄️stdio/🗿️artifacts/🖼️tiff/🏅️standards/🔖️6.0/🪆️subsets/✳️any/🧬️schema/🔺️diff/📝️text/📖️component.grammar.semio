@@ -1,12 +1,71 @@
-dialect grammar stdio.tiff.diff
-root = diff
-; wire text IS the JSON serialization of TiffDiff (serde camelCase, sparse fields); this
-; names the real top-level fields rather than restating RFC 8259's own JSON grammar
-diff = "{" (member ("," member)*)? "}"
-member = '"byteOrder"' ":" STRING
-       / '"ifds"' ":" ifds_triple
-       / '"pixels"' ":" "[" INT* "]"
-ifds_triple = "{" ('"removed"' ":" "[" INT* "]" ("," '"modified"' ":" "[" ifd_modified* "]")? ("," '"added"' ":" "[" json_value* "]")?)? "}"
-ifd_modified = "{" '"index"' ":" INT "," '"diff"' ":" tags_triple "}"
-tags_triple = "{" ('"removed"' ":" "[" INT* "]" ("," '"modified"' ":" "[" json_value* "]")? ("," '"added"' ":" "[" json_value* "]")?)? "}"
-BOOL = "true" / "false"
+dialect grammar
+grammar stdio.tiff.diff
+extension tiff
+start document
+comment none
+
+# P2-FG2: real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `../../🦀️component.rs` (`print_tiff_diff`/`parse_tiff_diff`), replacing the F6-era placeholder
+# that described neither the real snapshot NOR the real diff wire shape. Every keyword/tag token
+# below is copied verbatim from the real `format!(...)` call sites, not invented.
+#
+# `comment none`: not strictly required by any token this grammar's own alphabet produces (hex
+# payloads are lowercase-only, never containing `#`), kept for consistency with the sibling
+# ../../📸️snapshot/📝️text grammar.
+#
+# `hex` (bare `hex`, referenced below but deliberately NOT defined as a production in this file)
+# is the framework's built-in `hex` MACRO — see the mandatory-macro rationale in
+# `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2 (a hand-rolled `{INT|IDENT}*` production never
+# backtracks and would silently swallow a following bareword literal like `ifds`/`pixels`).
+document = byte-order-tok? ifds-tok? pixels-tok?
+byte-order-tok = "byte-order" "=" byte-order-lit
+byte-order-lit = "0" | "1"
+ifds-tok = "ifds" "=" ifds-diff-body
+pixels-tok = "pixels" "=" hex
+
+# `enc_ifds_diff`/`dec_ifds_diff` -- `[removed];[modified];[added]`, index-keyed (TIFF's own IFD
+# chain is positional, `📖️grammar-recipe.md` §1.4's index-keyed collection-triple shape).
+# `modified` entries are `index:<tags-diff-body>` (recursive), `added` entries are
+# `index:<ifd-lit>`.
+ifds-diff-body = "[" removed-list? "]" ";" "[" ifd-modified-list? "]" ";" "[" ifd-added-list? "]"
+removed-list = INT {"," INT}*
+ifd-modified-list = ifd-modified-item {"," ifd-modified-item}*
+ifd-modified-item = INT ":" tags-diff-body
+ifd-added-list = ifd-added-item {"," ifd-added-item}*
+ifd-added-item = INT ":" ifd-lit
+
+# `enc_tags_diff`/`dec_tags_diff` -- `[removed];[modified];[added]`, TAG-ID-keyed (a TIFF tag id
+# is TIFF's own natural stable identity within one IFD, not an ordinal position). `modified`/
+# `added` entries are `tag:kind:values` (colon-separated -- safe since `kind` is bare decimal and
+# `values` never contains a literal `:`).
+tags-diff-body = "[" removed-list? "]" ";" "[" tag-modified-list? "]" ";" "[" tag-added-list? "]"
+tag-modified-list = tag-modified-item {"," tag-modified-item}*
+tag-modified-item = INT ":" INT ":" tiff-values
+tag-added-list = tag-added-item {"," tag-added-item}*
+tag-added-item = INT ":" INT ":" tiff-values
+
+# `enc_ifd`/`dec_ifd`/`enc_tag`/`dec_tag` -- restated here (same shape as
+# ../../📸️snapshot's real tag/type/value model) so this leaf grammar is self-contained, matching
+# the repo's existing per-facet convention. `enc_list`'s uniform bracketed-comma-list shape
+# (`📖️grammar-recipe.md`'s own `hex` macro companion pattern).
+ifd-lit = "[" ifd-entry-list? "]"
+ifd-entry-list = tag-lit {"," tag-lit}*
+tag-lit = "[" INT "," INT "," tiff-values "]"
+
+# `enc_values`/`dec_values` -- single-uppercase-letter tag prefix immediately followed by the
+# bracketed positional payload (same convention `xml`'s `enc_xml_node`/gif's enum codecs use):
+# `B`=Byte, `A`=Ascii, `S`=Short, `L`=Long, `R`=Rational, `E`=SByte, `U`=Undefined, `H`=SShort,
+# `G`=SLong, `Q`=SRational, `F`=Float, `D`=Double. `Byte`/`Undefined` (raw octets) and `Ascii`
+# (text) are hex; every numeric list is decimal (or float) comma-separated;
+# `Rational`/`SRational` pairs nest as `[n,d]`.
+tiff-values = "B" "[" hex "]" | "A" "[" hex "]" | "S" number-list | "L" number-list | "R" rational-list | "E" number-list | "U" "[" hex "]" | "H" number-list | "G" number-list | "Q" rational-list | "F" number-list | "D" number-list
+number-list = "[" number-comma-list? "]"
+number-comma-list = number {"," number}*
+# Rust's `f32`/`f64` `Display` prints an integer-valued float (e.g. `3.0`) WITHOUT a decimal
+# point (`"3"`), so a `Float`/`Double` list can genuinely lex either token kind alongside a
+# signed/unsigned integer list's always-`INT` tokens -- same `NUMBER = FLOAT | INT` shape the
+# recipe's own STEP-value worked example uses (§1.3(e)).
+number = FLOAT | INT
+rational-list = "[" rational-comma-list? "]"
+rational-comma-list = rational-item {"," rational-item}*
+rational-item = "[" number "," number "]"

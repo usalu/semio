@@ -1,3 +1,12 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.tsv.snapshot" ;
+(* Real IANA text/tab-separated-values wire grammar
+   (https://www.iana.org/assignments/media-types/text/tab-separated-values). Bare text: the
+   `semio stdio.tsv.dsl v1` preamble line and its trailing newline are stripped by
+   `store::semio_format::split_text_preamble` BEFORE this grammar's `file` production runs.
+   NO quoting/escaping exists: a field can never legally contain a literal TAB/CR/LF byte. *)
+file = [ record, { line ending, record } ], [ line ending ] ;
+record = field, { tab, field } ;
+field = { text data } ;
+tab = ? U+0009 ? ;
+line ending = "\r", "\n" | "\n" ;
+(* text data = any byte except tab, cr, lf *)
+text data = ? any byte except U+0009 U+000D U+000A ? ;

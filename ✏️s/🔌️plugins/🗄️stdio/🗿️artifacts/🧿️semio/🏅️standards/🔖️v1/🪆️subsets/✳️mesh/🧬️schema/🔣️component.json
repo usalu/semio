@@ -1,10 +1,13 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.mesh/artifact.json",
   "title": "SemioMeshArtifact",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Full artifact state, mirrors SemioMeshSnapshot field for field.",
   "type": "object",
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+    "meshes": { "type": "array", "x-semio-state": "persistent" },
+    "materials": { "type": "array", "x-semio-state": "persistent" },
+    "textures": { "type": "array", "x-semio-state": "persistent" }
+  },
+  "required": ["schema", "meshes", "materials", "textures"]
 }

@@ -1,5 +1,7 @@
-//! 🏗️ SemioMeshBuilder — 🚧 scaffolded by W1b: local `ArtifactBuilder` round-tripping the
-//! minimal snapshot. W2 adds typed constructors + the real mutation vocabulary.
+//! 🏗️ SemioMeshBuilder — local `ArtifactBuilder` impl. `mutate()` delegates to
+//! `apply_semio_mesh_mutation`, so it already carries the real 16-variant `SemioMeshMutation`
+//! vocabulary (`schema::mutations`) — no builder-level changes were needed once that vocabulary
+//! landed.
 
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;

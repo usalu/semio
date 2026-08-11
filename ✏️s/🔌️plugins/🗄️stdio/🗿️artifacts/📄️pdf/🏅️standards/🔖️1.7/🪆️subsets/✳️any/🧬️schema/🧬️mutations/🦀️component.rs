@@ -12,6 +12,15 @@ use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{
     encode_option, enc_box, enc_dict_entry, enc_objref, enc_pdf_info, enc_pdf_object, enc_pdf_page, enc_str,
     split_top_level, strip_brackets,
 };
+/// 🧪️ P2-FG3: real recursive binary primitives backing the upgraded `OpBinary` impl below --
+/// reuses the diff facet's own `pub(crate)` binary codecs (`../🔺️diff/🦀️component.rs`) rather
+/// than duplicating them a second time in this file, same intra-artifact reuse pattern this
+/// module's `OpText` already uses for the text-form primitives.
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{
+    dec_box_bin, dec_objref_bin, dec_path_bin, dec_pdf_info_bin, dec_pdf_object_bin, dec_pdf_page_bin, dec_pdf_snapshot_bin,
+    enc_box_bin, enc_objref_bin, enc_path_bin, enc_pdf_info_bin, enc_pdf_object_bin, enc_pdf_page_bin, enc_pdf_snapshot_bin,
+    read_str_lp, write_str_lp,
+};
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
 use protocol::{Mutation, OpText};
 #[cfg(test)]
@@ -423,14 +432,149 @@ impl protocol::OpText for PdfMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `PdfDiff`'s hand-rolled codec uses.
+/// 🧪️ P2-FG3: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
+/// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut, per the mandatory
+/// FG1/FG2 binary-frame lesson. `tag` is the `PdfMutation` variant ordinal, in the SAME 0-14
+/// order `print_pdf_mutation`'s own keyword match uses. The payload past `format`/`tag` is
+/// genuine LEB128-varint/length-prefixed recursive binary (reusing the diff facet's own
+/// `pub(crate)` primitives), never the text form's bytes.
 impl protocol::OpBinary for PdfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let tag: u8 = match self {
+            PdfMutation::NoMutation => 0,
+            PdfMutation::SetSnapshot { .. } => 1,
+            PdfMutation::InsertPage { .. } => 2,
+            PdfMutation::RemovePage { .. } => 3,
+            PdfMutation::SetPageMediaBox { .. } => 4,
+            PdfMutation::SetPageCropBox { .. } => 5,
+            PdfMutation::AppendPageContent { .. } => 6,
+            PdfMutation::SetInfo { .. } => 7,
+            PdfMutation::InsertObject { .. } => 8,
+            PdfMutation::RemoveObject { .. } => 9,
+            PdfMutation::SetObjectValue { .. } => 10,
+            PdfMutation::SetDictEntry { .. } => 11,
+            PdfMutation::RemoveDictEntry { .. } => 12,
+            PdfMutation::SetTrailerEntry { .. } => 13,
+            PdfMutation::RemoveTrailerEntry { .. } => 14,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            PdfMutation::NoMutation => {}
+            PdfMutation::SetSnapshot { snapshot } => enc_pdf_snapshot_bin(snapshot, &mut out),
+            PdfMutation::InsertPage { index, page } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_pdf_page_bin(page, &mut out);
+            }
+            PdfMutation::RemovePage { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64),
+            PdfMutation::SetPageMediaBox { index, media_box } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_box_bin(media_box, &mut out);
+            }
+            PdfMutation::SetPageCropBox { index, crop_box } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                out.push(if crop_box.is_some() { 1 } else { 0 });
+                if let Some(b) = crop_box {
+                    enc_box_bin(b, &mut out);
+                }
+            }
+            PdfMutation::AppendPageContent { index, text } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                write_str_lp(&mut out, text);
+            }
+            PdfMutation::SetInfo { info } => enc_pdf_info_bin(info, &mut out),
+            PdfMutation::InsertObject { id, value } => {
+                enc_objref_bin(id, &mut out);
+                enc_pdf_object_bin(value, &mut out);
+            }
+            PdfMutation::RemoveObject { id } => enc_objref_bin(id, &mut out),
+            PdfMutation::SetObjectValue { id, value } => {
+                enc_objref_bin(id, &mut out);
+                enc_pdf_object_bin(value, &mut out);
+            }
+            PdfMutation::SetDictEntry { id, path, key, value } => {
+                enc_objref_bin(id, &mut out);
+                enc_path_bin(path, &mut out);
+                write_str_lp(&mut out, key);
+                enc_pdf_object_bin(value, &mut out);
+            }
+            PdfMutation::RemoveDictEntry { id, path, key } => {
+                enc_objref_bin(id, &mut out);
+                enc_path_bin(path, &mut out);
+                write_str_lp(&mut out, key);
+            }
+            PdfMutation::SetTrailerEntry { key, value } => {
+                write_str_lp(&mut out, key);
+                enc_pdf_object_bin(value, &mut out);
+            }
+            PdfMutation::RemoveTrailerEntry { key } => write_str_lp(&mut out, key),
+        }
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(PdfMutation::NoMutation),
+            1 => Ok(PdfMutation::SetSnapshot { snapshot: dec_pdf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? }),
+            2 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let page = dec_pdf_page_bin(&mut reader).map_err(|e| malformed("op page", reader.position(), e))?;
+                Ok(PdfMutation::InsertPage { index, page })
+            }
+            3 => Ok(PdfMutation::RemovePage { index: reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize }),
+            4 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let media_box = dec_box_bin(&mut reader).map_err(|e| malformed("op media_box", reader.position(), e))?;
+                Ok(PdfMutation::SetPageMediaBox { index, media_box })
+            }
+            5 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let has = reader.read_u8().map_err(|e| malformed("op crop_box presence", reader.position(), e.to_string()))?;
+                let crop_box = if has != 0 { Some(dec_box_bin(&mut reader).map_err(|e| malformed("op crop_box", reader.position(), e))?) } else { None };
+                Ok(PdfMutation::SetPageCropBox { index, crop_box })
+            }
+            6 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", reader.position(), e))?;
+                Ok(PdfMutation::AppendPageContent { index, text })
+            }
+            7 => Ok(PdfMutation::SetInfo { info: dec_pdf_info_bin(&mut reader).map_err(|e| malformed("op info", reader.position(), e))? }),
+            8 => {
+                let id = dec_objref_bin(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                let value = dec_pdf_object_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(PdfMutation::InsertObject { id, value })
+            }
+            9 => Ok(PdfMutation::RemoveObject { id: dec_objref_bin(&mut reader).map_err(|e| malformed("op id", reader.position(), e))? }),
+            10 => {
+                let id = dec_objref_bin(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                let value = dec_pdf_object_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(PdfMutation::SetObjectValue { id, value })
+            }
+            11 => {
+                let id = dec_objref_bin(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
+                let value = dec_pdf_object_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(PdfMutation::SetDictEntry { id, path, key, value })
+            }
+            12 => {
+                let id = dec_objref_bin(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
+                Ok(PdfMutation::RemoveDictEntry { id, path, key })
+            }
+            13 => {
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
+                let value = dec_pdf_object_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(PdfMutation::SetTrailerEntry { key, value })
+            }
+            14 => Ok(PdfMutation::RemoveTrailerEntry { key: read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))? }),
+            other => Err(malformed("op tag", 1, format!("unknown PdfMutation tag {other}"))),
+        }
     }
 }
 //#endregion OpCodecs

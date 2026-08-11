@@ -1,5 +1,6 @@
-module Semio_semio_workflow_diff;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Semio_workflow_diff;
+# `s.stdio.semio.workflow` diff BINARY wire format — UTF-8 bytes of the diff TEXT wire format
+# verbatim (see the doc comment on 🔺️diff/💾️binary/🥋️component.ksy).
 type Document = unit {
-    magic: bytes &size=25;
+    diff_line_utf8: bytes &eod;
 };

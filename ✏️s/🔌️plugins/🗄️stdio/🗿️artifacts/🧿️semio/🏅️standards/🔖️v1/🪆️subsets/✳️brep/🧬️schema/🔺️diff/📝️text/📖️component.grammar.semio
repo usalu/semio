@@ -1,5 +1,9 @@
 dialect grammar stdio.semio.brep.diff
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.brep.diff"
+root = diff-line
+; Real hand-rolled `SemioBrepDiff::print_diff`/`parse_diff` grammar (protocol::DiffCodec).
+; See ../💾️binary/🔠️component.abnf for the full ABNF-formalized production set (text and binary
+; encode/decode the SAME grammar -- `encode_diff` is `print_diff().into_bytes()` verbatim).
+diff-line = [token (SP token)*]
+token = collection "=" named-triple
+collection = "vertices" | "edges" | "loops" | "faces" | "shells" | "solids"
+named-triple = "[" removed-list "]" ";" "[" modified-list "]" ";" "[" added-list "]"

@@ -13,7 +13,7 @@ use crate::artifacts::png::{
         PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims,
         PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency,
     },
-    PngArtifact, PngDiff, PngMutation, PngSnapshot, STDIO_PNG_DOCUMENT_SCHEMA,
+    PngArtifact, PngMutation, PngSnapshot, STDIO_PNG_DOCUMENT_SCHEMA,
 };
 
 //#region Signature
@@ -805,12 +805,97 @@ pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
 }
 
 pub fn empty_png_snapshot() -> PngSnapshot { PngSnapshot::default() }
+
+/// 📄️ P2-P2: the demo `stdio.png` document — a genuinely non-trivial `PngSnapshot` exercising
+/// PLTE, every typed ancillary chunk (gAMA/cHRM/sRGB/pHYs/tIME/bKGD), one text chunk, and one
+/// verbatim-retained unknown ancillary chunk, all in a real relative chunk order. The single
+/// source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio`
+/// (both are literally this snapshot's `print_dsl`/`encode_pack` output, asserted equal by
+/// `fixture_honesty_law` below).
+///
+/// **Deliberately safe against `encode_png`'s own canonicalization** (see `encode_png`'s own
+/// `🚫️EncodeScopeNote`): `bit_depth`/`color_type`/`interlace` are set to EXACTLY what
+/// `encode_png` always hardcodes into the real IHDR bytes regardless of the snapshot's own
+/// field values (`8`/`Rgba`/`false`) — any OTHER value here would silently "self-correct" on
+/// the first decode and break `fixture_honesty_law`'s `parse_dsl(fixture) == demo()` identity.
+/// `trns` is deliberately `None` (a `tRNS` chunk decoded under `color_type == 6` is spec-
+/// mandated to be IGNORED — `decode_png`'s own `_ => {}` arm — so no non-`None` value here
+/// could ever round-trip either); `bkgd` uses the `Rgb` variant specifically (the ONLY variant
+/// whose own 6-byte wire shape matches what `color_type == 6` decodes, `2|6 => 6 bytes`).
+pub fn demo_png_snapshot() -> PngSnapshot {
+    let (w, h) = (3u32, 3u32);
+    let mut pixels = Vec::with_capacity((w * h * 4) as usize);
+    for y in 0..h {
+        for x in 0..w {
+            let checker = if (x + y) % 2 == 0 { 255u8 } else { 0u8 };
+            pixels.extend_from_slice(&[checker, ((x * 37) % 256) as u8, ((y * 53) % 256) as u8, 255]);
+        }
+    }
+    PngSnapshot {
+        schema: STDIO_PNG_DOCUMENT_SCHEMA.into(),
+        width: w,
+        height: h,
+        bit_depth: 8,
+        color_type: PngColorType::Rgba,
+        interlace: false,
+        plte: Some(vec![
+            PngRgb { r: 255, g: 0, b: 0 },
+            PngRgb { r: 0, g: 255, b: 0 },
+            PngRgb { r: 0, g: 0, b: 255 },
+        ]),
+        trns: None,
+        gama: Some(45455),
+        chrm: Some(PngChromaticities {
+            white_x: 31270, white_y: 32900, red_x: 64000, red_y: 33000,
+            green_x: 30000, green_y: 60000, blue_x: 15000, blue_y: 6000,
+        }),
+        srgb: Some(PngSrgbIntent::Perceptual),
+        phys: Some(PngPhysicalDims { ppu_x: 2835, ppu_y: 2835, unit_is_meter: true }),
+        time: Some(PngTimestamp { year: 2024, month: 6, day: 15, hour: 12, minute: 30, second: 0 }),
+        bkgd: Some(PngBackground::Rgb { r: 255, g: 255, b: 255 }),
+        text_chunks: vec![PngTextChunk {
+            keyword: "Title".into(),
+            value: "semio demo".into(),
+            compressed: false,
+            kind: PngTextKind::Text,
+            language_tag: String::new(),
+            translated_keyword: String::new(),
+        }],
+        pixels,
+        chunk_order: vec![
+            PngChunkMarker::Ihdr, PngChunkMarker::Plte, PngChunkMarker::Gama, PngChunkMarker::Chrm,
+            PngChunkMarker::Srgb, PngChunkMarker::Phys, PngChunkMarker::Time, PngChunkMarker::Bkgd,
+            PngChunkMarker::Text { index: 0 }, PngChunkMarker::Unknown { index: 0 },
+            PngChunkMarker::Idat, PngChunkMarker::Iend,
+        ],
+        unknown_chunks: vec![PngChunk { kind: *b"prIV", data: vec![9, 9, 9] }],
+    }
+}
 //#endregion Codec
 
 //#region Registration
 pub fn register() {
     crate::artifacts::png::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::png::schema::png_artifact_schema_descriptor());
+    register_pilot_languages();
+    store::register_document_codec(store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA));
+}
+
+/// 📌️ P2-P2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per note's
+/// exemplar pattern (`✏️s/🔌️plugins/🗒️note/…/⚙️engine/🦀️component.rs`'s
+/// `register_pilot_languages`) — `stdio.png`/`.op`/`.diff`/`.pack`/`.spr`, all
+/// `dsl::passthrough_hooks`. `diff`'s `protocol` slot stays `None`, matching the exemplar's
+/// own shape exactly (the 5-role scheme has no dedicated "diff binary" role, even though
+/// `🔺️diff/💾️binary/📡️component.protocol.semio` is a real, conformance-tested file — its
+/// binary form is exercised directly by `protocol_walk_law` below).
+///
+/// `register_schema_spec` (P2-M3's `FullResolver` insertion API) is deliberately NOT called
+/// here — see this wave's report `mechanism_gaps`: it requires `fn() -> RecordSpec`, and
+/// `stdio.png` has no derivable `RecordSpec` by design (`PngSnapshot`'s `ArtifactDsl`/
+/// `ArtifactPack` are hand-rolled because the format's real payload is a hex-dumped binary
+/// byte stream, not a `dsl`-derivable record shape — same root cause the sibling json/csv
+/// pilots' own `register_pilot_languages` doc comments already document).
+pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.png", extension: Some("png"), role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::png::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
@@ -819,7 +904,38 @@ pub fn register() {
         protocol_path: Some(crate::artifacts::png::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.png"),
     });
-    store::register_document_codec(store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA));
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.png.op", extension: None, role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::png::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::png::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::png::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::png::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.png.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.png.diff", extension: None, role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::png::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::png::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("stdio.png.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.png.pack", extension: None, role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::png::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::png::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.png.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.png.spr", extension: None, role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::png::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::png::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.png.spr"),
+    });
 }
 
 pub struct PngEngine { artifact_state: PngArtifact, snapshot_state: PngSnapshot }
@@ -1175,5 +1291,134 @@ mod tests {
         assert_eq!(snap.pixels, rgba, "adam7 de-interlace must reconstruct the exact original raster");
     }
     //#endregion Adam7Fixture
+
+    //#region 🔖️ConformanceLaws
+    /// 🧪️ P2-P2: per-artifact conformance laws (item 6 of the deliverable list) — grammar/
+    /// protocol parseability, `Recognizer` against real fixtures AND real `print_op`/
+    /// `print_diff` output, `walk_protocol` against real `encode_pack`/`encode_op`/
+    /// `encode_diff` bytes, and the fixture-honesty round-trip. Lives here (the engine's own
+    /// test region), not any framework file — `m5` auto-discovers the snapshot grammar+
+    /// `.dsl.semio`/protocol+`.pack.semio` pairs independently
+    /// (`🧪️fixture-sweep/🦀️component.rs`'s `m5_auto_discovery`); these tests are this
+    /// artifact's OWN early-warning, plus direct coverage of the mutations/diff facets that
+    /// harness does not auto-discover at all.
+    mod conformance_laws {
+        use super::*;
+        use crate::artifacts::png::schema::{diff, mutations, snapshot};
+        use protocol::{DiffCodec, OpBinary, OpText};
+
+        /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio`
+        /// files parse under the real dialect — independent of, and cheaper than, the two
+        /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a
+        /// clearer message).
+        #[test]
+        fn committed_facet_files_parse() {
+            for (label, text) in [
+                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
+            ] {
+                let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+                assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+            }
+            for (label, text) in [
+                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
+            ] {
+                dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+            }
+        }
+
+        /// ✅️ `grammar_conformance_law`: the snapshot grammar (a hex-dump grammar — PNG has no
+        /// textual syntax of its own, see that file's own doc comment) recognizes real
+        /// `print_dsl` output for the demo snapshot — same preamble-stripped body
+        /// reconstruction `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture`
+        /// uses, so this is a direct proof this artifact will pass that harness once
+        /// graduated, not merely an analogue.
+        #[test]
+        fn grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            let text = store::ArtifactDsl::print_dsl(&demo_png_snapshot());
+            let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
+            let reconstructed = format!("{}\n{body}", envelope.envelope_id());
+            assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+        }
+
+        /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
+        /// output for every `PngMutation` variant (`mutations::demo_mutation_cases()`).
+        #[test]
+        fn ops_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for mutation in mutations::demo_mutation_cases() {
+                let printed = mutation.print_op();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
+            }
+        }
+
+        /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff`
+        /// output for every representative `PngDiff` (`diff::demo_diff_cases()`), incl. the
+        /// empty diff and every tri-state/collection-triple shape.
+        #[test]
+        fn diff_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for d in diff::demo_diff_cases() {
+                let printed = d.print_diff();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
+            }
+        }
+
+        /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
+        /// snapshot pack (`encode_pack`, envelope-unwrapped first, matching how
+        /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
+        /// mutation's `encode_op`, and every demo diff's `encode_diff` — asserting `consumed
+        /// == bytes.len()`.
+        #[test]
+        fn protocol_walk_law() {
+            let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+            let packed = store::ArtifactPack::encode_pack(&demo_png_snapshot());
+            let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
+            let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+            assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
+
+            let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+            for mutation in mutations::demo_mutation_cases() {
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
+            }
+
+            let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+            for d in diff::demo_diff_cases() {
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
+            }
+        }
+
+        /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are
+        /// GENUINE `print_dsl`/`encode_pack` output of `demo_png_snapshot()` —
+        /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and
+        /// the pack twin — so the fixtures can never silently drift back to a fake again.
+        #[test]
+        fn fixture_honesty_law() {
+            const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+
+            let demo = demo_png_snapshot();
+
+            let parsed = <PngSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_png_snapshot()");
+            assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_png_snapshot()) drifted from the shipped .dsl.semio fixture");
+
+            let decoded = <PngSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_png_snapshot()");
+            assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_png_snapshot()) drifted from the shipped .pack.semio fixture");
+        }
+    }
+    //#endregion 🔖️ConformanceLaws
 }
 //#endregion EngineTests

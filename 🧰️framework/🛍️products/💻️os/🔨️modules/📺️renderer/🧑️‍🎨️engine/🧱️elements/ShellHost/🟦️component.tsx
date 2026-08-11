@@ -4726,14 +4726,14 @@ function FrameworkOsShellInner({
         {
           id: "studio.undo",
           label: shellLabel("ui.palette.undo"),
-          category: shellLabel("ui.search.category.studio"),
+          category: shellLabel("ui.search.category.hostApp"),
           icon: <Icon icon="undo-2" size="small" />,
           onSelect: () => onAction({ controllerId: hostControllerId ?? "", action: "undo" }),
         },
         {
           id: "studio.redo",
           label: shellLabel("ui.palette.redo"),
-          category: shellLabel("ui.search.category.studio"),
+          category: shellLabel("ui.search.category.hostApp"),
           icon: <Icon icon="redo-2" size="small" />,
           onSelect: () => onAction({ controllerId: hostControllerId ?? "", action: "redo" }),
         },

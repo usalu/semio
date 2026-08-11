@@ -1,7 +1,9 @@
 //! 🧬️ SemioImageArtifact schema — full artifact state, mirrors `SemioImageSnapshot` field for
-//! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
+//! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioImageSnapshot, SemioImageFrame};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{
+    SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot,
+};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +19,19 @@ pub struct SemioImageArtifact {
     pub height: u32,
     #[state(persistent)]
     #[serde(default)]
+    pub colorspace: SemioColorspace,
+    #[state(persistent)]
+    #[serde(default)]
+    pub bit_depth: u8,
+    #[state(persistent)]
+    #[serde(default)]
     pub frames: Vec<SemioImageFrame>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub icc: Option<Vec<u8>>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub metadata: Vec<SemioImageMetadataEntry>,
 }
 
 impl Default for SemioImageArtifact {
@@ -28,9 +42,13 @@ impl SemioImageArtifact {
     pub fn to_snapshot(&self) -> SemioImageSnapshot {
         SemioImageSnapshot {
             schema: self.schema.clone(),
-            width: self.width.clone(),
-            height: self.height.clone(),
+            width: self.width,
+            height: self.height,
+            colorspace: self.colorspace,
+            bit_depth: self.bit_depth,
             frames: self.frames.clone(),
+            icc: self.icc.clone(),
+            metadata: self.metadata.clone(),
         }
     }
     pub fn from_snapshot(snapshot: SemioImageSnapshot) -> Self {
@@ -38,14 +56,22 @@ impl SemioImageArtifact {
             schema: snapshot.schema,
             width: snapshot.width,
             height: snapshot.height,
+            colorspace: snapshot.colorspace,
+            bit_depth: snapshot.bit_depth,
             frames: snapshot.frames,
+            icc: snapshot.icc,
+            metadata: snapshot.metadata,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioImageSnapshot) {
         self.schema = snapshot.schema;
         self.width = snapshot.width;
         self.height = snapshot.height;
+        self.colorspace = snapshot.colorspace;
+        self.bit_depth = snapshot.bit_depth;
         self.frames = snapshot.frames;
+        self.icc = snapshot.icc;
+        self.metadata = snapshot.metadata;
     }
 }
 

@@ -6,7 +6,7 @@ use crate::artifacts::txt::schema::snapshot::LineEnding;
 use crate::artifacts::txt::TxtSnapshot;
 use protocol::Mutation;
 #[cfg(test)]
-use protocol::{OpBinary, OpText};
+use protocol::{DiffCodec, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -247,5 +247,22 @@ mod tests {
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }
+
+    //#region 🔖️OpsGrammarConformanceLaw
+    /// 🧪️ P2-P3: `dsl::parse_grammar` + `dsl::Recognizer::compile` + `.recognize` against REAL
+    /// `print_op` output for every variant, incl. `SetSnapshot`'s full nested-block payload.
+    #[test]
+    fn ops_grammar_conformance_law() {
+        let grammar_text = crate::artifacts::txt::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO;
+        let grammar = dsl::parse_grammar(grammar_text).expect("parse mutations grammar");
+        let recognizer = dsl::Recognizer::compile(&grammar);
+        let b = base();
+        for m in all_variants(&b) {
+            let printed = m.print_op();
+            let ok = recognizer.recognize(&printed).unwrap_or_else(|e| panic!("recognize({printed:?}) errored: {e:?}"));
+            assert!(ok, "mutations grammar must recognize real print_op output {printed:?} for {m:?}");
+        }
+    }
+    //#endregion 🔖️OpsGrammarConformanceLaw
 }
 //#endregion 🧪️Tests

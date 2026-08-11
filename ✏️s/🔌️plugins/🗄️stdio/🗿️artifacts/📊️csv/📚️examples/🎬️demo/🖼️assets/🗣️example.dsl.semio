@@ -1,1 +1,4 @@
-{"hello":"stdio.csv","n":1}
+semio stdio.csv.dsl v1
+name,note
+alpha,plain
+"Doe, John","He said ""hi"""

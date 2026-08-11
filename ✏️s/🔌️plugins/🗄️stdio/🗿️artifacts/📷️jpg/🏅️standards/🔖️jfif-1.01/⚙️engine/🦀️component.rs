@@ -1035,6 +1035,8 @@ pub fn empty_jpg_snapshot() -> JpgSnapshot { JpgSnapshot::default() }
 pub fn register() {
     crate::artifacts::jpg::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::jpg::schema::jpg_artifact_schema_descriptor());
+    register_pilot_languages();
+    register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA));
     // 🛡️ D5's generic validate-on-build hook: registers the ✳️baseline subset's SubsetValidator
     // (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES) so `io_dispatch`/
@@ -1043,10 +1045,124 @@ pub fn register() {
     crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::composer::register();
 }
 
+/// 📌️ P2-FG2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per
+/// `📖️grammar-recipe.md` §4's checklist and tiff's/las's own `register_pilot_languages`
+/// exemplar (this exact wave's own siblings) — `stdio.jpg`/`.op`/`.diff`/`.pack`/`.spr`, all
+/// `dsl::passthrough_hooks`. `diff`'s `protocol` slot stays `None`, matching every sibling's own
+/// shape exactly (the 5-role scheme has no dedicated "diff binary" role, even though
+/// `🔺️diff/💾️binary/📡️component.protocol.semio` is a real, conformance-tested file — its binary
+/// form is exercised directly by `conformance_laws::protocol_walk_law` below, just not wired
+/// through a 6th `LanguageRole`).
+///
+/// `register_schema_spec` (P2-M3's `FullResolver` insertion API) is deliberately NOT called
+/// here — filed as this wave's own `mechanism_gaps` entry, confirmed by a real, reverted
+/// derive-attribute probe (added `#[derive(dsl::DslRecord)]` to `JpgSnapshot` plus every nested
+/// value type this session, ran a real `cargo check -p semio-s-plugin-stdio --lib`, then
+/// reverted): every field compiled except `jfif_version: (u8, u8)` —
+/// `error[E0277]: the trait bound (u8, u8): DslField is not satisfied`, the exact same bare-tuple
+/// gap las's own `register_schema_specs` doc comment already documents (`LasPointDiff::rgb`'s
+/// `(f64, f64, f64)`/`LasMutation::SetScaleAndOffset`'s `(f64, f64, f64)` — no blanket `DslField`
+/// impl for tuples anywhere in `dsl`). `JpgDiff` is independently blocked too (`frame:
+/// Option<JpgFrameChange>` is a genuine data-carrying enum `DslField` has no impl for, PLUS
+/// `re_encode_quality`/`jfif_thumbnail`/`restart_interval`'s tri-state `Option<Option<T>>`
+/// fields — see `🔺️diff/🦀️component.rs`'s own `F6 CONFIRMED HAND-ROLL` doc comment for the real
+/// compile-error citations) and `JpgMutation` likewise (`🧬️mutations/🦀️component.rs`'s own `F6
+/// CONFIRMED HAND-ROLL` doc comment). No `fn() -> RecordSpec` exists to register under
+/// `"stdio.jpg"`/`"stdio.jpg#diff"` — same `register-schema-spec-needs-recordspec` gap
+/// json/csv/zip/png/tiff/las's own `register_pilot_languages`/`register_schema_specs` doc
+/// comments already document, not a fabricated spec.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.jpg", extension: Some("jpg"), role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::jpg::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::jpg::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::jpg::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::jpg::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.jpg"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.jpg.op", extension: None, role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::jpg::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::jpg::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::jpg::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::jpg::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.jpg.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.jpg.diff", extension: None, role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::jpg::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::jpg::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("stdio.jpg.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.jpg.pack", extension: None, role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::jpg::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::jpg::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.jpg.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.jpg.spr", extension: None, role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::jpg::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::jpg::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.jpg.spr"),
+    });
+}
+
+/// 📇️ P2-FG2: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion API) is
+/// deliberately NOT called here — see `register_pilot_languages`'s own doc comment above for the
+/// real, verified (`cargo check`-confirmed) reason: `JpgSnapshot` fails `#[derive(dsl::
+/// DslRecord)]` on its bare-tuple `jfif_version: (u8, u8)` field, and `JpgDiff`/`JpgMutation` are
+/// both independently, pre-existingly confirmed hand-rolled. `stdio.jpg`/`stdio.jpg#diff` are
+/// filed as this wave's own `mechanism_gaps` entries, matching las's own `register_schema_specs`
+/// resolution exactly (an artifact hitting the same bare-tuple `DslField` gap).
+pub fn register_schema_specs() {}
+
 pub struct JpgEngine { artifact_state: JpgArtifact, snapshot_state: JpgSnapshot }
 impl JpgEngine {
     pub fn new(snapshot: JpgSnapshot) -> Self {
         Self { artifact_state: JpgArtifact::from_snapshot(snapshot.clone()), snapshot_state: snapshot }
+    }
+}
+
+/// 🧪️ P2-FG2: the demo `JpgSnapshot` used by `conformance_laws::protocol_walk_law`/
+/// `fixture_honesty_law` — a real, `encode_jpg`-round-trippable 16x16 image (16x16 = exactly one
+/// 4:2:0 MCU, no edge-replication padding needed). Deliberately carries NO `jfif_thumbnail` and NO
+/// `other_segments`: `encode_jpg` always canonicalizes fresh Annex K DQT/DHT tables and a fixed
+/// 3-component frame regardless of `frame`/`quant_tables`/`huffman_tables`/`sof_marker`/
+/// `arithmetic`/`restart_interval` (those fields are decode-only, per the F3b-wave's own
+/// documented `EncodeScopeNote`), so this snapshot leaves them at their `Default` values — the
+/// thumbnail/other_segments omission specifically sidesteps the two arithmetic-count mechanism
+/// gaps `../🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️component.protocol.semio` documents
+/// (thumbnail-size = width*height*3 needs a two-field product; other_segments' body length needs
+/// `Lp - 2`, neither expressible by this dialect's `Field`/`Array` primitives).
+pub(crate) fn demo_jpg_snapshot() -> JpgSnapshot {
+    let (w, h) = (16u32, 16u32);
+    let mut pixels = vec![0u8; (w * h * 4) as usize];
+    for (i, px) in pixels.chunks_mut(4).enumerate() {
+        px[0] = (i * 7 % 255) as u8;
+        px[1] = (i * 13 % 255) as u8;
+        px[2] = (i * 17 % 255) as u8;
+        px[3] = 255;
+    }
+    JpgSnapshot {
+        schema: STDIO_JPG_DOCUMENT_SCHEMA.into(),
+        width: w,
+        height: h,
+        pixels,
+        re_encode_quality: Some(85),
+        jfif_version: (1, 1),
+        jfif_density_units: crate::artifacts::jpg::schema::snapshot::JfifDensityUnits::PixelsPerInch,
+        jfif_x_density: 72,
+        jfif_y_density: 72,
+        jfif_thumbnail: None,
+        other_segments: Vec::new(),
+        ..JpgSnapshot::default()
     }
 }
 
@@ -1204,5 +1320,151 @@ mod tests {
         let result = decode_jpg(&[0x00, 0x01, 0x02, 0x03]);
         assert!(matches!(result, Err(JpgError::Malformed(_))));
     }
+
+    //#region 🔖️ConformanceLaws
+    /// 🧪️ P2-FG2: per-artifact conformance laws (the recipe's §4 deliverable checklist item 6) —
+    /// grammar/protocol parseability, `Recognizer` against real fixtures AND real `print_op`/
+    /// `print_diff` output, `walk_protocol` against real `encode_pack`/`encode_op`/`encode_diff`
+    /// bytes, and the fixture-honesty round-trip. Lives here (the engine's own test region), not
+    /// any framework file — mirrors png's `📷️png/🏅️standards/🔖️1.2/⚙️engine/🦀️component.rs`'s
+    /// identically-named module exactly (same six laws, same structure, only the demo-case helpers
+    /// differ per the recipe's own note that every pilot's `conformance_laws` module is
+    /// near-identical).
+    mod conformance_laws {
+        use super::*;
+        use crate::artifacts::jpg::schema::{diff, mutations, snapshot};
+        use protocol::{DiffCodec, OpBinary, OpText};
+
+        /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
+        /// parse under the real dialect — independent of, and cheaper than, the two
+        /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
+        /// message).
+        #[test]
+        fn committed_facet_files_parse() {
+            for (label, text) in [
+                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
+            ] {
+                let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+                assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+            }
+            for (label, text) in [
+                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
+            ] {
+                dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+            }
+        }
+
+        /// ✅️ `grammar_conformance_law`: the snapshot grammar (hex-dump grammar of the TEXT DSL
+        /// form — jpg's real internal marker structure is `../💾️binary/📡️component.protocol.semio`'s
+        /// job, not this leaf's, per the recipe's own png precedent) recognizes real `print_dsl`
+        /// output for the demo snapshot — same preamble-stripped body reconstruction
+        /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses.
+        #[test]
+        fn grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            let text = store::ArtifactDsl::print_dsl(&demo_jpg_snapshot());
+            let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
+            let reconstructed = format!("{}\n{body}", envelope.envelope_id());
+            assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+        }
+
+        /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
+        /// output for every `JpgMutation` variant (`mutations::demo_mutation_cases()`).
+        #[test]
+        fn ops_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for mutation in mutations::demo_mutation_cases() {
+                let printed = mutation.print_op();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
+            }
+        }
+
+        /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
+        /// for every representative `JpgDiff` (`diff::demo_diff_cases()`), incl. the empty diff and
+        /// every tri-state/`JpgFrameChange`/collection-triple shape.
+        #[test]
+        fn diff_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for d in diff::demo_diff_cases() {
+                let printed = d.print_diff();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
+            }
+        }
+
+        /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
+        /// snapshot pack (`encode_pack`, envelope-unwrapped first, matching how
+        /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
+        /// mutation's `encode_op`, and every demo diff's `encode_diff`.
+        #[test]
+        fn protocol_walk_law() {
+            let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+            let packed = store::ArtifactPack::encode_pack(&demo_jpg_snapshot());
+            let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
+            let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+            assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
+
+            let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+            for mutation in mutations::demo_mutation_cases() {
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
+            }
+
+            let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+            for d in diff::demo_diff_cases() {
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
+            }
+        }
+
+        /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
+        /// `print_dsl`/`encode_pack` output of `demo_jpg_snapshot()` — `parse_dsl(fixture) ==
+        /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
+        /// fixtures can never silently drift back to a fake again.
+        #[test]
+        /// 🧪️ P2-FG2 deviation from png's own verbatim `fixture_honesty_law` shape (documented,
+        /// not a mistake): jpg is a LOSSY lifecycle format whose `parse_dsl`/`decode_pack` genuinely
+        /// `decode_jpg`-round-trip through real DCT/quantization/Huffman compression, then
+        /// canonicalize a FRESH `frame`/`quant_tables`/`huffman_tables`/`sof_marker` on re-decode
+        /// (matching `codec_retention_law`'s own already-established precedent above, and the
+        /// engine's own documented `EncodeScopeNote`) — a hand-authored `demo_jpg_snapshot()` (never
+        /// itself decoded) can therefore NEVER equal `parse_dsl(print_dsl(demo))` field-for-field
+        /// (confirmed live: a real `cargo test` run showed exactly this — decoded `frame`/
+        /// `quant_tables`/`huffman_tables` populated, `re_encode_quality` reset to `None`, pixels
+        /// DCT-lossy-shifted). The FORWARD direction (`print_dsl(demo) == FIXTURE_DSL`,
+        /// `encode_pack(demo) == FIXTURE_PACK`, byte-for-byte) still asserts the strong "fixture is
+        /// GENUINE encoder output" guarantee the recipe's law is really about; the REVERSE direction
+        /// asserts the same width/height/pixel-length invariant `codec_retention_law` already
+        /// establishes as this artifact's own honest lossy-round-trip contract, plus the ACTUAL
+        /// dimension bytes on wire (SOF0 width/height) matching, rather than asserting the
+        /// impossible byte-exact struct equality.
+        #[test]
+        fn fixture_honesty_law() {
+            const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+
+            let demo = demo_jpg_snapshot();
+
+            assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_jpg_snapshot()) drifted from the shipped .dsl.semio fixture");
+            assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_jpg_snapshot()) drifted from the shipped .pack.semio fixture");
+
+            let parsed = <JpgSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            assert_eq!(parsed.width, demo.width, "shipped .dsl.semio fixture decodes to a different width than demo_jpg_snapshot()");
+            assert_eq!(parsed.height, demo.height, "shipped .dsl.semio fixture decodes to a different height than demo_jpg_snapshot()");
+            assert_eq!(parsed.pixels.len(), demo.pixels.len(), "shipped .dsl.semio fixture decodes to a different pixel buffer length than demo_jpg_snapshot()");
+
+            let decoded = <JpgSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            assert_eq!(decoded, parsed, "shipped .pack.semio fixture must decode identically to the shipped .dsl.semio fixture (same real JFIF bytes, two envelope shapes)");
+        }
+    }
+    //#endregion 🔖️ConformanceLaws
 }
 //#endregion Tests

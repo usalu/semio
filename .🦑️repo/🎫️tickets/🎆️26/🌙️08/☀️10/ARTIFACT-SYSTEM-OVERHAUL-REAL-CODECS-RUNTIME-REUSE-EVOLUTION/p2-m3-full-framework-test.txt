@@ -1,0 +1,10 @@
+[dsl-fixture-sweep] m5 grammar auto-discovery: 59 facet(s) found, 59 checked, 0 soft-skipped, 53 stdio-exempt soft failure(s), 3 hard failure(s)
+
+
+failures:
+    os_dsl::fixture_sweep::m5_handcrafted_grammar_conformance::all_discovered_snapshot_grammars_recognize_their_shipped_fixtures
+    os_dsl::fixture_sweep::m5_production_coverage::all_discovered_grammars_report_uncovered_productions_for_their_shipped_fixture
+
+test result: FAILED. 761 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.35s
+
+error: test failed, to rerun pass `-p semio-framework-os-kernel --lib`

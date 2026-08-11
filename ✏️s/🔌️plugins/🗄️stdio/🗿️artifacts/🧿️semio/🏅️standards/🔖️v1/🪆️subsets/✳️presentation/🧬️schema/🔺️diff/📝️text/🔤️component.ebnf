@@ -1,3 +1,6 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.presentation.diff" ;
+(* SemioPresentationDiff token grammar. *)
+line   = [ token , { " " , token } ] ;
+token  = "masters=" , triple | "layouts=" , triple | "slides=" , triple ;
+triple = "[" , list , "];[" , list , "];[" , list , "]" ;
+list   = [ item , { "," , item } ] ;
+item   = { ? any char except , ; [ ] ? } ;

@@ -1,28 +1,136 @@
-//! 🧬️ SemioPresentationSnapshot — slides -> shapes (TextBox reusing DocBlock, Picture) — from pptx.
-//! 🚧 scaffolded by W1b: minimal honest fields only (not the full spec shape) — full
-//! implementation lands in W2/W3.
+//! 🧬️ SemioPresentationSnapshot — masters/layouts/slides -> shapes (TextBox/Picture/Table/
+//! Placeholder) + per-slide notes — from pptx. `SlideShape::TextBox`/`Table` cell content
+//! deliberately REUSE `document`'s `DocBlock` per the master plan's spec-mandated cross-reuse note
+//! ("presentation mirrors document's block shape with own types" — the shape types themselves
+//! (`SlideMaster`/`SlideLayout`/`Slide`/`SlideShape`) are owned here; only the block-tree LEAF is
+//! shared, per `w1b-type-ownership.md`).
 
+use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
-
-/// 🎞️ Owned by the `presentation` subset: `Slide`, `SlideShape`. `SlideShape::TextBox`
-/// deliberately REUSES `document`'s `DocBlock` per the master plan's spec-mandated cross-reuse
-/// note (presentation "mirrors document's block shape with own types" for everything else).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Slide { pub id: String, #[serde(default)] pub shapes: Vec<SlideShape> }
-
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
-pub enum SlideShape {
-    TextBox { block: DocBlock },
-    Picture { asset_id: String },
-}
-
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
+//#region 🔖️Geometry
+/// 📐️ A shape's on-slide placement: top-left `origin` (EMU-agnostic plane coordinates, matching
+/// pptx's `a:off`/`a:ext`) + `width`/`height` (matching `a:ext`). Reuses the shared engine's
+/// `SemioPoint2` for the position field per the type-ownership doc's geometry rule; `width`/
+/// `height` stay plain `f64` (a size is not itself a position, and the shared engine has no `Size`
+/// type — inventing a two-field wrapper here would just be a bare-tuple-in-disguise).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SlideFrame {
+    pub origin: SemioPoint2,
+    pub width: f64,
+    pub height: f64,
+}
+//#endregion 🔖️Geometry
+
+//#region 🔖️Shapes
+/// 🖼️ An embedded raster image (pptx `p:pic` -> `a:blip` target part), self-contained (no
+/// cross-reference to the `image` subset — presentation embeds its own media parts, same as pptx
+/// itself does not share media storage with other OOXML packages).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SlidePictureImage {
+    pub asset_id: String,
+    pub mime: String,
+    #[serde(default)]
+    pub bytes: Vec<u8>,
+}
+
+/// 🏷️ pptx placeholder type (`p:ph/@type`), the subset every named placeholder in a layout/slide
+/// declares itself as.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum PlaceholderKind {
+    Title,
+    Subtitle,
+    Body,
+    Footer,
+    SlideNumber,
+    DateTime,
+    Other { value: String },
+}
+
+/// 🔲️ One `a:tc` table cell — holds its own block content, reusing `document`'s `DocBlock` (same
+/// cross-reuse the master plan calls out for `TextBox`; a table cell's text content is shaped
+/// identically to a text box's).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SlideTableCell {
+    #[serde(default)]
+    pub blocks: Vec<DocBlock>,
+}
+
+/// ➖️ One `a:tr` table row.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SlideTableRow {
+    #[serde(default)]
+    pub cells: Vec<SlideTableCell>,
+}
+
+/// 🧩️ One shape on a master/layout/slide's shape tree (pptx `p:spTree` children) — the master
+/// plan's four kinds: `TextBox`, `Picture`, `Table`, `Placeholder`. Tag is `shapeKind` (not
+/// `kind`) because the `Placeholder` variant's own field is itself named `kind` (its pptx
+/// placeholder type) — an internally-tagged enum's tag name must not collide with any variant's
+/// own field name, so this avoids the collision rather than renaming the more-natural field.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "shapeKind", rename_all = "camelCase")]
+pub enum SlideShape {
+    /// ✍️ `p:sp` with a text body — `blocks` reuses `document::DocBlock` verbatim (spec-mandated
+    /// cross-reuse, see module doc comment).
+    TextBox { frame: SlideFrame, #[serde(default)] blocks: Vec<DocBlock> },
+    /// 🖼️ `p:pic`.
+    Picture { frame: SlideFrame, image: SlidePictureImage },
+    /// 🏛️ `p:graphicFrame` holding `a:tbl`.
+    Table { frame: SlideFrame, #[serde(default)] rows: Vec<SlideTableRow> },
+    /// 🏷️ `p:sp` with a `p:ph` placeholder reference.
+    Placeholder { frame: SlideFrame, kind: PlaceholderKind },
+}
+//#endregion 🔖️Shapes
+
+//#region 🔖️Structure
+/// 🗂️ One `p:sldMaster` — id-keyed (matches pptx's own part-relationship identity), a shape tree.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SlideMaster {
+    pub id: String,
+    #[serde(default)]
+    pub shapes: Vec<SlideShape>,
+}
+
+/// 📐️ One `p:sldLayout` — references its owning master by id (`master_id`), like pptx's
+/// layout-to-master relationship part.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SlideLayout {
+    pub id: String,
+    pub master_id: String,
+    #[serde(default)]
+    pub shapes: Vec<SlideShape>,
+}
+
+/// 🎞️ One `p:sld` — ordered (presentation order is significant, like pdf page order), so `id` is
+/// carried as the slide's own persistent identity while the COLLECTION itself is index-addressed
+/// (see the diff facet's `SlidesDiff` for why: an index-keyed collection, not name-keyed).
+/// `notes` is the slide's own `p:notesSlide` content (one notes page per slide in pptx, so it is
+/// modeled per-slide rather than as a top-level sibling collection).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Slide {
+    pub id: String,
+    #[serde(default)]
+    pub layout_id: Option<String>,
+    #[serde(default)]
+    pub shapes: Vec<SlideShape>,
+    #[serde(default)]
+    pub notes: Vec<DocBlock>,
+}
+//#endregion 🔖️Structure
+
 //#region 🔖️Ids
-pub const STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA: &str = "stdio.semio.presentation";
+pub const STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.presentation";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
@@ -34,6 +142,12 @@ pub struct SemioPresentationSnapshot {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
+    pub masters: Vec<SlideMaster>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub layouts: Vec<SlideLayout>,
+    #[state(persistent)]
+    #[serde(default)]
     pub slides: Vec<Slide>,
 }
 
@@ -41,16 +155,18 @@ impl Default for SemioPresentationSnapshot {
     fn default() -> Self {
         Self {
             schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(),
-            slides: Default::default(),
+            masters: Vec::new(),
+            layouts: Vec::new(),
+            slides: Vec::new(),
         }
     }
 }
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🚧 scaffolded by W1b: JSON-pack round trip (honest, genuinely working — not a per-format
-/// binary codec, since this subset's snapshot is a NEUTRAL semio type, not an on-disk file
-/// format). Wrapped in the same `store::semio_format` envelope every stdio artifact uses.
+/// 📦️ JSON-pack round trip wrapped in the shared `store::semio_format` envelope — honest for a
+/// NEUTRAL semio type (not an on-disk file format with its own byte grammar), the same convention
+/// `document`'s own snapshot uses.
 impl store::ArtifactDsl for SemioPresentationSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str { STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA }
@@ -132,6 +248,49 @@ mod tests {
         let snap = SemioPresentationSnapshot::default();
         let text = <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        assert_eq!(snap, back);
+    }
+
+    /// 🧪️ Non-empty structural round trip: masters/layouts/slides all populated, exercising every
+    /// shape kind + the document-block reuse.
+    #[test]
+    fn json_pack_round_trips_populated_structure() {
+        let snap = SemioPresentationSnapshot {
+            schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(),
+            masters: vec![SlideMaster {
+                id: "master1".into(),
+                shapes: vec![SlideShape::Placeholder {
+                    frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 100.0, height: 20.0 },
+                    kind: PlaceholderKind::Title,
+                }],
+            }],
+            layouts: vec![SlideLayout {
+                id: "layout1".into(),
+                master_id: "master1".into(),
+                shapes: Vec::new(),
+            }],
+            slides: vec![Slide {
+                id: "slide1".into(),
+                layout_id: Some("layout1".into()),
+                shapes: vec![
+                    SlideShape::TextBox {
+                        frame: SlideFrame { origin: SemioPoint2 { x: 1.0, y: 2.0 }, width: 50.0, height: 10.0 },
+                        blocks: vec![DocBlock::paragraph("x")],
+                    },
+                    SlideShape::Picture {
+                        frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 10.0, height: 10.0 },
+                        image: SlidePictureImage { asset_id: "img1".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] },
+                    },
+                    SlideShape::Table {
+                        frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 30.0, height: 30.0 },
+                        rows: vec![SlideTableRow { cells: vec![SlideTableCell { blocks: vec![DocBlock::paragraph("x")] }] }],
+                    },
+                ],
+                notes: vec![DocBlock::paragraph("x")],
+            }],
+        };
+        let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
+        let back = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 }

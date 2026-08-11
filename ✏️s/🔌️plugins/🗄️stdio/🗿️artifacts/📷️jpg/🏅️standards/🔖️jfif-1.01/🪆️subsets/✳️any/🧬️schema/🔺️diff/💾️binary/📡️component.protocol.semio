@@ -1,3 +1,34 @@
-dialect protocol stdio.jpg.diff
-magic = %x00
-payload = json-utf8 ; JSON-encoded JpgDiff (see ../🔣️component.json), not raw octets.
+dialect protocol
+protocol stdio.jpg.diff
+version 1
+schema stdio.jpg
+start record
+
+# P2-FG2: REAL binary diff frame, replacing F6's `print_diff().into_bytes()` text-as-binary
+# shortcut (`../../🦀️component.rs`'s old `DiffCodec::encode_diff` -- per the P2-W0 census, 100% of
+# stdio's `DiffCodec` impls were still on this shortcut). `format u8` + `flags u16le` (bit `i`,
+# LSB first, marks the field at declaration position `i` present -- `JpgDiff` has SIXTEEN
+# independently-optional top-level fields, `width`=0 .. `other-segments`=15, hence a `u16`
+# bitmask rather than xml's `u8`/json's single bool) as two REAL fixed fields, individually
+# protocol-walked.
+#
+# Past that header, the (up to 16) present fields' own payloads are bundled into ONE opaque
+# trailing `bytes` chain rather than sixteen separately-declared conditional fields: this dialect's
+# `Cond` (`if flags eq N`) can only test a field's WHOLE value against a literal, not an individual
+# BIT of it (no bitwise-AND primitive exists, `📖️grammar-recipe.md` §2.2's own `Cond` section), so
+# a per-bit-guarded field list isn't expressible here even before considering that several of
+# jpg's own diff payloads (`quant-tables`/`huffman-tables`/`other-segments`'s id/index-keyed
+# collection triples, `frame`'s `JpgFrameChange` enum) independently hit the SAME
+# `protocol-array-of-records`/`protocol-prim-ref-recursion` mechanism gaps every other stdio
+# artifact's diff/mutation payload hits (`📖️grammar-recipe.md` §5) -- once ANY field of this frame
+# is structurally unwalkable, bundling every field's payload into the SAME opaque tail, instead of
+# partially structuring only the simplest ones, is the honest, minimal-surface choice: the Rust
+# `encode_diff`/`decode_diff` side (`../../🦀️component.rs`'s `§ValueBinaryCodecs`/
+# `§DiffValueBinaryCodecs` regions) stays genuinely, fully structured (bit-tested, individually
+# typed, real varint/fixed-width fields, real collection-triple counts) and round-trip tested
+# independently -- this protocol file's opaque tail is a DESCRIPTION-layer boundary only.
+framing record
+header fixed 3
+field format u8
+field flags u16
+chain payload bytes

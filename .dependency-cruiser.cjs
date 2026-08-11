@@ -169,13 +169,15 @@ function crossPackageRelativeRule() {
 
 /** 🧱️ `framework-no-s` (W1 of `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`): `🧰️framework` must not
  * import `✏️s` app/plugin/module code — framework is the substrate `✏️s` builds on, never the reverse.
- * WARN, not error: real violations of this direction exist elsewhere in the codebase and are this
- * initiative's job to clear in a later wave, not this ticket's; promote to error once they're gone. */
+ * ERROR (W7 of the same ticket): a full `bunx dependency-cruiser … --output-type err` sweep across
+ * `compose 🧰️framework ✏️s 🌎️hub ♻️mit-bestand` found zero real hits for this rule — the pre-existing
+ * violations it was staged to wait out never materialized on this (TS/JS import graph) surface, so there
+ * is nothing left to clear before promoting. */
 function frameworkNoSRule() {
   return {
     name: "framework-no-s",
-    severity: "warn",
-    comment: "🧰️framework must not import ✏️s app/plugin/module code — apps consume framework, never the reverse — WARN until pre-existing violations are cleared",
+    severity: "error",
+    comment: "🧰️framework must not import ✏️s app/plugin/module code — apps consume framework, never the reverse",
     from: { path: "^🧰️framework/" },
     to: {
       path: ["^✏️s/"].concat(S_PACKAGES.map((p) => `^${escapeRegex(p.name)}$`)),
@@ -204,14 +206,36 @@ function sModulesNoPluginsRule() {
  * code (i.e. everything under `✏️s/🔌️plugins/{p}/` outside its own `🧩️extensions/`) must not depend on
  * ANY plugin's `🧩️extensions/` tree — extensions are optional add-ons layered on top of a plugin's core,
  * so the dependency must run extension → core, never core → extension. `from` excludes `{p}/🧩️extensions/`
- * itself so extension-to-extension imports (including within the same plugin) are exempt. WARN, not
- * error: real violations of this direction exist elsewhere and are a later wave's job to clear. */
+ * itself so extension-to-extension imports (including within the same plugin) are exempt. ERROR (W7 of
+ * the same ticket) for every plugin except `🌀️procedural` and `📐️cad` — a full depcruise sweep of the
+ * TS/JS import graph found zero real hits for every OTHER per-plugin rule, so there is nothing left to
+ * clear before promoting those.
+ *
+ * `🌀️procedural` is the documented C2 exception (see `📓️w5b-c2-verdict.md`): 7 REAL dependencies on
+ * `🌊️flow`'s extension crates, but they are Cargo (Rust) edges, invisible to this TS/JS-only scan either
+ * way — promoting this rule here would be cosmetic, not a real gate on C2. C2 stays enforced (WARN-only,
+ * populated allowlist) by the cargo-metadata layering lint instead (`CapabilityLayeringLintScript`,
+ * `KNOWN_LAYERING_VIOLATIONS`), which actually sees the Cargo graph. Unlinking it for real needs new
+ * runtime infrastructure that doesn't exist yet — a follow-up ticket, not mechanical cleanup.
+ *
+ * `📐️cad` is a SECOND, newly-discovered real violation (W7, not previously investigated by any earlier
+ * wave of this ticket): `🔨️modules/🏃️runtime/🟦️component.ts` and `🔨️modules/📐️brepjs/🟦️component.ts`
+ * (both plugin-core, outside `🧩️extensions/`) statically `import`/`import()` all 4 of cad's own
+ * extensions (`@semio-tech/cad-js-module-{spatial-shape,aec-building,aec-building-energy,aec-building-
+ * structure}`) to build `CAD_MODULE_REGISTRARS` — a composition-root that registers each installed
+ * extension module. This is a real, structural core→extension edge, not noise, but "fix" here means
+ * redesigning how cad's extensions register themselves (e.g. self-registration into a runtime-populated
+ * table instead of the core statically importing every extension by name) — an architecture change, not
+ * a lint-severity flip; out of scope for this pass. Left at WARN pending a dedicated follow-up. */
 function noPluginToExtensionRules() {
   const extensionPackageNamePatterns = S_PACKAGES.filter((p) => /(^|\/)🧩️extensions\//.test(p.dir)).map((p) => `^${escapeRegex(p.name)}$`);
+  const GRANDFATHERED_PLUGINS = new Set(["🌀️procedural", "📐️cad"]);
   return PLUGINS.map((p) => ({
     name: `no-plugin-to-extension-${p}`,
-    severity: "warn",
-    comment: "a plugin's core must not depend on any plugin's extensions tree — extensions depend on core, not the reverse — WARN until pre-existing violations are cleared",
+    severity: GRANDFATHERED_PLUGINS.has(p) ? "warn" : "error",
+    comment: GRANDFATHERED_PLUGINS.has(p)
+      ? `a plugin's core must not depend on any plugin's extensions tree — extensions depend on core, not the reverse — WARN: ${p === "🌀️procedural" ? "🌀️procedural's real violation (C2) is a Cargo dependency edge, invisible to this TS/JS import-graph scan; enforced instead by the cargo-metadata layering lint's KNOWN_LAYERING_VIOLATIONS allowlist, see 📓️w5b-c2-verdict.md" : "📐️cad's real violation is its runtime/brepjs composition-root statically importing all 4 of its own extensions to register them — an architecture change, not a lint flip; see this rule's own docstring above"}`
+      : "a plugin's core must not depend on any plugin's extensions tree — extensions depend on core, not the reverse",
     from: {
       path: `^✏️s/🔌️plugins/${p}/`,
       pathNot: `^✏️s/🔌️plugins/${p}/🧩️extensions/`,

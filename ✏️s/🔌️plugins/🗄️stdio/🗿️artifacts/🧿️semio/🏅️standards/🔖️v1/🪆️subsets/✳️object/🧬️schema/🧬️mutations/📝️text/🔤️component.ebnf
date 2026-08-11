@@ -1,3 +1,33 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.object.mutations" ;
+(* EBNF for `stdio.semio.object`'s hand-rolled `OpText` wire text form -- same shape as the
+   sibling 📖️component.grammar.semio, restated here for a self-contained EBNF reading. *)
+document = 'no-mutation'
+         | 'set-snapshot', space, 'snapshot', '=', snapshot
+         | 'set-value', space, 'path', '=', path, space, 'value', '=', value
+         | 'set-map-entry', space, 'path', '=', path, space, 'key', '=', hex, space, 'value', '=', value
+         | 'remove-map-entry', space, 'path', '=', path, space, 'key', '=', hex
+         | 'insert-list-item', space, 'path', '=', path, space, 'index', '=', digit, space, 'value', '=', value
+         | 'remove-list-item', space, 'path', '=', path, space, 'index', '=', digit
+         | 'set-object', space, 'id', '=', hex, space, 'value', '=', value
+         | 'remove-object', space, 'id', '=', hex ;
+
+path = '[', [ path segment, { ',', path segment } ], ']' ;
+path segment = 'K', '[', hex, ']' | 'I', '[', digit, ']' ;
+
+snapshot = '[', hex, ',', value, ',', '[', [ object node, { ',', object node } ], ']', ']' ;
+object node = hex, ':', value ;
+
+value = 'Z'
+      | 'B', '[', bit, ']'
+      | 'I', '[', hex, ']'
+      | 'F', '[', hex, ']'
+      | 'S', '[', hex, ']'
+      | 'Y', '[', hex, ']'
+      | 'L', '[', [ value, { ',', value } ], ']'
+      | 'M', '[', [ entry, { ',', entry } ], ']'
+      | 'R', '[', hex, ']' ;
+entry = hex, ':', value ;
+bit = '0' | '1' ;
+
+hex = { hex digit, hex digit } ;
+hex digit = digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;

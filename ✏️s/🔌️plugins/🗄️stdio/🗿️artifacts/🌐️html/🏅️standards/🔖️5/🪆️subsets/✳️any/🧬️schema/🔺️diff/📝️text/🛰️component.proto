@@ -1,7 +1,8 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_html_diff.text;
-message Semio_html_diff {
+package semio.stdio_html.diff_text;
+
+// 📝️ Hand-rolled bracket-token text per the sibling ../📖️component.grammar.semio -- not JSON.
+message Artifact {
   string schema = 1;
-  string entries_wire = 2;
+  string diff_text = 2;
 }

@@ -1,55 +1,42 @@
 //! 🧬️ Mp4Artifact schema — full artifact state, mirrors `Mp4Snapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
 
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Snapshot, Mp4RawBox};
+use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Box, Mp4Ftyp, Mp4Snapshot, Mp4Track};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp4")]
 pub struct Mp4Artifact {
     #[state(persistent)]
     pub schema: String,
     #[state(persistent)]
-    pub major_brand: String,
-    #[state(persistent)]
-    pub minor_version: u32,
-    #[state(persistent)]
-    pub track_count: u32,
+    pub ftyp: Mp4Ftyp,
     #[state(persistent)]
     #[serde(default)]
-    pub unknown_boxes: Vec<Mp4RawBox>,
-}
-
-impl Default for Mp4Artifact {
-    fn default() -> Self { Self::from_snapshot(Mp4Snapshot::default()) }
+    pub tracks: Vec<Mp4Track>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub unknown_boxes: Vec<Mp4Box>,
 }
 
 impl Mp4Artifact {
     pub fn to_snapshot(&self) -> Mp4Snapshot {
         Mp4Snapshot {
             schema: self.schema.clone(),
-            major_brand: self.major_brand.clone(),
-            minor_version: self.minor_version.clone(),
-            track_count: self.track_count.clone(),
+            ftyp: self.ftyp.clone(),
+            tracks: self.tracks.clone(),
             unknown_boxes: self.unknown_boxes.clone(),
         }
     }
     pub fn from_snapshot(snapshot: Mp4Snapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            major_brand: snapshot.major_brand,
-            minor_version: snapshot.minor_version,
-            track_count: snapshot.track_count,
-            unknown_boxes: snapshot.unknown_boxes,
-        }
+        Self { schema: snapshot.schema, ftyp: snapshot.ftyp, tracks: snapshot.tracks, unknown_boxes: snapshot.unknown_boxes }
     }
     pub fn set_snapshot(&mut self, snapshot: Mp4Snapshot) {
         self.schema = snapshot.schema;
-        self.major_brand = snapshot.major_brand;
-        self.minor_version = snapshot.minor_version;
-        self.track_count = snapshot.track_count;
+        self.ftyp = snapshot.ftyp;
+        self.tracks = snapshot.tracks;
         self.unknown_boxes = snapshot.unknown_boxes;
     }
 }

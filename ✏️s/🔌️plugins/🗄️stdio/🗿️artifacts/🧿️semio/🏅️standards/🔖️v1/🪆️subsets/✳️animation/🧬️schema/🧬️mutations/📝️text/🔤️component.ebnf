@@ -1,3 +1,4 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.animation.mutations" ;
+(* ebnf stdio.semio.animation.mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.semio.animation.mutations', newline ;
+body = op ;

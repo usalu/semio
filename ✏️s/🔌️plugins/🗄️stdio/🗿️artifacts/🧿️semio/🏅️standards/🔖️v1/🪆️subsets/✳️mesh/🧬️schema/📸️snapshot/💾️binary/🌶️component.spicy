@@ -1,5 +1,12 @@
-module Semio_semio_mesh_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=25;
+module Stdio_semio_mesh_snapshot;
+
+# Shared `.semio` binary envelope wrapping a stdio.semio.mesh payload: the REAL SemioMeshSnapshot
+# JSON bytes (this subset's `ArtifactPack` impl). Neutral semio type, not an on-disk file format
+# — no richer binary layout exists below the JSON payload boundary.
+
+public type Envelope = unit {
+    magic: bytes &size=8;                                   # 0x89 "SEM" CR LF SUB LF
+    token_len: uint32 &byte-order=spicy::ByteOrder::Little;
+    token: bytes &size=self.token_len;                      # UTF-8 "stdio.semio.mesh.pack v1"
+    payload: bytes &eod;                                     # serde_json::to_vec(SemioMeshSnapshot)
 };

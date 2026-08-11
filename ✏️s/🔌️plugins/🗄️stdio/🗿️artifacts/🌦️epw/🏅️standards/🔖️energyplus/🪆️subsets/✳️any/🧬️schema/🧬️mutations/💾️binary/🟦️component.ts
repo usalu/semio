@@ -1,10 +1,3 @@
-/** 🧬️ Semio_epw_mutations schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_epw_mutations
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_epw_mutationsEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_epw_mutations {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_epw_mutationsEntry[];
-}
+/** 💾️ Binary representation for `stdio.epw` (mutations): raw UTF-8 bytes of the hand-rolled
+ * mutation text, unwrapped (`protocol::OpBinary::encode_op`/`decode_op`). */
+export type EpwMutationBinary = Uint8Array;

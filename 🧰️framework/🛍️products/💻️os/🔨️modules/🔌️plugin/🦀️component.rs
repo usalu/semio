@@ -7075,9 +7075,26 @@ pub mod plugin_runtime {
         let _ = EXTENSION_BUNDLE_INSTALLER.set(install);
     }
 
+    /// 🔗️ Weak default mirroring `semio_plugin_bundle_installer_link_shim` (see that symbol's own
+    /// doc comment): lets an intermediate link succeed before the embedding extension crate's
+    /// `extension_exports!` provides the strong override. Without this default AND the explicit call
+    /// below, `EXTENSION_BUNDLE_INSTALLER` is never populated — no code path ever invoked this
+    /// symbol, so `register_extension_bundle_installer` was silently never called and every real
+    /// extension's `manifest()`/`activate()` observed only the empty-default `ExtensionBundle`.
+    #[cfg(feature = "component-extension-guest")]
+    #[unsafe(no_mangle)]
+    #[linkage = "weak"]
+    pub extern "C" fn semio_extension_bundle_installer_link_shim() {}
+
+    /// Ensures the embedding extension crate's bundle installer ran before any WIT export is served
+    /// — mirrors `ensure_plugin_initialized`'s explicit weak/strong-linkage shim call.
     fn ensure_extension_initialized() {
         EXTENSION_BUNDLE.with(|slot| {
             if slot.borrow().is_none() {
+                #[cfg(feature = "component-extension-guest")]
+                unsafe {
+                    semio_extension_bundle_installer_link_shim();
+                }
                 if let Some(install) = EXTENSION_BUNDLE_INSTALLER.get() {
                     install();
                 }

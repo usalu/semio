@@ -1,10 +1,15 @@
-/** 🧬️ Mp4Diff schema. 🚧 scaffolded by W1b — generic facet mirror; the Mp4Diff
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Mp4DiffEntry {
-  key: string;
-  value: string;
+/** 🔺️ Mp4Diff — sparse per-field diff. Mirrors 🦀️component.rs field-for-field. */
+export interface IndexedModified<D> { index: number; diff: D; }
+export interface IndexedAdded<T> { index: number; item: T; }
+export interface IndexedDiff<T, D> { removed: number[]; modified: IndexedModified<D>[]; added: IndexedAdded<T>[]; }
+
+export interface Mp4SampleDiff { data?: number[]; duration?: number; ctsOffset?: number; sync?: boolean; }
+export interface Mp4TrackDiff {
+  trackId?: number; timescale?: number; codec?: import("../📸️snapshot/🟦️component").Mp4Codec;
+  width?: number; height?: number; samples?: IndexedDiff<import("../📸️snapshot/🟦️component").Mp4Sample, Mp4SampleDiff>;
 }
 export interface Mp4Diff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Mp4DiffEntry[];
+  ftyp?: import("../📸️snapshot/🟦️component").Mp4Ftyp;
+  tracks?: IndexedDiff<import("../📸️snapshot/🟦️component").Mp4Track, Mp4TrackDiff>;
+  unknownBoxes?: IndexedDiff<import("../📸️snapshot/🟦️component").Mp4Box, import("../📸️snapshot/🟦️component").Mp4Box>;
 }

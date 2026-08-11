@@ -1,0 +1,62 @@
+    Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+error[E0433]: cannot find `import` in `io`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🎹️composer/🦀️component.rs:12:63
+   |
+--
+
+error[E0433]: cannot find `export` in `io`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🎹️composer/🦀️component.rs:13:63
+   |
+--
+
+error[E0433]: cannot find `import` in `io`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🎹️composer/🦀️component.rs:14:63
+   |
+--
+
+error[E0433]: cannot find `export` in `io`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🎹️composer/🦀️component.rs:15:63
+   |
+--
+
+error[E0433]: cannot find `import` in `io`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🎹️composer/🦀️component.rs:16:63
+   |
+--
+
+error[E0433]: cannot find `export` in `io`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🎹️composer/🦀️component.rs:17:63
+   |
+--
+
+error[E0433]: cannot find `schema` in `v89a`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎞️gif/🔖️89a/✳️any/🦀️component.rs:15:45
+   |
+--
+
+error[E0433]: cannot find `schema` in `v89a`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎞️gif/🔖️89a/✳️any/🦀️component.rs:19:45
+   |
+--
+
+error[E0433]: cannot find `import` in `io`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️workflow/🎹️composer/🦀️component.rs:14:16
+   |
+--
+
+error[E0433]: cannot find `export` in `io`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️workflow/🎹️composer/🦀️component.rs:15:16
+   |
+--
+
+error[E0433]: cannot find `schema` in `v89a`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎞️gif/🔖️89a/✳️any/🦀️component.rs:104:61
+    |
+--
+
+error[E0433]: cannot find type `Mp4Box` in this scope
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️component.rs:54:17
+   |
+--
+warning: `semio-s-plugin-stdio` (lib) generated 253 warnings
+error: could not compile `semio-s-plugin-stdio` (lib) due to 12 previous errors; 253 warnings emitted

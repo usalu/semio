@@ -1,5 +1,11 @@
 dialect grammar stdio.semio.cad.snapshot
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
 root = document
-document = marker
-marker = "stdio.semio.cad.snapshot"
+; preamble line + its trailing newline are stripped before this grammar runs
+; (store::semio_format::split_text_preamble). This subset's snapshot is a NEUTRAL semio type
+; (not an on-disk file format) -- the DSL text is a whitespace-tolerant ASCII hex dump of
+; serde_json::to_vec(SemioCadSnapshot); see ../🔣️component.json for the decoded JSON's real
+; schema and ../💾️binary/🥋️component.ksy for the paired binary envelope.
+document = hex_byte (WS hex_byte)*
+hex_byte = HEXDIG HEXDIG
+HEXDIG = %x30-39 / %x41-46 / %x61-66
+WS = *(%x20 / %x09 / %x0D / %x0A)

@@ -1,1 +1,14 @@
-{"hello":"stdio.md","n":1}
+semio stdio.md.dsl v1
+# Title
+
+> > Deeply quoted.
+
+Lossless **markdown** body with *emphasis* and `inline code`.
+
+```rust
+fn demo() -> i32 {
+    42
+}
+```
+
+---

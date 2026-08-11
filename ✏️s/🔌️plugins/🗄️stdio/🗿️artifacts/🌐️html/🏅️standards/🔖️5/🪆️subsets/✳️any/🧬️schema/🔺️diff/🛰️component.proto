@@ -1,7 +1,82 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
 package semio.s_stdio_html.diff;
+
+import "s_stdio_html/snapshot.proto";
+
 message HtmlDiff {
-  string schema = 1;
-  string entries_wire = 2;
+  optional NullableString doctype = 1;
+  optional HtmlNodeDiff root = 2;
+}
+
+// 🏳️ Tri-state wrapper: unset field on `HtmlDiff` = unchanged; present with `is_null = true` =
+// cleared; present with `value` set = set to that value.
+message NullableString {
+  bool is_null = 1;
+  string value = 2;
+}
+
+message HtmlNodeDiff {
+  oneof diff {
+    HtmlElementDiff element = 1;
+    HtmlTextDiff text = 2;
+    HtmlCommentDiff comment = 3;
+    HtmlRawTextDiff raw_text = 4;
+    HtmlReplaceDiff replace = 5;
+  }
+}
+
+message HtmlElementDiff {
+  optional string name = 1;
+  optional HtmlAttributesDiff attributes = 2;
+  optional HtmlChildrenDiff children = 3;
+}
+
+message HtmlTextDiff {
+  optional string text = 1;
+}
+
+message HtmlCommentDiff {
+  optional string text = 1;
+}
+
+message HtmlRawTextDiff {
+  optional semio.s_stdio_html.snapshot.RawTextKind parent_kind = 1;
+  optional string text = 2;
+}
+
+message HtmlReplaceDiff {
+  semio.s_stdio_html.snapshot.HtmlNode node = 1;
+}
+
+message HtmlAttrModified {
+  string name = 1;
+  optional string value = 2; // unset = valueless
+}
+
+message HtmlAttrAdded {
+  uint64 index = 1;
+  string name = 2;
+  optional string value = 3;
+}
+
+message HtmlAttributesDiff {
+  repeated string removed = 1;
+  repeated HtmlAttrModified modified = 2;
+  repeated HtmlAttrAdded added = 3;
+}
+
+message HtmlChildModified {
+  uint64 index = 1;
+  HtmlNodeDiff diff = 2;
+}
+
+message HtmlChildAdded {
+  uint64 index = 1;
+  semio.s_stdio_html.snapshot.HtmlNode item = 2;
+}
+
+message HtmlChildrenDiff {
+  repeated uint64 removed = 1;
+  repeated HtmlChildModified modified = 2;
+  repeated HtmlChildAdded added = 3;
 }

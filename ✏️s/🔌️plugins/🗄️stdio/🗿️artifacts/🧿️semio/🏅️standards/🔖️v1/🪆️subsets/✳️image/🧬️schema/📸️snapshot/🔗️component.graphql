@@ -1,9 +1,23 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioImageSnapshotEntry {
+# 🧬️ SemioImageSnapshot schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+enum SemioColorspace { RGB RGBA GRAYSCALE GRAYSCALE_ALPHA INDEXED }
+
+type SemioImageFrame {
+  delayMs: Int!
+  rgba8: String!
+}
+
+type SemioImageMetadataEntry {
   key: String!
   value: String!
 }
+
 type SemioImageSnapshot {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioImageSnapshotEntry!]! @state(class: PERSISTENT)
+  width: Int! @state(class: PERSISTENT)
+  height: Int! @state(class: PERSISTENT)
+  colorspace: SemioColorspace! @state(class: PERSISTENT)
+  bitDepth: Int! @state(class: PERSISTENT)
+  frames: [SemioImageFrame!]! @state(class: PERSISTENT)
+  icc: String @state(class: PERSISTENT)
+  metadata: [SemioImageMetadataEntry!]! @state(class: PERSISTENT)
 }

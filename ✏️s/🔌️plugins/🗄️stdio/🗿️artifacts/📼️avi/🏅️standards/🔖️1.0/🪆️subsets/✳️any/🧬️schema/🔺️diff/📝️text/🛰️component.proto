@@ -1,7 +1,23 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_avi_diff.text;
-message Semio_avi_diff {
-  string schema = 1;
-  string entries_wire = 2;
+package semio.stdio_avi.diff;
+import "snapshot.proto";
+
+message AviChunkDiff { optional bytes data = 1; optional bool keyframe = 2; }
+message IndexedModifiedChunk { uint32 index = 1; AviChunkDiff diff = 2; }
+message IndexedAddedChunk { uint32 index = 1; semio.stdio_avi.snapshot.AviChunk item = 2; }
+message AviChunksDiff { repeated uint32 removed = 1; repeated IndexedModifiedChunk modified = 2; repeated IndexedAddedChunk added = 3; }
+
+message AviStreamDiff {
+  optional semio.stdio_avi.snapshot.AviStreamHeader strh = 1;
+  optional semio.stdio_avi.snapshot.AviStreamFormat strf = 2;
+  optional AviChunksDiff chunks = 3;
+}
+message IndexedModifiedStream { uint32 index = 1; AviStreamDiff diff = 2; }
+message IndexedAddedStream { uint32 index = 1; semio.stdio_avi.snapshot.AviStream item = 2; }
+message AviStreamsDiff { repeated uint32 removed = 1; repeated IndexedModifiedStream modified = 2; repeated IndexedAddedStream added = 3; }
+
+message AviDiff {
+  semio.stdio_avi.snapshot.AviMainHeader main_header = 1;
+  AviStreamsDiff streams = 2;
+  optional bool idx1_present = 3;
 }

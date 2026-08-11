@@ -1,3 +1,17 @@
-dialect protocol stdio.semio.model.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.model.snapshot"
+dialect protocol
+protocol stdio.semio.model.snapshot
+version 1
+schema stdio.semio.model
+; Real binary (pack) envelope layout -- `store::semio_format::wrap_binary`/`unwrap_binary`
+; (🧰️framework/…/🧬️semio/🦀️component.rs), NOT a scaffold placeholder: magic + le-u32 token length +
+; utf8 token "stdio.semio.model.pack v1" + payload bytes to end of stream (no length field follows
+; the token -- everything after it genuinely IS the payload, see `size-eos: true` in the sibling
+; ../🥋️component.ksy for the same honest reason).
+start frame
+framing magic 0x89534d0d0a1a0a
+field token_len u32le
+field token utf8
+; payload = compact-JSON serialization of SemioModelSnapshot (schema/spatial/elements/relations),
+; same shape as ../../📝️text/🔣️component.json -- NOT hex-encoded here (only the text/DSL facet
+; hex-encodes; the binary/pack facet carries the raw JSON bytes directly).
+segment payload eos bytes

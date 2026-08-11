@@ -1,9 +1,7 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Mp4ArtifactEntry {
-  key: String!
-  value: String!
-}
+# Mp4Artifact — full artifact state, mirrors Mp4Snapshot field for field.
 type Mp4Artifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [Mp4ArtifactEntry!]! @state(class: PERSISTENT)
+  ftyp: Mp4Ftyp! @state(class: PERSISTENT)
+  tracks: [Mp4Track!]! @state(class: PERSISTENT)
+  unknownBoxes: [Mp4Box!]! @state(class: PERSISTENT)
 }

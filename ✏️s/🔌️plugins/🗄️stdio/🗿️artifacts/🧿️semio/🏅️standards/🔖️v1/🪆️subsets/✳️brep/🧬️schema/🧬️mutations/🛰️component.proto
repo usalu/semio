@@ -1,7 +1,54 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// 🧬️ SemioBrepMutation facet mirror — see the sibling 🦀️component.rs for the real source of truth.
 package semio.s_stdio_semio_brep.mutations;
+
+import "../📸️snapshot/🛰️component.proto";
+
+enum BrepMutationKind {
+  NO_MUTATION = 0;
+  SET_SNAPSHOT = 1;
+  ADD_VERTEX = 2;
+  REMOVE_VERTEX = 3;
+  SET_VERTEX_POINT = 4;
+  ADD_EDGE = 5;
+  REMOVE_EDGE = 6;
+  SET_EDGE_ENDPOINTS = 7;
+  SET_EDGE_CURVE = 8;
+  ADD_LOOP = 9;
+  REMOVE_LOOP = 10;
+  SET_LOOP_EDGES = 11;
+  ADD_FACE = 12;
+  REMOVE_FACE = 13;
+  SET_FACE_SURFACE = 14;
+  SET_FACE_ORIENTATION = 15;
+  SET_FACE_LOOPS = 16;
+  ADD_SHELL = 17;
+  REMOVE_SHELL = 18;
+  SET_SHELL_FACES = 19;
+  ADD_SOLID = 20;
+  REMOVE_SOLID = 21;
+  SET_SOLID_SHELLS = 22;
+}
+
 message SemioBrepMutation {
-  string schema = 1;
-  string entries_wire = 2;
+  BrepMutationKind mutation = 1;
+  optional semio.s_stdio_semio_brep.snapshot.SemioBrepSnapshot snapshot = 2;
+  optional string id = 3;
+  optional semio.s_stdio_semio_brep.snapshot.SemioPoint3 point = 4;
+  optional semio.s_stdio_semio_brep.snapshot.BrepVertex vertex = 5;
+  optional semio.s_stdio_semio_brep.snapshot.BrepEdge edge = 6;
+  optional string start_vertex = 7;
+  optional string end_vertex = 8;
+  optional semio.s_stdio_semio_brep.snapshot.BrepCurve curve = 9;
+  optional semio.s_stdio_semio_brep.snapshot.BrepLoop brep_loop = 10;
+  repeated semio.s_stdio_semio_brep.snapshot.BrepLoopEdge edges = 11;
+  optional semio.s_stdio_semio_brep.snapshot.BrepFace face = 12;
+  optional semio.s_stdio_semio_brep.snapshot.BrepSurface surface = 13;
+  optional bool orientation = 14;
+  optional string outer_loop = 15;
+  repeated string inner_loops = 16;
+  optional semio.s_stdio_semio_brep.snapshot.BrepShell shell = 17;
+  repeated semio.s_stdio_semio_brep.snapshot.BrepShellFace faces = 18;
+  optional semio.s_stdio_semio_brep.snapshot.BrepSolid solid = 19;
+  repeated semio.s_stdio_semio_brep.snapshot.BrepSolidShell shells = 20;
 }

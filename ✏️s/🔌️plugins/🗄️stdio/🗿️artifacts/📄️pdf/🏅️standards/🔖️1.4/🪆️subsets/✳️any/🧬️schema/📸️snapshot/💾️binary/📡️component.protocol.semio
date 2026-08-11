@@ -1,3 +1,36 @@
-dialect protocol stdio.pdf.snapshot
-magic = %x00
-payload = *OCTET
+dialect protocol
+protocol stdio.pdf.snapshot
+version 1
+schema stdio.pdf
+start header
+
+# P2-FG3: `stdio.pdf` (1.4) pack payload is the REAL raw PDF file bytes (`store::ArtifactPack::
+# encode_pack_with`, ../../../../../⚙️engine's `PdfSnapshot` schema module -> real `encode_pdf(self)`,
+# wrapped verbatim by the SEMIO binary envelope -- this file models the bytes as if the walk
+# already starts AT the payload, past the envelope, per M3's own guidance).
+#
+# `framing record` (NOT `framing magic ...`) is deliberate, confirmed live by a real
+# `walk_protocol` run, not assumed: `Framing::Magic` unconditionally reads/compares EXACTLY 8
+# raw bytes regardless of how many hex digits the declared literal has
+# (`🗣️dsl/📖️grammar/🦀️component.rs`'s own `magic_bytes(value: u64) -> [u8; 8]`) -- PDF's real
+# magic is only 4 bytes (`%PDF`), so `framing magic 0x25504446` gets read as an 8-byte,
+# left-zero-padded `[0,0,0,0,0x25,0x50,0x44,0x46]` and mismatches the real on-disk bytes (a
+# genuine dialect gap, `protocol-framing-magic-fixed-8-bytes`, first hit by gif87a's own
+# 6-byte signature). Modeled honestly, same fix gif87a's own protocol file documents: a real,
+# individually-read `field magic fixed 4` inside a `header` block -- genuinely walked but NOT
+# byte-validated at the PROTOCOL layer (the real Rust `decode_pdf` already validates it
+# byte-for-byte, `data.starts_with(b"%PDF")`, ⚙️engine/component.rs:1236 [1.7's shared decoder,
+# which 1.4's own frozen-stub `decode_pdf` mirrors with its own local 4-byte check]).
+framing record
+
+header fixed 4
+field magic fixed 4
+
+# 1.4's own real `decode_pdf` (../../../../../⚙️engine/🦀️component.rs) checks only the 4-byte
+# `%PDF` magic then does a raw FORWARD byte-search for `stream`/`endstream` -- no xref/trailer/
+# object-graph parsing exists at all (the "1.4 stays a frozen stub" scope boundary, W0 recon +
+# this ticket's own binding note: "keep it minimally alive under its own path -- do NOT give it
+# the full 1.7 object-graph model"). No backward-scan/xref structure to model here (unlike 1.7's
+# own protocol file) -- past the real magic, the rest is one opaque trailing chain, the honest
+# boundary for a linear substring-search codec with no declarative block structure of its own.
+chain payload bytes

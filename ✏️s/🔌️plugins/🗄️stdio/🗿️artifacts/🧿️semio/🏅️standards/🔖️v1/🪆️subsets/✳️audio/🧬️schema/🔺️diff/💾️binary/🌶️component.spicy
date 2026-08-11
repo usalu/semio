@@ -1,5 +1,4 @@
-module Semio_semio_audio_diff;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_semio_audio_diff;
 type Document = unit {
-    magic: bytes &size=22;
+    payload: bytes &eod;
 };

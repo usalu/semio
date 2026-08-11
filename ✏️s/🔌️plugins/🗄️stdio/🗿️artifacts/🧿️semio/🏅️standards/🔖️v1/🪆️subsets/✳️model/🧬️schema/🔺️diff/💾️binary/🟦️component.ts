@@ -1,10 +1,3 @@
-/** 🧬️ Semio_semio_model_diff schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_model_diff
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_model_diffEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_model_diff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_model_diffEntry[];
-}
+/** 💾️ Binary representation for `stdio.semio.model` (diff): UTF-8 bytes of `print_diff()`, no
+ * envelope. */
+export type SemioModelDiffBinary = Uint8Array;

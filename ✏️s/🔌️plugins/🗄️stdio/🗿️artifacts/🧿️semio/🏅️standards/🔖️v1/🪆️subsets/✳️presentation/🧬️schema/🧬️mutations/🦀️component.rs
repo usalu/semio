@@ -1,32 +1,146 @@
-//! 🧬️ SemioPresentationMutation — 🚧 scaffolded by W1b: a single `SetSnapshot` full-replace mutation
-//! (genuinely implements `protocol::Mutation`). W2 replaces this with the full named-variant
-//! vocabulary (per-field mutations, sparse `diff()`/`inverse()`), following the gif 89a / docx
-//! precedent.
+//! 🧬️ SemioPresentationMutation — presentation-structure mutation dispatch. Every variant's
+//! `diff()` is handcrafted (never apply-and-capture) and every variant's `inverse()` is
+//! handcrafted, key/index-aware (docx precedent).
 
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::SemioPresentationDiff;
-use protocol::Mutation;
+use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
+use crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::{
+    dec_layout, dec_master, dec_shape, dec_slide, decode_option, diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide,
+    diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout,
+    diff_set_slide_notes, diff_set_snapshot, diff_set_textbox_blocks, dec_doc_block, dec_frame, dec_str, enc_layout, enc_master, enc_shape, enc_slide,
+    encode_option, enc_doc_block, enc_frame, enc_list, dec_list, enc_str, frame_of, SemioPresentationDiff,
+};
+use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlideShape};
+use protocol::{Mutation, OpText};
 #[cfg(test)]
-use protocol::{OpBinary, OpText};
+use protocol::OpBinary;
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️Mutation
+//#region 🔖️Mutations
+/// 📐️ Typed content mutation for `stdio.semio.presentation`. Addresses slides by INDEX (`index`,
+/// presentation order), shapes on a slide by `(slide_index, shape_index)` — no recursive path type
+/// needed (unlike docx's nested-table `DocxBlockPath`) since a shape tree here is exactly two
+/// levels deep. Masters/layouts are addressed by their own `id`.
+/// 🧪️ Following the docx/f6 precedent, this enum's own `diff()`/`inverse()` are hand-rolled rather
+/// than derived: every variant's payload embeds `SlideShape`/`DocBlock` (data-carrying enums), the
+/// same `dsl::DslField`-for-enums gap `DocxMutation`'s own doc comment documents (f6-final-summary
+/// §4.4 family) — hand-rolling sidesteps it entirely rather than fighting the derive.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioPresentationMutation {
     #[default]
     NoMutation,
-    /// 🚧 Full-snapshot replace — the only variant until W2's per-field vocabulary lands.
-    SetSnapshot { snapshot: SemioPresentationSnapshot },
+    SetSnapshot {
+        snapshot: SemioPresentationSnapshot,
+    },
+    /// ➕️ Inserts `slide` at `index` (FINAL-state index).
+    InsertSlide {
+        index: usize,
+        slide: Slide,
+    },
+    /// ➖️ Removes the slide at `index` (BASE-state index).
+    RemoveSlide {
+        index: usize,
+    },
+    /// 🔗 Sets (or, if `None`, clears) slide `index`'s `layout_id`.
+    SetSlideLayout {
+        index: usize,
+        layout_id: Option<String>,
+    },
+    /// 📝️ Replaces slide `index`'s speaker notes wholesale.
+    SetSlideNotes {
+        index: usize,
+        notes: Vec<DocBlock>,
+    },
+    /// ➕️ Inserts `shape` at `shape_index` on slide `slide_index`.
+    InsertShape {
+        slide_index: usize,
+        shape_index: usize,
+        shape: SlideShape,
+    },
+    /// ➖️ Removes the shape at `shape_index` on slide `slide_index`.
+    RemoveShape {
+        slide_index: usize,
+        shape_index: usize,
+    },
+    /// 📐️ Sets shape `shape_index`'s on-slide frame (position/size).
+    SetShapeFrame {
+        slide_index: usize,
+        shape_index: usize,
+        frame: SlideFrame,
+    },
+    /// ✍️ Replaces a `TextBox` shape's `blocks` wholesale.
+    SetTextBoxBlocks {
+        slide_index: usize,
+        shape_index: usize,
+        blocks: Vec<DocBlock>,
+    },
+    /// ➕️ Inserts a master.
+    InsertMaster {
+        master: SlideMaster,
+    },
+    /// ➖️ Removes the master with id `id`.
+    RemoveMaster {
+        id: String,
+    },
+    /// ➕️ Inserts a layout.
+    InsertLayout {
+        layout: SlideLayout,
+    },
+    /// ➖️ Removes the layout with id `id`.
+    RemoveLayout {
+        id: String,
+    },
+    /// 🔗 Repoints the layout with id `id` to master `master_id`.
+    SetLayoutMaster {
+        id: String,
+        master_id: String,
+    },
 }
+//#endregion 🔖️Mutations
 
+//#region 🔖️Apply
+/// ▶️ `let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d` -- the diff is the
+/// single semantics source, never a separate imperative apply path (apply-and-capture is banned).
+pub fn apply_semio_presentation_mutation(snapshot: &mut SemioPresentationSnapshot, mutation: &SemioPresentationMutation) -> SemioPresentationDiff {
+    let diff = Mutation::diff(mutation, snapshot);
+    *snapshot = protocol::MutationDiff::apply(&diff, snapshot);
+    diff
+}
+//#endregion 🔖️Apply
+
+//#region 🔖️Helpers
+fn shape_at<'a>(base: &'a SemioPresentationSnapshot, slide_index: usize, shape_index: usize) -> Option<&'a SlideShape> {
+    base.slides.get(slide_index)?.shapes.get(shape_index)
+}
+fn master_at<'a>(base: &'a SemioPresentationSnapshot, id: &str) -> Option<&'a SlideMaster> {
+    base.masters.iter().find(|m| m.id == id)
+}
+fn layout_at<'a>(base: &'a SemioPresentationSnapshot, id: &str) -> Option<&'a SlideLayout> {
+    base.layouts.iter().find(|l| l.id == id)
+}
+//#endregion 🔖️Helpers
+
+//#region 🔖️MutationTrait
 impl Mutation<SemioPresentationSnapshot> for SemioPresentationMutation {
     type Diff = SemioPresentationDiff;
 
-    fn diff(&self, _base: &SemioPresentationSnapshot) -> Self::Diff {
+    fn diff(&self, base: &SemioPresentationSnapshot) -> Self::Diff {
         match self {
             SemioPresentationMutation::NoMutation => SemioPresentationDiff::default(),
-            SemioPresentationMutation::SetSnapshot { snapshot } => SemioPresentationDiff { replacement: Some(snapshot.clone()) },
+            SemioPresentationMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            SemioPresentationMutation::InsertSlide { index, slide } => diff_insert_slide(*index, slide.clone()),
+            SemioPresentationMutation::RemoveSlide { index } => diff_remove_slide(*index),
+            SemioPresentationMutation::SetSlideLayout { index, layout_id } => diff_set_slide_layout(base, *index, layout_id.clone()),
+            SemioPresentationMutation::SetSlideNotes { index, notes } => diff_set_slide_notes(base, *index, notes.clone()),
+            SemioPresentationMutation::InsertShape { slide_index, shape_index, shape } => diff_insert_shape(*slide_index, *shape_index, shape.clone()),
+            SemioPresentationMutation::RemoveShape { slide_index, shape_index } => diff_remove_shape(*slide_index, *shape_index),
+            SemioPresentationMutation::SetShapeFrame { slide_index, shape_index, frame } => diff_set_shape_frame(base, *slide_index, *shape_index, *frame),
+            SemioPresentationMutation::SetTextBoxBlocks { slide_index, shape_index, blocks } => diff_set_textbox_blocks(base, *slide_index, *shape_index, blocks.clone()),
+            SemioPresentationMutation::InsertMaster { master } => diff_insert_master(master.clone()),
+            SemioPresentationMutation::RemoveMaster { id } => diff_remove_master(id),
+            SemioPresentationMutation::InsertLayout { layout } => diff_insert_layout(layout.clone()),
+            SemioPresentationMutation::RemoveLayout { id } => diff_remove_layout(id),
+            SemioPresentationMutation::SetLayoutMaster { id, master_id } => diff_set_layout_master(id, master_id),
         }
     }
 
@@ -34,82 +148,493 @@ impl Mutation<SemioPresentationSnapshot> for SemioPresentationMutation {
         match self {
             SemioPresentationMutation::NoMutation => vec![SemioPresentationMutation::NoMutation],
             SemioPresentationMutation::SetSnapshot { .. } => vec![SemioPresentationMutation::SetSnapshot { snapshot: base.clone() }],
+            SemioPresentationMutation::InsertSlide { index, .. } => vec![SemioPresentationMutation::RemoveSlide { index: *index }],
+            SemioPresentationMutation::RemoveSlide { index } => match base.slides.get(*index) {
+                Some(slide) => vec![SemioPresentationMutation::InsertSlide { index: *index, slide: slide.clone() }],
+                None => vec![SemioPresentationMutation::NoMutation],
+            },
+            SemioPresentationMutation::SetSlideLayout { index, .. } => match base.slides.get(*index) {
+                Some(slide) => vec![SemioPresentationMutation::SetSlideLayout { index: *index, layout_id: slide.layout_id.clone() }],
+                None => vec![SemioPresentationMutation::NoMutation],
+            },
+            SemioPresentationMutation::SetSlideNotes { index, .. } => match base.slides.get(*index) {
+                Some(slide) => vec![SemioPresentationMutation::SetSlideNotes { index: *index, notes: slide.notes.clone() }],
+                None => vec![SemioPresentationMutation::NoMutation],
+            },
+            SemioPresentationMutation::InsertShape { slide_index, shape_index, .. } => {
+                vec![SemioPresentationMutation::RemoveShape { slide_index: *slide_index, shape_index: *shape_index }]
+            }
+            SemioPresentationMutation::RemoveShape { slide_index, shape_index } => match shape_at(base, *slide_index, *shape_index) {
+                Some(shape) => vec![SemioPresentationMutation::InsertShape { slide_index: *slide_index, shape_index: *shape_index, shape: shape.clone() }],
+                None => vec![SemioPresentationMutation::NoMutation],
+            },
+            SemioPresentationMutation::SetShapeFrame { slide_index, shape_index, .. } => match shape_at(base, *slide_index, *shape_index) {
+                Some(shape) => vec![SemioPresentationMutation::SetShapeFrame { slide_index: *slide_index, shape_index: *shape_index, frame: *frame_of(shape) }],
+                None => vec![SemioPresentationMutation::NoMutation],
+            },
+            SemioPresentationMutation::SetTextBoxBlocks { slide_index, shape_index, .. } => match shape_at(base, *slide_index, *shape_index) {
+                Some(SlideShape::TextBox { blocks, .. }) => {
+                    vec![SemioPresentationMutation::SetTextBoxBlocks { slide_index: *slide_index, shape_index: *shape_index, blocks: blocks.clone() }]
+                }
+                _ => vec![SemioPresentationMutation::NoMutation],
+            },
+            SemioPresentationMutation::InsertMaster { master } => vec![SemioPresentationMutation::RemoveMaster { id: master.id.clone() }],
+            SemioPresentationMutation::RemoveMaster { id } => match master_at(base, id) {
+                Some(m) => vec![SemioPresentationMutation::InsertMaster { master: m.clone() }],
+                None => vec![SemioPresentationMutation::NoMutation],
+            },
+            SemioPresentationMutation::InsertLayout { layout } => vec![SemioPresentationMutation::RemoveLayout { id: layout.id.clone() }],
+            SemioPresentationMutation::RemoveLayout { id } => match layout_at(base, id) {
+                Some(l) => vec![SemioPresentationMutation::InsertLayout { layout: l.clone() }],
+                None => vec![SemioPresentationMutation::NoMutation],
+            },
+            SemioPresentationMutation::SetLayoutMaster { id, .. } => match layout_at(base, id) {
+                Some(l) => vec![SemioPresentationMutation::SetLayoutMaster { id: id.clone(), master_id: l.master_id.clone() }],
+                None => vec![SemioPresentationMutation::NoMutation],
+            },
         }
     }
 }
-
-/// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
-/// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
-pub fn apply_semio_presentation_mutation(snapshot: &mut SemioPresentationSnapshot, mutation: &SemioPresentationMutation) -> SemioPresentationDiff {
-    let diff = <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <SemioPresentationDiff as protocol::MutationDiff<SemioPresentationSnapshot>>::apply(&diff, snapshot);
-    diff
-}
-//#endregion 🔖️Mutation
+//#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-/// 🎙️ Handcrafted `OpText`/`OpBinary` — 🚧 scaffolded by W1b: plain `serde_json` round-trip of
-/// the whole enum (one line of compact JSON per op), the same "JSON-pack passthrough" honesty
-/// boundary the subset's own `ArtifactPack` impl already uses (see that file's doc comment).
-/// Deliberately NOT `#[derive(dsl::DslOps)]` + `#[dsl(block)]` (the grammar/hand-rolled-op-triple
-/// path every OTHER artifact's real mutation vocabulary uses) — that path requires the embedded
-/// snapshot type to itself implement `dsl::DslField` (via `dsl::DslRecord`), which is real work
-/// spanning every nested type in the snapshot tree and squarely W2's job, not a wiring fix. W2
-/// replaces this whole region when it replaces `SetSnapshot` with the real per-field vocabulary.
-impl protocol::OpText for SemioPresentationMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+/// 🎙️ Hand-rolled `OpText`/`OpBinary` (same reasoning as `DocxMutation`'s: the payload types are
+/// data-carrying enums the `dsl::DslOps` derive cannot bridge) — reuses the diff file's
+/// `pub(crate)` grammar primitives rather than duplicating them. Grammar: `keyword arg=value ...`
+/// (space-separated), matching the docx/gif/svg convention.
+fn print_presentation_mutation(m: &SemioPresentationMutation) -> String {
+    match m {
+        SemioPresentationMutation::NoMutation => "no-mutation".to_string(),
+        SemioPresentationMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::enc_presentation_snapshot(snapshot)),
+        SemioPresentationMutation::InsertSlide { index, slide } => format!("insert-slide index={index} slide={}", enc_slide(slide)),
+        SemioPresentationMutation::RemoveSlide { index } => format!("remove-slide index={index}"),
+        SemioPresentationMutation::SetSlideLayout { index, layout_id } => format!("set-slide-layout index={index} layout-id={}", encode_option(layout_id, |v| enc_str(v))),
+        SemioPresentationMutation::SetSlideNotes { index, notes } => format!("set-slide-notes index={index} notes={}", enc_list(notes, enc_doc_block)),
+        SemioPresentationMutation::InsertShape { slide_index, shape_index, shape } => format!("insert-shape slide-index={slide_index} shape-index={shape_index} shape={}", enc_shape(shape)),
+        SemioPresentationMutation::RemoveShape { slide_index, shape_index } => format!("remove-shape slide-index={slide_index} shape-index={shape_index}"),
+        SemioPresentationMutation::SetShapeFrame { slide_index, shape_index, frame } => format!("set-shape-frame slide-index={slide_index} shape-index={shape_index} frame={}", enc_frame(frame)),
+        SemioPresentationMutation::SetTextBoxBlocks { slide_index, shape_index, blocks } => format!("set-textbox-blocks slide-index={slide_index} shape-index={shape_index} blocks={}", enc_list(blocks, enc_doc_block)),
+        SemioPresentationMutation::InsertMaster { master } => format!("insert-master master={}", enc_master(master)),
+        SemioPresentationMutation::RemoveMaster { id } => format!("remove-master id={}", enc_str(id)),
+        SemioPresentationMutation::InsertLayout { layout } => format!("insert-layout layout={}", enc_layout(layout)),
+        SemioPresentationMutation::RemoveLayout { id } => format!("remove-layout id={}", enc_str(id)),
+        SemioPresentationMutation::SetLayoutMaster { id, master_id } => format!("set-layout-master id={} master-id={}", enc_str(id), enc_str(master_id)),
     }
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_default()
+}
+fn parse_presentation_mutation(line: &str) -> Result<SemioPresentationMutation, String> {
+    if line == "no-mutation" {
+        return Ok(SemioPresentationMutation::NoMutation);
+    }
+    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    let args: std::collections::BTreeMap<&str, &str> = rest
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|tok| tok.split_once('=').ok_or_else(|| format!("presentation mutation: bad arg token {tok:?}")))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .collect();
+    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("presentation mutation: missing arg '{k}' for '{keyword}'"));
+    let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
+    match keyword {
+        "set-snapshot" => Ok(SemioPresentationMutation::SetSnapshot { snapshot: crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::dec_presentation_snapshot(arg("snapshot")?)? }),
+        "insert-slide" => Ok(SemioPresentationMutation::InsertSlide { index: usize_arg("index")?, slide: dec_slide(arg("slide")?)? }),
+        "remove-slide" => Ok(SemioPresentationMutation::RemoveSlide { index: usize_arg("index")? }),
+        "set-slide-layout" => Ok(SemioPresentationMutation::SetSlideLayout { index: usize_arg("index")?, layout_id: decode_option(arg("layout-id")?, dec_str)? }),
+        "set-slide-notes" => Ok(SemioPresentationMutation::SetSlideNotes { index: usize_arg("index")?, notes: dec_list(arg("notes")?, dec_doc_block)? }),
+        "insert-shape" => Ok(SemioPresentationMutation::InsertShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, shape: dec_shape(arg("shape")?)? }),
+        "remove-shape" => Ok(SemioPresentationMutation::RemoveShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")? }),
+        "set-shape-frame" => Ok(SemioPresentationMutation::SetShapeFrame { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, frame: dec_frame(arg("frame")?)? }),
+        "set-textbox-blocks" => Ok(SemioPresentationMutation::SetTextBoxBlocks { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, blocks: dec_list(arg("blocks")?, dec_doc_block)? }),
+        "insert-master" => Ok(SemioPresentationMutation::InsertMaster { master: dec_master(arg("master")?)? }),
+        "remove-master" => Ok(SemioPresentationMutation::RemoveMaster { id: dec_str(arg("id")?)? }),
+        "insert-layout" => Ok(SemioPresentationMutation::InsertLayout { layout: dec_layout(arg("layout")?)? }),
+        "remove-layout" => Ok(SemioPresentationMutation::RemoveLayout { id: dec_str(arg("id")?)? }),
+        "set-layout-master" => Ok(SemioPresentationMutation::SetLayoutMaster { id: dec_str(arg("id")?)?, master_id: dec_str(arg("master-id")?)? }),
+        other => Err(format!("presentation mutation: unknown keyword {other:?}")),
     }
 }
 
+impl OpText for SemioPresentationMutation {
+    fn print_op(&self) -> String {
+        print_presentation_mutation(self)
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_presentation_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+}
+
+/// ⚡️ Binary = the text bytes verbatim (same simplification as the diff file's hand-rolled codec).
 impl protocol::OpBinary for SemioPresentationMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
+        Ok(self.print_op().into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
 
-//#region 🔖️Tests
+//#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+    use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocRun;
+    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
+    use protocol::command::DiffAlgebra;
+    use protocol::MutationDiff;
 
-    /// 🧪️ mutation_diff_law + inverse_law: `mutation.diff(base).apply(base) == target`, and
-    /// applying the inverse mutation restores `base`.
-    #[test]
-    fn mutation_diff_law_set_snapshot_matches_diff() {
-        let base = SemioPresentationSnapshot::default();
-        let mut next = SemioPresentationSnapshot::default();
-        next.schema = format!("{}-mutated", base.schema);
-        let mutation = SemioPresentationMutation::SetSnapshot { snapshot: next.clone() };
-        let diff = <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::diff(&mutation, &base);
-        assert_eq!(<SemioPresentationDiff as protocol::MutationDiff<SemioPresentationSnapshot>>::apply(&diff, &base), next);
-        let inv = <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(&mutation, &base);
-        assert_eq!(inv.len(), 1);
-        let mut round = next.clone();
-        let _ = apply_semio_presentation_mutation(&mut round, &inv[0]);
-        assert_eq!(round, base);
+    fn frame(x: f64, y: f64, w: f64, h: f64) -> SlideFrame {
+        SlideFrame { origin: SemioPoint2 { x, y }, width: w, height: h }
     }
-    /// 🧪️ op_text_binary_roundtrip_law: handcrafted `OpText`/`OpBinary` JSON round-trip.
-    #[test]
-    fn op_text_binary_roundtrip_law() {
-        let base = SemioPresentationSnapshot::default();
-        for m in [SemioPresentationMutation::NoMutation, SemioPresentationMutation::SetSnapshot { snapshot: base.clone() }] {
-            let printed = m.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = SemioPresentationMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
-            assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?}");
+    fn text_block(text: &str) -> DocBlock {
+        DocBlock::paragraph(text)
+    }
 
-            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = SemioPresentationMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
-            assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
+    fn fixture() -> SemioPresentationSnapshot {
+        SemioPresentationSnapshot {
+            schema: "s.stdio.semio.presentation".into(),
+            masters: vec![SlideMaster { id: "master1".into(), shapes: Vec::new() }],
+            layouts: vec![SlideLayout { id: "layout1".into(), master_id: "master1".into(), shapes: Vec::new() }],
+            slides: vec![
+                Slide { id: "s1".into(), layout_id: Some("layout1".into()), shapes: vec![SlideShape::TextBox { frame: frame(0.0, 0.0, 10.0, 10.0), blocks: vec![text_block("first")] }], notes: Vec::new() },
+                Slide { id: "s2".into(), layout_id: None, shapes: Vec::new(), notes: vec![text_block("note")] },
+            ],
         }
     }
+
+    //#region 🔖️Fixtures
+    fn sweep_a() -> SemioPresentationSnapshot {
+        SemioPresentationSnapshot {
+            schema: "s.stdio.semio.presentation".into(),
+            masters: vec![
+                SlideMaster { id: "keep".into(), shapes: vec![SlideShape::Placeholder { frame: frame(0.0, 0.0, 5.0, 5.0), kind: PlaceholderKind::Title }] },
+                SlideMaster { id: "toModify".into(), shapes: Vec::new() },
+                SlideMaster { id: "toRemove".into(), shapes: Vec::new() },
+            ],
+            layouts: vec![
+                SlideLayout { id: "keepLayout".into(), master_id: "toRemove".into(), shapes: Vec::new() },
+                SlideLayout { id: "toRemoveLayout".into(), master_id: "keep".into(), shapes: Vec::new() },
+            ],
+            slides: vec![
+                Slide { id: "toModifySlide".into(), layout_id: None, shapes: vec![SlideShape::TextBox { frame: frame(0.0, 0.0, 1.0, 1.0), blocks: vec![text_block("old")] }], notes: vec![text_block("oldNote")] },
+                Slide { id: "keepSlide".into(), layout_id: Some("keepLayout".into()), shapes: Vec::new(), notes: Vec::new() },
+                Slide { id: "toDropSlide".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() },
+            ],
+        }
+    }
+
+    fn sweep_b() -> SemioPresentationSnapshot {
+        SemioPresentationSnapshot {
+            schema: "s.stdio.semio.presentation".into(),
+            masters: vec![
+                SlideMaster { id: "keep".into(), shapes: vec![SlideShape::Placeholder { frame: frame(0.0, 0.0, 5.0, 5.0), kind: PlaceholderKind::Title }] },
+                SlideMaster { id: "toModify".into(), shapes: vec![SlideShape::Placeholder { frame: frame(1.0, 1.0, 2.0, 2.0), kind: PlaceholderKind::Body }] },
+                SlideMaster { id: "addedMaster".into(), shapes: Vec::new() },
+            ],
+            layouts: vec![
+                SlideLayout { id: "keepLayout".into(), master_id: "keep".into(), shapes: Vec::new() },
+                SlideLayout { id: "addedLayout".into(), master_id: "toModify".into(), shapes: Vec::new() },
+            ],
+            // 🎯️ Length 2 vs `sweep_a`'s 3: per docx's own "known structural trap" precedent, a
+            // single same-direction `between()` call on an INDEX-keyed collection can never show
+            // BOTH a top-level `removed` AND a top-level `added` (only one tail flavor per
+            // direction) -- `a -> b` exercises `slides.removed` (the dropped `toDropSlide`, index
+            // 2) + `slides.modified[0]` (nested shapes modified+added, nested notes added);
+            // `b -> a` (asserted separately in `field_sweep` below) exercises `slides.added` (the
+            // very same dropped slide, carried whole as the added item's payload).
+            slides: vec![
+                Slide {
+                    id: "toModifySlide".into(),
+                    layout_id: Some("keepLayout".into()),
+                    shapes: vec![
+                        SlideShape::TextBox { frame: frame(0.0, 0.0, 1.0, 1.0), blocks: vec![text_block("new")] },
+                        SlideShape::Picture { frame: frame(2.0, 2.0, 3.0, 3.0), image: SlidePictureImage { asset_id: "a1".into(), mime: "image/png".into(), bytes: vec![1, 2] } },
+                    ],
+                    notes: vec![text_block("newNote"), text_block("secondNote")],
+                },
+                Slide { id: "keepSlide".into(), layout_id: Some("keepLayout".into()), shapes: Vec::new(), notes: Vec::new() },
+            ],
+        }
+    }
+    //#endregion 🔖️Fixtures
+
+    //#region 🔖️MutationDiffLaw
+    fn sample_mutations() -> Vec<SemioPresentationMutation> {
+        vec![
+            SemioPresentationMutation::NoMutation,
+            SemioPresentationMutation::SetSnapshot { snapshot: sweep_b() },
+            SemioPresentationMutation::InsertSlide { index: 1, slide: Slide { id: "new".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() } },
+            SemioPresentationMutation::RemoveSlide { index: 0 },
+            SemioPresentationMutation::SetSlideLayout { index: 0, layout_id: Some("layout1".into()) },
+            SemioPresentationMutation::SetSlideLayout { index: 0, layout_id: None },
+            SemioPresentationMutation::SetSlideNotes { index: 1, notes: vec![text_block("updated")] },
+            SemioPresentationMutation::InsertShape { slide_index: 0, shape_index: 1, shape: SlideShape::Picture { frame: frame(0.0, 0.0, 1.0, 1.0), image: SlidePictureImage { asset_id: "x".into(), mime: "image/png".into(), bytes: vec![7] } } },
+            SemioPresentationMutation::RemoveShape { slide_index: 0, shape_index: 0 },
+            SemioPresentationMutation::SetShapeFrame { slide_index: 0, shape_index: 0, frame: frame(9.0, 9.0, 9.0, 9.0) },
+            SemioPresentationMutation::SetTextBoxBlocks { slide_index: 0, shape_index: 0, blocks: vec![text_block("changed")] },
+            SemioPresentationMutation::InsertMaster { master: SlideMaster { id: "m2".into(), shapes: Vec::new() } },
+            SemioPresentationMutation::RemoveMaster { id: "master1".into() },
+            SemioPresentationMutation::InsertLayout { layout: SlideLayout { id: "l2".into(), master_id: "master1".into(), shapes: Vec::new() } },
+            SemioPresentationMutation::RemoveLayout { id: "layout1".into() },
+            SemioPresentationMutation::SetLayoutMaster { id: "layout1".into(), master_id: "master1".into() },
+        ]
+    }
+
+    #[test]
+    fn mutation_diff_law() {
+        for mutation in sample_mutations() {
+            let base = fixture();
+            let diff_direct = Mutation::diff(&mutation, &base);
+            let applied_via_diff = MutationDiff::apply(&diff_direct, &base);
+
+            let mut via_apply = base.clone();
+            let diff_from_apply = apply_semio_presentation_mutation(&mut via_apply, &mutation);
+
+            assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
+            assert_eq!(diff_direct, diff_from_apply, "mutation_diff_law: diff mismatch for {mutation:?}");
+        }
+    }
+    //#endregion 🔖️MutationDiffLaw
+
+    //#region 🔖️InverseLaw
+    #[test]
+    fn inverse_law() {
+        for mutation in sample_mutations() {
+            let base = fixture();
+
+            let mut round_tripped = base.clone();
+            apply_semio_presentation_mutation(&mut round_tripped, &mutation);
+            for inverse_mutation in <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(&mutation, &base) {
+                apply_semio_presentation_mutation(&mut round_tripped, &inverse_mutation);
+            }
+            assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
+
+            let diff = Mutation::diff(&mutation, &base);
+            let next = MutationDiff::apply(&diff, &base);
+            let inverse_diff = DiffAlgebra::inverse(&diff, &base);
+            let restored = MutationDiff::apply(&inverse_diff, &next);
+            assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
+        }
+    }
+    //#endregion 🔖️InverseLaw
+
+    //#region 🔖️AbsorbLaw
+    fn assert_absorb_matches_sequential(base: &SemioPresentationSnapshot, d1: &SemioPresentationDiff, d2: &SemioPresentationDiff) -> SemioPresentationDiff {
+        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base));
+        let mut absorbed = d1.clone();
+        MutationDiff::absorb(&mut absorbed, d2.clone());
+        assert_eq!(MutationDiff::apply(&absorbed, base), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+        absorbed
+    }
+
+    fn slides_triple(diff: &SemioPresentationDiff) -> &crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::SlidesDiff {
+        diff.slides.as_ref().expect("slides diff present")
+    }
+
+    #[test]
+    fn absorb_law() {
+        // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
+        {
+            let base = fixture();
+            let new_slide = || Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
+            let d1 = Mutation::diff(&SemioPresentationMutation::InsertSlide { index: 2, slide: new_slide() }, &base);
+            let mid = MutationDiff::apply(&d1, &base);
+            let d2 = Mutation::diff(&SemioPresentationMutation::RemoveSlide { index: 0 }, &mid);
+            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let triple = slides_triple(&absorbed);
+            assert_eq!(triple.removed, vec![0]);
+            assert_eq!(triple.added.len(), 1);
+            assert_eq!(triple.added[0].index, 1);
+            assert_eq!(triple.added[0].item, new_slide());
+        }
+
+        // Canonical: Insert(2,f)+Insert(2,g) -> both survive.
+        {
+            let base = fixture();
+            let slide_f = Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
+            let slide_g = Slide { id: "g".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
+            let d1 = Mutation::diff(&SemioPresentationMutation::InsertSlide { index: 2, slide: slide_f.clone() }, &base);
+            let mid = MutationDiff::apply(&d1, &base);
+            let d2 = Mutation::diff(&SemioPresentationMutation::InsertSlide { index: 2, slide: slide_g.clone() }, &mid);
+            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let triple = slides_triple(&absorbed);
+            assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
+            assert!(triple.added.iter().any(|a| a.item == slide_f));
+            assert!(triple.added.iter().any(|a| a.item == slide_g));
+        }
+
+        // Canonical: Insert(1,f)+SetField(1,v) -> patch into the added payload.
+        {
+            let base = fixture();
+            let slide_f = Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
+            let d1 = Mutation::diff(&SemioPresentationMutation::InsertSlide { index: 1, slide: slide_f }, &base);
+            let mid = MutationDiff::apply(&d1, &base);
+            let d2 = Mutation::diff(&SemioPresentationMutation::SetSlideLayout { index: 1, layout_id: Some("patched".into()) }, &mid);
+            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let triple = slides_triple(&absorbed);
+            assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
+            assert_eq!(triple.added.len(), 1);
+            assert_eq!(triple.added[0].item.layout_id, Some("patched".to_string()));
+        }
+
+        // Canonical: Modify+Remove -> the modify is annihilated by the later remove.
+        {
+            let base = fixture();
+            let d1 = Mutation::diff(&SemioPresentationMutation::SetSlideLayout { index: 1, layout_id: Some("x".into()) }, &base);
+            let mid = MutationDiff::apply(&d1, &base);
+            let d2 = Mutation::diff(&SemioPresentationMutation::RemoveSlide { index: 1 }, &mid);
+            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let triple = slides_triple(&absorbed);
+            assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
+            assert_eq!(triple.removed, vec![1]);
+        }
+
+        // Associativity over a triple.
+        {
+            let base = fixture();
+            let slide_f = Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
+            let slide_g = Slide { id: "g".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
+            let d1 = Mutation::diff(&SemioPresentationMutation::InsertSlide { index: 2, slide: slide_f }, &base);
+            let mid1 = MutationDiff::apply(&d1, &base);
+            let d2 = Mutation::diff(&SemioPresentationMutation::InsertSlide { index: 2, slide: slide_g }, &mid1);
+            let mid2 = MutationDiff::apply(&d2, &mid1);
+            let d3 = Mutation::diff(&SemioPresentationMutation::RemoveSlide { index: 0 }, &mid2);
+            let sequential = MutationDiff::apply(&d3, &mid2);
+
+            let mut left = d1.clone();
+            MutationDiff::absorb(&mut left, d2.clone());
+            MutationDiff::absorb(&mut left, d3.clone());
+
+            let mut d2_then_d3 = d2.clone();
+            MutationDiff::absorb(&mut d2_then_d3, d3.clone());
+            let mut right = d1.clone();
+            MutationDiff::absorb(&mut right, d2_then_d3);
+
+            assert_eq!(MutationDiff::apply(&left, &base), sequential, "absorb associativity (left) failed");
+            assert_eq!(MutationDiff::apply(&right, &base), sequential, "absorb associativity (right) failed");
+        }
+    }
+    //#endregion 🔖️AbsorbLaw
+
+    //#region 🔖️BetweenRoundtripLaw
+    #[test]
+    fn between_roundtrip_law() {
+        let a = sweep_a();
+        let b = sweep_b();
+        assert_eq!(MutationDiff::apply(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&a, &b), &a), b);
+        assert_eq!(MutationDiff::apply(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&b, &a), &b), a);
+
+        let sample = fixture();
+        assert_eq!(MutationDiff::apply(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&sample, &sample), &sample), sample);
+
+        // "Real" fixture leg: a realistic small deck diffed against a mutated variant.
+        let real = fixture();
+        let mut mutated = real.clone();
+        apply_semio_presentation_mutation(&mut mutated, &SemioPresentationMutation::SetTextBoxBlocks { slide_index: 0, shape_index: 0, blocks: vec![text_block("Chapter Two")] });
+        assert_ne!(real, mutated);
+        assert_eq!(MutationDiff::apply(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&real, &mutated), &real), mutated);
+        assert_eq!(MutationDiff::apply(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&mutated, &real), &mutated), real);
+    }
+    //#endregion 🔖️BetweenRoundtripLaw
+
+    //#region 🔖️CodecRetentionLaw
+    #[test]
+    fn codec_retention_law() {
+        let snap = fixture();
+        let bytes = store::ArtifactPack::encode_pack(&snap);
+        let decoded = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        assert_eq!(decoded, snap);
+    }
+    //#endregion 🔖️CodecRetentionLaw
+
+    //#region 🔖️FieldSweep
+    /// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field across
+    /// `masters`, `layouts`, and `slides` (incl. the nested shape tree, `document::DocBlock` reuse,
+    /// and the `layout_id` tri-state).
+    #[test]
+    fn field_sweep() {
+        let a = sweep_a();
+        let b = sweep_b();
+
+        let diff_ab = <SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&a, &b);
+        assert_eq!(MutationDiff::apply(&diff_ab, &a), b);
+        let diff_ba = <SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&b, &a);
+        assert_eq!(MutationDiff::apply(&diff_ba, &b), a);
+        assert!(<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&a, &a).is_empty());
+
+        let masters = diff_ab.masters.as_ref().expect("masters diff present");
+        assert!(!masters.removed.is_empty(), "masters: removed not exercised");
+        assert!(!masters.added.is_empty(), "masters: added not exercised");
+        let master_mod = masters.modified.iter().find(|m| m.key == "toModify").expect("toModify master modified");
+        assert!(master_mod.diff.shapes.as_ref().expect("master shapes diff present").added.len() > 0);
+
+        let layouts = diff_ab.layouts.as_ref().expect("layouts diff present");
+        assert!(!layouts.removed.is_empty(), "layouts: removed not exercised");
+        assert!(!layouts.added.is_empty(), "layouts: added not exercised");
+        let layout_mod = layouts.modified.iter().find(|l| l.key == "keepLayout").expect("keepLayout modified");
+        assert_eq!(layout_mod.diff.master_id, Some("keep".to_string()));
+
+        // a -> b (sweep_a len 3, sweep_b len 2): exercises `removed` (the dropped `toDropSlide`,
+        // index 2) + `modified[0]` (nested shapes modified+added, nested notes added, layout_id
+        // tri-state Some(Some(_))) -- per the fixtures' own doc comment, a single same-direction
+        // `between()` on an index-keyed collection can't show both `removed` AND `added` at once.
+        let slides = diff_ab.slides.as_ref().expect("slides diff present");
+        assert!(!slides.removed.is_empty(), "slides: removed not exercised");
+        assert_eq!(slides.modified.len(), 1);
+        let slide_mod = &slides.modified[0].diff;
+        assert_eq!(slide_mod.layout_id, Some(Some("keepLayout".to_string())), "layout_id tri-state Some(Some(_)) not exercised");
+        let shapes = slide_mod.shapes.as_ref().expect("shapes diff present");
+        assert!(!shapes.modified.is_empty(), "shapes: modified not exercised");
+        assert!(!shapes.added.is_empty(), "shapes: added (Picture) not exercised");
+        let notes = slide_mod.notes.as_ref().expect("notes diff present");
+        assert!(!notes.modified.is_empty() || !notes.added.is_empty(), "notes: not exercised");
+
+        // b -> a: exercises the OTHER direction's `added` (the very same dropped `toDropSlide`,
+        // carried whole as the added item's payload) + the layout_id tri-state's OTHER leg,
+        // Some(None) (clearing `toModifySlide`'s layout_id back to what `sweep_a` has).
+        let slides_ba = diff_ba.slides.as_ref().expect("slides diff (b->a) present");
+        assert!(!slides_ba.added.is_empty(), "slides (b->a): added not exercised");
+        assert_eq!(slides_ba.added[0].item, a.slides.iter().find(|s| s.id == "toDropSlide").unwrap().clone());
+        let to_modify_index_in_b = b.slides.iter().position(|s| s.id == "toModifySlide").expect("present in b");
+        let modified_entry = slides_ba.modified.iter().find(|m| m.index == to_modify_index_in_b).expect("toModifySlide modified b->a");
+        assert_eq!(modified_entry.diff.layout_id, Some(None), "layout_id tri-state Some(None) not exercised on the reverse direction");
+    }
+    //#endregion 🔖️FieldSweep
+
+    //#region 🔖️OpTextBinaryRoundtripLaw
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        let mutations = vec![
+            SemioPresentationMutation::NoMutation,
+            SemioPresentationMutation::SetSnapshot { snapshot: sweep_b() },
+            SemioPresentationMutation::InsertSlide { index: 1, slide: Slide { id: "new".into(), layout_id: Some("layout1".into()), shapes: vec![SlideShape::Table { frame: frame(0.0, 0.0, 1.0, 1.0), rows: vec![SlideTableRow { cells: vec![SlideTableCell { blocks: vec![text_block("cell")] }] }] }], notes: Vec::new() } },
+            SemioPresentationMutation::RemoveSlide { index: 0 },
+            SemioPresentationMutation::SetSlideLayout { index: 0, layout_id: Some("other".into()) },
+            SemioPresentationMutation::SetSlideLayout { index: 0, layout_id: None },
+            SemioPresentationMutation::SetSlideNotes { index: 1, notes: vec![text_block("hello world")] },
+            SemioPresentationMutation::InsertShape { slide_index: 0, shape_index: 0, shape: SlideShape::Placeholder { frame: frame(0.0, 0.0, 1.0, 1.0), kind: PlaceholderKind::Other { value: "custom".into() } } },
+            SemioPresentationMutation::RemoveShape { slide_index: 0, shape_index: 0 },
+            SemioPresentationMutation::SetShapeFrame { slide_index: 0, shape_index: 0, frame: frame(1.5, 2.5, 3.5, 4.5) },
+            SemioPresentationMutation::SetTextBoxBlocks { slide_index: 0, shape_index: 0, blocks: vec![text_block("changed"), DocBlock::Heading { level: 1, style_id: Some("s".into()), runs: vec![DocRun { text: "h".into(), style: Default::default() }] }] },
+            SemioPresentationMutation::InsertMaster { master: SlideMaster { id: "m2".into(), shapes: Vec::new() } },
+            SemioPresentationMutation::RemoveMaster { id: "master1".into() },
+            SemioPresentationMutation::InsertLayout { layout: SlideLayout { id: "l2".into(), master_id: "master1".into(), shapes: Vec::new() } },
+            SemioPresentationMutation::RemoveLayout { id: "layout1".into() },
+            SemioPresentationMutation::SetLayoutMaster { id: "layout1".into(), master_id: "master1".into() },
+        ];
+        for mutation in mutations {
+            let printed = mutation.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = SemioPresentationMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
+
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = SemioPresentationMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+        }
+    }
+    //#endregion 🔖️OpTextBinaryRoundtripLaw
 }
-//#endregion 🔖️Tests
+//#endregion 🧪️Tests

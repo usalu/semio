@@ -1,9 +1,24 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type TsvMutationEntry {
-  key: String!
-  value: String!
+# 🧬️ TsvMutation union — mirrors 🦀️component.rs's tagged enum (modeled as one input type
+# with the tag plus optional per-variant payload fields, mirroring the JSON Schema facet's oneOf).
+
+enum TsvMutationTag {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_TRAILING_NEWLINE
+  SET_LINE_ENDING
+  INSERT_ROW
+  REMOVE_ROW
+  SET_CELL
 }
-type TsvMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [TsvMutationEntry!]! @state(class: PERSISTENT)
+
+input TsvMutationInput {
+  mutation: TsvMutationTag!
+  snapshot: TsvSnapshotInput
+  trailingNewline: Boolean
+  lineEnding: TsvLineEnding
+  index: Int
+  row: [String!]
+  rowIndex: Int
+  fieldIndex: Int
+  value: String
 }

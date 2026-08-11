@@ -1,6 +1,38 @@
-dialect grammar stdio.dwg.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.dwg' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.dwg.ac1018.diff
+start diff
+comment none
+
+# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: real one-line
+# `print_diff`/`parse_diff` form — `DwgDiff` (ac1018) derives `dsl::DslDiff`, whose
+# `DiffCodec::print_diff` is `dsl::print(&self.__dsl_diff_to_record(), &Self::__dsl_diff_spec(),
+# dsl::JoinMode::Inline)` — the same generic derive-driven printer `stdio.txt`'s own diff grammar
+# documents (`📄txt/…/🔺️diff/📝️text/📖️component.grammar.semio`), applied here to a STRUCT with no
+# container keyword: every field prints as a bare `key=value`/`key=<list>` run, in
+# `keyed_field_rank` order (scalar fields first, in declaration order, then `List`-shaped fields,
+# also in declaration order). An all-`None` diff prints as the empty string. Every token below is
+# copied verbatim from real, directly-observed `print_diff()` output for every
+# `DwgDiff::demo_diff_cases()` case (temp `[DEBUG]` test, run once, deleted before landing):
+#   (empty diff) -> ""
+#   version=AC1018
+#   maintenance-version=9 codepage=65001
+#   bytes=[ 170 187 0 255 ]
+#   section-names=[ "AcDb:Header" "AcDb:Classes" ]
+#   section-names=[ ]
+
+diff = version-field? maintenance-version-field? codepage-field? bytes-field? section-names-field?
+
+text-value = IDENT | TEXT
+
+version-field = "version" "=" text-value
+maintenance-version-field = "maintenance-version" "=" INT
+codepage-field = "codepage" "=" INT
+
+# `bytes: Option<Vec<u8>>` does NOT get the compact base64 grammar — `classify_field` peels the
+# outer `Option` unconditionally before ever checking `attrs.base64`, so an `Option<Vec<u8>>`
+# field always falls back to `Shape::List(UInt)` (verbose bracketed decimal-byte list), regardless
+# of the `#[dsl(base64)]` attribute (documented `f6-recon-report.md` derive quirk, re-confirmed
+# here by direct observation: `bytes=[ 170 187 0 255 ]`, never a quoted base64 token).
+bytes-field = "bytes" "=" "[" INT* "]"
+
+section-names-field = "section-names" "=" "[" text-value* "]"

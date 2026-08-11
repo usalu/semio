@@ -1,7 +1,24 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
 package semio.s_stdio_tsv.diff;
+
+import "s_stdio_tsv/snapshot.proto";
+
+message TsvRowFieldSlot {
+  optional string value = 1;
+}
+message TsvRowDiff {
+  repeated TsvRowFieldSlot fields = 1;
+}
+message TsvRowModified { uint64 index = 1; TsvRowDiff diff = 2; }
+message TsvRowAdded { uint64 index = 1; semio.s_stdio_tsv.snapshot.TsvRow row = 2; }
+message TsvRowsDiff {
+  repeated uint64 removed = 1;
+  repeated TsvRowModified modified = 2;
+  repeated TsvRowAdded added = 3;
+}
+
 message TsvDiff {
-  string schema = 1;
-  string entries_wire = 2;
+  optional bool trailing_newline = 1;
+  optional semio.s_stdio_tsv.snapshot.TsvLineEnding line_ending = 2;
+  optional TsvRowsDiff records = 3;
 }

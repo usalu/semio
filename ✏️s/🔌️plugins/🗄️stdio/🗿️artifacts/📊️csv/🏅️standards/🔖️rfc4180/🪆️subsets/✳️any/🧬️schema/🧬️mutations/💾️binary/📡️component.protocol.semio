@@ -1,4 +1,32 @@
-dialect protocol stdio.csv.mutations
-; protocol::OpBinary raw JSON encoding of CsvMutation — NOT wrapped in the shared `.semio`
-; binary envelope
-payload = *OCTET   ; UTF-8 JSON object (see ../📝️text/📖️component.grammar.semio)
+dialect protocol
+protocol stdio.csv.mutations
+version 1
+schema stdio.csv.op
+start op
+
+# Real binary op-frame `protocol::OpBinary::encode_op`/`decode_op` NOW emit for CsvMutation —
+# upgraded, this program, from the F6-era `print_op().into_bytes()` text-as-binary shortcut
+# (see this artifact's report). `tag u8` is the mutation's own ordinal (this enum cannot use
+# `#[derive(dsl::DslOps)]`, see 🧬️mutations/🦀️component.rs's own doc comment, so the ordinal is
+# hand-assigned, declaration order: NoMutation=0, SetSnapshot=1, SetHasHeader=2,
+# InsertRecord=3, RemoveRecord=4, SetField=5). Every scalar field below (the ordinal, `index`,
+# `record_index`/`field_index`, `has_header`, `quoted`) is genuinely, individually byte-walked
+# and validated. Each arm's own trailing `bytes` field is this artifact's hand-rolled nested
+# `CsvSnapshot`/`CsvRecord`/string binary encoding — deliberately placed LAST in every arm so it
+# can honestly consume "rest of buffer" with no length prefix needed. The deeply nested,
+# variable-shaped collection INSIDE that tail (a record's own field list, or a whole snapshot's
+# record list) is genuinely NOT expressible by this dialect's `Array` (homogeneous
+# single-`Prim`-element repeat only) or `Ref` (struct/enum references still unconditionally
+# error at walk time, confirmed unchanged since P2-M2) — see this artifact's report,
+# mechanism_gaps "csv-nested-record-array-unwalkable". Same honest-opaque-tail treatment the
+# user's own carve-out already gives a compressed payload.
+framing record
+repeat op {
+tag u8
+arm 0 { }
+arm 1 { snapshot bytes }
+arm 2 { has_header u8 }
+arm 3 { index varint record bytes }
+arm 4 { index varint }
+arm 5 { record_index varint field_index varint quoted u8 value bytes }
+}

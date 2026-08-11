@@ -1,16 +1,68 @@
-dialect protocol stdio.tiff.snapshot
-; shared `.semio` binary envelope (store::semio_format::wrap_binary) wrapping the REAL TIFF
-; 6.0 file bytes (byte-order mark + IFD chain, TIFF6 §2) this artifact's engine decodes/encodes.
-envelope-magic = %x89.53.45.4D.0D.0A.1A.0A
-token-len = U32LE
-token = UTF8(19)                    ; "stdio.tiff.pack v1"
-tiff-file = byte-order-mark:ASCII(2) magic-42:U16 first-ifd-offset:U32 ifd+
-; byte-order-mark is "II" (little-endian) or "MM" (big-endian); it governs the endianness of
-; EVERY multi-byte field from magic-42 onward, including inside every ifd/ifd-entry.
-ifd = entry-count:U16 ifd-entry* next-ifd-offset:U32
-; TIFF6 §2 requires entries sorted ascending by tag; next-ifd-offset 0 = end of chain.
-ifd-entry = tag:U16 field-type:U16 value-count:U32 value-or-offset:BYTES(4)
-; field-type: 1 Byte, 2 Ascii, 3 Short, 4 Long, 5 Rational, 6 SByte, 7 Undefined, 8 SShort,
-; 9 SLong, 10 SRational, 11 Float, 12 Double (TIFF6 core table). value-or-offset is inline if
-; element_size(field-type) * value-count <= 4, else a file offset — see sibling
-; ../🥋️component.ksy for the fully typed per-type value decode.
+dialect protocol
+protocol stdio.tiff.snapshot
+version 1
+schema stdio.tiff
+start header
+
+# Real TIFF 6.0 byte layout — field-for-field against the REAL codec (../../../⚙️engine/
+# 🦀️component.rs's `decode_tiff`/`encode_tiff`), using M2's `endian {...}` construct exactly
+# as the P2-W0 recon's dedicated TIFF paragraph and the P2-M2 report's own worked TIFF test
+# describe. Models the bytes as if the walk already starts AT the payload (past the SEMIO
+# envelope — see `🧬️semio/📡️protocol/📡️component.protocol.semio`, described once,
+# framework-level; per M3's own guidance, this file does NOT re-describe it).
+#
+# ── Header (TIFF6 §2, 8 bytes) ─────────────────────────────────────────────────────────────
+# `byte_order` is the real `II`/`MM` marker (`decode_tiff`/`encode_tiff`, ⚙️engine/
+# 🦀️component.rs:344-348) — M2 item 6's `endian {...}` construct, THE dialect capability
+# TIFF's own recon paragraph names this needing: it genuinely reads the 2-byte marker AND
+# mutates the walker's runtime endian mode for every subsequent plain (non-`Be`-suffixed)
+# `Prim` read for the REST of this walk (`magic`/`first_ifd_offset` below, plus every field
+# inside `entry_count`), not merely a per-field static choice the way PNG/JPEG's BE-everywhere
+# format needed (`p2-w0-recon-report.md`'s dedicated "TIFF byte-order marker" paragraph).
+framing record
+header fixed 8
+field byte_order endian { "II"=le "MM"=be }
+field magic u16
+field first_ifd_offset u32
+
+# ── First IFD's entry count (TIFF6 §2) ─────────────────────────────────────────────────────
+# One real, individually protocol-walked field: the 2-byte entry count leading IFD 0. Past
+# this point the file is genuinely NOT a linear forward-describable structure at the
+# declarative protocol-dialect level — three independent, already-catalogued mechanism gaps
+# compound here (P2-W0 §1b's own TIFF row, "specific gap(s)" column):
+#   (a) `entry_count` real 12-byte IFD entries (tag/type/count/value-or-offset) are a
+#       HOMOGENEOUS but per-entry-count-varying-shape record repeated `entry_count` times —
+#       `Prim::Array` only repeats one FIXED-WIDTH SCALAR, never a multi-field RECORD
+#       (`protocol-array-of-records`, hit independently by zip/csv's own nested-record-array
+#       gap — this is TIFF's own instance of the identical root cause);
+#   (b) each entry's `value-or-offset` 4-byte field is DUAL-MEANING depending on whether
+#       `element_size(type) * count <= 4` (TIFF6 §2's own documented inline-vs-offset rule,
+#       `read_tag_values`, ⚙️engine/🦀️component.rs:140-154) — genuine out-of-line
+#       offset-pointer resolution, the SAME class of gap ZIP's `cd_offset`/`local_off` need,
+#       scoped down here to per-entry tag VALUES rather than a whole section;
+#   (c) the IFD chain itself is pointer-chased (`next_ifd_offset`, repeat until 0) rather than
+#       a single forward pass or a tag-dispatched/sentinel-terminated `repeat` — no "repeat via
+#       next-pointer until sentinel 0" construct exists;
+#   (d) pixel strip data is reached via `StripOffsets`/`StripByteCounts` tag VALUES (more
+#       offset pointers, decode_pixels_from_ifd, ⚙️engine/🦀️component.rs:264-338), several
+#       further offset-resolution hops past even (b).
+# Per the recipe's own documented workaround for this exact shape (§5 `protocol-array-of-
+# records`/`protocol-prim-ref-recursion` rows): model the real fixed leading field, then treat
+# the rest (every IFD entry, the next-IFD-offset chain, every out-of-line tag value, and the
+# pixel strip data) as ONE opaque trailing `chain` — the Rust `decode_tiff`/`encode_tiff` side
+# stays genuinely, fully structured (generic tag/type/value decode for all 12 field types, IFD
+# chain walk, inline-vs-offset resolution, strip reassembly) and round-trip tested
+# independently; this protocol description's honest reach stops at the real, bounded header.
+#
+# A second `header fixed N` block (not a NAMED `record` block) is used here deliberately:
+# `walk_protocol`'s own `Framing::Record` handling special-cases a NAMED `Block::Record` by
+# jumping `pos` straight to `bytes.len()` on first sight (treating the whole remaining buffer as
+# that one record's body, "record IS the rest" — the shape json's own `framing record / chain
+# payload utf8` text-native exemplar relies on) rather than genuinely walking its declared
+# fields — real, individually field-checked fields under `Framing::Record` belong in an
+# (optionally repeated) `header fixed N` block instead, exactly as `📖️grammar-recipe.md` §2.5's
+# own `format u8 | tag u8 | chain payload bytes` op-frame exemplar does.
+header fixed 2
+field entry_count u16
+
+chain rest bytes

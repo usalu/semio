@@ -1,4 +1,39 @@
-dialect protocol stdio.bmp.mutations
-; protocol::OpBinary raw JSON encoding of BmpMutation — NOT wrapped in the shared `.semio`
-; binary envelope
-payload = *OCTET   ; UTF-8 JSON object (see ../📝️text/📖️component.grammar.semio)
+dialect protocol
+protocol stdio.bmp.mutations
+version 1
+schema stdio.bmp.op
+start op
+
+# P2-FG2: `protocol::OpBinary::encode_op`/`decode_op` (../🦀️component.rs) forward straight to
+# `dsl::variants_binary::encode_op`/`decode_op` (🗣️dsl/🦀️component.rs `OpRt` region) -- this was
+# ALREADY real binary before this wave touched it, NOT the F6-era `print_op().into_bytes()`
+# text-as-binary shortcut this file used to (wrongly) document as a bare JSON payload (confirmed
+# by direct reading, not assumed: `encode_op` calls `os_pack::encode_record_body`, never
+# `print_op`/serde_json). Same shape as `stdio.txt`/`stdio.zip`'s own already-real mutations
+# protocol (`📄txt/…/🧬️mutations/💾️binary/📡️component.protocol.semio`), copied here in shape;
+# only `protocol`/`schema` above and the variant ordinal table below differ.
+#
+# Layout, byte-for-byte, per `variants_binary::encode_op`'s own doc comment (`OP_BINARY_FORMAT`):
+# a fixed `format` byte (always `1`), the matched variant's ordinal as a `varint` (declaration
+# order, `dsl::DslVariants::variants()`'s own emission order: `NoMutation`=0, `SetSnapshot`=1,
+# `SetHeaderFields`=2, `InsertPaletteEntry`=3, `RemovePaletteEntry`=4, `SetPaletteEntry`=5,
+# `SetPixelData`=6), then the variant's own field payload, `os_pack::encode_record_body(spec,
+# record)` -- itself a varint-prefixed STRING-SYMBOL TABLE followed by a generic, self-
+# describing per-field-id TAG+value wire (`🎒️pack/🔢️value/🦀️component.rs`
+# `encode_record_body`/`encode_record_fields` -- confirmed by direct reading of a real
+# `encode_op(NoMutation)` byte dump). This inner wire is the FRAMEWORK's own generic record-body
+# encoding -- shared verbatim by every `#[derive(dsl::DslRecord)]`/`DslOps`/`DslDiff` type in the
+# whole repo, not anything specific to `stdio.bmp` -- and is genuinely NOT expressible by this
+# dialect's `Array`/`Ref`/`repeat` primitives as they stand today (no dynamic per-field TAG
+# dispatch keyed by a runtime field-id, no symbol-table back-reference resolution) -- the SAME
+# real limitation `txt-opbinary-record-body-wire-is-framework-generic` (this ticket's own recipe
+# §5) already names. Modeled honestly: `format`/`ordinal` are genuinely, individually byte-walked
+# and validated; the remaining record-body bytes are one opaque tail -- same "opaque segment only
+# where honestly irreducible" carve-out. A framework-level `record-body.protocol.semio`
+# description (mirroring M3's own `semio.envelope`/`pack_format` precedent) would let EVERY
+# future `DslOps`/`DslDiff`-derived artifact `use` it instead of repeating this opaque-tail
+# treatment -- out of this per-artifact ticket's ownership boundary (recorded in `mechanism_gaps`).
+framing record
+field format u8
+field ordinal varint
+chain bytes

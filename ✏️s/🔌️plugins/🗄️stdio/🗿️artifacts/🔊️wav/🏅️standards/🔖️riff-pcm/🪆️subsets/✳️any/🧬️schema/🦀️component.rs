@@ -1,7 +1,7 @@
 //! 🧬️ WavArtifact schema — full artifact state, mirrors `WavSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
 
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{WavSnapshot, WavFmt, WavRawChunk};
+use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{WavSnapshot, WavFmt, WavData, RiffChunk};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -12,14 +12,12 @@ pub struct WavArtifact {
     #[state(persistent)]
     pub schema: String,
     #[state(persistent)]
-    #[serde(default)]
-    pub fmt: Option<WavFmt>,
+    pub fmt: WavFmt,
+    #[state(persistent)]
+    pub data: WavData,
     #[state(persistent)]
     #[serde(default)]
-    pub data: Vec<u8>,
-    #[state(persistent)]
-    #[serde(default)]
-    pub other_chunks: Vec<WavRawChunk>,
+    pub other_chunks: Vec<RiffChunk>,
 }
 
 impl Default for WavArtifact {

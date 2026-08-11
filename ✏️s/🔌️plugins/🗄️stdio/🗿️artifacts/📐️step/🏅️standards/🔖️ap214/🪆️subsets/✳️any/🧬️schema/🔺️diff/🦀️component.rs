@@ -658,6 +658,59 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 //#endregion 🔖️Primitives
 
+//#region 🔖️BinaryPrimitives
+/// 🧪️ P2-FG1: real LEB128-varint-framed binary primitives backing the upgraded `OpBinary`
+/// (`../🧬️mutations/🦀️component.rs`) and `DiffCodec` (below) frames — mirrors md/dxf's own
+/// `write_str_bin`/`read_str_bin`/`write_option_bin`/`read_option_bin` shape, reusing
+/// `store::pack_rt::write_varint_u64`/`store::write_varint_i64`/`store::ByteReader` rather than
+/// reinventing varint encode/decode. `pub(crate)` so the mutations sibling can reuse these rather
+/// than duplicating them a second time in that file (same intra-artifact-reuse split the TEXT
+/// codec primitives above use).
+pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+    store::pack_rt::write_varint_u64(out, s.len() as u64);
+    out.extend_from_slice(s.as_bytes());
+}
+pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+}
+pub(crate) fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
+    out.extend_from_slice(&v.to_le_bytes());
+}
+pub(crate) fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
+    reader.read_f64_le().map_err(|e| e.to_string())
+}
+pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
+    match opt {
+        None => out.push(0),
+        Some(v) => {
+            out.push(1);
+            enc(v, out);
+        }
+    }
+}
+pub(crate) fn read_option_bin<T>(
+    reader: &mut store::ByteReader<'_>,
+    dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>,
+) -> Result<Option<T>, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(None),
+        1 => Ok(Some(dec(reader)?)),
+        other => Err(format!("option binary: unknown tag {other}")),
+    }
+}
+pub(crate) fn write_str_list_bin(out: &mut Vec<u8>, list: &[String]) {
+    store::pack_rt::write_varint_u64(out, list.len() as u64);
+    for s in list {
+        write_str_bin(out, s);
+    }
+}
+pub(crate) fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    (0..count).map(|_| read_str_bin(reader)).collect()
+}
+//#endregion 🔖️BinaryPrimitives
+
 //#region 🔖️ValueCodecs
 /// 🔤️ `StepValue` — single-uppercase-letter tag prefix like `enc_xml_node`, one per variant: `U`
 /// Unset, `D` Derived, `I` Integer, `R` Real, `S` String, `E` Enum, `F` reFerence (`R` taken by
@@ -810,6 +863,179 @@ pub(crate) fn dec_step_snapshot(s: &str) -> Result<StepSnapshot, String> {
 }
 //#endregion 🔖️ValueCodecs
 
+//#region 🔖️ValueBinaryCodecs
+/// 🧪️ P2-FG1: real recursive binary twin of [`enc_value`]/[`dec_value`] — same 0-8 ordinal order
+/// as `StepValue`'s own declaration (`Unset`,`Derived`,`Integer`,`Real`,`String`,`Enum`,
+/// `Reference`,`Aggregate`,`TypedValue`), backing the upgraded `OpBinary`/`DiffCodec` frames below.
+/// `Aggregate`/`TypedValue` recurse via plain Rust function recursion — the DSL derive machinery's
+/// `Prim::Ref` protocol-dialect blocker (cited on the sibling `.protocol.semio` files) constrains
+/// only the DECLARATIVE description, never hand-written Rust, which recurses here exactly like
+/// `enc_value`'s own text twin does two regions up.
+pub(crate) fn enc_value_bin(v: &StepValue, out: &mut Vec<u8>) {
+    match v {
+        StepValue::Unset => out.push(0),
+        StepValue::Derived => out.push(1),
+        StepValue::Integer(i) => {
+            out.push(2);
+            store::write_varint_i64(out, *i);
+        }
+        StepValue::Real(r) => {
+            out.push(3);
+            write_f64_bin(out, *r);
+        }
+        StepValue::String(s) => {
+            out.push(4);
+            write_str_bin(out, s);
+        }
+        StepValue::Enum(s) => {
+            out.push(5);
+            write_str_bin(out, s);
+        }
+        StepValue::Reference(id) => {
+            out.push(6);
+            store::pack_rt::write_varint_u64(out, *id);
+        }
+        StepValue::Aggregate(items) => {
+            out.push(7);
+            store::pack_rt::write_varint_u64(out, items.len() as u64);
+            for item in items {
+                enc_value_bin(item, out);
+            }
+        }
+        StepValue::TypedValue { type_name, value } => {
+            out.push(8);
+            write_str_bin(out, type_name);
+            enc_value_bin(value, out);
+        }
+    }
+}
+pub(crate) fn dec_value_bin(reader: &mut store::ByteReader<'_>) -> Result<StepValue, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    match tag {
+        0 => Ok(StepValue::Unset),
+        1 => Ok(StepValue::Derived),
+        2 => Ok(StepValue::Integer(reader.read_varint_i64().map_err(|e| e.to_string())?)),
+        3 => Ok(StepValue::Real(read_f64_bin(reader)?)),
+        4 => Ok(StepValue::String(read_str_bin(reader)?)),
+        5 => Ok(StepValue::Enum(read_str_bin(reader)?)),
+        6 => Ok(StepValue::Reference(reader.read_varint_u64().map_err(|e| e.to_string())?)),
+        7 => {
+            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let items = (0..count).map(|_| dec_value_bin(reader)).collect::<Result<Vec<_>, String>>()?;
+            Ok(StepValue::Aggregate(items))
+        }
+        8 => {
+            let type_name = read_str_bin(reader)?;
+            let value = Box::new(dec_value_bin(reader)?);
+            Ok(StepValue::TypedValue { type_name, value })
+        }
+        other => Err(format!("step value binary: unknown tag {other}")),
+    }
+}
+
+pub(crate) fn enc_complex_bin(c: &StepComplexType, out: &mut Vec<u8>) {
+    write_str_bin(out, &c.name);
+    store::pack_rt::write_varint_u64(out, c.args.len() as u64);
+    for a in &c.args {
+        enc_value_bin(a, out);
+    }
+}
+pub(crate) fn dec_complex_bin(reader: &mut store::ByteReader<'_>) -> Result<StepComplexType, String> {
+    let name = read_str_bin(reader)?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let args = (0..count).map(|_| dec_value_bin(reader)).collect::<Result<Vec<_>, String>>()?;
+    Ok(StepComplexType { name, args })
+}
+
+pub(crate) fn enc_entity_bin(e: &StepEntity, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, e.id);
+    write_str_bin(out, &e.name);
+    store::pack_rt::write_varint_u64(out, e.args.len() as u64);
+    for a in &e.args {
+        enc_value_bin(a, out);
+    }
+    store::pack_rt::write_varint_u64(out, e.complex.len() as u64);
+    for c in &e.complex {
+        enc_complex_bin(c, out);
+    }
+}
+pub(crate) fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntity, String> {
+    let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let name = read_str_bin(reader)?;
+    let args_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let args = (0..args_count).map(|_| dec_value_bin(reader)).collect::<Result<Vec<_>, String>>()?;
+    let complex_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let complex = (0..complex_count).map(|_| dec_complex_bin(reader)).collect::<Result<Vec<_>, String>>()?;
+    Ok(StepEntity { id, name, args, complex })
+}
+
+pub(crate) fn enc_file_description_bin(d: &StepFileDescription, out: &mut Vec<u8>) {
+    write_str_list_bin(out, &d.description);
+    write_str_bin(out, &d.implementation_level);
+}
+pub(crate) fn dec_file_description_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileDescription, String> {
+    let description = read_str_list_bin(reader)?;
+    let implementation_level = read_str_bin(reader)?;
+    Ok(StepFileDescription { description, implementation_level })
+}
+
+pub(crate) fn enc_file_name_bin(f: &StepFileName, out: &mut Vec<u8>) {
+    write_str_bin(out, &f.name);
+    write_str_bin(out, &f.timestamp);
+    write_str_list_bin(out, &f.author);
+    write_str_list_bin(out, &f.organization);
+    write_str_bin(out, &f.preprocessor_version);
+    write_str_bin(out, &f.originating_system);
+    write_str_bin(out, &f.authorization);
+}
+pub(crate) fn dec_file_name_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileName, String> {
+    Ok(StepFileName {
+        name: read_str_bin(reader)?,
+        timestamp: read_str_bin(reader)?,
+        author: read_str_list_bin(reader)?,
+        organization: read_str_list_bin(reader)?,
+        preprocessor_version: read_str_bin(reader)?,
+        originating_system: read_str_bin(reader)?,
+        authorization: read_str_bin(reader)?,
+    })
+}
+
+pub(crate) fn enc_file_schema_bin(s: &StepFileSchema, out: &mut Vec<u8>) {
+    write_str_list_bin(out, &s.schemas);
+}
+pub(crate) fn dec_file_schema_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileSchema, String> {
+    Ok(StepFileSchema { schemas: read_str_list_bin(reader)? })
+}
+
+/// 📸️ Full `StepSnapshot` binary codec — needed by `SetSnapshot`'s `OpBinary` (mutations file
+/// imports this `pub(crate)`), never by `StepDiff` itself (no `snapshot: Option<StepSnapshot>`
+/// full-replace slot exists on the diff), same split [`enc_step_snapshot`]/[`dec_step_snapshot`]
+/// (the TEXT twin) uses.
+pub(crate) fn enc_step_snapshot_bin(s: &StepSnapshot, out: &mut Vec<u8>) {
+    write_str_bin(out, &s.schema);
+    enc_file_description_bin(&s.header.file_description, out);
+    enc_file_name_bin(&s.header.file_name, out);
+    enc_file_schema_bin(&s.header.file_schema, out);
+    store::pack_rt::write_varint_u64(out, s.entities.len() as u64);
+    for e in &s.entities {
+        enc_entity_bin(e, out);
+    }
+}
+pub(crate) fn dec_step_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StepSnapshot, String> {
+    let schema = read_str_bin(reader)?;
+    let file_description = dec_file_description_bin(reader)?;
+    let file_name = dec_file_name_bin(reader)?;
+    let file_schema = dec_file_schema_bin(reader)?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let entities = (0..count).map(|_| dec_entity_bin(reader)).collect::<Result<Vec<_>, String>>()?;
+    Ok(StepSnapshot {
+        schema,
+        header: crate::artifacts::step::schema::snapshot::StepHeader { file_description, file_name, file_schema },
+        entities,
+    })
+}
+//#endregion 🔖️ValueBinaryCodecs
+
 //#region 🔖️DiffValueCodecs
 fn enc_args_diff(d: &StepArgsDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
@@ -890,6 +1116,109 @@ fn dec_entities_diff(body: &str) -> Result<StepEntitiesDiff, String> {
 }
 //#endregion 🔖️DiffValueCodecs
 
+//#region 🔖️DiffValueBinaryCodecs
+/// 🧪️ P2-FG1: real recursive binary twins of [`enc_args_diff`]/[`enc_entity_diff`]/
+/// [`enc_entities_diff`] — same three-section (removed/modified/added) collection-triple shape,
+/// backing the upgraded `DiffCodec::encode_diff`/`decode_diff` below.
+pub(crate) fn enc_args_diff_bin(d: &StepArgsDiff, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
+    for i in &d.removed {
+        store::pack_rt::write_varint_u64(out, *i as u64);
+    }
+    store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
+    for m in &d.modified {
+        store::pack_rt::write_varint_u64(out, m.index as u64);
+        enc_value_bin(&m.value, out);
+    }
+    store::pack_rt::write_varint_u64(out, d.added.len() as u64);
+    for a in &d.added {
+        store::pack_rt::write_varint_u64(out, a.index as u64);
+        enc_value_bin(&a.value, out);
+    }
+}
+pub(crate) fn dec_args_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepArgsDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(removed_count as usize);
+    for _ in 0..removed_count {
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+    }
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(modified_count as usize);
+    for _ in 0..modified_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let value = dec_value_bin(reader)?;
+        modified.push(StepArgModified { index, value });
+    }
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(added_count as usize);
+    for _ in 0..added_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let value = dec_value_bin(reader)?;
+        added.push(StepArgAdded { index, value });
+    }
+    Ok(StepArgsDiff { removed, modified, added })
+}
+
+pub(crate) fn enc_entity_diff_bin(d: &StepEntityDiff, out: &mut Vec<u8>) {
+    write_option_bin(out, &d.name, |v, o| write_str_bin(o, v));
+    write_option_bin(out, &d.args, |v, o| enc_args_diff_bin(v, o));
+    write_option_bin(out, &d.complex, |v, o| {
+        store::pack_rt::write_varint_u64(o, v.len() as u64);
+        for c in v {
+            enc_complex_bin(c, o);
+        }
+    });
+}
+pub(crate) fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntityDiff, String> {
+    let name = read_option_bin(reader, read_str_bin)?;
+    let args = read_option_bin(reader, dec_args_diff_bin)?;
+    let complex = read_option_bin(reader, |r| {
+        let count = r.read_varint_u64().map_err(|e| e.to_string())?;
+        (0..count).map(|_| dec_complex_bin(r)).collect::<Result<Vec<_>, String>>()
+    })?;
+    Ok(StepEntityDiff { name, args, complex })
+}
+
+pub(crate) fn enc_entities_diff_bin(d: &StepEntitiesDiff, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
+    for id in &d.removed {
+        store::pack_rt::write_varint_u64(out, *id);
+    }
+    store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
+    for m in &d.modified {
+        store::pack_rt::write_varint_u64(out, m.id);
+        enc_entity_diff_bin(&m.diff, out);
+    }
+    store::pack_rt::write_varint_u64(out, d.added.len() as u64);
+    for a in &d.added {
+        store::pack_rt::write_varint_u64(out, a.index as u64);
+        enc_entity_bin(&a.entity, out);
+    }
+}
+pub(crate) fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntitiesDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(removed_count as usize);
+    for _ in 0..removed_count {
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())?);
+    }
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(modified_count as usize);
+    for _ in 0..modified_count {
+        let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
+        let diff = dec_entity_diff_bin(reader)?;
+        modified.push(StepEntityModified { id, diff });
+    }
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(added_count as usize);
+    for _ in 0..added_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let entity = dec_entity_bin(reader)?;
+        added.push(StepEntityAdded { index, entity });
+    }
+    Ok(StepEntitiesDiff { removed, modified, added })
+}
+//#endregion 🔖️DiffValueBinaryCodecs
+
 //#region 🔖️TopLevel
 fn print_step_diff(d: &StepDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
@@ -921,18 +1250,83 @@ impl protocol::DiffCodec for StepDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_step_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`/`WriterDiff`
-    /// use — satisfies every `DiffCodec` law without inventing a second wire format.
+    /// 🧪️ P2-FG1: REAL binary frame (`format u8 | flags u8 | present-field payloads`), matching
+    /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+    /// upgraded from F6's `print_diff().into_bytes()` text-as-binary shortcut. `flags` is a 4-bit
+    /// presence mask (bit0=`file_description`, bit1=`file_name`, bit2=`file_schema`,
+    /// bit3=`entities`) — `StepDiff` has FOUR independently optional top-level fields, same shape
+    /// dxf's own `DxfDiff` (also four) upgraded to this same wave, unlike md/json's single
+    /// `has_value` byte.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let flags: u8 = (self.file_description.is_some() as u8)
+            | ((self.file_name.is_some() as u8) << 1)
+            | ((self.file_schema.is_some() as u8) << 2)
+            | ((self.entities.is_some() as u8) << 3);
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
+        if let Some(v) = &self.file_description {
+            enc_file_description_bin(v, &mut out);
+        }
+        if let Some(v) = &self.file_name {
+            enc_file_name_bin(v, &mut out);
+        }
+        if let Some(v) = &self.file_schema {
+            enc_file_schema_bin(v, &mut out);
+        }
+        if let Some(v) = &self.entities {
+            enc_entities_diff_bin(v, &mut out);
+        }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let file_description = if flags & 1 != 0 {
+            Some(dec_file_description_bin(&mut reader).map_err(|e| malformed("diff file_description", reader.position(), e))?)
+        } else {
+            None
+        };
+        let file_name = if flags & 2 != 0 {
+            Some(dec_file_name_bin(&mut reader).map_err(|e| malformed("diff file_name", reader.position(), e))?)
+        } else {
+            None
+        };
+        let file_schema = if flags & 4 != 0 {
+            Some(dec_file_schema_bin(&mut reader).map_err(|e| malformed("diff file_schema", reader.position(), e))?)
+        } else {
+            None
+        };
+        let entities = if flags & 8 != 0 {
+            Some(dec_entities_diff_bin(&mut reader).map_err(|e| malformed("diff entities", reader.position(), e))?)
+        } else {
+            None
+        };
+        Ok(StepDiff { file_description, file_name, file_schema, entities })
     }
 }
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG1: representative `StepDiff` cases — real `print_diff()`-conformance-law fodder
+/// (`diff_grammar_conformance_law`) and `protocol_walk_law` fodder — the empty diff, a genuine
+/// `between()` result exercising every top-level field plus all three `entities`/`args`
+/// collection-triple flavors and `StepEntityDiff.complex`, and its reverse direction.
+pub(crate) fn demo_diff_cases() -> Vec<StepDiff> {
+    let a = crate::artifacts::step::engine::demo_step_snapshot();
+    let mut b = a.clone();
+    b.header.file_schema.schemas.push("CONFIG_CONTROL_DESIGN".into());
+    b.header.file_name.originating_system = "changed".into();
+    if let Some(first) = b.entities.first_mut() {
+        first.name = "RENAMED_POINT".into();
+        first.args.push(StepValue::Aggregate(vec![StepValue::Integer(1), StepValue::Integer(2)]));
+        first.complex.push(StepComplexType { name: "EXTRA_TYPE".into(), args: vec![StepValue::Real(1.5), StepValue::String("hi".into())] });
+    }
+    b.entities.push(StepEntity { id: 99, name: "ADDED_WITH_COMPLEX".into(), args: vec![StepValue::Unset], complex: vec![StepComplexType { name: "ANOTHER_TYPE".into(), args: vec![StepValue::Reference(42)] }] });
+    vec![StepDiff::default(), StepDiff::between(&a, &b), StepDiff::between(&b, &a)]
+}
+//#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
 #[cfg(test)]

@@ -1,5 +1,5 @@
-module Semio_html_diff;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_html_diff;
+# UTF-8 bytes of print_diff's output, verbatim -- see the sibling ../📝️text/📖️component.grammar.semio.
 type Document = unit {
-    magic: bytes &size=15;
+    diff_text: bytes &eod;
 };

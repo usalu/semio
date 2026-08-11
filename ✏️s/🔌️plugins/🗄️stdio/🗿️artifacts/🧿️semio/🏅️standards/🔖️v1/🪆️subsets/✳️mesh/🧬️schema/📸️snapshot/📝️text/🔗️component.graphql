@@ -1,9 +1,10 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_semio_mesh_snapshotEntry {
-  key: String!
-  value: String!
-}
-type Semio_semio_mesh_snapshot {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_mesh_snapshotEntry!]! @state(class: PERSISTENT)
+# 🔗️ GraphQL mirror of `s.stdio.semio.mesh`'s DSL TEXT representation — a hex string wrapping
+# the real SemioMeshSnapshot JSON payload (see ../🦀️component.rs for the grammar this mirrors).
+scalar HexBytes
+
+type SemioMeshSnapshotDslText {
+  """ preamble line: `semio stdio.semio.mesh.dsl v1` """
+  preamble: String!
+  """ whitespace-tolerant ASCII hex dump of SemioMeshSnapshot's JSON bytes """
+  body: HexBytes!
 }

@@ -1,9 +1,23 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioDocumentMutationEntry {
-  key: String!
-  value: String!
+# Named-variant SemioDocumentMutation enum -- GraphQL exposes the tag + a per-variant payload
+# bag (GraphQL has no native tagged union over scalars, so every variant's optional fields sit
+# on one type, discriminated by `mutation`, mirroring the Rust `#[serde(tag = "mutation")]` shape).
+enum SemioDocumentMutationTag {
+  NO_MUTATION SET_SNAPSHOT INSERT_BLOCK REMOVE_BLOCK SET_BLOCK_CONTENT SET_PARAGRAPH_STYLE
+  SET_HEADING_LEVEL SET_LIST_ORDERED SET_RUN_TEXT SET_RUN_STYLE SET_IMAGE_BLOCK INSERT_STYLE
+  REMOVE_STYLE SET_STYLE_NAME SET_STYLE_BASED_ON INSERT_IMAGE REMOVE_IMAGE SET_IMAGE_BYTES
 }
 type SemioDocumentMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioDocumentMutationEntry!]! @state(class: PERSISTENT)
+  mutation: SemioDocumentMutationTag!
+  id: String
+  name: String
+  text: String
+  runIndex: Int
+  level: Int
+  ordered: Boolean
+  basedOn: String
+  imageId: String
+  alt: String
+  width: Float
+  height: Float
+  mime: String
 }

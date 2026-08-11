@@ -1,5 +1,6 @@
 module Semio_semio_drawing_diff;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+# no separate binary envelope -- bytes ARE the UTF-8 text-facet grammar verbatim (json's own
+# stdio.json.diff binary leaf precedent).
 type Document = unit {
-    magic: bytes &size=24;
+    text_bytes: bytes &eod;
 };

@@ -1,10 +1,4 @@
-/** 🧬️ Semio_semio_cad_snapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_cad_snapshot
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_cad_snapshotEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_cad_snapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_cad_snapshotEntry[];
-}
+/** 📝️ Text (DSL) representation for `s.stdio.semio.cad` (snapshot) — whitespace-tolerant ASCII
+ * hex dump of `serde_json::to_vec(SemioCadSnapshot)`, preceded by the semio preamble line; see
+ * ../🔣️component.json for the decoded JSON's real schema. */
+export type SemioCadSnapshotText = string;

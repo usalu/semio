@@ -1,3 +1,4 @@
-//! 🚧 scaffolded by W1b — binary representation marker for `stdio.html.mutations`. Full field-layout
-//! parse/print lands in W2/W3.
-pub const BINARY_MAGIC: &str = "stdio.html.mutations";
+//! binary rep for stdio.html 🧬️mutations -- see the sibling `encode_op`/`decode_op` two levels up.
+
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");

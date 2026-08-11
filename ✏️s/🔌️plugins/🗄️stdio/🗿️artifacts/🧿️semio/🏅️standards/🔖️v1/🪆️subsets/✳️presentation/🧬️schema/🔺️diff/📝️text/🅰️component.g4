@@ -1,3 +1,10 @@
 grammar Semio_semio_presentation_diff;
-// 🚧 scaffolded by W1b — full production rules land in W2/W3. Top-level rule name only.
-ROOT: 'stdio.semio.presentation.diff' ;
+line: (token (WS token)*)? EOF;
+token: MASTERS_EQ triple | LAYOUTS_EQ triple | SLIDES_EQ triple;
+MASTERS_EQ: 'masters=';
+LAYOUTS_EQ: 'layouts=';
+SLIDES_EQ: 'slides=';
+triple: '[' list ']' ';' '[' list ']' ';' '[' list ']';
+list: (ITEM (',' ITEM)*)?;
+ITEM: (~[,;\[\]])+;
+WS: ' ';

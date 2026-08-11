@@ -1,10 +1,16 @@
-/** 🧬️ EpwArtifact schema. 🚧 scaffolded by W1b — generic facet mirror; the EpwArtifact
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface EpwArtifactEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ EpwArtifact schema facet — full artifact state, mirrors EpwSnapshot field-for-field
+ * (see ./📸️snapshot/🟦️component.ts for the shared shapes). */
+import type { EpwLocation, EpwDataPeriods, EpwRecord } from './📸️snapshot/🟦️component.ts';
+
 export interface EpwArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: EpwArtifactEntry[];
+  schema: string;
+  location: EpwLocation;
+  designConditions: string;
+  typicalExtremePeriods: string;
+  groundTemperatures: string;
+  holidaysDst: string;
+  comments1: string;
+  comments2: string;
+  dataPeriods: EpwDataPeriods;
+  records: EpwRecord[];
 }

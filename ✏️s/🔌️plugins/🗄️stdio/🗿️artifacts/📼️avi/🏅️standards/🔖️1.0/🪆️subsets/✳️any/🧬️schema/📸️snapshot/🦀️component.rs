@@ -1,13 +1,11 @@
-//! 🧬️ AviSnapshot — RIFF/AVI form type + top-level chunks, typed-raw.
-//! 🚧 scaffolded by W1b: minimal honest fields only (not the full spec shape) — full
-//! implementation lands in W2/W3.
+//! 🧬️ AviSnapshot — RIFF/AVI 1.0: `avih` (MainAVIHeader) typed, per-stream `strh` typed + `strf`
+//! discriminated by `fccType` (`BitmapInfo` for `vids`, `WaveFormat` for `auds`, `Raw` otherwise),
+//! `movi` chunks assigned to their owning stream with `idx1`-derived keyframe flags, everything
+//! else (non-`hdrl`/`movi`/`idx1` top-level RIFF children) typed-raw retained (`unknown_chunks`).
+//! Real binary codec (`ArtifactPack`/`ArtifactDsl` wrap the REAL RIFF bytes `⚙️engine::{decode_avi,
+//! encode_avi}` produce/consume, mirrors mp4's/`stdio.png`'s pattern — NOT JSON-pack passthrough).
 
-/// 📦️ Owned by `avi`: `AviRawChunk` — an untyped-raw top-level RIFF chunk (fourcc + payload
-/// bytes verbatim). `hdrl`/`strl`/`movi` descent lands in W3.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AviRawChunk { pub fourcc: String, #[serde(default)] pub data: Vec<u8> }
-
+use crate::artifacts::avi::standards::v1_0::engine;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -15,35 +13,151 @@ use serde::{Deserialize, Serialize};
 pub const STDIO_AVI_DOCUMENT_SCHEMA: &str = "stdio.avi";
 //#endregion 🔖️Ids
 
+//#region 🔖️MainHeader
+/// 🏷️ `avih` — MainAVIHeader, all 14 DWORDs typed (56 bytes). <https://learn.microsoft.com/windows/win32/directshow/avimainheader>
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AviMainHeader {
+    pub micro_sec_per_frame: u32,
+    pub max_bytes_per_sec: u32,
+    pub padding_granularity: u32,
+    pub flags: u32,
+    pub total_frames: u32,
+    pub initial_frames: u32,
+    pub streams: u32,
+    pub suggested_buffer_size: u32,
+    pub width: u32,
+    pub height: u32,
+    /// 🕳️ `dwReserved[4]` — verbatim, never fabricated.
+    #[serde(default)]
+    pub reserved: Vec<u32>,
+}
+//#endregion 🔖️MainHeader
+
+//#region 🔖️StreamHeader
+/// 🏷️ `strh` — AVIStreamHeader, all fields typed (64 bytes: `rcFrame` is 4 `LONG`s, not `SHORT`s).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AviStreamHeader {
+    pub fcc_type: String,
+    pub fcc_handler: String,
+    pub flags: u32,
+    pub priority: u16,
+    pub language: u16,
+    pub initial_frames: u32,
+    pub scale: u32,
+    pub rate: u32,
+    pub start: u32,
+    pub length: u32,
+    pub suggested_buffer_size: u32,
+    pub quality: i32,
+    pub sample_size: u32,
+    pub rc_frame_left: i32,
+    pub rc_frame_top: i32,
+    pub rc_frame_right: i32,
+    pub rc_frame_bottom: i32,
+}
+//#endregion 🔖️StreamHeader
+
+//#region 🔖️StreamFormat
+/// 🎨️ `strf`, discriminated by the owning stream's `fccType`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "format", rename_all = "camelCase")]
+pub enum AviStreamFormat {
+    /// 🖼️ `BITMAPINFOHEADER` (40 bytes; `vids`). <https://learn.microsoft.com/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader>
+    BitmapInfo {
+        size: u32,
+        width: i32,
+        height: i32,
+        planes: u16,
+        bit_count: u16,
+        compression: String,
+        size_image: u32,
+        x_pels_per_meter: i32,
+        y_pels_per_meter: i32,
+        colors_used: u32,
+        colors_important: u32,
+    },
+    /// 🔊️ `WAVEFORMATEX`-shaped (`auds`).
+    WaveFormat {
+        format_tag: u16,
+        channels: u16,
+        samples_per_sec: u32,
+        avg_bytes_per_sec: u32,
+        block_align: u16,
+        bits_per_sample: u16,
+        #[serde(default)]
+        extra: Vec<u8>,
+    },
+    /// 📦 Any other `fccType` — verbatim `strf` payload bytes.
+    Raw { data: Vec<u8> },
+}
+
+impl Default for AviStreamFormat {
+    fn default() -> Self { Self::Raw { data: Vec::new() } }
+}
+//#endregion 🔖️StreamFormat
+
+//#region 🔖️Chunk
+/// 🎞️ One `movi` chunk belonging to this stream — fourcc (e.g. `"00dc"`), payload bytes, and
+/// whether `idx1` (or the no-`idx1` fallback, per spec: absent index ⇒ every scanned chunk is
+/// treated as a sync point) marks it a keyframe.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AviChunk {
+    pub fourcc: String,
+    #[serde(default)]
+    pub data: Vec<u8>,
+    pub keyframe: bool,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AviStream {
+    pub strh: AviStreamHeader,
+    pub strf: AviStreamFormat,
+    #[serde(default)]
+    pub chunks: Vec<AviChunk>,
+}
+//#endregion 🔖️Chunk
+
+//#region 🔖️RawChunk
+/// 📦️ Typed-raw retention for a top-level RIFF child this codec doesn't otherwise type (any
+/// entry inside `AVI `'s body besides `hdrl`/`movi`/`idx1`) — verbatim fourcc + payload, replayed
+/// at the same relative position (after `idx1`) on encode.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RiffChunk {
+    pub fourcc: String,
+    #[serde(default)]
+    pub data: Vec<u8>,
+}
+//#endregion 🔖️RawChunk
+
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.avi")]
 pub struct AviSnapshot {
     #[state(persistent)]
+    #[serde(default = "default_schema")]
     pub schema: String,
     #[state(persistent)]
-    pub form_type: String,
+    pub main_header: AviMainHeader,
     #[state(persistent)]
     #[serde(default)]
-    pub chunks: Vec<AviRawChunk>,
+    pub streams: Vec<AviStream>,
+    #[state(persistent)]
+    pub idx1_present: bool,
+    #[state(persistent)]
+    #[serde(default)]
+    pub unknown_chunks: Vec<RiffChunk>,
 }
 
-impl Default for AviSnapshot {
-    fn default() -> Self {
-        Self {
-            schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
-            form_type: Default::default(),
-            chunks: Default::default(),
-        }
-    }
-}
+fn default_schema() -> String { STDIO_AVI_DOCUMENT_SCHEMA.into() }
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🚧 scaffolded by W1b: JSON-pack round trip (honest, genuinely working — not a per-format
-/// binary codec, since this subset's snapshot is a NEUTRAL semio type, not an on-disk file
-/// format). Wrapped in the same `store::semio_format` envelope every stdio artifact uses.
 impl store::ArtifactDsl for AviSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str { STDIO_AVI_DOCUMENT_SCHEMA }
@@ -65,11 +179,11 @@ impl store::ArtifactDsl for AviSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        serde_json::from_slice(&bytes).map_err(|e| store::TextError::new(format!("json decode: {e}"), dsl::TextSpan::at(1, 1)))
+        engine::decode_avi(&bytes).map_err(|e| store::TextError::new(format!("avi decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = serde_json::to_vec(self).unwrap_or_default();
+        let bytes = engine::encode_avi(self);
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -83,7 +197,7 @@ impl store::ArtifactDsl for AviSnapshot {
 impl store::ArtifactPack for AviSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = serde_json::to_vec(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = engine::encode_avi(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -102,7 +216,7 @@ impl store::ArtifactPack for AviSnapshot {
             )));
         }
         let _ = options;
-        serde_json::from_slice(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
+        engine::decode_avi(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -112,19 +226,54 @@ impl store::ArtifactPack for AviSnapshot {
 mod tests {
     use super::*;
 
+    fn sample_snapshot() -> AviSnapshot {
+        AviSnapshot {
+            schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
+            main_header: AviMainHeader { micro_sec_per_frame: 100_000, max_bytes_per_sec: 1400, padding_granularity: 0, flags: 0x10, total_frames: 2, initial_frames: 0, streams: 1, suggested_buffer_size: 140, width: 16, height: 16, reserved: vec![0, 0, 0, 0] },
+            streams: vec![AviStream {
+                strh: AviStreamHeader { fcc_type: "vids".into(), fcc_handler: "MJPG".into(), flags: 0, priority: 0, language: 0, initial_frames: 0, scale: 1, rate: 10, start: 0, length: 2, suggested_buffer_size: 140, quality: -1, sample_size: 0, rc_frame_left: 0, rc_frame_top: 0, rc_frame_right: 16, rc_frame_bottom: 16 },
+                strf: AviStreamFormat::BitmapInfo { size: 40, width: 16, height: 16, planes: 1, bit_count: 24, compression: "MJPG".into(), size_image: 140, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
+                chunks: vec![
+                    AviChunk { fourcc: "00dc".into(), data: vec![1, 2, 3, 4], keyframe: true },
+                    AviChunk { fourcc: "00dc".into(), data: vec![5, 6, 7, 8], keyframe: true },
+                ],
+            }],
+            idx1_present: true,
+            unknown_chunks: vec![],
+        }
+    }
+
     #[test]
-    fn json_pack_round_trips() {
-        let snap = AviSnapshot::default();
+    fn json_pack_round_trips_via_real_avi_bytes() {
+        let snap = sample_snapshot();
         let bytes = <AviSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <AviSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 
     #[test]
-    fn dsl_text_round_trips() {
-        let snap = AviSnapshot::default();
+    fn dsl_text_round_trips_via_real_avi_bytes() {
+        let snap = sample_snapshot();
         let text = <AviSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <AviSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        assert_eq!(snap, back);
+    }
+
+    #[test]
+    fn default_snapshot_round_trips_through_real_codec() {
+        // 🧭️ `..AviSnapshot::default()` gives `schema: ""`/`reserved: vec![]` (derived `Default`,
+        // not the real codec's own normal form): `decode_avi` always stamps `schema` from
+        // `STDIO_AVI_DOCUMENT_SCHEMA` and `avih`'s `dwReserved[4]` is always 4 real DWORDs on the
+        // wire, so a snapshot claiming to round-trip through the real codec must start in that
+        // codec's own normal form, not the bare struct-derive default.
+        let snap = AviSnapshot {
+            schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
+            main_header: AviMainHeader { reserved: vec![0; 4], ..AviMainHeader::default() },
+            idx1_present: false,
+            ..AviSnapshot::default()
+        };
+        let bytes = <AviSnapshot as store::ArtifactPack>::encode_pack(&snap);
+        let back = <AviSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 }

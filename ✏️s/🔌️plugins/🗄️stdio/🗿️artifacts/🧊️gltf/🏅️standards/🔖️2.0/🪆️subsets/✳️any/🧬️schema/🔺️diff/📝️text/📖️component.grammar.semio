@@ -1,21 +1,265 @@
-dialect grammar stdio.gltf.diff
-; The wire form of `GltfDiff` -- RFC8259 JSON text, a sparse object whose members are ALL
-; optional (present iff that field changed). Collection fields are the generic
-; `{removed:[usize], modified:[{index,diff}], added:[{index,item}]}` triple.
-root = ws diff_object ws
-diff_object = '{' ( member ( ',' member )* )? '}'
-member = 'asset' ':' object
-       | 'scene' ':' ( number | 'null' )
-       | ( 'scenes' | 'nodes' | 'meshes' | 'accessors' | 'bufferViews' | 'buffers' | 'bufferBytes'
-         | 'materials' | 'textures' | 'images' | 'samplers' | 'skins' | 'animations' | 'cameras' ) ':' collection_diff
-       | ( 'extensionsUsed' | 'extensionsRequired' ) ':' array
-       | ( 'extensions' | 'extras' ) ':' ( object | 'null' )
-       | 'sourceForm' ':' ( '"json"' | '"glb"' )
-collection_diff = '{' ( 'removed' ':' array_of_index )? ( ',' 'modified' ':' array_of_modified )? ( ',' 'added' ':' array_of_added )? '}'
-array_of_index = '[' ( number ( ',' number )* )? ']'
-array_of_modified = '[' ( modified_entry ( ',' modified_entry )* )? ']'
-modified_entry = '{' 'index' ':' number ',' 'diff' ':' value '}'
-array_of_added = '[' ( added_entry ( ',' added_entry )* )? ']'
-added_entry = '{' 'index' ':' number ',' 'item' ':' value '}'
-value = object | array | string | number | 'true' | 'false' | 'null'
-ws = ( ' ' | TAB | NL | CR )*
+dialect grammar
+grammar stdio.gltf.diff
+start diff
+comment none
+
+# P2-FG3: real one-line `print_diff`/`parse_diff` form this artifact's hand-rolled `DiffCodec`
+# ACTUALLY emits (../🦀️component.rs `print_gltf_diff`/`parse_gltf_diff`) -- a space-separated
+# `name=value` token per changed top-level field, in `GltfDiff`'s own struct declaration order.
+# Unlike gif/png's `"<name>" "{" ... "}"` collection wrapper, gltf's OWN 14 collection fields print
+# through the SAME uniform `name=value` convention every scalar field uses (`enc_collection`'s
+# return value is placed directly after `<name>=`, no extra wrapping braces) -- confirmed by direct
+# read of `print_gltf_diff`, not assumed from another artifact's shape. Every string/byte payload is
+# `hex`-encoded (`enc_str`/`enc_bytes` -> `hex_encode`) -- the framework's built-in `hex` MACRO
+# (bare `hex` ident, no matching production; `Symbol::Ref`'s production-then-macro fallback,
+# `match_macro_span` backtracks correctly unlike a hand-rolled `{INT|IDENT}*` Star, §3 pitfall #2).
+# `{...}*` grouping only, never bare `(...)*` (§3 pitfall #1). Kept on ONE physical line per
+# production throughout (§3 pitfall #4 -- this dialect's sequence parsing stops at the first
+# Newline token, no line-continuation syntax).
+diff = asset-clause? scene-clause? scenes-clause? nodes-clause? meshes-clause? accessors-clause? buffer-views-clause? buffers-clause? buffer-bytes-clause? materials-clause? textures-clause? images-clause? samplers-clause? skins-clause? animations-clause? cameras-clause? extensions-used-clause? extensions-required-clause? extensions-clause? extras-clause? source-form-clause?
+
+#region Primitives
+# `Option<T>`/`Option<Option<T>>` -- `encode_option`'s uniform `[0]`/`[1,<value>]` tag; the
+# tri-state form (`encode_option_option`) wraps that SAME shape one layer deeper, matching
+# `png`'s/`gif`'s own `[0]`/`[1,[...]]` precedent (§1.4's tri-state pattern).
+bit = "0" | "1"
+gltf-f64 = INT | FLOAT
+bit-opt = "[" "0" "]" | "[" "1" "," bit "]"
+f64-opt = "[" "0" "]" | "[" "1" "," gltf-f64 "]"
+int-opt = "[" "0" "]" | "[" "1" "," INT "]"
+tri-int = "[" "0" "]" | "[" "1" "," int-opt "]"
+str-opt = "[" "0" "]" | "[" "1" "," hex "]"
+str-triopt = "[" "0" "]" | "[" "1" "," str-opt "]"
+f64-list = "[" "]" | "[" gltf-f64 {"," gltf-f64}* "]"
+f64-list-opt = "[" "0" "]" | "[" "1" "," f64-list "]"
+f64-list-triopt = "[" "0" "]" | "[" "1" "," f64-list-opt "]"
+usize-list = "[" "]" | "[" INT {"," INT}* "]"
+usize-list-opt = "[" "0" "]" | "[" "1" "," usize-list "]"
+str-list = "[" "]" | "[" hex {"," hex}* "]"
+str-list-opt = "[" "0" "]" | "[" "1" "," str-list "]"
+attr-pair = hex ":" INT
+attr-pairs = "[" "]" | "[" attr-pair {"," attr-pair}* "]"
+#endregion
+
+#region GltfJsonValue
+# `GltfJson` -- this artifact's own local `extras`/`extensions` value enum (F4). Tag prefix (NO
+# separator between the tag letter and its bracketed payload -- `enc_json` concatenates via
+# `format!`, and the shared lexer always ends an IDENT token at the next punctuation char, so `Z`/
+# `B[...]`/etc. tokenize as distinct terminals with no whitespace needed, same proven pattern as
+# gif's `L:`/`T:` single-letter diff tags): `Z`=Null (bare), `B[0|1]`=Bool, `F[<f64>]`=Number,
+# `S[<hex>]`=String, `A[v,v,...]`=Array, `O[k:v,k:v,...]`=Object (member order preserved).
+json-value = "Z" | "B" "[" bit "]" | "F" "[" gltf-f64 "]" | "S" "[" hex "]" | "A" "[" json-list? "]" | "O" "[" json-obj-list? "]"
+json-list = json-value {"," json-value}*
+json-obj-list = json-member {"," json-member}*
+json-member = hex ":" json-value
+json-opt = "[" "0" "]" | "[" "1" "," json-value "]"
+json-triopt = "[" "0" "]" | "[" "1" "," json-opt "]"
+#endregion
+
+#region UnitEnums
+# `component-type` -- the real spec numeric code (5120..5126, `GltfComponentType::code`), NOT a
+# word tag. The rest are real spec word tags (`GltfAccessorType::as_str`/`GltfAlphaMode`/
+# `GltfInterpolation`/`GltfAnimationPath`/`GltfSourceForm`'s own hand-rolled text mappings).
+component-type = INT
+component-type-opt = "[" "0" "]" | "[" "1" "," component-type "]"
+accessor-type = "SCALAR" | "VEC2" | "VEC3" | "VEC4" | "MAT2" | "MAT3" | "MAT4"
+accessor-type-opt = "[" "0" "]" | "[" "1" "," accessor-type "]"
+alpha-mode = "OPAQUE" | "MASK" | "BLEND"
+alpha-mode-opt = "[" "0" "]" | "[" "1" "," alpha-mode "]"
+interpolation = "LINEAR" | "STEP" | "CUBICSPLINE"
+animation-path = "translation" | "rotation" | "scale" | "weights"
+source-form = "json" | "glb"
+source-form-opt = "[" "0" "]" | "[" "1" "," source-form "]"
+#endregion
+
+#region AssetSceneNode
+asset-value = "[" hex "," str-opt "," str-opt "," str-opt "," json-opt "," json-opt "]"
+asset-diff-value = "[" str-opt "," str-triopt "," str-triopt "," str-triopt "," json-triopt "," json-triopt "]"
+scene-value = "[" usize-list "," str-opt "," json-opt "," json-opt "]"
+scene-diff-value = "[" usize-list-opt "," str-triopt "," json-triopt "," json-triopt "]"
+node-value = "[" usize-list "," int-opt "," int-opt "," int-opt "," f64-list-opt "," f64-list-opt "," f64-list-opt "," f64-list-opt "," f64-list "," str-opt "," json-opt "," json-opt "]"
+node-diff-value = "[" usize-list-opt "," tri-int "," tri-int "," tri-int "," f64-list-triopt "," f64-list-triopt "," f64-list-triopt "," f64-list-triopt "," f64-list-opt "," str-triopt "," json-triopt "," json-triopt "]"
+#endregion
+
+#region MeshAccessorMaterial
+primitive-value = "[" attr-pairs "," int-opt "," int-opt "," int-opt "," json-opt "," json-opt "]"
+primitive-list = "[" "]" | "[" primitive-value {"," primitive-value}* "]"
+primitive-list-opt = "[" "0" "]" | "[" "1" "," primitive-list "]"
+mesh-value = "[" primitive-list "," f64-list "," str-opt "," json-opt "," json-opt "]"
+mesh-diff-value = "[" primitive-list-opt "," f64-list-opt "," str-triopt "," json-triopt "," json-triopt "]"
+
+sparse-indices-value = "[" INT "," INT "," component-type "]"
+sparse-values-value = "[" INT "," INT "]"
+sparse-accessor-value = "[" INT "," sparse-indices-value "," sparse-values-value "]"
+sparse-opt = "[" "0" "]" | "[" "1" "," sparse-accessor-value "]"
+sparse-triopt = "[" "0" "]" | "[" "1" "," sparse-opt "]"
+accessor-value = "[" int-opt "," INT "," component-type "," bit "," INT "," accessor-type "," f64-list-opt "," f64-list-opt "," sparse-opt "," str-opt "," json-opt "," json-opt "]"
+accessor-diff-value = "[" tri-int "," int-opt "," component-type-opt "," bit-opt "," int-opt "," accessor-type-opt "," f64-list-triopt "," f64-list-triopt "," sparse-triopt "," str-triopt "," json-triopt "," json-triopt "]"
+
+texture-info-value = "[" INT "," INT "," json-opt "," json-opt "]"
+tex-info-opt = "[" "0" "]" | "[" "1" "," texture-info-value "]"
+tex-info-triopt = "[" "0" "]" | "[" "1" "," tex-info-opt "]"
+normal-texture-info-value = "[" INT "," INT "," gltf-f64 "," json-opt "," json-opt "]"
+normal-tex-opt = "[" "0" "]" | "[" "1" "," normal-texture-info-value "]"
+normal-tex-triopt = "[" "0" "]" | "[" "1" "," normal-tex-opt "]"
+occlusion-texture-info-value = "[" INT "," INT "," gltf-f64 "," json-opt "," json-opt "]"
+occlusion-tex-opt = "[" "0" "]" | "[" "1" "," occlusion-texture-info-value "]"
+occlusion-tex-triopt = "[" "0" "]" | "[" "1" "," occlusion-tex-opt "]"
+pbr-value = "[" f64-list "," tex-info-opt "," gltf-f64 "," gltf-f64 "," tex-info-opt "," json-opt "," json-opt "]"
+pbr-opt = "[" "0" "]" | "[" "1" "," pbr-value "]"
+pbr-triopt = "[" "0" "]" | "[" "1" "," pbr-opt "]"
+material-value = "[" str-opt "," pbr-opt "," normal-tex-opt "," occlusion-tex-opt "," tex-info-opt "," f64-list "," alpha-mode "," gltf-f64 "," bit "," json-opt "," json-opt "]"
+material-diff-value = "[" str-triopt "," pbr-triopt "," normal-tex-triopt "," occlusion-tex-triopt "," tex-info-triopt "," f64-list-opt "," alpha-mode-opt "," f64-opt "," bit-opt "," json-triopt "," json-triopt "]"
+#endregion
+
+#region Buffer
+buffer-value = "[" INT "," str-opt "," str-opt "," json-opt "," json-opt "]"
+buffer-diff-value = "[" int-opt "," str-triopt "," str-triopt "," json-triopt "," json-triopt "]"
+buffer-view-value = "[" INT "," INT "," INT "," int-opt "," int-opt "," str-opt "," json-opt "," json-opt "]"
+#endregion
+
+#region TextureImageSamplerSkin
+texture-value = "[" int-opt "," int-opt "," str-opt "," json-opt "," json-opt "]"
+image-value = "[" str-opt "," str-opt "," int-opt "," str-opt "," json-opt "," json-opt "]"
+sampler-value = "[" int-opt "," int-opt "," INT "," INT "," str-opt "," json-opt "," json-opt "]"
+skin-value = "[" int-opt "," int-opt "," usize-list "," str-opt "," json-opt "," json-opt "]"
+#endregion
+
+#region Animation
+animation-channel-target-value = "[" int-opt "," animation-path "," json-opt "," json-opt "]"
+animation-channel-value = "[" INT "," animation-channel-target-value "," json-opt "," json-opt "]"
+animation-sampler-value = "[" INT "," interpolation "," INT "," json-opt "," json-opt "]"
+channel-list = "[" "]" | "[" animation-channel-value {"," animation-channel-value}* "]"
+animation-sampler-list = "[" "]" | "[" animation-sampler-value {"," animation-sampler-value}* "]"
+animation-value = "[" channel-list "," animation-sampler-list "," str-opt "," json-opt "," json-opt "]"
+#endregion
+
+#region Camera
+perspective-value = "[" f64-opt "," gltf-f64 "," f64-opt "," gltf-f64 "," json-opt "," json-opt "]"
+orthographic-value = "[" gltf-f64 "," gltf-f64 "," gltf-f64 "," gltf-f64 "," json-opt "," json-opt "]"
+camera-projection-value = "P" perspective-value | "O" orthographic-value
+camera-value = "[" camera-projection-value "," str-opt "," json-opt "," json-opt "]"
+#endregion
+
+#region TopLevelClauses
+asset-clause = "asset" "=" asset-diff-value
+# NOTE (real bug caught by `diff_grammar_conformance_law`, fixed before landing): `scene`/
+# `extensions`/`extras`/`source-form`/`extensions-used`/`extensions-required` are all `Option<T>`
+# or `Option<Option<T>>` FIELDS OF `GltfDiff` ITSELF — but `print_gltf_diff` destructures the
+# OUTER `Option` via `if let Some(v) = d.<field> { tokens.push(format!("<name>={}", ...)) }`
+# BEFORE ever formatting a value, so token PRESENCE already carries the outer "did this change"
+# signal and the printed VALUE only ever encodes what's INSIDE that outer `Some` — a BARE value
+# (`asset_diff`-shaped struct, collection triple, string, or word) for a plain `Option<T>` field,
+# or a SINGLE (not double-nested) `[0]`/`[1,x]` opt tag for the tri-state fields' own INNER
+# `Option<usize>`/`Option<GltfJson>`. The double-nested tri-opt/opt-wrapper shape (§1.4) is real
+# but ONLY applies to a sub-field buried INSIDE a fixed positional bracket-tuple (`asset-diff-
+# value`'s own 6 fields, `node-diff-value`'s 12, a collection's `modified`/`added` item fields,
+# …) — those have no separate "token" of their own to carry the outer presence bit, so BOTH layers
+# must be explicit there. Confirmed against the real printed line, e.g. `scene=[1,1]` (a bare
+# `int-opt`, not `[1,[1,1]]`), `extensions=[1,B[1]]` (a bare `json-opt`), `source-form=glb` (a bare
+# WORD, no bracket at all), `extensions-used=[a,b]` (a bare `str-list`, no opt wrapper).
+scene-clause = "scene" "=" int-opt
+
+# The 14 collection-triple clauses (P2-P1 csv report §2's copy-pasteable shape, index-keyed since
+# every one of these arrays has no stable name/identity) -- REAL gltf shape is `"<name>" "=" "["
+# removed-list? "]" ";" "[" <name>-modified-list? "]" ";" "[" <name>-added-list? "]"`, no extra
+# enclosing `{...}` wrapper (unlike gif/png's own dedicated brace syntax) since `enc_collection`'s
+# return value is placed directly after the `=`, matching every scalar clause's own convention.
+removed-list = INT {"," INT}*
+
+scenes-clause = "scenes" "=" "[" removed-list? "]" ";" "[" scenes-modified-list? "]" ";" "[" scenes-added-list? "]"
+scenes-modified-list = scenes-modified {"," scenes-modified}*
+scenes-modified = INT ":" scene-diff-value
+scenes-added-list = scenes-added {"," scenes-added}*
+scenes-added = INT ":" scene-value
+
+nodes-clause = "nodes" "=" "[" removed-list? "]" ";" "[" nodes-modified-list? "]" ";" "[" nodes-added-list? "]"
+nodes-modified-list = nodes-modified {"," nodes-modified}*
+nodes-modified = INT ":" node-diff-value
+nodes-added-list = nodes-added {"," nodes-added}*
+nodes-added = INT ":" node-value
+
+meshes-clause = "meshes" "=" "[" removed-list? "]" ";" "[" meshes-modified-list? "]" ";" "[" meshes-added-list? "]"
+meshes-modified-list = meshes-modified {"," meshes-modified}*
+meshes-modified = INT ":" mesh-diff-value
+meshes-added-list = meshes-added {"," meshes-added}*
+meshes-added = INT ":" mesh-value
+
+accessors-clause = "accessors" "=" "[" removed-list? "]" ";" "[" accessors-modified-list? "]" ";" "[" accessors-added-list? "]"
+accessors-modified-list = accessors-modified {"," accessors-modified}*
+accessors-modified = INT ":" accessor-diff-value
+accessors-added-list = accessors-added {"," accessors-added}*
+accessors-added = INT ":" accessor-value
+
+buffer-views-clause = "buffer-views" "=" "[" removed-list? "]" ";" "[" buffer-views-modified-list? "]" ";" "[" buffer-views-added-list? "]"
+buffer-views-modified-list = buffer-views-modified {"," buffer-views-modified}*
+buffer-views-modified = INT ":" buffer-view-value
+buffer-views-added-list = buffer-views-added {"," buffer-views-added}*
+buffer-views-added = INT ":" buffer-view-value
+
+buffers-clause = "buffers" "=" "[" removed-list? "]" ";" "[" buffers-modified-list? "]" ";" "[" buffers-added-list? "]"
+buffers-modified-list = buffers-modified {"," buffers-modified}*
+buffers-modified = INT ":" buffer-diff-value
+buffers-added-list = buffers-added {"," buffers-added}*
+buffers-added = INT ":" buffer-value
+
+# `buffer_bytes` -- the WEAK, index-aligned raw byte-content counterpart to `buffers` (`GltfSnapshot::
+# buffers[i]`, a plain `Vec<u8>`, diff == whole new value, `hex`-encoded).
+buffer-bytes-clause = "buffer-bytes" "=" "[" removed-list? "]" ";" "[" buffer-bytes-modified-list? "]" ";" "[" buffer-bytes-added-list? "]"
+buffer-bytes-modified-list = buffer-bytes-modified {"," buffer-bytes-modified}*
+buffer-bytes-modified = INT ":" hex
+buffer-bytes-added-list = buffer-bytes-added {"," buffer-bytes-added}*
+buffer-bytes-added = INT ":" hex
+
+materials-clause = "materials" "=" "[" removed-list? "]" ";" "[" materials-modified-list? "]" ";" "[" materials-added-list? "]"
+materials-modified-list = materials-modified {"," materials-modified}*
+materials-modified = INT ":" material-diff-value
+materials-added-list = materials-added {"," materials-added}*
+materials-added = INT ":" material-value
+
+# The remaining 6 collections are WEAK (real, undifferentiated glTF objects whose "diff" is
+# legitimately their whole new value per the recipe's strong/weak split, `GltfWeakCollectionDiff<T>
+# = GltfCollectionDiff<T, T>`) -- `modified`'s value and `added`'s value use the SAME `<T>-value`
+# production.
+textures-clause = "textures" "=" "[" removed-list? "]" ";" "[" textures-modified-list? "]" ";" "[" textures-added-list? "]"
+textures-modified-list = textures-modified {"," textures-modified}*
+textures-modified = INT ":" texture-value
+textures-added-list = textures-added {"," textures-added}*
+textures-added = INT ":" texture-value
+
+images-clause = "images" "=" "[" removed-list? "]" ";" "[" images-modified-list? "]" ";" "[" images-added-list? "]"
+images-modified-list = images-modified {"," images-modified}*
+images-modified = INT ":" image-value
+images-added-list = images-added {"," images-added}*
+images-added = INT ":" image-value
+
+samplers-clause = "samplers" "=" "[" removed-list? "]" ";" "[" samplers-modified-list? "]" ";" "[" samplers-added-list? "]"
+samplers-modified-list = samplers-modified {"," samplers-modified}*
+samplers-modified = INT ":" sampler-value
+samplers-added-list = samplers-added {"," samplers-added}*
+samplers-added = INT ":" sampler-value
+
+skins-clause = "skins" "=" "[" removed-list? "]" ";" "[" skins-modified-list? "]" ";" "[" skins-added-list? "]"
+skins-modified-list = skins-modified {"," skins-modified}*
+skins-modified = INT ":" skin-value
+skins-added-list = skins-added {"," skins-added}*
+skins-added = INT ":" skin-value
+
+animations-clause = "animations" "=" "[" removed-list? "]" ";" "[" animations-modified-list? "]" ";" "[" animations-added-list? "]"
+animations-modified-list = animations-modified {"," animations-modified}*
+animations-modified = INT ":" animation-value
+animations-added-list = animations-added {"," animations-added}*
+animations-added = INT ":" animation-value
+
+cameras-clause = "cameras" "=" "[" removed-list? "]" ";" "[" cameras-modified-list? "]" ";" "[" cameras-added-list? "]"
+cameras-modified-list = cameras-modified {"," cameras-modified}*
+cameras-modified = INT ":" camera-value
+cameras-added-list = cameras-added {"," cameras-added}*
+cameras-added = INT ":" camera-value
+
+extensions-used-clause = "extensions-used" "=" str-list
+extensions-required-clause = "extensions-required" "=" str-list
+extensions-clause = "extensions" "=" json-opt
+extras-clause = "extras" "=" json-opt
+source-form-clause = "source-form" "=" source-form
+#endregion

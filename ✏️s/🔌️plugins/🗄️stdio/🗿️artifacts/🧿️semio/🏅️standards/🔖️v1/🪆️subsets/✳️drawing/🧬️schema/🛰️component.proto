@@ -1,7 +1,30 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// 🧬️ SemioDrawingArtifact — mirrors the real Rust SemioDrawingArtifact.
 package semio.s_stdio_semio_drawing.artifact;
+
+message DrawCanvas {
+  double width = 1;
+  double height = 2;
+  optional Rgba background = 3;
+}
+message Rgba { float r = 1; float g = 2; float b = 3; float a = 4; }
+message DrawStyle {
+  string name = 1;
+  optional Rgba fill = 2;
+  optional Rgba stroke = 3;
+  optional double stroke_width = 4;
+  optional float opacity = 5;
+}
+message DrawLayer {
+  string id = 1;
+  string name = 2;
+  bool visible = 3;
+  bytes root_node_wire = 4; // recursive DrawNode, see snapshot/component.proto
+}
+
 message SemioDrawingArtifact {
   string schema = 1;
-  string entries_wire = 2;
+  DrawCanvas canvas = 2;
+  repeated DrawStyle styles = 3;
+  repeated DrawLayer layers = 4;
 }

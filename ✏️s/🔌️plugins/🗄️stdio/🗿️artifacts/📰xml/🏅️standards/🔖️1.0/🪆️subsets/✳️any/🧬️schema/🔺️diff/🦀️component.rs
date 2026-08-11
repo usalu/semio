@@ -683,6 +683,27 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
+
+//#region 🔖️BinaryPrimitives
+/// 🧪️ P2-FG1: real LEB128-varint-framed binary primitives (length-prefixed bytes/utf8) backing the
+/// upgraded `OpBinary`/`DiffCodec` frames below (and, via re-export, `../🧬️mutations/🦀️component.rs`'s
+/// own upgraded `OpBinary`) -- reuses `store::pack_rt::write_varint_u64`/`store::ByteReader` rather
+/// than reinventing varint encode/decode, same shape json's own `write_str_lp`/`read_str_lp` uses.
+pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+//#endregion 🔖️BinaryPrimitives
 //#endregion 🔖️Primitives
 
 //#region 🔖️XmlValueCodecs
@@ -749,6 +770,106 @@ pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
         other => Err(format!("xml node: unknown tag {other:?}")),
     }
 }
+
+//#region 🔖️XmlValueBinaryCodecs
+/// 🧪️ P2-FG1: real recursive binary twins of [`enc_xml_node`]/[`dec_xml_node`] and
+/// [`enc_declaration`]/[`dec_declaration`] above -- a 1-byte kind tag (`0`=Element/`1`=Text/
+/// `2`=CData/`3`=Comment/`4`=ProcessingInstruction, distinct numbering from the text codec's letter
+/// tags) followed by the real payload (length-prefixed strings for scalars, a varint COUNT then
+/// that many recursively-encoded elements for `Element`'s attrs/children -- genuinely recursive,
+/// not text-as-bytes). Backs the upgraded `OpBinary` frame (`../🧬️mutations/🦀️component.rs`) and
+/// the `Replace`/added-item payloads inside [`enc_node_diff_bin`] below. `pub(crate)` so the
+/// sibling `../🧬️mutations/🦀️component.rs` (same artifact, different facet module) can reuse these
+/// rather than duplicating them a second time, matching this file's own existing text-codec reuse
+/// convention.
+pub(crate) fn enc_attr_bin(a: &XmlAttr, out: &mut Vec<u8>) {
+    write_str_lp(out, &a.name);
+    write_str_lp(out, &a.value);
+}
+pub(crate) fn dec_attr_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttr, String> {
+    let name = read_str_lp(reader)?;
+    let value = read_str_lp(reader)?;
+    Ok(XmlAttr { name, value })
+}
+pub(crate) fn enc_declaration_bin(d: &XmlDeclaration, out: &mut Vec<u8>) {
+    write_str_lp(out, &d.version);
+    out.push(if d.encoding.is_some() { 1 } else { 0 });
+    if let Some(encoding) = &d.encoding {
+        write_str_lp(out, encoding);
+    }
+    out.push(if d.standalone.is_some() { 1 } else { 0 });
+    if let Some(standalone) = d.standalone {
+        out.push(if standalone { 1 } else { 0 });
+    }
+}
+pub(crate) fn dec_declaration_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDeclaration, String> {
+    let version = read_str_lp(reader)?;
+    let encoding = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let standalone = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
+    Ok(XmlDeclaration { version, encoding, standalone })
+}
+pub(crate) fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
+    match node {
+        XmlNode::Element { name, attrs, children } => {
+            out.push(0);
+            write_str_lp(out, name);
+            store::pack_rt::write_varint_u64(out, attrs.len() as u64);
+            for attr in attrs {
+                enc_attr_bin(attr, out);
+            }
+            store::pack_rt::write_varint_u64(out, children.len() as u64);
+            for child in children {
+                enc_xml_node_bin(child, out);
+            }
+        }
+        XmlNode::Text { text } => {
+            out.push(1);
+            write_str_lp(out, text);
+        }
+        XmlNode::CData { text } => {
+            out.push(2);
+            write_str_lp(out, text);
+        }
+        XmlNode::Comment { text } => {
+            out.push(3);
+            write_str_lp(out, text);
+        }
+        XmlNode::ProcessingInstruction { target, data } => {
+            out.push(4);
+            write_str_lp(out, target);
+            write_str_lp(out, data);
+        }
+    }
+}
+pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    match tag {
+        0 => {
+            let name = read_str_lp(reader)?;
+            let attr_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let mut attrs = Vec::with_capacity(attr_count as usize);
+            for _ in 0..attr_count {
+                attrs.push(dec_attr_bin(reader)?);
+            }
+            let child_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let mut children = Vec::with_capacity(child_count as usize);
+            for _ in 0..child_count {
+                children.push(dec_xml_node_bin(reader)?);
+            }
+            Ok(XmlNode::Element { name, attrs, children })
+        }
+        1 => Ok(XmlNode::Text { text: read_str_lp(reader)? }),
+        2 => Ok(XmlNode::CData { text: read_str_lp(reader)? }),
+        3 => Ok(XmlNode::Comment { text: read_str_lp(reader)? }),
+        4 => {
+            let target = read_str_lp(reader)?;
+            let data = read_str_lp(reader)?;
+            Ok(XmlNode::ProcessingInstruction { target, data })
+        }
+        other => Err(format!("xml node binary: unknown tag {other}")),
+    }
+}
+//#endregion 🔖️XmlValueBinaryCodecs
 //#endregion 🔖️XmlValueCodecs
 
 //#region 🔖️DiffValueCodecs
@@ -833,6 +954,148 @@ fn dec_children_diff(body: &str) -> Result<XmlChildrenDiff, String> {
     }).collect::<Result<Vec<_>, String>>()?;
     Ok(XmlChildrenDiff { removed, modified, added })
 }
+
+//#region 🔖️DiffValueBinaryCodecs
+/// 🧪️ P2-FG1: real recursive binary twin of [`enc_node_diff`]/[`dec_node_diff`] -- same 1-byte tag
+/// numbering scheme as [`enc_xml_node_bin`] (`0`=Element/`1`=Text) plus `2`=`Replace` (needs its own
+/// arm since `Replace` wraps a whole [`XmlNode`], not a bare scalar payload). `attrs`/`children`
+/// collection triples encode as three varint-counted, recursively-encoded lists (removed/modified/
+/// added) -- genuinely structured binary, backing the upgraded `DiffCodec::encode_diff`/
+/// `decode_diff` below.
+fn enc_node_diff_bin(diff: &XmlNodeDiff, out: &mut Vec<u8>) {
+    match diff {
+        XmlNodeDiff::Element(e) => {
+            out.push(0);
+            out.push(if e.name.is_some() { 1 } else { 0 });
+            if let Some(name) = &e.name {
+                write_str_lp(out, name);
+            }
+            out.push(if e.attributes.is_some() { 1 } else { 0 });
+            if let Some(attrs) = &e.attributes {
+                enc_attrs_diff_bin(attrs, out);
+            }
+            out.push(if e.children.is_some() { 1 } else { 0 });
+            if let Some(children) = &e.children {
+                enc_children_diff_bin(children, out);
+            }
+        }
+        XmlNodeDiff::Text { text } => {
+            out.push(1);
+            out.push(if text.is_some() { 1 } else { 0 });
+            if let Some(text) = text {
+                write_str_lp(out, text);
+            }
+        }
+        XmlNodeDiff::Replace { node } => {
+            out.push(2);
+            out.push(if node.is_some() { 1 } else { 0 });
+            if let Some(node) = node {
+                enc_xml_node_bin(node, out);
+            }
+        }
+    }
+}
+fn dec_node_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNodeDiff, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    match tag {
+        0 => {
+            let name = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+            let attributes = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_attrs_diff_bin(reader)?) } else { None };
+            let children = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_children_diff_bin(reader)?) } else { None };
+            Ok(XmlNodeDiff::Element(XmlElementDiff { name, attributes, children }))
+        }
+        1 => {
+            let text = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+            Ok(XmlNodeDiff::Text { text })
+        }
+        2 => {
+            let node = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
+            Ok(XmlNodeDiff::Replace { node })
+        }
+        other => Err(format!("xml node diff binary: unknown tag {other}")),
+    }
+}
+
+fn enc_attrs_diff_bin(diff: &XmlAttributesDiff, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
+    for name in &diff.removed {
+        write_str_lp(out, name);
+    }
+    store::pack_rt::write_varint_u64(out, diff.modified.len() as u64);
+    for entry in &diff.modified {
+        write_str_lp(out, &entry.name);
+        write_str_lp(out, &entry.value);
+    }
+    store::pack_rt::write_varint_u64(out, diff.added.len() as u64);
+    for entry in &diff.added {
+        store::pack_rt::write_varint_u64(out, entry.index as u64);
+        write_str_lp(out, &entry.name);
+        write_str_lp(out, &entry.value);
+    }
+}
+fn dec_attrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttributesDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(removed_count as usize);
+    for _ in 0..removed_count {
+        removed.push(read_str_lp(reader)?);
+    }
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(modified_count as usize);
+    for _ in 0..modified_count {
+        let name = read_str_lp(reader)?;
+        let value = read_str_lp(reader)?;
+        modified.push(XmlAttrModified { name, value });
+    }
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(added_count as usize);
+    for _ in 0..added_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let name = read_str_lp(reader)?;
+        let value = read_str_lp(reader)?;
+        added.push(XmlAttrAdded { index, name, value });
+    }
+    Ok(XmlAttributesDiff { removed, modified, added })
+}
+
+fn enc_children_diff_bin(diff: &XmlChildrenDiff, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
+    for index in &diff.removed {
+        store::pack_rt::write_varint_u64(out, *index as u64);
+    }
+    store::pack_rt::write_varint_u64(out, diff.modified.len() as u64);
+    for entry in &diff.modified {
+        store::pack_rt::write_varint_u64(out, entry.index as u64);
+        enc_node_diff_bin(&entry.diff, out);
+    }
+    store::pack_rt::write_varint_u64(out, diff.added.len() as u64);
+    for entry in &diff.added {
+        store::pack_rt::write_varint_u64(out, entry.index as u64);
+        enc_xml_node_bin(&entry.item, out);
+    }
+}
+fn dec_children_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlChildrenDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(removed_count as usize);
+    for _ in 0..removed_count {
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+    }
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(modified_count as usize);
+    for _ in 0..modified_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let diff = dec_node_diff_bin(reader)?;
+        modified.push(XmlChildModified { index, diff });
+    }
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(added_count as usize);
+    for _ in 0..added_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let item = dec_xml_node_bin(reader)?;
+        added.push(XmlChildAdded { index, item });
+    }
+    Ok(XmlChildrenDiff { removed, modified, added })
+}
+//#endregion 🔖️DiffValueBinaryCodecs
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
@@ -864,25 +1127,67 @@ impl protocol::DiffCodec for XmlDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_xml_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`'s hand-rolled
-    /// codecs use (and the repo's only other hand-rolled `DiffCodec`, `WriterDiff`) — satisfies
-    /// every `DiffCodec` law without inventing a second wire format.
+    /// 🧪️ P2-FG1: REAL binary frame (`format u8 | flags u8 | [declaration][doctype][root]`),
+    /// matching `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload
+    /// bytes` shape — upgraded from F6's `print_diff().into_bytes()` text-as-binary shortcut (100%
+    /// of stdio's `DiffCodec` impls were still on that shortcut per the P2-W0 census). `flags` bits
+    /// 0/1/2 mark `declaration`/`doctype`/`root` presence; each present field's own tri-state/
+    /// recursive payload follows in that fixed order.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let mut flags: u8 = 0;
+        if self.declaration.is_some() { flags |= 0b001; }
+        if self.doctype.is_some() { flags |= 0b010; }
+        if self.root.is_some() { flags |= 0b100; }
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
+        if let Some(declaration) = &self.declaration {
+            out.push(if declaration.is_some() { 1 } else { 0 });
+            if let Some(declaration) = declaration {
+                enc_declaration_bin(declaration, &mut out);
+            }
+        }
+        if let Some(doctype) = &self.doctype {
+            out.push(if doctype.is_some() { 1 } else { 0 });
+            if let Some(doctype) = doctype {
+                write_str_lp(&mut out, doctype);
+            }
+        }
+        if let Some(root) = &self.root {
+            enc_node_diff_bin(root, &mut out);
+        }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let declaration = if flags & 0b001 != 0 {
+            let has = reader.read_u8().map_err(|e| malformed("diff declaration presence", reader.position(), e.to_string()))?;
+            Some(if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("diff declaration", reader.position(), e))?) } else { None })
+        } else {
+            None
+        };
+        let doctype = if flags & 0b010 != 0 {
+            let has = reader.read_u8().map_err(|e| malformed("diff doctype presence", reader.position(), e.to_string()))?;
+            Some(if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("diff doctype", reader.position(), e))?) } else { None })
+        } else {
+            None
+        };
+        let root = if flags & 0b100 != 0 { Some(dec_node_diff_bin(&mut reader).map_err(|e| malformed("diff root", reader.position(), e))?) } else { None };
+        Ok(XmlDiff { declaration, doctype, root })
     }
 }
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
 
-//#region 🧪️Tests
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG1: representative `XmlDiff` values (both top-level tri-states, the recursive
+/// `Element`/`Text`/`Replace` `XmlNodeDiff` tree, attribute add/remove/modify, nested child
+/// add/remove/modify) — the single source of truth reused by `diff_codec_text_binary_roundtrip_law`
+/// below AND by `⚙️engine/🦀️component.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`
+/// conformance tests.
 #[cfg(test)]
-mod handcrafted_diff_codec_tests {
-    use super::*;
-    use protocol::DiffCodec;
+pub(crate) fn demo_diff_cases() -> Vec<XmlDiff> {
     use crate::artifacts::xml::schema::snapshot::XmlDocument;
 
     fn elem(name: &str, attrs: Vec<(&str, &str)>, children: Vec<XmlNode>) -> XmlNode {
@@ -892,39 +1197,44 @@ mod handcrafted_diff_codec_tests {
             children,
         }
     }
-
     fn snapshot(doc: XmlDocument) -> XmlSnapshot {
         XmlSnapshot { doc, ..Default::default() }
     }
 
+    let a = snapshot(XmlDocument {
+        root: Some(elem("root", vec![("width", "10")], vec![elem("child", vec![("x", "0")], vec![])])),
+        doctype: Some("<!DOCTYPE root>".into()),
+        declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
+    });
+    let b = snapshot(XmlDocument {
+        root: Some(elem(
+            "root",
+            vec![("width", "20"), ("height", "30")],
+            vec![elem("other", vec![("r", "5")], vec![]), XmlNode::Text { text: "hi".into() }],
+        )),
+        doctype: None,
+        declaration: None,
+    });
+    let c = snapshot(XmlDocument { root: None, doctype: None, declaration: None });
+
+    vec![XmlDiff::default(), XmlDiff::between(&a, &b), XmlDiff::between(&b, &a), XmlDiff::between(&a, &c), XmlDiff::between(&c, &a)]
+}
+//#endregion 🔖️DemoCases
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod handcrafted_diff_codec_tests {
+    use super::*;
+    use protocol::DiffCodec;
+
     /// 🧪️ `DiffCodec` round-trip laws over the hand-rolled `XmlDiff` grammar — exercises the
     /// recursive enum tree (`Element`/`Text`/`Replace` `XmlNodeDiff` variants), both top-level
-    /// tri-states, attribute add/remove/modify, and nested child add/remove/modify.
+    /// tri-states, attribute add/remove/modify, and nested child add/remove/modify. Reuses
+    /// `demo_diff_cases()` (the single source of truth also consumed by
+    /// `⚙️engine/🦀️component.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`).
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {
-        let a = snapshot(XmlDocument {
-            root: Some(elem("root", vec![("width", "10")], vec![elem("child", vec![("x", "0")], vec![])])),
-            doctype: Some("<!DOCTYPE root>".into()),
-            declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
-        });
-        let b = snapshot(XmlDocument {
-            root: Some(elem("root", vec![("width", "20"), ("height", "30")], vec![
-                elem("other", vec![("r", "5")], vec![]),
-                XmlNode::Text { text: "hi".into() },
-            ])),
-            doctype: None,
-            declaration: None,
-        });
-        let c = snapshot(XmlDocument { root: None, doctype: None, declaration: None });
-
-        let cases = vec![
-            XmlDiff::default(),
-            XmlDiff::between(&a, &b),
-            XmlDiff::between(&b, &a),
-            XmlDiff::between(&a, &c),
-            XmlDiff::between(&c, &a),
-        ];
-        for d in cases {
+        for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
             let parsed = XmlDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));

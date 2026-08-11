@@ -1,5 +1,21 @@
-module Semio_avi_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=18;
+module Stdio_avi_snapshot;
+# Real little-endian RIFF/AVI grammar for the payload wrapped by the shared `.semio` binary
+# envelope — see ../🥋️component.ksy for the fully typed field layout this mirrors.
+
+public type RiffChunkHeader = unit {
+    fourcc: bytes &size=4;
+    chunk_size: uint32 &byte-order=spicy::ByteOrder::Little;
+};
+
+public type MainAviHeader = unit {
+    micro_sec_per_frame: uint32 &byte-order=spicy::ByteOrder::Little;
+    max_bytes_per_sec: uint32 &byte-order=spicy::ByteOrder::Little;
+    padding_granularity: uint32 &byte-order=spicy::ByteOrder::Little;
+    flags: uint32 &byte-order=spicy::ByteOrder::Little;
+    total_frames: uint32 &byte-order=spicy::ByteOrder::Little;
+    initial_frames: uint32 &byte-order=spicy::ByteOrder::Little;
+    streams: uint32 &byte-order=spicy::ByteOrder::Little;
+    suggested_buffer_size: uint32 &byte-order=spicy::ByteOrder::Little;
+    width: uint32 &byte-order=spicy::ByteOrder::Little;
+    height: uint32 &byte-order=spicy::ByteOrder::Little;
 };

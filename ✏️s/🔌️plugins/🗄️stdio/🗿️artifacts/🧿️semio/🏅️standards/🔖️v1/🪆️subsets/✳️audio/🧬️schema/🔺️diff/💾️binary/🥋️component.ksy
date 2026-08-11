@@ -1,8 +1,6 @@
 meta:
-  id: semio_audio_diff
+  id: stdio_semio_audio_diff
   endian: le
-doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
 seq:
-  - id: magic
-    contents: "stdio.semio.audio.diff"
+  - id: payload
+    size-eos: true

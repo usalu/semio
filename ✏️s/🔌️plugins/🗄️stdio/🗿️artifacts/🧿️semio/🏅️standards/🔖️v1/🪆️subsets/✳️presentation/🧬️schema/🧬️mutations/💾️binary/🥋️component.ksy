@@ -1,8 +1,10 @@
 meta:
   id: semio_presentation_mutations
-  endian: le
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  Binary = the UTF-8 bytes of the mutations facet's own text grammar (`keyword arg=value ...`)
+  verbatim, same simplification `protocol::OpBinary::encode_op` uses (`self.print_op().into_bytes()`).
 seq:
-  - id: magic
-    contents: "stdio.semio.presentation.mutations"
+  - id: line_utf8
+    type: str
+    size-eos: true
+    encoding: UTF-8

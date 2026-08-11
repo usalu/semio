@@ -1,9 +1,7 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Mp4DiffEntry {
-  key: String!
-  value: String!
-}
+type Mp4SampleDiff { data: [Int!] duration: Int ctsOffset: Int sync: Boolean }
+type Mp4TrackDiff { trackId: Int timescale: Int codec: Mp4Codec width: Int height: Int samplesRemoved: [Int!] }
 type Mp4Diff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Mp4DiffEntry!]! @state(class: PERSISTENT)
+  ftyp: Mp4Ftyp
+  tracksRemoved: [Int!]
+  unknownBoxesRemoved: [Int!]
 }

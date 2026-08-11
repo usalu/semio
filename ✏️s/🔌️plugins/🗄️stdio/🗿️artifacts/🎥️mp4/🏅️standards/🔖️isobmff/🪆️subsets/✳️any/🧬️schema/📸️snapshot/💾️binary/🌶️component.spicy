@@ -1,5 +1,21 @@
-module Semio_mp4_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=18;
+module Stdio_mp4_snapshot;
+# Real ISO-BMFF box-stream grammar (Zeek/Spicy) for the payload wrapped by the shared `.semio`
+# binary envelope — see ../🥋️component.ksy for the fully typed field layout this mirrors.
+
+public type EnvelopeHeader = unit {
+    magic: bytes &size=8;
+    token_len: uint32;
+    token: bytes &size=self.token_len;
+};
+
+public type IsoBmffBox = unit {
+    size32: uint32;
+    fourcc: bytes &size=4;
+    body: bytes &size=(self.size32 > 8 ? self.size32 - 8 : 0);
+};
+
+public type FtypBody = unit {
+    major_brand: bytes &size=4;
+    minor_version: uint32;
+    compatible_brands: bytes &eod;
 };

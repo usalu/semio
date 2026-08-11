@@ -1,10 +1,3 @@
-/** 🧬️ Semio_semio_cad_mutations schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_cad_mutations
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_cad_mutationsEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_cad_mutations {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_cad_mutationsEntry[];
-}
+/** 📝️ Text (OpText) representation for `s.stdio.semio.cad.mutations` — no semio envelope; see
+ * ../🟦️component.ts for the decoded mutation's real schema. */
+export type SemioCadMutationText = string;

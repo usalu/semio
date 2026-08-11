@@ -1,3 +1,4 @@
 dialect protocol stdio.semio.document.diff
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.document.diff"
+; Binary diff form = the text diff's UTF-8 bytes verbatim (protocol::DiffCodec::encode_diff wraps
+; print_diff() directly).
+textDiffUtf8 = *OCTET

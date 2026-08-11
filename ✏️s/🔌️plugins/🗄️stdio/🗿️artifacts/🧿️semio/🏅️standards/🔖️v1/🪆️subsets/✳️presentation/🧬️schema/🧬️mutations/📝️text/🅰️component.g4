@@ -1,3 +1,8 @@
 grammar Semio_semio_presentation_mutations;
-// 🚧 scaffolded by W1b — full production rules land in W2/W3. Top-level rule name only.
-ROOT: 'stdio.semio.presentation.mutations' ;
+line: NO_MUTATION | KEYWORD (WS arg)*;
+arg: NAME '=' VALUE;
+NO_MUTATION: 'no-mutation';
+KEYWORD: [a-z-]+;
+NAME: [a-z-]+;
+VALUE: (~[ ])*;
+WS: ' ';

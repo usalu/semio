@@ -1,7 +1,9 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// 🧬️ SemioVideoArtifact — full artifact state, mirrors SemioVideoSnapshot field for field.
 package semio.s_stdio_semio_video.artifact;
+import "./📸️snapshot/🛰️component.proto";
+
 message SemioVideoArtifact {
   string schema = 1;
-  string entries_wire = 2;
+  repeated semio.s_stdio_semio_video.snapshot.SemioVideoStream streams = 2;
 }

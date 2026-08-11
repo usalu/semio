@@ -1,7 +1,37 @@
+// 🧬️ SemioPresentationSnapshot — masters/layouts/slides -> shapes + notes.
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.s_stdio_semio_presentation.snapshot;
+package stdio.semio.presentation.snapshot;
+
+message SemioPoint2 { double x = 1; double y = 2; }
+message SlideFrame { SemioPoint2 origin = 1; double width = 2; double height = 3; }
+message SlidePictureImage { string asset_id = 1; string mime = 2; bytes data = 3; }
+
+message PlaceholderKind {
+  enum Tag { TITLE = 0; SUBTITLE = 1; BODY = 2; FOOTER = 3; SLIDE_NUMBER = 4; DATE_TIME = 5; OTHER = 6; }
+  Tag tag = 1;
+  string value = 2; // set only when tag == OTHER
+}
+
+message SlideTableCell { repeated bytes blocks = 1; } // DocBlock (document subset's own wire form)
+message SlideTableRow { repeated SlideTableCell cells = 1; }
+
+message SlideShape {
+  enum Kind { TEXT_BOX = 0; PICTURE = 1; TABLE = 2; PLACEHOLDER = 3; }
+  Kind shape_kind = 1;
+  SlideFrame frame = 2;
+  repeated bytes blocks = 3;          // TextBox only (DocBlock wire form)
+  SlidePictureImage image = 4;        // Picture only
+  repeated SlideTableRow rows = 5;    // Table only
+  PlaceholderKind placeholder_kind = 6; // Placeholder only
+}
+
+message SlideMaster { string id = 1; repeated SlideShape shapes = 2; }
+message SlideLayout { string id = 1; string master_id = 2; repeated SlideShape shapes = 3; }
+message Slide { string id = 1; optional string layout_id = 2; repeated SlideShape shapes = 3; repeated bytes notes = 4; }
+
 message SemioPresentationSnapshot {
   string schema = 1;
-  string entries_wire = 2;
+  repeated SlideMaster masters = 2;
+  repeated SlideLayout layouts = 3;
+  repeated Slide slides = 4;
 }

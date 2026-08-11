@@ -26,6 +26,11 @@ use crate::artifacts::dxf::schema::diff::{
     diff_set_snapshot, diff_set_style, enc_block, enc_dxf_entity, enc_dxf_snapshot,
     enc_header_var, enc_layer, enc_linetype, enc_str, enc_style, entity_diff_between_pub,
     header_var_diff_between, layer_diff_between, linetype_diff_between, style_diff_between,
+    // 🧪️ P2-FG1: real recursive binary twins backing the upgraded `OpBinary` impl below (see
+    // `🔺️diff/🦀️component.rs`'s `#region 🔖️ItemBinaryCodecs`/`#region 🔖️BinaryPrimitives`).
+    dec_block_bin, dec_dxf_entity_bin, dec_dxf_snapshot_bin, dec_header_var_bin, dec_layer_bin,
+    dec_linetype_bin, dec_style_bin, enc_block_bin, enc_dxf_entity_bin, enc_dxf_snapshot_bin,
+    enc_header_var_bin, enc_layer_bin, enc_linetype_bin, enc_style_bin, read_str_lp, write_str_lp,
     DxfDiff,
 };
 use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle};
@@ -307,18 +312,215 @@ impl protocol::OpText for DxfMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `🔺️diff`'s hand-rolled `DiffCodec`
-/// uses (and `GifDiff`/`SvgDiff`/`WriterDiff` before it).
+/// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
+/// `DxfMutation` variant ordinal, in the SAME 0-18 order `parse_dxf_mutation`'s own keyword match
+/// uses. Every variant payload reuses `🔺️diff/🦀️component.rs`'s real recursive binary item
+/// codecs (`enc_dxf_snapshot_bin`/`enc_dxf_entity_bin`/`enc_block_bin`/…) — genuinely structured,
+/// varint/length-prefixed binary, never text-as-bytes.
 impl protocol::OpBinary for DxfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let tag: u8 = match self {
+            DxfMutation::NoMutation => 0,
+            DxfMutation::SetSnapshot { .. } => 1,
+            DxfMutation::SetHeaderVar { .. } => 2,
+            DxfMutation::RemoveHeaderVar { .. } => 3,
+            DxfMutation::InsertLayer { .. } => 4,
+            DxfMutation::RemoveLayer { .. } => 5,
+            DxfMutation::SetLayer { .. } => 6,
+            DxfMutation::InsertStyle { .. } => 7,
+            DxfMutation::RemoveStyle { .. } => 8,
+            DxfMutation::SetStyle { .. } => 9,
+            DxfMutation::InsertLinetype { .. } => 10,
+            DxfMutation::RemoveLinetype { .. } => 11,
+            DxfMutation::SetLinetype { .. } => 12,
+            DxfMutation::InsertEntity { .. } => 13,
+            DxfMutation::RemoveEntity { .. } => 14,
+            DxfMutation::SetEntity { .. } => 15,
+            DxfMutation::InsertBlock { .. } => 16,
+            DxfMutation::RemoveBlock { .. } => 17,
+            DxfMutation::SetBlock { .. } => 18,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            DxfMutation::NoMutation => {}
+            DxfMutation::SetSnapshot { snapshot } => enc_dxf_snapshot_bin(snapshot, &mut out),
+            DxfMutation::SetHeaderVar { name, header_var } => { write_str_lp(&mut out, name); enc_header_var_bin(header_var, &mut out); }
+            DxfMutation::RemoveHeaderVar { name } => write_str_lp(&mut out, name),
+            DxfMutation::InsertLayer { index, layer } => { store::pack_rt::write_varint_u64(&mut out, *index as u64); enc_layer_bin(layer, &mut out); }
+            DxfMutation::RemoveLayer { name } => write_str_lp(&mut out, name),
+            DxfMutation::SetLayer { name, layer } => { write_str_lp(&mut out, name); enc_layer_bin(layer, &mut out); }
+            DxfMutation::InsertStyle { index, style } => { store::pack_rt::write_varint_u64(&mut out, *index as u64); enc_style_bin(style, &mut out); }
+            DxfMutation::RemoveStyle { name } => write_str_lp(&mut out, name),
+            DxfMutation::SetStyle { name, style } => { write_str_lp(&mut out, name); enc_style_bin(style, &mut out); }
+            DxfMutation::InsertLinetype { index, linetype } => { store::pack_rt::write_varint_u64(&mut out, *index as u64); enc_linetype_bin(linetype, &mut out); }
+            DxfMutation::RemoveLinetype { name } => write_str_lp(&mut out, name),
+            DxfMutation::SetLinetype { name, linetype } => { write_str_lp(&mut out, name); enc_linetype_bin(linetype, &mut out); }
+            DxfMutation::InsertEntity { index, entity } => { store::pack_rt::write_varint_u64(&mut out, *index as u64); enc_dxf_entity_bin(entity, &mut out); }
+            DxfMutation::RemoveEntity { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64),
+            DxfMutation::SetEntity { index, entity } => { store::pack_rt::write_varint_u64(&mut out, *index as u64); enc_dxf_entity_bin(entity, &mut out); }
+            DxfMutation::InsertBlock { index, block } => { store::pack_rt::write_varint_u64(&mut out, *index as u64); enc_block_bin(block, &mut out); }
+            DxfMutation::RemoveBlock { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64),
+            DxfMutation::SetBlock { index, block } => { store::pack_rt::write_varint_u64(&mut out, *index as u64); enc_block_bin(block, &mut out); }
+        }
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(DxfMutation::NoMutation),
+            1 => Ok(DxfMutation::SetSnapshot { snapshot: dec_dxf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? }),
+            2 => {
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let header_var = dec_header_var_bin(&mut reader).map_err(|e| malformed("op header_var", reader.position(), e))?;
+                Ok(DxfMutation::SetHeaderVar { name, header_var })
+            }
+            3 => Ok(DxfMutation::RemoveHeaderVar { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? }),
+            4 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let layer = dec_layer_bin(&mut reader).map_err(|e| malformed("op layer", reader.position(), e))?;
+                Ok(DxfMutation::InsertLayer { index, layer })
+            }
+            5 => Ok(DxfMutation::RemoveLayer { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? }),
+            6 => {
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let layer = dec_layer_bin(&mut reader).map_err(|e| malformed("op layer", reader.position(), e))?;
+                Ok(DxfMutation::SetLayer { name, layer })
+            }
+            7 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", reader.position(), e))?;
+                Ok(DxfMutation::InsertStyle { index, style })
+            }
+            8 => Ok(DxfMutation::RemoveStyle { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? }),
+            9 => {
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", reader.position(), e))?;
+                Ok(DxfMutation::SetStyle { name, style })
+            }
+            10 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let linetype = dec_linetype_bin(&mut reader).map_err(|e| malformed("op linetype", reader.position(), e))?;
+                Ok(DxfMutation::InsertLinetype { index, linetype })
+            }
+            11 => Ok(DxfMutation::RemoveLinetype { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? }),
+            12 => {
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let linetype = dec_linetype_bin(&mut reader).map_err(|e| malformed("op linetype", reader.position(), e))?;
+                Ok(DxfMutation::SetLinetype { name, linetype })
+            }
+            13 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let entity = dec_dxf_entity_bin(&mut reader).map_err(|e| malformed("op entity", reader.position(), e))?;
+                Ok(DxfMutation::InsertEntity { index, entity })
+            }
+            14 => Ok(DxfMutation::RemoveEntity { index: reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize }),
+            15 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let entity = dec_dxf_entity_bin(&mut reader).map_err(|e| malformed("op entity", reader.position(), e))?;
+                Ok(DxfMutation::SetEntity { index, entity })
+            }
+            16 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
+                Ok(DxfMutation::InsertBlock { index, block })
+            }
+            17 => Ok(DxfMutation::RemoveBlock { index: reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize }),
+            18 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
+                Ok(DxfMutation::SetBlock { index, block })
+            }
+            other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
+        }
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG1: representative `DxfMutation` values — one instance per variant (19 total, plus four
+/// extra `InsertEntity` cases exercising the Polyline/Other/Solid/Insert entity kinds the base
+/// `variants()` fixture didn't reach), incl. a `SetSnapshot` payload nesting a raw-retained
+/// `other_tables` entry and a block with a nested entity — exercises the WHOLE grammar/protocol
+/// tree end-to-end. The single source of truth reused by `op_text_binary_roundtrip_law` below AND
+/// by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law` conformance
+/// tests, so a new variant only needs adding here once.
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
+    use crate::artifacts::dxf::schema::snapshot::{DxfOtherTable, DxfTables, DxfTag, DxfValue, DxfVertex};
+
+    fn demo_snapshot_for_set() -> DxfSnapshot {
+        DxfSnapshot {
+            schema: "stdio.dxf".into(),
+            header_vars: vec![DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1009".into() }, extra_group_codes: vec![] }],
+            tables: DxfTables {
+                layers: vec![DxfLayer { name: "0".into(), color: 7, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] }],
+                styles: vec![],
+                linetypes: vec![],
+            },
+            other_tables: vec![DxfOtherTable { name: "VPORT".into(), tags: vec![DxfTag { code: 2, value: "*ACTIVE".into() }] }],
+            blocks: vec![DxfBlock {
+                name: "B1".into(),
+                base_point: [0.0, 0.0, 0.0],
+                entities: vec![DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }],
+                unknown_group_codes: vec![],
+            }],
+            entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }],
+        }
+    }
+
+    vec![
+        DxfMutation::NoMutation,
+        DxfMutation::SetSnapshot { snapshot: demo_snapshot_for_set() },
+        DxfMutation::SetHeaderVar { name: "$ACADVER".into(), header_var: DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1015".into() }, extra_group_codes: vec![] } },
+        DxfMutation::SetHeaderVar { name: "$NEWVAR".into(), header_var: DxfHeaderVar { name: "$NEWVAR".into(), group_code: 70, value: DxfValue::Int { value: 3 }, extra_group_codes: vec![(999, DxfValue::Str { value: "note".into() })] } },
+        DxfMutation::RemoveHeaderVar { name: "$ACADVER".into() },
+        DxfMutation::InsertLayer { index: 1, layer: DxfLayer { name: "L2".into(), color: 1, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] } },
+        DxfMutation::RemoveLayer { name: "0".into() },
+        DxfMutation::SetLayer { name: "0".into(), layer: DxfLayer { name: "0".into(), color: 3, linetype: "DASHED".into(), flags: 1, unknown_group_codes: vec![] } },
+        DxfMutation::InsertStyle { index: 1, style: DxfStyle { name: "S2".into(), flags: 0, font_name: "arial".into(), unknown_group_codes: vec![] } },
+        DxfMutation::RemoveStyle { name: "STANDARD".into() },
+        DxfMutation::SetStyle { name: "STANDARD".into(), style: DxfStyle { name: "STANDARD".into(), flags: 1, font_name: "romans".into(), unknown_group_codes: vec![] } },
+        DxfMutation::InsertLinetype { index: 1, linetype: DxfLinetype { name: "DASHED".into(), flags: 0, description: "Dashed".into(), unknown_group_codes: vec![] } },
+        DxfMutation::RemoveLinetype { name: "CONTINUOUS".into() },
+        DxfMutation::SetLinetype { name: "CONTINUOUS".into(), linetype: DxfLinetype { name: "CONTINUOUS".into(), flags: 1, description: "Solid line".into(), unknown_group_codes: vec![] } },
+        DxfMutation::InsertEntity { index: 0, entity: DxfEntity::Arc { center: [1.0, 1.0, 0.0], radius: 2.0, start_angle: 0.0, end_angle: 90.0, layer: "0".into(), unknown_group_codes: vec![] } },
+        DxfMutation::RemoveEntity { index: 0 },
+        DxfMutation::SetEntity { index: 0, entity: DxfEntity::Line { start: [9.0, 9.0, 0.0], end: [8.0, 8.0, 0.0], layer: "L2".into(), unknown_group_codes: vec![] } },
+        DxfMutation::SetEntity { index: 1, entity: DxfEntity::Text { position: [0.0, 0.0, 0.0], height: 1.0, value: "hi".into(), layer: "0".into(), unknown_group_codes: vec![] } },
+        DxfMutation::InsertBlock { index: 0, block: DxfBlock { name: "B2".into(), base_point: [1.0, 1.0, 0.0], entities: vec![], unknown_group_codes: vec![] } },
+        DxfMutation::RemoveBlock { index: 0 },
+        DxfMutation::SetBlock { index: 0, block: DxfBlock { name: "B1".into(), base_point: [5.0, 5.0, 0.0], entities: vec![DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] } },
+        DxfMutation::InsertEntity {
+            index: 1,
+            entity: DxfEntity::Polyline {
+                vertices: vec![
+                    DxfVertex { x: 0.0, y: 0.0, z: 0.0, bulge: 0.0, unknown_group_codes: vec![] },
+                    DxfVertex { x: 1.0, y: 0.0, z: 0.0, bulge: 0.5, unknown_group_codes: vec![(8, DxfValue::Str { value: "0".into() })] },
+                ],
+                closed: true,
+                layer: "0".into(),
+                unknown_group_codes: vec![],
+            },
+        },
+        DxfMutation::InsertEntity { index: 2, entity: DxfEntity::Other { kind: "3DFACE".into(), group_codes: vec![(10, DxfValue::Double { value: 0.0 })] } },
+        // 🧭️ `index: 2` (not 3/4): `base_snapshot()` (used by `mutation_diff_law`/`inverse_law`,
+        // the two OTHER generic property tests sharing this fixture) has exactly 2 entities —
+        // `Mutation::inverse`'s `InsertEntity` arm reads the index literally off the mutation's
+        // own payload (comment above, `#region 🔖️MutationTrait`), which only round-trips when the
+        // requested index is `<= base.len()` (no clamping inside `generic_apply`'s `idx.min(len)`
+        // needed); an out-of-range literal index here would desync `inverse_law` for a fixture
+        // this demo list is also reused by, not a grammar/protocol concern.
+        DxfMutation::InsertEntity { index: 2, entity: DxfEntity::Solid { points: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], layer: "0".into(), unknown_group_codes: vec![] } },
+        DxfMutation::InsertEntity { index: 2, entity: DxfEntity::Insert { block_name: "B1".into(), position: [1.0, 2.0, 3.0], scale: [1.0, 1.0, 1.0], rotation: 0.0, layer: "0".into(), unknown_group_codes: vec![] } },
+    ]
+}
+//#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -348,30 +550,11 @@ mod tests {
         }
     }
 
+    /// 🔁️ Every DxfMutation-generic property test below (`mutation_diff_law`/`inverse_law`/
+    /// `op_text_binary_roundtrip_law`) shares ONE fixture with `⚙️engine/🦀️component.rs`'s
+    /// conformance laws — `demo_mutation_cases()` (`#region 🔖️DemoCases` above).
     fn variants() -> Vec<DxfMutation> {
-        vec![
-            DxfMutation::NoMutation,
-            DxfMutation::SetSnapshot { snapshot: sweep_b() },
-            DxfMutation::SetHeaderVar { name: "$ACADVER".into(), header_var: DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1015".into() }, extra_group_codes: vec![] } },
-            DxfMutation::SetHeaderVar { name: "$NEWVAR".into(), header_var: DxfHeaderVar { name: "$NEWVAR".into(), group_code: 70, value: DxfValue::Int { value: 3 }, extra_group_codes: vec![] } },
-            DxfMutation::RemoveHeaderVar { name: "$ACADVER".into() },
-            DxfMutation::InsertLayer { index: 1, layer: DxfLayer { name: "L2".into(), color: 1, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] } },
-            DxfMutation::RemoveLayer { name: "0".into() },
-            DxfMutation::SetLayer { name: "0".into(), layer: DxfLayer { name: "0".into(), color: 3, linetype: "DASHED".into(), flags: 1, unknown_group_codes: vec![] } },
-            DxfMutation::InsertStyle { index: 1, style: DxfStyle { name: "S2".into(), flags: 0, font_name: "arial".into(), unknown_group_codes: vec![] } },
-            DxfMutation::RemoveStyle { name: "STANDARD".into() },
-            DxfMutation::SetStyle { name: "STANDARD".into(), style: DxfStyle { name: "STANDARD".into(), flags: 1, font_name: "romans".into(), unknown_group_codes: vec![] } },
-            DxfMutation::InsertLinetype { index: 1, linetype: DxfLinetype { name: "DASHED".into(), flags: 0, description: "Dashed".into(), unknown_group_codes: vec![] } },
-            DxfMutation::RemoveLinetype { name: "CONTINUOUS".into() },
-            DxfMutation::SetLinetype { name: "CONTINUOUS".into(), linetype: DxfLinetype { name: "CONTINUOUS".into(), flags: 1, description: "Solid line".into(), unknown_group_codes: vec![] } },
-            DxfMutation::InsertEntity { index: 0, entity: DxfEntity::Arc { center: [1.0, 1.0, 0.0], radius: 2.0, start_angle: 0.0, end_angle: 90.0, layer: "0".into(), unknown_group_codes: vec![] } },
-            DxfMutation::RemoveEntity { index: 0 },
-            DxfMutation::SetEntity { index: 0, entity: DxfEntity::Line { start: [9.0, 9.0, 0.0], end: [8.0, 8.0, 0.0], layer: "L2".into(), unknown_group_codes: vec![] } },
-            DxfMutation::SetEntity { index: 1, entity: DxfEntity::Text { position: [0.0, 0.0, 0.0], height: 1.0, value: "hi".into(), layer: "0".into(), unknown_group_codes: vec![] } },
-            DxfMutation::InsertBlock { index: 0, block: DxfBlock { name: "B2".into(), base_point: [1.0, 1.0, 0.0], entities: vec![], unknown_group_codes: vec![] } },
-            DxfMutation::RemoveBlock { index: 0 },
-            DxfMutation::SetBlock { index: 0, block: DxfBlock { name: "B1".into(), base_point: [5.0, 5.0, 0.0], entities: vec![DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] } },
-        ]
+        demo_mutation_cases()
     }
     //#endregion 🔖️Fixtures
 

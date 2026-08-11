@@ -1,3 +1,10 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.drawing.snapshot"
+; abnf stdio.semio.drawing snapshot binary -- real semio_format::wrap_binary envelope: 8-byte
+; magic, u32-LE token length, UTF-8 token, raw JSON(SemioDrawingSnapshot) bytes (full field
+; structure of the JSON payload: sibling 🔣️component.json)
+document = magic token-len token json-bytes
+magic = %x89 "SEM" %x0D %x0A %x1A %x0A
+token-len = 4OCTET  ; u32 little-endian
+token = *OCTET  ; UTF-8 "stdio.semio.drawing.pack v1", length = token-len
+json-bytes = *json-byte
+json-byte = OCTET
+

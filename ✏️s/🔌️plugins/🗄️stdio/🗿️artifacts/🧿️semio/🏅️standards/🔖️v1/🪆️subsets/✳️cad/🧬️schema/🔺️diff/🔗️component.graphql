@@ -1,9 +1,31 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioCadDiffEntry {
-  key: String!
-  value: String!
+# 🔺️ SemioCadDiff schema — real facet mirror of `🦀️component.rs` (source of truth).
+type CadLayerDiff {
+  colorIndex: Int
+  lineType: String
+  visible: Boolean
 }
+
+type CadEntityRecordDiff {
+  layer: String
+  entity: CadEntity
+}
+
+type CadBlockDiff {
+  basePoint: SemioPoint2
+  entities: CadEntitiesDiff
+}
+
+type CadLayerModified { key: String! diff: CadLayerDiff! }
+type CadLayersDiff { removed: [String!]! modified: [CadLayerModified!]! added: [CadLayer!]! }
+
+type CadBlockModified { key: String! diff: CadBlockDiff! }
+type CadBlocksDiff { removed: [String!]! modified: [CadBlockModified!]! added: [CadBlock!]! }
+
+type CadEntityRecordModified { key: String! diff: CadEntityRecordDiff! }
+type CadEntitiesDiff { removed: [String!]! modified: [CadEntityRecordModified!]! added: [CadEntityRecord!]! }
+
 type SemioCadDiff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioCadDiffEntry!]! @state(class: PERSISTENT)
+  layers: CadLayersDiff
+  blocks: CadBlocksDiff
+  entities: CadEntitiesDiff
 }

@@ -1,5 +1,34 @@
-dialect grammar stdio.semio.object.snapshot
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.object.snapshot"
+dialect grammar
+grammar semio.object.snapshot
+extension semio
+start document
+
+# `store::ArtifactDsl::print_dsl`/`parse_dsl` (`🦀️component.rs`) — the semio envelope preamble
+# (see `store::semio_format::wrap_text`) wrapping a HEX-ENCODED compact serialization of the WHOLE
+# `SemioObjectSnapshot` struct (not RFC8259 text on its own terms -- this subset's snapshot is a
+# neutral semio type, not an on-disk file format, so `serde_json` is a wire carrier for
+# `SemioValue`'s own typed shape, never a `serde_json::Value` fallback).
+document = header body
+header = "schema" SP "stdio.semio.object" NL
+body = hex-body
+
+# `hex-body` decodes to exactly one `snapshot-object` below (`serde(rename_all="camelCase")`).
+hex-body = ( HEXDIG HEXDIG )*
+snapshot-object = "{" '"schema"' ":" quoted-string "," '"root"' ":" semio-value "," '"objects"' ":" "[" ( object-node ( "," object-node )* )? "]" "}"
+object-node = "{" '"id"' ":" object-id "," '"value"' ":" semio-value "}"
+object-id = "{" '"value"' ":" quoted-string "}"
+
+# `SemioValue` (`#[serde(tag = "kind")]`) — one keyed object per variant, discriminated by `"kind"`.
+semio-value = null-value | bool-value | int-value | float-value | str-value | bytes-value | list-value | map-value | ref-value
+null-value  = "{" '"kind"' ":" '"null"' "}"
+bool-value  = "{" '"kind"' ":" '"bool"' "," '"value"' ":" ( "true" | "false" ) "}"
+int-value   = "{" '"kind"' ":" '"int"' "," '"lexeme"' ":" quoted-string "}"
+float-value = "{" '"kind"' ":" '"float"' "," '"lexeme"' ":" quoted-string "}"
+str-value   = "{" '"kind"' ":" '"str"' "," '"value"' ":" quoted-string "}"
+bytes-value = "{" '"kind"' ":" '"bytes"' "," '"value"' ":" "[" ( byte ( "," byte )* )? "]" "}"
+list-value  = "{" '"kind"' ":" '"list"' "," '"items"' ":" "[" ( semio-value ( "," semio-value )* )? "]" "}"
+map-value   = "{" '"kind"' ":" '"map"' "," '"entries"' ":" "[" ( map-entry ( "," map-entry )* )? "]" "}"
+ref-value   = "{" '"kind"' ":" '"ref"' "," '"id"' ":" object-id "}"
+map-entry   = "{" '"key"' ":" quoted-string "," '"value"' ":" semio-value "}"
+byte        = DIGIT+
+quoted-string = '"' ( unescaped | escape )* '"'

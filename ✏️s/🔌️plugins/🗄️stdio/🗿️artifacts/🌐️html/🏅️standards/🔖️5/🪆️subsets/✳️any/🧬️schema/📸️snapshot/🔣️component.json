@@ -1,10 +1,43 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.html/snapshot.json",
   "title": "HtmlSnapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
   "type": "object",
+  "required": ["schema", "root"],
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "doctype": { "type": "string", "x-semio-state": "persistent", "description": "raw content between '<!' and '>', e.g. \"DOCTYPE html\"" },
+    "root": { "$ref": "#/$defs/HtmlNode", "x-semio-state": "persistent" }
+  },
+  "$defs": {
+    "HtmlAttr": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "value": { "type": "string", "description": "absent = valueless boolean attribute" }
+      }
+    },
+    "RawTextKind": { "enum": ["script", "style"] },
+    "HtmlNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "name"],
+          "properties": {
+            "kind": { "const": "element" },
+            "name": { "type": "string" },
+            "attributes": { "type": "array", "items": { "$ref": "#/$defs/HtmlAttr" } },
+            "children": { "type": "array", "items": { "$ref": "#/$defs/HtmlNode" } }
+          }
+        },
+        { "type": "object", "required": ["kind", "text"], "properties": { "kind": { "const": "text" }, "text": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "text"], "properties": { "kind": { "const": "comment" }, "text": { "type": "string" } } },
+        {
+          "type": "object",
+          "required": ["kind", "parentKind", "text"],
+          "properties": { "kind": { "const": "rawText" }, "parentKind": { "$ref": "#/$defs/RawTextKind" }, "text": { "type": "string" } }
+        }
+      ]
+    }
   }
 }

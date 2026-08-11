@@ -1,8 +1,11 @@
 meta:
-  id: mp4_mutations
-  endian: le
+  id: stdio_mp4_mutations
+  endian: be
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  protocol::OpBinary::encode_op/decode_op (../🦀️component.rs): one JSON-serialized Mp4Mutation
+  per record (length supplied by the caller's op-log framing).
 seq:
-  - id: magic
-    contents: "stdio.mp4.mutations"
+  - id: json_utf8
+    type: str
+    size-eos: true
+    encoding: UTF-8

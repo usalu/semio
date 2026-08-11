@@ -1,2 +1,2 @@
-/** 🚪️ IO (SemioAudio set-snapshot mutation). 🚧 scaffolded by W1b — leaves land in W4. */
+/** 🧩 set_snapshot mutation leaf. */
 export {};

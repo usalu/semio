@@ -1,10 +1,10 @@
-/** 🧬️ HtmlArtifact schema. 🚧 scaffolded by W1b — generic facet mirror; the HtmlArtifact
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface HtmlArtifactEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ HtmlArtifact schema — full artifact state, mirrors `HtmlSnapshot` field for field. See the
+ * sibling `📸️snapshot/🟦️component.ts` for the canonical `HtmlNode`/`HtmlAttr`/`RawTextKind` shapes. */
+import type { HtmlNode } from './📸️snapshot/🟦️component.ts';
+export type { HtmlNode };
+
 export interface HtmlArtifact {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: HtmlArtifactEntry[];
+  /** @state persistent */ doctype?: string;
+  /** @state persistent */ root: HtmlNode;
 }

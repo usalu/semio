@@ -1,5 +1,9 @@
 dialect grammar stdio.semio.presentation.snapshot
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
 root = document
-document = marker
-marker = "stdio.semio.presentation.snapshot"
+document = header body
+header = 'schema' SP 's.stdio.semio.presentation' NL
+body = payload NL?
+; payload is the hex encoding of the serde_json-serialized SemioPresentationSnapshot -- the
+; STRUCTURED shape of that payload is normatively described by the sibling 🔣️component.json
+; JSON Schema, not re-derived here (this grammar describes the on-disk TEXT ENVELOPE only).
+payload = *OCTET

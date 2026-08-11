@@ -366,6 +366,20 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Introduce analytics to every artifact schema.
+A snapshot is a data structure that describes all the information that is persisted.
+A diff is a data structure that describes all the information that can be changed on a snapshot.
+A mutation is a data structure that holds all the 
+
+---
+
+The schemas for the artifacts are extremely adhoc.
+Every snapshot must be exhaustively types and not fallback on generic key value pairs such as in ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/📸️snapshot/🔗️component.graphql
+See legacy compose/client/schema/graphql/schema.golden.graphql for reference of a more complete schema.
+Overhaul and complete everything.
+
+---
+
 At the heart of everything are artifacts. The make different apps interoperable and integratable into existing projects because due to import and export to common artifacts.
 
 The most important artifacts are the inbuilt semio artifacts because they are all designed to work with each other and import and export smoothly.

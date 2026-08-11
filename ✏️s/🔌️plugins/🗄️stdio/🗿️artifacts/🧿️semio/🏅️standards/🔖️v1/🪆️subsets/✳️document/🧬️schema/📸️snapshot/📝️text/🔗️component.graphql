@@ -1,9 +1,3 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_semio_document_snapshotEntry {
-  key: String!
-  value: String!
-}
-type Semio_semio_document_snapshot {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_document_snapshotEntry!]! @state(class: PERSISTENT)
-}
+# DSL text envelope for a SemioDocumentSnapshot -- opaque to GraphQL (a preamble line + hex body),
+# exposed as a scalar rather than fabricating structure GraphQL callers never parse directly.
+scalar SemioDocumentSnapshotDslText

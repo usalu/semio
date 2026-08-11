@@ -1,10 +1,32 @@
-/** 🧬️ SemioWorkflowSnapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioWorkflowSnapshot
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface SemioWorkflowSnapshotEntry {
+/** 🧬️ SemioWorkflowSnapshot schema — real facet mirror of `📸️snapshot/🦀️component.rs`; that Rust
+ * file is the source of truth. */
+export interface SemioPoint2 {
+  x: number;
+  y: number;
+}
+export interface PortRef {
+  node: string;
+  port: string;
+}
+export interface WorkflowParam {
   key: string;
   value: string;
 }
+export interface WorkflowNode {
+  id: string;
+  kind: string;
+  label: string;
+  params: WorkflowParam[];
+  position: SemioPoint2;
+}
+export interface WorkflowEdge {
+  id: string;
+  from: PortRef;
+  to: PortRef;
+  kind: string;
+}
 export interface SemioWorkflowSnapshot {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioWorkflowSnapshotEntry[];
+  /** @state persistent */ nodes: WorkflowNode[];
+  /** @state persistent */ edges: WorkflowEdge[];
 }

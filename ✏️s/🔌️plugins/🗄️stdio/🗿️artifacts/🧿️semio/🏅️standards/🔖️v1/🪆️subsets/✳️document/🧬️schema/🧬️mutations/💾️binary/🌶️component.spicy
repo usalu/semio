@@ -1,5 +1,5 @@
-module Semio_semio_document_mutations;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module SemioDocumentMutation;
+# Binary op form = the text op's UTF-8 bytes verbatim (no separate binary framing).
 type Document = unit {
-    magic: bytes &size=30;
+    text_op_utf8: bytes &eod;
 };

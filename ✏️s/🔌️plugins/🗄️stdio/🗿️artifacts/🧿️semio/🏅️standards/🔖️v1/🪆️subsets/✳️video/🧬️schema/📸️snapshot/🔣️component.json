@@ -1,10 +1,44 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.video/snapshot.json",
   "title": "SemioVideoSnapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "streams{kind,codec,width,height,rate,samples{pts,key,data}} — container-typed, payload-opaque.",
   "type": "object",
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+    "streams": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": {
+        "title": "SemioVideoStream",
+        "type": "object",
+        "properties": {
+          "kind": { "enum": ["video", "audio", "subtitle"] },
+          "codec": { "type": "string" },
+          "width": { "type": "integer", "minimum": 0 },
+          "height": { "type": "integer", "minimum": 0 },
+          "rate": {
+            "title": "SemioRational",
+            "type": "object",
+            "properties": { "num": { "type": "integer" }, "den": { "type": "integer" } },
+            "required": ["num", "den"]
+          },
+          "samples": {
+            "type": "array",
+            "items": {
+              "title": "SemioVideoSample",
+              "type": "object",
+              "properties": {
+                "pts": { "type": "integer", "minimum": 0 },
+                "key": { "type": "boolean" },
+                "data": { "type": "string", "contentEncoding": "hex", "description": "opaque compressed payload" }
+              },
+              "required": ["pts", "key", "data"]
+            }
+          }
+        },
+        "required": ["kind", "codec", "width", "height", "rate", "samples"]
+      }
+    }
+  },
+  "required": ["schema", "streams"]
 }

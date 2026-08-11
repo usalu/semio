@@ -1,9 +1,7 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioModelArtifactEntry {
-  key: String!
-  value: String!
-}
+# SemioModelArtifact schema -- full artifact state, mirrors SemioModelSnapshot field for field.
 type SemioModelArtifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioModelArtifactEntry!]! @state(class: PERSISTENT)
+  spatial: [SpatialNode!]! @state(class: PERSISTENT)
+  elements: [SemioModelElement!]! @state(class: PERSISTENT)
+  relations: [ModelRelation!]! @state(class: PERSISTENT)
 }

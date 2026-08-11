@@ -1,6 +1,22 @@
-dialect grammar stdio.dwg.snapshot
-root = document
-document = header body
-header = 'schema' SP 'stdio.dwg' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.dwg.ac1024.snapshot
+extension dwg
+start document
+comment none
+
+# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: real
+# `store::ArtifactDsl::print_dsl`/`parse_dsl` shape for `stdio.dwg` (ac1024), read directly from
+# `../🦀️component.rs`'s handcrafted `impl store::ArtifactDsl for DwgSnapshot` — same shape as
+# ac1018's own sibling file (`🔖️ac1018/…/📸️snapshot/📝️text/📖️component.grammar.semio`): `encode_dwg`
+# returns `snap.bytes.clone()` verbatim (the real R2004+ D1/D2 structural insight in `sections`
+# below is READ-ONLY overlay, never consulted by `encode_dwg` — see `../🦀️component.rs`'s own doc
+# comment on `DwgSnapshot.sections`), so `print_dsl`'s body is a CONTINUOUS run of lowercase hex
+# digit pairs of the WHOLE original file, no separators — `stdio.dwg` genuinely IS "a binary
+# file", same "format is bytes" honest treatment as `stdio.binary`'s own precedent.
+document = artifact-mark hex-body
+artifact-mark = "stdio.dwg"
+
+# P2-P1-fix note (mandatory reading, `p2-p1-fix-report.md`): an open-ended hex run MUST be the
+# framework's built-in `hex` MACRO (bare `hex`, no matching production — `Symbol::Ref` falls back
+# production-then-macro automatically), never a hand-rolled `{INT | IDENT}*`-shaped production.
+hex-body = hex

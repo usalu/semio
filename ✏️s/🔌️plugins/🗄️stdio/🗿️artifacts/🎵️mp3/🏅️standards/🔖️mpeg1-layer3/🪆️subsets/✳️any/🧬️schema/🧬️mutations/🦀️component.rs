@@ -1,10 +1,10 @@
-//! 🧬️ Mp3Mutation — 🚧 scaffolded by W1b: a single `SetSnapshot` full-replace mutation
-//! (genuinely implements `protocol::Mutation`). W2 replaces this with the full named-variant
-//! vocabulary (per-field mutations, sparse `diff()`/`inverse()`), following the gif 89a / docx
-//! precedent.
+//! 🧬️ Mp3Mutation — the real per-field mutation vocabulary over `Mp3Snapshot`'s three
+//! top-level fields (`id3v2`/`frames`/`id3v1`), plus `SetSnapshot` for full replace.
 
-use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
-use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::diff::Mp3Diff;
+use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::diff::{
+    diff_set_frames, diff_set_id3v1, diff_set_id3v2, diff_set_snapshot, Mp3Diff,
+};
+use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3Snapshot};
 use protocol::Mutation;
 #[cfg(test)]
 use protocol::{OpBinary, OpText};
@@ -16,17 +16,26 @@ use serde::{Deserialize, Serialize};
 pub enum Mp3Mutation {
     #[default]
     NoMutation,
-    /// 🚧 Full-snapshot replace — the only variant until W2's per-field vocabulary lands.
+    /// 🔁️ Full-snapshot replace.
     SetSnapshot { snapshot: Mp3Snapshot },
+    /// 🏷️ Sets (`Some`) or clears (`None`) the ID3v2 tag wholesale.
+    SetId3v2 { id3v2: Option<Id3v2Tag> },
+    /// 🎼️ Replaces the MPEG frame sequence wholesale.
+    SetFrames { frames: Vec<Mp3Frame> },
+    /// 🏷️ Sets (`Some`) or clears (`None`) the ID3v1 trailer wholesale.
+    SetId3v1 { id3v1: Option<Id3v1Tag> },
 }
 
 impl Mutation<Mp3Snapshot> for Mp3Mutation {
     type Diff = Mp3Diff;
 
-    fn diff(&self, _base: &Mp3Snapshot) -> Self::Diff {
+    fn diff(&self, base: &Mp3Snapshot) -> Self::Diff {
         match self {
             Mp3Mutation::NoMutation => Mp3Diff::default(),
-            Mp3Mutation::SetSnapshot { snapshot } => Mp3Diff { replacement: Some(snapshot.clone()) },
+            Mp3Mutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            Mp3Mutation::SetId3v2 { id3v2 } => diff_set_id3v2(id3v2.clone()),
+            Mp3Mutation::SetFrames { frames } => diff_set_frames(frames.clone()),
+            Mp3Mutation::SetId3v1 { id3v1 } => diff_set_id3v1(id3v1.clone()),
         }
     }
 
@@ -34,12 +43,15 @@ impl Mutation<Mp3Snapshot> for Mp3Mutation {
         match self {
             Mp3Mutation::NoMutation => vec![Mp3Mutation::NoMutation],
             Mp3Mutation::SetSnapshot { .. } => vec![Mp3Mutation::SetSnapshot { snapshot: base.clone() }],
+            Mp3Mutation::SetId3v2 { .. } => vec![Mp3Mutation::SetId3v2 { id3v2: base.id3v2.clone() }],
+            Mp3Mutation::SetFrames { .. } => vec![Mp3Mutation::SetFrames { frames: base.frames.clone() }],
+            Mp3Mutation::SetId3v1 { .. } => vec![Mp3Mutation::SetId3v1 { id3v1: base.id3v1.clone() }],
         }
     }
 }
 
-/// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
-/// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
+/// ▶️ Applies a mutation to `snapshot` in place, returning the diff (the diff is the single
+/// semantics source — never apply-and-capture).
 pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) -> Mp3Diff {
     let diff = <Mp3Mutation as Mutation<Mp3Snapshot>>::diff(mutation, snapshot);
     *snapshot = <Mp3Diff as protocol::MutationDiff<Mp3Snapshot>>::apply(&diff, snapshot);
@@ -48,14 +60,12 @@ pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) ->
 //#endregion 🔖️Mutation
 
 //#region OpCodecs
-/// 🎙️ Handcrafted `OpText`/`OpBinary` — 🚧 scaffolded by W1b: plain `serde_json` round-trip of
-/// the whole enum (one line of compact JSON per op), the same "JSON-pack passthrough" honesty
-/// boundary the subset's own `ArtifactPack` impl already uses (see that file's doc comment).
-/// Deliberately NOT `#[derive(dsl::DslOps)]` + `#[dsl(block)]` (the grammar/hand-rolled-op-triple
-/// path every OTHER artifact's real mutation vocabulary uses) — that path requires the embedded
-/// snapshot type to itself implement `dsl::DslField` (via `dsl::DslRecord`), which is real work
-/// spanning every nested type in the snapshot tree and squarely W2's job, not a wiring fix. W2
-/// replaces this whole region when it replaces `SetSnapshot` with the real per-field vocabulary.
+/// 🎙️ Handcrafted `OpText`/`OpBinary` via plain `serde_json` (one line of compact JSON per op) —
+/// deliberately NOT `#[derive(dsl::DslOps)]`: `Mp3Frame`/`Id3v2Tag` embed nested collections of
+/// named structs, the same generic-collection-diff shape `f6-final-summary.md` §4.4 documents as
+/// needing a hand-rolled bridge. This is a SEPARATE wire format from the subset's own
+/// `ArtifactDsl`/`ArtifactPack` envelope (which wraps real MP3 bytes, see that file's doc
+/// comment) — an op is always plain JSON here.
 impl protocol::OpText for Mp3Mutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
@@ -79,28 +89,75 @@ impl protocol::OpBinary for Mp3Mutation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::MutationDiff;
+    use protocol::command::DiffAlgebra;
+    use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Mp3FrameHeader};
 
-    /// 🧪️ mutation_diff_law + inverse_law: `mutation.diff(base).apply(base) == target`, and
-    /// applying the inverse mutation restores `base`.
-    #[test]
-    fn mutation_diff_law_set_snapshot_matches_diff() {
-        let base = Mp3Snapshot::default();
-        let mut next = Mp3Snapshot::default();
-        next.schema = format!("{}-mutated", base.schema);
-        let mutation = Mp3Mutation::SetSnapshot { snapshot: next.clone() };
-        let diff = <Mp3Mutation as Mutation<Mp3Snapshot>>::diff(&mutation, &base);
-        assert_eq!(<Mp3Diff as protocol::MutationDiff<Mp3Snapshot>>::apply(&diff, &base), next);
-        let inv = <Mp3Mutation as Mutation<Mp3Snapshot>>::inverse(&mutation, &base);
-        assert_eq!(inv.len(), 1);
-        let mut round = next.clone();
-        let _ = apply_mp3_mutation(&mut round, &inv[0]);
-        assert_eq!(round, base);
+    fn frame() -> Mp3Frame {
+        Mp3Frame {
+            header: Mp3FrameHeader {
+                mpeg_version_id: 3, layer: 1, protection_bit: true, bitrate_index: 9, sample_rate_index: 0,
+                padding: false, private_bit: false, channel_mode: 3, mode_extension: 0, copyright: false, original: true, emphasis: 0,
+            },
+            payload: vec![0u8; 4],
+        }
     }
-    /// 🧪️ op_text_binary_roundtrip_law: handcrafted `OpText`/`OpBinary` JSON round-trip.
+
+    fn base_snapshot() -> Mp3Snapshot {
+        Mp3Snapshot { frames: vec![frame()], ..Mp3Snapshot::default() }
+    }
+
+    fn variants(base: &Mp3Snapshot) -> Vec<Mp3Mutation> {
+        vec![
+            Mp3Mutation::NoMutation,
+            Mp3Mutation::SetSnapshot { snapshot: Mp3Snapshot { frames: vec![frame(), frame()], ..base.clone() } },
+            Mp3Mutation::SetId3v2 { id3v2: Some(Id3v2Tag { major_version: 3, minor_version: 0, flags: 0, frames: vec![Id3Frame { id: "TIT2".into(), flags: 0, data: vec![0] }] }) },
+            Mp3Mutation::SetId3v2 { id3v2: None },
+            Mp3Mutation::SetFrames { frames: vec![frame(), frame(), frame()] },
+            Mp3Mutation::SetId3v1 { id3v1: Some(Id3v1Tag { raw: vec![b'T', b'A', b'G'] }) },
+            Mp3Mutation::SetId3v1 { id3v1: None },
+        ]
+    }
+
+    //#region mutation_diff_law
+    #[test]
+    fn mutation_diff_law_every_variant() {
+        let base = base_snapshot();
+        for m in variants(&base) {
+            let mut via_apply = base.clone();
+            let returned = apply_mp3_mutation(&mut via_apply, &m);
+            let direct = m.diff(&base);
+            assert_eq!(direct, returned, "diff mismatch for {m:?}");
+            assert_eq!(direct.apply(&base), via_apply, "apply mismatch for {m:?}");
+        }
+    }
+    //#endregion mutation_diff_law
+
+    //#region inverse_law
+    #[test]
+    fn inverse_law_mutation_and_diff_level() {
+        let base = base_snapshot();
+        for m in variants(&base) {
+            let mut round = base.clone();
+            apply_mp3_mutation(&mut round, &m);
+            for inv in m.inverse(&base) {
+                apply_mp3_mutation(&mut round, &inv);
+            }
+            assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
+
+            let d = m.diff(&base);
+            let applied = d.apply(&base);
+            let undone = d.inverse(&base).apply(&applied);
+            assert_eq!(undone, base, "diff-level inverse failed for {m:?}");
+        }
+    }
+    //#endregion inverse_law
+
+    //#region op_text_binary_roundtrip_law
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = Mp3Snapshot::default();
-        for m in [Mp3Mutation::NoMutation, Mp3Mutation::SetSnapshot { snapshot: base.clone() }] {
+        let base = base_snapshot();
+        for m in variants(&base) {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = Mp3Mutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
@@ -111,5 +168,6 @@ mod tests {
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }
+    //#endregion op_text_binary_roundtrip_law
 }
 //#endregion 🔖️Tests

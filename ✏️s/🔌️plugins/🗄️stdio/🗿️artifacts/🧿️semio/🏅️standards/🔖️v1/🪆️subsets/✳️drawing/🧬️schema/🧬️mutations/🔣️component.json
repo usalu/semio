@@ -1,10 +1,44 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.drawing/mutations.json",
+  "$id": "https://semio.tech/schema/s.stdio.semio.drawing/mutation.json",
   "title": "SemioDrawingMutation",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Mirrors the real Rust 🧬️mutations/🦀️component.rs -- 18 named variants tagged on `mutation`. Variant fields target canvas/styles (key-ed added/modified/removed)/layers/node children/root, read the base snapshot's schema/translation for inverse(); line = one-line OpText wire, item = a triple's inserted payload.",
   "type": "object",
+  "required": ["mutation"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "mutation": {
+      "enum": [
+        "noMutation", "setSnapshot", "setCanvasSize", "setCanvasBackground", "setStyle", "removeStyle",
+        "insertLayer", "removeLayer", "setLayerMeta", "moveLayer", "setGroupTransform", "setPathSegments",
+        "setNodeStyle", "setText", "setImage", "insertNode", "removeNode", "replaceNode"
+      ]
+    },
+    "snapshot": { "$ref": "../📸️snapshot/🔣️component.json" },
+    "width": { "type": "number" },
+    "height": { "type": "number" },
+    "background": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/Rgba" },
+    "name": { "type": "string" },
+    "fill": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/Rgba" },
+    "stroke": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/Rgba" },
+    "strokeWidth": { "type": "number" },
+    "opacity": { "type": "number" },
+    "index": { "type": "integer" },
+    "layer": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/DrawLayer" },
+    "id": { "type": "string" },
+    "visible": { "type": "boolean" },
+    "from": { "type": "integer" },
+    "to": { "type": "integer" },
+    "path": {
+      "type": "object",
+      "required": ["layer", "path"],
+      "properties": { "layer": { "type": "integer", "minimum": 0 }, "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } } }
+    },
+    "transform": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/Transform" },
+    "segments": { "type": "array", "items": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/PathSegment" } },
+    "style": { "type": "string" },
+    "value": { "type": "string" },
+    "at": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/SemioPoint2" },
+    "mime": { "type": "string" },
+    "bytes": { "type": "string", "contentEncoding": "base64" },
+    "node": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/DrawNode" }
   }
 }

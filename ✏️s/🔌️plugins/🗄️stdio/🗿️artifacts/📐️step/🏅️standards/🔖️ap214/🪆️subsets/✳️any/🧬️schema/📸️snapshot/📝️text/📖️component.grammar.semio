@@ -1,42 +1,48 @@
-dialect grammar stdio.step.snapshot
-; ISO 10303-21 exchange structure — real grammar for the `.step` physical file, not a placeholder.
-; Matches this facet's own tokenizer 1:1 (`engine::part21::{Lexer, parse_part21, write_part21}`).
-; https://www.iso.org/standard/63141.html
-root = exchange-file
-exchange-file = 'ISO-10303-21;' NL header-section data-section 'END-ISO-10303-21;' NL?
-header-section = 'HEADER;' NL file-description-record file-name-record file-schema-record 'ENDSEC;' NL
-file-description-record = 'FILE_DESCRIPTION' '(' string-list ',' simple-string ')' ';' NL
-file-name-record = 'FILE_NAME' '(' simple-string ',' simple-string ',' string-list ',' string-list ','
-                    simple-string ',' simple-string ',' simple-string ')' ';' NL
-file-schema-record = 'FILE_SCHEMA' '(' string-list ')' ';' NL
-data-section = 'DATA;' NL *instance 'ENDSEC;' NL
-; A simple instance is one `TYPE(args)` record; a complex instance (rare — real but spec-legal, see
-; `StepEntity::complex`) parenthesizes 2+ simple records back to back with no separator.
-instance = '#' digit-seq '=' ( simple-record / '(' 1*simple-record ')' ) ';' NL
-simple-record = keyword '(' [ value *( ',' value ) ] ')'
-keyword = upper *( upper / digit / '_' )
-value = unset / derived / reference / simple-string / enumeration / real-literal / integer-literal
-      / aggregate / typed-value
-unset = '$'
-derived = '*'
-reference = '#' digit-seq
-enumeration = '.' 1*( upper / digit / '_' ) '.'
-integer-literal = [ '-' / '+' ] 1*digit
-real-literal = [ '-' / '+' ] 1*digit '.' *digit [ ( 'E' / 'e' ) [ '-' / '+' ] 1*digit ]
-aggregate = '(' [ value *( ',' value ) ] ')'
-; A typed/defined-type value wrapper (`IFCLENGTHMEASURE(3000.)`-shaped) — grammatically a keyword
-; immediately followed by a parenthesized value list, indistinguishable at this level from a
-; top-level instance record; disambiguated only by nesting position (inside a value, not after
-; `#N=`). EXPRESS defined-type semantics mean the value list is always exactly one value in
-; conformant AP214 data (see `StepValue::TypedValue`'s own doc comment for the honest edge case).
-typed-value = keyword '(' [ value *( ',' value ) ] ')'
-simple-string = QUOTE *step-char QUOTE
-; `''` = literal quote; `\X\HH\` = one Latin-1 byte; `\X2\HHHH(HHHH)*\X0\` = a UCS-2 run.
-step-char = %x20-26 / %x28-7E / QUOTE QUOTE / '\X\' 2HEXDIG '\' / '\X2\' 1*( 4HEXDIG ) '\X0\'
-string-list = '(' [ simple-string *( ',' simple-string ) ] ')'
-digit-seq = 1*digit
-digit = %x30-39
-upper = %x41-5A
-HEXDIG = digit / %x41-46
-QUOTE = %x27
-NL = %x0A
+# 📖️ Real ISO 10303-21 Part-21 exchange-file grammar (P2-FG1), matching this facet's own
+# `engine::part21::{Lexer, parse_part21, write_part21}` tokenizer 1:1
+# (`⚙️engine/📐️part21/🦀️component.rs`) — replaces the old one-line-header ABNF placeholder this
+# file used to contain. STEP's `#N=...` entity-ref sigil collides with the shared lexer's DEFAULT
+# `#`-to-EOL comment convention, so `comment line none` + `comment block "/*" "*/"` (Part-21's real
+# comment form) resolve that collision per M1's own documented STEP-shaped worked example.
+# `string single doubled` turns on `''`-doubling decode for every `'...'` token (Part-21's own
+# string escape convention — the `\X\HH\`/`\X2\HHHH...\X0\` unicode escapes stay opaque CONTENT
+# inside that one TEXT token, never separately modeled — `StringEscape::Doubled` only interprets
+# `''`, leaving backslash runs untouched, confirmed by direct read of the shared lexer). `print_dsl`
+# wraps a `semio stdio.step.dsl v1` preamble line the harness strips to the bare envelope id
+# (`"stdio.step"`) before this grammar ever sees the body, matching every pilot's own
+# `grammar_conformance_law` reconstruction convention. https://www.iso.org/standard/63141.html
+dialect grammar
+grammar stdio.step.snapshot
+extension step
+start document
+comment line none
+comment block "/*" "*/"
+string single doubled
+
+document = envelope-mark exchange-file
+envelope-mark = "stdio.step"
+
+# `write_part21`'s exact output shape: `ISO-10303-21;` `HEADER;` the three standard records in
+# fixed order, `ENDSEC;` `DATA;` every instance, `ENDSEC;` `END-ISO-10303-21;`.
+exchange-file = "ISO-10303-21" ";" "HEADER" ";" file-description-record file-name-record file-schema-record "ENDSEC" ";" "DATA" ";" instance* "ENDSEC" ";" "END-ISO-10303-21" ";"
+file-description-record = "FILE_DESCRIPTION" "(" value-list ")" ";"
+file-name-record = "FILE_NAME" "(" value-list ")" ";"
+file-schema-record = "FILE_SCHEMA" "(" value-list ")" ";"
+
+# One `#N=TYPE(args);` simple instance, or a spec-legal `#N=(TYPE1(...)TYPE2(...));` complex
+# instance (`StepEntity::complex`, ISO 10303-21 §4.2) — real, not a hypothetical, rare in AP214,
+# common in IFC's select-type disambiguation (the shared `part21` tokenizer both artifacts reuse).
+instance = "#" INT "=" instance-body ";"
+instance-body = entity-record | "(" entity-record+ ")"
+entity-record = IDENT "(" value-list ")"
+
+# `value` per `Part21Value`/`write_value`: `$` unset, `*` derived, `#N` reference, `'...'` string
+# (TEXT), `.NAME.` enumeration (DOTENUM), a plain number (real values always carry a trailing dot
+# via `format_real` — still `INT | FLOAT` since a negative whole real like `-3.` still lexes as
+# FLOAT only once the dot is present; the bare-INT alternative here covers the `Int` variant, which
+# never gets a dot), a parenthesized list (recursive aggregate), or a typed/defined-type wrapper
+# (`IFCLENGTHMEASURE(3000.)`-shaped — an EXPRESS keyword immediately followed by its own value
+# list, indistinguishable at this level from a top-level instance record; disambiguated only by
+# nesting position, per `StepValue::TypedValue`'s own doc comment).
+value-list = {step-value {"," step-value}*}?
+step-value = "$" | "*" | "#" INT | TEXT | DOTENUM | INT | FLOAT | "(" value-list ")" | IDENT "(" value-list ")"

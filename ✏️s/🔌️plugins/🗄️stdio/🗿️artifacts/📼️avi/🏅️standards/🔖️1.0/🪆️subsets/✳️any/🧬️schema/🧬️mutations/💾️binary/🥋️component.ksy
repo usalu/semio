@@ -1,8 +1,10 @@
 meta:
-  id: avi_mutations
-  endian: le
+  id: stdio_avi_mutations
+  endian: be
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  protocol::OpBinary (../🦀️component.rs): one JSON-serialized AviMutation per record.
 seq:
-  - id: magic
-    contents: "stdio.avi.mutations"
+  - id: json_utf8
+    type: str
+    size-eos: true
+    encoding: UTF-8

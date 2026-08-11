@@ -1,0 +1,9 @@
+test os_dsl::fixture_sweep::m5_semio_envelope_protocol::semio_envelope_protocol_parses_under_the_real_dialect ... ok
+test os_dsl::fixture_sweep::m5_semio_envelope_protocol::semio_envelope_protocol_walks_a_different_token_length_and_an_empty_payload ... ok
+test os_dsl::fixture_sweep::m5_semio_envelope_protocol::semio_envelope_protocol_walks_a_real_wrap_binary_payload ... ok
+test os_dsl::fixture_sweep::m5_handcrafted_protocol_conformance::all_discovered_snapshot_protocols_walk_their_shipped_fixtures ... ok
+test os_dsl::fixture_sweep::m5_cross_artifact_rejection::all_non_stdio_grammars_reject_each_others_shipped_fixtures ... ok
+test os_dsl::fixture_sweep::m5_production_coverage::all_discovered_grammars_report_uncovered_productions_for_their_shipped_fixture ... FAILED
+test os_dsl::fixture_sweep::m5_handcrafted_grammar_conformance::all_discovered_snapshot_grammars_recognize_their_shipped_fixtures ... FAILED
+[dsl-fixture-sweep] m5 grammar auto-discovery: 59 facet(s) found, 59 checked, 0 soft-skipped, 47 stdio-exempt soft failure(s), 3 hard failure(s)
+test result: FAILED. 5 passed; 2 failed; 0 ignored; 0 measured; 757 filtered out; finished in 0.29s

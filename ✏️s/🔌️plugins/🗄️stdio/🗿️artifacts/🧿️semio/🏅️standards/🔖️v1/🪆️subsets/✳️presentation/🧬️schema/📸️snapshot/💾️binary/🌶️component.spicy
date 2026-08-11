@@ -1,5 +1,10 @@
-module Semio_semio_presentation_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=33;
+module SemioPresentationSnapshot;
+
+public type Envelope = unit {
+    envelope_id_len: uint32;
+    envelope_id: bytes &size=self.envelope_id_len;
+    component_tag: uint8;
+    version: uint32;
+    payload_len: uint64;
+    payload: bytes &size=self.payload_len; # opaque serde_json bytes -- see snapshot/component.json
 };

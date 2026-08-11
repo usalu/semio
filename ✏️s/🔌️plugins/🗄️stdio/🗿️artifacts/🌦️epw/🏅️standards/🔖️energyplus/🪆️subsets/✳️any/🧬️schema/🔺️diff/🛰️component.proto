@@ -1,7 +1,41 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
 package semio.s_stdio_epw.diff;
+
+import "s_stdio_epw/snapshot.proto";
+
+message EpwRecordDiff {
+  optional string year = 1; optional string month = 2; optional string day = 3; optional string hour = 4;
+  optional string minute = 5; optional string data_source_uncertainty = 6; optional string dry_bulb_temp = 7;
+  optional string dew_point_temp = 8; optional string relative_humidity = 9; optional string atmospheric_pressure = 10;
+  optional string extraterrestrial_horizontal_radiation = 11; optional string extraterrestrial_direct_normal_radiation = 12;
+  optional string horizontal_infrared_radiation = 13; optional string global_horizontal_radiation = 14;
+  optional string direct_normal_radiation = 15; optional string diffuse_horizontal_radiation = 16;
+  optional string global_horizontal_illuminance = 17; optional string direct_normal_illuminance = 18;
+  optional string diffuse_horizontal_illuminance = 19; optional string zenith_luminance = 20;
+  optional string wind_direction = 21; optional string wind_speed = 22; optional string total_sky_cover = 23;
+  optional string opaque_sky_cover = 24; optional string visibility = 25; optional string ceiling_height = 26;
+  optional string present_weather_observation = 27; optional string present_weather_codes = 28;
+  optional string precipitable_water = 29; optional string aerosol_optical_depth = 30; optional string snow_depth = 31;
+  optional string days_since_last_snowfall = 32; optional string albedo = 33; optional string liquid_precip_depth = 34;
+  optional string liquid_precip_quantity = 35;
+}
+
+message EpwRecordModified { uint64 index = 1; EpwRecordDiff diff = 2; }
+message EpwRecordAdded { uint64 index = 1; semio.s_stdio_epw.snapshot.EpwRecord record = 2; }
+message EpwRecordsDiff {
+  repeated uint64 removed = 1;
+  repeated EpwRecordModified modified = 2;
+  repeated EpwRecordAdded added = 3;
+}
+
 message EpwDiff {
-  string schema = 1;
-  string entries_wire = 2;
+  optional semio.s_stdio_epw.snapshot.EpwLocation location = 1;
+  optional string design_conditions = 2;
+  optional string typical_extreme_periods = 3;
+  optional string ground_temperatures = 4;
+  optional string holidays_dst = 5;
+  optional string comments_1 = 6;
+  optional string comments_2 = 7;
+  optional semio.s_stdio_epw.snapshot.EpwDataPeriods data_periods = 8;
+  optional EpwRecordsDiff records = 9;
 }

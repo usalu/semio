@@ -1,2 +1,6 @@
-/** 🚪️ IO (SemioAudio builder). 🚧 scaffolded by W1b — leaves land in W4. */
-export {};
+/** 🏗️ SemioAudioBuilder (audio subset) meta. */
+export const meta = {
+  artifactKind: "s.stdio.semio",
+  standard: "v1",
+  subset: "audio",
+} as const;

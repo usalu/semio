@@ -1,7 +1,7 @@
 //! 🧬️ SemioModelArtifact schema — full artifact state, mirrors `SemioModelSnapshot` field for
-//! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
+//! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{SemioModelSnapshot, SemioModelElement};
+use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ModelRelation, SemioModelElement, SemioModelSnapshot, SpatialNode};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +13,13 @@ pub struct SemioModelArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
+    pub spatial: Vec<SpatialNode>,
+    #[state(persistent)]
+    #[serde(default)]
     pub elements: Vec<SemioModelElement>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub relations: Vec<ModelRelation>,
 }
 
 impl Default for SemioModelArtifact {
@@ -24,18 +30,24 @@ impl SemioModelArtifact {
     pub fn to_snapshot(&self) -> SemioModelSnapshot {
         SemioModelSnapshot {
             schema: self.schema.clone(),
+            spatial: self.spatial.clone(),
             elements: self.elements.clone(),
+            relations: self.relations.clone(),
         }
     }
     pub fn from_snapshot(snapshot: SemioModelSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
+            spatial: snapshot.spatial,
             elements: snapshot.elements,
+            relations: snapshot.relations,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioModelSnapshot) {
         self.schema = snapshot.schema;
+        self.spatial = snapshot.spatial;
         self.elements = snapshot.elements;
+        self.relations = snapshot.relations;
     }
 }
 

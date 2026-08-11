@@ -1,3 +1,13 @@
-dialect protocol stdio.semio.object.diff
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.object.diff"
+dialect protocol
+protocol semio.object.diff
+version 1
+schema stdio.semio.object.diff
+start body
+
+# `DiffCodec::encode_diff`/`decode_diff` (this subset's own `🔺️diff/🦀️component.rs`) are the
+# TEXT `print_diff` bytes verbatim (`self.print_diff().into_bytes()`), same simplification every
+# hand-rolled `DiffCodec` in this program uses (`SvgDiff`/`GifDiff`/`JsonDiff`) -- there is no
+# distinct binary framing to describe beyond the payload being opaque UTF-8 at this layer; its real
+# grammar is `../📝️text/📖️component.grammar.semio`'s job.
+framing record
+chain payload utf8

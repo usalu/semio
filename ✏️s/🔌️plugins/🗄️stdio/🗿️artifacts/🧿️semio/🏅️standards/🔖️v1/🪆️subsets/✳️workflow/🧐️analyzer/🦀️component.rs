@@ -1,5 +1,7 @@
-//! 🧐️ SemioWorkflowAnalyzer — 🚧 scaffolded by W1b: JSON-pack decode only. `sniff()` genuinely
-//! inspects the payload for this subset's document-schema marker (not an always-High/Low stub).
+//! 🧐️ SemioWorkflowAnalyzer — real `ArtifactAnalyzer`: `sniff()` genuinely inspects the payload
+//! for this subset's document-schema marker (not an always-High/Low stub); `analyze()` genuinely
+//! decodes via the real `ArtifactDsl`/`ArtifactPack` codecs, downgrading confidence and surfacing
+//! diagnostics on decode failure.
 
 use semio_framework_plugin::{ArtifactAnalyzer, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
 use crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::{SemioWorkflowSnapshot, STDIO_SEMIOWORKFLOW_DOCUMENT_SCHEMA};

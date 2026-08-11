@@ -1,12 +1,16 @@
-//! 🧐️ SemioAudioAnalyzer — 🚧 scaffolded by W1b: JSON-pack decode only. `sniff()` genuinely
-//! inspects the payload for this subset's document-schema marker (not an always-High/Low stub).
+//! 🧐️ SemioAudioAnalyzer — real `sniff()` (inspects the payload for this subset's document-schema
+//! marker) + real `analyze()` (decodes the subset's own JSON-pack payload into a typed
+//! `SemioAudioSnapshot`; no `serde_json::Value` escapes this boundary).
 
 use semio_framework_plugin::{ArtifactAnalyzer, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
 use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioSnapshot, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
 
+//#region 🔖️Parts
 #[derive(Clone, Debug, Default)]
 pub struct SemioAudioParts { pub snapshot: Option<SemioAudioSnapshot> }
+//#endregion 🔖️Parts
 
+//#region 🔖️Analyzer
 pub struct SemioAudioAnalyzer;
 
 impl ArtifactAnalyzer for SemioAudioAnalyzer {
@@ -50,3 +54,29 @@ impl ArtifactAnalyzer for SemioAudioAnalyzer {
         Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
     }
 }
+//#endregion 🔖️Analyzer
+
+//#region 🔖️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sniff_recognizes_own_marker_and_rejects_foreign_text() {
+        let snapshot = SemioAudioSnapshot { sample_rate: 8_000, ..SemioAudioSnapshot::default() };
+        let text = <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
+        assert_eq!(SemioAudioAnalyzer::sniff(&AnalyzeSource::Text(&text)), IoConfidence::High);
+        assert_eq!(SemioAudioAnalyzer::sniff(&AnalyzeSource::Text("not-audio-at-all")), IoConfidence::Low);
+    }
+
+    #[test]
+    fn analyze_decodes_a_real_binary_source() {
+        let snapshot = SemioAudioSnapshot { sample_rate: 16_000, ..SemioAudioSnapshot::default() };
+        let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+        let analysis = SemioAudioAnalyzer::analyze(&[AnalyzeSource::Binary(&bytes)]);
+        assert_eq!(analysis.confidence, IoConfidence::High);
+        assert_eq!(analysis.parts.snapshot, Some(snapshot));
+        assert!(analysis.diagnostics.is_empty());
+    }
+}
+//#endregion 🔖️Tests

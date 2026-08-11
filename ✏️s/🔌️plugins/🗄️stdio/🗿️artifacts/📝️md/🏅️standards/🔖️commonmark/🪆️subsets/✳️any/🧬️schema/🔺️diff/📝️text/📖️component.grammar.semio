@@ -1,40 +1,80 @@
-dialect grammar stdio.md.diff
-; 🔺️ Wire-text (JSON) shape of `MdDiff` -- mirrors 🦀️component.rs's `serde(tag = "kind")`
-; discriminated union exactly.
+dialect grammar
+grammar stdio.md.diff
+extension md
+start document
 
-root = md-diff
-md-diff = "{" [ %s"blocks" ":" blocks-diff ] "}"
-blocks-diff = "{" "removed" ":" index-array ","
-                   "modified" ":" "[" *( block-modified "," ) "]" ","
-                   "added" ":" "[" *( block-added "," ) "]" "}"
-block-modified = "{" "index" ":" index "," "diff" ":" block-diff "}"
-block-added = "{" "index" ":" index "," "item" ":" md-block "}"
+# P2-FG1: real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `../../🦀️component.rs` (`print_md_diff`/`parse_md_diff`) -- replaces the pre-Phase-2 ABNF
+# placeholder describing a serde-JSON `MdDiff` wire struct the codec never emits. `MdDiff` has
+# exactly one diffable field (`blocks: Option<MdBlocksDiff>`), so the line is either EMPTY
+# (unchanged) or exactly one `blocks=<blocks-diff>` token -- `document`'s `?` makes the whole line
+# optional, correctly recognizing the empty string.
+document = blocks-line?
+blocks-line = "blocks" "=" blocks-diff-body
 
-block-diff = heading-diff / paragraph-diff / list-diff / code-block-diff
-           / block-quote-diff / thematic-break-diff / html-block-diff / replace-diff
-heading-diff = "{" %s"kind" ":" %s"heading" [ "," "level" ":" level ] [ "," "inlines" ":" inline-array ] "}"
-paragraph-diff = "{" %s"kind" ":" %s"paragraph" [ "," "inlines" ":" inline-array ] "}"
-list-diff = "{" %s"kind" ":" %s"list" [ "," "ordered" ":" boolean ]
-                [ "," "start" ":" ( "null" / index ) ] [ "," "tight" ":" boolean ]
-                [ "," "items" ":" list-items-diff ] "}"
-code-block-diff = "{" %s"kind" ":" %s"codeBlock" [ "," "info" ":" ( "null" / string ) ]
-                      [ "," "literal" ":" string ] "}"
-block-quote-diff = "{" %s"kind" ":" %s"blockQuote" [ "," "blocks" ":" blocks-diff ] "}"
-thematic-break-diff = "{" %s"kind" ":" %s"thematicBreak" "}"
-html-block-diff = "{" %s"kind" ":" %s"htmlBlock" [ "," "raw" ":" string ] "}"
-replace-diff = "{" %s"kind" ":" %s"replace" "," "block" ":" md-block "}"
+# `enc_blocks_diff`/`dec_blocks_diff` -- `[removed];[modified];[added]`, index-keyed (recipe §1.4's
+# collection-triple shape). Reused verbatim (same production) for `MdDiff.blocks`,
+# `MdBlockDiff::BlockQuote.blocks` (via `opt-blocks-diff`), and a `List` item's own content (via
+# `list-items-diff-body`'s `modified` entries) -- genuinely recursive: `blocks-diff-body`'s
+# `block-modified`/`block-added` entries reference `block-diff`/`md-block`, and `block-diff`'s own
+# `S`(List)/`U`(BlockQuote) arms reference back into `list-items-diff-body`/`blocks-diff-body` --
+# exercised end-to-end (multiple nesting depths, every reachable `MdBlockDiff` kind, both tri-states)
+# by this wave's own `diff_grammar_conformance_law` against real `print_diff` output,
+# `⚙️engine/🦀️component.rs`'s `diff::demo_diff_cases()`.
+blocks-diff-body = "[" removed-list "]" ";" "[" modified-list "]" ";" "[" added-list "]"
+removed-list = {INT ","?}*
+modified-list = {block-modified ","?}*
+block-modified = INT ":" block-diff
+added-list = {block-added ","?}*
+block-added = INT ":" md-block
 
-list-items-diff = "{" "removed" ":" index-array ","
-                       "modified" ":" "[" *( list-item-modified "," ) "]" ","
-                       "added" ":" "[" *( list-item-added "," ) "]" "}"
-list-item-modified = "{" "index" ":" index "," "diff" ":" blocks-diff "}"
-list-item-added = "{" "index" ":" index "," "item" ":" "[" *( md-block "," ) "]" "}"
+# `enc_block_diff`/`dec_block_diff`, tag range Q-X (see `../../🦀️component.rs`'s own file doc
+# comment for the full tag-vocabulary table) -- `X` = `Replace`, the block-KIND-change fallback
+# (mirrors json's `R`=Replace on `JsonValueDiff`). ONE physical line per production (recipe §3
+# pitfall #4).
+block-diff = "Q" "[" opt-int "," opt-inline-list "]" | "R" "[" opt-inline-list "]" | "S" "[" opt-bool "," opt-opt-int "," opt-bool "," opt-list-items-diff "]" | "T" "[" opt-opt-hex "," opt-hex "]" | "U" "[" opt-blocks-diff "]" | "V" "[" "]" | "W" "[" opt-hex "]" | "X" "[" md-block "]"
 
-index = 1*DIGIT
-index-array = "[" *( index "," ) "]"
-inline-array = "[" *( md-inline "," ) "]"
-level = %x31-36 ; 1..6
-boolean = %s"true" / %s"false"
-string = DQUOTE *CHAR DQUOTE
-md-block = <see ../../📸️snapshot/📝️text/📖️component.grammar.semio's wire-JSON equivalent>
-md-inline = <see ../../📸️snapshot/📝️text/📖️component.grammar.semio's wire-JSON equivalent>
+# `enc_list_items_diff`/`dec_list_items_diff` -- SAME 3-part shape as `blocks-diff-body`, over a
+# `List`'s `items: Vec<Vec<MdBlock>>`. `modified` entries wrap their nested `blocks-diff-body` in an
+# EXTRA bracket pair (`idx:[...]`, not `idx:...`) -- `../../🦀️component.rs`'s own doc comment: a
+# BARE triple embedded directly inside a `,`-joined entry list (not via `encode_option`'s own
+# bracket, and not inside a tag-prefixed enum arm) needs the extra wrap so its internal `;`/`,` stay
+# at bracket-depth >=1 relative to the OUTER triple's own `;`-separated sections.
+list-items-diff-body = "[" li-removed-list "]" ";" "[" li-modified-list "]" ";" "[" li-added-list "]"
+li-removed-list = {INT ","?}*
+li-modified-list = {list-item-modified ","?}*
+list-item-modified = INT ":" "[" blocks-diff-body "]"
+li-added-list = {list-item-added ","?}*
+list-item-added = INT ":" block-list
+
+# `encode_option`/`decode_option` -- the uniform `[0]`/`[1,x]` tag (recipe §1.4), one concrete
+# production per distinct `Option<T>` payload shape this file's real codec emits.
+opt-int = "[" "0" "]" | "[" "1" "," INT "]"
+opt-bool = "[" "0" "]" | "[" "1" "," bool-lit "]"
+opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
+opt-inline-list = "[" "0" "]" | "[" "1" "," inline-list "]"
+opt-blocks-diff = "[" "0" "]" | "[" "1" "," blocks-diff-body "]"
+opt-list-items-diff = "[" "0" "]" | "[" "1" "," list-items-diff-body "]"
+
+# Tri-states -- `Option<Option<T>>` (`MdBlockDiff::List.start`, `MdBlockDiff::CodeBlock.info`) nest
+# an `opt-*` production inside another `opt-*` wrapper, matching `encode_option(outer, |v|
+# encode_option(v, enc))`'s own nested closures exactly (`Some(None)` -> `[1,[0]]`, `Some(Some(x))`
+# -> `[1,[1,x]]`, `None` -> `[0]`).
+opt-opt-int = "[" "0" "]" | "[" "1" "," opt-int "]"
+opt-opt-hex = "[" "0" "]" | "[" "1" "," opt-hex "]"
+
+bool-lit = "0" | "1"
+
+# `enc_inline`/`dec_inline`, `enc_block`/`dec_block` -- restated here (same shape as the sibling
+# `../../🧬️mutations/📝️text/📖️component.grammar.semio`, and the wire form `MdBlockDiff`'s own
+# `Replace`/`added` payloads carry directly) so this leaf grammar is self-contained, matching the
+# repo's existing per-facet convention (json's diff grammar restates `value` the same way).
+md-inline = "A" "[" hex "]" | "B" "[" inline-list "]" | "C" "[" inline-list "]" | "D" "[" hex "]" | "E" "[" inline-list "," hex "," opt-hex "]" | "F" "[" hex "," hex "," opt-hex "]" | "G" "[" "]" | "H" "[" "]" | "I" "[" hex "]"
+inline-list = "[" inline-item* "]"
+inline-item = md-inline ","?
+
+md-block = "J" "[" INT "," inline-list "]" | "K" "[" inline-list "]" | "L" "[" bool-lit "," opt-int "," bool-lit "," item-list "]" | "M" "[" opt-hex "," hex "]" | "N" "[" block-list "]" | "O" "[" "]" | "P" "[" hex "]"
+block-list = "[" block-item* "]"
+block-item = md-block ","?
+item-list = "[" item-item* "]"
+item-item = block-list ","?

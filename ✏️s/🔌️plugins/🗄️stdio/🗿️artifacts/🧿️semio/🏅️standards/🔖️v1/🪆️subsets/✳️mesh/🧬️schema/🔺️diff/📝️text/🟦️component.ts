@@ -1,10 +1,13 @@
-/** 🧬️ Semio_semio_mesh_diff schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_mesh_diff
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_mesh_diffEntry {
-  key: string;
-  value: string;
+/** 🔺️ `s.stdio.semio.mesh` DiffCodec text grammar — real hand-rolled grammar (see the
+ * `impl protocol::DiffCodec for SemioMeshDiff` in the sibling `../🦀️component.rs`): a
+ * space-separated sequence of `key=value` tokens (`meshes=`/`materials=`/`textures=`), each
+ * value a bracket-depth-aware `[removed];[modified];[added]` named triple. */
+export interface SemioMeshDiffTextToken {
+  key: "meshes" | "materials" | "textures";
+  removed: string[];
+  modified: string[]; // "key:diff" encoded
+  added: string[];
 }
-export interface Semio_semio_mesh_diff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_mesh_diffEntry[];
+export interface SemioMeshDiffText {
+  tokens: SemioMeshDiffTextToken[];
 }

@@ -1,32 +1,114 @@
-//! 🧬️ SemioImageMutation — 🚧 scaffolded by W1b: a single `SetSnapshot` full-replace mutation
-//! (genuinely implements `protocol::Mutation`). W2 replaces this with the full named-variant
-//! vocabulary (per-field mutations, sparse `diff()`/`inverse()`), following the gif 89a / docx
-//! precedent.
+//! 🧬️ SemioImageMutation — named-variant enum covering every mutable field of
+//! `SemioImageSnapshot`. Every `diff()`/`inverse()` arm is HAND-WRITTEN (never apply-and-capture
+//! — `🧬️schema-design.md`'s svg infinite-recursion warning): each variant builds its own sparse
+//! `SemioImageDiff` directly and computes its own base-aware inverse mutation.
 
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::{
+    SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff, decode_option, diff_set_snapshot,
+    enc_colorspace, dec_colorspace, enc_frame, dec_frame, enc_metadata_entry, dec_metadata_entry, encode_option,
+};
+use crate::artifacts::semio::standards::v1::engine::triples::{IndexAdded, IndexModified, NamedModified, split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{
+    SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot,
+};
 use protocol::Mutation;
-#[cfg(test)]
+/// 🔧️ Unconditional — `impl protocol::OpBinary for SemioImageMutation` below calls
+/// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope in
+/// production code (was missing entirely, even test-gated) (W2b closer fix).
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioImageMutation {
-    #[default]
     NoMutation,
-    /// 🚧 Full-snapshot replace — the only variant until W2's per-field vocabulary lands.
     SetSnapshot { snapshot: SemioImageSnapshot },
+    SetDimensions { width: u32, height: u32 },
+    SetColorspace { colorspace: SemioColorspace },
+    SetBitDepth { bit_depth: u8 },
+    /// 🎨️ `icc: None` clears the profile — the mutation payload is the FINAL value (unlike the
+    /// diff's own tri-state, a mutation never needs to distinguish "no-op" from "clear").
+    SetIcc { icc: Option<Vec<u8>> },
+    InsertFrame { index: usize, frame: SemioImageFrame },
+    RemoveFrame { index: usize },
+    MoveFrame { from: usize, to: usize },
+    SetFrameDelay { index: usize, delay_ms: u32 },
+    SetFramePixels { index: usize, rgba8: Vec<u8> },
+    SetMetadataEntry { key: String, value: String },
+    RemoveMetadataEntry { key: String },
+}
+
+impl Default for SemioImageMutation {
+    fn default() -> Self { SemioImageMutation::NoMutation }
 }
 
 impl Mutation<SemioImageSnapshot> for SemioImageMutation {
     type Diff = SemioImageDiff;
 
-    fn diff(&self, _base: &SemioImageSnapshot) -> Self::Diff {
+    fn diff(&self, base: &SemioImageSnapshot) -> Self::Diff {
         match self {
             SemioImageMutation::NoMutation => SemioImageDiff::default(),
-            SemioImageMutation::SetSnapshot { snapshot } => SemioImageDiff { replacement: Some(snapshot.clone()) },
+            SemioImageMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            SemioImageMutation::SetDimensions { width, height } => SemioImageDiff {
+                width: (base.width != *width).then_some(*width),
+                height: (base.height != *height).then_some(*height),
+                ..Default::default()
+            },
+            SemioImageMutation::SetColorspace { colorspace } => SemioImageDiff {
+                colorspace: (base.colorspace != *colorspace).then_some(*colorspace),
+                ..Default::default()
+            },
+            SemioImageMutation::SetBitDepth { bit_depth } => SemioImageDiff {
+                bit_depth: (base.bit_depth != *bit_depth).then_some(*bit_depth),
+                ..Default::default()
+            },
+            SemioImageMutation::SetIcc { icc } => SemioImageDiff {
+                icc: (base.icc != *icc).then_some(icc.clone()),
+                ..Default::default()
+            },
+            SemioImageMutation::InsertFrame { index, frame } => SemioImageDiff {
+                frames: Some(SemioImageFramesDiff { added: vec![IndexAdded { index: *index, item: frame.clone() }], ..Default::default() }),
+                ..Default::default()
+            },
+            SemioImageMutation::RemoveFrame { index } => SemioImageDiff {
+                frames: Some(SemioImageFramesDiff { removed: vec![*index], ..Default::default() }),
+                ..Default::default()
+            },
+            SemioImageMutation::MoveFrame { from, to } => {
+                let frames = base.frames.get(*from).map(|item| SemioImageFramesDiff {
+                    removed: vec![*from],
+                    added: vec![IndexAdded { index: *to, item: item.clone() }],
+                    ..Default::default()
+                });
+                SemioImageDiff { frames, ..Default::default() }
+            }
+            SemioImageMutation::SetFrameDelay { index, delay_ms } => SemioImageDiff {
+                frames: Some(SemioImageFramesDiff {
+                    modified: vec![IndexModified { index: *index, diff: SemioImageFrameDiff { delay_ms: Some(*delay_ms), rgba8: None } }],
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+            SemioImageMutation::SetFramePixels { index, rgba8 } => SemioImageDiff {
+                frames: Some(SemioImageFramesDiff {
+                    modified: vec![IndexModified { index: *index, diff: SemioImageFrameDiff { delay_ms: None, rgba8: Some(rgba8.clone()) } }],
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+            SemioImageMutation::SetMetadataEntry { key, value } => {
+                let metadata = if base.metadata.iter().any(|e| &e.key == key) {
+                    SemioImageMetadataDiff { modified: vec![NamedModified { key: key.clone(), diff: value.clone() }], ..Default::default() }
+                } else {
+                    SemioImageMetadataDiff { added: vec![SemioImageMetadataEntry { key: key.clone(), value: value.clone() }], ..Default::default() }
+                };
+                SemioImageDiff { metadata: Some(metadata), ..Default::default() }
+            }
+            SemioImageMutation::RemoveMetadataEntry { key } => SemioImageDiff {
+                metadata: Some(SemioImageMetadataDiff { removed: vec![key.clone()], ..Default::default() }),
+                ..Default::default()
+            },
         }
     }
 
@@ -34,12 +116,38 @@ impl Mutation<SemioImageSnapshot> for SemioImageMutation {
         match self {
             SemioImageMutation::NoMutation => vec![SemioImageMutation::NoMutation],
             SemioImageMutation::SetSnapshot { .. } => vec![SemioImageMutation::SetSnapshot { snapshot: base.clone() }],
+            SemioImageMutation::SetDimensions { .. } => vec![SemioImageMutation::SetDimensions { width: base.width, height: base.height }],
+            SemioImageMutation::SetColorspace { .. } => vec![SemioImageMutation::SetColorspace { colorspace: base.colorspace }],
+            SemioImageMutation::SetBitDepth { .. } => vec![SemioImageMutation::SetBitDepth { bit_depth: base.bit_depth }],
+            SemioImageMutation::SetIcc { .. } => vec![SemioImageMutation::SetIcc { icc: base.icc.clone() }],
+            SemioImageMutation::InsertFrame { index, .. } => vec![SemioImageMutation::RemoveFrame { index: *index }],
+            SemioImageMutation::RemoveFrame { index } => match base.frames.get(*index) {
+                Some(frame) => vec![SemioImageMutation::InsertFrame { index: *index, frame: frame.clone() }],
+                None => vec![SemioImageMutation::NoMutation],
+            },
+            SemioImageMutation::MoveFrame { from, to } => vec![SemioImageMutation::MoveFrame { from: *to, to: *from }],
+            SemioImageMutation::SetFrameDelay { index, .. } => match base.frames.get(*index) {
+                Some(frame) => vec![SemioImageMutation::SetFrameDelay { index: *index, delay_ms: frame.delay_ms }],
+                None => vec![SemioImageMutation::NoMutation],
+            },
+            SemioImageMutation::SetFramePixels { index, .. } => match base.frames.get(*index) {
+                Some(frame) => vec![SemioImageMutation::SetFramePixels { index: *index, rgba8: frame.rgba8.clone() }],
+                None => vec![SemioImageMutation::NoMutation],
+            },
+            SemioImageMutation::SetMetadataEntry { key, .. } => match base.metadata.iter().find(|e| &e.key == key) {
+                Some(entry) => vec![SemioImageMutation::SetMetadataEntry { key: key.clone(), value: entry.value.clone() }],
+                None => vec![SemioImageMutation::RemoveMetadataEntry { key: key.clone() }],
+            },
+            SemioImageMutation::RemoveMetadataEntry { key } => match base.metadata.iter().find(|e| &e.key == key) {
+                Some(entry) => vec![SemioImageMutation::SetMetadataEntry { key: key.clone(), value: entry.value.clone() }],
+                None => vec![SemioImageMutation::NoMutation],
+            },
         }
     }
 }
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
-/// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
+/// `apply_gif_mutation` convention — used by the builder's `mutate()` and every triad leaf).
 pub fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutation: &SemioImageMutation) -> SemioImageDiff {
     let diff = <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(mutation, snapshot);
     *snapshot = <SemioImageDiff as protocol::MutationDiff<SemioImageSnapshot>>::apply(&diff, snapshot);
@@ -47,69 +155,242 @@ pub fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutation: &
 }
 //#endregion 🔖️Mutation
 
-//#region OpCodecs
-/// 🎙️ Handcrafted `OpText`/`OpBinary` — 🚧 scaffolded by W1b: plain `serde_json` round-trip of
-/// the whole enum (one line of compact JSON per op), the same "JSON-pack passthrough" honesty
-/// boundary the subset's own `ArtifactPack` impl already uses (see that file's doc comment).
-/// Deliberately NOT `#[derive(dsl::DslOps)]` + `#[dsl(block)]` (the grammar/hand-rolled-op-triple
-/// path every OTHER artifact's real mutation vocabulary uses) — that path requires the embedded
-/// snapshot type to itself implement `dsl::DslField` (via `dsl::DslRecord`), which is real work
-/// spanning every nested type in the snapshot tree and squarely W2's job, not a wiring fix. W2
-/// replaces this whole region when it replaces `SetSnapshot` with the real per-field vocabulary.
+//#region 🔖️OpCodecs
+/// 🎙️ Hand-rolled `OpText`/`OpBinary` — same reasoning as `SemioImageDiff`'s hand-rolled
+/// `DiffCodec` (see that module's doc comment): `SetIcc`'s `Option<Vec<u8>>` payload is the same
+/// bare-`Option` shape the `dsl` derive machinery cannot bind, and per this ticket's own
+/// instruction ("hand-roll all diff/op codecs — do not fight the derive"), every variant is
+/// handcrafted rather than mixed derive/hand-roll. One space-free token per op: `tag` then `:`
+/// then comma-separated positional fields (bracket-depth-aware, reusing the shared
+/// `engine::triples` split/strip helpers so a nested `[...]` payload — e.g. `SetSnapshot`'s whole
+/// snapshot — never confuses the top-level split).
+fn enc_snapshot(s: &SemioImageSnapshot) -> String {
+    let frames = s.frames.iter().map(enc_frame).collect::<Vec<_>>().join(",");
+    let metadata = s.metadata.iter().map(enc_metadata_entry).collect::<Vec<_>>().join(",");
+    format!(
+        "[{},{},{},{},{},[{}],[{}]]",
+        s.width, s.height, enc_colorspace(s.colorspace), s.bit_depth,
+        encode_option(&s.icc, |b| b.iter().map(|x| format!("{x:02x}")).collect::<String>()),
+        frames, metadata,
+    )
+}
+fn dec_snapshot(s: &str) -> Result<SemioImageSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [width, height, colorspace, bit_depth, icc, frames, metadata] = parts.as_slice() else {
+        return Err(format!("snapshot: expected 7 fields, got {}", parts.len()));
+    };
+    let frames = split_top_level(strip_brackets(frames)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_frame).collect::<Result<Vec<_>, String>>()?;
+    let metadata = split_top_level(strip_brackets(metadata)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_metadata_entry).collect::<Result<Vec<_>, String>>()?;
+    Ok(SemioImageSnapshot {
+        schema: crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
+        width: width.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
+        height: height.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
+        colorspace: dec_colorspace(colorspace)?,
+        bit_depth: bit_depth.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
+        icc: decode_option(icc, |h| (0..h.len()).step_by(2).map(|i| u8::from_str_radix(&h[i..i + 2], 16).map_err(|e| e.to_string())).collect())?,
+        frames,
+        metadata,
+    })
+}
+fn enc_bytes(b: &[u8]) -> String { b.iter().map(|x| format!("{x:02x}")).collect() }
+fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+fn enc_str(s: &str) -> String { s.bytes().map(|b| format!("{b:02x}")).collect() }
+fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(dec_bytes(s)?).map_err(|e| e.to_string()) }
+
+fn print_image_mutation(m: &SemioImageMutation) -> String {
+    match m {
+        SemioImageMutation::NoMutation => "no".to_string(),
+        SemioImageMutation::SetSnapshot { snapshot } => format!("setSnapshot:{}", enc_snapshot(snapshot)),
+        SemioImageMutation::SetDimensions { width, height } => format!("setDimensions:{width},{height}"),
+        SemioImageMutation::SetColorspace { colorspace } => format!("setColorspace:{}", enc_colorspace(*colorspace)),
+        SemioImageMutation::SetBitDepth { bit_depth } => format!("setBitDepth:{bit_depth}"),
+        SemioImageMutation::SetIcc { icc } => format!("setIcc:{}", encode_option(icc, |b| enc_bytes(b))),
+        SemioImageMutation::InsertFrame { index, frame } => format!("insertFrame:{index},{}", enc_frame(frame)),
+        SemioImageMutation::RemoveFrame { index } => format!("removeFrame:{index}"),
+        SemioImageMutation::MoveFrame { from, to } => format!("moveFrame:{from},{to}"),
+        SemioImageMutation::SetFrameDelay { index, delay_ms } => format!("setFrameDelay:{index},{delay_ms}"),
+        SemioImageMutation::SetFramePixels { index, rgba8 } => format!("setFramePixels:{index},{}", enc_bytes(rgba8)),
+        SemioImageMutation::SetMetadataEntry { key, value } => format!("setMetadataEntry:{},{}", enc_str(key), enc_str(value)),
+        SemioImageMutation::RemoveMetadataEntry { key } => format!("removeMetadataEntry:{}", enc_str(key)),
+    }
+}
+
+fn parse_image_mutation(line: &str) -> Result<SemioImageMutation, String> {
+    if line == "no" { return Ok(SemioImageMutation::NoMutation); }
+    let (tag, rest) = line.split_once(':').ok_or_else(|| format!("mutation: missing tag separator in {line:?}"))?;
+    match tag {
+        "setSnapshot" => Ok(SemioImageMutation::SetSnapshot { snapshot: dec_snapshot(rest)? }),
+        "setDimensions" => {
+            let parts = split_top_level(rest, ',');
+            let [w, h] = parts.as_slice() else { return Err(format!("setDimensions: expected 2 fields, got {}", parts.len())) };
+            Ok(SemioImageMutation::SetDimensions { width: w.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, height: h.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
+        }
+        "setColorspace" => Ok(SemioImageMutation::SetColorspace { colorspace: dec_colorspace(rest)? }),
+        "setBitDepth" => Ok(SemioImageMutation::SetBitDepth { bit_depth: rest.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }),
+        "setIcc" => Ok(SemioImageMutation::SetIcc { icc: decode_option(rest, dec_bytes)? }),
+        "insertFrame" => {
+            let (idx, frame) = rest.split_once(',').ok_or_else(|| "insertFrame: missing comma".to_string())?;
+            Ok(SemioImageMutation::InsertFrame { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, frame: dec_frame(frame)? })
+        }
+        "removeFrame" => Ok(SemioImageMutation::RemoveFrame { index: rest.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }),
+        "moveFrame" => {
+            let parts = split_top_level(rest, ',');
+            let [from, to] = parts.as_slice() else { return Err(format!("moveFrame: expected 2 fields, got {}", parts.len())) };
+            Ok(SemioImageMutation::MoveFrame { from: from.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, to: to.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
+        }
+        "setFrameDelay" => {
+            let parts = split_top_level(rest, ',');
+            let [idx, delay] = parts.as_slice() else { return Err(format!("setFrameDelay: expected 2 fields, got {}", parts.len())) };
+            Ok(SemioImageMutation::SetFrameDelay { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, delay_ms: delay.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
+        }
+        "setFramePixels" => {
+            let (idx, rgba) = rest.split_once(',').ok_or_else(|| "setFramePixels: missing comma".to_string())?;
+            Ok(SemioImageMutation::SetFramePixels { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, rgba8: dec_bytes(rgba)? })
+        }
+        "setMetadataEntry" => {
+            let parts = split_top_level(rest, ',');
+            let [key, value] = parts.as_slice() else { return Err(format!("setMetadataEntry: expected 2 fields, got {}", parts.len())) };
+            Ok(SemioImageMutation::SetMetadataEntry { key: dec_str(key)?, value: dec_str(value)? })
+        }
+        "removeMetadataEntry" => Ok(SemioImageMutation::RemoveMetadataEntry { key: dec_str(rest)? }),
+        other => Err(format!("mutation: unknown tag {other:?}")),
+    }
+}
+
 impl protocol::OpText for SemioImageMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+        parse_image_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_default()
+        print_image_mutation(self)
     }
 }
 
 impl protocol::OpBinary for SemioImageMutation {
+    /// ⚡️ Binary = the text bytes verbatim — same simplification `SemioImageDiff`'s `DiffCodec`
+    /// uses (see that module's doc comment).
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
+        Ok(self.print_op().into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
-//#endregion OpCodecs
+//#endregion 🔖️OpCodecs
 
 //#region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    /// 🔧️ `DiffAlgebra` lives at `protocol::command::DiffAlgebra`, not `protocol::DiffAlgebra`
+    /// (W2b closer fix — was an unresolved-import compile error).
+    use protocol::command::DiffAlgebra;
+    use protocol::{MutationDiff, OpBinary, OpText};
 
-    /// 🧪️ mutation_diff_law + inverse_law: `mutation.diff(base).apply(base) == target`, and
-    /// applying the inverse mutation restores `base`.
-    #[test]
-    fn mutation_diff_law_set_snapshot_matches_diff() {
-        let base = SemioImageSnapshot::default();
-        let mut next = SemioImageSnapshot::default();
-        next.schema = format!("{}-mutated", base.schema);
-        let mutation = SemioImageMutation::SetSnapshot { snapshot: next.clone() };
-        let diff = <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation, &base);
-        assert_eq!(<SemioImageDiff as protocol::MutationDiff<SemioImageSnapshot>>::apply(&diff, &base), next);
-        let inv = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
-        assert_eq!(inv.len(), 1);
-        let mut round = next.clone();
-        let _ = apply_semio_image_mutation(&mut round, &inv[0]);
-        assert_eq!(round, base);
+    fn frame(seed: u8, len: usize) -> SemioImageFrame {
+        SemioImageFrame { delay_ms: 100, rgba8: vec![seed; len] }
     }
-    /// 🧪️ op_text_binary_roundtrip_law: handcrafted `OpText`/`OpBinary` JSON round-trip.
+
+    fn fixture() -> SemioImageSnapshot {
+        SemioImageSnapshot {
+            width: 4, height: 4, colorspace: SemioColorspace::Rgba, bit_depth: 8,
+            frames: vec![frame(1, 16), frame(2, 16)],
+            icc: Some(vec![9, 9]),
+            metadata: vec![SemioImageMetadataEntry { key: "Title".into(), value: "old".into() }],
+            ..SemioImageSnapshot::default()
+        }
+    }
+
+    fn sample_mutations() -> Vec<SemioImageMutation> {
+        vec![
+            SemioImageMutation::NoMutation,
+            SemioImageMutation::SetSnapshot { snapshot: fixture() },
+            SemioImageMutation::SetDimensions { width: 8, height: 8 },
+            SemioImageMutation::SetColorspace { colorspace: SemioColorspace::Grayscale },
+            SemioImageMutation::SetBitDepth { bit_depth: 16 },
+            SemioImageMutation::SetIcc { icc: None },
+            SemioImageMutation::SetIcc { icc: Some(vec![1, 2, 3]) },
+            SemioImageMutation::InsertFrame { index: 1, frame: frame(5, 16) },
+            SemioImageMutation::RemoveFrame { index: 0 },
+            SemioImageMutation::MoveFrame { from: 0, to: 1 },
+            SemioImageMutation::SetFrameDelay { index: 0, delay_ms: 250 },
+            SemioImageMutation::SetFramePixels { index: 1, rgba8: vec![7; 16] },
+            SemioImageMutation::SetMetadataEntry { key: "Title".into(), value: "new".into() },
+            SemioImageMutation::SetMetadataEntry { key: "Author".into(), value: "someone".into() },
+            SemioImageMutation::RemoveMetadataEntry { key: "Title".into() },
+        ]
+    }
+
+    //#region 🔖️MutationDiffLaw
+    #[test]
+    fn mutation_diff_law() {
+        for mutation in sample_mutations() {
+            let base = fixture();
+            let diff_direct = Mutation::diff(&mutation, &base);
+            let applied_via_diff = MutationDiff::apply(&diff_direct, &base);
+
+            let mut via_apply = base.clone();
+            let diff_from_apply = apply_semio_image_mutation(&mut via_apply, &mutation);
+
+            assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
+            assert_eq!(diff_direct, diff_from_apply, "mutation_diff_law: diff mismatch for {mutation:?}");
+        }
+    }
+    //#endregion 🔖️MutationDiffLaw
+
+    //#region 🔖️InverseLaw
+    #[test]
+    fn inverse_law() {
+        for mutation in sample_mutations() {
+            let base = fixture();
+
+            let mut round_tripped = base.clone();
+            apply_semio_image_mutation(&mut round_tripped, &mutation);
+            for inverse_mutation in <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base) {
+                apply_semio_image_mutation(&mut round_tripped, &inverse_mutation);
+            }
+            assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
+
+            let diff = Mutation::diff(&mutation, &base);
+            let next = MutationDiff::apply(&diff, &base);
+            let inverse_diff = DiffAlgebra::inverse(&diff, &base);
+            let restored = MutationDiff::apply(&inverse_diff, &next);
+            assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
+        }
+    }
+    //#endregion 🔖️InverseLaw
+
+    //#region 🔖️CodecRetentionLaw
+    /// 🧪️ codec_retention_law: `ArtifactPack` decode(encode(snapshot)) on a real (mutation-built,
+    /// not just default) snapshot.
+    #[test]
+    fn codec_retention_law() {
+        let mut snap = fixture();
+        apply_semio_image_mutation(&mut snap, &SemioImageMutation::SetMetadataEntry { key: "Author".into(), value: "x".into() });
+        let bytes = store::ArtifactPack::encode_pack(&snap);
+        let decoded = <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        assert_eq!(decoded, snap);
+    }
+    //#endregion 🔖️CodecRetentionLaw
+
+    //#region 🔖️OpTextBinaryRoundtripLaw
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = SemioImageSnapshot::default();
-        for m in [SemioImageMutation::NoMutation, SemioImageMutation::SetSnapshot { snapshot: base.clone() }] {
+        for m in sample_mutations() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = SemioImageMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
-            assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?}");
+            assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
 
             let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
             let decoded = SemioImageMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }
+    //#endregion 🔖️OpTextBinaryRoundtripLaw
 }
 //#endregion 🔖️Tests

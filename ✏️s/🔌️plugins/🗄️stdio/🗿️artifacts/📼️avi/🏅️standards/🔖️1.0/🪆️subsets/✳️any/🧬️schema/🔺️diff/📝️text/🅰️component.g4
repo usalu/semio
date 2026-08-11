@@ -1,3 +1,7 @@
-grammar Semio_avi_diff;
-// 🚧 scaffolded by W1b — full production rules land in W2/W3. Top-level rule name only.
-ROOT: 'stdio.avi.diff' ;
+// 🅰️ ANTLR grammar for stdio.avi's diff text form — op codecs are the handcrafted
+// OpText/OpBinary JSON round-trip in 🧬️mutations/🦀️component.rs.
+grammar Stdio_avi_diff;
+document : hexByte (WS? hexByte)* EOF ;
+hexByte  : HEXDIGIT HEXDIGIT ;
+HEXDIGIT : [0-9a-fA-F] ;
+WS       : [ \t\r\n]+ ;

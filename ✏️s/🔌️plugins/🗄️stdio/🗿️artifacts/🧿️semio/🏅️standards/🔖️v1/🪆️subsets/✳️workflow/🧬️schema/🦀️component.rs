@@ -1,5 +1,5 @@
 //! 🧬️ SemioWorkflowArtifact schema — full artifact state, mirrors `SemioWorkflowSnapshot` field for
-//! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
+//! field (see gif's `GifArtifact` for the precedent this follows).
 
 use crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::{SemioWorkflowSnapshot, WorkflowNode, WorkflowEdge};
 use schema::ArtifactSchema;

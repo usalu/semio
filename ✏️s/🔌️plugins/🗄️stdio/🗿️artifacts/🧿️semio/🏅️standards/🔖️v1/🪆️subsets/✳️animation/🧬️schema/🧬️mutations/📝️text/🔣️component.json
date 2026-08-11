@@ -1,10 +1,6 @@
 {
   "$id": "https://semio.tech/schema/stdio.semio.animation.mutations/text.json",
-  "title": "Semio_semio_animation_mutations",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "title": "SemioAnimationMutationsText",
   "type": "object",
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+  "properties": { "mutation": { "enum": ["noMutation", "setSnapshot", "insertTimeline", "removeTimeline", "setTimelineName", "insertChannel", "removeChannel", "setChannelTarget", "setChannelInterpolation", "insertKeyframe", "removeKeyframe", "setKeyframeTime", "setKeyframeValue"] } }
 }

@@ -1,10 +1,14 @@
-/** 🧬️ SemioImageArtifact schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioImageArtifact
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface SemioImageArtifactEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ SemioImageArtifact schema — real facet mirror of the Rust `🦀️component.rs` sibling; full
+ * artifact state, mirrors `SemioImageSnapshot` field for field. */
+import type { SemioColorspace, SemioImageFrame, SemioImageMetadataEntry } from "./📸️snapshot/🟦️component.ts";
+
 export interface SemioImageArtifact {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioImageArtifactEntry[];
+  /** @state persistent */ width: number;
+  /** @state persistent */ height: number;
+  /** @state persistent */ colorspace: SemioColorspace;
+  /** @state persistent */ bitDepth: number;
+  /** @state persistent */ frames: SemioImageFrame[];
+  /** @state persistent */ icc: string | null;
+  /** @state persistent */ metadata: SemioImageMetadataEntry[];
 }

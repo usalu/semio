@@ -1,5 +1,13 @@
 dialect grammar stdio.semio.brep.mutations
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.brep.mutations"
+root = op-line
+; Real hand-rolled `SemioBrepMutation` op grammar (protocol::OpText/OpBinary): one line of
+; COMPACT serde_json for the tagged enum (tag field `mutation`, camelCase variant names) -- the
+; same "JSON-pack passthrough" honesty boundary the subset's own snapshot ArtifactPack impl uses
+; (see ../../📸️snapshot/🦀️component.rs doc comment). Not derived via dsl::DslOps (the
+; grammar/hand-rolled-op-triple path every other artifact's real mutation vocabulary uses) --
+; that path requires the embedded SemioBrepSnapshot to itself implement dsl::DslField, out of
+; this wave's scope (f6-final-summary.md §4 dsl-derive gaps).
+op-line = json-value
+json-value = json-object   ; RFC8259 JSON value grammar, tag-discriminated on "mutation"
+json-object = "{" [json-member *("," json-member)] "}"
+json-member = json-string ":" json-value

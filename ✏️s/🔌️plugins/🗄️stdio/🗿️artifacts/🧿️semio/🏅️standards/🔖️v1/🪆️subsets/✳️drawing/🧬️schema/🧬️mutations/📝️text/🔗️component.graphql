@@ -1,9 +1,3 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_semio_drawing_mutationsEntry {
-  key: String!
-  value: String!
-}
-type Semio_semio_drawing_mutations {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_drawing_mutationsEntry!]! @state(class: PERSISTENT)
-}
+# 📝️ Text-wire scalar for stdio.semio.drawing (mutation): one line of compact, mutation-tagged
+# JSON. Real shape: 🅰️component.g4.
+scalar SemioDrawingMutationText

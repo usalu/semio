@@ -1,10 +1,30 @@
-/** 🧬️ SemioVideoSnapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioVideoSnapshot
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface SemioVideoSnapshotEntry {
-  key: string;
-  value: string;
+/** 🧬️ SemioVideoSnapshot — streams{kind, codec, width, height, rate, samples{pts, key, data}},
+ * container-typed / payload-opaque (sample `data` is the format's own compressed bytes, never
+ * decoded by this subset). Mirrors `📸️snapshot/🦀️component.rs` field for field. */
+export type SemioVideoStreamKind = "video" | "audio" | "subtitle";
+
+export interface SemioRational {
+  num: number;
+  den: number;
 }
+
+export interface SemioVideoSample {
+  pts: number;
+  key: boolean;
+  /** hex-encoded opaque bytes on the wire */
+  data: number[];
+}
+
+export interface SemioVideoStream {
+  kind: SemioVideoStreamKind;
+  codec: string;
+  width: number;
+  height: number;
+  rate: SemioRational;
+  samples: SemioVideoSample[];
+}
+
 export interface SemioVideoSnapshot {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioVideoSnapshotEntry[];
+  /** @state persistent */ streams: SemioVideoStream[];
 }

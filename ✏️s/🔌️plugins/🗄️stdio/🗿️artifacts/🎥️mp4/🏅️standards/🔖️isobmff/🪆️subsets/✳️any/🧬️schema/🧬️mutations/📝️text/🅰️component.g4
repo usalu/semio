@@ -1,3 +1,5 @@
-grammar Semio_mp4_mutations;
-// 🚧 scaffolded by W1b — full production rules land in W2/W3. Top-level rule name only.
-ROOT: 'stdio.mp4.mutations' ;
+// 🅰️ ANTLR grammar for stdio.mp4's op text form (protocol::OpText::print_op/parse_op in
+// ../🦀️component.rs): one compact, single-line JSON object per op, tagged by "mutation".
+grammar Stdio_mp4_mutations;
+document : jsonLine EOF ;
+jsonLine : ~[\r\n]+ ;

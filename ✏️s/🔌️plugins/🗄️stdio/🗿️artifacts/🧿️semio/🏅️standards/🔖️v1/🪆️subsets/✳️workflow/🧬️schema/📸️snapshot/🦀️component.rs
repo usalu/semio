@@ -1,19 +1,63 @@
-//! 🧬️ SemioWorkflowSnapshot — id-keyed nodes{kind, position} + edges — from OS workflow's WorkflowNode/dag shape.
-//! 🚧 scaffolded by W1b: minimal honest fields only (not the full spec shape) — full
-//! implementation lands in W2/W3.
+//! 🧬️ SemioWorkflowSnapshot — id-keyed `nodes{kind,label,params,position:SemioPoint2}` +
+//! `PortRef`-addressed `edges{from,to,kind}`, informed by OS `🔁️workflow` WorkflowNode +
+//! `🌊️flow/🕸️dag` (see master-plan.md's "Subset snapshot cores" table). Complete per spec: no
+//! `serde_json::Value`, no bare tuples (`PortRef`/`SemioPoint2` are named structs), no nested
+//! fixed arrays.
 
 use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
 
-/// 🔁️ Owned by the `workflow` subset: `WorkflowNode`, `WorkflowEdge` — DISTINCT from the OS
-/// kernel's own `WorkflowSnapshot`/`WorkflowNode` (a different crate, `semio-framework`, not
-/// `semio-s-plugin-stdio` — no name collision, but do not conflate the two).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+//#region 🔖️PortRef
+/// 🔌️ Addresses one named port on one node — the endpoint shape `WorkflowEdge` connects through.
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct WorkflowNode { pub id: String, pub kind: String, pub position: SemioPoint2 }
+pub struct PortRef {
+    pub node: String,
+    pub port: String,
+}
+//#endregion 🔖️PortRef
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+//#region 🔖️Param
+/// 🎛️ One ordered key-value node parameter. String-valued is the honest boundary for a workflow
+/// DAG's per-node config — a richer typed value graph is `object` subset's job (`SemioValue`), not
+/// workflow's; see w1b-type-ownership.md's per-subset owned-types table.
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct WorkflowEdge { pub from_id: String, pub to_id: String }
+pub struct WorkflowParam {
+    pub key: String,
+    pub value: String,
+}
+//#endregion 🔖️Param
+
+//#region 🔖️Node
+/// 🔁️ Owned by the `workflow` subset. DISTINCT from the OS kernel's own
+/// `semio_framework::WorkflowNode` (a different crate, `semio-framework`, not
+/// `semio-s-plugin-stdio`) — same name, zero collision risk, do not conflate the two (see
+/// w1b-type-ownership.md).
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkflowNode {
+    pub id: String,
+    pub kind: String,
+    pub label: String,
+    #[serde(default)]
+    pub params: Vec<WorkflowParam>,
+    pub position: SemioPoint2,
+}
+//#endregion 🔖️Node
+
+//#region 🔖️Edge
+/// ➡️ Owned by the `workflow` subset. `id`-keyed (like `nodes`) so the sparse diff can address one
+/// edge by identity rather than by its `(from,to,kind)` value, which is not guaranteed unique in a
+/// real multigraph DAG.
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkflowEdge {
+    pub id: String,
+    pub from: PortRef,
+    pub to: PortRef,
+    pub kind: String,
+}
+//#endregion 🔖️Edge
 
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -29,9 +73,11 @@ pub const STDIO_SEMIOWORKFLOW_DOCUMENT_SCHEMA: &str = "stdio.semio.workflow";
 pub struct SemioWorkflowSnapshot {
     #[state(persistent)]
     pub schema: String,
+    /// 🆔️ Id-keyed strong collection — sparse-diffed via `🧰️triples::NamedTripleDiff`.
     #[state(persistent)]
     #[serde(default)]
     pub nodes: Vec<WorkflowNode>,
+    /// 🆔️ Id-keyed strong collection — sparse-diffed via `🧰️triples::NamedTripleDiff`.
     #[state(persistent)]
     #[serde(default)]
     pub edges: Vec<WorkflowEdge>,
@@ -49,9 +95,10 @@ impl Default for SemioWorkflowSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🚧 scaffolded by W1b: JSON-pack round trip (honest, genuinely working — not a per-format
-/// binary codec, since this subset's snapshot is a NEUTRAL semio type, not an on-disk file
-/// format). Wrapped in the same `store::semio_format` envelope every stdio artifact uses.
+/// 🎁 JSON-pack round trip (honest, genuinely working — this subset's snapshot is a NEUTRAL semio
+/// type, not an on-disk file format, so there is no "real" external byte layout to reproduce; the
+/// same boundary the sibling W2a/W2b semio subsets use). Wrapped in the repo-wide
+/// `store::semio_format` envelope.
 impl store::ArtifactDsl for SemioWorkflowSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str { STDIO_SEMIOWORKFLOW_DOCUMENT_SCHEMA }
@@ -120,9 +167,37 @@ impl store::ArtifactPack for SemioWorkflowSnapshot {
 mod tests {
     use super::*;
 
+    fn sample() -> SemioWorkflowSnapshot {
+        SemioWorkflowSnapshot {
+            schema: STDIO_SEMIOWORKFLOW_DOCUMENT_SCHEMA.into(),
+            nodes: vec![
+                WorkflowNode {
+                    id: "n1".into(),
+                    kind: "source".into(),
+                    label: "Source".into(),
+                    params: vec![WorkflowParam { key: "count".into(), value: "3".into() }],
+                    position: SemioPoint2 { x: 0.0, y: 0.0 },
+                },
+                WorkflowNode {
+                    id: "n2".into(),
+                    kind: "sink".into(),
+                    label: "Sink".into(),
+                    params: Vec::new(),
+                    position: SemioPoint2 { x: 100.0, y: 50.0 },
+                },
+            ],
+            edges: vec![WorkflowEdge {
+                id: "e1".into(),
+                from: PortRef { node: "n1".into(), port: "out".into() },
+                to: PortRef { node: "n2".into(), port: "in".into() },
+                kind: "data".into(),
+            }],
+        }
+    }
+
     #[test]
     fn json_pack_round_trips() {
-        let snap = SemioWorkflowSnapshot::default();
+        let snap = sample();
         let bytes = <SemioWorkflowSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioWorkflowSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
@@ -130,10 +205,17 @@ mod tests {
 
     #[test]
     fn dsl_text_round_trips() {
-        let snap = SemioWorkflowSnapshot::default();
+        let snap = sample();
         let text = <SemioWorkflowSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioWorkflowSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
+    }
+
+    #[test]
+    fn default_snapshot_has_no_nodes_or_edges() {
+        let snap = SemioWorkflowSnapshot::default();
+        assert!(snap.nodes.is_empty());
+        assert!(snap.edges.is_empty());
     }
 }
 //#endregion 🔖️Tests

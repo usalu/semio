@@ -1,15 +1,51 @@
-dialect grammar stdio.csv.snapshot
-root = file
-; envelope preamble line + its trailing newline are stripped before this grammar runs
-; (store::semio_format::split_text_preamble)
-file = record (CRLF record)* CRLF?
-record = field (COMMA field)*
-field = escaped / non_escaped
-escaped = DQUOTE (TEXTDATA / COMMA / CR / LF / DQUOTE DQUOTE)* DQUOTE
-non_escaped = TEXTDATA*
-COMMA = ","
-CR = "\r"
-LF = "\n"
-CRLF = CR LF / LF
-DQUOTE = '"'
-TEXTDATA = %x20-21 / %x23-2B / %x2D-7E / %x80-10FFFF
+dialect grammar
+grammar stdio.csv.snapshot
+extension csv
+start document
+
+# RFC 4180 §2: quote-state-aware record/field grammar, matching this artifact's real
+# `parse_csv_records` tokenizer (⚙️engine/component.rs:20-69) exactly — not a "hex dump"
+# shortcut, not the pre-Phase-2 ABNF placeholder this file used to contain.
+comment none
+string double doubled
+
+# `dsl::fixture_sweep::m5_handcrafted_grammar_conformance::dsl_body_from_fixture` feeds the
+# Recognizer "<envelope-id>\n<body>" (SemioEnvelope::envelope_id = "plugin.artifact", the real
+# preamble line's trailing "v<n>" already stripped by the harness) — the shared lexer treats
+# both the preamble's own newline AND every record-terminating CR/LF as trivia (never surfaced
+# as tokens to this grammar, see this artifact's report, mechanism_gaps "csv-newline-trivia"),
+# so `envelope-mark` and the first record sit directly adjacent in the significant token stream.
+envelope-mark = "stdio.csv"
+document = envelope-mark document-body
+
+# RFC 4180 §2 rule 1/2: one-or-more records. This dialect has no NEWLINE terminal (see
+# mechanism_gaps above) — a record boundary is recovered structurally instead: `record` greedily
+# consumes every comma-adjacent field in the significant token stream, which is exactly one
+# physical line's worth, because a real source CR/LF always breaks the shared lexer's token
+# scan even though the resulting Newline token is then dropped as trivia before this grammar
+# ever sees it (proven for this artifact's own real fixture, see the conformance test).
+document-body = record+
+record = field {"," field}*
+field = quoted-field | unquoted-field
+
+# RFC 4180 §2 rule 5: a quoted field may itself legally contain the field/record delimiters
+# (comma, CR, LF) as literal data, with a literal `"` escaped by doubling (`""`). The
+# `string double doubled` mode declared above makes the shared lexer decode exactly this —
+# one TEXT token per quoted field, with every embedded comma/CR/LF/doubled-quote already
+# resolved, never surfacing as separate COMMA/record-boundary tokens. This is the real fix for
+# the "structural-comma-vs-quoted-comma" gap the P2-W0 recon census flagged for this artifact.
+# Known real limitation (see this artifact's report, mechanism_gaps
+# "csv-quoted-field-embedded-newline"): the shared lexer's `Doubled` string scanner treats a raw
+# `\n` mid-string as unterminated even in forgiving mode (🔍️lexer/component.rs:393-398), so a
+# quoted field containing a LITERAL embedded newline (also legal per RFC 4180 §2 rule 5) is not
+# tokenized as one TEXT token — this artifact's own fixture deliberately avoids that input shape.
+quoted-field = TEXT
+
+# RFC 4180 §2 rule 6: an unquoted field is a run of TEXTDATA (any octet except comma, CR, LF,
+# DQUOTE — %x20-21 / %x23-2B / %x2D-7E / %x80-10FFFF). This dialect's fixed token alphabet can
+# only directly represent the IDENT/INT/FLOAT-shaped subset of TEXTDATA (see this artifact's
+# report, mechanism_gaps "csv-unquoted-textdata-alphabet") — an unquoted field is zero-or-more
+# such atoms; inter-atom whitespace is lexer trivia here, same treatment json's grammar already
+# gives its own escape-decoding boundary (P2-W0 §1a).
+unquoted-field = field-atom*
+field-atom = IDENT | INT | FLOAT

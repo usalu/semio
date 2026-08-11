@@ -310,17 +310,207 @@ impl protocol::OpText for JpgMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `JpgDiff`'s hand-rolled codec uses.
+//#region 🔖️SnapshotBinaryCodec
+/// 🧪️ P2-FG2: real binary twin of `enc_jpg_snapshot`/`dec_jpg_snapshot` above — every field
+/// genuinely, individually written/read (declaration order), reusing `diff`'s `pub(crate)` binary
+/// value codecs (`enc_version_bin`/`enc_thumbnail_bin`/`enc_frame_header_bin`/`enc_quant_table_bin`/
+/// `enc_huffman_table_bin`/`enc_segment_bin`/`write_bytes_lp`/`write_opt`/...) rather than a third
+/// copy. Backs `SetSnapshot`'s payload in the upgraded `OpBinary` below.
+fn enc_jpg_snapshot_bin(s: &JpgSnapshot, out: &mut Vec<u8>) {
+    diff::write_bytes_lp(out, s.schema.as_bytes());
+    store::pack_rt::write_varint_u64(out, s.width as u64);
+    store::pack_rt::write_varint_u64(out, s.height as u64);
+    diff::write_bytes_lp(out, &s.pixels);
+    diff::write_opt(out, &s.re_encode_quality, |v, out| out.push(*v));
+    diff::enc_version_bin(&s.jfif_version, out);
+    diff::enc_density_units_bin(&s.jfif_density_units, out);
+    store::pack_rt::write_varint_u64(out, s.jfif_x_density as u64);
+    store::pack_rt::write_varint_u64(out, s.jfif_y_density as u64);
+    diff::write_opt(out, &s.jfif_thumbnail, |t, out| diff::enc_thumbnail_bin(t, out));
+    diff::write_opt(out, &s.frame, |f, out| diff::enc_frame_header_bin(f, out));
+    out.push(s.sof_marker);
+    out.push(if s.arithmetic { 1 } else { 0 });
+    store::pack_rt::write_varint_u64(out, s.quant_tables.len() as u64);
+    for t in &s.quant_tables { diff::enc_quant_table_bin(t, out); }
+    store::pack_rt::write_varint_u64(out, s.huffman_tables.len() as u64);
+    for t in &s.huffman_tables { diff::enc_huffman_table_bin(t, out); }
+    diff::write_opt(out, &s.restart_interval, |v, out| store::pack_rt::write_varint_u64(out, *v as u64));
+    store::pack_rt::write_varint_u64(out, s.other_segments.len() as u64);
+    for seg in &s.other_segments { diff::enc_segment_bin(seg, out); }
+}
+fn dec_jpg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSnapshot, String> {
+    let schema = String::from_utf8(diff::read_bytes_lp(reader)?).map_err(|e| e.to_string())?;
+    let width = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let height = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let pixels = diff::read_bytes_lp(reader)?;
+    let re_encode_quality = diff::read_opt(reader, |r| r.read_u8().map_err(|e| e.to_string()))?;
+    let jfif_version = diff::dec_version_bin(reader)?;
+    let jfif_density_units = diff::dec_density_units_bin(reader)?;
+    let jfif_x_density = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let jfif_y_density = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let jfif_thumbnail = diff::read_opt(reader, diff::dec_thumbnail_bin)?;
+    let frame = diff::read_opt(reader, diff::dec_frame_header_bin)?;
+    let sof_marker = reader.read_u8().map_err(|e| e.to_string())?;
+    let arithmetic = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let qc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut quant_tables = Vec::with_capacity(qc as usize);
+    for _ in 0..qc { quant_tables.push(diff::dec_quant_table_bin(reader)?); }
+    let hc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut huffman_tables = Vec::with_capacity(hc as usize);
+    for _ in 0..hc { huffman_tables.push(diff::dec_huffman_table_bin(reader)?); }
+    let restart_interval = diff::read_opt(reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as u16))?;
+    let sc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut other_segments = Vec::with_capacity(sc as usize);
+    for _ in 0..sc { other_segments.push(diff::dec_segment_bin(reader)?); }
+    Ok(JpgSnapshot {
+        schema, width, height, pixels, re_encode_quality, jfif_version, jfif_density_units, jfif_x_density, jfif_y_density,
+        jfif_thumbnail, frame, sof_marker, arithmetic, quant_tables, huffman_tables, restart_interval, other_segments,
+    })
+}
+//#endregion 🔖️SnapshotBinaryCodec
+
+/// 🧪️ P2-FG2: REAL binary op frame (`format u8 | tag u8 | <variant payload>`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the variant's
+/// declaration-order ordinal (0=`NoMutation` .. 11=`SetReEncodeQuality`, same order
+/// `print_jpg_mutation`'s own match arms use). Every variant's payload is genuinely, individually
+/// written/read via the real (non-recursive) binary value codecs `diff`/`§SnapshotBinaryCodec`
+/// provide — no opaque tail anywhere in this frame (jpg has no self-recursive mutation payload,
+/// unlike xml's `XmlMutation`).
 impl protocol::OpBinary for JpgMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, 0u8];
+        match self {
+            JpgMutation::NoMutation => { out[1] = 0; }
+            JpgMutation::SetSnapshot { snapshot } => { out[1] = 1; enc_jpg_snapshot_bin(snapshot, &mut out); }
+            JpgMutation::SetJfifHeader { version, density_units, x_density, y_density, thumbnail } => {
+                out[1] = 2;
+                diff::enc_version_bin(version, &mut out);
+                diff::enc_density_units_bin(density_units, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *x_density as u64);
+                store::pack_rt::write_varint_u64(&mut out, *y_density as u64);
+                diff::write_opt(&mut out, thumbnail, |t, out| diff::enc_thumbnail_bin(t, out));
+            }
+            JpgMutation::SetQuantTable { table } => { out[1] = 3; diff::enc_quant_table_bin(table, &mut out); }
+            JpgMutation::RemoveQuantTable { id } => { out[1] = 4; out.push(*id); }
+            JpgMutation::SetHuffmanTable { table } => { out[1] = 5; diff::enc_huffman_table_bin(table, &mut out); }
+            JpgMutation::RemoveHuffmanTable { key } => { out[1] = 6; diff::enc_huffman_key_bin(key, &mut out); }
+            JpgMutation::SetRestartInterval { restart_interval } => {
+                out[1] = 7;
+                diff::write_opt(&mut out, restart_interval, |v, out| store::pack_rt::write_varint_u64(out, *v as u64));
+            }
+            JpgMutation::InsertOtherSegment { index, segment } => {
+                out[1] = 8;
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                diff::enc_segment_bin(segment, &mut out);
+            }
+            JpgMutation::RemoveOtherSegment { index } => { out[1] = 9; store::pack_rt::write_varint_u64(&mut out, *index as u64); }
+            JpgMutation::SetPixels { pixels } => { out[1] = 10; diff::write_bytes_lp(&mut out, pixels); }
+            JpgMutation::SetReEncodeQuality { quality } => {
+                out[1] = 11;
+                diff::write_opt(&mut out, quality, |v, out| out.push(*v));
+            }
+        }
+        Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(JpgMutation::NoMutation),
+            1 => Ok(JpgMutation::SetSnapshot { snapshot: dec_jpg_snapshot_bin(&mut reader).map_err(|e| malformed("op set-snapshot", reader.position(), e))? }),
+            2 => {
+                let version = diff::dec_version_bin(&mut reader).map_err(|e| malformed("op version", reader.position(), e))?;
+                let density_units = diff::dec_density_units_bin(&mut reader).map_err(|e| malformed("op density-units", reader.position(), e))?;
+                let x_density = reader.read_varint_u64().map_err(|e| malformed("op x-density", reader.position(), e.to_string()))? as u16;
+                let y_density = reader.read_varint_u64().map_err(|e| malformed("op y-density", reader.position(), e.to_string()))? as u16;
+                let thumbnail = diff::read_opt(&mut reader, diff::dec_thumbnail_bin).map_err(|e| malformed("op thumbnail", reader.position(), e))?;
+                Ok(JpgMutation::SetJfifHeader { version, density_units, x_density, y_density, thumbnail })
+            }
+            3 => Ok(JpgMutation::SetQuantTable { table: diff::dec_quant_table_bin(&mut reader).map_err(|e| malformed("op quant-table", reader.position(), e))? }),
+            4 => Ok(JpgMutation::RemoveQuantTable { id: reader.read_u8().map_err(|e| malformed("op quant-id", reader.position(), e.to_string()))? }),
+            5 => Ok(JpgMutation::SetHuffmanTable { table: diff::dec_huffman_table_bin(&mut reader).map_err(|e| malformed("op huffman-table", reader.position(), e))? }),
+            6 => Ok(JpgMutation::RemoveHuffmanTable { key: diff::dec_huffman_key_bin(&mut reader).map_err(|e| malformed("op huffman-key", reader.position(), e))? }),
+            7 => Ok(JpgMutation::SetRestartInterval { restart_interval: diff::read_opt(&mut reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as u16)).map_err(|e| malformed("op restart-interval", reader.position(), e))? }),
+            8 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let segment = diff::dec_segment_bin(&mut reader).map_err(|e| malformed("op segment", reader.position(), e))?;
+                Ok(JpgMutation::InsertOtherSegment { index, segment })
+            }
+            9 => Ok(JpgMutation::RemoveOtherSegment { index: reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize }),
+            10 => Ok(JpgMutation::SetPixels { pixels: diff::read_bytes_lp(&mut reader).map_err(|e| malformed("op pixels", reader.position(), e))? }),
+            11 => Ok(JpgMutation::SetReEncodeQuality { quality: diff::read_opt(&mut reader, |r| r.read_u8().map_err(|e| e.to_string())).map_err(|e| malformed("op quality", reader.position(), e))? }),
+            other => Err(malformed("op tag", 1, format!("unknown JpgMutation tag {other}"))),
+        }
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG2: representative `JpgMutation` values (every variant, incl. `SetSnapshot`'s full
+/// nested `JpgFrameHeader`/`JpgFrameComponent` tree and both legs of every `Option<T>`-shaped
+/// argument) — the single source of truth reused by `tests::op_text_binary_roundtrip_law` below
+/// AND by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
+/// conformance tests. `pub(crate)` (not `#[cfg(test)]`-gated) so the engine's non-test conformance
+/// module can reuse it, matching png's own `demo_mutation_cases()` visibility.
+pub(crate) fn demo_mutation_cases() -> Vec<JpgMutation> {
+    fn quant(id: u8, seed: u16) -> JpgQuantTable { JpgQuantTable { id, precision: 0, values: [seed; 64] } }
+    fn huffman(class: crate::artifacts::jpg::schema::snapshot::JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
+        JpgHuffmanTable { id, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] }
+    }
+    fn segment(marker: u8, data: Vec<u8>) -> JpgSegment { JpgSegment { marker, data } }
+    use crate::artifacts::jpg::schema::snapshot::{JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass};
+
+    let base = JpgSnapshot {
+        schema: "stdio.jpg".into(),
+        width: 4,
+        height: 4,
+        pixels: vec![0u8; 4 * 4 * 4],
+        re_encode_quality: None,
+        jfif_version: (1, 1),
+        jfif_density_units: JfifDensityUnits::Aspect,
+        jfif_x_density: 1,
+        jfif_y_density: 1,
+        jfif_thumbnail: None,
+        frame: Some(JpgFrameHeader {
+            precision: 8,
+            width: 4,
+            height: 4,
+            components: vec![
+                JpgFrameComponent { id: 1, h_sampling: 2, v_sampling: 2, quant_table_id: 0 },
+                JpgFrameComponent { id: 2, h_sampling: 1, v_sampling: 1, quant_table_id: 1 },
+            ],
+        }),
+        sof_marker: 0xC0,
+        arithmetic: false,
+        quant_tables: vec![quant(0, 10)],
+        huffman_tables: vec![huffman(JpgHuffmanClass::Dc, 0, 1)],
+        restart_interval: None,
+        other_segments: vec![segment(0xFE, vec![1, 2, 3])],
+    };
+
+    vec![
+        JpgMutation::NoMutation,
+        JpgMutation::SetSnapshot { snapshot: base.clone() },
+        JpgMutation::SetSnapshot { snapshot: { let mut s = base.clone(); s.frame = None; s.jfif_thumbnail = None; s } },
+        JpgMutation::SetJfifHeader { version: (1, 2), density_units: JfifDensityUnits::PixelsPerCm, x_density: 300, y_density: 300, thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }) },
+        JpgMutation::SetJfifHeader { version: (1, 1), density_units: JfifDensityUnits::Aspect, x_density: 1, y_density: 1, thumbnail: None },
+        JpgMutation::SetQuantTable { table: quant(0, 77) },
+        JpgMutation::RemoveQuantTable { id: 3 },
+        JpgMutation::SetHuffmanTable { table: huffman(JpgHuffmanClass::Ac, 2, 5) },
+        JpgMutation::RemoveHuffmanTable { key: JpgHuffmanTableKey { class: JpgHuffmanClass::Dc, id: 0 } },
+        JpgMutation::SetRestartInterval { restart_interval: Some(16) },
+        JpgMutation::SetRestartInterval { restart_interval: None },
+        JpgMutation::InsertOtherSegment { index: 1, segment: segment(0xE2, vec![7, 8]) },
+        JpgMutation::RemoveOtherSegment { index: 0 },
+        JpgMutation::SetPixels { pixels: vec![9u8; base.pixels.len()] },
+        JpgMutation::SetReEncodeQuality { quality: Some(50) },
+        JpgMutation::SetReEncodeQuality { quality: None },
+    ]
+}
+//#endregion 🔖️DemoCases
 
 //#region Tests
 #[cfg(test)]

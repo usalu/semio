@@ -1,10 +1,64 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.model/diff.json",
   "title": "SemioModelDiff",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Sparse per-field diff, id-keyed triples (removed/modified/added) over spatial/elements/relations.",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "spatial": { "$ref": "#/$defs/spatialTriple" },
+    "elements": { "$ref": "#/$defs/elementsTriple" },
+    "relations": { "$ref": "#/$defs/relationsTriple" }
+  },
+  "$defs": {
+    "spatialNodeDiff": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string" },
+        "name": { "type": "string" },
+        "parentId": { "type": ["string", "null"] },
+        "placement": { "type": "object" }
+      }
+    },
+    "semioModelElementDiff": {
+      "type": "object",
+      "properties": {
+        "class": { "type": "object" },
+        "placement": { "type": "object" },
+        "geometry": { "type": "object" },
+        "spatialId": { "type": ["string", "null"] },
+        "psets": { "type": "array" }
+      }
+    },
+    "modelRelationDiff": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "object" },
+        "from": { "type": "string" },
+        "to": { "type": "string" }
+      }
+    },
+    "spatialTriple": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "key": { "type": "string" }, "diff": { "$ref": "#/$defs/spatialNodeDiff" } } } },
+        "added": { "type": "array" }
+      }
+    },
+    "elementsTriple": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "key": { "type": "string" }, "diff": { "$ref": "#/$defs/semioModelElementDiff" } } } },
+        "added": { "type": "array" }
+      }
+    },
+    "relationsTriple": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "key": { "type": "string" }, "diff": { "$ref": "#/$defs/modelRelationDiff" } } } },
+        "added": { "type": "array" }
+      }
+    }
   }
 }

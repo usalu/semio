@@ -1,3 +1,7 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.mesh.snapshot"
+; abnf s.stdio.semio.mesh snapshot (binary) — the shared `.semio` binary envelope
+; (store::semio_format::wrap_binary) wrapping the REAL SemioMeshSnapshot JSON payload.
+document       = envelope-magic token-len token json-payload
+envelope-magic = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A   ; 8 bytes: 0x89 "SEM" CR LF SUB LF
+token-len      = 4OCTET                                     ; u32, little-endian
+token          = 22OCTET                                    ; UTF-8 "stdio.semio.mesh.pack v1"
+json-payload   = *OCTET                                     ; serde_json::to_vec(SemioMeshSnapshot) — the neutral type's own JSON, the real complete boundary for this subset

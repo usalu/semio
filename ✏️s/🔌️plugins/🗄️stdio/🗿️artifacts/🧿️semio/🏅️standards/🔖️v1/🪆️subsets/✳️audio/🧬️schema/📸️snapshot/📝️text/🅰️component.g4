@@ -1,3 +1,2 @@
-grammar Semio_semio_audio_snapshot;
-// 🚧 scaffolded by W1b — full production rules land in W2/W3. Top-level rule name only.
-ROOT: 'stdio.semio.audio.snapshot' ;
+grammar Stdio_semio_audio_snapshot;
+DOCUMENT: 'schema' [ ]+ 'stdio.semio.audio' ;

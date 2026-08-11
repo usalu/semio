@@ -1,9 +1,3 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_epw_snapshotEntry {
-  key: String!
-  value: String!
-}
-type Semio_epw_snapshot {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_epw_snapshotEntry!]! @state(class: PERSISTENT)
-}
+# stdio.epw snapshot text grammar schema
+scalar Bytes
+type Document { schema: String! payload: String! }

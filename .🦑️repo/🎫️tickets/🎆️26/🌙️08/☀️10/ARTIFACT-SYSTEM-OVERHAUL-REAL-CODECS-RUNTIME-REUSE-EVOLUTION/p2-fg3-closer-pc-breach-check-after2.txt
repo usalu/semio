@@ -1,0 +1,10 @@
+TOTAL repo-wide breaches (5 PC rules): 58
+  7  stdio-artifacts/fixture-honesty
+  21  stdio-artifacts/grammar-parseability
+  1  stdio-artifacts/json-transfer-ban
+  8  stdio-artifacts/language-registration
+  21  stdio-artifacts/protocol-parseability
+
+--- breaches touching FG3's 5 standards (gltf/pdf-1.4/pdf-1.7/ply/svg) ---
+
+TOTAL touching FG3 artifacts: 0

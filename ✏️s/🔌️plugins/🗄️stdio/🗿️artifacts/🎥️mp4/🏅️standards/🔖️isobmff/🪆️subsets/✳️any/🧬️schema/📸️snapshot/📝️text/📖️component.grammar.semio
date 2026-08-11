@@ -1,5 +1,10 @@
 dialect grammar stdio.mp4.snapshot
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
 root = document
-document = marker
-marker = "stdio.mp4.snapshot"
+; preamble line + its trailing newline are stripped before this grammar runs
+; (store::semio_format::split_text_preamble). MP4 has no textual syntax of its own — the DSL
+; text is a whitespace-tolerant ASCII hex dump of the REAL binary ISO-BMFF bytes; see
+; ../💾️binary/🥋️component.ksy for that binary's own honest box-tree grammar.
+document = hex_byte (WS hex_byte)*
+hex_byte = HEXDIG HEXDIG
+HEXDIG = %x30-39 / %x41-46 / %x61-66
+WS = *(%x20 / %x09 / %x0D / %x0A)

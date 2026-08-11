@@ -1,3 +1,55 @@
-dialect protocol stdio.dwg.snapshot
-magic = %x00
-payload = *OCTET
+dialect protocol
+protocol stdio.dwg.ac1018.snapshot
+version 1
+schema stdio.dwg
+start file
+
+# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: `stdio.dwg`
+# (ac1018) is BINARY-NATIVE. This file describes the PACK CONTAINER's post-unwrap PAYLOAD, i.e.
+# exactly `DwgSnapshot.bytes` — the REAL on-disk `.dwg` file, verbatim (`encode_dwg` in
+# `../🦀️component.rs` returns `snap.bytes.clone()` with zero further framing of its own; the
+# SEMIO binary envelope itself, magic + token, is described ONCE framework-side at
+# 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/📡️protocol/📡️component.protocol.semio (P2-M3
+# deliverable 3) — cross-artifact `use` still doesn't resolve at walk time, so this file starts
+# exactly where that envelope's own `chain bytes` hands off, matching how
+# `m5_handcrafted_protocol_conformance` already `unwrap_binary`s a `.pack.semio` fixture before
+# calling `walk_protocol`).
+#
+# Per this ticket's M2-exclusions carve-out (§6 of `📖️grammar-recipe.md`, restated in this FG2
+# brief) — DWG's decrypt+decompress section pipeline is a genuinely imperative transform, not a
+# declarative layout, and stays wholly out of this dialect. What ac1018 (per Decision #5, a
+# deliberately frozen legacy shim that never runs the ac1024 D1/D2 pipeline) DOES read cleanly,
+# declaratively, WITHOUT any decrypt/decompress step first — verified by direct read of
+# `../🦀️component.rs`'s `dwg_version_sentinel`/`parse_version_header_fields`:
+#   - the 6-byte `AC10xx` version sentinel at offset 0x00 (`dwg_version_sentinel` — GENERIC across
+#     every AC10xx version, e.g. `encode_dwg`'s own test accepts "AC1032"; this codec is not
+#     hardcoded to literally "AC1018")
+#   - `maintenance_version` (RC, one byte at 0x12) and `codepage` (RS, little-endian u16 at
+#     0x13-0x14) — both cross-checked against LibreDWG's own `header.spec` field order
+#     (`zero_one_or_three@0x0B`, `thumbnail_address@0x0D`, `dwg_version@0x11`,
+#     `maint_version@0x12`, `codepage@0x13`), same offsets `parse_version_header_fields` reads
+# The 12 bytes between the version sentinel (ends at 0x06) and `maintenance_version` (0x12) ARE
+# real, positionally-fixed DWG header content per that same spec (the redundant
+# `zero_one_or_three` byte, a preview-thumbnail file address, etc.) but this artifact's own real
+# Rust codec never reads or interprets them — modeled honestly as one opaque `reserved` span
+# rather than fabricated field-by-field detail this codec doesn't actually have. Everything past
+# `codepage` (offset 0x15 onward) — `section_names`' own best-effort substring/offset-table scan,
+# and the whole rest of the real file — is genuinely NOT further positionally decoded by this
+# standard (Decision #5's frozen scope) and stays one opaque trailing chain.
+#
+# `framing record` (NOT `framing magic ...`) is deliberate — `Framing::Magic` unconditionally
+# reads/compares EXACTLY 8 raw bytes regardless of the declared literal's own width (confirmed
+# live by a real `walk_protocol` run: a 6-hex-byte `0x414331303138` literal still got read as an
+# 8-byte, left-zero-padded `[0,0,65,67,49,48,49,56]` against the real on-disk 6-byte "AC1018"
+# immediately followed by 2 real header bytes — a genuine mismatch, the SAME
+# `protocol-framing-magic-fixed-8-bytes` gap `stdio.gif`'s own 87a/89a sibling standards hit
+# first for their own 6-byte "GIF87a"/"GIF89a" magics). Modeled honestly, matching that same
+# precedent: `field magic fixed 6` — genuinely walked but not byte-validated at the PROTOCOL
+# layer (the real Rust `dwg_version_sentinel` already validates the `AC` + 4-digit shape).
+framing record
+header fixed 21
+field magic fixed 6
+field reserved fixed 12
+field maintenance_version u8
+field codepage u16
+chain remainder bytes

@@ -1,7 +1,23 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_mp4_diff.text;
-message Semio_mp4_diff {
-  string schema = 1;
-  string entries_wire = 2;
+package semio.stdio_mp4.diff;
+import "snapshot.proto";
+
+message Mp4SampleDiff { optional bytes data = 1; optional uint32 duration = 2; optional int32 cts_offset = 3; optional bool sync = 4; }
+message IndexedModifiedSample { uint32 index = 1; Mp4SampleDiff diff = 2; }
+message IndexedAddedSample { uint32 index = 1; semio.stdio_mp4.snapshot.Mp4Sample item = 2; }
+message Mp4SamplesDiff { repeated uint32 removed = 1; repeated IndexedModifiedSample modified = 2; repeated IndexedAddedSample added = 3; }
+
+message Mp4TrackDiff {
+  optional uint32 track_id = 1; optional uint32 timescale = 2;
+  optional semio.stdio_mp4.snapshot.Mp4Codec codec = 3;
+  optional uint32 width = 4; optional uint32 height = 5;
+  optional Mp4SamplesDiff samples = 6;
+}
+message IndexedModifiedTrack { uint32 index = 1; Mp4TrackDiff diff = 2; }
+message IndexedAddedTrack { uint32 index = 1; semio.stdio_mp4.snapshot.Mp4Track item = 2; }
+message Mp4TracksDiff { repeated uint32 removed = 1; repeated IndexedModifiedTrack modified = 2; repeated IndexedAddedTrack added = 3; }
+
+message Mp4Diff {
+  semio.stdio_mp4.snapshot.Mp4Ftyp ftyp = 1;
+  Mp4TracksDiff tracks = 2;
 }

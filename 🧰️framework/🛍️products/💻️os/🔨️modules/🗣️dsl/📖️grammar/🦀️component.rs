@@ -307,6 +307,24 @@ fn lex(text: &str) -> Result<Vec<GToken>, TextError> {
 
     while i < bytes.len() {
         let c = bytes[i];
+        // P2-P1 regression fix: `#`-to-end-of-line comments (the fixed default marker every
+        // `.grammar`/`.protocol` file's own meta-syntax uses to tokenize its OWN header/productions,
+        // independent of whatever `comment` header directive the file declares for the RECOGNIZER —
+        // see `push_segment`'s `core_lex(segment, &Limits::default(), false)` call, which always
+        // uses `CommentDialect::default()`) are skipped whole here too, matching `dsl_core`'s own
+        // line-comment scan exactly. Without this, a `"`, `?`, or `|` character inside comment PROSE
+        // (illustrating an escaped quote like `\"`, or an EBNF alternation like `a | b`, in a doc
+        // comment — routine in a hand-authored grammar's own commentary) is misread by the quote/
+        // operator checks below as this *lexer's* own quote-open/Pipe/Question token, corrupting
+        // every segment boundary from that point on (confirmed root cause of the P2-P1 pilot
+        // conformance-test parse failures — every one of them traces back to a comment-embedded `"`,
+        // `?`, or `|`, not to any actual defect in the pilots' own grammar syntax).
+        if c == b'#' {
+            while i < bytes.len() && bytes[i] != b'\n' {
+                i += 1;
+            }
+            continue;
+        }
         // A quoted `TEXT` literal is skipped whole here (matching dsl_core's own `"..."` escape
         // scheme, backslash-escapes included) so a `?` or `|` *inside* a string — needed to write
         // e.g. `"|"` as a literal pipe token — is never mistaken for this lexer's own operators.
@@ -1960,13 +1978,20 @@ impl Recognizer {
         }
     }
 
+    /// @emoji 🔙️ Tries the LARGEST token span first, shrinking down to (and including, P2-P1) a
+    /// zero-width match — real backtracking, unlike `Symbol::Star`'s single-pass greedy loop, which
+    /// is why a macro is the right escape hatch for a Ref that must stop short of a following
+    /// literal it would otherwise swallow (see the `hex` macro's own doc comment). The zero-width
+    /// floor (`pos..` rather than `pos + 1..`) only ever fires for a matcher whose `try_match`
+    /// accepts the empty string — `hex`'s does (an empty hex-encoded value is valid) — so this is a
+    /// strict widening: every pre-existing macro's behavior on non-empty spans is unchanged.
     fn match_macro_span(
         &self,
         matcher: &MacroMatcher,
         tokens: &[crate::os_dsl::SpannedToken],
         pos: usize,
     ) -> Option<usize> {
-        for end in (pos + 1..=tokens.len()).rev() {
+        for end in (pos..=tokens.len()).rev() {
             let slice_text = slice_source_text(&tokens[pos..end]);
             if (matcher.try_match)(&slice_text) {
                 return Some(end);
@@ -2062,6 +2087,28 @@ fn macro_props_ok(text: &str) -> bool {
     text.contains('=')
 }
 
+/// @emoji 🔠️ P2-P1: a run of lowercase hex digits (`enc_str`/`hex_encode`'s own alphabet), incl. the
+/// empty string (an empty hex-encoded value is valid — see `match_macro_span`'s zero-width floor).
+/// Exists as a MACRO, not a `hex = {INT | IDENT | FLOAT}*` production, because a Star is a single
+/// greedy pass with no backtracking (`Symbol::Star`'s doc comment): a *production*-modeled `hex`
+/// immediately followed by an unrelated bareword literal it happens to share a token KIND with
+/// (`set-member`'s real wire shape is `key=<hex> value=<value>` — `value` tokenizes as an ordinary
+/// `IDENT`, exactly like a stray hex letter run would) gets silently swallowed INTO the greedy `hex`
+/// Star, desyncing everything after it — a real, silent (no parse error, just `recognize() == false`
+/// or worse, a wrong match) trap for every future FG-wave author who reaches for `{INT|IDENT}*` to
+/// model a generic opaque/hex content field placed before another keyword. `match_macro_span`
+/// already tries the largest token span first and shrinks until `try_match` accepts, so `hex` here
+/// naturally backtracks off `value` (spelled with `v`/`l`/`u`, none of them valid hex digits) without
+/// any grammar-file change beyond referencing the bare `hex` ident (no production named `hex` is
+/// defined — `Symbol::Ref`'s existing production-then-macro fallback routes it here automatically).
+fn macro_hex_ok(text: &str) -> bool {
+    // `slice_source_text` joins multi-token spans with a synthetic `" "` (no such space exists in
+    // the real source — whitespace is trivia, stripped before tokens ever reach the recognizer, so
+    // e.g. hex `"6b"` lexing as two adjacent tokens `Int("6")`/`Ident("b")` joins to `"6 b"` here);
+    // filter it back out before validating, or every multi-token hex value would spuriously fail.
+    text.bytes().filter(|b| !b.is_ascii_whitespace()).all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+}
+
 fn default_macros() -> Vec<MacroMatcher> {
     vec![
         MacroMatcher {
@@ -2079,6 +2126,10 @@ fn default_macros() -> Vec<MacroMatcher> {
         MacroMatcher {
             name: "props",
             try_match: macro_props_ok,
+        },
+        MacroMatcher {
+            name: "hex",
+            try_match: macro_hex_ok,
         },
     ]
 }
@@ -2663,6 +2714,27 @@ mod tests {
         assert_eq!(g.start, "doc");
         assert_eq!(g.productions.len(), 1);
         assert_eq!(g.productions[0].alternatives[0].symbols, vec![Symbol::Literal("hello".to_string())]);
+    }
+
+    /// ✅️ P2-P1 regression: a `#`-comment containing a `"`, `?`, or `|` character (routine in a
+    /// hand-authored grammar's own doc-comment prose — e.g. illustrating an escaped quote or an
+    /// EBNF-style alternation) must never be misread by `lex`'s quote/operator pre-scan as this
+    /// lexer's own quote-open/Pipe/Question token. Root cause of every P2-P1 pilot (json/csv)
+    /// conformance-test parse failure: `lex` scanned the WHOLE file's raw bytes for `"`/`?`/`|`
+    /// before comments were ever recognized, so e.g. a doc comment illustrating JSON's `\"` escape
+    /// opened a runaway "quote" that swallowed real productions below it, and a doc comment
+    /// illustrating `a | b` alternation split the segment mid-sentence, leaving a stray backtick to
+    /// fall through to "unexpected character" once the corrupted segment reached `core_lex`.
+    #[test]
+    fn hash_comment_hides_quote_and_pipe_characters_from_the_operator_prescan() {
+        let g = parse_grammar(
+            "grammar demo\nstart doc\n# illustrating an escape: \\\" and an alternation: a | b, plus a trailing comma? here\ndoc = \"hello\" | \"world\"\n",
+        )
+        .expect("parse_grammar");
+        assert_eq!(g.id, "demo");
+        assert_eq!(g.productions[0].alternatives.len(), 2);
+        assert_eq!(g.productions[0].alternatives[0].symbols, vec![Symbol::Literal("hello".to_string())]);
+        assert_eq!(g.productions[0].alternatives[1].symbols, vec![Symbol::Literal("world".to_string())]);
     }
 
     #[test]

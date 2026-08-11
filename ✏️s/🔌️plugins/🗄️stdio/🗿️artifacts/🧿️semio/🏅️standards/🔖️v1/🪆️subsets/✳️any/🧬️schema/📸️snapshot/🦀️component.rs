@@ -1,6 +1,10 @@
 //! 🧬️ SemioSnapshot — the envelope union over all 13 domain subsets — every semio artifact round-trips through this shape.
-//! 🚧 scaffolded by W1b: minimal honest fields only (not the full spec shape) — full
-//! implementation lands in W2/W3.
+//! W2b closer: the 13 imports below now resolve to each subset's REAL, W2a/W2b-completed
+//! snapshot type (brep/mesh/model/object/cad/drawing landed in W2a; document/image/video/audio/
+//! animation/presentation/workflow landed in W2b) — this file's own shape (an untagged-by-us
+//! `SemioSubsetSnapshot` enum + the thin `SemioSnapshot{schema, subset}` wrapper) needed no
+//! structural change from the W1b scaffold to pick that up, since only the referenced types'
+//! internals grew, not their names/paths.
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;

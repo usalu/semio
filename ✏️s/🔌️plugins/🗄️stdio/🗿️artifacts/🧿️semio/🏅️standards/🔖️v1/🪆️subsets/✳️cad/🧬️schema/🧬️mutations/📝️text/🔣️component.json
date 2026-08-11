@@ -1,10 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.semio.cad.mutations/text.json",
-  "title": "Semio_semio_cad_mutations",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
-  "type": "object",
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+  "$id": "https://semio.tech/schema/s.stdio.semio.cad/mutations/text.json",
+  "title": "SemioCadMutationText",
+  "description": "protocol::OpText::print_op/parse_op wire text -- no semio envelope; see ../🔣️component.json for the decoded mutation's real schema.",
+  "type": "string"
 }

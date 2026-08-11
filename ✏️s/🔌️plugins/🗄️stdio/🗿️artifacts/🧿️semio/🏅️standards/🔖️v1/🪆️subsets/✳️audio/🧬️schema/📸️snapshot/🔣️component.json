@@ -1,10 +1,26 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.audio/snapshot.json",
   "title": "SemioAudioSnapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
   "type": "object",
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "sampleRate": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "format": { "type": "string", "enum": ["pcm8", "pcm16", "pcm24", "pcm32", "f32", "f64"], "x-semio-state": "persistent" },
+    "channels": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": {
+        "type": "object",
+        "properties": { "samples": { "type": "array", "items": { "type": "number" } } }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": {
+        "type": "object",
+        "properties": { "key": { "type": "string" }, "value": { "type": "string" } }
+      }
+    }
   }
 }

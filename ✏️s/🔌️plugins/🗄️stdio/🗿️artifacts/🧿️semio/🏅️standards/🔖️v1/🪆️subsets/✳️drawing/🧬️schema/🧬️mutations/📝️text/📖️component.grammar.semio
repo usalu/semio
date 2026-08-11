@@ -1,5 +1,17 @@
-dialect grammar stdio.semio.drawing.mutations
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
+dialect grammar stdio.semio.drawing.mutation.text
+; real protocol::OpText grammar (🦀️component.rs print_op/parse_op): one line of compact,
+; mutation-tagged JSON -- see 🔣️component.json for the full 18-variant field union
 root = document
-document = marker
-marker = "stdio.semio.drawing.mutations"
+document = json-object
+json-object = "{" DQUOTE "mutation" DQUOTE ":" mutation-tag *("," member) "}"
+mutation-tag = %s"noMutation" / %s"setSnapshot" / %s"setCanvasSize" / %s"setCanvasBackground"
+             / %s"setStyle" / %s"removeStyle" / %s"insertLayer" / %s"removeLayer"
+             / %s"setLayerMeta" / %s"moveLayer" / %s"setGroupTransform" / %s"setPathSegments"
+             / %s"setNodeStyle" / %s"setText" / %s"setImage" / %s"insertNode" / %s"removeNode"
+             / %s"replaceNode"
+member = json-string ":" json-value
+json-value = json-string / json-number / json-object / json-array / "true" / "false" / "null"
+json-array = "[" [json-value *("," json-value)] "]"
+json-string = DQUOTE *(%x20-21 / %x23-5B / %x5D-10FFFF / "\" %x22-5C) DQUOTE
+json-number = ["-"] 1*DIGIT ["." 1*DIGIT]
+

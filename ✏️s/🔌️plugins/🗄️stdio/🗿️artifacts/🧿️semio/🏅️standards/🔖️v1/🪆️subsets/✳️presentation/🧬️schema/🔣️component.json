@@ -1,10 +1,12 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.presentation/artifact.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "SemioPresentationArtifact",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
   "type": "object",
+  "required": ["schema", "masters", "layouts", "slides"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "schema": { "type": "string" },
+    "masters": { "type": "array" },
+    "layouts": { "type": "array" },
+    "slides": { "type": "array" }
   }
 }

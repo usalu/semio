@@ -1,3 +1,4 @@
-//! 🚧 scaffolded by W1b — text representation marker for `stdio.semio.document.mutations`. Full grammar-backed
-//! parse/print lands in W2/W3.
-pub const TEXT_MARKER: &str = "stdio.semio.document.mutations";
+//! 📄️ Text representation marker for `s.stdio.semio.document.mutations`: `keyword arg=value ...`
+//! (space-separated) or the literal token `no-mutation` (see `print_document_mutation`/
+//! `parse_document_mutation` in `🧬️mutations/🦀️component.rs` for the real hand-rolled grammar).
+pub const TEXT_MARKER: &str = "s.stdio.semio.document.mutations";

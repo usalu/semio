@@ -1,8 +1,11 @@
 meta:
-  id: epw_mutations
+  id: stdio_epw_mutations
   endian: le
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  Raw UTF-8 bytes of the hand-rolled `stdio.epw.mutations` text (see ../📝️text/📖️component.grammar.semio).
+  Not wrapped in the shared `.semio` binary envelope.
 seq:
-  - id: magic
-    contents: "stdio.epw.mutations"
+  - id: payload
+    type: str
+    size-eos: true
+    encoding: UTF-8

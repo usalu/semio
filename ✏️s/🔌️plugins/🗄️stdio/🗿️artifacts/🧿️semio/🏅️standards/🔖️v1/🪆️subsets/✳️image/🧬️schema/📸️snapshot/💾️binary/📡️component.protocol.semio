@@ -1,3 +1,13 @@
-dialect protocol stdio.semio.image.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.image.snapshot"
+dialect protocol
+protocol s.stdio.semio.image.snapshot.binary
+start semio-binary
+
+semio-binary  = magic token-len token snapshot-json
+magic         = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A
+token-len     = u32le
+token         = *OCTET
+snapshot-json = *OCTET
+
+; -- real wire shape (store::semio_format::wrap_binary/unwrap_binary). Honest boundary:
+; -- `snapshot-json` is this NEUTRAL semio subset's own serde_json bytes, not a format-specific
+; -- byte layout — see the JSON Schema sibling under 📸️snapshot for that shape.

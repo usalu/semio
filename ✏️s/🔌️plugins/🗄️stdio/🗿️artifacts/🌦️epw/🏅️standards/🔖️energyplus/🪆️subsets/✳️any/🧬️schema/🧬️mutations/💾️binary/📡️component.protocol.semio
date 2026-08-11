@@ -1,3 +1,4 @@
 dialect protocol stdio.epw.mutations
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.epw.mutations"
+; protocol::OpBinary raw text encoding of EpwMutation — NOT wrapped in the shared `.semio`
+; binary envelope
+payload = *OCTET   ; UTF-8 hand-rolled mutation text (see ../📝️text/📖️component.grammar.semio)

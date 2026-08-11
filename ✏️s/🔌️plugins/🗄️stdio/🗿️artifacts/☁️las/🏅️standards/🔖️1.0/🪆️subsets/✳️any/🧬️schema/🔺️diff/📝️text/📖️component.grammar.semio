@@ -1,6 +1,92 @@
-dialect grammar stdio.las.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.las' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.las.diff
+start diff
+
+# Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: real one-line
+# diff-text grammar matching `LasDiff`'s hand-rolled `print_las_diff`/`parse_las_diff`
+# (../🦀️component.rs's `HandcraftedDiffCodec` region -- the F6 gif89a/svg-precedent shape, same
+# convention zip's own `ZipDiff` diff grammar uses: space-separated top-level `key=value`/
+# `key{...}` tokens, hex for strings/bytes, a uniform `[0]`/`[1,<T>]` tag for the two
+# `Option<Option<T>>` tri-state point fields, single-letter `tag:value` pairs for the sparse
+# `LasVlrDiff`/`LasPointDiff`, and `<name>{[removed];[modified];[added]}` for the two INDEX-keyed
+# collection triples (`vlrs`/`points`). Replaces the pre-existing placeholder (`header = 'schema'
+# SP 'stdio.las' NL` / `body = payload NL? ` / `payload = *OCTET`) which used pseudo-ABNF syntax
+# entirely outside this framework's real dialect and did not match `print_las_diff`'s actual
+# output shape at all. Per this program's mandatory fix-report guidance (`p2-p1-fix-report.md`):
+# grouping is always `{...}`, never bare `(...)`; hex-byte runs reference the framework `hex`
+# MACRO (a bare `hex` ident with no matching production), never a hand-written `{INT|IDENT}*`
+# production. Every token below is copied verbatim from `print_las_diff`'s real declaration-order
+# field emission, not invented.
+
+diff = {version-major-part}? {version-minor-part}? {system-identifier-part}? {generating-software-part}? {creation-day-of-year-part}? {creation-year-part}? {header-size-part}? {offset-to-point-data-part}? {number-of-vlrs-part}? {point-data-format-id-part}? {point-data-record-length-part}? {number-of-point-records-part}? {points-by-return-part}? {x-scale-part}? {y-scale-part}? {z-scale-part}? {x-offset-part}? {y-offset-part}? {z-offset-part}? {max-x-part}? {min-x-part}? {max-y-part}? {min-y-part}? {max-z-part}? {min-z-part}? {vlrs-part}? {points-part}?
+
+version-major-part = "version-major" "=" INT
+version-minor-part = "version-minor" "=" INT
+system-identifier-part = "system-identifier" "=" hex
+generating-software-part = "generating-software" "=" hex
+creation-day-of-year-part = "creation-day-of-year" "=" INT
+creation-year-part = "creation-year" "=" INT
+header-size-part = "header-size" "=" INT
+offset-to-point-data-part = "offset-to-point-data" "=" INT
+number-of-vlrs-part = "number-of-vlrs" "=" INT
+point-data-format-id-part = "point-data-format-id" "=" INT
+point-data-record-length-part = "point-data-record-length" "=" INT
+number-of-point-records-part = "number-of-point-records" "=" INT
+points-by-return-part = "points-by-return" "=" u32x5
+x-scale-part = "x-scale" "=" number
+y-scale-part = "y-scale" "=" number
+z-scale-part = "z-scale" "=" number
+x-offset-part = "x-offset" "=" number
+y-offset-part = "y-offset" "=" number
+z-offset-part = "z-offset" "=" number
+max-x-part = "max-x" "=" number
+min-x-part = "min-x" "=" number
+max-y-part = "max-y" "=" number
+min-y-part = "min-y" "=" number
+max-z-part = "max-z" "=" number
+min-z-part = "min-z" "=" number
+
+# `f64::to_string()` prints a whole value like `100.0` as `100` (no decimal point) -- both lex
+# through the shared lexer, `FLOAT` for a value with a `.`/exponent, `INT` otherwise (same real
+# ambiguity obj/ply's own `number = FLOAT | INT` production already covers).
+number = FLOAT | INT
+
+u32x5 = "[" INT "," INT "," INT "," INT "," INT "]"
+
+# `enc_vlrs_diff`/`enc_points_diff`'s `<name>{[removed];[modified];[added]}` shape (recipe §1.4's
+# copy-pasteable index-keyed collection-triple grammar, png's own verbatim precedent).
+vlrs-part = "vlrs" "{" "[" vlrs-removed-list? "]" ";" "[" vlrs-modified-list? "]" ";" "[" vlrs-added-list? "]" "}"
+vlrs-removed-list = INT {"," INT}*
+vlrs-modified-list = vlrs-modified-item {"," vlrs-modified-item}*
+vlrs-modified-item = INT ":" vlr-diff-body
+vlrs-added-list = vlrs-added-item {"," vlrs-added-item}*
+vlrs-added-item = INT ":" vlr-body
+
+points-part = "points" "{" "[" points-removed-list? "]" ";" "[" points-modified-list? "]" ";" "[" points-added-list? "]" "}"
+points-removed-list = INT {"," INT}*
+points-modified-list = points-modified-item {"," points-modified-item}*
+points-modified-item = INT ":" point-diff-body
+points-added-list = points-added-item {"," points-added-item}*
+points-added-item = INT ":" point-body
+
+# `enc_vlr_diff`'s single-letter `tag:value` pairs -- only present (changed) fields, comma-joined.
+vlr-diff-body = "[" {vlr-diff-tag {"," vlr-diff-tag}*}? "]"
+vlr-diff-tag = "U" ":" hex | "R" ":" INT | "N" ":" hex | "X" ":" hex
+
+# `enc_vlr`'s full positional 4-tuple (user_id, record_id, description, data).
+vlr-body = "[" hex "," INT "," hex "," hex "]"
+
+# `enc_point_diff`'s single-letter `tag:value` pairs, incl. the two tri-state fields (`G`=gps_time,
+# `B`=rgb) which nest ANOTHER `[0]`/`[1,<T>]` option tag inside their own value.
+point-diff-body = "[" {point-diff-tag {"," point-diff-tag}*}? "]"
+point-diff-tag = "X" ":" number | "Y" ":" number | "Z" ":" number | "I" ":" INT | "R" ":" INT | "N" ":" INT | "D" ":" INT | "E" ":" INT | "C" ":" INT | "A" ":" INT | "U" ":" INT | "P" ":" INT | "G" ":" gps-opt | "B" ":" rgb-opt
+
+# `enc_point`'s full positional 14-tuple, field order matching `LasPoint`'s struct declaration
+# exactly (x, y, z, intensity, return_number, number_of_returns, scan_direction_flag,
+# edge_of_flight_line, classification, scan_angle_rank, user_data, point_source_id, gps_time, rgb).
+point-body = "[" number "," number "," number "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," gps-opt "," rgb-opt "]"
+
+# `encode_option`'s uniform `[0]` (None) / `[1,<value>]` (Some) tag.
+gps-opt = "[" "0" "]" | "[" "1" "," number "]"
+rgb-opt = "[" "0" "]" | "[" "1" "," rgb-value "]"
+rgb-value = "[" INT "," INT "," INT "]"

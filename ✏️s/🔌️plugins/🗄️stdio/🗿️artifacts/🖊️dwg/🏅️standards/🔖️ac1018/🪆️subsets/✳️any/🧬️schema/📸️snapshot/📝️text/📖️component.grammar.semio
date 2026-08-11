@@ -1,6 +1,39 @@
-dialect grammar stdio.dwg.snapshot
-root = document
-document = header body
-header = 'schema' SP 'stdio.dwg' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.dwg.ac1018.snapshot
+extension dwg
+start document
+comment none
+
+# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: real
+# `store::ArtifactDsl::print_dsl`/`parse_dsl` shape for `stdio.dwg` (ac1018), read directly from
+# `../🦀️component.rs`'s handcrafted `impl store::ArtifactDsl for DwgSnapshot` — replaces the old
+# one-line-header ABNF placeholder (`dialect grammar stdio.dwg.snapshot` — 2 tokens on one line,
+# rejected by this dialect's parser — plus `%x`/single-quoted-literal/`SP`/`NL` bodies outside this
+# dialect's alphabet). `print_dsl` is `wrap_text(envelope, body)` where `body` is
+# `encode_dwg(self).iter().map(|b| format!("{b:02x}")).collect()` — `encode_dwg` returns
+# `snap.bytes.clone()` verbatim (this artifact never re-derives the byte payload from its typed
+# mirror fields; `bytes` IS the ground truth) — so `body` is a CONTINUOUS run of lowercase hex
+# digit pairs, no separators, no whitespace, exactly `stdio.binary`'s own DWG-shaped precedent
+# (`💾️binary/…/📸️snapshot/📝️text/📖️component.grammar.semio`) — `stdio.dwg` genuinely IS "a binary
+# file", same "format is bytes" honest treatment.
+#
+# `dsl::fixture_sweep::m5_handcrafted_grammar_conformance::dsl_body_from_fixture` (and this
+# artifact's own `grammar_conformance_law`, mirroring it) feeds the Recognizer
+# `"<envelope-id>\n<body>"` — the mandatory `semio stdio.dwg.dsl v1` preamble line is a
+# framework-level envelope concern, already described once at
+# 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/📡️protocol/📡️component.protocol.semio (P2-M3
+# deliverable 3) and stripped down to the bare `SemioEnvelope::envelope_id()` (`"stdio.dwg"`)
+# before this grammar ever sees it.
+document = artifact-mark hex-body
+artifact-mark = "stdio.dwg"
+
+# P2-P1-fix note (mandatory reading, `p2-p1-fix-report.md`): an open-ended hex run MUST be the
+# framework's built-in `hex` MACRO (bare `hex`, no matching production here — `Symbol::Ref` falls
+# back production-then-macro automatically), never a hand-rolled `{INT | IDENT}*`-shaped
+# production (`Symbol::Star` is a single greedy, non-backtracking pass and silently mis-swallows
+# an adjacent keyword-shaped token). `hex-body` is the last token in the document — nothing
+# follows it to backtrack off of — and the macro already supports the empty-body case
+# (`DwgSnapshot::default()`'s `bytes: vec![]`, though `encode_dwg` itself errors on an empty
+# payload — see `../🦀️component.rs`'s `encode_dwg` — so an empty body is grammar-legal but never
+# genuinely emitted by `print_dsl`).
+hex-body = hex

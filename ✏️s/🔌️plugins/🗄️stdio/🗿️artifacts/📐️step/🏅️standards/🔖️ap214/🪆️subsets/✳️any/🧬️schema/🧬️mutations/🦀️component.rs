@@ -3,9 +3,11 @@
 //! `inverse()` is handcrafted per variant, key/index-aware.
 
 use crate::artifacts::step::schema::diff::{
-    dec_entity, dec_file_description, dec_file_name, dec_file_schema, dec_step_snapshot, dec_str, dec_value, diff_set_snapshot, enc_entity, enc_file_description,
-    enc_file_name, enc_file_schema, enc_step_snapshot, enc_str, enc_value, parse_u64, parse_usize, StepArgAdded, StepArgModified, StepArgsDiff, StepDiff,
-    StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified,
+    dec_entity, dec_entity_bin, dec_file_description, dec_file_description_bin, dec_file_name, dec_file_name_bin, dec_file_schema, dec_file_schema_bin,
+    dec_step_snapshot, dec_step_snapshot_bin, dec_str, dec_value, dec_value_bin, diff_set_snapshot, enc_entity, enc_entity_bin, enc_file_description,
+    enc_file_description_bin, enc_file_name, enc_file_name_bin, enc_file_schema, enc_file_schema_bin, enc_step_snapshot, enc_step_snapshot_bin, enc_str,
+    enc_value, enc_value_bin, parse_u64, parse_usize, read_str_bin, write_str_bin, StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff,
+    StepEntityAdded, StepEntityDiff, StepEntityModified,
 };
 use crate::artifacts::step::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
 use crate::artifacts::step::StepSnapshot;
@@ -253,17 +255,152 @@ impl OpText for StepMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `StepDiff`'s hand-rolled codec uses.
+/// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
+/// `StepMutation` variant ordinal, same 0-10 order `print_step_mutation`'s own keyword match uses.
+/// Reuses `StepDiff`'s `pub(crate)` recursive `enc_value_bin`/`enc_entity_bin`/
+/// `enc_step_snapshot_bin`/`write_str_bin` primitives (`../../🔺️diff/🦀️component.rs`, imported
+/// above) — same intra-artifact-reuse split the TEXT codec above already uses.
 impl protocol::OpBinary for StepMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let tag: u8 = match self {
+            StepMutation::NoMutation => 0,
+            StepMutation::SetSnapshot { .. } => 1,
+            StepMutation::SetFileDescription { .. } => 2,
+            StepMutation::SetFileName { .. } => 3,
+            StepMutation::SetFileSchema { .. } => 4,
+            StepMutation::InsertEntity { .. } => 5,
+            StepMutation::RemoveEntity { .. } => 6,
+            StepMutation::SetEntityName { .. } => 7,
+            StepMutation::SetEntityArg { .. } => 8,
+            StepMutation::InsertEntityArg { .. } => 9,
+            StepMutation::RemoveEntityArg { .. } => 10,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            StepMutation::NoMutation => {}
+            StepMutation::SetSnapshot { snapshot } => enc_step_snapshot_bin(snapshot, &mut out),
+            StepMutation::SetFileDescription { file_description } => enc_file_description_bin(file_description, &mut out),
+            StepMutation::SetFileName { file_name } => enc_file_name_bin(file_name, &mut out),
+            StepMutation::SetFileSchema { file_schema } => enc_file_schema_bin(file_schema, &mut out),
+            StepMutation::InsertEntity { index, entity } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_entity_bin(entity, &mut out);
+            }
+            StepMutation::RemoveEntity { id } => store::pack_rt::write_varint_u64(&mut out, *id),
+            StepMutation::SetEntityName { id, name } => {
+                store::pack_rt::write_varint_u64(&mut out, *id);
+                write_str_bin(&mut out, name);
+            }
+            StepMutation::SetEntityArg { id, arg_index, value } => {
+                store::pack_rt::write_varint_u64(&mut out, *id);
+                store::pack_rt::write_varint_u64(&mut out, *arg_index as u64);
+                enc_value_bin(value, &mut out);
+            }
+            StepMutation::InsertEntityArg { id, arg_index, value } => {
+                store::pack_rt::write_varint_u64(&mut out, *id);
+                store::pack_rt::write_varint_u64(&mut out, *arg_index as u64);
+                enc_value_bin(value, &mut out);
+            }
+            StepMutation::RemoveEntityArg { id, arg_index } => {
+                store::pack_rt::write_varint_u64(&mut out, *id);
+                store::pack_rt::write_varint_u64(&mut out, *arg_index as u64);
+            }
+        }
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(StepMutation::NoMutation),
+            1 => {
+                let snapshot = dec_step_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                Ok(StepMutation::SetSnapshot { snapshot })
+            }
+            2 => {
+                let file_description = dec_file_description_bin(&mut reader).map_err(|e| malformed("op file_description", reader.position(), e))?;
+                Ok(StepMutation::SetFileDescription { file_description })
+            }
+            3 => {
+                let file_name = dec_file_name_bin(&mut reader).map_err(|e| malformed("op file_name", reader.position(), e))?;
+                Ok(StepMutation::SetFileName { file_name })
+            }
+            4 => {
+                let file_schema = dec_file_schema_bin(&mut reader).map_err(|e| malformed("op file_schema", reader.position(), e))?;
+                Ok(StepMutation::SetFileSchema { file_schema })
+            }
+            5 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let entity = dec_entity_bin(&mut reader).map_err(|e| malformed("op entity", reader.position(), e))?;
+                Ok(StepMutation::InsertEntity { index, entity })
+            }
+            6 => {
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                Ok(StepMutation::RemoveEntity { id })
+            }
+            7 => {
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let name = read_str_bin(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                Ok(StepMutation::SetEntityName { id, name })
+            }
+            8 => {
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", reader.position(), e.to_string()))? as usize;
+                let value = dec_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(StepMutation::SetEntityArg { id, arg_index, value })
+            }
+            9 => {
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", reader.position(), e.to_string()))? as usize;
+                let value = dec_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(StepMutation::InsertEntityArg { id, arg_index, value })
+            }
+            10 => {
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", reader.position(), e.to_string()))? as usize;
+                Ok(StepMutation::RemoveEntityArg { id, arg_index })
+            }
+            other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
+        }
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG1: one representative `StepMutation` per variant, real `print_op()`-conformance-law
+/// fodder (`ops_grammar_conformance_law`) and `protocol_walk_law` fodder — every `StepValue` tag
+/// (incl. the recursive `Aggregate`/`TypedValue` cases) and `InsertEntity`'s bare `StepEntity`
+/// payload are exercised at least once.
+pub(crate) fn demo_mutation_cases() -> Vec<StepMutation> {
+    use crate::artifacts::step::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepValue as SV};
+    let demo_entity = |id: u64, name: &str, args: Vec<StepValue>| StepEntity { id, name: name.into(), args, complex: Vec::new() };
+    vec![
+        StepMutation::NoMutation,
+        StepMutation::SetSnapshot { snapshot: crate::artifacts::step::engine::demo_step_snapshot() },
+        StepMutation::SetFileDescription { file_description: StepFileDescription { description: vec!["demo".into()], implementation_level: "2;1".into() } },
+        StepMutation::SetFileName { file_name: StepFileName { name: "demo.step".into(), timestamp: "2026-08-11T00:00:00".into(), author: vec!["Ueli".into()], organization: vec!["semio".into()], preprocessor_version: "semio".into(), originating_system: "".into(), authorization: "".into() } },
+        StepMutation::SetFileSchema { file_schema: StepFileSchema { schemas: vec!["AUTOMOTIVE_DESIGN".into()] } },
+        StepMutation::InsertEntity {
+            index: 1,
+            entity: demo_entity(50, "NEW", vec![
+                SV::Unset, SV::Derived, SV::Integer(-42), SV::Real(3.5), SV::String("s".into()), SV::Enum("T".into()),
+                SV::Reference(9), SV::Aggregate(vec![SV::Integer(1), SV::Real(2.0)]),
+                SV::TypedValue { type_name: "IFCLENGTHMEASURE".into(), value: Box::new(SV::Real(3000.0)) },
+            ]),
+        },
+        StepMutation::RemoveEntity { id: 2 },
+        StepMutation::SetEntityName { id: 1, name: "RENAMED".into() },
+        StepMutation::SetEntityArg { id: 1, arg_index: 1, value: SV::Aggregate(vec![SV::Real(1.0), SV::Real(2.0), SV::Real(3.0)]) },
+        StepMutation::InsertEntityArg { id: 1, arg_index: 2, value: SV::TypedValue { type_name: "X".into(), value: Box::new(SV::Aggregate(vec![SV::Integer(1), SV::Integer(2)])) } },
+        StepMutation::RemoveEntityArg { id: 1, arg_index: 0 },
+    ]
+}
+//#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
 #[cfg(test)]

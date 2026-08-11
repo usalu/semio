@@ -2,7 +2,13 @@ meta:
   id: semio_video_diff
   endian: le
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  stdio.semio.video diff binary layout: UTF-8 bytes of the text grammar (../📝️text) verbatim —
+  protocol::DiffCodec::encode_diff == print_diff().into_bytes(), no separate binary framing
+  (matching GifDiff/SvgDiff/DocxDiff's own hand-rolled codecs).
 seq:
-  - id: magic
-    contents: "stdio.semio.video.diff"
+  - id: text_utf8
+    type: str
+    encoding: UTF-8
+    consume: false
+    terminator: -1
+    doc: the streams= triple grammar, see ../📝️text/📖️component.grammar.semio

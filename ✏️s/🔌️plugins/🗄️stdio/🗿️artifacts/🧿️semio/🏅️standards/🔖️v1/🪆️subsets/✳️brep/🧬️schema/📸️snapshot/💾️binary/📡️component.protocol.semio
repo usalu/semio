@@ -1,3 +1,18 @@
-dialect protocol stdio.semio.brep.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.brep.snapshot"
+dialect protocol
+protocol stdio.semio.brep.snapshot
+version 1
+schema stdio.semio.brep
+start frame
+framing magic 0xbeef5e10a0000001
+header fixed 32
+field format_major u16
+field format_minor u16
+field flags u32
+field domain_tag u32
+field header_crc32 u32
+; payload bytes are the JSON-pack encoding of a SemioBrepSnapshot -- see ../../🔣️component.json
+; for that payload's own structure, not an unstructured blob.
+segment payload varint bytes
+footer fixed 64
+field artifact_mark utf8
+field body_crc32 u32

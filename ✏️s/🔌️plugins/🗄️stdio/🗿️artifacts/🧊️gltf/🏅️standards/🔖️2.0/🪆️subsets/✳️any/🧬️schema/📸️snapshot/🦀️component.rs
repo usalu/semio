@@ -896,9 +896,17 @@ impl store::ArtifactDsl for GltfSnapshot {
 }
 
 impl store::ArtifactPack for GltfSnapshot {
+    /// 📦️ P2-FG3: routes through the REAL `.glb` binary container (`encode_glb`), not the prior
+    /// F6-era `serialize_gltf_document` JSON-as-"binary" shortcut — glTF's own genuine binary
+    /// serialization, matching `../💾️binary/📡️component.protocol.semio`'s real chunk-container
+    /// framing exactly (this is what that protocol file's `walk_protocol` is built to walk; per
+    /// the recipe's own instruction, the protocol description must match what `encode_pack`
+    /// actually produces). A raw `.glb` file byte-for-byte (unwrapped) still decodes directly via
+    /// `crate::artifacts::gltf::engine::decode_glb` (🧐️analyzer's own fast path) — this impl only
+    /// adds the SEMIO envelope around the SAME real container, it does not invent a second shape.
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::gltf::engine::serialize_gltf_document(self);
+        let raw = crate::artifacts::gltf::engine::encode_glb(self).map_err(store::PackError::Schema)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -917,7 +925,7 @@ impl store::ArtifactPack for GltfSnapshot {
             )));
         }
         let _ = options;
-        crate::artifacts::gltf::engine::parse_gltf_document(&inner).map_err(store::PackError::Schema)
+        crate::artifacts::gltf::engine::decode_glb(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

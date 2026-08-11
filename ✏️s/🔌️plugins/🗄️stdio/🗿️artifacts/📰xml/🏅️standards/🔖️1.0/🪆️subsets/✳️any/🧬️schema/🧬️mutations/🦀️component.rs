@@ -312,56 +312,205 @@ impl protocol::OpText for XmlMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification as `XmlDiff`'s hand-rolled codec.
+//#region 🔖️OpBinaryCodec
+/// 🧪️ P2-FG1: real recursive binary primitives backing the upgraded `OpBinary` impl below --
+/// mirrors json's own `enc_json_path_bin`/`enc_json_snapshot_bin` shape
+/// (`🔣️json/…/🧬️mutations/🦀️component.rs`), reusing `store::pack_rt::write_varint_u64` /
+/// `store::ByteReader` plus `XmlDiff`'s own `write_str_lp`/`read_str_lp`/`enc_xml_node_bin`/
+/// `dec_xml_node_bin`/`enc_declaration_bin`/`dec_declaration_bin` (`../🔺️diff/🦀️component.rs`,
+/// `pub(crate)` to this artifact).
+use crate::artifacts::xml::schema::diff::{dec_declaration_bin, dec_xml_node_bin, enc_declaration_bin, enc_xml_node_bin, read_str_lp, write_str_lp};
+
+fn enc_node_path_bin(p: &XmlNodePath, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, p.0.len() as u64);
+    for index in &p.0 {
+        store::pack_rt::write_varint_u64(out, *index as u64);
+    }
+}
+fn dec_node_path_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNodePath, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut path = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        path.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+    }
+    Ok(XmlNodePath(path))
+}
+fn enc_xml_snapshot_bin(s: &XmlSnapshot, out: &mut Vec<u8>) {
+    write_str_lp(out, &s.schema);
+    out.push(if s.doc.root.is_some() { 1 } else { 0 });
+    if let Some(root) = &s.doc.root {
+        enc_xml_node_bin(root, out);
+    }
+    out.push(if s.doc.doctype.is_some() { 1 } else { 0 });
+    if let Some(doctype) = &s.doc.doctype {
+        write_str_lp(out, doctype);
+    }
+    out.push(if s.doc.declaration.is_some() { 1 } else { 0 });
+    if let Some(declaration) = &s.doc.declaration {
+        enc_declaration_bin(declaration, out);
+    }
+}
+fn dec_xml_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let root = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
+    let doctype = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let declaration = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_declaration_bin(reader)?) } else { None };
+    Ok(XmlSnapshot { schema, doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root, doctype, declaration } })
+}
+//#endregion 🔖️OpBinaryCodec
+
+/// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
+/// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the `XmlMutation`
+/// variant ordinal, in the same 0-7 order `print_xml_mutation`'s own keyword match uses.
 impl protocol::OpBinary for XmlMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let tag: u8 = match self {
+            XmlMutation::NoMutation => 0,
+            XmlMutation::SetSnapshot { .. } => 1,
+            XmlMutation::SetDeclaration { .. } => 2,
+            XmlMutation::SetDoctype { .. } => 3,
+            XmlMutation::InsertElement { .. } => 4,
+            XmlMutation::RemoveElement { .. } => 5,
+            XmlMutation::SetAttribute { .. } => 6,
+            XmlMutation::SetText { .. } => 7,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            XmlMutation::NoMutation => {}
+            XmlMutation::SetSnapshot { snapshot } => enc_xml_snapshot_bin(snapshot, &mut out),
+            XmlMutation::SetDeclaration { declaration } => {
+                out.push(if declaration.is_some() { 1 } else { 0 });
+                if let Some(declaration) = declaration {
+                    enc_declaration_bin(declaration, &mut out);
+                }
+            }
+            XmlMutation::SetDoctype { doctype } => {
+                out.push(if doctype.is_some() { 1 } else { 0 });
+                if let Some(doctype) = doctype {
+                    write_str_lp(&mut out, doctype);
+                }
+            }
+            XmlMutation::InsertElement { path, index, node } => {
+                enc_node_path_bin(path, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_xml_node_bin(node, &mut out);
+            }
+            XmlMutation::RemoveElement { path, index } => {
+                enc_node_path_bin(path, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+            }
+            XmlMutation::SetAttribute { path, name, value } => {
+                enc_node_path_bin(path, &mut out);
+                write_str_lp(&mut out, name);
+                out.push(if value.is_some() { 1 } else { 0 });
+                if let Some(value) = value {
+                    write_str_lp(&mut out, value);
+                }
+            }
+            XmlMutation::SetText { path, text } => {
+                enc_node_path_bin(path, &mut out);
+                write_str_lp(&mut out, text);
+            }
+        }
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(XmlMutation::NoMutation),
+            1 => {
+                let snapshot = dec_xml_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                Ok(XmlMutation::SetSnapshot { snapshot })
+            }
+            2 => {
+                let has = reader.read_u8().map_err(|e| malformed("op declaration presence", reader.position(), e.to_string()))?;
+                let declaration = if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("op declaration", reader.position(), e))?) } else { None };
+                Ok(XmlMutation::SetDeclaration { declaration })
+            }
+            3 => {
+                let has = reader.read_u8().map_err(|e| malformed("op doctype presence", reader.position(), e.to_string()))?;
+                let doctype = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op doctype", reader.position(), e))?) } else { None };
+                Ok(XmlMutation::SetDoctype { doctype })
+            }
+            4 => {
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let node = dec_xml_node_bin(&mut reader).map_err(|e| malformed("op node", reader.position(), e))?;
+                Ok(XmlMutation::InsertElement { path, index, node })
+            }
+            5 => {
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                Ok(XmlMutation::RemoveElement { path, index })
+            }
+            6 => {
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let has = reader.read_u8().map_err(|e| malformed("op value presence", reader.position(), e.to_string()))?;
+                let value = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?) } else { None };
+                Ok(XmlMutation::SetAttribute { path, name, value })
+            }
+            7 => {
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", reader.position(), e))?;
+                Ok(XmlMutation::SetText { path, text })
+            }
+            other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
+        }
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG1: representative `XmlMutation` values (every variant, incl. `InsertElement`'s bare
+/// `XmlNode` payload and `SetSnapshot`'s full nested-document payload) -- the single source of
+/// truth reused by `op_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
+/// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests, so a new variant only needs
+/// adding here once.
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<XmlMutation> {
+    use crate::artifacts::xml::schema::snapshot::XmlAttr;
+
+    let base = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(r#"<root a="1"><child x="0"/></root>"#).unwrap();
+    vec![
+        XmlMutation::NoMutation,
+        XmlMutation::SetSnapshot { snapshot: base },
+        XmlMutation::SetDeclaration { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }) },
+        XmlMutation::SetDeclaration { declaration: None },
+        XmlMutation::SetDoctype { doctype: Some("<!DOCTYPE root>".into()) },
+        XmlMutation::SetDoctype { doctype: None },
+        XmlMutation::InsertElement {
+            path: XmlNodePath(vec![]),
+            index: 1,
+            node: XmlNode::Element { name: "grandchild".into(), attrs: vec![XmlAttr { name: "r".into(), value: "1".into() }], children: vec![] },
+        },
+        XmlMutation::RemoveElement { path: XmlNodePath(vec![]), index: 0 },
+        XmlMutation::SetAttribute { path: XmlNodePath(vec![0]), name: "width".into(), value: Some("99".into()) },
+        XmlMutation::SetAttribute { path: XmlNodePath(vec![0]), name: "width".into(), value: None },
+        XmlMutation::SetText { path: XmlNodePath(vec![0]), text: "hello world".into() },
+    ]
+}
+//#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod op_codec_tests {
     use super::*;
-    use crate::artifacts::xml::schema::snapshot::XmlAttr;
     use protocol::OpBinary;
-
-    fn fixture() -> XmlSnapshot {
-        <XmlSnapshot as store::ArtifactDsl>::parse_dsl(
-            r#"<root a="1"><child x="0"/></root>"#,
-        )
-        .unwrap()
-    }
 
     /// 🧪️ `OpText`/`OpBinary` round-trip laws for the hand-rolled `XmlMutation` grammar —
     /// exercises every variant incl. `InsertElement`'s bare `XmlNode` payload and `SetSnapshot`'s
-    /// full nested-document payload (declaration + doctype + recursive node tree).
+    /// full nested-document payload (declaration + doctype + recursive node tree). Reuses
+    /// `demo_mutation_cases()` (the single source of truth also consumed by
+    /// `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`).
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = fixture();
-        let mutations = vec![
-            XmlMutation::NoMutation,
-            XmlMutation::SetSnapshot { snapshot: base.clone() },
-            XmlMutation::SetDeclaration { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }) },
-            XmlMutation::SetDeclaration { declaration: None },
-            XmlMutation::SetDoctype { doctype: Some("<!DOCTYPE root>".into()) },
-            XmlMutation::SetDoctype { doctype: None },
-            XmlMutation::InsertElement {
-                path: XmlNodePath(vec![]),
-                index: 1,
-                node: XmlNode::Element { name: "grandchild".into(), attrs: vec![XmlAttr { name: "r".into(), value: "1".into() }], children: vec![] },
-            },
-            XmlMutation::RemoveElement { path: XmlNodePath(vec![]), index: 0 },
-            XmlMutation::SetAttribute { path: XmlNodePath(vec![0]), name: "width".into(), value: Some("99".into()) },
-            XmlMutation::SetAttribute { path: XmlNodePath(vec![0]), name: "width".into(), value: None },
-            XmlMutation::SetText { path: XmlNodePath(vec![0]), text: "hello world".into() },
-        ];
-        for mutation in mutations {
+        for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = XmlMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

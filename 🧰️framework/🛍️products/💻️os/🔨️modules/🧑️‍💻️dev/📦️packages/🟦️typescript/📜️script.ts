@@ -1513,6 +1513,102 @@ class PluginCapabilityLintScript extends BundleScript {
   }
 }
 
+//#region 🔖️CapabilityLayeringLint
+/** 🗺️ The four layering roles this lint enforces — a subset of `🔣️taxonomy.json`'s `roles` (which also
+ * lists `product`/`hub`/`testkit`/`tool`, deliberately out of scope: this lint mirrors exactly the three
+ * directions `.dependency-cruiser.cjs`'s `framework-no-s`/`s-modules-no-plugins`/`no-plugin-to-extension-*`
+ * already enforce on the TS/JS import graph, not a broader Cargo policy). */
+type LayeringRole = "framework" | "s-module" | "plugin" | "extension";
+const LAYERING_ROLES = new Set<string>(["framework", "s-module", "plugin", "extension"]);
+
+/** 🚧️ Grandfathered layering violations — real, evidence-backed, and deliberately accepted, NOT
+ * pre-existing noise like `KNOWN_CAPABILITY_VIOLATIONS` above. This ticket's one populated entry is C2
+ * from `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT` (see `📓️w5b-c2-verdict.md`):
+ * `semio-s-plugin-procedural` has 7 real Cargo dependencies on `🌊️flow`'s extension crates, and unlinking
+ * them needs new runtime infrastructure that does not exist yet (a host-side extension registry wired
+ * into a real boot path, guest-side component-extension wiring for all 7 crates, and a resolution for the
+ * shared brep-kernel `GeometryHandle` coupling) — tracked as a dedicated follow-up ticket, not mechanical
+ * cleanup. Do not add an entry here to silence a failure without the same standard of evidence — every
+ * other hit this lint finds is a REAL new violation, not noise. */
+const KNOWN_LAYERING_VIOLATIONS = new Set<string>(
+  ["brep", "math", "primitive", "logic", "dictionary", "list", "text"].map(
+    (ext) => `semio-s-plugin-procedural: plugin->extension dependency on semio-s-plugin-flow-extension-${ext}`,
+  ),
+);
+
+/** 🧱️ `[package.metadata.semio]`'s `role` key, read the same way `PluginCapabilityLintScript`'s own
+ * `[package.metadata.semio]` regex above reads `capabilities` — a plain-text scrape, not a TOML parser
+ * dependency, for one field. `🔣️taxonomy.json`'s `ecosystems.🦀️rust.marker` documents this table as the
+ * SSOT for a crate's role (see `📓️w6-investigation.md`, which used this exact table to settle a real-vs-
+ * optics layering question about `semio-framework-os-kernel`). */
+function extractSemioRole(manifestText: string): LayeringRole | null {
+  const role = manifestText.match(/\[package\.metadata\.semio\][\s\S]*?\brole\s*=\s*"([^"]+)"/)?.[1];
+  return role && LAYERING_ROLES.has(role) ? (role as LayeringRole) : null;
+}
+
+/** 🧱️ Cargo-metadata-driven counterpart to `.dependency-cruiser.cjs`'s `framework-no-s`/
+ * `s-modules-no-plugins`/`no-plugin-to-extension-*` rules: those see only the TS/JS import graph (`compose
+ * 🧰️framework ✏️s 🌎️hub ♻️mit-bestand`), so a real *Cargo* dependency edge violating the same three
+ * directions (framework→{s-module,plugin,extension}, s-module→{plugin,extension}, plugin→extension) is
+ * invisible to them — this is exactly how C2 (`🌀️procedural`→7 `🌊️flow` extension crates) went
+ * undetected. Classifies every workspace crate by its own declared `[package.metadata.semio].role` (SSOT,
+ * never a directory-path guess) and walks `cargo metadata`'s real dependency edges, `kind: null` (normal/
+ * runtime) only — `dev`/`build` edges are test/build-time-only and not a real production coupling (mirrors
+ * this file's own `dsl-fixture-sweep`-style "test-only harness, not a runtime violation" precedent). W7 of
+ * `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`. Deliberately NOT wired into `plugin lint`/the root
+ * `verify gate`: a dry run surfaced one real, undocumented `framework->plugin` edge
+ * (`semio-framework-os-renderer-wgpu` → `semio-s-plugin-puzzle`, apparently-unused — no `puzzle::` call
+ * site found in the wgpu renderer's sources despite the live Cargo dependency) that nobody has yet
+ * evaluated or accepted as a grandfathered exception; wiring straight into the shared gate would redden it
+ * repo-wide over an unreviewed finding. Run on demand instead (`bun ./📜️script.ts layer-lint` from this
+ * package, or `bun nx run @semio-tech/framework-os-dev:layer-lint`) until that finding is triaged. */
+class CapabilityLayeringLintScript extends BundleScript {
+  async run(): Promise<void> {
+    const metadataResult = runProbe("cargo", ["metadata", "--format-version", "1", "--no-deps"], { cwd: repoRoot, budgetMs: buildBudgetMs() });
+    if (metadataResult.status !== 0) {
+      throw new Error(metadataResult.stderr || "cargo metadata failed");
+    }
+    const metadata = JSON.parse(metadataResult.stdout || "{}") as {
+      packages: Array<{ name: string; manifest_path: string; dependencies: Array<{ name: string; kind: string | null }> }>;
+    };
+    const roleByName = new Map<string, LayeringRole>();
+    for (const pkg of metadata.packages) {
+      const role = extractSemioRole(await Bun.file(pkg.manifest_path).text());
+      if (role) roleByName.set(pkg.name, role);
+    }
+    const forbiddenTargets: Record<LayeringRole, LayeringRole[]> = {
+      framework: ["s-module", "plugin", "extension"],
+      "s-module": ["plugin", "extension"],
+      plugin: ["extension"],
+      extension: [],
+    };
+    const failures: string[] = [];
+    let checkedEdgeCount = 0;
+    for (const pkg of metadata.packages) {
+      const fromRole = roleByName.get(pkg.name);
+      if (!fromRole) continue;
+      for (const dep of pkg.dependencies) {
+        if (dep.kind !== null) continue; // 🕵️ dev/build deps are not a real runtime coupling
+        const toRole = roleByName.get(dep.name);
+        if (!toRole || dep.name === pkg.name) continue;
+        checkedEdgeCount++;
+        if (forbiddenTargets[fromRole].includes(toRole)) {
+          failures.push(`${pkg.name}: ${fromRole}->${toRole} dependency on ${dep.name}`);
+        }
+      }
+    }
+    const grandfathered = failures.filter((f) => KNOWN_LAYERING_VIOLATIONS.has(f));
+    const blocking = failures.filter((f) => !KNOWN_LAYERING_VIOLATIONS.has(f));
+    for (const warning of grandfathered) console.warn(`[capability-layering-lint] WARN (grandfathered C2, see 📓️w5b-c2-verdict.md): ${warning}`);
+    if (blocking.length > 0) {
+      for (const failure of blocking) console.error(`[capability-layering-lint] ${failure}`);
+      throw new Error(`capability layering lint failed (${blocking.length} issue(s), ${checkedEdgeCount} cross-role edge(s) evaluated)`);
+    }
+    console.log(`[DEBUG] capability layering lint passed (${checkedEdgeCount} cross-role edge(s) evaluated, ${grandfathered.length} grandfathered warning(s))`);
+  }
+}
+//#endregion 🔖️CapabilityLayeringLint
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
@@ -2486,6 +2582,10 @@ const router = new ScriptRouter(import.meta.dir)
   .register("build", BuildScript)
   .register("test", TestScript)
   .register("verify", VerifyScript)
+  // 🧱️ Standalone, not folded into `plugin lint`/`verify` — see `CapabilityLayeringLintScript`'s own
+  // docstring: a dry run surfaced one real, undocumented framework->plugin edge that isn't yet triaged,
+  // and wiring straight into the shared gate would redden it repo-wide over an unreviewed finding.
+  .register("layer-lint", CapabilityLayeringLintScript)
   .register(
     "parity",
     class extends BundleScript {

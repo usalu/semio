@@ -1,5 +1,5 @@
-//! 🏗️ SemioModelBuilder — 🚧 scaffolded by W1b: local `ArtifactBuilder` round-tripping the
-//! minimal snapshot. W2 adds typed constructors + the real mutation vocabulary.
+//! 🏗️ SemioModelBuilder — `ArtifactBuilder` over the real `SemioModelSnapshot`/`SemioModelDiff`/
+//! `SemioModelMutation` triple (spatial/elements/relations, full named-variant vocabulary).
 
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::semio::standards::v1::subsets::model::schema::diff::SemioModelDiff;

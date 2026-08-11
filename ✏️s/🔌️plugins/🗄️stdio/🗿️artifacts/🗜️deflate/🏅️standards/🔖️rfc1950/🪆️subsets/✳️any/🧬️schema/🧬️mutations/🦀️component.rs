@@ -129,6 +129,36 @@ impl protocol::OpBinary for DeflateMutation {
 }
 //#endregion OpCodecs
 
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG2: representative `DeflateMutation` values (every variant, incl. both
+/// `SetPresetDictionary` arms and both `SetPayload` empty/non-empty arms) — the single source of
+/// truth reused by `op_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
+/// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests.
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<DeflateMutation> {
+    use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
+
+    let snapshot = DeflateSnapshot {
+        schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
+        compression_method: 8,
+        window_bits: 7,
+        compression_level_hint: DeflateLevelHint::Default,
+        dict_id: Some(0x1234_5678),
+        payload: b"demo-mutation-snapshot-payload".to_vec(),
+    };
+    vec![
+        DeflateMutation::NoMutation,
+        DeflateMutation::SetSnapshot { snapshot: snapshot.clone() },
+        DeflateMutation::SetSnapshot { snapshot: DeflateSnapshot { dict_id: None, compression_level_hint: DeflateLevelHint::Fastest, ..snapshot } },
+        DeflateMutation::SetCompressionParams { method: 8, window_bits: 5, level_hint: DeflateLevelHint::Maximum },
+        DeflateMutation::SetPresetDictionary { dict_id: Some(7) },
+        DeflateMutation::SetPresetDictionary { dict_id: None },
+        DeflateMutation::SetPayload { payload: b"demo-payload".to_vec() },
+        DeflateMutation::SetPayload { payload: Vec::new() },
+    ]
+}
+//#endregion 🔖️DemoCases
+
 //#region Tests
 #[cfg(test)]
 mod tests {

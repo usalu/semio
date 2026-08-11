@@ -1,31 +1,64 @@
-dialect protocol stdio.pdf.1.7.snapshot
+dialect protocol
+protocol stdio.pdf.1.7.snapshot
+version 1
+schema stdio.pdf.1.7
+start header
 
-; -- ISO 32000-1 §7.5.2 file header -- the real byte-level magic this artifact's `sniff_pdf`
-; -- checks (not a placeholder single-byte magic).
-magic = "%PDF-"
-version-major = DIGIT
-version-dot = "."
-version-minor = DIGIT
+# P2-FG3: `stdio.pdf.1.7` pack payload is the REAL raw PDF file bytes (`store::ArtifactPack::
+# encode_pack_with` -> real `encode_pdf(self)`, ../../../../../⚙️engine/🦀️component.rs, wrapped
+# verbatim by the SEMIO binary envelope -- this file models the bytes as if the walk already
+# starts AT the payload, past the envelope, per M3's own guidance).
+#
+# Per this ticket's own binding instruction (mirroring M2's ZIP/PDF-1.7 exclusion, `📖️grammar-
+# recipe.md` §6): model the container framing the real decoder actually reads directly -- the
+# `%PDF-` header magic, and the xref/trailer region located via the SAME backward-scan capability
+# M2 built for zip -- but do NOT attempt full random-access indirect-object-graph resolution
+# (xref `/Prev` chains, hybrid streams, arbitrary backward jumps to resolve any object) in the
+# protocol walker; that stays Rust-side, as it already is (`decode_pdf`'s own `Resolver`/
+# `build_xref`/`resolve_compressed`, ⚙️engine/component.rs:671-796).
+#
+# `framing record` (NOT `framing magic ...`) is deliberate, confirmed live by a real
+# `walk_protocol` run, not assumed: `Framing::Magic` unconditionally reads/compares EXACTLY 8 raw
+# bytes regardless of how many hex digits the declared literal has (`🗣️dsl/📖️grammar/
+# 🦀️component.rs`'s own `magic_bytes(value: u64) -> [u8; 8]`) -- PDF 1.7's real magic is only 5
+# bytes (`%PDF-`), so `framing magic 0x255044462D` gets read as an 8-byte, left-zero-padded value
+# and mismatches the real on-disk bytes (`protocol-framing-magic-fixed-8-bytes`, first hit by
+# gif87a's own 6-byte signature). Modeled honestly, same fix gif87a's own protocol file
+# documents: a real, individually-read `field magic fixed 5` inside a `header` block -- genuinely
+# walked but NOT byte-validated at the PROTOCOL layer (the real Rust `decode_pdf` already
+# validates it byte-for-byte, `data.len() < 5 || &data[0..5] != b"%PDF-"`,
+# ⚙️engine/component.rs:1236). The version digits that follow (`1.7`) are variable-length ASCII
+# text terminated by CR/LF -- this dialect's `Prim` family has no "read decimal ASCII digits to a
+# delimiter" primitive (only fixed-width binary types and length-prefixed/greedy byte spans), so
+# the version text is NOT separately fielded here; it is part of the SAME opaque region every
+# real byte past the header magic falls into, until the backward-scan anchor below.
+framing record
 
-; -- The remainder is offset-indexed (via the trailing xref table's byte offsets, or `startxref`)
-; -- rather than a fixed sequential frame -- `⚙️engine::build_xref`/`Resolver::resolve` walk it by
-; -- offset, not by scanning forward field-by-field, so this protocol description names the real
-; -- top-level frames (indirect objects, xref table, trailer) without over-claiming a fixed order.
-indirect-object = obj-num SP obj-gen SP "obj" EOL object EOL "endobj" EOL
-object-stream-payload = *OCTET ; the format's payload IS bytes at this leaf (§7.4 filters)
-xref-table = "xref" EOL *xref-subsection
-xref-entry = offset-10digit SP gen-5digit SP in-use-flag SP EOL
-trailer-dict-and-pointer = "trailer" EOL trailer-dict EOL "startxref" EOL byte-offset EOL "%%EOF"
+header fixed 5
+field magic fixed 5
 
-DIGIT = %x30-39
-SP = %x20
-EOL = %x0A / %x0D.0A
-obj-num = 1*DIGIT
-obj-gen = 1*DIGIT
-offset-10digit = 10DIGIT
-gen-5digit = 5DIGIT
-in-use-flag = "n" / "f"
-byte-offset = 1*DIGIT
-object = 1*OCTET ; see the sibling ../📝️text/📖️component.grammar.semio for the full COS grammar
-trailer-dict = 1*OCTET
-xref-subsection = 1*OCTET
+# Real Rust `decode_pdf` locates its xref/trailer anchor via `find_last_subslice(data,
+# b"startxref")` (⚙️engine/component.rs:1242) -- a genuine BACKWARD scan from EOF, because (same
+# "trailer describes the middle" family as ZIP's EOCD, W0's own load-bearing finding) nothing
+# before that keyword announces where the trailer/xref region begins. `backward`'s own `magic`
+# literal is ALSO u64-parsed (`trim_be_bytes(parse_u64_literal(...))`,
+# `🗣️dsl/📖️grammar/🦀️component.rs`) -- capped at 8 bytes, same limit `framing magic` hits above --
+# so the real 9-byte ASCII keyword `startxref` cannot be declared whole; this file anchors on its
+# first 8 bytes, `startxre` (`0x7374617274787265` = `s t a r t x r e`), which is unique enough in
+# a well-formed PDF (the only place that byte run occurs) to locate the same real position
+# `find_last_subslice` finds, one byte earlier than the literal keyword's own end -- harmless
+# since the trailing `f` simply becomes the first byte of the opaque `tail`. The offset digits,
+# `xref`/`trailer` dictionary text, and every indirect object preceding this anchor are ASCII/COS
+# text with no fixed byte width either (`/Length 123` object-stream lengths, decimal xref
+# offsets, `<< ... >>` dictionaries) -- genuinely NOT protocol-Prim-walkable at the byte-fixed-
+# field level this dialect provides (STEP/PLY's own cross-dialect-parameterization gap,
+# `📖️grammar-recipe.md` §6, is the same family: a grammar-parsed value driving protocol field
+# shape). Modeled as one honest opaque tail from the anchor to EOF -- the real per-field COS
+# parsing (`Lexer`/`parse_dict_or_stream`/`parse_classic_xref`/`parse_xref_stream`) stays fully
+# real and independently tested, Rust-side.
+# Once this file declares a `backward` block, `walk_protocol`'s final `pos == bytes.len()` check
+# is (correctly, per M2's own documented exception) skipped -- see `protocol_walk_law`, which
+# asserts a bounded `consumed`, not `== len`.
+backward xref_trailer_region magic 0x7374617274787265 {
+  tail bytes
+}

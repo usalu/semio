@@ -1,10 +1,16 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.presentation/diff.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "SemioPresentationDiff",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "masters": { "$ref": "#/definitions/NamedTripleDiff" },
+    "layouts": { "$ref": "#/definitions/NamedTripleDiff" },
+    "slides": { "$ref": "#/definitions/IndexedTripleDiff" }
+  },
+  "definitions": {
+    "IndexedTripleDiff": { "type": "object", "properties": { "removed": { "type": "array", "items": { "type": "integer" } }, "modified": { "type": "array" }, "added": { "type": "array" } } },
+    "NamedTripleDiff": { "type": "object", "properties": { "removed": { "type": "array" }, "modified": { "type": "array" }, "added": { "type": "array" } } },
+    "SlideFrameDiff": { "type": "object", "properties": { "origin": { "type": "object" }, "width": { "type": "number" }, "height": { "type": "number" } } },
+    "SlideDiff": { "type": "object", "properties": { "layoutId": { "type": ["string", "null"] }, "shapes": { "$ref": "#/definitions/IndexedTripleDiff" }, "notes": { "$ref": "#/definitions/IndexedTripleDiff" } } }
   }
 }

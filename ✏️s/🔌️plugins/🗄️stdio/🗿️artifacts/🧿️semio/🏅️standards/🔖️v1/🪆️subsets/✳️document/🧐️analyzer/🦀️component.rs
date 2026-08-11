@@ -1,5 +1,6 @@
-//! 🧐️ SemioDocumentAnalyzer — 🚧 scaffolded by W1b: JSON-pack decode only. `sniff()` genuinely
-//! inspects the payload for this subset's document-schema marker (not an always-High/Low stub).
+//! 🧐️ SemioDocumentAnalyzer — real cheap `sniff()` (inspects the payload for this subset's
+//! document-schema marker, not an always-High/Low stub) plus real `analyze()` (full JSON-pack
+//! decode into the typed `SemioDocumentSnapshot`).
 
 use semio_framework_plugin::{ArtifactAnalyzer, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
@@ -50,3 +51,41 @@ impl ArtifactAnalyzer for SemioDocumentAnalyzer {
         Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
     }
 }
+
+//#region 🔖️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocStyle};
+
+    fn rich_snapshot() -> SemioDocumentSnapshot {
+        SemioDocumentSnapshot { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: vec![DocStyle { id: "n".into(), name: "Normal".into(), based_on: None }], images: Vec::new(), blocks: vec![DocBlock::paragraph("hi")] }
+    }
+
+    #[test]
+    fn sniff_detects_own_binary_and_text_payloads() {
+        let snap = rich_snapshot();
+        let bytes = store::ArtifactPack::encode_pack(&snap);
+        assert_eq!(SemioDocumentAnalyzer::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
+        let text = <SemioDocumentSnapshot as store::ArtifactDsl>::print_dsl(&snap);
+        assert_eq!(SemioDocumentAnalyzer::sniff(&AnalyzeSource::Text(&text)), IoConfidence::High);
+        assert_eq!(SemioDocumentAnalyzer::sniff(&AnalyzeSource::Binary(b"not a semio document at all")), IoConfidence::Low);
+    }
+
+    #[test]
+    fn analyze_decodes_binary_source_into_snapshot() {
+        let snap = rich_snapshot();
+        let bytes = store::ArtifactPack::encode_pack(&snap);
+        let analysis = SemioDocumentAnalyzer::analyze(&[AnalyzeSource::Binary(&bytes)]);
+        assert_eq!(analysis.confidence, IoConfidence::High);
+        assert_eq!(analysis.parts.snapshot, Some(snap));
+    }
+
+    #[test]
+    fn analyze_reports_low_confidence_on_malformed_text() {
+        let analysis = SemioDocumentAnalyzer::analyze(&[AnalyzeSource::Text("not valid semio document dsl")]);
+        assert_eq!(analysis.confidence, IoConfidence::Low);
+        assert!(!analysis.diagnostics.is_empty());
+    }
+}
+//#endregion 🔖️Tests

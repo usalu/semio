@@ -115,6 +115,42 @@ pub fn diff_set_payload(payload: Vec<u8>) -> DeflateDiff {
 }
 //#endregion 🔖️Diff
 
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG2: representative `DeflateDiff` values -- covers every field, incl. `dict_id`'s
+/// tri-state (`Some(None)` = cleared, `Some(Some(_))` = set/changed) and the empty diff. Single
+/// source of truth reused by `diff_codec_text_binary_roundtrip_law` (below) AND by
+/// `⚙️engine/🦀️component.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law` conformance
+/// tests.
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<DeflateDiff> {
+    use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
+
+    let a = DeflateSnapshot {
+        schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
+        compression_method: 8,
+        window_bits: 7,
+        compression_level_hint: DeflateLevelHint::Fastest,
+        dict_id: None,
+        payload: b"demo-cases-a-payload".to_vec(),
+    };
+    let b = DeflateSnapshot {
+        schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
+        compression_method: 9,
+        window_bits: 6,
+        compression_level_hint: DeflateLevelHint::Maximum,
+        dict_id: Some(0xDEAD_BEEF),
+        payload: b"demo-cases-b-different-longer-payload".to_vec(),
+    };
+    vec![
+        DeflateDiff::default(),
+        DeflateDiff::between(&a, &b),
+        DeflateDiff::between(&b, &a),
+        diff_set_preset_dictionary(None),
+        diff_set_payload(Vec::new()),
+    ]
+}
+//#endregion 🔖️DemoCases
+
 //#region 🔖️HandcraftedDiffCodec
 /// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `DeflateDiff` — the derive path
 /// (`#[derive(dsl::DslDiff)]`) is NOT usable here: `dict_id: Option<Option<u32>>` is a tri-state
@@ -257,15 +293,76 @@ impl protocol::DiffCodec for DeflateDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_deflate_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim (same simplification `GifDiff`/`WriterDiff`'s
-    /// hand-rolled `DiffCodec` impls use): satisfies every `DiffCodec` law (round-trips,
-    /// deterministic) without inventing a second, denser wire format.
+    /// 🧪️ P2-FG2: REAL binary frame (`format u8 | flags u8 | [compression_method][window_bits]
+    /// [compression_level_hint][dict_id][payload]`), matching
+    /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes`
+    /// shape -- upgraded from F6's `print_diff().into_bytes()` text-as-binary shortcut (100% of
+    /// stdio's `DiffCodec` impls were still on that shortcut per the P2-W0 census). `flags` bits
+    /// 0-4 mark `compression_method`/`window_bits`/`compression_level_hint`/`dict_id`/`payload`
+    /// presence in that fixed order; each present field's own (possibly tri-state) payload
+    /// follows in the same order, `payload` last so it can be bare "rest of buffer" bytes with
+    /// no length prefix (it is the only opaque, unbounded field in the frame).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let mut flags: u8 = 0;
+        if self.compression_method.is_some() { flags |= 0b0_0001; }
+        if self.window_bits.is_some() { flags |= 0b0_0010; }
+        if self.compression_level_hint.is_some() { flags |= 0b0_0100; }
+        if self.dict_id.is_some() { flags |= 0b0_1000; }
+        if self.payload.is_some() { flags |= 0b1_0000; }
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
+        if let Some(v) = self.compression_method { out.push(v); }
+        if let Some(v) = self.window_bits { out.push(v); }
+        if let Some(v) = self.compression_level_hint { out.push(v.to_bits()); }
+        if let Some(dict_id) = &self.dict_id {
+            out.push(if dict_id.is_some() { 1 } else { 0 });
+            if let Some(id) = dict_id {
+                out.extend_from_slice(&id.to_le_bytes());
+            }
+        }
+        if let Some(payload) = &self.payload {
+            out.extend_from_slice(payload);
+        }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let compression_method = if flags & 0b0_0001 != 0 {
+            Some(reader.read_u8().map_err(|e| malformed("diff compression_method", reader.position(), e.to_string()))?)
+        } else {
+            None
+        };
+        let window_bits = if flags & 0b0_0010 != 0 {
+            Some(reader.read_u8().map_err(|e| malformed("diff window_bits", reader.position(), e.to_string()))?)
+        } else {
+            None
+        };
+        let compression_level_hint = if flags & 0b0_0100 != 0 {
+            let bits = reader.read_u8().map_err(|e| malformed("diff compression_level_hint", reader.position(), e.to_string()))?;
+            Some(DeflateLevelHint::from_bits(bits))
+        } else {
+            None
+        };
+        let dict_id = if flags & 0b0_1000 != 0 {
+            let has = reader.read_u8().map_err(|e| malformed("diff dict_id presence", reader.position(), e.to_string()))?;
+            Some(if has != 0 {
+                let bytes4 = reader.read_bytes(4).map_err(|e| malformed("diff dict_id", reader.position(), e.to_string()))?;
+                Some(u32::from_le_bytes([bytes4[0], bytes4[1], bytes4[2], bytes4[3]]))
+            } else {
+                None
+            })
+        } else {
+            None
+        };
+        let payload = if flags & 0b1_0000 != 0 {
+            let rest = reader.read_bytes(reader.remaining()).map_err(|e| malformed("diff payload", reader.position(), e.to_string()))?;
+            Some(rest.to_vec())
+        } else {
+            None
+        };
+        Ok(DeflateDiff { compression_method, window_bits, compression_level_hint, dict_id, payload })
     }
 }
 //#endregion 🔖️TopLevel

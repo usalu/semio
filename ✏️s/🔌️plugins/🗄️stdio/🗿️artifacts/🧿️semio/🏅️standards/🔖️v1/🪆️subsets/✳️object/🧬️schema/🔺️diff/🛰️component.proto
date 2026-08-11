@@ -1,7 +1,48 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// 🔺️ SemioObjectDiff facet mirror — mirrors the 🦀️component.rs sibling's real fields.
 package semio.s_stdio_semio_object.diff;
+
+import "../📸️snapshot/🛰️component.proto";
+
+message IndexModified { uint64 index = 1; SemioValueDiff diff = 2; }
+message IndexAdded { uint64 index = 1; semio.s_stdio_semio_object.snapshot.SemioValue item = 2; }
+message IndexedTripleDiff {
+  repeated uint64 removed = 1;
+  repeated IndexModified modified = 2;
+  repeated IndexAdded added = 3;
+}
+
+message NamedModified { string key = 1; SemioValueDiff diff = 2; }
+message NamedAddedEntry { uint64 index = 1; semio.s_stdio_semio_object.snapshot.SemioObjectEntry item = 2; }
+message NamedTripleDiff {
+  repeated string removed = 1;
+  repeated NamedModified modified = 2;
+  repeated NamedAddedEntry added = 3;
+}
+
+message ObjectsModified { semio.s_stdio_semio_object.snapshot.ObjectId key = 1; SemioValueDiff diff = 2; }
+message NamedAddedNode { uint64 index = 1; semio.s_stdio_semio_object.snapshot.SemioObjectNode item = 2; }
+message ObjectsTripleDiff {
+  repeated semio.s_stdio_semio_object.snapshot.ObjectId removed = 1;
+  repeated ObjectsModified modified = 2;
+  repeated NamedAddedNode added = 3;
+}
+
+message SemioValueDiff {
+  oneof kind {
+    semio.s_stdio_semio_object.snapshot.SemioValue replace = 1;
+    bool bool_value = 2;
+    string int_lexeme = 3;
+    string float_lexeme = 4;
+    string str_value = 5;
+    bytes bytes_value = 6;
+    IndexedTripleDiff list = 7;
+    NamedTripleDiff map = 8;
+    semio.s_stdio_semio_object.snapshot.ObjectId ref_id = 9;
+  }
+}
+
 message SemioObjectDiff {
-  string schema = 1;
-  string entries_wire = 2;
+  SemioValueDiff root = 1;
+  ObjectsTripleDiff objects = 2;
 }

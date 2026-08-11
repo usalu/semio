@@ -1,3 +1,4 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.html.diff" ;
+(* ebnf stdio.html diff -- hand-rolled bracket-token grammar, see the sibling
+   ../📖️component.grammar.semio for the full production rules. *)
+document = { token, " " } ;
+token = "doctype=", tristateString | "root=", nodeDiff ;

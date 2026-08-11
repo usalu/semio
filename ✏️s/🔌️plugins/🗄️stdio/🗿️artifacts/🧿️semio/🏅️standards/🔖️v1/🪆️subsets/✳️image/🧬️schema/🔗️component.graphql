@@ -1,9 +1,19 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioImageArtifactEntry {
+# 🧬️ SemioImageArtifact schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+type SemioImageFrame {
+  delayMs: Int!
+  rgba8: String!
+}
+type SemioImageMetadataEntry {
   key: String!
   value: String!
 }
 type SemioImageArtifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioImageArtifactEntry!]! @state(class: PERSISTENT)
+  width: Int! @state(class: PERSISTENT)
+  height: Int! @state(class: PERSISTENT)
+  colorspace: String! @state(class: PERSISTENT)
+  bitDepth: Int! @state(class: PERSISTENT)
+  frames: [SemioImageFrame!]! @state(class: PERSISTENT)
+  icc: String @state(class: PERSISTENT)
+  metadata: [SemioImageMetadataEntry!]! @state(class: PERSISTENT)
 }

@@ -1,10 +1,9 @@
-/** 🧬️ SemioPresentationArtifact schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioPresentationArtifact
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface SemioPresentationArtifactEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ SemioPresentationArtifact — full artifact state, mirrors SemioPresentationSnapshot. */
+import type { SlideMaster, SlideLayout, Slide } from "./📸️snapshot/component";
+
 export interface SemioPresentationArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioPresentationArtifactEntry[];
+  schema: string;
+  masters: SlideMaster[];
+  layouts: SlideLayout[];
+  slides: Slide[];
 }

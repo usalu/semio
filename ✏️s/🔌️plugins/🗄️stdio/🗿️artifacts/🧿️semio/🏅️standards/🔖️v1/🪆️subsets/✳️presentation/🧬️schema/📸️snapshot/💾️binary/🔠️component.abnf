@@ -1,3 +1,7 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.presentation.snapshot"
+envelope    = envelope-id-len envelope-id component-tag version payload-len payload
+envelope-id-len = 4OCTET  ; u32 LE
+envelope-id     = *OCTET  ; UTF-8, envelope-id-len bytes
+component-tag   = OCTET
+version         = 4OCTET  ; u32 LE
+payload-len     = 8OCTET  ; u64 LE
+payload         = *OCTET  ; serde_json(SemioPresentationSnapshot), payload-len bytes

@@ -1,7 +1,7 @@
 //! 🧬️ Mp3Artifact schema — full artifact state, mirrors `Mp3Snapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
 
-use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Mp3Snapshot, Id3v2Header};
+use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Mp3Snapshot, Id3v2Tag, Id3v1Tag, Mp3Frame};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -13,10 +13,13 @@ pub struct Mp3Artifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub id3v2: Option<Id3v2Header>,
+    pub id3v2: Option<Id3v2Tag>,
     #[state(persistent)]
     #[serde(default)]
-    pub frames_raw: Vec<u8>,
+    pub frames: Vec<Mp3Frame>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub id3v1: Option<Id3v1Tag>,
 }
 
 impl Default for Mp3Artifact {
@@ -28,20 +31,23 @@ impl Mp3Artifact {
         Mp3Snapshot {
             schema: self.schema.clone(),
             id3v2: self.id3v2.clone(),
-            frames_raw: self.frames_raw.clone(),
+            frames: self.frames.clone(),
+            id3v1: self.id3v1.clone(),
         }
     }
     pub fn from_snapshot(snapshot: Mp3Snapshot) -> Self {
         Self {
             schema: snapshot.schema,
             id3v2: snapshot.id3v2,
-            frames_raw: snapshot.frames_raw,
+            frames: snapshot.frames,
+            id3v1: snapshot.id3v1,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: Mp3Snapshot) {
         self.schema = snapshot.schema;
         self.id3v2 = snapshot.id3v2;
-        self.frames_raw = snapshot.frames_raw;
+        self.frames = snapshot.frames;
+        self.id3v1 = snapshot.id3v1;
     }
 }
 

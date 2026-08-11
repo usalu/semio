@@ -1,9 +1,2 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_semio_model_mutationsEntry {
-  key: String!
-  value: String!
-}
-type Semio_semio_model_mutations {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_model_mutationsEntry!]! @state(class: PERSISTENT)
-}
+# stdio.semio.model mutation text grammar schema
+type Document { line: String! }

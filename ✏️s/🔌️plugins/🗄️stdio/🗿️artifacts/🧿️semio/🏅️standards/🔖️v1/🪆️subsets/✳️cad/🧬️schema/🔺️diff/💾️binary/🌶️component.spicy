@@ -1,5 +1,9 @@
-module Semio_semio_cad_diff;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=20;
+module Stdio_semio_cad_diff;
+
+# protocol::DiffCodec encode_diff/decode_diff payload for s.stdio.semio.cad.diff -- NO semio
+# envelope (unlike the snapshot facet): encode_diff is print_diff().into_bytes() verbatim, ASCII
+# text in the ../📝️text/📖️component.grammar.semio bracket-triple grammar.
+
+public type Document = unit {
+    payload: bytes &eod;   # print_diff() output; see ../📝️text/📖️component.grammar.semio
 };

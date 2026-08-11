@@ -460,5 +460,48 @@ mod tests {
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch for {d:?}");
         }
     }
+
+    //#region 🔖️DiffGrammarConformanceLaw
+    /// 🧪️ P2-P3: `dsl::parse_grammar` + `dsl::Recognizer::compile` + `.recognize` against REAL
+    /// `print_diff` output -- the empty diff, a scalar-only diff, and a diff exercising every one
+    /// of `TxtLinesDiff`'s `removed`/`modified`/`added` sections at once (a real `between()`
+    /// result can only ever populate `modified`+`removed` OR `modified`+`added` at a time, per
+    /// `TxtLinesDiff::between`'s own base-tail/other-tail algorithm above, so this also directly
+    /// constructs one diff exercising all three sections simultaneously, plus a genuine
+    /// `between()` result for good measure -- same case list `diff_codec_text_binary_roundtrip_law`
+    /// already uses).
+    #[test]
+    fn diff_grammar_conformance_law() {
+        use protocol::DiffCodec;
+        let grammar_text = crate::artifacts::txt::schema::diff::text::COMPONENT_GRAMMAR_SEMIO;
+        let grammar = dsl::parse_grammar(grammar_text).expect("parse diff grammar");
+        let recognizer = dsl::Recognizer::compile(&grammar);
+
+        let a = TxtSnapshot { lines: lines(&["a", "b", "c"]), trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() };
+        let b = TxtSnapshot { lines: lines(&["a", "x", "c", "d"]), trailing_newline: false, line_ending: LineEnding::CrLf, ..Default::default() };
+        let cases = vec![
+            TxtDiff::default(),
+            TxtDiff { trailing_newline: Some(true), line_ending: Some(LineEnding::CrLf), lines: None },
+            TxtDiff {
+                trailing_newline: Some(false),
+                line_ending: Some(LineEnding::Lf),
+                lines: Some(TxtLinesDiff {
+                    removed: vec![0, 2],
+                    modified: vec![TxtLineModified { index: 1, text: "changed".into() }],
+                    added: vec![
+                        TxtLineAdded { index: 0, text: "new-head".into() },
+                        TxtLineAdded { index: 3, text: "new-tail".into() },
+                    ],
+                }),
+            },
+            TxtDiff::between(&a, &b),
+        ];
+        for d in cases {
+            let printed = d.print_diff();
+            let ok = recognizer.recognize(&printed).unwrap_or_else(|e| panic!("recognize({printed:?}) errored: {e:?}"));
+            assert!(ok, "diff grammar must recognize real print_diff output {printed:?} for {d:?}");
+        }
+    }
+    //#endregion 🔖️DiffGrammarConformanceLaw
 }
 //#endregion 🧪️Tests

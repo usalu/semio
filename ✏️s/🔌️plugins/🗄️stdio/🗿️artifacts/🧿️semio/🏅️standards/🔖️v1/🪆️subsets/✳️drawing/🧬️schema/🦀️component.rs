@@ -1,7 +1,7 @@
 //! 🧬️ SemioDrawingArtifact schema — full artifact state, mirrors `SemioDrawingSnapshot` field for
-//! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
+//! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{SemioDrawingSnapshot, DrawNode};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawStyle, SemioDrawingSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -12,7 +12,13 @@ pub struct SemioDrawingArtifact {
     #[state(persistent)]
     pub schema: String,
     #[state(persistent)]
-    pub root: DrawNode,
+    pub canvas: DrawCanvas,
+    #[state(persistent)]
+    #[serde(default)]
+    pub styles: Vec<DrawStyle>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub layers: Vec<DrawLayer>,
 }
 
 impl Default for SemioDrawingArtifact {
@@ -23,18 +29,24 @@ impl SemioDrawingArtifact {
     pub fn to_snapshot(&self) -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             schema: self.schema.clone(),
-            root: self.root.clone(),
+            canvas: self.canvas,
+            styles: self.styles.clone(),
+            layers: self.layers.clone(),
         }
     }
     pub fn from_snapshot(snapshot: SemioDrawingSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            root: snapshot.root,
+            canvas: snapshot.canvas,
+            styles: snapshot.styles,
+            layers: snapshot.layers,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioDrawingSnapshot) {
         self.schema = snapshot.schema;
-        self.root = snapshot.root;
+        self.canvas = snapshot.canvas;
+        self.styles = snapshot.styles;
+        self.layers = snapshot.layers;
     }
 }
 

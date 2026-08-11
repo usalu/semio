@@ -1,9 +1,7 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioMeshArtifactEntry {
-  key: String!
-  value: String!
-}
+# 🧬️ SemioMeshArtifact schema — full artifact state, mirrors SemioMeshSnapshot field for field.
 type SemioMeshArtifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioMeshArtifactEntry!]! @state(class: PERSISTENT)
+  meshes: [SemioMesh!]! @state(class: PERSISTENT)
+  materials: [SemioMaterial!]! @state(class: PERSISTENT)
+  textures: [SemioTexture!]! @state(class: PERSISTENT)
 }

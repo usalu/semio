@@ -1,3 +1,4 @@
-//! 🚧 scaffolded by W1b — binary representation marker for `stdio.semio.brep.diff`. Full field-layout
-//! parse/print lands in W2/W3.
-pub const BINARY_MAGIC: &str = "stdio.semio.brep.diff";
+//! 💾️ Binary representation codec surface for `stdio.semio.brep` (diff).
+
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");

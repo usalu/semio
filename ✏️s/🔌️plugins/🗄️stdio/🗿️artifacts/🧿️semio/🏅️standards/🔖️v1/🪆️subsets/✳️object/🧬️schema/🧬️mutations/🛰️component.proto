@@ -1,7 +1,35 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// 🧬️ SemioObjectMutation facet mirror — mirrors the 🦀️component.rs sibling's real fields.
 package semio.s_stdio_semio_object.mutations;
+
+import "../📸️snapshot/🛰️component.proto";
+
+message SemioObjectPathSegment {
+  oneof kind {
+    string key = 1;
+    uint64 index = 2;
+  }
+}
+
+message SetSnapshot { semio.s_stdio_semio_object.snapshot.SemioObjectSnapshot snapshot = 1; }
+message SetValue { repeated SemioObjectPathSegment path = 1; semio.s_stdio_semio_object.snapshot.SemioValue value = 2; }
+message SetMapEntry { repeated SemioObjectPathSegment path = 1; string key = 2; semio.s_stdio_semio_object.snapshot.SemioValue value = 3; }
+message RemoveMapEntry { repeated SemioObjectPathSegment path = 1; string key = 2; }
+message InsertListItem { repeated SemioObjectPathSegment path = 1; uint64 index = 2; semio.s_stdio_semio_object.snapshot.SemioValue value = 3; }
+message RemoveListItem { repeated SemioObjectPathSegment path = 1; uint64 index = 2; }
+message SetObject { semio.s_stdio_semio_object.snapshot.ObjectId id = 1; semio.s_stdio_semio_object.snapshot.SemioValue value = 2; }
+message RemoveObject { semio.s_stdio_semio_object.snapshot.ObjectId id = 1; }
+
 message SemioObjectMutation {
-  string schema = 1;
-  string entries_wire = 2;
+  oneof mutation {
+    bool no_mutation = 1;
+    SetSnapshot set_snapshot = 2;
+    SetValue set_value = 3;
+    SetMapEntry set_map_entry = 4;
+    RemoveMapEntry remove_map_entry = 5;
+    InsertListItem insert_list_item = 6;
+    RemoveListItem remove_list_item = 7;
+    SetObject set_object = 8;
+    RemoveObject remove_object = 9;
+  }
 }

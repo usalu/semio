@@ -1,10 +1,2 @@
-/** 🧬️ Semio_semio_object_mutations schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_object_mutations
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_object_mutationsEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_object_mutations {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_object_mutationsEntry[];
-}
+/** 💾️ Binary representation for `stdio.semio.object` (mutations). */
+export type SemioObjectMutationBinary = Uint8Array;

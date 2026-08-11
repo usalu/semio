@@ -1,10 +1,59 @@
-/** 🧬️ SemioDocumentSnapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioDocumentSnapshot
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface SemioDocumentSnapshotEntry {
-  key: string;
-  value: string;
+/** 🧬️ SemioDocumentSnapshot — real TS mirror of the Rust snapshot shape (see the sibling
+ * `🦀️component.rs` for the source of truth). Block tree: Paragraph/Heading/List/Table/Code/
+ * Quote/Image/PageBreak, discriminated on `kind`. */
+
+export interface RunStyle {
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  size?: number;
+  font?: string;
+  color?: string;
+  link?: string;
 }
+
+export interface DocRun {
+  text: string;
+  style: RunStyle;
+}
+
+export interface DocStyle {
+  id: string;
+  name: string;
+  basedOn?: string;
+}
+
+export interface DocImage {
+  id: string;
+  mime: string;
+  bytes: number[];
+}
+
+export interface DocListItem {
+  blocks: DocBlock[];
+}
+
+export interface DocTableCell {
+  blocks: DocBlock[];
+}
+
+export interface DocTableRow {
+  cells: DocTableCell[];
+}
+
+export type DocBlock =
+  | { kind: "paragraph"; styleId?: string; runs: DocRun[] }
+  | { kind: "heading"; level: number; styleId?: string; runs: DocRun[] }
+  | { kind: "list"; ordered: boolean; items: DocListItem[] }
+  | { kind: "table"; rows: DocTableRow[] }
+  | { kind: "code"; language?: string; text: string }
+  | { kind: "quote"; blocks: DocBlock[] }
+  | { kind: "image"; imageId: string; alt: string; width?: number; height?: number }
+  | { kind: "pageBreak" };
+
 export interface SemioDocumentSnapshot {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioDocumentSnapshotEntry[];
+  /** @state persistent */ styles: DocStyle[];
+  /** @state persistent */ images: DocImage[];
+  /** @state persistent */ blocks: DocBlock[];
 }

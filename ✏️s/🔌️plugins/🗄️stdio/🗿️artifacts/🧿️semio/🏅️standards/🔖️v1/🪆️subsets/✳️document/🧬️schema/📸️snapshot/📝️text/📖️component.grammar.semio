@@ -1,5 +1,7 @@
 dialect grammar stdio.semio.document.snapshot
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
+; DSL text form: preamble line naming the envelope, then the JSON body hex-encoded 2 digits/byte.
 root = document
-document = marker
-marker = "stdio.semio.document.snapshot"
+document = preamble NL hexBody
+preamble = "stdio.semio.document.dsl.v1"
+hexBody = *HEXPAIR
+HEXPAIR = HEXDIG HEXDIG

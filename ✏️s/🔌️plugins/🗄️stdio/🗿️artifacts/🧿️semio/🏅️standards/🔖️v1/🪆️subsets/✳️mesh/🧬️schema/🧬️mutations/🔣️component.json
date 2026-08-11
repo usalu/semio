@@ -1,10 +1,36 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.mesh/mutations.json",
   "title": "SemioMeshMutation",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
-  "type": "object",
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+  "description": "Discriminated union on the 'mutation' tag, mirrors SemioMeshMutation.",
+  "oneOf": [
+    { "type": "object", "properties": { "mutation": { "const": "noMutation" } }, "required": ["mutation"] },
+    { "type": "object", "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } }, "required": ["mutation", "snapshot"] },
+    { "type": "object", "properties": { "mutation": { "const": "addMesh" }, "mesh": { "type": "object" } }, "required": ["mutation", "mesh"] },
+    { "type": "object", "properties": { "mutation": { "const": "removeMesh" }, "id": { "type": "string" } }, "required": ["mutation", "id"] },
+    { "type": "object", "properties": { "mutation": { "const": "addPrimitive" }, "meshId": { "type": "string" }, "primitive": { "type": "object" } }, "required": ["mutation", "meshId", "primitive"] },
+    { "type": "object", "properties": { "mutation": { "const": "removePrimitive" }, "meshId": { "type": "string" }, "primitiveId": { "type": "string" } }, "required": ["mutation", "meshId", "primitiveId"] },
+    { "type": "object", "properties": { "mutation": { "const": "setPrimitiveTopology" }, "meshId": { "type": "string" }, "primitiveId": { "type": "string" }, "topology": { "type": "string" } }, "required": ["mutation", "meshId", "primitiveId", "topology"] },
+    {
+      "type": "object",
+      "properties": {
+        "mutation": { "const": "setPrimitiveGeometry" },
+        "meshId": { "type": "string" },
+        "primitiveId": { "type": "string" },
+        "positions": { "type": "array" },
+        "normals": { "type": "array" },
+        "uvs": { "type": "array" },
+        "colors": { "type": "array" },
+        "indices": { "type": "array" }
+      },
+      "required": ["mutation", "meshId", "primitiveId", "positions", "normals", "uvs", "colors", "indices"]
+    },
+    { "type": "object", "properties": { "mutation": { "const": "setPrimitiveMaterial" }, "meshId": { "type": "string" }, "primitiveId": { "type": "string" }, "materialId": { "type": ["string", "null"] } }, "required": ["mutation", "meshId", "primitiveId", "materialId"] },
+    { "type": "object", "properties": { "mutation": { "const": "addMaterial" }, "material": { "type": "object" } }, "required": ["mutation", "material"] },
+    { "type": "object", "properties": { "mutation": { "const": "removeMaterial" }, "id": { "type": "string" } }, "required": ["mutation", "id"] },
+    { "type": "object", "properties": { "mutation": { "const": "setMaterialBaseColor" }, "id": { "type": "string" }, "baseColor": { "type": "object" } }, "required": ["mutation", "id", "baseColor"] },
+    { "type": "object", "properties": { "mutation": { "const": "setMaterialPbr" }, "id": { "type": "string" }, "metallic": { "type": "number" }, "roughness": { "type": "number" } }, "required": ["mutation", "id", "metallic", "roughness"] },
+    { "type": "object", "properties": { "mutation": { "const": "addTexture" }, "texture": { "type": "object" } }, "required": ["mutation", "texture"] },
+    { "type": "object", "properties": { "mutation": { "const": "removeTexture" }, "id": { "type": "string" } }, "required": ["mutation", "id"] },
+    { "type": "object", "properties": { "mutation": { "const": "setTextureBytes" }, "id": { "type": "string" }, "mime": { "type": "string" }, "bytes": { "type": "array" } }, "required": ["mutation", "id", "mime", "bytes"] }
+  ]
 }

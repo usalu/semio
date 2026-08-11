@@ -1,9 +1,56 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioDocumentSnapshotEntry {
-  key: String!
-  value: String!
+# Complete-per-spec SemioDocumentSnapshot: named styles + id-keyed images + a recursive block tree.
+type RunStyle {
+  bold: Boolean!
+  italic: Boolean!
+  underline: Boolean!
+  size: Float
+  font: String
+  color: String
+  link: String
 }
+type DocRun {
+  text: String!
+  style: RunStyle!
+}
+type DocStyle {
+  id: String!
+  name: String!
+  basedOn: String
+}
+type DocImage {
+  id: String!
+  mime: String!
+  bytes: [Int!]!
+}
+type DocListItem { blocks: [DocBlock!]! }
+type DocTableCell { blocks: [DocBlock!]! }
+type DocTableRow { cells: [DocTableCell!]! }
+
+enum DocBlockKind { PARAGRAPH HEADING LIST TABLE CODE QUOTE IMAGE PAGE_BREAK }
+
+# GraphQL has no native tagged union over scalars+lists, so the block tree is mirrored as one
+# type carrying every kind's optional fields, discriminated by `kind` (mirrors the Rust
+# `#[serde(tag = "kind")]` shape honestly rather than fabricating a union GraphQL can't express).
+type DocBlock {
+  kind: DocBlockKind!
+  styleId: String
+  runs: [DocRun!]
+  level: Int
+  ordered: Boolean
+  items: [DocListItem!]
+  rows: [DocTableRow!]
+  language: String
+  text: String
+  blocks: [DocBlock!]
+  imageId: String
+  alt: String
+  width: Float
+  height: Float
+}
+
 type SemioDocumentSnapshot {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioDocumentSnapshotEntry!]! @state(class: PERSISTENT)
+  styles: [DocStyle!]! @state(class: PERSISTENT)
+  images: [DocImage!]! @state(class: PERSISTENT)
+  blocks: [DocBlock!]! @state(class: PERSISTENT)
 }

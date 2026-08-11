@@ -1,17 +1,57 @@
-//! 🧬️ WavSnapshot — a typed `fmt ` chunk + raw PCM `data` + any other RIFF chunk verbatim.
-//! 🚧 scaffolded by W1b: minimal honest fields only (not the full spec shape) — full
-//! implementation lands in W2/W3.
+//! 🧬️ WavSnapshot — a typed `fmt ` chunk + typed `data` samples + any other RIFF chunk
+//! verbatim. Real byte-accurate RIFF/WAVE codec (see `⚙️engine`), not a container placeholder.
 
-/// 📦️ Owned by `wav`: `WavFmt` (typed `fmt ` chunk) + `WavRawChunk` (any other chunk,
-/// untyped-raw). NO type sharing with `avi` (both are RIFF-based but deliberately distinct
-/// vocabularies per the master plan).
+/// 📦️ Owned by `wav`: the `fmt ` chunk's fields, typed. `ext` carries the extensible/non-PCM
+/// tail (`cbSize` bytes) verbatim when present — `None` for the plain 16-byte PCM form. NO type
+/// sharing with `avi` (both are RIFF-based but deliberately distinct vocabularies per the master
+/// plan).
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct WavFmt { pub audio_format: u16, pub channels: u16, pub sample_rate: u32, pub bits_per_sample: u16 }
+pub struct WavFmt {
+    pub audio_format: u16,
+    pub channels: u16,
+    pub sample_rate: u32,
+    pub byte_rate: u32,
+    pub block_align: u16,
+    pub bits_per_sample: u16,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ext: Option<Vec<u8>>,
+}
 
+impl Default for WavFmt {
+    fn default() -> Self {
+        Self { audio_format: 1, channels: 1, sample_rate: 44_100, byte_rate: 88_200, block_align: 2, bits_per_sample: 16, ext: None }
+    }
+}
+
+/// 📦️ Owned by `wav`: the `data` chunk's samples, typed per `WavFmt`'s
+/// `(audio_format, bits_per_sample)` — `Raw` is the honest fallback for anything this codec
+/// doesn't interpret sample-by-sample (24-bit PCM, ADPCM, WAVE_FORMAT_EXTENSIBLE payloads, …).
+/// 🏷️ Adjacently tagged (`tag`+`content`), not purely internally tagged — serde cannot serialize
+/// an internally-tagged newtype variant wrapping a non-map type (`Vec<T>` here), the same
+/// constraint already on record for `HtmlNode`/`JsonValue` elsewhere in this codebase.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "kind", content = "value", rename_all = "camelCase")]
+pub enum WavData {
+    Pcm16(Vec<i16>),
+    Pcm8(Vec<u8>),
+    Float32(Vec<f32>),
+    Raw(Vec<u8>),
+}
+
+impl Default for WavData {
+    fn default() -> Self { WavData::Raw(Vec::new()) }
+}
+
+/// 📦️ Owned by `wav`: any RIFF chunk other than `fmt `/`data`, retained byte-for-byte
+/// (`LIST`/`INFO`/`fact`/`cue `/…).
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct WavRawChunk { pub fourcc: String, #[serde(default)] pub data: Vec<u8> }
+pub struct RiffChunk {
+    pub fourcc: String,
+    #[serde(default)]
+    pub data: Vec<u8>,
+}
 
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -28,22 +68,20 @@ pub struct WavSnapshot {
     #[state(persistent)]
     pub schema: String,
     #[state(persistent)]
-    #[serde(default)]
-    pub fmt: Option<WavFmt>,
+    pub fmt: WavFmt,
+    #[state(persistent)]
+    pub data: WavData,
     #[state(persistent)]
     #[serde(default)]
-    pub data: Vec<u8>,
-    #[state(persistent)]
-    #[serde(default)]
-    pub other_chunks: Vec<WavRawChunk>,
+    pub other_chunks: Vec<RiffChunk>,
 }
 
 impl Default for WavSnapshot {
     fn default() -> Self {
         Self {
             schema: STDIO_WAV_DOCUMENT_SCHEMA.into(),
-            fmt: Default::default(),
-            data: Default::default(),
+            fmt: WavFmt::default(),
+            data: WavData::default(),
             other_chunks: Default::default(),
         }
     }
@@ -51,11 +89,12 @@ impl Default for WavSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🚧 scaffolded by W1b: JSON-pack round trip (honest, genuinely working — not a per-format
-/// binary codec, since this subset's snapshot is a NEUTRAL semio type, not an on-disk file
-/// format). Wrapped in the same `store::semio_format` envelope every stdio artifact uses.
+/// 🎧️ `ArtifactDsl`/`ArtifactPack` route through the REAL RIFF/WAVE codec
+/// (`⚙️engine::encode_wav`/`decode_wav`) — the envelope wraps genuine on-disk WAV bytes, the same
+/// convention `BmpSnapshot`'s handcrafted codecs use (real format bytes inside the
+/// `store::semio_format` envelope, not a JSON re-serialization of the Rust type).
 impl store::ArtifactDsl for WavSnapshot {
-    const EXTENSION: &'static str = "semio";
+    const EXTENSION: &'static str = "wav";
     fn envelope_id() -> &'static str { STDIO_WAV_DOCUMENT_SCHEMA }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
@@ -75,11 +114,12 @@ impl store::ArtifactDsl for WavSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        serde_json::from_slice(&bytes).map_err(|e| store::TextError::new(format!("json decode: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::wav::standards::riff_pcm::engine::decode_wav(&bytes)
+            .map_err(|e| store::TextError::new(format!("wav decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = serde_json::to_vec(self).unwrap_or_default();
+        let bytes = crate::artifacts::wav::standards::riff_pcm::engine::encode_wav(self);
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -93,7 +133,7 @@ impl store::ArtifactDsl for WavSnapshot {
 impl store::ArtifactPack for WavSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = serde_json::to_vec(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = crate::artifacts::wav::standards::riff_pcm::engine::encode_wav(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -112,7 +152,7 @@ impl store::ArtifactPack for WavSnapshot {
             )));
         }
         let _ = options;
-        serde_json::from_slice(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
+        crate::artifacts::wav::standards::riff_pcm::engine::decode_wav(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -122,9 +162,13 @@ impl store::ArtifactPack for WavSnapshot {
 mod tests {
     use super::*;
 
+    fn sample_snapshot() -> WavSnapshot {
+        WavSnapshot { data: WavData::Pcm16(vec![1, -1, 100, -100]), ..WavSnapshot::default() }
+    }
+
     #[test]
     fn json_pack_round_trips() {
-        let snap = WavSnapshot::default();
+        let snap = sample_snapshot();
         let bytes = <WavSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <WavSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
@@ -132,7 +176,7 @@ mod tests {
 
     #[test]
     fn dsl_text_round_trips() {
-        let snap = WavSnapshot::default();
+        let snap = sample_snapshot();
         let text = <WavSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <WavSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);

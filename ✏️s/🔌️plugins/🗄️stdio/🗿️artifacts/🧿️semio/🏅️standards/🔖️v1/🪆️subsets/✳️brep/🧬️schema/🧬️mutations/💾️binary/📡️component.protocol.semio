@@ -1,3 +1,8 @@
-dialect protocol stdio.semio.brep.mutations
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.brep.mutations"
+dialect protocol
+protocol stdio.semio.brep.mutations
+version 1
+schema stdio.semio.brep.mutations
+start frame
+; payload bytes are the UTF-8 compact-JSON encoding of a SemioBrepMutation (serde_json::to_vec)
+; -- see ../🔣️component.json for the tagged variant/field enumeration.
+segment payload varint bytes

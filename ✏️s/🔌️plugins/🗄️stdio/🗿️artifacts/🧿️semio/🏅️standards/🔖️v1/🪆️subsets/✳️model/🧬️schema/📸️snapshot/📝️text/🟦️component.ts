@@ -1,10 +1,3 @@
-/** 🧬️ Semio_semio_model_snapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_model_snapshot
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_model_snapshotEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_model_snapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_model_snapshotEntry[];
-}
+/** 📝️ Text representation for `stdio.semio.model` (snapshot): the `semio_format` preamble line
+ * plus the hex-encoded compact-JSON snapshot body. */
+export type SemioModelSnapshotText = string;

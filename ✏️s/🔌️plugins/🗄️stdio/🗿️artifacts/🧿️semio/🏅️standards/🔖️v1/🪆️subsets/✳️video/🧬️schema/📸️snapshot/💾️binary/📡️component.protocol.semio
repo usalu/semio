@@ -1,3 +1,8 @@
 dialect protocol stdio.semio.video.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.video.snapshot"
+; magic + version + length-prefixed JSON body (store::semio_format::wrap_binary envelope). The
+; JSON payload's own structure is the sibling 🔣️component.json (../🔣️component.json), not
+; reproduced here.
+magic = "stdio.semio.video"
+version = u8
+length = u32le
+body = OCTET length

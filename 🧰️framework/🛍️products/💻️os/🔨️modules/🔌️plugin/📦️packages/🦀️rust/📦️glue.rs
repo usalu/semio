@@ -1,4 +1,4 @@
-#![cfg_attr(feature = "component-guest", feature(linkage))]
+#![cfg_attr(any(feature = "component-guest", feature = "component-extension-guest"), feature(linkage))]
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as dsl;

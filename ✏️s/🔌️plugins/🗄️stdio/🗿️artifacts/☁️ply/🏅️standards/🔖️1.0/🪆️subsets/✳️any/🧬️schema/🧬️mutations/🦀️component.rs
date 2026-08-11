@@ -18,6 +18,8 @@ use crate::artifacts::ply::schema::diff::{
     diff_remove_element, diff_remove_row, diff_set_comments, diff_set_format,
     diff_set_row_property, diff_set_snapshot, enc_element, enc_format, enc_row, enc_str,
     enc_value, split_top_level, strip_brackets, PlyDiff,
+    read_bin_element, read_bin_row, read_bin_snapshot, read_bin_str, read_bin_value,
+    write_bin_element, write_bin_row, write_bin_snapshot, write_bin_str, write_bin_value,
 };
 use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyRow, PlyValue};
 use crate::artifacts::ply::PlySnapshot;
@@ -227,72 +229,184 @@ impl protocol::OpText for PlyMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification as `PlyDiff`'s hand-rolled codec.
-impl protocol::OpBinary for PlyMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+//#region 🔖️RealBinaryOpFrame
+/// 🧪️ P2-FG3: real binary op frame — upgraded from the F6-era `print_op().into_bytes()`
+/// text-as-binary shortcut. Matches `../💾️binary/📡️component.protocol.semio`'s `header fixed 2 |
+/// field format u8 | field tag u8 | chain payload bytes` shape exactly — `format` is
+/// `store::pack_rt::OP_BINARY_FORMAT`, `tag` is the `PlyMutation` variant ordinal in the SAME
+/// 0-9 order `print_ply_mutation`'s own match uses, then each variant's own payload real binary
+/// (reusing `PlyDiff`'s `pub(crate)` binary primitives — `write_bin_element`/`write_bin_row`/
+/// `write_bin_snapshot`/`write_bin_str`/`write_bin_value` — the same way this file's `OpText`
+/// already reuses the text-codec primitives).
+fn op_tag(m: &PlyMutation) -> u8 {
+    match m {
+        PlyMutation::NoMutation => 0,
+        PlyMutation::SetSnapshot { .. } => 1,
+        PlyMutation::SetFormat { .. } => 2,
+        PlyMutation::InsertComment { .. } => 3,
+        PlyMutation::RemoveComment { .. } => 4,
+        PlyMutation::AddElement { .. } => 5,
+        PlyMutation::RemoveElement { .. } => 6,
+        PlyMutation::InsertRow { .. } => 7,
+        PlyMutation::RemoveRow { .. } => 8,
+        PlyMutation::SetRowProperty { .. } => 9,
     }
 }
+fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+    protocol::ProtocolError::Malformed { what: "ply op binary", offset: 0, detail: e.to_string() }
+}
+
+impl protocol::OpBinary for PlyMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let mut w = dsl::ByteWriter::new();
+        w.write_u8(store::pack_rt::OP_BINARY_FORMAT);
+        w.write_u8(op_tag(self));
+        match self {
+            PlyMutation::NoMutation => {}
+            PlyMutation::SetSnapshot { snapshot } => write_bin_snapshot(&mut w, snapshot),
+            PlyMutation::SetFormat { format } => {
+                crate::artifacts::ply::schema::diff::write_bin_format(&mut w, *format);
+            }
+            PlyMutation::InsertComment { index, comment } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_str(&mut w, comment);
+            }
+            PlyMutation::RemoveComment { index } => w.write_varint_u64(*index as u64),
+            PlyMutation::AddElement { index, element } => {
+                w.write_varint_u64(*index as u64);
+                write_bin_element(&mut w, element);
+            }
+            PlyMutation::RemoveElement { name } => write_bin_str(&mut w, name),
+            PlyMutation::InsertRow { element_name, index, row } => {
+                write_bin_str(&mut w, element_name);
+                w.write_varint_u64(*index as u64);
+                write_bin_row(&mut w, row);
+            }
+            PlyMutation::RemoveRow { element_name, index } => {
+                write_bin_str(&mut w, element_name);
+                w.write_varint_u64(*index as u64);
+            }
+            PlyMutation::SetRowProperty { element_name, row_index, property_name, value } => {
+                write_bin_str(&mut w, element_name);
+                w.write_varint_u64(*row_index as u64);
+                write_bin_str(&mut w, property_name);
+                write_bin_value(&mut w, value);
+            }
+        }
+        Ok(w.into_bytes())
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut r = dsl::ByteReader::new(bytes);
+        let _format = r.read_u8().map_err(op_pack_err)?;
+        let tag = r.read_u8().map_err(op_pack_err)?;
+        match tag {
+            0 => Ok(PlyMutation::NoMutation),
+            1 => Ok(PlyMutation::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(op_pack_err)? }),
+            2 => Ok(PlyMutation::SetFormat { format: crate::artifacts::ply::schema::diff::read_bin_format(&mut r).map_err(op_pack_err)? }),
+            3 => {
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                let comment = read_bin_str(&mut r).map_err(op_pack_err)?;
+                Ok(PlyMutation::InsertComment { index, comment })
+            }
+            4 => Ok(PlyMutation::RemoveComment { index: r.read_varint_u64().map_err(op_pack_err)? as usize }),
+            5 => {
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                let element = read_bin_element(&mut r).map_err(op_pack_err)?;
+                Ok(PlyMutation::AddElement { index, element })
+            }
+            6 => Ok(PlyMutation::RemoveElement { name: read_bin_str(&mut r).map_err(op_pack_err)? }),
+            7 => {
+                let element_name = read_bin_str(&mut r).map_err(op_pack_err)?;
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                let row = read_bin_row(&mut r).map_err(op_pack_err)?;
+                Ok(PlyMutation::InsertRow { element_name, index, row })
+            }
+            8 => {
+                let element_name = read_bin_str(&mut r).map_err(op_pack_err)?;
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                Ok(PlyMutation::RemoveRow { element_name, index })
+            }
+            9 => {
+                let element_name = read_bin_str(&mut r).map_err(op_pack_err)?;
+                let row_index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                let property_name = read_bin_str(&mut r).map_err(op_pack_err)?;
+                let value = read_bin_value(&mut r).map_err(op_pack_err)?;
+                Ok(PlyMutation::SetRowProperty { element_name, row_index, property_name, value })
+            }
+            other => Err(protocol::ProtocolError::Malformed { what: "ply op tag", offset: 1, detail: format!("unknown tag {other}") }),
+        }
+    }
+}
+//#endregion 🔖️RealBinaryOpFrame
 //#endregion OpCodecs
+
+//#region 🔖️DemoMutationCases
+/// ✅️ Every `PlyMutation` variant built off a small `base()` snapshot — the single case list
+/// `op_text_binary_roundtrip_law` (this file) AND `ops_grammar_conformance_law`/
+/// `protocol_walk_law` (`⚙️engine/🦀️component.rs`) all exercise. Covers `SetSnapshot`'s whole
+/// nested snapshot, `AddElement`'s bare `PlyElement` payload (itself containing `PlyProperty`),
+/// `InsertRow`'s `PlyRow` payload, and `SetRowProperty`'s bare `PlyValue` payload (incl. the
+/// recursive `List` variant).
+#[cfg(test)]
+fn demo_base_snapshot() -> PlySnapshot {
+    use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyScalarType};
+    PlySnapshot {
+        schema: crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA.into(),
+        format: PlyFormat::Ascii,
+        comments: vec!["hi".into()],
+        elements: vec![PlyElement {
+            name: "vertex".into(),
+            count: 1,
+            properties: vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }],
+            rows: vec![PlyRow { values: vec![PlyValue::Float(1.5)] }],
+        }],
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<PlyMutation> {
+    use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyScalarType};
+    let snapshot = demo_base_snapshot();
+    vec![
+        PlyMutation::NoMutation,
+        PlyMutation::SetSnapshot { snapshot: snapshot.clone() },
+        PlyMutation::SetFormat { format: PlyFormat::BinaryBigEndian },
+        PlyMutation::InsertComment { index: 0, comment: "new comment".into() },
+        PlyMutation::RemoveComment { index: 0 },
+        PlyMutation::AddElement {
+            index: 1,
+            element: PlyElement {
+                name: "face".into(),
+                count: 1,
+                properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::Int }],
+                rows: vec![PlyRow { values: vec![PlyValue::List(vec![PlyValue::Int(0), PlyValue::Int(1), PlyValue::Int(2)])] }],
+            },
+        },
+        PlyMutation::RemoveElement { name: "vertex".into() },
+        PlyMutation::InsertRow { element_name: "vertex".into(), index: 0, row: PlyRow { values: vec![PlyValue::Float(-2.5)] } },
+        PlyMutation::RemoveRow { element_name: "vertex".into(), index: 0 },
+        PlyMutation::SetRowProperty { element_name: "vertex".into(), row_index: 0, property_name: "x".into(), value: PlyValue::Float(42.0) },
+        PlyMutation::SetRowProperty {
+            element_name: "face".into(),
+            row_index: 0,
+            property_name: "vertex_indices".into(),
+            value: PlyValue::List(vec![PlyValue::Int(3), PlyValue::Int(4), PlyValue::Int(5)]),
+        },
+    ]
+}
+//#endregion 🔖️DemoMutationCases
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod codec_tests {
     use super::*;
-    use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyScalarType};
 
-    fn base() -> PlySnapshot {
-        PlySnapshot {
-            schema: crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA.into(),
-            format: PlyFormat::Ascii,
-            comments: vec!["hi".into()],
-            elements: vec![PlyElement {
-                name: "vertex".into(),
-                count: 1,
-                properties: vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }],
-                rows: vec![PlyRow { values: vec![PlyValue::Float(1.5)] }],
-            }],
-        }
-    }
-
-    /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `PlyMutation` grammar —
-    /// exercises every variant incl. `SetSnapshot`'s whole nested snapshot, `AddElement`'s bare
-    /// `PlyElement` payload (itself containing `PlyProperty`), `InsertRow`'s `PlyRow` payload, and
-    /// `SetRowProperty`'s bare `PlyValue` payload (incl. the recursive `List` variant).
+    /// 🧪️ F6/P2-FG3: `OpText`/`OpBinary` round-trip laws for the hand-rolled `PlyMutation`
+    /// grammar — `OpBinary` is now a REAL binary frame, no longer text-as-bytes.
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let snapshot = base();
-        let mutations = vec![
-            PlyMutation::NoMutation,
-            PlyMutation::SetSnapshot { snapshot: snapshot.clone() },
-            PlyMutation::SetFormat { format: PlyFormat::BinaryBigEndian },
-            PlyMutation::InsertComment { index: 0, comment: "new comment".into() },
-            PlyMutation::RemoveComment { index: 0 },
-            PlyMutation::AddElement {
-                index: 1,
-                element: PlyElement {
-                    name: "face".into(),
-                    count: 1,
-                    properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::Int }],
-                    rows: vec![PlyRow { values: vec![PlyValue::List(vec![PlyValue::Int(0), PlyValue::Int(1), PlyValue::Int(2)])] }],
-                },
-            },
-            PlyMutation::RemoveElement { name: "vertex".into() },
-            PlyMutation::InsertRow { element_name: "vertex".into(), index: 0, row: PlyRow { values: vec![PlyValue::Float(-2.5)] } },
-            PlyMutation::RemoveRow { element_name: "vertex".into(), index: 0 },
-            PlyMutation::SetRowProperty { element_name: "vertex".into(), row_index: 0, property_name: "x".into(), value: PlyValue::Float(42.0) },
-            PlyMutation::SetRowProperty {
-                element_name: "face".into(),
-                row_index: 0,
-                property_name: "vertex_indices".into(),
-                value: PlyValue::List(vec![PlyValue::Int(3), PlyValue::Int(4), PlyValue::Int(5)]),
-            },
-        ];
-        for mutation in mutations {
+        for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = PlyMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

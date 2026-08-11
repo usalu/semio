@@ -1,10 +1,12 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.mp4/artifact.json",
+  "$id": "https://semio.tech/schema/stdio.mp4.json",
   "title": "Mp4Artifact",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Full artifact state, mirrors Mp4Snapshot field for field.",
   "type": "object",
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "ftyp": { "type": "object", "x-semio-state": "persistent" },
+    "tracks": { "type": "array", "x-semio-state": "persistent" },
+    "unknownBoxes": { "type": "array", "x-semio-state": "persistent" }
   }
 }

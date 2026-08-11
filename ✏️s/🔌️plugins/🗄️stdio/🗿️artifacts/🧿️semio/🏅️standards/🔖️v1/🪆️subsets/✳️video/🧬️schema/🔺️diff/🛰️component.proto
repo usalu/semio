@@ -1,7 +1,41 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// 🔺️ SemioVideoDiff facet mirror — sparse index-keyed triples, recursive at the samples level.
 package semio.s_stdio_semio_video.diff;
+
+message SemioVideoSampleDiff {
+  optional uint64 pts = 1;
+  optional bool key = 2;
+  optional bytes data = 3;
+}
+message SemioVideoSampleModified {
+  uint64 index = 1;
+  SemioVideoSampleDiff diff = 2;
+}
+message SemioVideoSamplesDiff {
+  repeated uint64 removed = 1;
+  repeated SemioVideoSampleModified modified = 2;
+  repeated uint64 added_index = 3;
+}
+
+message SemioVideoStreamDiff {
+  optional string kind = 1;
+  optional string codec = 2;
+  optional uint32 width = 3;
+  optional uint32 height = 4;
+  optional int64 rate_num = 5;
+  optional int64 rate_den = 6;
+  optional SemioVideoSamplesDiff samples = 7;
+}
+message SemioVideoStreamModified {
+  uint64 index = 1;
+  SemioVideoStreamDiff diff = 2;
+}
+message SemioVideoStreamsDiff {
+  repeated uint64 removed = 1;
+  repeated SemioVideoStreamModified modified = 2;
+  repeated uint64 added_index = 3;
+}
+
 message SemioVideoDiff {
-  string schema = 1;
-  string entries_wire = 2;
+  SemioVideoStreamsDiff streams = 1;
 }

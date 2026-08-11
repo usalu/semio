@@ -1,9 +1,8 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioAudioArtifactEntry {
-  key: String!
-  value: String!
+type SemioAudioEntry {
+  name: String!
+  data: [Int!]!
 }
 type SemioAudioArtifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioAudioArtifactEntry!]! @state(class: PERSISTENT)
+  entries: [SemioAudioEntry!]! @state(class: PERSISTENT)
 }

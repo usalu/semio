@@ -1,0 +1,103 @@
+
+running 7 tests
+test os_dsl::fixture_sweep::m5_semio_envelope_protocol::semio_envelope_protocol_parses_under_the_real_dialect ... ok
+test os_dsl::fixture_sweep::m5_semio_envelope_protocol::semio_envelope_protocol_walks_a_real_wrap_binary_payload ... ok
+test os_dsl::fixture_sweep::m5_semio_envelope_protocol::semio_envelope_protocol_walks_a_different_token_length_and_an_empty_payload ... ok
+test os_dsl::fixture_sweep::m5_handcrafted_protocol_conformance::all_discovered_snapshot_protocols_walk_their_shipped_fixtures ... ok
+test os_dsl::fixture_sweep::m5_cross_artifact_rejection::all_non_stdio_grammars_reject_each_others_shipped_fixtures ... ok
+test os_dsl::fixture_sweep::m5_production_coverage::all_discovered_grammars_report_uncovered_productions_for_their_shipped_fixture ... FAILED
+test os_dsl::fixture_sweep::m5_handcrafted_grammar_conformance::all_discovered_snapshot_grammars_recognize_their_shipped_fixtures ... FAILED
+
+failures:
+
+---- os_dsl::fixture_sweep::m5_production_coverage::all_discovered_grammars_report_uncovered_productions_for_their_shipped_fixture stdout ----
+[DEBUG] 🏗️fem::◻2d::🔖️1: uncovered productions (4) = document, header, body, payload
+[DEBUG] 💠️lowpoly::💠️lowpoly::🔖️1: uncovered productions (10) = object-transform, transform-field, paint-layer, paint-layer-field, scene, layer, layer-anchor, transform-block, paint-block, paint-field
+[DEBUG] 📐️cad::📐️cad::🔖️1: uncovered productions (7) = scene, layer, layer-anchor, transform-block, transform-field, paint-block, paint-field
+[DEBUG] 📕️norm::📘️en1992::🔖️1: uncovered productions (4) = document, header, body, payload
+[DEBUG] 🕸️dag::🕸️dag::🔖️1: uncovered productions (4) = document, header, body, payload
+[DEBUG] 🗒️note::🗒️note::🔖️1: uncovered productions (9) = image-block, shape-block, scene, layer, layer-anchor, transform-block, transform-field, paint-block, paint-field
+[dsl-fixture-sweep] m5 production coverage auto-discovery: 59 facet(s) found, 6 checked, 0 stdio-exempt soft failure(s), 3 hard failure(s)
+
+thread 'os_dsl::fixture_sweep::m5_production_coverage::all_discovered_grammars_report_uncovered_productions_for_their_shipped_fixture' (172839101) panicked at 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:1258:9:
+m5 production coverage failed for 3 artifact(s):
+
+🏗️fem::◻2d::🔖️1: fixture must still recognize while coverage is tracked
+
+📕️norm::📘️en1992::🔖️1: fixture must still recognize while coverage is tracked
+
+🕸️dag::🕸️dag::🔖️1: fixture must still recognize while coverage is tracked
+
+---- os_dsl::fixture_sweep::m5_handcrafted_grammar_conformance::all_discovered_snapshot_grammars_recognize_their_shipped_fixtures stdout ----
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::☁️las::🔖️1.0: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 12, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::☁️ply::🔖️1.0: parse grammar.semio: TextError { message: "unexpected character '—'", span: TextSpan { line: 2, column: 72, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🌐️html::🔖️5: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🌦️epw::🔖️energyplus: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🎒️zip::🔖️2.0: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 10, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🎞️gif::🔖️87a: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 10, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🎞️gif::🔖️89a: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 10, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🎞️pptx::🔖️ecma-376: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 10, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🎥️mp4::🔖️isobmff: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🎨️svg::🔖️1.1: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 10, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🎵️mp3::🔖️mpeg1-layer3: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🏗️ifc::🔖️2x3: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 10, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🏗️ifc::🔖️4: parse grammar.semio: TextError { message: "unexpected character '📐'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::💬️bcf::🔖️2.1: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 10, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::💾️binary::🔖️raw: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 12, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::📄txt::🔖️utf-8: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 12, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::📄️pdf::🔖️1.4: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 10, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::📄️pdf::🔖️1.7: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 3, column: 28, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::📊️csv::🔖️rfc4180: parse grammar.semio: TextError { message: "`.grammar` files cannot contain a Semicolon token here", span: TextSpan { line: 3, column: 1, length: 1 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::📐️step::🔖️ap214: parse grammar.semio: TextError { message: "unexpected character '—'", span: TextSpan { line: 2, column: 35, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::📑️tsv::🔖️iana: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::📕️xlsx::🔖️ecma-376: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 10, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::📜️docx::🔖️ecma-376: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 10, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::📝️md::🔖️commonmark: parse grammar.semio: TextError { message: "unexpected character '🧩'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::📰xml::🔖️1.0: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 2, column: 15, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::📷️jpg::🔖️jfif-1.01: parse grammar.semio: TextError { message: "unexpected character '📖'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::📷️png::🔖️1.2: parse grammar.semio: TextError { message: "unexpected character '.'", span: TextSpan { line: 4, column: 45, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::📼️avi::🔖️1.0: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🔊️wav::🔖️riff-pcm: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🔣️json::🔖️rfc8259: parse grammar.semio: TextError { message: "unexpected character '§'", span: TextSpan { line: 3, column: 14, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🖊️dwg::🔖️ac1018: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 10, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🖊️dwg::🔖️ac1024: parse grammar.semio: TextError { message: "unexpected character '''", span: TextSpan { line: 4, column: 10, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🖊️dxf::🔖️r12: parse grammar.semio: TextError { message: "unexpected character '.'", span: TextSpan { line: 3, column: 45, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🖼️bmp::🔖️v3: parse grammar.semio: TextError { message: "unexpected character '`'", span: TextSpan { line: 3, column: 7, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🖼️tiff::🔖️6.0: parse grammar.semio: TextError { message: "unexpected character '.'", span: TextSpan { line: 4, column: 45, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🗜️deflate::🔖️rfc1950: parse grammar.semio: TextError { message: "unexpected character '§'", span: TextSpan { line: 6, column: 96, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🟪️stl::🔖️ascii: parse grammar.semio: TextError { message: "unexpected character '.'", span: TextSpan { line: 2, column: 62, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧊️gltf::🔖️2.0: parse grammar.semio: TextError { message: "unexpected character '`'", span: TextSpan { line: 2, column: 5, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧊️obj::🔖️3.0: parse grammar.semio: TextError { message: "unexpected character '.'", span: TextSpan { line: 3, column: 45, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧿️semio::🔖️v1: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧿️semio::🔖️v1: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧿️semio::🔖️v1: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧿️semio::🔖️v1: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧿️semio::🔖️v1: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧿️semio::🔖️v1: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧿️semio::🔖️v1: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧿️semio::🔖️v1: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧿️semio::🔖️v1: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧿️semio::🔖️v1: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧿️semio::🔖️v1: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧿️semio::🔖️v1: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧿️semio::🔖️v1: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[DEBUG] soft (stdio-exempt, pre-FG-wave) grammar conformance failure for 🗄️stdio::🧿️semio::🔖️v1: parse grammar.semio: TextError { message: "unexpected character '🚧'", span: TextSpan { line: 2, column: 3, length: 0 }, expected: None }
+[dsl-fixture-sweep] m5 grammar auto-discovery: 59 facet(s) found, 59 checked, 0 soft-skipped, 53 stdio-exempt soft failure(s), 3 hard failure(s)
+
+thread 'os_dsl::fixture_sweep::m5_handcrafted_grammar_conformance::all_discovered_snapshot_grammars_recognize_their_shipped_fixtures' (172839099) panicked at 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:985:9:
+m5 grammar conformance failed for 3 artifact(s):
+
+🏗️fem::◻2d::🔖️1: grammar did not recognize shipped fixture DSL body
+
+📕️norm::📘️en1992::🔖️1: grammar did not recognize shipped fixture DSL body
+
+🕸️dag::🕸️dag::🔖️1: grammar did not recognize shipped fixture DSL body
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    os_dsl::fixture_sweep::m5_handcrafted_grammar_conformance::all_discovered_snapshot_grammars_recognize_their_shipped_fixtures
+    os_dsl::fixture_sweep::m5_production_coverage::all_discovered_grammars_report_uncovered_productions_for_their_shipped_fixture
+
+test result: FAILED. 5 passed; 2 failed; 0 ignored; 0 measured; 756 filtered out; finished in 0.43s
+

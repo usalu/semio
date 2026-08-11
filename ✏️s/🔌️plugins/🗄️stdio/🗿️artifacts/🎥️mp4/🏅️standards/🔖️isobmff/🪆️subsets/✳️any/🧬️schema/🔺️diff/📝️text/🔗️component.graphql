@@ -1,9 +1,8 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_mp4_diffEntry {
-  key: String!
-  value: String!
-}
-type Semio_mp4_diff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_mp4_diffEntry!]! @state(class: PERSISTENT)
+# stdio.mp4 diff 📝️text facet — same shape as ../🔗️component.graphql.
+type Mp4SampleDiff { data: [Int!] duration: Int ctsOffset: Int sync: Boolean }
+type Mp4TrackDiff { trackId: Int timescale: Int codec: Mp4Codec width: Int height: Int samplesRemoved: [Int!] }
+type Mp4Diff {
+  ftyp: Mp4Ftyp
+  tracksRemoved: [Int!]
+  unknownBoxesRemoved: [Int!]
 }

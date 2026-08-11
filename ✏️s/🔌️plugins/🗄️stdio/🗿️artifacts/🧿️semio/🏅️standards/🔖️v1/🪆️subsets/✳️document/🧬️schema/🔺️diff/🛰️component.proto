@@ -1,7 +1,21 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// Handcrafted sparse SemioDocumentDiff -- name-keyed styles/images triples + an index-keyed
+// recursive blocks triple. Real per-collection item/diff payloads are opaque JSON bytes here
+// (proto3 has no generic triple type); the Rust side is the source of truth for their shape.
 package semio.s_stdio_semio_document.diff;
+
+message IndexedTripleDiff {
+  repeated uint64 removed = 1;
+  repeated bytes modified = 2; // each entry: {"index":N,"diff":<json>}
+  repeated bytes added = 3;    // each entry: {"index":N,"item":<json>}
+}
+message NamedTripleDiff {
+  repeated string removed = 1;
+  repeated bytes modified = 2; // each entry: {"key":K,"diff":<json>}
+  repeated bytes added = 3;    // each entry: full item json
+}
 message SemioDocumentDiff {
-  string schema = 1;
-  string entries_wire = 2;
+  optional NamedTripleDiff styles = 1;
+  optional NamedTripleDiff images = 2;
+  optional IndexedTripleDiff blocks = 3;
 }

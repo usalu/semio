@@ -5,6 +5,7 @@ use crate::artifacts::md::schema::diff::{diff_at_path, diff_set_snapshot, MdBloc
 pub use crate::artifacts::md::schema::diff::MdPathStep;
 use crate::artifacts::md::schema::diff::navigate_container;
 use crate::artifacts::md::schema::diff::{dec_block, dec_block_list, dec_inline_list, dec_str, enc_block, enc_block_list, enc_inline_list, enc_str, parse_usize, split_top_level, strip_brackets};
+use crate::artifacts::md::schema::diff::{dec_block_bin, dec_block_list_bin, dec_inline_list_bin, enc_block_bin, enc_block_list_bin, enc_inline_list_bin, read_str_bin, write_str_bin};
 use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
 use crate::artifacts::md::MdSnapshot;
 use protocol::{Mutation, OpText};
@@ -223,18 +224,186 @@ impl protocol::OpText for MdMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `MdDiff`'s hand-rolled codec (and
-/// `SvgMutation`/`SvgDiff`) use.
+//#region 🔖️OpBinaryCodec
+/// 🧪️ P2-FG1: mutation-specific real binary primitives backing the upgraded `OpBinary` impl below
+/// — reuses `MdDiff`'s `pub(crate)` recursive `enc_block_bin`/`enc_inline_list_bin`/`write_str_bin`/
+/// `write_option_bin` primitives (`../../🔺️diff/🦀️component.rs`, imported above) for the SHARED
+/// `MdBlock`/`MdInline` shape (same intra-artifact-reuse split the TEXT codec above already uses),
+/// only `MdSnapshot`/`MdPathStep`'s own binary shape is genuinely new here.
+fn enc_snapshot_bin(s: &MdSnapshot, out: &mut Vec<u8>) {
+    write_str_bin(out, &s.schema);
+    enc_block_list_bin(&s.blocks, out);
+}
+fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<MdSnapshot, String> {
+    let schema = read_str_bin(reader)?;
+    let blocks = dec_block_list_bin(reader)?;
+    Ok(MdSnapshot { schema, blocks })
+}
+
+fn enc_path_step_bin(step: &MdPathStep, out: &mut Vec<u8>) {
+    match step {
+        MdPathStep::BlockQuote { index } => {
+            out.push(0);
+            store::pack_rt::write_varint_u64(out, *index as u64);
+        }
+        MdPathStep::ListItem { index, item } => {
+            out.push(1);
+            store::pack_rt::write_varint_u64(out, *index as u64);
+            store::pack_rt::write_varint_u64(out, *item as u64);
+        }
+    }
+}
+fn dec_path_step_bin(reader: &mut store::ByteReader<'_>) -> Result<MdPathStep, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    match tag {
+        0 => Ok(MdPathStep::BlockQuote { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize }),
+        1 => {
+            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+            let item = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+            Ok(MdPathStep::ListItem { index, item })
+        }
+        other => Err(format!("path step binary: unknown tag {other}")),
+    }
+}
+fn enc_path_bin(path: &[MdPathStep], out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, path.len() as u64);
+    for step in path {
+        enc_path_step_bin(step, out);
+    }
+}
+fn dec_path_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdPathStep>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    (0..count).map(|_| dec_path_step_bin(reader)).collect()
+}
+//#endregion 🔖️OpBinaryCodec
+
+/// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the `MdMutation`
+/// variant ordinal, same 0-5 order `print_md_mutation`'s own keyword match uses.
 impl protocol::OpBinary for MdMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let tag: u8 = match self {
+            MdMutation::NoMutation => 0,
+            MdMutation::SetSnapshot { .. } => 1,
+            MdMutation::InsertBlock { .. } => 2,
+            MdMutation::RemoveBlock { .. } => 3,
+            MdMutation::ReplaceBlock { .. } => 4,
+            MdMutation::SetInlines { .. } => 5,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            MdMutation::NoMutation => {}
+            MdMutation::SetSnapshot { snapshot } => enc_snapshot_bin(snapshot, &mut out),
+            MdMutation::InsertBlock { path, index, block } => {
+                enc_path_bin(path, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_block_bin(block, &mut out);
+            }
+            MdMutation::RemoveBlock { path, index } => {
+                enc_path_bin(path, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+            }
+            MdMutation::ReplaceBlock { path, index, block } => {
+                enc_path_bin(path, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_block_bin(block, &mut out);
+            }
+            MdMutation::SetInlines { path, index, inlines } => {
+                enc_path_bin(path, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_inline_list_bin(inlines, &mut out);
+            }
+        }
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(MdMutation::NoMutation),
+            1 => {
+                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                Ok(MdMutation::SetSnapshot { snapshot })
+            }
+            2 => {
+                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
+                Ok(MdMutation::InsertBlock { path, index, block })
+            }
+            3 => {
+                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                Ok(MdMutation::RemoveBlock { path, index })
+            }
+            4 => {
+                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
+                Ok(MdMutation::ReplaceBlock { path, index, block })
+            }
+            5 => {
+                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let inlines = dec_inline_list_bin(&mut reader).map_err(|e| malformed("op inlines", reader.position(), e))?;
+                Ok(MdMutation::SetInlines { path, index, inlines })
+            }
+            other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
+        }
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG1: representative `MdMutation` values (every variant, incl. `InsertBlock`/
+/// `ReplaceBlock`'s bare `MdBlock` payload — a `List` block, so `enc_block`'s own recursive
+/// `items: Vec<Vec<MdBlock>>` field gets exercised too — `SetInlines`'s `Vec<MdInline>` payload
+/// (multiple inline kinds incl. nested `Emphasis`), and both `MdPathStep` variants incl. a
+/// multi-step nested path) — the single source of truth reused by `op_text_binary_roundtrip_law`
+/// below AND by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
+/// conformance tests, so a new variant only needs adding here once.
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<MdMutation> {
+    let base = MdSnapshot {
+        schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(),
+        blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "hi".into() }] }],
+    };
+    let list_block = MdBlock::List {
+        ordered: true,
+        start: Some(2),
+        tight: false,
+        items: vec![
+            vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "one".into() }] }],
+            vec![MdBlock::BlockQuote { blocks: vec![MdBlock::ThematicBreak] }],
+        ],
+    };
+    vec![
+        MdMutation::NoMutation,
+        MdMutation::SetSnapshot { snapshot: base },
+        MdMutation::InsertBlock { path: Vec::new(), index: 1, block: list_block.clone() },
+        MdMutation::InsertBlock { path: vec![MdPathStep::BlockQuote { index: 0 }], index: 0, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } },
+        MdMutation::RemoveBlock { path: Vec::new(), index: 0 },
+        MdMutation::RemoveBlock { path: vec![MdPathStep::ListItem { index: 2, item: 1 }, MdPathStep::BlockQuote { index: 0 }], index: 3 },
+        MdMutation::ReplaceBlock { path: Vec::new(), index: 0, block: MdBlock::CodeBlock { info: None, literal: "x".into() } },
+        MdMutation::ReplaceBlock { path: vec![MdPathStep::BlockQuote { index: 1 }], index: 2, block: list_block },
+        MdMutation::SetInlines {
+            path: Vec::new(),
+            index: 0,
+            inlines: vec![
+                MdInline::Text { text: "hello".into() },
+                MdInline::Emphasis { inlines: vec![MdInline::Strong { inlines: vec![MdInline::Text { text: "world".into() }] }] },
+                MdInline::Link { text: vec![MdInline::Text { text: "l".into() }], url: "http://x".into(), title: None },
+                MdInline::HardBreak,
+            ],
+        },
+        MdMutation::SetInlines { path: vec![MdPathStep::ListItem { index: 0, item: 0 }], index: 5, inlines: Vec::new() },
+    ]
+}
+//#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -242,50 +411,11 @@ mod op_codec_tests {
     use super::*;
     use protocol::OpBinary;
 
-    fn snapshot(blocks: Vec<MdBlock>) -> MdSnapshot {
-        MdSnapshot { schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
-    }
-
-    /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `MdMutation` grammar —
-    /// exercises every variant incl. `InsertBlock`/`ReplaceBlock`'s bare `MdBlock` payload (a
-    /// `List` block, so `enc_block`'s own recursive `items: Vec<Vec<MdBlock>>` field gets
-    /// exercised too), `SetInlines`'s `Vec<MdInline>` payload (multiple inline kinds incl. nested
-    /// `Emphasis`), and both `MdPathStep` variants (`BlockQuote`/`ListItem`, incl. a
-    /// multi-step nested path).
+    /// 🧪️ F6/P2-FG1: `OpText`/`OpBinary` round-trip laws for the hand-rolled `MdMutation` grammar —
+    /// see `demo_mutation_cases()`'s own doc comment for exactly what each case exercises.
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = snapshot(vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "hi".into() }] }]);
-        let list_block = MdBlock::List {
-            ordered: true,
-            start: Some(2),
-            tight: false,
-            items: vec![
-                vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "one".into() }] }],
-                vec![MdBlock::BlockQuote { blocks: vec![MdBlock::ThematicBreak] }],
-            ],
-        };
-        let mutations = vec![
-            MdMutation::NoMutation,
-            MdMutation::SetSnapshot { snapshot: base.clone() },
-            MdMutation::InsertBlock { path: Vec::new(), index: 1, block: list_block.clone() },
-            MdMutation::InsertBlock { path: vec![MdPathStep::BlockQuote { index: 0 }], index: 0, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } },
-            MdMutation::RemoveBlock { path: Vec::new(), index: 0 },
-            MdMutation::RemoveBlock { path: vec![MdPathStep::ListItem { index: 2, item: 1 }, MdPathStep::BlockQuote { index: 0 }], index: 3 },
-            MdMutation::ReplaceBlock { path: Vec::new(), index: 0, block: MdBlock::CodeBlock { info: None, literal: "x".into() } },
-            MdMutation::ReplaceBlock { path: vec![MdPathStep::BlockQuote { index: 1 }], index: 2, block: list_block },
-            MdMutation::SetInlines {
-                path: Vec::new(),
-                index: 0,
-                inlines: vec![
-                    MdInline::Text { text: "hello".into() },
-                    MdInline::Emphasis { inlines: vec![MdInline::Strong { inlines: vec![MdInline::Text { text: "world".into() }] }] },
-                    MdInline::Link { text: vec![MdInline::Text { text: "l".into() }], url: "http://x".into(), title: None },
-                    MdInline::HardBreak,
-                ],
-            },
-            MdMutation::SetInlines { path: vec![MdPathStep::ListItem { index: 0, item: 0 }], index: 5, inlines: Vec::new() },
-        ];
-        for mutation in mutations {
+        for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = MdMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

@@ -1,9 +1,3 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_tsv_mutationsEntry {
-  key: String!
-  value: String!
-}
-type Semio_tsv_mutations {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_tsv_mutationsEntry!]! @state(class: PERSISTENT)
-}
+# stdio.tsv mutations text grammar schema
+scalar Bytes
+type Document { schema: String! payload: String! }

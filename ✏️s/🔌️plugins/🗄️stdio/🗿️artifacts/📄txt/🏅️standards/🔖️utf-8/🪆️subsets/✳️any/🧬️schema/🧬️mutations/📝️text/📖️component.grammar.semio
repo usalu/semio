@@ -1,18 +1,58 @@
-dialect grammar stdio.txt.mutation
-root = mutation
-; discriminated on `mutation`; only that variant's own fields are present:
-;   noMutation                        -- no extra fields
-;   setSnapshot        { snapshot }
-;   setTrailingNewline { value: bool }
-;   setLineEnding      { value: "lf"|"crLf" }
-;   insertLine         { index, text }
-;   removeLine         { index }
-;   setLine            { index, text }
-mutation = '{"mutation":' kind *(',' field) '}'
-kind = '"noMutation"' / '"setSnapshot"' / '"setTrailingNewline"' / '"setLineEnding"'
-     / '"insertLine"' / '"removeLine"' / '"setLine"'
-field = snapshot-f / value-f / index-f / text-f
-snapshot-f = '"snapshot":' snapshot-object
-value-f = '"value":' (bool / '"lf"' / '"crLf"')
-index-f = '"index":' digits
-text-f = '"text":' json-string
+dialect grammar
+grammar stdio.txt.mutations
+start op
+
+# P2-P3: real one-line `OpText` grammar matching `TxtMutation`'s GENERIC `dsl::DslOps`-derived
+# `print_op`/`parse_op` (../🦀️component.rs `OpCodecs` region: `dsl::DslVariants::to_named_record`
+# + `dsl::print(..., dsl::JoinMode::Inline)` -- no per-artifact custom printer, unlike json/csv's
+# own hand-rolled `print_json_mutation`/`print_csv_mutation`). Same mechanism, same conventions,
+# as stdio.zip's own already-real mutations grammar
+# (../../../../../🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/
+# 📖️component.grammar.semio) -- copied here verbatim in spirit. Keyword = kebab-case of the Rust
+# variant name (`to_kebab`, 🗣️dsl/✨️derive/🦀️component.rs's own documented convention:
+# `SetLineEnding` -> `set-line-ending`). Field keys are likewise kebab-case of the Rust field
+# ident, printed `key=value` in `keyed_field_rank` order (🗣️dsl/🧬️schema/🦀️component.rs): every
+# scalar field on every `TxtMutation` variant is rank 0 (declaration order, a stable sort over an
+# already-ordered slice); `SetSnapshot`'s own nested `snapshot` block is the one rank-1 field,
+# printed last (moot here -- it is that variant's only field).
+comment none
+
+op = no-mutation | set-snapshot | set-trailing-newline | set-line-ending | insert-line | remove-line | set-line
+
+# `scalar_to_text` (🗣️dsl/🧬️schema/🦀️component.rs) prints a `String` field bare (`IDENT`) when it
+# lexes back as exactly one identifier (`is_bare_ident`), quoted+escaped (`TEXT`) otherwise.
+text-value = IDENT | TEXT
+# `LineEnding` (`#[derive(dsl::DslScalar)]`, ../../📸️snapshot/🦀️component.rs) prints its bare
+# kebab-case variant tag -- `Lf` -> `lf`, `CrLf` -> `cr-lf`.
+line-ending-value = "lf" | "cr-lf"
+# `bool` prints via `scalar_to_text`'s own dedicated arm (`FieldValue::Bool(b) => b.to_string()`)
+# -- always bare `true`/`false`, never quoted, regardless of `is_bare_ident`.
+bit = "true" | "false"
+
+no-mutation = "no-mutation"
+
+# `SetSnapshot`'s whole `TxtSnapshot` payload is `#[dsl(block)]` -- printed as `snapshot { ... }`
+# (`Shape::Block(Shape::Record(...))`: `writer.open_block()`/`close_block()` emit the literal
+# `{`/`}`, `print_record_fields` prints the nested record's own keyed fields inside, in the SAME
+# `keyed_field_rank` order as any other record: `schema`/`trailing-newline`/`line-ending` (rank 0,
+# declaration order), then `lines` (rank 1, a `List`) -- verified against real `print_op` output,
+# not assumed). Unlike zip's own `set-snapshot`/`add-entry` (genuinely unboundedly-recursive
+# nested collections, honestly modeled as `REST`), `TxtSnapshot` is flat -- every one of its 4
+# fields is itself a scalar or a single-level `Vec<String>` list -- so this IS finitely,
+# precisely describable, field for field.
+set-snapshot = "set-snapshot" "snapshot" "{" snapshot-fields "}"
+snapshot-fields = schema-field trailing-newline-field line-ending-field lines-field
+schema-field = "schema" "=" text-value
+trailing-newline-field = "trailing-newline" "=" bit
+line-ending-field = "line-ending" "=" line-ending-value
+lines-field = "lines" "=" "[" text-value* "]"
+
+set-trailing-newline = "set-trailing-newline" "value" "=" bit
+
+set-line-ending = "set-line-ending" "value" "=" line-ending-value
+
+insert-line = "insert-line" "index" "=" INT "text" "=" text-value
+
+remove-line = "remove-line" "index" "=" INT
+
+set-line = "set-line" "index" "=" INT "text" "=" text-value

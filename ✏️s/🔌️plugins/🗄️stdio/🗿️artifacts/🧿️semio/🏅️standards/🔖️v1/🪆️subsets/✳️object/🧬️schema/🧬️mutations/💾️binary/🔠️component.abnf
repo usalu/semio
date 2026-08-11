@@ -1,3 +1,26 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.object.mutations"
+; abnf stdio.semio.object mutations (encode_op/decode_op binary payload)
+; payload is the UTF-8 `print_op` line verbatim -- see ../📝️text/📖️component.grammar.semio for the
+; full grammar; restated here for a self-contained ABNF reading.
+document = %s"no-mutation"
+         / %s"set-snapshot" SP %s"snapshot=" snapshot
+         / %s"set-value" SP %s"path=" path SP %s"value=" value
+         / %s"set-map-entry" SP %s"path=" path SP %s"key=" hex SP %s"value=" value
+         / %s"remove-map-entry" SP %s"path=" path SP %s"key=" hex
+         / %s"insert-list-item" SP %s"path=" path SP %s"index=" 1*DIGIT SP %s"value=" value
+         / %s"remove-list-item" SP %s"path=" path SP %s"index=" 1*DIGIT
+         / %s"set-object" SP %s"id=" hex SP %s"value=" value
+         / %s"remove-object" SP %s"id=" hex
+
+path = %x5B [ path-segment *( %x2C path-segment ) ] %x5D
+path-segment = %s"K[" hex %x5D / %s"I[" 1*DIGIT %x5D
+
+snapshot = %x5B hex %x2C value %x2C %x5B [ object-node *( %x2C object-node ) ] %x5D %x5D
+object-node = hex %x3A value
+
+value = %s"Z" / %s"B[" bit %x5D / %s"I[" hex %x5D / %s"F[" hex %x5D / %s"S[" hex %x5D
+      / %s"Y[" hex %x5D / %s"L[" [ value *( %x2C value ) ] %x5D
+      / %s"M[" [ entry *( %x2C entry ) ] %x5D / %s"R[" hex %x5D
+entry = hex %x3A value
+bit = %x30 / %x31
+
+hex = *2HEXDIG

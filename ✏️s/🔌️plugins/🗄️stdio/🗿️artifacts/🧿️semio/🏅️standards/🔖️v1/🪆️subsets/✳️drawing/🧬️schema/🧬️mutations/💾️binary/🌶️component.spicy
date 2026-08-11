@@ -1,5 +1,5 @@
 module Semio_semio_drawing_mutations;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+# serde_json::to_vec, no separate envelope -- bytes ARE UTF-8 mutation-tagged JSON.
 type Document = unit {
-    magic: bytes &size=29;
+    json_bytes: bytes &eod;
 };

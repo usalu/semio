@@ -1,10 +1,17 @@
-/** 🧬️ EpwMutation schema. 🚧 scaffolded by W1b — generic facet mirror; the EpwMutation
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface EpwMutationEntry {
-  key: string;
-  value: string;
-}
-export interface EpwMutation {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: EpwMutationEntry[];
-}
+/** 🧬️ EpwMutation union — mirrors 🦀️component.rs's `#[serde(tag = "mutation")]` enum. */
+import type { EpwSnapshot, EpwLocation, EpwDataPeriods, EpwRecord } from '../📸️snapshot/🟦️component.ts';
+
+export type EpwMutation =
+  | { mutation: 'noMutation' }
+  | { mutation: 'setSnapshot'; snapshot: EpwSnapshot }
+  | { mutation: 'setLocation'; location: EpwLocation }
+  | { mutation: 'setDesignConditions'; value: string }
+  | { mutation: 'setTypicalExtremePeriods'; value: string }
+  | { mutation: 'setGroundTemperatures'; value: string }
+  | { mutation: 'setHolidaysDst'; value: string }
+  | { mutation: 'setComments1'; value: string }
+  | { mutation: 'setComments2'; value: string }
+  | { mutation: 'setDataPeriods'; dataPeriods: EpwDataPeriods }
+  | { mutation: 'insertRecord'; index: number; record: EpwRecord }
+  | { mutation: 'removeRecord'; index: number }
+  | { mutation: 'setRecordField'; recordIndex: number; fieldIndex: number; value: string };

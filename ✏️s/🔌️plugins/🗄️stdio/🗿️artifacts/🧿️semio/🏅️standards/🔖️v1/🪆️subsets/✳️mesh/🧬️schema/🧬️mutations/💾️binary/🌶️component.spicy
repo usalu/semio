@@ -1,5 +1,8 @@
-module Semio_semio_mesh_mutations;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=26;
+module Stdio_semio_mesh_mutation;
+
+# BINARY representation — identical to the TEXT grammar, UTF-8 encoded, no additional framing:
+# encode_op() is print_op().into_bytes() verbatim (../🦀️component.rs's `OpCodecs` region).
+
+public type Envelope = unit {
+    text_utf8: bytes &eod;   # UTF-8 bytes of the print_op() text grammar
 };

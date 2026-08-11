@@ -1,7 +1,57 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// Complete-per-spec SemioDocumentSnapshot: named styles + id-keyed images + a recursive block tree.
 package semio.s_stdio_semio_document.snapshot;
+
+message RunStyle {
+  bool bold = 1;
+  bool italic = 2;
+  bool underline = 3;
+  optional double size = 4;
+  optional string font = 5;
+  optional string color = 6;
+  optional string link = 7;
+}
+message DocRun {
+  string text = 1;
+  RunStyle style = 2;
+}
+message DocStyle {
+  string id = 1;
+  string name = 2;
+  optional string based_on = 3;
+}
+message DocImage {
+  string id = 1;
+  string mime = 2;
+  bytes bytes = 3;
+}
+message DocListItem { repeated DocBlock blocks = 1; }
+message DocTableCell { repeated DocBlock blocks = 1; }
+message DocTableRow { repeated DocTableCell cells = 1; }
+
+// proto3 has no recursive oneof-of-message-containing-itself restriction, so DocBlock nests
+// directly (protoc generates the recursive type fine); one oneof per block kind's own fields.
+message DocBlock {
+  enum Kind { PARAGRAPH = 0; HEADING = 1; LIST = 2; TABLE = 3; CODE = 4; QUOTE = 5; IMAGE = 6; PAGE_BREAK = 7; }
+  Kind kind = 1;
+  optional string style_id = 2;
+  repeated DocRun runs = 3;
+  uint32 level = 4;
+  bool ordered = 5;
+  repeated DocListItem items = 6;
+  repeated DocTableRow rows = 7;
+  optional string language = 8;
+  string text = 9;
+  repeated DocBlock blocks = 10;
+  string image_id = 11;
+  string alt = 12;
+  optional double width = 13;
+  optional double height = 14;
+}
+
 message SemioDocumentSnapshot {
   string schema = 1;
-  string entries_wire = 2;
+  repeated DocStyle styles = 2;
+  repeated DocImage images = 3;
+  repeated DocBlock blocks = 4;
 }

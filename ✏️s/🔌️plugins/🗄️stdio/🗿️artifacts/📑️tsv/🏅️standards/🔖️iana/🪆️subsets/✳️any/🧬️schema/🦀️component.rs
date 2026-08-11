@@ -1,7 +1,6 @@
-//! 🧬️ TsvArtifact schema — full artifact state, mirrors `TsvSnapshot` field for
-//! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
+//! 🧬️ TsvArtifact schema — full artifact state, mirrors `TsvSnapshot` field for field.
 
-use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::{TsvSnapshot, TsvRecord};
+use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -13,12 +12,13 @@ pub struct TsvArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub header: Vec<String>,
+    pub records: Vec<Vec<String>>,
     #[state(persistent)]
     #[serde(default)]
-    pub records: Vec<TsvRecord>,
-    #[state(persistent)]
     pub trailing_newline: bool,
+    #[state(persistent)]
+    #[serde(default)]
+    pub line_ending: LineEnding,
 }
 
 impl Default for TsvArtifact {
@@ -29,24 +29,24 @@ impl TsvArtifact {
     pub fn to_snapshot(&self) -> TsvSnapshot {
         TsvSnapshot {
             schema: self.schema.clone(),
-            header: self.header.clone(),
             records: self.records.clone(),
-            trailing_newline: self.trailing_newline.clone(),
+            trailing_newline: self.trailing_newline,
+            line_ending: self.line_ending,
         }
     }
     pub fn from_snapshot(snapshot: TsvSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            header: snapshot.header,
             records: snapshot.records,
             trailing_newline: snapshot.trailing_newline,
+            line_ending: snapshot.line_ending,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: TsvSnapshot) {
         self.schema = snapshot.schema;
-        self.header = snapshot.header;
         self.records = snapshot.records;
         self.trailing_newline = snapshot.trailing_newline;
+        self.line_ending = snapshot.line_ending;
     }
 }
 

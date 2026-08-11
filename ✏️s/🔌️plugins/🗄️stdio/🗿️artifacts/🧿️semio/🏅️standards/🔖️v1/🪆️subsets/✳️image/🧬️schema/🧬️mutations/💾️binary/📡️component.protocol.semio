@@ -1,3 +1,9 @@
-dialect protocol stdio.semio.image.mutations
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.image.mutations"
+dialect protocol
+protocol s.stdio.semio.image.mutations.binary
+start op-binary
+
+op-binary = *OCTET
+
+; -- real: `encode_op` is the 📝️text sibling's `op` grammar UTF-8 bytes, verbatim -- a documented
+; -- simplification matching gif's own hand-rolled op codec (see the `🧬️mutations`
+; -- `🦀️component.rs` sibling's `🔖️OpCodecs` region doc comment).

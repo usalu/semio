@@ -1,6 +1,93 @@
-dialect grammar stdio.docx.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.docx' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.docx.mutations
+extension docx
+start document
+comment none
+
+# FG-wave: real one-line `OpText::print_op`/`parse_op` shape ALREADY emitted by
+# `../../🦀️component.rs` (`print_docx_mutation`/`parse_docx_mutation`, ~L305-360), replacing the
+# F6-era `*OCTET` hex-dump placeholder. Grammar: `keyword arg=value arg=value ...`
+# (space-separated), one alternative per `DocxMutation` variant -- every keyword/arg-name token
+# below is copied verbatim from the real `format!(...)` call sites, not invented.
+#
+# `hex` (bare `hex`, referenced but deliberately NOT defined as a production) is the framework's
+# built-in `hex` MACRO -- `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2. `[0]`/`[1,x]` is
+# `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4).
+document = no-mutation | set-snapshot | insert-block | remove-block | set-block-content | set-run-text | set-run-formatting | insert-style | remove-style | set-style-name | set-style-based-on | set-part | remove-part
+
+no-mutation = "no-mutation"
+set-snapshot = "set-snapshot" "snapshot" "=" docx-snapshot
+insert-block = "insert-block" "path" "=" block-path "block" "=" block
+remove-block = "remove-block" "path" "=" block-path
+set-block-content = "set-block-content" "path" "=" block-path "block" "=" block
+set-run-text = "set-run-text" "path" "=" block-path "run-index" "=" INT "text" "=" hex
+set-run-formatting = "set-run-formatting" "path" "=" block-path "run-index" "=" INT "bold" "=" bool-lit "italic" "=" bool-lit "underline" "=" bool-lit
+insert-style = "insert-style" "style" "=" style
+remove-style = "remove-style" "id" "=" hex
+set-style-name = "set-style-name" "id" "=" hex "name" "=" hex
+set-style-based-on = "set-style-based-on" "id" "=" hex "based-on" "=" opt-hex
+set-part = "set-part" "path" "=" hex "content-type" "=" hex "bytes" "=" hex
+remove-part = "remove-part" "path" "=" hex
+
+bool-lit = "0" | "1"
+opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
+
+# ── `DocxBlockPath` -- `[[segment,...],index]` (`enc_block_path`) ────────────────────────────────
+block-path = "[" segments-list "," INT "]"
+segments-list = "[" segment-item* "]"
+segment-item = segment ","?
+segment = "[" INT "," INT "," INT "]"
+
+# ── `DocxSnapshot` -- `[schema,opc-package,docx-document]` (`enc_docx_snapshot`, `SetSnapshot`'s
+# whole-payload encoding only) ────────────────────────────────────────────────────────────────────
+docx-snapshot = "[" hex "," opc-package "," docx-document "]"
+
+# ── `OpcPackage` -- `[parts,content-types,relationships-by-owner]` (`enc_opc_package`) ───────────
+opc-package = "[" parts-list "," content-types "," rel-owner-list "]"
+parts-list = "[" opc-part-item* "]"
+opc-part-item = opc-part ","?
+opc-part = "[" hex "," hex "," hex "]"
+content-types = "[" ct-entries-list "," ct-entries-list "]"
+ct-entries-list = "[" ct-entry-item* "]"
+ct-entry-item = ct-entry ","?
+ct-entry = "[" hex "," hex "]"
+rel-owner-list = "[" rel-owner-item* "]"
+rel-owner-item = rel-owner-entry ","?
+rel-owner-entry = "[" hex "," rel-list "]"
+rel-list = "[" rel-item* "]"
+rel-item = rel ","?
+rel = "[" hex "," hex "," hex "," target-mode "]"
+target-mode = "0" | "1"
+
+# ── `DocxDocument` -- `[body,styles]` (`enc_docx_document`) ──────────────────────────────────────
+docx-document = "[" blocks-list "," styles-list "]"
+blocks-list = "[" block-item* "]"
+block-item = block ","?
+styles-list = "[" style-item* "]"
+style-item = style ","?
+
+# ── Restated whole-item value shapes (identical to this artifact's own `../🔺️diff/📝️text` sibling
+# grammar's own `block`/`paragraph`/`run`/`table`/`row`/`cell`/`style` productions, restated here
+# per-facet since grammar files don't cross-reference -- same shape `enc_block`/`enc_style` in
+# `../🔺️diff/🦀️component.rs` produce, reused by `../🦀️component.rs`'s `OpText` impl too, per that
+# file's own `DocxDiff`'s `pub(crate)` grammar primitives reuse note). ───────────────────────────
+block = "P" paragraph | "T" table
+paragraph = "[" runs-list "," opt-hex "," extra-list "]"
+runs-list = "[" run-item* "]"
+run-item = run ","?
+run = "[" hex "," bool-lit "," bool-lit "," bool-lit "," extra-list "]"
+extra-list = "[" x-node-item* "]"
+x-node-item = x-node ","?
+table = "[" rows-list "," extra-list "]"
+rows-list = "[" row-item* "]"
+row-item = row ","?
+row = "[" cells-list "," extra-list "]"
+cells-list = "[" cell-item* "]"
+cell-item = cell ","?
+cell = "[" blocks-list "," extra-list "]"
+style = "[" hex "," hex "," opt-hex "]"
+
+# Restated `XmlNode` value shape, verbatim from this artifact's own `../🔺️diff/📝️text` sibling
+# grammar's `x-node` production (itself restated from xml's own FG1 `xml-node` diff shape).
+x-node = "E" "[" hex "," "[" x-attr-item* "]" "," "[" x-node-item* "]" "]" | "T" "[" hex "]" | "D" "[" hex "]" | "M" "[" hex "]" | "P" "[" hex "," hex "]"
+x-attr-item = "[" hex "," hex "]" ","?

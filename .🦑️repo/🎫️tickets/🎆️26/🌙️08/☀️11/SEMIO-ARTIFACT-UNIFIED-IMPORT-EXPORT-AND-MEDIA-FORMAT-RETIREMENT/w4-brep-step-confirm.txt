@@ -1,0 +1,20 @@
+test artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::component::tests::json_pack_round_trips ... ok
+test artifacts::semio::standards::v1::subsets::workflow::composer::tests::dangling_edge_endpoint_is_flagged ... ok
+
+failures:
+
+---- artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::pdf::v1_7::any::component::tests::real_byte_round_trip_through_pdf_codec stdout ----
+
+thread 'artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::pdf::v1_7::any::component::tests::real_byte_round_trip_through_pdf_codec' (177613570) panicked at ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.7/✳️any/🦀️component.rs:94:9:
+assertion `left == right` failed
+  left: "hellosemio"
+ right: "hello\nsemio"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::pdf::v1_7::any::component::tests::real_byte_round_trip_through_pdf_codec
+
+test result: FAILED. 426 passed; 1 failed; 0 ignored; 0 measured; 1217 filtered out; finished in 0.05s
+
+error: test failed, to rerun pass `-p semio-s-plugin-stdio --lib`

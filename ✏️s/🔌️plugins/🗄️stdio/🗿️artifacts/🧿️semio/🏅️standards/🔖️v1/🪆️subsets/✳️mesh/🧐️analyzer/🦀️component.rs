@@ -1,5 +1,6 @@
-//! 🧐️ SemioMeshAnalyzer — 🚧 scaffolded by W1b: JSON-pack decode only. `sniff()` genuinely
-//! inspects the payload for this subset's document-schema marker (not an always-High/Low stub).
+//! 🧐️ SemioMeshAnalyzer — JSON-pack decode via the real `SemioMeshSnapshot`
+//! `store::ArtifactDsl`/`ArtifactPack` impls. `sniff()` genuinely inspects the payload for this
+//! subset's document-schema marker (not an always-High/Low stub).
 
 use semio_framework_plugin::{ArtifactAnalyzer, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};

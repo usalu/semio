@@ -1,10 +1,8 @@
-/** 🧬️ AviArtifact schema. 🚧 scaffolded by W1b — generic facet mirror; the AviArtifact
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface AviArtifactEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ AviArtifact — full artifact state, mirrors AviSnapshot field for field. */
 export interface AviArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: AviArtifactEntry[];
+  schema: string;
+  mainHeader: import("./📸️snapshot/🟦️component").AviMainHeader;
+  streams: import("./📸️snapshot/🟦️component").AviStream[];
+  idx1Present: boolean;
+  unknownChunks: import("./📸️snapshot/🟦️component").RiffChunk[];
 }

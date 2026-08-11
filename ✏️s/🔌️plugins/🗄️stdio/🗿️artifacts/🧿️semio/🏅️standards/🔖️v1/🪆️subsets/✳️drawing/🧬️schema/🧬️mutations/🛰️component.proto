@@ -1,7 +1,46 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.s_stdio_semio_drawing.mutations;
+// 🧬️ SemioDrawingMutation — mirrors the real Rust 🧬️mutations/🦀️component.rs. Variant fields
+// target canvas/styles (key-ed added/modified/removed)/layers/node children/root, read the base
+// snapshot's schema/translation (strokeWidth included via style fields) for inverse(); line =
+// one-line OpText wire, item = a triple's inserted payload.
+package semio.s_stdio_semio_drawing.mutation;
+
+message NodePath {
+  uint32 layer = 1;
+  repeated uint32 path = 2;
+}
+
+enum MutationKind {
+  NO_MUTATION = 0; SET_SNAPSHOT = 1; SET_CANVAS_SIZE = 2; SET_CANVAS_BACKGROUND = 3; SET_STYLE = 4;
+  REMOVE_STYLE = 5; INSERT_LAYER = 6; REMOVE_LAYER = 7; SET_LAYER_META = 8; MOVE_LAYER = 9;
+  SET_GROUP_TRANSFORM = 10; SET_PATH_SEGMENTS = 11; SET_NODE_STYLE = 12; SET_TEXT = 13; SET_IMAGE = 14;
+  INSERT_NODE = 15; REMOVE_NODE = 16; REPLACE_NODE = 17;
+}
+
 message SemioDrawingMutation {
-  string schema = 1;
-  string entries_wire = 2;
+  MutationKind mutation = 1;
+  optional bytes snapshot_wire = 2;
+  optional double width = 3;
+  optional double height = 4;
+  optional bytes background_wire = 5;
+  optional string name = 6;
+  optional bytes fill_wire = 7;
+  optional bytes stroke_wire = 8;
+  optional double stroke_width = 9;
+  optional float opacity = 10;
+  optional uint32 index = 11;
+  optional bytes layer_wire = 12;
+  optional string id = 13;
+  optional bool visible = 14;
+  optional uint32 from_index = 15;
+  optional uint32 to_index = 16;
+  NodePath path = 17;
+  optional bytes transform_wire = 18;
+  repeated bytes segments_wire = 19;
+  optional string style = 20;
+  optional string value = 21;
+  optional bytes at_wire = 22;
+  optional string mime = 23;
+  optional bytes image_bytes = 24;
+  optional bytes node_wire = 25;
 }

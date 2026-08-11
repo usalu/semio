@@ -1,9 +1,12 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type TsvSnapshotEntry {
-  key: String!
-  value: String!
-}
+# 🧬️ TsvSnapshot schema facet — mirrors 🦀️component.rs field-for-field.
+
+enum TsvLineEnding { LF CRLF }
+
+type TsvRow { fields: [String!]! }
+
 type TsvSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  entries: [TsvSnapshotEntry!]! @state(class: PERSISTENT)
+  schema: String!
+  records: [TsvRow!]!
+  trailingNewline: Boolean!
+  lineEnding: TsvLineEnding!
 }

@@ -1,3 +1,5 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.drawing.diff"
+; abnf stdio.semio.drawing diff binary -- no separate envelope, bytes ARE the UTF-8 text-facet
+; grammar verbatim (../📝️text/📖️component.grammar.semio's document production)
+document = *OCTET-UTF8
+OCTET-UTF8 = OCTET  ; UTF-8 byte of the text-facet document, see ../📝️text/📖️component.grammar.semio
+

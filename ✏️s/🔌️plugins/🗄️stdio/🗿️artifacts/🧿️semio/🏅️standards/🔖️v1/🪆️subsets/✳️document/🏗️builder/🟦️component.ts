@@ -1,2 +1,3 @@
-/** 🚪️ IO (SemioDocument builder). 🚧 scaffolded by W1b — leaves land in W4. */
+/** 🏗️ SemioDocumentBuilder — constitutional facet stub (real logic is Rust-only; see the
+ * sibling `🦀️component.rs` for the real `ArtifactBuilder` impl). */
 export {};

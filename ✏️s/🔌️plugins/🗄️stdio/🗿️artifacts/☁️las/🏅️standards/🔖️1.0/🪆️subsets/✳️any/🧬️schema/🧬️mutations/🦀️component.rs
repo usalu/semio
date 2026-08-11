@@ -391,19 +391,262 @@ impl protocol::OpText for LasMutation {
     }
 }
 
+//#region 🔖️BinaryOpCodec
+/// 🧪️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: REAL binary
+/// twins backing the upgraded `OpBinary::encode_op`/`decode_op` below — replaces the old F6
+/// `print_las_mutation(self).into_bytes()` text-as-binary shortcut. Reuses the diff facet's own
+/// `write_bytes_lp`/`write_str_lp`/`enc_header_bin`/`enc_vlr_bin`/`enc_point_bin` primitives
+/// (`../🔺️diff/🦀️component.rs`'s `#region 🔖️BinaryDiffCodec`, `pub(crate)`) — `LasHeader`/
+/// `LasVlr`/`LasPoint` are the SAME real records whether embedded in a sparse diff-patch or (here)
+/// a whole `SetSnapshot`/`InsertVlr`/`InsertPoint`/`SetPoint` payload, so one binary encoder per
+/// record type, shared across both facets, is the correct de-duplication (not a second,
+/// independently-drifting copy).
+fn enc_f64x3_bin(t: (f64, f64, f64), out: &mut Vec<u8>) {
+    out.extend_from_slice(&t.0.to_le_bytes());
+    out.extend_from_slice(&t.1.to_le_bytes());
+    out.extend_from_slice(&t.2.to_le_bytes());
+}
+fn dec_f64x3_bin(reader: &mut store::ByteReader<'_>) -> Result<(f64, f64, f64), String> {
+    Ok((
+        reader.read_f64_le().map_err(|e| e.to_string())?,
+        reader.read_f64_le().map_err(|e| e.to_string())?,
+        reader.read_f64_le().map_err(|e| e.to_string())?,
+    ))
+}
+
+/// 🧭️ A whole `LasSnapshot` — `schema` (real, genuinely round-tripped identity field) + the full
+/// `LasHeader` record + runtime-counted `vlrs`/`points` lists, each item a full record.
+fn enc_snapshot_bin(s: &LasSnapshot, out: &mut Vec<u8>) {
+    diff::write_str_lp(out, &s.schema);
+    diff::enc_header_bin(&s.header, out);
+    store::pack_rt::write_varint_u64(out, s.vlrs.len() as u64);
+    for v in &s.vlrs { diff::enc_vlr_bin(v, out); }
+    store::pack_rt::write_varint_u64(out, s.points.len() as u64);
+    for p in &s.points { diff::enc_point_bin(p, out); }
+}
+fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<LasSnapshot, String> {
+    let schema = diff::read_str_lp(reader)?;
+    let header = diff::dec_header_bin(reader)?;
+    let vlr_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let vlrs = (0..vlr_count).map(|_| diff::dec_vlr_bin(reader)).collect::<Result<Vec<_>, String>>()?;
+    let point_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let points = (0..point_count).map(|_| diff::dec_point_bin(reader)).collect::<Result<Vec<_>, String>>()?;
+    Ok(LasSnapshot { schema, header, vlrs, points })
+}
+
+/// 🔢️ Variant tag byte — declaration order, matching `LasMutation`'s own enum order exactly.
+const TAG_NO_MUTATION: u8 = 0;
+const TAG_SET_SNAPSHOT: u8 = 1;
+const TAG_SET_VERSION: u8 = 2;
+const TAG_SET_SYSTEM_IDENTIFIER: u8 = 3;
+const TAG_SET_SOFTWARE_INFO: u8 = 4;
+const TAG_SET_CREATION_DATE: u8 = 5;
+const TAG_SET_SCALE_AND_OFFSET: u8 = 6;
+const TAG_SET_BOUNDS: u8 = 7;
+const TAG_SET_POINTS_BY_RETURN: u8 = 8;
+const TAG_INSERT_VLR: u8 = 9;
+const TAG_REMOVE_VLR: u8 = 10;
+const TAG_SET_VLR_DATA: u8 = 11;
+const TAG_INSERT_POINT: u8 = 12;
+const TAG_REMOVE_POINT: u8 = 13;
+const TAG_SET_POINT: u8 = 14;
+//#endregion 🔖️BinaryOpCodec
+
 impl protocol::OpBinary for LasMutation {
-    /// ⚡️ Binary = the text bytes verbatim (same simplification the `🔺️diff` module's hand-rolled
-    /// `DiffCodec::encode_diff` uses — satisfies every `OpBinary` law without inventing a second
-    /// wire format).
+    /// ⚡️ REAL binary frame (`format u8 | tag u8 | <variant-specific fields>`), matching
+    /// `../💾️binary/📡️component.protocol.semio`'s `format`/`tag` leading fields exactly —
+    /// upgraded from F6's `print_las_mutation(self).into_bytes()` text-as-binary shortcut. Every
+    /// variant's payload is genuinely, individually field-by-field encoded below (see
+    /// `#region 🔖️BinaryOpCodec` for the shared record encoders).
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(print_las_mutation(self).into_bytes())
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT];
+        match self {
+            LasMutation::NoMutation => out.push(TAG_NO_MUTATION),
+            LasMutation::SetSnapshot { snapshot } => { out.push(TAG_SET_SNAPSHOT); enc_snapshot_bin(snapshot, &mut out); }
+            LasMutation::SetVersion { major, minor } => { out.push(TAG_SET_VERSION); out.push(*major); out.push(*minor); }
+            LasMutation::SetSystemIdentifier { system_identifier } => { out.push(TAG_SET_SYSTEM_IDENTIFIER); diff::write_str_lp(&mut out, system_identifier); }
+            LasMutation::SetSoftwareInfo { generating_software } => { out.push(TAG_SET_SOFTWARE_INFO); diff::write_str_lp(&mut out, generating_software); }
+            LasMutation::SetCreationDate { day_of_year, year } => {
+                out.push(TAG_SET_CREATION_DATE);
+                store::pack_rt::write_varint_u64(&mut out, *day_of_year as u64);
+                store::pack_rt::write_varint_u64(&mut out, *year as u64);
+            }
+            LasMutation::SetScaleAndOffset { scale, offset } => {
+                out.push(TAG_SET_SCALE_AND_OFFSET);
+                enc_f64x3_bin(*scale, &mut out);
+                enc_f64x3_bin(*offset, &mut out);
+            }
+            LasMutation::SetBounds { max, min } => {
+                out.push(TAG_SET_BOUNDS);
+                enc_f64x3_bin(*max, &mut out);
+                enc_f64x3_bin(*min, &mut out);
+            }
+            LasMutation::SetPointsByReturn { counts } => {
+                out.push(TAG_SET_POINTS_BY_RETURN);
+                for c in counts { store::pack_rt::write_varint_u64(&mut out, *c as u64); }
+            }
+            LasMutation::InsertVlr { index, vlr } => {
+                out.push(TAG_INSERT_VLR);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                diff::enc_vlr_bin(vlr, &mut out);
+            }
+            LasMutation::RemoveVlr { index } => { out.push(TAG_REMOVE_VLR); store::pack_rt::write_varint_u64(&mut out, *index as u64); }
+            LasMutation::SetVlrData { index, data } => {
+                out.push(TAG_SET_VLR_DATA);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                diff::write_bytes_lp(&mut out, data);
+            }
+            LasMutation::InsertPoint { index, point } => {
+                out.push(TAG_INSERT_POINT);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                diff::enc_point_bin(point, &mut out);
+            }
+            LasMutation::RemovePoint { index } => { out.push(TAG_REMOVE_POINT); store::pack_rt::write_varint_u64(&mut out, *index as u64); }
+            LasMutation::SetPoint { index, point } => {
+                out.push(TAG_SET_POINT);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                diff::enc_point_bin(point, &mut out);
+            }
+        }
+        Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        parse_las_mutation(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        fn go(bytes: &[u8]) -> Result<LasMutation, String> {
+            let mut reader = store::ByteReader::new(bytes);
+            let format = reader.read_u8().map_err(|e| e.to_string())?;
+            if format != store::pack_rt::OP_BINARY_FORMAT {
+                return Err(format!("bad op format byte {format}"));
+            }
+            let tag = reader.read_u8().map_err(|e| e.to_string())?;
+            Ok(match tag {
+                TAG_NO_MUTATION => LasMutation::NoMutation,
+                TAG_SET_SNAPSHOT => LasMutation::SetSnapshot { snapshot: dec_snapshot_bin(&mut reader)? },
+                TAG_SET_VERSION => LasMutation::SetVersion {
+                    major: reader.read_u8().map_err(|e| e.to_string())?,
+                    minor: reader.read_u8().map_err(|e| e.to_string())?,
+                },
+                TAG_SET_SYSTEM_IDENTIFIER => LasMutation::SetSystemIdentifier { system_identifier: diff::read_str_lp(&mut reader)? },
+                TAG_SET_SOFTWARE_INFO => LasMutation::SetSoftwareInfo { generating_software: diff::read_str_lp(&mut reader)? },
+                TAG_SET_CREATION_DATE => LasMutation::SetCreationDate {
+                    day_of_year: reader.read_varint_u64().map_err(|e| e.to_string())? as u16,
+                    year: reader.read_varint_u64().map_err(|e| e.to_string())? as u16,
+                },
+                TAG_SET_SCALE_AND_OFFSET => LasMutation::SetScaleAndOffset {
+                    scale: dec_f64x3_bin(&mut reader)?,
+                    offset: dec_f64x3_bin(&mut reader)?,
+                },
+                TAG_SET_BOUNDS => LasMutation::SetBounds {
+                    max: dec_f64x3_bin(&mut reader)?,
+                    min: dec_f64x3_bin(&mut reader)?,
+                },
+                TAG_SET_POINTS_BY_RETURN => {
+                    let mut counts = [0u32; 5];
+                    for slot in counts.iter_mut() { *slot = reader.read_varint_u64().map_err(|e| e.to_string())? as u32; }
+                    LasMutation::SetPointsByReturn { counts }
+                }
+                TAG_INSERT_VLR => LasMutation::InsertVlr {
+                    index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize,
+                    vlr: diff::dec_vlr_bin(&mut reader)?,
+                },
+                TAG_REMOVE_VLR => LasMutation::RemoveVlr { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize },
+                TAG_SET_VLR_DATA => LasMutation::SetVlrData {
+                    index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize,
+                    data: diff::read_bytes_lp(&mut reader)?,
+                },
+                TAG_INSERT_POINT => LasMutation::InsertPoint {
+                    index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize,
+                    point: diff::dec_point_bin(&mut reader)?,
+                },
+                TAG_REMOVE_POINT => LasMutation::RemovePoint { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize },
+                TAG_SET_POINT => LasMutation::SetPoint {
+                    index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize,
+                    point: diff::dec_point_bin(&mut reader)?,
+                },
+                other => return Err(format!("las mutation: unknown binary tag {other}")),
+            })
+        }
+        go(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "las op binary", offset: 0, detail: e })
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️SharedFixtures
+/// 🧪️ Moved out of `mod tests` (was originally local to it) so `demo_mutation_cases()` below can
+/// share the exact same fixtures `mod tests` itself uses — single source of truth, per CLAUDE.md.
+#[cfg(test)]
+pub(crate) fn vlr(user_id: &str, record_id: u16, data: &[u8]) -> LasVlr {
+    LasVlr { user_id: user_id.into(), record_id, description: format!("vlr {record_id}"), data: data.to_vec() }
+}
+
+#[cfg(test)]
+pub(crate) fn point(seed: u8) -> LasPoint {
+    LasPoint {
+        x: 100.0 + seed as f64,
+        y: -50.0 + seed as f64 * 0.5,
+        z: 10.0 + seed as f64 * 0.1,
+        intensity: 100 + seed as u16,
+        return_number: (seed % 5) + 1,
+        number_of_returns: ((seed + 1) % 5) + 1,
+        scan_direction_flag: seed % 2 == 0,
+        edge_of_flight_line: seed % 3 == 0,
+        classification: seed,
+        scan_angle_rank: seed as i8 - 10,
+        user_data: seed,
+        point_source_id: 1000 + seed as u16,
+        gps_time: None,
+        rgb: None,
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn base_snapshot() -> LasSnapshot {
+    let vlrs = vec![vlr("LASF_Spec", 100, b"vlr-a"), vlr("LASF_Spec", 101, b"vlr-b")];
+    let points = vec![point(0), point(1), point(2)];
+    LasSnapshot {
+        schema: "stdio.las".into(),
+        header: LasHeader {
+            number_of_vlrs: vlrs.len() as u32,
+            number_of_point_records: points.len() as u32,
+            ..LasHeader::default()
+        },
+        vlrs,
+        points,
+    }
+}
+
+/// 🧪️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: representative
+/// `LasMutation` cases, one per variant (15 total) — single source of truth shared by
+/// `op_text_binary_roundtrip_law` below AND `⚙️engine/🦀️component.rs`'s
+/// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests, per CLAUDE.md (no
+/// duplicated literal case lists). Exercises `SetSnapshot` (whole-header + vlrs + points
+/// positional codec), both bare-tuple variants (`SetScaleAndOffset`/`SetBounds`), the `[u32; 5]`
+/// array (`SetPointsByReturn`), and a point/VLR carrying both tri-state-capable fields set
+/// (`gps_time`/`rgb`).
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<LasMutation> {
+    let base = base_snapshot();
+    let mut rich_point = point(9);
+    rich_point.gps_time = Some(1234.5);
+    rich_point.rgb = Some((11, 22, 33));
+    vec![
+        LasMutation::NoMutation,
+        LasMutation::SetSnapshot { snapshot: LasSnapshot { header: LasHeader { creation_year: 2031, ..base.header.clone() }, ..base.clone() } },
+        LasMutation::SetVersion { major: 1, minor: 4 },
+        LasMutation::SetSystemIdentifier { system_identifier: "semio".into() },
+        LasMutation::SetSoftwareInfo { generating_software: "semio-las-writer".into() },
+        LasMutation::SetCreationDate { day_of_year: 42, year: 2026 },
+        LasMutation::SetScaleAndOffset { scale: (0.001, 0.001, 0.001), offset: (1000.0, 2000.0, 0.0) },
+        LasMutation::SetBounds { max: (999.0, 888.0, 777.0), min: (-1.0, -2.0, -3.0) },
+        LasMutation::SetPointsByReturn { counts: [1, 2, 3, 4, 5] },
+        LasMutation::InsertVlr { index: 1, vlr: vlr("EXTRA", 200, b"new-vlr") },
+        LasMutation::RemoveVlr { index: 0 },
+        LasMutation::SetVlrData { index: 0, data: b"patched".to_vec() },
+        LasMutation::InsertPoint { index: 1, point: rich_point.clone() },
+        LasMutation::RemovePoint { index: 0 },
+        LasMutation::SetPoint { index: 0, point: rich_point },
+    ]
+}
+//#endregion 🔖️SharedFixtures
 
 //#region Tests
 #[cfg(test)]
@@ -413,46 +656,6 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
     use protocol::{OpBinary, OpText};
-
-    //#region Fixtures
-    fn vlr(user_id: &str, record_id: u16, data: &[u8]) -> LasVlr {
-        LasVlr { user_id: user_id.into(), record_id, description: format!("vlr {record_id}"), data: data.to_vec() }
-    }
-
-    fn point(seed: u8) -> LasPoint {
-        LasPoint {
-            x: 100.0 + seed as f64,
-            y: -50.0 + seed as f64 * 0.5,
-            z: 10.0 + seed as f64 * 0.1,
-            intensity: 100 + seed as u16,
-            return_number: (seed % 5) + 1,
-            number_of_returns: ((seed + 1) % 5) + 1,
-            scan_direction_flag: seed % 2 == 0,
-            edge_of_flight_line: seed % 3 == 0,
-            classification: seed,
-            scan_angle_rank: seed as i8 - 10,
-            user_data: seed,
-            point_source_id: 1000 + seed as u16,
-            gps_time: None,
-            rgb: None,
-        }
-    }
-
-    fn base_snapshot() -> LasSnapshot {
-        let vlrs = vec![vlr("LASF_Spec", 100, b"vlr-a"), vlr("LASF_Spec", 101, b"vlr-b")];
-        let points = vec![point(0), point(1), point(2)];
-        LasSnapshot {
-            schema: "stdio.las".into(),
-            header: LasHeader {
-                number_of_vlrs: vlrs.len() as u32,
-                number_of_point_records: points.len() as u32,
-                ..LasHeader::default()
-            },
-            vlrs,
-            points,
-        }
-    }
-    //#endregion Fixtures
 
     //#region 🔖️mutation_diff_law
     fn assert_mutation_diff_law(base: &LasSnapshot, mutation: LasMutation) {
@@ -849,33 +1052,12 @@ mod tests {
 
     //#region 🔖️op_text_binary_roundtrip_law
     /// 🧪️ F6 (las): `OpText`/`OpBinary` round-trip law over the full 15-variant vocabulary
-    /// (hand-rolled, `dsl::DslOps` blocked — see the `OpCodecs` region's doc comment). Exercises
-    /// `SetSnapshot` (whole-header + vlrs + points positional codec), both bare-tuple mutation
-    /// variants (`SetScaleAndOffset`/`SetBounds`), the `[u32; 5]` array (`SetPointsByReturn`), and
-    /// a point/VLR carrying both tri-state-capable fields set (`gps_time`/`rgb`).
+    /// (hand-rolled, `dsl::DslOps` blocked — see the `OpCodecs` region's doc comment), via
+    /// `demo_mutation_cases()` — the single source of truth also reused by
+    /// `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`.
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = base_snapshot();
-        let mut rich_point = point(9);
-        rich_point.gps_time = Some(1234.5);
-        rich_point.rgb = Some((11, 22, 33));
-        for mutation in [
-            LasMutation::NoMutation,
-            LasMutation::SetSnapshot { snapshot: LasSnapshot { header: LasHeader { creation_year: 2031, ..base.header.clone() }, ..base.clone() } },
-            LasMutation::SetVersion { major: 1, minor: 4 },
-            LasMutation::SetSystemIdentifier { system_identifier: "semio".into() },
-            LasMutation::SetSoftwareInfo { generating_software: "semio-las-writer".into() },
-            LasMutation::SetCreationDate { day_of_year: 42, year: 2026 },
-            LasMutation::SetScaleAndOffset { scale: (0.001, 0.001, 0.001), offset: (1000.0, 2000.0, 0.0) },
-            LasMutation::SetBounds { max: (999.0, 888.0, 777.0), min: (-1.0, -2.0, -3.0) },
-            LasMutation::SetPointsByReturn { counts: [1, 2, 3, 4, 5] },
-            LasMutation::InsertVlr { index: 1, vlr: vlr("EXTRA", 200, b"new-vlr") },
-            LasMutation::RemoveVlr { index: 0 },
-            LasMutation::SetVlrData { index: 0, data: b"patched".to_vec() },
-            LasMutation::InsertPoint { index: 1, point: rich_point.clone() },
-            LasMutation::RemovePoint { index: 0 },
-            LasMutation::SetPoint { index: 0, point: rich_point },
-        ] {
+        for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = LasMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

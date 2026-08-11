@@ -1,7 +1,7 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_html_mutations.text;
-message Semio_html_mutations {
+package semio.stdio_html.mutations_text;
+
+message Artifact {
   string schema = 1;
-  string entries_wire = 2;
+  string op_text = 2;
 }

@@ -1,3 +1,9 @@
 dialect protocol stdio.semio.animation.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.animation.snapshot"
+magic = %x00
+body = timeline*
+timeline = name? channel*
+channel = target interpolation keyframe*
+target = node property
+property = 'translation' / 'rotation' / 'scale' / 'weights' / ('custom' name)
+keyframe = t value
+value = ('scalar' f64) / ('vec3' f64 f64 f64) / ('quat' f64 f64 f64 f64) / ('weights' f64*)

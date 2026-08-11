@@ -1,7 +1,7 @@
 //! 🧬️ SemioAudioArtifact schema — full artifact state, mirrors `SemioAudioSnapshot` field for
-//! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
+//! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioSnapshot, SemioAudioChannel};
+use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -15,7 +15,13 @@ pub struct SemioAudioArtifact {
     pub sample_rate: u32,
     #[state(persistent)]
     #[serde(default)]
+    pub format: SemioAudioFormat,
+    #[state(persistent)]
+    #[serde(default)]
     pub channels: Vec<SemioAudioChannel>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub tags: Vec<SemioAudioTag>,
 }
 
 impl Default for SemioAudioArtifact {
@@ -26,21 +32,27 @@ impl SemioAudioArtifact {
     pub fn to_snapshot(&self) -> SemioAudioSnapshot {
         SemioAudioSnapshot {
             schema: self.schema.clone(),
-            sample_rate: self.sample_rate.clone(),
+            sample_rate: self.sample_rate,
+            format: self.format,
             channels: self.channels.clone(),
+            tags: self.tags.clone(),
         }
     }
     pub fn from_snapshot(snapshot: SemioAudioSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             sample_rate: snapshot.sample_rate,
+            format: snapshot.format,
             channels: snapshot.channels,
+            tags: snapshot.tags,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioAudioSnapshot) {
         self.schema = snapshot.schema;
         self.sample_rate = snapshot.sample_rate;
+        self.format = snapshot.format;
         self.channels = snapshot.channels;
+        self.tags = snapshot.tags;
     }
 }
 

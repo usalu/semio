@@ -1,5 +1,19 @@
-dialect grammar stdio.semio.image.diff
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.image.diff"
+dialect grammar
+grammar s.stdio.semio.image.diff.text
+extension semio
+start line
+
+line = [ token *( SP token ) ]
+token = scalar-token / collection-token
+scalar-token = ( "width" / "height" / "bitDepth" ) "=" 1*DIGIT
+             / "colorspace" "=" ( "r" / "a" / "g" / "y" / "i" )
+             / "icc" "=" option
+option = "[0]" / "[1," *HEXDIG "]"
+collection-token = ( "frames" / "metadata" ) "{" triple "}"
+triple = "[" items "]" ";" "[" items "]" ";" "[" items "]"
+items = [ item *( "," item ) ]
+item = 1*DIGIT ":" *HEXDIG
+
+; -- real hand-rolled DiffCodec grammar (see the diff `🦀️component.rs` sibling's
+; -- `🔖️HandcraftedDiffCodec` region for the exact encoder/decoder this mirrors). `frames`/
+; -- `metadata` reuse the shared `engine::triples` `[removed];[modified];[added]` collection shape.

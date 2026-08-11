@@ -1,10 +1,3 @@
-/** 🧬️ Semio_semio_cad_snapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_cad_snapshot
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_cad_snapshotEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_cad_snapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_cad_snapshotEntry[];
-}
+/** 💾️ Binary representation for `s.stdio.semio.cad` (snapshot) — the `.semio` envelope wrapping
+ * `serde_json::to_vec(SemioCadSnapshot)` verbatim; see ../🔣️component.json for the real payload shape. */
+export type SemioCadSnapshotBinary = Uint8Array;

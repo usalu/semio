@@ -1,10 +1,3 @@
-/** 🧬️ Semio_semio_drawing_diff schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_drawing_diff
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_drawing_diffEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_drawing_diff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_drawing_diffEntry[];
-}
+/** 📝️ Text-wire representation for `stdio.semio.drawing` (diff): space-separated field=value
+ * tokens. Real shape: `🅰️component.g4`. */
+export type SemioDrawingDiffText = string;

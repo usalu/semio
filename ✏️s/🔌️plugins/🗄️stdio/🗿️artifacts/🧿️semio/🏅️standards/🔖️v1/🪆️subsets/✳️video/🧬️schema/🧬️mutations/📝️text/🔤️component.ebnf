@@ -1,3 +1,17 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.video.mutations" ;
+(* stdio.semio.video mutation text grammar: "no-mutation" or "<keyword> arg=value ...". See
+   📖️component.grammar.semio for the fully-spelled-out ABNF-flavored version of this same shape. *)
+op = "no-mutation"
+   | "set-snapshot snapshot=", value
+   | "insert-stream index=", index, " stream=", stream value
+   | "remove-stream index=", index
+   | "set-stream-meta index=", index, " kind=", kind, " codec=", hex string, " width=", index, " height=", index, " rate=", rational
+   | "insert-sample stream-index=", index, " index=", index, " sample=", sample value
+   | "remove-sample stream-index=", index, " index=", index
+   | "set-sample-data stream-index=", index, " index=", index, " data=", hex string
+   | "set-sample-flags stream-index=", index, " index=", index, " pts=", index, " key=", bool ;
+kind = "V" | "A" | "S" ;
+bool = "0" | "1" ;
+index = digit, { digit } ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+hex string = { hex digit, hex digit } ;
+hex digit = digit | "a" | "b" | "c" | "d" | "e" | "f" ;

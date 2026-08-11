@@ -589,6 +589,64 @@ pub fn sniff_zip_bytes(data: &[u8]) -> SniffConfidence {
 pub fn empty_zip_snapshot() -> ZipSnapshot {
     ZipSnapshot::default()
 }
+
+/// 📦️ P2-P2: the demo `stdio.zip` document — two real entries (one `Stored`, one `Deflate`),
+/// each with extra fields, timestamps (one carrying a real Info-ZIP `UT` mtime, the other without
+/// — exercising the tri-state at the fixture level too), distinct attrs/comments, plus an
+/// archive-level comment. The single source of truth for
+/// `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally
+/// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law`
+/// below) and for this artifact's own `protocol_walk_law` (walked against the REAL
+/// `📸️snapshot/💾️binary/📡️component.protocol.semio` — needs at least one central-directory entry
+/// for the `repeat`/`backward`/`jump` construct to have real bytes to walk).
+pub fn demo_zip_snapshot() -> ZipSnapshot {
+    ZipSnapshot {
+        schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
+        entries: vec![
+            ZipEntry {
+                name: "readme.txt".into(),
+                data: b"hello from stdio.zip".to_vec(),
+                method: ZipCompressionMethod::Stored,
+                dos_date: 0x5678,
+                dos_time: 0x1234,
+                unix_mtime: Some(1_700_000_000),
+                // `encode_zip` always sets bit 11 (UTF-8) and clears bit 3 (data descriptor)
+                // unconditionally — this fixture's `flags` is already in that post-round-trip
+                // normal form (matching `encode_full_metadata_round_trip`'s own documented
+                // pattern) so `fixture_honesty_law`'s `parse_dsl(fixture) == demo()` holds exactly.
+                flags: 0x0800,
+                version_made_by: 20,
+                version_needed: 20,
+                internal_attrs: 0,
+                external_attrs: 0o100644 << 16,
+                // Real Info-ZIP `UT` (0x5455) extended-timestamp payload: mtime-present flag byte
+                // + LE i32 seconds — this is what `parse_ut_mtime` actually decodes back into
+                // `unix_mtime` above (a raw, non-UT-shaped payload would silently round-trip to a
+                // DIFFERENT `unix_mtime`, exactly the bug this fixture must avoid).
+                local_extra: vec![ZipExtraField { id: 0x5455, payload: { let mut p = vec![0x01u8]; p.extend_from_slice(&1_700_000_000i32.to_le_bytes()); p } }],
+                central_extra: vec![],
+                comment: "a readme".into(),
+            },
+            ZipEntry {
+                name: "data/poem.txt".into(),
+                data: b"deflate this small poem, it should compress reasonably well well well".to_vec(),
+                method: ZipCompressionMethod::Deflate,
+                dos_date: 0x1111,
+                dos_time: 0x2222,
+                unix_mtime: None,
+                flags: 0x0800,
+                version_made_by: 63,
+                version_needed: 20,
+                internal_attrs: 1,
+                external_attrs: 0o100755 << 16,
+                local_extra: vec![],
+                central_extra: vec![ZipExtraField { id: 9, payload: vec![9, 9] }],
+                comment: String::new(),
+            },
+        ],
+        comment: "demo archive comment".into(),
+    }
+}
 //#endregion DocumentHelpers
 
 //#region Register
@@ -606,7 +664,19 @@ pub fn register() {
     crate::artifacts::zip::standards::v2_0::subsets::iso21320::composer::register();
 }
 
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
+/// 📌️ P2-P2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per note's exemplar
+/// pattern (`✏️s/🔌️plugins/🗒️note/…/⚙️engine/🦀️component.rs`'s `register_pilot_languages`, also
+/// followed by P2-P1's json/csv pilots) — `stdio.zip`/`.op`/`.diff`/`.pack`/`.spr`, all
+/// `dsl::passthrough_hooks`. `diff`'s `protocol` slot stays `None` matching the exemplar's own
+/// shape exactly (the role scheme has no dedicated "diff binary" role even though
+/// `🔺️diff/💾️binary/📡️component.protocol.semio` is a real, conformance-tested file — its binary
+/// form is exercised directly by `protocol_walk_law` below, just not wired through a 6th
+/// `LanguageRole`). `register_schema_spec` (P2-M3's `FullResolver` insertion API) is deliberately
+/// NOT called — `ZipSnapshot`/`ZipDiff` have no derivable `RecordSpec` (`ZipSnapshot`'s
+/// `ArtifactDsl`/`ArtifactPack` are hand-rolled, see ../../📸️snapshot/🦀️component.rs's
+/// `HandcraftedArtifactCodecs`, and `ZipDiff` is hand-rolled for the tri-state-`Option<Option<T>>`
+/// reason documented at the top of ../../🔺️diff/🦀️component.rs) — fabricating one would be
+/// dishonest. Filed as `mechanism_gaps` in this wave's report.
 pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.zip",
@@ -617,6 +687,46 @@ pub fn register_pilot_languages() {
         protocol: Some(crate::artifacts::zip::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::zip::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.zip"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.zip.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::zip::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::zip::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::zip::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::zip::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.zip.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.zip.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::zip::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::zip::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("stdio.zip.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.zip.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::zip::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::zip::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.zip.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.zip.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::zip::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::zip::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.zip.spr"),
     });
 }
 
@@ -1054,5 +1164,145 @@ mod tests {
         assert_eq!(sniff_zip_bytes(b"not a zip at all, just prose"), SniffConfidence::Low);
         assert_eq!(sniff_zip_bytes(b""), SniffConfidence::Low);
     }
+
+    //#region 🔖️ConformanceLaws
+    /// 🧪️ P2-P2: per-artifact conformance laws (item 6 of the deliverable list) — grammar/protocol
+    /// parseability, `Recognizer` against real fixtures AND real `print_op`/`print_diff` output,
+    /// `walk_protocol` against real `encode_pack`/`encode_op`/`encode_diff` bytes, and the
+    /// fixture-honesty round-trip. Lives here (the engine's own test region), not any framework
+    /// file — `m5` auto-discovers the snapshot grammar+`.dsl.semio`/protocol+`.pack.semio` pairs
+    /// independently (`🧪️fixture-sweep/🦀️component.rs`'s `m5_auto_discovery`); these tests are this
+    /// artifact's OWN early-warning, plus direct coverage of the mutations/diff facets that harness
+    /// does not auto-discover at all. Same convention P2-P1's json/csv pilots established.
+    mod conformance_laws {
+        use super::*;
+        use crate::artifacts::zip::schema::{diff, mutations, snapshot};
+        use protocol::{DiffCodec, OpBinary, OpText};
+
+        /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
+        /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
+        /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
+        #[test]
+        fn committed_facet_files_parse() {
+            for (label, text) in [
+                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
+            ] {
+                let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+                assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+            }
+            for (label, text) in [
+                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
+            ] {
+                dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+            }
+        }
+
+        /// ✅️ `grammar_conformance_law`: the snapshot grammar (a hex-dump grammar — `stdio.zip` is
+        /// binary-native) recognizes real `print_dsl` output for the demo archive — same
+        /// preamble-stripped body reconstruction `m5_handcrafted_grammar_conformance`'s own
+        /// `dsl_body_from_fixture` uses, so this is a direct proof this artifact will pass that
+        /// harness once graduated, not merely an analogue.
+        #[test]
+        fn grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            let text = store::ArtifactDsl::print_dsl(&demo_zip_snapshot());
+            let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
+            let reconstructed = format!("{}\n{body}", envelope.envelope_id());
+            assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+        }
+
+        /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
+        /// output for every representative `ZipMutation` variant (`mutations::demo_mutation_cases()`),
+        /// including the three genuinely-recursive-payload variants (`SetSnapshot`/`AddEntry`/
+        /// `SetEntryExtra`), which the grammar honestly models via `REST` (see that file's own doc
+        /// comment) — this law proves `REST` genuinely swallows their real nested-block/list output,
+        /// not just that the simple scalar-only variants parse.
+        #[test]
+        fn ops_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for mutation in mutations::demo_mutation_cases() {
+                let printed = mutation.print_op();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
+            }
+        }
+
+        /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
+        /// for every representative `ZipDiff` (`diff::demo_diff_cases()`), incl. the empty diff and
+        /// a two-directional `between()` result exercising the full `entries` collection triple and
+        /// the tri-state `unix_mtime`.
+        #[test]
+        fn diff_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for d in diff::demo_diff_cases() {
+                let printed = d.print_diff();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
+            }
+        }
+
+        /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
+        /// snapshot pack (`encode_pack`, envelope-unwrapped, matching how
+        /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
+        /// mutation's `encode_op`, and every demo diff's `encode_diff`.
+        ///
+        /// The snapshot/pack case does NOT assert `consumed == bytes.len()` — per M2's own
+        /// documented exception (`walk_protocol`'s doc comment, `📖️grammar/🦀️component.rs`), a
+        /// protocol that performs a `backward`/`jump` (ours does, twice: EOCD backward-scan +
+        /// central-directory jump) is no longer required to land on exactly EOF, since the bytes
+        /// between the final block's landing point and EOF are validly described by AN EARLIER
+        /// block the walk already visited (here: the `backward eocd` block, which already fully
+        /// captured the EOCD's own fields before the final `central_directory` repeat's sentinel
+        /// match re-touches its first 4 bytes only to terminate cleanly). The op/diff cases declare
+        /// neither block, so the ordinary `consumed == bytes.len()` law holds for them exactly.
+        #[test]
+        fn protocol_walk_law() {
+            let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+            let packed = store::ArtifactPack::encode_pack(&demo_zip_snapshot());
+            let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
+            let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+            assert!(trace.consumed > 0 && trace.consumed <= inner.len(), "pack walk consumed an out-of-range position: {} (len {})", trace.consumed, inner.len());
+
+            let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+            for mutation in mutations::demo_mutation_cases() {
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
+            }
+
+            let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+            for d in diff::demo_diff_cases() {
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
+            }
+        }
+
+        /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
+        /// `print_dsl`/`encode_pack` output of `demo_zip_snapshot()` — `parse_dsl(fixture) ==
+        /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
+        /// fixtures can never silently drift back to a fake again.
+        #[test]
+        fn fixture_honesty_law() {
+            const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+
+            let demo = demo_zip_snapshot();
+
+            let parsed = <ZipSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_zip_snapshot()");
+            assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_zip_snapshot()) drifted from the shipped .dsl.semio fixture");
+
+            let decoded = <ZipSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_zip_snapshot()");
+            assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_zip_snapshot()) drifted from the shipped .pack.semio fixture");
+        }
+    }
+    //#endregion 🔖️ConformanceLaws
 }
 //#endregion Tests

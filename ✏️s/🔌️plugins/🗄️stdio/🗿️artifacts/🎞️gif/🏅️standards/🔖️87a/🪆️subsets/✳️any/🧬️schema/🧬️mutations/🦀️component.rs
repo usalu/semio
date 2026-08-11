@@ -6,7 +6,7 @@
 //! those concepts; that scope lives entirely on 89a's mutation enum.
 
 use crate::artifacts::gif::standards::v87a::subsets::any::schema::diff::{self, GifDiff, GifImageDiff, GifImagesDiff, GifImageModified, GifImageAdded};
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifSnapshot};
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot};
 use protocol::{Mutation, MutationDiff};
 #[cfg(test)]
 use protocol::{OpBinary, OpText};
@@ -58,6 +58,36 @@ pub enum GifMutation {
     SetImageInterlace { index: usize, interlace: bool },
 }
 //#endregion 🔖️Mutations
+
+/// 🧪️ P2-FG2: representative `GifMutation` cases for `ops_grammar_conformance_law`/
+/// `protocol_walk_law` (`../../../../⚙️engine/🦀️component.rs`'s `conformance_laws` module) —
+/// every one of the 12 real variants, incl. both `Some`/`None` shapes of the one
+/// `Option<T>`-of-struct-block field (`SetGlobalColorTable::gct`) — mirrors png's own
+/// `demo_mutation_cases()`.
+pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
+    let base = crate::artifacts::gif::standards::v87a::engine::demo_gif_snapshot();
+    let sample_image = GifImage {
+        left: 0, top: 0, width: 2, height: 2,
+        interlace: false,
+        lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 9, g: 9, b: 9 }; 2] }),
+        indices: vec![0, 1, 1, 0],
+    };
+    vec![
+        GifMutation::NoMutation,
+        GifMutation::SetSnapshot { snapshot: base.clone() },
+        GifMutation::SetScreenSize { width: 10, height: 10 },
+        GifMutation::SetGlobalColorTable { gct: base.gct.clone() },
+        GifMutation::SetGlobalColorTable { gct: None },
+        GifMutation::SetBackgroundColorIndex { index: 5 },
+        GifMutation::SetPixelAspectRatio { ratio: 3 },
+        GifMutation::InsertImage { index: 1, image: sample_image },
+        GifMutation::RemoveImage { index: 1 },
+        GifMutation::MoveImage { from: 0, to: 1 },
+        GifMutation::SetImageGeometry { index: 0, left: 1, top: 1, width: 2, height: 2 },
+        GifMutation::SetImagePixels { index: 0, indices: vec![1, 1, 1, 1] },
+        GifMutation::SetImageInterlace { index: 0, interlace: true },
+    ]
+}
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range image indices are no-ops rather than panics.

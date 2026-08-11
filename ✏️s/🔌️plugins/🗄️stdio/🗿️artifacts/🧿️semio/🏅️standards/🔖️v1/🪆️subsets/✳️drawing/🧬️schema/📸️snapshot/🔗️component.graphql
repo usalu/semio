@@ -1,9 +1,64 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioDrawingSnapshotEntry {
-  key: String!
-  value: String!
+# 🧬️ SemioDrawingSnapshot — mirrors the real Rust 📸️snapshot/🦀️component.rs. Codec: hex-encoded
+# JSON body, semio_format-enveloped text, options-aware ArtifactPack encode/decode.
+type SemioPoint2 { x: Float! y: Float! }
+type Rgba { r: Float! g: Float! b: Float! a: Float! }
+type Point3 { x: Float! y: Float! z: Float! }
+type Quaternion { x: Float! y: Float! z: Float! w: Float! }
+type Transform { translation: Point3! rotation: Quaternion! scale: Point3! }
+
+enum PathSegmentKind { MOVE_TO LINE_TO CUBIC_TO QUAD_TO ARC_TO CLOSE }
+type PathSegment {
+  kind: PathSegmentKind!
+  to: SemioPoint2
+  c1: SemioPoint2
+  c2: SemioPoint2
+  c: SemioPoint2
+  rx: Float
+  ry: Float
+  xRotation: Float
+  largeArc: Boolean
+  sweep: Boolean
 }
+
+enum DrawNodeKind { PATH TEXT GROUP IMAGE }
+type DrawNode {
+  kind: DrawNodeKind!
+  segments: [PathSegment!]
+  style: String
+  value: String
+  at: SemioPoint2
+  transform: Transform
+  children: [DrawNode!]
+  width: Float
+  height: Float
+  mime: String
+  bytes: String
+}
+
+type DrawStyle {
+  name: String!
+  fill: Rgba
+  stroke: Rgba
+  strokeWidth: Float
+  opacity: Float
+}
+
+type DrawLayer {
+  id: String!
+  name: String!
+  visible: Boolean!
+  root: DrawNode!
+}
+
+type DrawCanvas {
+  width: Float!
+  height: Float!
+  background: Rgba
+}
+
 type SemioDrawingSnapshot {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioDrawingSnapshotEntry!]! @state(class: PERSISTENT)
+  canvas: DrawCanvas! @state(class: PERSISTENT)
+  styles: [DrawStyle!]! @state(class: PERSISTENT)
+  layers: [DrawLayer!]! @state(class: PERSISTENT)
 }

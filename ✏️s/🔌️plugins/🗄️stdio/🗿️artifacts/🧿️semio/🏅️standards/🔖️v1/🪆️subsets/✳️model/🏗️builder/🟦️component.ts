@@ -1,2 +1,2 @@
-/** 🚪️ IO (SemioModel builder). 🚧 scaffolded by W1b — leaves land in W4. */
+/** 🏗️ SemioModelBuilder facet marker (Rust `🦀️component.rs` sibling is the real implementation). */
 export {};

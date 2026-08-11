@@ -1,10 +1,18 @@
-/** 🧬️ TsvDiff schema. 🚧 scaffolded by W1b — generic facet mirror; the TsvDiff
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface TsvDiffEntry {
-  key: string;
-  value: string;
+/** 🔺️ TsvDiff schema facet — mirrors 🦀️component.rs field-for-field. `records` is an
+ * index-keyed removed/modified/added triple with a sparse positional per-column patch. */
+import type { TsvLineEnding } from '../📸️snapshot/🟦️component.ts';
+
+/** Positional per-column patch list; `null` at a position means that column is unchanged. */
+export interface TsvRowDiff {
+  fields?: (string | null)[];
 }
+
+export interface TsvRowModified { index: number; diff: TsvRowDiff; }
+export interface TsvRowAdded { index: number; row: string[]; }
+export interface TsvRowsDiff { removed?: number[]; modified?: TsvRowModified[]; added?: TsvRowAdded[]; }
+
 export interface TsvDiff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: TsvDiffEntry[];
+  trailingNewline?: boolean;
+  lineEnding?: TsvLineEnding;
+  records?: TsvRowsDiff;
 }

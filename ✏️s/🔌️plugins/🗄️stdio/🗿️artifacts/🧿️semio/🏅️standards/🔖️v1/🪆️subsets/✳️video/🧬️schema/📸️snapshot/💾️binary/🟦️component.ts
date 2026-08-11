@@ -1,10 +1,8 @@
-/** 🧬️ Semio_semio_video_snapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_video_snapshot
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_video_snapshotEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_video_snapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_video_snapshotEntry[];
+/** 💾️ Binary envelope mirror for `stdio.semio.video` snapshot: magic + version + length-prefixed
+ * JSON body (see the sibling 📸️snapshot/🟦️component.ts for the JSON body's own shape). */
+export interface SemioVideoSnapshotBinaryEnvelope {
+  magic: "stdio.semio.video";
+  version: number;
+  bodyLen: number;
+  body: Uint8Array;
 }

@@ -1,7 +1,52 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// SemioModelSnapshot schema mirror -- spatial hierarchy + elements + relations, from ifc/4.
 package semio.s_stdio_semio_model.snapshot;
+
+message SemioPoint3 { double x = 1; double y = 2; double z = 3; }
+message SemioQuaternion { double x = 1; double y = 2; double z = 3; double w = 4; }
+message SemioTransform { SemioPoint3 translation = 1; SemioQuaternion rotation = 2; SemioPoint3 scale = 3; }
+
+enum SpatialKind { SITE = 0; BUILDING = 1; STOREY = 2; SPACE = 3; }
+
+message SpatialNode {
+  string id = 1;
+  SpatialKind kind = 2;
+  string name = 3;
+  // camelCase field name (not idiomatic snake_case) — this repo's facet-mirror-drift policy
+  // requires the Rust field's camelCased form to appear verbatim in every sibling facet leaf.
+  optional string parentId = 4;
+  SemioTransform placement = 5;
+}
+
+enum ElementClassTag { WALL = 0; SLAB = 1; COLUMN = 2; BEAM = 3; DOOR = 4; WINDOW = 5; ROOF = 6; STAIR = 7; FURNITURE = 8; OTHER = 9; }
+message ElementClass { ElementClassTag kind = 1; string name = 2; }
+
+enum GeometryRefTag { NONE = 0; BREP = 1; MESH = 2; }
+message GeometryRef { GeometryRefTag kind = 1; string brepId = 2; string meshId = 3; }
+
+enum PsetValueTag { TEXT = 0; NUMBER = 1; BOOLEAN = 2; }
+message PsetValue { PsetValueTag kind = 1; string value = 2; }
+
+message Property { string key = 1; PsetValue value = 2; }
+message PropertySet { string name = 1; repeated Property properties = 2; }
+
+message SemioModelElement {
+  string id = 1;
+  ElementClass class = 2;
+  SemioTransform placement = 3;
+  GeometryRef geometry = 4;
+  optional string spatialId = 5;
+  repeated PropertySet psets = 6;
+}
+
+enum RelationKindTag { AGGREGATES = 0; CONTAINED_IN = 1; CONNECTS_TO = 2; FILLS_VOID = 3; VOIDS_ELEMENT = 4; OTHER_RELATION = 5; }
+message RelationKind { RelationKindTag kind = 1; string label = 2; }
+
+message ModelRelation { string id = 1; RelationKind kind = 2; string from = 3; string to = 4; }
+
 message SemioModelSnapshot {
   string schema = 1;
-  string entries_wire = 2;
+  repeated SpatialNode spatial = 2;
+  repeated SemioModelElement elements = 3;
+  repeated ModelRelation relations = 4;
 }

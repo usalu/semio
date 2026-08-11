@@ -1,10 +1,3 @@
-/** 🧬️ Semio_semio_video_diff schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_video_diff
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_video_diffEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_video_diff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_video_diffEntry[];
-}
+/** 💾️ Binary envelope mirror for `stdio.semio.video` diff: the UTF-8 bytes of the text grammar
+ * (../📝️text/🟦️component.ts) verbatim — no separate binary framing. */
+export type SemioVideoDiffBinary = Uint8Array; // UTF-8 encoding of the text grammar's one line

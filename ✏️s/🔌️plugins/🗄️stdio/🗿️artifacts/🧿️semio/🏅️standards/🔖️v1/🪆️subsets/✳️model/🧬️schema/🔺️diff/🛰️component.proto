@@ -1,7 +1,39 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// SemioModelDiff schema mirror -- sparse per-field diff, id-keyed triples over spatial/elements/relations.
 package semio.s_stdio_semio_model.diff;
+
+message SpatialNodeDiff {
+  optional string kind = 1;
+  optional string name = 2;
+  optional string parentId = 3;
+  optional bytes placement = 4;
+}
+
+message SemioModelElementDiff {
+  optional bytes class = 1;
+  optional bytes placement = 2;
+  optional bytes geometry = 3;
+  optional string spatialId = 4;
+  repeated bytes psets = 5;
+}
+
+message ModelRelationDiff {
+  optional bytes kind = 1;
+  optional string from = 2;
+  optional string to = 3;
+}
+
+message SpatialModified { string key = 1; SpatialNodeDiff diff = 2; }
+message SpatialTripleDiff { repeated string removed = 1; repeated SpatialModified modified = 2; repeated bytes added = 3; }
+
+message ElementModified { string key = 1; SemioModelElementDiff diff = 2; }
+message ElementsTripleDiff { repeated string removed = 1; repeated ElementModified modified = 2; repeated bytes added = 3; }
+
+message RelationModified { string key = 1; ModelRelationDiff diff = 2; }
+message RelationsTripleDiff { repeated string removed = 1; repeated RelationModified modified = 2; repeated bytes added = 3; }
+
 message SemioModelDiff {
-  string schema = 1;
-  string entries_wire = 2;
+  optional SpatialTripleDiff spatial = 1;
+  optional ElementsTripleDiff elements = 2;
+  optional RelationsTripleDiff relations = 3;
 }

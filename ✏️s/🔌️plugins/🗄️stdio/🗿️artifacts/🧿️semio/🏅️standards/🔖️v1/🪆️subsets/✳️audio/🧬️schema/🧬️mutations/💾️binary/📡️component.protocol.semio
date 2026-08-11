@@ -1,3 +1,3 @@
 dialect protocol stdio.semio.audio.mutations
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.audio.mutations"
+magic = %x00
+payload = *OCTET

@@ -1,7 +1,27 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_mp4_snapshot.text;
-message Semio_mp4_snapshot {
+package semio.stdio_mp4.snapshot.text;
+
+message Mp4Ftyp {
+  string major_brand = 1;
+  uint32 minor_version = 2;
+  repeated string compatible_brands = 3;
+}
+message Mp4CodecAvc { repeated bytes sps = 1; repeated bytes pps = 2; uint32 nal_length_size = 3; }
+message Mp4CodecOther { string fourcc = 1; bytes raw = 2; }
+message Mp4Codec { oneof codec { Mp4CodecAvc avc = 1; Mp4CodecOther other = 2; } }
+message Mp4Sample { bytes data = 1; uint32 duration = 2; int32 cts_offset = 3; bool sync = 4; }
+message Mp4Track {
+  uint32 track_id = 1;
+  uint32 timescale = 2;
+  Mp4Codec codec = 3;
+  uint32 width = 4;
+  uint32 height = 5;
+  repeated Mp4Sample samples = 6;
+}
+message Mp4Box { string fourcc = 1; bytes data = 2; }
+message Mp4Snapshot {
   string schema = 1;
-  string entries_wire = 2;
+  Mp4Ftyp ftyp = 2;
+  repeated Mp4Track tracks = 3;
+  repeated Mp4Box unknown_boxes = 4;
 }

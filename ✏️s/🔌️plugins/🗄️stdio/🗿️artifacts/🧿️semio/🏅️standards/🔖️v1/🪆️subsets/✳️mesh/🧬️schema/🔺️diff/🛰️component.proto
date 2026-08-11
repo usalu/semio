@@ -1,7 +1,49 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// 🔺️ SemioMeshDiff schema — real mirror of `🦀️component.rs`.
 package semio.s_stdio_semio_mesh.diff;
+
+import "../📸️snapshot/🛰️component.proto";
+
+message SemioPrimitiveDiff {
+  optional semio.s_stdio_semio_mesh.snapshot.SemioTopology topology = 1;
+  repeated semio.s_stdio_semio_mesh.snapshot.SemioPoint3 positions = 2;
+  repeated semio.s_stdio_semio_mesh.snapshot.SemioPoint3 normals = 3;
+  repeated semio.s_stdio_semio_mesh.snapshot.SemioUv uvs = 4;
+  repeated semio.s_stdio_semio_mesh.snapshot.SemioRgba colors = 5;
+  repeated uint32 indices = 6;
+  optional string material_id = 7; // tri-state carried by has_material_id below
+  bool has_material_id = 8;
+}
+
+message SemioMeshItemDiff {
+  SemioPrimitivesDiff primitives = 1;
+}
+
+message SemioMaterialDiff {
+  semio.s_stdio_semio_mesh.snapshot.SemioRgba base_color = 1;
+  optional float metallic = 2;
+  optional float roughness = 3;
+}
+
+message SemioTextureDiff {
+  optional string mime = 1;
+  optional bytes bytes_ = 2;
+}
+
+message SemioMeshModified { string key = 1; SemioMeshItemDiff diff = 2; }
+message SemioMeshesDiff { repeated string removed = 1; repeated SemioMeshModified modified = 2; repeated semio.s_stdio_semio_mesh.snapshot.SemioMesh added = 3; }
+
+message SemioPrimitiveModified { string key = 1; SemioPrimitiveDiff diff = 2; }
+message SemioPrimitivesDiff { repeated string removed = 1; repeated SemioPrimitiveModified modified = 2; repeated semio.s_stdio_semio_mesh.snapshot.SemioPrimitive added = 3; }
+
+message SemioMaterialModified { string key = 1; SemioMaterialDiff diff = 2; }
+message SemioMaterialsDiff { repeated string removed = 1; repeated SemioMaterialModified modified = 2; repeated semio.s_stdio_semio_mesh.snapshot.SemioMaterial added = 3; }
+
+message SemioTextureModified { string key = 1; SemioTextureDiff diff = 2; }
+message SemioTexturesDiff { repeated string removed = 1; repeated SemioTextureModified modified = 2; repeated semio.s_stdio_semio_mesh.snapshot.SemioTexture added = 3; }
+
 message SemioMeshDiff {
-  string schema = 1;
-  string entries_wire = 2;
+  SemioMeshesDiff meshes = 1;
+  SemioMaterialsDiff materials = 2;
+  SemioTexturesDiff textures = 3;
 }

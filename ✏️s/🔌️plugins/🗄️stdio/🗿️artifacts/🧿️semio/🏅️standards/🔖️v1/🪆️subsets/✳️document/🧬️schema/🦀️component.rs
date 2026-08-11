@@ -1,7 +1,7 @@
 //! 🧬️ SemioDocumentArtifact schema — full artifact state, mirrors `SemioDocumentSnapshot` field for
-//! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
+//! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{SemioDocumentSnapshot, DocBlock, DocStyle};
+use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocStyle, SemioDocumentSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -13,10 +13,13 @@ pub struct SemioDocumentArtifact {
     pub schema: String,
     #[state(persistent)]
     #[serde(default)]
-    pub blocks: Vec<DocBlock>,
+    pub styles: Vec<DocStyle>,
     #[state(persistent)]
     #[serde(default)]
-    pub styles: Vec<DocStyle>,
+    pub images: Vec<DocImage>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub blocks: Vec<DocBlock>,
 }
 
 impl Default for SemioDocumentArtifact {
@@ -27,21 +30,24 @@ impl SemioDocumentArtifact {
     pub fn to_snapshot(&self) -> SemioDocumentSnapshot {
         SemioDocumentSnapshot {
             schema: self.schema.clone(),
-            blocks: self.blocks.clone(),
             styles: self.styles.clone(),
+            images: self.images.clone(),
+            blocks: self.blocks.clone(),
         }
     }
     pub fn from_snapshot(snapshot: SemioDocumentSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            blocks: snapshot.blocks,
             styles: snapshot.styles,
+            images: snapshot.images,
+            blocks: snapshot.blocks,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioDocumentSnapshot) {
         self.schema = snapshot.schema;
-        self.blocks = snapshot.blocks;
         self.styles = snapshot.styles;
+        self.images = snapshot.images;
+        self.blocks = snapshot.blocks;
     }
 }
 

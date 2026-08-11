@@ -1,7 +1,28 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_avi_mutations.text;
-message Semio_avi_mutations {
-  string schema = 1;
-  string entries_wire = 2;
+package semio.stdio_avi.mutations;
+import "snapshot.proto";
+
+message AviMutation {
+  oneof mutation {
+    bool no_mutation = 1;
+    semio.stdio_avi.snapshot.AviSnapshot set_snapshot = 2;
+    semio.stdio_avi.snapshot.AviMainHeader set_main_header = 3;
+    bool set_idx1_present = 4;
+    InsertStream insert_stream = 5;
+    uint32 remove_stream = 6;
+    SetStreamHeader set_stream_header = 7;
+    SetStreamFormat set_stream_format = 8;
+    InsertChunk insert_chunk = 9;
+    RemoveChunk remove_chunk = 10;
+    SetChunkKeyframe set_chunk_keyframe = 11;
+    AddUnknownChunk add_unknown_chunk = 12;
+    uint32 remove_unknown_chunk = 13;
+  }
 }
+message InsertStream { uint32 index = 1; semio.stdio_avi.snapshot.AviStream stream = 2; }
+message SetStreamHeader { uint32 stream_index = 1; semio.stdio_avi.snapshot.AviStreamHeader strh = 2; }
+message SetStreamFormat { uint32 stream_index = 1; semio.stdio_avi.snapshot.AviStreamFormat strf = 2; }
+message InsertChunk { uint32 stream_index = 1; uint32 index = 2; semio.stdio_avi.snapshot.AviChunk chunk = 3; }
+message RemoveChunk { uint32 stream_index = 1; uint32 index = 2; }
+message SetChunkKeyframe { uint32 stream_index = 1; uint32 index = 2; bool keyframe = 3; }
+message AddUnknownChunk { uint32 index = 1; semio.stdio_avi.snapshot.RiffChunk item = 2; }

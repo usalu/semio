@@ -1,10 +1,42 @@
-/** 🧬️ SemioMeshSnapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioMeshSnapshot
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface SemioMeshSnapshotEntry {
-  key: string;
-  value: string;
+/** 🧬️ SemioMeshSnapshot schema — real mirror of `🦀️component.rs` (the source of truth). */
+export type SemioTopology = "points" | "lines" | "lineStrip" | "triangles" | "triangleStrip" | "triangleFan";
+
+export interface SemioPoint3 { x: number; y: number; z: number; }
+export interface SemioUv { u: number; v: number; }
+export interface SemioRgba { r: number; g: number; b: number; a: number; }
+
+export interface SemioPrimitive {
+  id: string;
+  topology: SemioTopology;
+  positions: SemioPoint3[];
+  normals: SemioPoint3[];
+  uvs: SemioUv[];
+  colors: SemioRgba[];
+  indices: number[];
+  materialId: string | null;
 }
+
+export interface SemioMesh {
+  id: string;
+  primitives: SemioPrimitive[];
+}
+
+export interface SemioMaterial {
+  id: string;
+  baseColor: SemioRgba;
+  metallic: number;
+  roughness: number;
+}
+
+export interface SemioTexture {
+  id: string;
+  mime: string;
+  bytes: number[];
+}
+
 export interface SemioMeshSnapshot {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioMeshSnapshotEntry[];
+  /** @state persistent */ meshes: SemioMesh[];
+  /** @state persistent */ materials: SemioMaterial[];
+  /** @state persistent */ textures: SemioTexture[];
 }

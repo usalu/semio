@@ -1,8 +1,31 @@
-dialect grammar stdio.deflate.snapshot
-root = document
-document = cmf flg dict-id? compressed-data adler32
-cmf = 2HEXDIG                     ; low nibble = compression method (8=deflate), high nibble = CINFO (window bits)
-flg = 2HEXDIG                     ; bits6-7 FLEVEL, bit5 FDICT, bits0-4 FCHECK
-dict-id = 8HEXDIG                 ; preset-dictionary id, present only when flg.FDICT is set
-compressed-data = *2HEXDIG        ; raw RFC1951 DEFLATE stream, hex-pair-encoded (opaque bitstream)
-adler32 = 8HEXDIG                 ; Adler-32 of the decompressed payload, hex-encoded, RFC1950 §2.3
+dialect grammar
+grammar deflate.snapshot
+extension zz
+start document
+
+# P2-FG2: `stdio.deflate` has no textual syntax of its own -- `store::ArtifactDsl::print_dsl`/
+# `parse_dsl` (../../🦀️component.rs, `HandcraftedArtifactCodecs`) hex-encode/decode the REAL
+# binary RFC1950 zlib container bytes (CMF/FLG + optional DICTID + DEFLATE bitstream + Adler-32
+# trailer, produced by `encode_deflate_snapshot`/`decode_deflate_snapshot`, ⚙️engine/component.rs)
+# verbatim, byte-for-byte -- the honest hex-dump grammar shape, per png's own precedent (P2-W0
+# §1b: "hex-dump grammar per png's own precedent"), NOT an aspiration to structurally re-derive
+# CMF/FLG/DICTID/Adler32 as separate grammar productions (that real structure is what
+# ../💾️binary/📡️component.protocol.semio models -- grammars never model binary).
+comment none
+
+# `dsl::fixture_sweep`'s `dsl_body_from_fixture` feeds the Recognizer "<envelope-id>\n<body>"
+# (`SemioEnvelope::envelope_id` = "stdio.deflate", the real preamble line's own trailing "v<n>"
+# already stripped by the harness) -- the shared lexer treats the preamble's newline as trivia,
+# so `envelope-mark` and the hex body sit directly adjacent in the significant token stream,
+# matching json/csv/png's own grammars' identical convention.
+envelope-mark = "stdio.deflate"
+document = envelope-mark hex-body
+
+# The rest of the DSL text is one lowercase-hex digit run -- the real zlib container's bytes,
+# hex-encoded losslessly. `hex` (bare `hex`, deliberately NOT defined as a production here) is
+# the framework's built-in `hex` MACRO (`📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2) -- a
+# hand-rolled `{INT|IDENT}*` production would silently mis-lex a `<digits>e<digits>` byte run as
+# one FLOAT token instead of alternating INT/IDENT; the macro's own largest-span-first
+# backtracking (`Recognizer::match_macro_span`) handles it correctly with no grammar-file
+# workaround needed.
+hex-body = hex

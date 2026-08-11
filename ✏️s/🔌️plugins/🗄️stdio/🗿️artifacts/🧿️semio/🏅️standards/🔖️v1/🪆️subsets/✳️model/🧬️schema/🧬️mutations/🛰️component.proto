@@ -1,7 +1,29 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// SemioModelMutation union mirror -- named-variant vocabulary, discriminated on `mutation`.
 package semio.s_stdio_semio_model.mutations;
+
+enum SemioModelMutationTag {
+  NO_MUTATION = 0; SET_SNAPSHOT = 1;
+  INSERT_SPATIAL_NODE = 2; REMOVE_SPATIAL_NODE = 3; SET_SPATIAL_NODE = 4;
+  INSERT_ELEMENT = 5; REMOVE_ELEMENT = 6; SET_ELEMENT = 7;
+  INSERT_RELATION = 8; REMOVE_RELATION = 9; SET_RELATION = 10;
+}
+
 message SemioModelMutation {
-  string schema = 1;
-  string entries_wire = 2;
+  SemioModelMutationTag mutation = 1;
+  optional bytes snapshot = 2;
+  optional bytes node = 3;
+  optional bytes element = 4;
+  optional bytes relation = 5;
+  optional string id = 6;
+  optional bytes kind = 7;
+  optional string name = 8;
+  optional string parentId = 9;
+  optional bytes placement = 10;
+  optional bytes class = 11;
+  optional bytes geometry = 12;
+  optional string spatialId = 13;
+  repeated bytes psets = 14;
+  optional string from = 15;
+  optional string to = 16;
 }

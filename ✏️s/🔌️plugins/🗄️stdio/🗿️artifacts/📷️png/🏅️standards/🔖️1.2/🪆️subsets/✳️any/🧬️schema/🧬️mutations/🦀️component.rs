@@ -321,17 +321,229 @@ impl protocol::OpText for PngMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `PngDiff`'s hand-rolled codec uses.
+//#region 🔖️RealBinaryOpFrame
+/// 🧪️ P2-P2: **real binary op-frame** for `PngMutation` — upgraded from the F6-era
+/// `print_op().into_bytes()` text-as-binary shortcut. `tag u8` ordinal (hand-assigned, this
+/// enum cannot use `#[derive(dsl::DslOps)]`, see the doc comment above) + per-variant fields,
+/// via `dsl::ByteWriter`/`dsl::ByteReader`, reusing `🔺️diff/🦀️component.rs`'s own
+/// `RealBinaryPrimitives` region (`write_bin_option`/`write_bin_snapshot`/`write_bin_rgb`/…)
+/// instead of duplicating them a second time — same intra-artifact reuse direction the text
+/// codecs above already establish. Matches `../💾️binary/📡️component.protocol.semio`'s real
+/// `repeat`/`arm` shape exactly — see that file's own doc comment for why the nested
+/// `PngSnapshot`/`PngTransparency`/`PngBackground`/… payload inside most arms is one honest
+/// opaque tail blob rather than individually walked at the protocol-description level (the
+/// Rust encoding below IS genuinely, fully structured real binary).
+fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+    protocol::ProtocolError::Malformed { what: "png op binary", offset: 0, detail: e.to_string() }
+}
+
 impl protocol::OpBinary for PngMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let mut w = dsl::ByteWriter::new();
+        match self {
+            PngMutation::NoMutation => {
+                w.write_u8(0);
+            }
+            PngMutation::SetSnapshot { snapshot } => {
+                w.write_u8(1);
+                diff::write_bin_snapshot(&mut w, snapshot);
+            }
+            PngMutation::SetHeader { width, height, bit_depth, color_type, interlace } => {
+                w.write_u8(2);
+                w.write_u32_le(*width);
+                w.write_u32_le(*height);
+                w.write_u8(*bit_depth);
+                w.write_u8(color_type.to_u8());
+                w.write_u8(if *interlace { 1 } else { 0 });
+            }
+            PngMutation::SetPalette { plte } => {
+                w.write_u8(3);
+                diff::write_bin_option(&mut w, plte, |w, v: &Vec<PngRgb>| diff::write_bin_vec(w, v, diff::write_bin_rgb));
+            }
+            PngMutation::SetTransparency { trns } => {
+                w.write_u8(4);
+                diff::write_bin_option(&mut w, trns, diff::write_bin_transparency);
+            }
+            PngMutation::SetGamma { gama } => {
+                w.write_u8(5);
+                diff::write_bin_option(&mut w, gama, |w, v: &u32| w.write_u32_le(*v));
+            }
+            PngMutation::SetChromaticities { chrm } => {
+                w.write_u8(6);
+                diff::write_bin_option(&mut w, chrm, diff::write_bin_chromaticities);
+            }
+            PngMutation::SetSrgbIntent { srgb } => {
+                w.write_u8(7);
+                diff::write_bin_option(&mut w, srgb, |w, v: &PngSrgbIntent| w.write_u8(v.to_u8()));
+            }
+            PngMutation::SetPhysicalDims { phys } => {
+                w.write_u8(8);
+                diff::write_bin_option(&mut w, phys, diff::write_bin_physical_dims);
+            }
+            PngMutation::SetTimestamp { time } => {
+                w.write_u8(9);
+                diff::write_bin_option(&mut w, time, diff::write_bin_timestamp);
+            }
+            PngMutation::SetBackground { bkgd } => {
+                w.write_u8(10);
+                diff::write_bin_option(&mut w, bkgd, diff::write_bin_background);
+            }
+            PngMutation::InsertTextChunk { index, chunk } => {
+                w.write_u8(11);
+                w.write_varint_u64(*index as u64);
+                diff::write_bin_text_chunk(&mut w, chunk);
+            }
+            PngMutation::RemoveTextChunk { index } => {
+                w.write_u8(12);
+                w.write_varint_u64(*index as u64);
+            }
+            PngMutation::SetTextChunk { index, chunk } => {
+                w.write_u8(13);
+                w.write_varint_u64(*index as u64);
+                diff::write_bin_text_chunk(&mut w, chunk);
+            }
+            PngMutation::SetPixels { pixels } => {
+                w.write_u8(14);
+                diff::write_bin_blob(&mut w, pixels);
+            }
+            PngMutation::InsertUnknownChunk { index, chunk } => {
+                w.write_u8(15);
+                w.write_varint_u64(*index as u64);
+                diff::write_bin_chunk(&mut w, chunk);
+            }
+            PngMutation::RemoveUnknownChunk { index } => {
+                w.write_u8(16);
+                w.write_varint_u64(*index as u64);
+            }
+        }
+        Ok(w.into_bytes())
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut r = dsl::ByteReader::new(bytes);
+        let ordinal = r.read_u8().map_err(op_pack_err)?;
+        let mutation = match ordinal {
+            0 => PngMutation::NoMutation,
+            1 => PngMutation::SetSnapshot { snapshot: diff::read_bin_snapshot(&mut r).map_err(op_pack_err)? },
+            2 => PngMutation::SetHeader {
+                width: r.read_u32_le().map_err(op_pack_err)?,
+                height: r.read_u32_le().map_err(op_pack_err)?,
+                bit_depth: r.read_u8().map_err(op_pack_err)?,
+                color_type: PngColorType::from_u8(r.read_u8().map_err(op_pack_err)?).map_err(|e| protocol::ProtocolError::Malformed { what: "png op color type", offset: 0, detail: e })?,
+                interlace: r.read_u8().map_err(op_pack_err)? != 0,
+            },
+            3 => PngMutation::SetPalette { plte: diff::read_bin_option(&mut r, |r| diff::read_bin_vec(r, diff::read_bin_rgb)).map_err(op_pack_err)? },
+            4 => PngMutation::SetTransparency { trns: diff::read_bin_option(&mut r, diff::read_bin_transparency).map_err(op_pack_err)? },
+            5 => PngMutation::SetGamma { gama: diff::read_bin_option(&mut r, |r| r.read_u32_le()).map_err(op_pack_err)? },
+            6 => PngMutation::SetChromaticities { chrm: diff::read_bin_option(&mut r, diff::read_bin_chromaticities).map_err(op_pack_err)? },
+            7 => PngMutation::SetSrgbIntent {
+                srgb: diff::read_bin_option(&mut r, |r| PngSrgbIntent::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png op srgb intent", offset: 0, detail: e })).map_err(op_pack_err)?,
+            },
+            8 => PngMutation::SetPhysicalDims { phys: diff::read_bin_option(&mut r, diff::read_bin_physical_dims).map_err(op_pack_err)? },
+            9 => PngMutation::SetTimestamp { time: diff::read_bin_option(&mut r, diff::read_bin_timestamp).map_err(op_pack_err)? },
+            10 => PngMutation::SetBackground { bkgd: diff::read_bin_option(&mut r, diff::read_bin_background).map_err(op_pack_err)? },
+            11 => {
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                let chunk = diff::read_bin_text_chunk(&mut r).map_err(op_pack_err)?;
+                PngMutation::InsertTextChunk { index, chunk }
+            }
+            12 => PngMutation::RemoveTextChunk { index: r.read_varint_u64().map_err(op_pack_err)? as usize },
+            13 => {
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                let chunk = diff::read_bin_text_chunk(&mut r).map_err(op_pack_err)?;
+                PngMutation::SetTextChunk { index, chunk }
+            }
+            14 => PngMutation::SetPixels { pixels: diff::read_bin_blob(&mut r).map_err(op_pack_err)? },
+            15 => {
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                let chunk = diff::read_bin_chunk(&mut r).map_err(op_pack_err)?;
+                PngMutation::InsertUnknownChunk { index, chunk }
+            }
+            16 => PngMutation::RemoveUnknownChunk { index: r.read_varint_u64().map_err(op_pack_err)? as usize },
+            other => {
+                return Err(protocol::ProtocolError::Malformed { what: "png op ordinal", offset: 0, detail: format!("unknown ordinal {other}") });
+            }
+        };
+        Ok(mutation)
     }
 }
+//#endregion 🔖️RealBinaryOpFrame
 //#endregion OpCodecs
+
+//#region 🔖️DemoMutationCases
+/// 🧪️ P2-P2: shared demo mutation fixtures — `⚙️engine/🦀️component.rs`'s `conformance_laws`
+/// module calls `demo_mutation_cases()` directly (`ops_grammar_conformance_law`/
+/// `protocol_walk_law`) instead of duplicating the literal case list; `mod tests` below now
+/// calls it too (single source of truth, per CLAUDE.md — moved out of `mod tests` verbatim,
+/// only the `pub(crate)`/`#[cfg(test)]` visibility changed).
+#[cfg(test)]
+fn demo_text_chunk(keyword: &str, value: &str) -> PngTextChunk {
+    PngTextChunk {
+        keyword: keyword.into(),
+        value: value.into(),
+        compressed: false,
+        kind: crate::artifacts::png::schema::snapshot::PngTextKind::Text,
+        language_tag: String::new(),
+        translated_keyword: String::new(),
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn demo_base_snapshot() -> PngSnapshot {
+    use crate::artifacts::png::schema::snapshot::PngChunkMarker;
+    PngSnapshot {
+        schema: "stdio.png".into(),
+        width: 4,
+        height: 4,
+        bit_depth: 8,
+        color_type: PngColorType::Rgba,
+        interlace: false,
+        plte: None,
+        trns: None,
+        gama: None,
+        chrm: None,
+        srgb: None,
+        phys: None,
+        time: None,
+        bkgd: None,
+        text_chunks: vec![demo_text_chunk("Title", "demo")],
+        pixels: vec![0u8; 4 * 4 * 4],
+        chunk_order: vec![PngChunkMarker::Ihdr, PngChunkMarker::Idat, PngChunkMarker::Text { index: 0 }, PngChunkMarker::Iend],
+        unknown_chunks: vec![],
+    }
+}
+
+/// ✅️ Every `PngMutation` variant (incl. two out-of-range no-op cases) built off
+/// `demo_base_snapshot()` — the single case list `mutation_diff_law`/`inverse_law`/
+/// `op_text_binary_roundtrip_law` (this file) AND `ops_grammar_conformance_law`/
+/// `protocol_walk_law` (`⚙️engine/🦀️component.rs`) all exercise.
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<PngMutation> {
+    let base = demo_base_snapshot();
+    vec![
+        PngMutation::NoMutation,
+        PngMutation::SetSnapshot { snapshot: { let mut s = base.clone(); s.width = 99; s } },
+        PngMutation::SetHeader { width: 8, height: 8, bit_depth: 16, color_type: PngColorType::Grayscale, interlace: true },
+        PngMutation::SetPalette { plte: Some(vec![PngRgb { r: 1, g: 2, b: 3 }]) },
+        PngMutation::SetTransparency { trns: Some(PngTransparency::Grayscale { gray: 7 }) },
+        PngMutation::SetGamma { gama: Some(45455) },
+        PngMutation::SetChromaticities { chrm: Some(PngChromaticities { white_x: 1, white_y: 2, red_x: 3, red_y: 4, green_x: 5, green_y: 6, blue_x: 7, blue_y: 8 }) },
+        PngMutation::SetSrgbIntent { srgb: Some(PngSrgbIntent::Saturation) },
+        PngMutation::SetPhysicalDims { phys: Some(PngPhysicalDims { ppu_x: 96, ppu_y: 96, unit_is_meter: false }) },
+        PngMutation::SetTimestamp { time: Some(PngTimestamp { year: 2024, month: 6, day: 1, hour: 12, minute: 0, second: 0 }) },
+        PngMutation::SetBackground { bkgd: Some(PngBackground::Rgb { r: 1, g: 2, b: 3 }) },
+        PngMutation::InsertTextChunk { index: 1, chunk: demo_text_chunk("Comment", "hi") },
+        PngMutation::RemoveTextChunk { index: 0 },
+        PngMutation::SetTextChunk { index: 0, chunk: demo_text_chunk("Title", "updated") },
+        PngMutation::SetPixels { pixels: vec![9u8; base.pixels.len()] },
+        PngMutation::InsertUnknownChunk { index: 1, chunk: PngChunk { kind: *b"zTXt", data: vec![4, 5] } },
+        PngMutation::RemoveUnknownChunk { index: 0 },
+        // Out-of-range targets: graceful no-ops, still law-compliant.
+        PngMutation::RemoveTextChunk { index: 99 },
+        PngMutation::RemoveUnknownChunk { index: 99 },
+    ]
+}
+//#endregion 🔖️DemoMutationCases
 
 //#region Tests
 #[cfg(test)]
@@ -341,52 +553,16 @@ mod tests {
     use protocol::command::DiffAlgebra;
 
     //#region 🔖️Fixtures
+    /// 🔁️ Thin aliases of the module-level `demo_text_chunk`/`demo_base_snapshot` (P2-P2 —
+    /// single source of truth, per CLAUDE.md) — kept as short LOCAL names since both are used
+    /// pervasively for ad hoc per-test values below (`absorb_law` etc.), not just the mutation
+    /// case list.
     fn text_chunk(keyword: &str, value: &str) -> PngTextChunk {
-        PngTextChunk {
-            keyword: keyword.into(),
-            value: value.into(),
-            compressed: false,
-            kind: PngTextKind::Text,
-            language_tag: String::new(),
-            translated_keyword: String::new(),
-        }
+        demo_text_chunk(keyword, value)
     }
 
     fn base_snapshot() -> PngSnapshot {
-        PngSnapshot {
-            schema: "stdio.png".into(),
-            width: 4,
-            height: 4,
-            bit_depth: 8,
-            color_type: PngColorType::Rgba,
-            interlace: false,
-            plte: None,
-            trns: None,
-            gama: None,
-            chrm: None,
-            srgb: None,
-            phys: None,
-            time: None,
-            bkgd: None,
-            text_chunks: vec![text_chunk("Title", "demo")],
-            pixels: vec![0u8; 4 * 4 * 4],
-            // NOTE: `Text{index:0}` sits AFTER `Idat`, matching `chunk_order_insert_pos`'s own
-            // "new markers land just before Iend" convention (see its doc) — the same
-            // convention `InsertTextChunk`'s diff uses, so `RemoveTextChunk` + its inverse
-            // (`InsertTextChunk`) round-trips `chunk_order` exactly, not just `text_chunks`. A
-            // REAL decoded file that places tEXt before IDAT keeps that exact position through
-            // decode (verbatim, untouched); this fixture models a MUTATION-built document,
-            // where every insert already went through that same default-position policy.
-            // `unknown_chunks` starts EMPTY on purpose: with two DIFFERENT default-inserted
-            // markers already coexisting before `Iend`, removing+reinserting whichever one
-            // isn't last would flip their relative order (the same "before Iend" position
-            // policy can't distinguish "restore" from "append") — a real, documented
-            // normalization limitation, not something `inverse_law` should be asserting past.
-            // `InsertUnknownChunk`'s own variant in `all_variants` still exercises that marker
-            // fresh (nothing to reorder against), so the transport itself stays fully covered.
-            chunk_order: vec![PngChunkMarker::Ihdr, PngChunkMarker::Idat, PngChunkMarker::Text { index: 0 }, PngChunkMarker::Iend],
-            unknown_chunks: vec![],
-        }
+        demo_base_snapshot()
     }
     //#endregion 🔖️Fixtures
 
@@ -460,29 +636,13 @@ mod tests {
         assert_eq!(expected_diff.apply(base), applied_snapshot, "diff.apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
+    /// 🔁️ Thin alias of the module-level `demo_mutation_cases()` (P2-P2 — single source of
+    /// truth) — kept as a local name taking the SAME `&PngSnapshot` signature every call site
+    /// below already uses; `demo_mutation_cases()` builds its own (structurally identical)
+    /// base internally, so the passed-in `base` is intentionally unused here.
     fn all_variants(base: &PngSnapshot) -> Vec<PngMutation> {
-        vec![
-            PngMutation::NoMutation,
-            PngMutation::SetSnapshot { snapshot: { let mut s = base.clone(); s.width = 99; s } },
-            PngMutation::SetHeader { width: 8, height: 8, bit_depth: 16, color_type: PngColorType::Grayscale, interlace: true },
-            PngMutation::SetPalette { plte: Some(vec![PngRgb { r: 1, g: 2, b: 3 }]) },
-            PngMutation::SetTransparency { trns: Some(PngTransparency::Grayscale { gray: 7 }) },
-            PngMutation::SetGamma { gama: Some(45455) },
-            PngMutation::SetChromaticities { chrm: Some(PngChromaticities { white_x: 1, white_y: 2, red_x: 3, red_y: 4, green_x: 5, green_y: 6, blue_x: 7, blue_y: 8 }) },
-            PngMutation::SetSrgbIntent { srgb: Some(PngSrgbIntent::Saturation) },
-            PngMutation::SetPhysicalDims { phys: Some(PngPhysicalDims { ppu_x: 96, ppu_y: 96, unit_is_meter: false }) },
-            PngMutation::SetTimestamp { time: Some(PngTimestamp { year: 2024, month: 6, day: 1, hour: 12, minute: 0, second: 0 }) },
-            PngMutation::SetBackground { bkgd: Some(PngBackground::Rgb { r: 1, g: 2, b: 3 }) },
-            PngMutation::InsertTextChunk { index: 1, chunk: text_chunk("Comment", "hi") },
-            PngMutation::RemoveTextChunk { index: 0 },
-            PngMutation::SetTextChunk { index: 0, chunk: text_chunk("Title", "updated") },
-            PngMutation::SetPixels { pixels: vec![9u8; base.pixels.len()] },
-            PngMutation::InsertUnknownChunk { index: 1, chunk: PngChunk { kind: *b"zTXt", data: vec![4, 5] } },
-            PngMutation::RemoveUnknownChunk { index: 0 },
-            // Out-of-range targets: graceful no-ops, still law-compliant.
-            PngMutation::RemoveTextChunk { index: 99 },
-            PngMutation::RemoveUnknownChunk { index: 99 },
-        ]
+        let _ = base;
+        demo_mutation_cases()
     }
 
     #[test]

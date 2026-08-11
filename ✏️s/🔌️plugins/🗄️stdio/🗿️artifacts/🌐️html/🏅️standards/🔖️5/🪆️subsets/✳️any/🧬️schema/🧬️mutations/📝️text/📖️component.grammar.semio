@@ -1,5 +1,12 @@
-dialect grammar stdio.html.mutations
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
+dialect grammar
+grammar html.mutations
 root = document
-document = marker
-marker = "stdio.html.mutations"
+document = keyword *(SP arg "=" value)
+; HtmlMutation's real text representation is the hand-rolled `protocol::OpText` grammar
+; `print_op`/`parse_op` implement (component.rs `#region OpCodecs`): `keyword arg=value ...`
+; (space-separated), reusing the diff module's hex/bracket primitives for every value.
+keyword = "no-mutation" / "set-snapshot" / "set-doctype" / "insert-node" / "remove-node"
+        / "set-element-name" / "set-attribute" / "set-text" / "set-comment" / "set-raw-text"
+arg = "snapshot" / "doctype" / "parent" / "index" / "node" / "path" / "name" / "value" / "text"
+value = hex-str / node-path / html-node / tristate-str / tristate-attr-value / DIGIT-string
+node-path = "[" *(DIGIT ",") "]"

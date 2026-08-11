@@ -17,8 +17,12 @@ pub struct IndexModified<D> { pub index: usize, pub diff: D }
 #[serde(rename_all = "camelCase")]
 pub struct IndexAdded<T> { pub index: usize, pub item: T }
 
+// 🩹 `bound(...)` override (same pattern as bcf's own local `NamedTripleDiff` copy, see that
+// module's doc comment): without it, `#[derive(Deserialize)]` on a struct whose field is
+// `#[serde(default)]` infers a spurious `D: Default`/`T: Default` bound via serde_derive's
+// generic-parameter heuristic, even though `Vec<_>: Default` never actually needs `D`/`T: Default`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", bound(serialize = "D: Serialize, T: Serialize", deserialize = "D: Deserialize<'de>, T: Deserialize<'de>"))]
 pub struct IndexedTripleDiff<D, T> {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
@@ -38,8 +42,10 @@ impl<D, T> Default for IndexedTripleDiff<D, T> {
 #[serde(rename_all = "camelCase")]
 pub struct NamedModified<K, D> { pub key: K, pub diff: D }
 
+// 🩹 same `bound(...)` override as `IndexedTripleDiff` above (see that struct's comment) — required
+// here too, `K`/`D`/`T` all appear only inside `#[serde(default)]` `Vec<_>` fields.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", bound(serialize = "K: Serialize, D: Serialize, T: Serialize", deserialize = "K: Deserialize<'de>, D: Deserialize<'de>, T: Deserialize<'de>"))]
 pub struct NamedTripleDiff<K, D, T> {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<K>,
@@ -52,6 +58,20 @@ pub struct NamedTripleDiff<K, D, T> {
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
     fn default() -> Self { Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() } }
 }
+
+/// 🧷 Position-carrying "added" wrapper for name/id-keyed collections, supplied as `T` in
+/// `NamedTripleDiff<K, D, NamedAdded<T>>` by any consumer that needs a re-added interior member to
+/// land back at its real position instead of always being appended last (`IndexedTripleDiff`
+/// already gets this for free via `IndexAdded<T>`; `NamedTripleDiff`'s own `added: Vec<T>` field
+/// intentionally stays position-agnostic — most named/keyed collections don't care about order —
+/// so this is opt-in via `T`, not a change to the struct itself). Was independently reinvented by
+/// every W2 subset that needed it (`object::NamedAdded`, `json::JsonObjectAdded`, …) before this
+/// shared copy existed — see `s.stdio.object`'s own `🧬️schema/🔺️diff/🦀️component.rs` for the
+/// reference usage this was hoisted from. Existing per-subset local copies are untouched (still
+/// correct); only new W4/W5 consumers should import this one instead of reinventing it again.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NamedAdded<T> { pub index: usize, pub item: T }
 //#endregion 🔖️NamedTriple
 
 //#region 🔖️Parsing
@@ -123,6 +143,19 @@ pub fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, Stri
     let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_t(e)).collect::<Result<Vec<_>, String>>()?;
     Ok(NamedTripleDiff { removed, modified, added })
 }
+
+/// 🧷 `NamedAdded<T>`-wrapping encode/decode pair (`index:item`, same `idx:rest` shape
+/// `enc_indexed_triple`/`dec_indexed_triple` already use for `IndexAdded<T>` above) — for a
+/// consumer instantiating `NamedTripleDiff<K, D, NamedAdded<T>>`, pass
+/// `|a| enc_named_added(a, enc_t)`/`|s| dec_named_added(s, dec_t)` as `enc_named_triple`'s/
+/// `dec_named_triple`'s own `enc_t`/`dec_t` argument.
+pub fn enc_named_added<T>(a: &NamedAdded<T>, enc_t: impl Fn(&T) -> String) -> String {
+    format!("{}:{}", a.index, enc_t(&a.item))
+}
+pub fn dec_named_added<T>(s: &str, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedAdded<T>, String> {
+    let (idx, rest) = s.split_once(':').ok_or_else(|| format!("named added: bad entry {s:?}"))?;
+    Ok(NamedAdded { index: idx.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string())?, item: dec_t(rest)? })
+}
 //#endregion 🔖️NamedCodec
 
 //#region 🔖️Tests
@@ -157,6 +190,46 @@ mod tests {
         let encoded = enc_named_triple(&diff, enc_str, enc_u32, enc_str);
         let decoded = dec_named_triple(&encoded, dec_str, dec_u32, dec_str).expect("decode");
         assert_eq!(decoded, diff);
+    }
+
+    #[test]
+    fn named_added_round_trips_through_hex_shape() {
+        let diff: NamedTripleDiff<String, u32, NamedAdded<String>> = NamedTripleDiff {
+            removed: vec![],
+            modified: vec![],
+            added: vec![NamedAdded { index: 2, item: "reinserted".to_string() }],
+        };
+        let encoded = enc_named_triple(&diff, enc_str, enc_u32, |a| enc_named_added(a, enc_str));
+        let decoded = dec_named_triple(&encoded, dec_str, dec_u32, |s| dec_named_added(s, dec_str)).expect("decode");
+        assert_eq!(decoded, diff);
+    }
+
+    /// 🩹 A non-`Default` item type proves the `bound(...)` override actually works: without it,
+    /// `#[derive(Deserialize)]`'s spurious inferred `T: Default` bound would fail THIS test to
+    /// even compile (not just at runtime) the moment `T` doesn't implement `Default` — exactly the
+    /// shape every real `ArtifactSchema` diff-item type is in practice.
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    struct NoDefault(u32);
+
+    #[test]
+    fn serde_json_round_trips_a_non_default_item_type() {
+        let diff: NamedTripleDiff<String, NoDefault, NoDefault> = NamedTripleDiff {
+            removed: vec!["gone".to_string()],
+            modified: vec![NamedModified { key: "kept".to_string(), diff: NoDefault(9) }],
+            added: vec![NoDefault(3)],
+        };
+        let json = serde_json::to_string(&diff).expect("serialize");
+        let decoded: NamedTripleDiff<String, NoDefault, NoDefault> = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(decoded, diff);
+
+        let idiff: IndexedTripleDiff<NoDefault, NoDefault> = IndexedTripleDiff {
+            removed: vec![1],
+            modified: vec![IndexModified { index: 0, diff: NoDefault(5) }],
+            added: vec![IndexAdded { index: 2, item: NoDefault(7) }],
+        };
+        let ijson = serde_json::to_string(&idiff).expect("serialize");
+        let idecoded: IndexedTripleDiff<NoDefault, NoDefault> = serde_json::from_str(&ijson).expect("deserialize");
+        assert_eq!(idecoded, idiff);
     }
 
     #[test]

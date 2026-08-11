@@ -1,9 +1,14 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type TsvDiffEntry {
-  key: String!
-  value: String!
-}
+# 🔺️ TsvDiff schema facet — sparse structural diff, mirrors 🦀️component.rs.
+
+"Positional per-column patch list; null at a position means that column is unchanged."
+type TsvRowDiff { fields: [String] }
+
+type TsvRowModified { index: Int! diff: TsvRowDiff! }
+type TsvRowAdded { index: Int! row: [String!]! }
+type TsvRowsDiff { removed: [Int!] modified: [TsvRowModified!] added: [TsvRowAdded!] }
+
 type TsvDiff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [TsvDiffEntry!]! @state(class: PERSISTENT)
+  trailingNewline: Boolean
+  lineEnding: TsvLineEnding
+  records: TsvRowsDiff
 }

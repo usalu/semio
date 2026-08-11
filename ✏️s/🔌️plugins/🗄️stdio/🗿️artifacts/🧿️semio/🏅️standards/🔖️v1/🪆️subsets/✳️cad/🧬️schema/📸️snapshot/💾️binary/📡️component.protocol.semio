@@ -1,3 +1,16 @@
 dialect protocol stdio.semio.cad.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.cad.snapshot"
+; shared `.semio` binary envelope (store::semio_format::wrap_binary) wrapping a NEUTRAL semio
+; snapshot payload -- the payload genuinely IS serde_json::to_vec(SemioCadSnapshot) verbatim, all
+; remaining bytes (no length prefix by design), modeled as the real RFC 8259 JSON grammar (not a
+; byte catch-all); see ../🔣️component.json for the semantic shape.
+envelope-magic = %x89.53.45.4D.0D.0A.1A.0A
+token-len = U32LE
+token = ASCII(17)                   ; "semio.cad.pack v1"
+payload = json-value                ; see ../🔣️component.json for the real object/array shape
+; RFC 8259, condensed:
+json-value = ws ( "false" / "null" / "true" / json-object / json-array / json-number / json-string ) ws
+json-object = "{" ws [ json-member ("," ws json-member)* ] ws "}"
+json-member = json-string ws ":" ws json-value
+json-array = "[" ws [ json-value ("," ws json-value)* ] ws "]"
+json-number = ["-"] ("0" / [1-9] *DIGIT) ["." 1*DIGIT] [("e"/"E") ["+"/"-"] 1*DIGIT]
+json-string = DQUOTE *(UNESCAPED / "\" (DQUOTE / "\" / "/" / "b" / "f" / "n" / "r" / "t" / "u" 4HEXDIG)) DQUOTE

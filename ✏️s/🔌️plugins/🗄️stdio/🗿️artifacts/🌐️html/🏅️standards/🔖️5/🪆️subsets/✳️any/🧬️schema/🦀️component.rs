@@ -1,7 +1,7 @@
-//! 🧬️ HtmlArtifact schema — full artifact state, mirrors `HtmlSnapshot` field for
-//! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
+//! 🧬️ HtmlArtifact schema — full artifact state, mirrors `HtmlSnapshot` field for field (see
+//! svg's `SvgArtifact` for the precedent this follows).
 
-use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::{HtmlNode, HtmlSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -12,10 +12,10 @@ pub struct HtmlArtifact {
     #[state(persistent)]
     pub schema: String,
     #[state(persistent)]
-    pub doctype_html5: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub doctype: Option<String>,
     #[state(persistent)]
-    #[serde(default)]
-    pub body_raw: String,
+    pub root: HtmlNode,
 }
 
 impl Default for HtmlArtifact {
@@ -26,21 +26,21 @@ impl HtmlArtifact {
     pub fn to_snapshot(&self) -> HtmlSnapshot {
         HtmlSnapshot {
             schema: self.schema.clone(),
-            doctype_html5: self.doctype_html5.clone(),
-            body_raw: self.body_raw.clone(),
+            doctype: self.doctype.clone(),
+            root: self.root.clone(),
         }
     }
     pub fn from_snapshot(snapshot: HtmlSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            doctype_html5: snapshot.doctype_html5,
-            body_raw: snapshot.body_raw,
+            doctype: snapshot.doctype,
+            root: snapshot.root,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: HtmlSnapshot) {
         self.schema = snapshot.schema;
-        self.doctype_html5 = snapshot.doctype_html5;
-        self.body_raw = snapshot.body_raw;
+        self.doctype = snapshot.doctype;
+        self.root = snapshot.root;
     }
 }
 

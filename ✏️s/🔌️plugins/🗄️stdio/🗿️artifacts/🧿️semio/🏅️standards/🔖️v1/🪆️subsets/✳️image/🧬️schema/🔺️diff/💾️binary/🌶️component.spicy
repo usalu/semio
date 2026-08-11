@@ -1,5 +1,8 @@
-module Semio_semio_image_diff;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=22;
+module SemioImageDiffBinary;
+
+# Real binary layout for `SemioImageDiff::encode_diff`/`decode_diff` — a documented
+# simplification (matching gif's own hand-rolled `DiffCodec`): `encode_diff` is the 📝️text
+# sibling's `line` grammar UTF-8 bytes, verbatim, with no separate binary framing.
+public type DiffBinary = unit {
+    line_utf8: bytes &eod;
 };

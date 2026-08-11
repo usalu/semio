@@ -1,5 +1,7 @@
-dialect grammar stdio.semio.drawing.snapshot
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
+dialect grammar stdio.semio.drawing.snapshot.text
+; 📖️ real shape: preamble line + hex-encoded JSON(SemioDrawingSnapshot) body (see 🔣️component.json
+; for the full field structure this hex payload decodes to)
 root = document
-document = marker
-marker = "stdio.semio.drawing.snapshot"
+document = preamble NL hex_body
+preamble = "semio stdio.semio.drawing.dsl v1"
+hex_body = *HEXDIG

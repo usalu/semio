@@ -1,3 +1,4 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.document.diff"
+; Binary diff form = the text diff's UTF-8 bytes verbatim (protocol::DiffCodec::encode_diff wraps
+; print_diff() directly; no separate binary framing, same simplification gif/svg/docx use).
+document = text-diff-bytes
+text-diff-bytes = *OCTET  ; exactly the print_diff() ASCII output, re-encoded as UTF-8

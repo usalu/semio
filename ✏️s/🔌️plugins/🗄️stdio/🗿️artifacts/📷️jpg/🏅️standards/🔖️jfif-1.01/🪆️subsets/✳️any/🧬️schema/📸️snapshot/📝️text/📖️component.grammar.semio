@@ -1,24 +1,23 @@
-dialect grammar stdio.jpg.snapshot
-; 📖 The TEXT envelope `store::ArtifactDsl::parse_dsl`/`print_dsl` actually round-trip: a semio
-; preamble line, then the real JFIF byte stream (SOI..EOI, ITU-T T.81/ISO 10918-1) hex-encoded.
-; `payload` below is that hex dump; `jpeg-stream` describes what it decodes TO — the real
-; marker-segment structure `⚙️engine::decode_jpg` walks, not a placeholder.
-root = document
-document = preamble NL payload
-preamble = 'semio' SP 'dsl' SP '1' SP 'stdio.jpg'
-payload = hex-byte*                       ; hex-decodes to jpeg-stream
-jpeg-stream = SOI segment* app0 segment* sof0 segment* sos entropy-data EOI
-segment = app0 / appn / com / dqt / dht / dri / sof0
-SOI = %xFF.D8
-EOI = %xFF.D9
-app0 = %xFF.E0 length "JFIF" %x00 version units x-density y-density thumb-w thumb-h thumb-rgb
-appn = %xFF.(E1-EF) length OCTET*         ; retained verbatim as JpgSegment
-com  = %xFF.FE length OCTET*              ; retained verbatim as JpgSegment
-dqt  = %xFF.DB length (table-id precision-tbl 64qk)+
-dht  = %xFF.C4 length (class-id 16-counts symbol*)+
-dri  = %xFF.DD length restart-interval
-sof0 = %xFF.C0 length precision height width n-components component+
-sos  = %xFF.DA length n-scan-components scan-component+ Ss Se AhAl
-entropy-data = (byte-stuffed-octet / restart-marker)*
-length = 2OCTET                            ; big-endian, includes itself, excludes marker
-hex-byte = 2HEXDIG
+dialect grammar
+grammar stdio.jpg.snapshot
+extension jpg
+start document
+comment none
+
+# P2-FG2: real M1-dialect grammar, replacing the pre-Phase-2 ABNF-flavored placeholder (wrong
+# header dialect -- `dialect protocol stdio.jpg.snapshot` on one line, `%x` ranges, `/`
+# alternation, `~` negation -- none of it this dialect's real syntax, see
+# `📖️grammar-recipe.md` §1.1). `📷️jpg` is BINARY-NATIVE (per the ticket's own classification for
+# this wave): the TEXT DSL wire form `store::ArtifactDsl::parse_dsl`/`print_dsl` actually round
+# trip (`../../🦀️component.rs`) is a semio preamble line, then the real JFIF byte stream
+# (SOI..EOI, ITU-T T.81/ISO 10918-1) hex-encoded verbatim -- so this grammar honestly models the
+# TEXT form (a hex-dump grammar, matching png's own accurate precedent per the recipe) and does
+# NOT re-describe the binary marker-segment structure that job belongs to
+# `../💾️binary/📡️component.protocol.semio`.
+#
+# `comment none`: hex digits are lowercase-only and never contain `#`; kept for consistency with
+# every other stdio artifact's snapshot grammar and so a stray `#` in future fixture growth fails
+# loudly as a real parse mismatch instead of silently vanishing as a comment.
+document = artifact-mark payload
+artifact-mark = "stdio.jpg"
+payload = hex*

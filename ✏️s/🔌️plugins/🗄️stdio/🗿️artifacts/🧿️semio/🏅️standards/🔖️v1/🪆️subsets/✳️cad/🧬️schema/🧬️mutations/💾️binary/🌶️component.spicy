@@ -1,5 +1,9 @@
-module Semio_semio_cad_mutations;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=25;
+module Stdio_semio_cad_mutations;
+
+# protocol::OpText encode_op/decode_op payload for s.stdio.semio.cad.mutations -- NO semio
+# envelope: encode_op is print_op().into_bytes() verbatim, ASCII text in the
+# ../📝️text/📖️component.grammar.semio "keyword arg=value ..." grammar.
+
+public type Document = unit {
+    payload: bytes &eod;   # print_op() output; see ../📝️text/📖️component.grammar.semio
 };

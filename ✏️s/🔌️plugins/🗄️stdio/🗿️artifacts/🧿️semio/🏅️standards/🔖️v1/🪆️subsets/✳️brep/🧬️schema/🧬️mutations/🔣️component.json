@@ -1,10 +1,21 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.brep/mutations.json",
   "title": "SemioBrepMutation",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Named-variant enum, tag field `mutation`, camelCase. See the sibling 🦀️component.rs for the real source of truth.",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+    "mutation": {
+      "type": "string",
+      "enum": [
+        "noMutation", "setSnapshot",
+        "addVertex", "removeVertex", "setVertexPoint",
+        "addEdge", "removeEdge", "setEdgeEndpoints", "setEdgeCurve",
+        "addLoop", "removeLoop", "setLoopEdges",
+        "addFace", "removeFace", "setFaceSurface", "setFaceOrientation", "setFaceLoops",
+        "addShell", "removeShell", "setShellFaces",
+        "addSolid", "removeSolid", "setSolidShells"
+      ]
+    }
+  },
+  "required": ["mutation"]
 }

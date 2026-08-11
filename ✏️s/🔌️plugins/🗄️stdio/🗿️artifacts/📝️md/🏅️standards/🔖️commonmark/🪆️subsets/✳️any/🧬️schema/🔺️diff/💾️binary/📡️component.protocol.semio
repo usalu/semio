@@ -1,7 +1,23 @@
-dialect protocol stdio.md.diff
-; 🔺️ Binary op-log encoding of `MdDiff`: length-prefixed UTF-8 JSON matching the sibling
-; ../📝️text/📖️component.grammar.semio (real `OpBinary::encode_op`/`decode_op` shape --
-; `serde_json::to_vec`/`from_slice` over the same `MdDiff` wire form, framed with a length).
-diff-frame = length json-payload
-length = u32-le
-json-payload = utf8-bytes ; conforms to ../📝️text/📖️component.grammar.semio `md-diff`
+dialect protocol
+protocol stdio.md.diff
+version 1
+schema stdio.md
+start record
+
+# P2-FG1: REAL binary diff frame, replacing F6's `print_diff().into_bytes()` text-as-binary
+# shortcut (`../../🦀️component.rs`'s old `DiffCodec::encode_diff`) -- per the P2-W0 census 100% of
+# stdio's `DiffCodec` impls were still on this shortcut. Same structural reasoning as the sibling
+# `../../🧬️mutations/💾️binary/📡️component.protocol.semio` (read that file's comment for the full
+# `DslField`/recursion rationale -- it applies identically here, `MdBlocksDiff`/`MdBlockDiff` are
+# the diff-shaped twin of the same recursive `MdBlock`/collection-triple problem): `format u8` +
+# `has_value u8` (0 = `MdDiff{blocks:None}`, i.e. no change; 1 = present) as two real fixed fields,
+# then the recursive `MdBlocksDiff` payload (when present) as one opaque trailing `bytes` chain --
+# real LEB128-varint-framed binary (`enc_blocks_diff_bin`/`dec_blocks_diff_bin` in the same
+# `../../🦀️component.rs`), honestly opaque at THIS layer for the identical `Prim::Ref`
+# protocol-recursion gap documented in the mutations sibling file (filed once, in this wave's
+# `mechanism_gaps`, applies to both facets).
+framing record
+header fixed 2
+field format u8
+field has_value u8
+chain payload bytes

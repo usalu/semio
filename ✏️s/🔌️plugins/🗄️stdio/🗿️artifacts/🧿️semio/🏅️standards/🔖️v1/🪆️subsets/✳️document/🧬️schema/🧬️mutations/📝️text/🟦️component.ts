@@ -1,10 +1,4 @@
-/** 🧬️ Semio_semio_document_mutations schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_document_mutations
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_document_mutationsEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_document_mutations {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_document_mutationsEntry[];
-}
+/** 📄️ Text form marker for `s.stdio.semio.document.mutations`: `keyword arg=value ...`
+ * (space-separated) or the literal token `no-mutation` (see the sibling `🦀️component.rs` marker
+ * and `SemioDocumentMutation`'s real `OpText` impl for the source of truth). */
+export const TEXT_MARKER = "s.stdio.semio.document.mutations";

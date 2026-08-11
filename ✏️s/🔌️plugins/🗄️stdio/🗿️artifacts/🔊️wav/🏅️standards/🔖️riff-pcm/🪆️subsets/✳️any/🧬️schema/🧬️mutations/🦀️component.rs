@@ -1,10 +1,10 @@
-//! 🧬️ WavMutation — 🚧 scaffolded by W1b: a single `SetSnapshot` full-replace mutation
-//! (genuinely implements `protocol::Mutation`). W2 replaces this with the full named-variant
-//! vocabulary (per-field mutations, sparse `diff()`/`inverse()`), following the gif 89a / docx
-//! precedent.
+//! 🧬️ WavMutation — the real per-field mutation vocabulary over `WavSnapshot`'s three
+//! top-level fields (`fmt`/`data`/`other_chunks`), plus `SetSnapshot` for full replace.
 
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::diff::WavDiff;
+use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::diff::{
+    diff_set_data, diff_set_fmt, diff_set_other_chunks, diff_set_snapshot, WavDiff,
+};
+use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
 use protocol::Mutation;
 #[cfg(test)]
 use protocol::{OpBinary, OpText};
@@ -16,17 +16,27 @@ use serde::{Deserialize, Serialize};
 pub enum WavMutation {
     #[default]
     NoMutation,
-    /// 🚧 Full-snapshot replace — the only variant until W2's per-field vocabulary lands.
+    /// 🔁️ Full-snapshot replace.
     SetSnapshot { snapshot: WavSnapshot },
+    /// 🎚️ Replaces the `fmt ` chunk's typed fields wholesale.
+    SetFmt { fmt: WavFmt },
+    /// 🔊️ Replaces the typed sample data wholesale (may also change `WavData`'s variant, e.g.
+    /// `Pcm16` → `Float32`, mirroring a real re-encode).
+    SetData { data: WavData },
+    /// 📎️ Replaces the verbatim-retained non-`fmt `/`data` chunk list wholesale.
+    SetOtherChunks { chunks: Vec<RiffChunk> },
 }
 
 impl Mutation<WavSnapshot> for WavMutation {
     type Diff = WavDiff;
 
-    fn diff(&self, _base: &WavSnapshot) -> Self::Diff {
+    fn diff(&self, base: &WavSnapshot) -> Self::Diff {
         match self {
             WavMutation::NoMutation => WavDiff::default(),
-            WavMutation::SetSnapshot { snapshot } => WavDiff { replacement: Some(snapshot.clone()) },
+            WavMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            WavMutation::SetFmt { fmt } => diff_set_fmt(fmt.clone()),
+            WavMutation::SetData { data } => diff_set_data(data.clone()),
+            WavMutation::SetOtherChunks { chunks } => diff_set_other_chunks(chunks.clone()),
         }
     }
 
@@ -34,12 +44,15 @@ impl Mutation<WavSnapshot> for WavMutation {
         match self {
             WavMutation::NoMutation => vec![WavMutation::NoMutation],
             WavMutation::SetSnapshot { .. } => vec![WavMutation::SetSnapshot { snapshot: base.clone() }],
+            WavMutation::SetFmt { .. } => vec![WavMutation::SetFmt { fmt: base.fmt.clone() }],
+            WavMutation::SetData { .. } => vec![WavMutation::SetData { data: base.data.clone() }],
+            WavMutation::SetOtherChunks { .. } => vec![WavMutation::SetOtherChunks { chunks: base.other_chunks.clone() }],
         }
     }
 }
 
-/// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
-/// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
+/// ▶️ Applies a mutation to `snapshot` in place, returning the diff (the diff is the single
+/// semantics source — never apply-and-capture).
 pub fn apply_wav_mutation(snapshot: &mut WavSnapshot, mutation: &WavMutation) -> WavDiff {
     let diff = <WavMutation as Mutation<WavSnapshot>>::diff(mutation, snapshot);
     *snapshot = <WavDiff as protocol::MutationDiff<WavSnapshot>>::apply(&diff, snapshot);
@@ -48,14 +61,12 @@ pub fn apply_wav_mutation(snapshot: &mut WavSnapshot, mutation: &WavMutation) ->
 //#endregion 🔖️Mutation
 
 //#region OpCodecs
-/// 🎙️ Handcrafted `OpText`/`OpBinary` — 🚧 scaffolded by W1b: plain `serde_json` round-trip of
-/// the whole enum (one line of compact JSON per op), the same "JSON-pack passthrough" honesty
-/// boundary the subset's own `ArtifactPack` impl already uses (see that file's doc comment).
-/// Deliberately NOT `#[derive(dsl::DslOps)]` + `#[dsl(block)]` (the grammar/hand-rolled-op-triple
-/// path every OTHER artifact's real mutation vocabulary uses) — that path requires the embedded
-/// snapshot type to itself implement `dsl::DslField` (via `dsl::DslRecord`), which is real work
-/// spanning every nested type in the snapshot tree and squarely W2's job, not a wiring fix. W2
-/// replaces this whole region when it replaces `SetSnapshot` with the real per-field vocabulary.
+/// 🎙️ Handcrafted `OpText`/`OpBinary` via plain `serde_json` (one line of compact JSON per op) —
+/// deliberately NOT `#[derive(dsl::DslOps)]`: `WavData` is a data-carrying enum embedded in
+/// `SetData`'s payload, the same shape `f6-final-summary.md` §4.4 documents as structurally
+/// unbindable by the derive machinery today (no generic/enum-payload `DslField` bridge). This is
+/// a SEPARATE wire format from the subset's own `ArtifactDsl`/`ArtifactPack` envelope (which
+/// wraps real RIFF/WAVE bytes, see that file's doc comment) — an op is always plain JSON here.
 impl protocol::OpText for WavMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
@@ -79,28 +90,64 @@ impl protocol::OpBinary for WavMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::MutationDiff;
+    use protocol::command::DiffAlgebra;
 
-    /// 🧪️ mutation_diff_law + inverse_law: `mutation.diff(base).apply(base) == target`, and
-    /// applying the inverse mutation restores `base`.
-    #[test]
-    fn mutation_diff_law_set_snapshot_matches_diff() {
-        let base = WavSnapshot::default();
-        let mut next = WavSnapshot::default();
-        next.schema = format!("{}-mutated", base.schema);
-        let mutation = WavMutation::SetSnapshot { snapshot: next.clone() };
-        let diff = <WavMutation as Mutation<WavSnapshot>>::diff(&mutation, &base);
-        assert_eq!(<WavDiff as protocol::MutationDiff<WavSnapshot>>::apply(&diff, &base), next);
-        let inv = <WavMutation as Mutation<WavSnapshot>>::inverse(&mutation, &base);
-        assert_eq!(inv.len(), 1);
-        let mut round = next.clone();
-        let _ = apply_wav_mutation(&mut round, &inv[0]);
-        assert_eq!(round, base);
+    fn base_snapshot() -> WavSnapshot {
+        WavSnapshot { data: WavData::Pcm16(vec![10, -10, 5]), ..WavSnapshot::default() }
     }
-    /// 🧪️ op_text_binary_roundtrip_law: handcrafted `OpText`/`OpBinary` JSON round-trip.
+
+    fn variants(base: &WavSnapshot) -> Vec<WavMutation> {
+        vec![
+            WavMutation::NoMutation,
+            WavMutation::SetSnapshot { snapshot: WavSnapshot { fmt: WavFmt { sample_rate: 48000, ..base.fmt.clone() }, ..base.clone() } },
+            WavMutation::SetFmt { fmt: WavFmt { channels: 2, ..WavFmt::default() } },
+            WavMutation::SetData { data: WavData::Float32(vec![0.25, -0.25]) },
+            WavMutation::SetOtherChunks { chunks: vec![RiffChunk { fourcc: "fact".into(), data: vec![1, 2] }] },
+        ]
+    }
+
+    //#region mutation_diff_law
+    /// 🧪️ `mutation.diff(base).apply(base) == apply_wav_mutation(base, mutation)`.
+    #[test]
+    fn mutation_diff_law_every_variant() {
+        let base = base_snapshot();
+        for m in variants(&base) {
+            let mut via_apply = base.clone();
+            let returned = apply_wav_mutation(&mut via_apply, &m);
+            let direct = m.diff(&base);
+            assert_eq!(direct, returned, "diff mismatch for {m:?}");
+            assert_eq!(direct.apply(&base), via_apply, "apply mismatch for {m:?}");
+        }
+    }
+    //#endregion mutation_diff_law
+
+    //#region inverse_law
+    /// 🧪️ Applying the inverse mutation restores base, at both the mutation and diff levels.
+    #[test]
+    fn inverse_law_mutation_and_diff_level() {
+        let base = base_snapshot();
+        for m in variants(&base) {
+            let mut round = base.clone();
+            apply_wav_mutation(&mut round, &m);
+            for inv in m.inverse(&base) {
+                apply_wav_mutation(&mut round, &inv);
+            }
+            assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
+
+            let d = m.diff(&base);
+            let applied = d.apply(&base);
+            let undone = d.inverse(&base).apply(&applied);
+            assert_eq!(undone, base, "diff-level inverse failed for {m:?}");
+        }
+    }
+    //#endregion inverse_law
+
+    //#region op_text_binary_roundtrip_law
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = WavSnapshot::default();
-        for m in [WavMutation::NoMutation, WavMutation::SetSnapshot { snapshot: base.clone() }] {
+        let base = base_snapshot();
+        for m in variants(&base) {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = WavMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
@@ -111,5 +158,6 @@ mod tests {
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }
+    //#endregion op_text_binary_roundtrip_law
 }
 //#endregion 🔖️Tests

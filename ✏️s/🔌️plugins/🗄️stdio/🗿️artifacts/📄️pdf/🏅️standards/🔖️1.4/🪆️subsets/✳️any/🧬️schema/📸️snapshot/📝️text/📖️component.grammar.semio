@@ -1,6 +1,22 @@
-dialect grammar stdio.pdf.snapshot
-root = document
-document = header body
-header = 'schema' SP 'stdio.pdf' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.pdf.snapshot
+extension pdf
+start document
+
+# P2-FG3: real `store::ArtifactDsl::print_dsl`/`parse_dsl` shape for `stdio.pdf` (1.4) --
+# ../../../../../⚙️engine/🦀️component.rs's `impl store::ArtifactDsl for PdfSnapshot`: `print_dsl`
+# hex-encodes the REAL `encode_pdf(self)` byte output (the actual `%PDF-1.4...` file bytes),
+# verbatim -- no COS-text reserialization at the DSL-text layer. Confirmed by direct read AND a
+# real `[DEBUG]` dump of `print_dsl`, not assumed: the body is a CONTINUOUS run of lowercase hex
+# digit pairs, e.g. `255044462d312e340a...` (= `%PDF-1.4\n...` in hex). Same shape binary/raw's
+# own snapshot grammar documents for the identical reason (`ArtifactDsl` chose a hex-dump text
+# form here, not a reserialized-native-format text form) -- replaces the old one-line
+# ABNF-placeholder header (2 tokens on one line, `%x`/single-quoted-literal/`SP`/`NL` bodies
+# entirely outside this dialect's real alphabet).
+document = artifact-mark hex-body
+artifact-mark = "stdio.pdf"
+
+# See binary/raw's own grammar file's identical note (`📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2):
+# bare `hex`, no matching production -- `Symbol::Ref` falls back production-then-macro
+# (`Recognizer::match_macro_span`), backtracks correctly, unlike a hand-rolled `{INT|IDENT}*`.
+hex-body = hex

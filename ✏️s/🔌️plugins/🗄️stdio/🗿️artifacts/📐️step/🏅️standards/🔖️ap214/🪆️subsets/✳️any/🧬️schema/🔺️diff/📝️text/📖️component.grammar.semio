@@ -1,48 +1,57 @@
-dialect grammar stdio.step.diff
-; A `StepDiff` op-text line is the exact `serde_json::to_string` of the Rust struct — a single-line
-; JSON object, camelCase keys, absent fields omitted (never emitted as `null`). `StepValue` is
-; serde's default externally-tagged shape: unit variants (`unset`/`derived`) serialize as a bare
-; string; tuple/struct variants as a single-key object (see `📸️snapshot/🟦️component.ts` for the
-; exact TS union this mirrors).
-root = diff-line
-diff-line = diff-object NL?
-diff-object = '{' [ header-member *( ',' header-member ) ] [ entities-member ] '}'
-header-member = '"fileDescription"' ':' file-description-object
-              / '"fileName"' ':' file-name-object
-              / '"fileSchema"' ':' file-schema-object
-entities-member = '"entities"' ':' entities-object
-entities-object = '{' [ removed-member ',' ] [ modified-member ',' ] [ added-member ] '}'
-removed-member = '"removed"' ':' '[' *( json-number ',' ) ']'
-modified-member = '"modified"' ':' '[' *( entity-modified ',' ) ']'
-entity-modified = '{' '"id"' ':' json-number ',' '"diff"' ':' entity-diff-object '}'
-added-member = '"added"' ':' '[' *( entity-added ',' ) ']'
-entity-added = '{' '"index"' ':' json-number ',' '"entity"' ':' entity-object '}'
-entity-diff-object = '{' *( entity-diff-member ',' ) '}'
-entity-diff-member = '"name"' ':' json-string
-                    / '"args"' ':' args-diff-object
-                    / '"complex"' ':' complex-array
-; `args` is a SEPARATE index-keyed triple (Part-21 argument lists are positional); its items are
-; `StepValue` directly — the "diff" IS the whole new value (weak collection, no sub-diff).
-args-diff-object = '{' [ args-removed ',' ] [ args-modified ',' ] [ args-added ] '}'
-args-removed = '"removed"' ':' '[' *( json-number ',' ) ']'
-args-modified = '"modified"' ':' '[' *( arg-modified ',' ) ']'
-arg-modified = '{' '"index"' ':' json-number ',' '"value"' ':' step-value '}'
-args-added = '"added"' ':' '[' *( arg-added ',' ) ']'
-arg-added = '{' '"index"' ':' json-number ',' '"value"' ':' step-value '}'
-step-value = 'unset' / 'derived'
-           / '{' '"integer"' ':' json-integer '}'
-           / '{' '"real"' ':' json-number '}'
-           / '{' '"string"' ':' json-string '}'
-           / '{' '"enum"' ':' json-string '}'
-           / '{' '"reference"' ':' json-number '}'
-           / '{' '"aggregate"' ':' '[' *( step-value ',' ) ']' '}'
-           / '{' '"typedValue"' ':' '{' '"typeName"' ':' json-string ',' '"value"' ':' step-value '}' '}'
-entity-object = '{' '"id"' ':' json-number ',' '"name"' ':' json-string ',' *( entity-diff-member ',' ) '}'
-complex-array = '[' *( complex-object ',' ) ']'
-complex-object = '{' '"name"' ':' json-string ',' '"args"' ':' '[' *( step-value ',' ) ']' '}'
-file-description-object = '{' '"description"' ':' '[' *( json-string ',' ) ']' ',' '"implementationLevel"' ':' json-string '}'
-file-name-object = '{' *( json-string ) '}' ; seven string/string-array members, see snapshot facet
-file-schema-object = '{' '"schemas"' ':' '[' *( json-string ',' ) ']' '}'
-json-string = DQUOTE *CHAR DQUOTE
-json-number = [ '-' ] 1*DIGIT [ '.' 1*DIGIT ]
-json-integer = [ '-' ] 1*DIGIT
+# 📖️ P2-FG1: real `DiffCodec::print_diff`/`parse_diff` shape for `StepDiff`, hand-rolled since
+# `#[derive(dsl::DslDiff)]` fails (real `cargo check` output, `StepEntitiesDiff`/`StepValue: DslField`
+# unsatisfied — see `🔺️diff/🦀️component.rs`'s own doc comment). One line of space-separated
+# `name=value` tokens, only the CHANGED top-level fields present, in declared field order — every
+# literal copied verbatim from `print_step_diff`'s real body, not invented. Replaces the old
+# serde-JSON `{"fileDescription":...}` ABNF placeholder this file used to contain.
+dialect grammar
+grammar stdio.step.diff
+start document
+
+document = file-description-tok? file-name-tok? file-schema-tok? entities-tok?
+file-description-tok = "file-description" "=" file-description
+file-name-tok = "file-name" "=" file-name
+file-schema-tok = "file-schema" "=" file-schema
+entities-tok = "entities" "=" entities-diff
+
+# `enc_entities_diff`: `[removed-ids];[modified];[added]` — id-keyed collection triple (§1.4's
+# copy-pasteable shape). `modified` items are `id:entity-diff`; `added` items are `index:entity`
+# (FINAL-position index, matching this program's own `added` semantics convention).
+entities-diff = "[" u64-list "]" ";" "[" entity-modified-list "]" ";" "[" entity-added-list "]"
+u64-list = {INT {"," INT}*}?
+entity-modified-list = {entity-modified {"," entity-modified}*}?
+entity-modified = INT ":" entity-diff
+entity-added-list = {entity-added {"," entity-added}*}?
+entity-added = INT ":" entity
+
+# `enc_entity_diff`: `[nameOpt,argsOpt,complexOpt]` — every field independently `[0]`/`[1,value]`
+# tri-state-tagged (§1.4's Tri-state pattern; `Option<T>`, never a genuine `Option<Option<T>>` here).
+entity-diff = "[" name-opt "," args-opt "," complex-opt "]"
+name-opt = "[" "0" "]" | "[" "1" "," hex "]"
+args-opt = "[" "0" "]" | "[" "1" "," args-diff "]"
+complex-opt = "[" "0" "]" | "[" "1" "," "[" complex-list "]" "]"
+
+# `enc_args_diff`: SAME `[removed];[modified];[added]` collection-triple shape, index-keyed (Part-21
+# entity argument lists are positional). Items are `StepValue` directly — a weak collection, the
+# "diff" IS the whole new value, no further sub-diffing.
+args-diff = "[" usize-list "]" ";" "[" arg-modified-list "]" ";" "[" arg-added-list "]"
+usize-list = {INT {"," INT}*}?
+arg-modified-list = {arg-modified {"," arg-modified}*}?
+arg-modified = INT ":" step-value
+arg-added-list = {arg-added {"," arg-added}*}?
+arg-added = INT ":" step-value
+
+# `StepValue`'s single-uppercase-letter tag scheme — see the sibling mutations grammar's identical
+# doc comment for the full rationale (own copy per this dialect's per-file convention).
+step-value = "U" "[" "]" | "D" "[" "]" | "I" "[" INT "]" | "R" "[" real-num "]" | "S" "[" hex "]" | "E" "[" hex "]" | "F" "[" INT "]" | "A" "[" value-list "]" | "T" "[" hex "," step-value "]"
+real-num = INT | FLOAT
+value-list = {step-value {"," step-value}*}?
+
+entity = "[" INT "," hex "," "[" value-list "]" "," "[" complex-list "]" "]"
+complex-list = {complex-item {"," complex-item}*}?
+complex-item = "[" hex "," "[" value-list "]" "]"
+
+file-description = "[" "[" hex-list "]" "," hex "]"
+file-name = "[" hex "," hex "," "[" hex-list "]" "," "[" hex-list "]" "," hex "," hex "," hex "]"
+file-schema = "[" hex-list "]"
+hex-list = {hex {"," hex}*}?

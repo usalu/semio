@@ -392,6 +392,58 @@ pub fn encode_las(snap: &LasSnapshot) -> Result<Vec<u8>, String> {
 pub fn empty_las_snapshot() -> LasSnapshot {
     LasSnapshot::default()
 }
+
+/// 📄️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: the demo
+/// `stdio.las` document — a small but genuinely representative point-data-format-0 snapshot (one
+/// VLR, two points), matching the companion real-format fixture assets
+/// (`📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio`, both regenerated
+/// from this snapshot's real `print_dsl`/`encode_pack` output). Single source of truth for those
+/// fixtures, asserted equal by `conformance_laws::fixture_honesty_law` below.
+pub fn demo_las_snapshot() -> LasSnapshot {
+    LasSnapshot {
+        schema: STDIO_LAS_DOCUMENT_SCHEMA.into(),
+        header: LasHeader {
+            version_major: 1,
+            version_minor: 2,
+            system_identifier: "SEMIO".into(),
+            generating_software: "semio-las-engine".into(),
+            creation_day_of_year: 100,
+            creation_year: 2026,
+            offset_to_point_data: 289, // structural: 227 (fixed header) + 54 (vlr header) + 8 (vlr data)
+            number_of_vlrs: 1,
+            point_data_format_id: 0,
+            point_data_record_length: 20,
+            number_of_point_records: 2,
+            points_by_return: [2, 0, 0, 0, 0],
+            x_scale: 0.01, y_scale: 0.01, z_scale: 0.01,
+            x_offset: 0.0, y_offset: 0.0, z_offset: 0.0,
+            max_x: 200.0, min_x: 100.0, max_y: 0.0, min_y: -50.0, max_z: 11.0, min_z: 10.0,
+            ..LasHeader::default()
+        },
+        vlrs: vec![LasVlr {
+            user_id: "LASF_Projection".into(),
+            record_id: 34735,
+            description: "GeoKeyDirectoryTag".into(),
+            data: vec![1, 0, 1, 0, 0, 0, 3, 0],
+        }],
+        points: vec![
+            LasPoint {
+                x: 100.0, y: -50.0, z: 10.0, intensity: 100,
+                return_number: 1, number_of_returns: 1,
+                scan_direction_flag: false, edge_of_flight_line: false,
+                classification: 2, scan_angle_rank: -5, user_data: 0, point_source_id: 1000,
+                gps_time: None, rgb: None,
+            },
+            LasPoint {
+                x: 101.23, y: -49.5, z: 10.01, intensity: 110,
+                return_number: 2, number_of_returns: 2,
+                scan_direction_flag: true, edge_of_flight_line: true,
+                classification: 4, scan_angle_rank: 3, user_data: 1, point_source_id: 1001,
+                gps_time: None, rgb: None,
+            },
+        ],
+    }
+}
 //#endregion 🔖️Encode
 
 //#region 🔖️Register
@@ -400,14 +452,24 @@ pub fn register() {
     crate::artifacts::las::composer::register();
     register_artifact_schema();
     register_pilot_languages();
+    register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<LasSnapshot, LasMutation>(STDIO_LAS_DOCUMENT_SCHEMA));
 }
 
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (las).
+/// 📌️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: 5-role
+/// `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the recipe's json exemplar —
+/// `stdio.las`/`.op`/`.diff`/`.pack`/`.spr`, all `dsl::passthrough_hooks`. `diff`'s `protocol`
+/// slot stays `None` matching the exemplar's own shape exactly (the 5-role scheme has no
+/// dedicated "diff binary" role even though `🔺️diff/💾️binary/📡️component.protocol.semio` is a
+/// real, conformance-tested file — its binary form is exercised directly by
+/// `conformance_laws::protocol_walk_law` below, just not wired through a 6th `LanguageRole`).
+/// `extension` corrected from the pre-existing (F2-era) `"bin"` copy-paste to the artifact's own
+/// real `"las"` (`store::ArtifactDsl::EXTENSION` for `LasSnapshot`, `⚙️engine/🦀️component.rs`'s
+/// sibling `📸️snapshot/🦀️component.rs`).
 pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.las",
-        extension: Some("bin"),
+        extension: Some("las"),
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::las::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::las::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
@@ -415,12 +477,65 @@ pub fn register_pilot_languages() {
         protocol_path: Some(crate::artifacts::las::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.las"),
     });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.las.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::las::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::las::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::las::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::las::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.las.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.las.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::las::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::las::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("stdio.las.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.las.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::las::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::las::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.las.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.las.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::las::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::las::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.las.spr"),
+    });
 }
 
 /// 📌️ Registers schema leaves for `s.stdio.las`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::las::schema::las_artifact_schema_descriptor());
 }
+
+/// 📇️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION:
+/// `dsl::registry::register_schema_spec` is deliberately NOT called here — `LasSnapshot`/
+/// `LasHeader`/`LasVlr`/`LasPoint`/`LasDiff` are all fully hand-rolled (no `#[derive(dsl::
+/// DslRecord)]`/`DslDiff` anywhere in this tree), confirmed by a real, reverted derive-attribute
+/// probe (see `🔺️diff/🦀️component.rs`'s `HandcraftedDiffCodec` doc comment for the two
+/// independently-confirmed compiler-error blockers: `LasPointDiff`'s tri-state `Option<Option<T>>`
+/// fields, and the complete absence of a blanket `DslField` impl for bare tuples like `(f64, f64,
+/// f64)`, hit by BOTH `LasPointDiff::rgb` and `LasMutation::SetScaleAndOffset`/`SetBounds`). No
+/// `fn() -> RecordSpec` exists to register under `"stdio.las"`/`"stdio.las#diff"` — filed as a
+/// `mechanism_gaps` entry (`register-schema-spec-needs-recordspec`) rather than fabricating an
+/// unrelated spec, per the recipe's own documented rule (json/csv/zip/png's own situation).
+pub fn register_schema_specs() {}
 //#endregion 🔖️Register
 
 //#region 🔖️ArtifactEngine
@@ -704,5 +819,146 @@ mod tests {
         let err = decode_las(&bytes).unwrap_err();
         assert!(err.contains("too short"), "unexpected error: {err}");
     }
+
+    #[test]
+    fn demo_snapshot_round_trip() {
+        let snap = demo_las_snapshot();
+        let text = store::ArtifactDsl::print_dsl(&snap);
+        let parsed = <LasSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        assert_eq!(parsed, snap);
+        let bytes = store::ArtifactPack::encode_pack(&snap);
+        let decoded = <LasSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        assert_eq!(decoded, snap);
+    }
+
+    //#region 🔖️ConformanceLaws
+    /// 🧪️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: per-artifact
+    /// conformance laws — grammar/protocol parseability, `Recognizer` against real fixtures AND
+    /// real `print_op`/`print_diff` output, `walk_protocol` against real
+    /// `encode_pack`/`encode_op`/`encode_diff` bytes, and the fixture-honesty round-trip. Lives
+    /// here (the engine's own test region), not any framework file — this artifact's OWN
+    /// early-warning, independent of the eventual `STDIO_CONFORMANCE_GRADUATED` framework-level
+    /// gate (see the ticket's grammar-recipe doc §7).
+    mod conformance_laws {
+        use super::*;
+        use crate::artifacts::las::schema::{diff, mutations, snapshot};
+        use protocol::{DiffCodec, OpBinary, OpText};
+
+        /// ✅️ "committed files parse": all 3 handcrafted `.grammar.semio`/`.protocol.semio` file
+        /// pairs parse under the real dialect — independent of, and cheaper than, the two
+        /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
+        /// message).
+        #[test]
+        fn committed_facet_files_parse() {
+            for (label, text) in [
+                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
+            ] {
+                let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+                assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+            }
+            for (label, text) in [
+                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
+            ] {
+                dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+            }
+        }
+
+        /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output
+        /// for the demo snapshot — same preamble-stripped body reconstruction
+        /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses.
+        #[test]
+        fn grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            let text = store::ArtifactDsl::print_dsl(&demo_las_snapshot());
+            let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
+            let reconstructed = format!("{}\n{body}", envelope.envelope_id());
+            assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+
+            // 🔬️ Also the empty-bytes case (`LasSnapshot::default()`), exercising the `hex`
+            // macro's zero-width match.
+            let empty_text = store::ArtifactDsl::print_dsl(&empty_las_snapshot());
+            let (empty_envelope, empty_body) = store::semio_format::split_text_preamble(&empty_text).expect("split preamble");
+            let empty_reconstructed = format!("{}\n{empty_body}", empty_envelope.envelope_id());
+            assert!(recognizer.recognize(&empty_reconstructed).expect("recognize"), "grammar did not recognize empty dsl body:\n{empty_reconstructed}");
+        }
+
+        /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
+        /// output for every `LasMutation` variant (`mutations::demo_mutation_cases()`).
+        #[test]
+        fn ops_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for mutation in mutations::demo_mutation_cases() {
+                let printed = mutation.print_op();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
+            }
+        }
+
+        /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff`
+        /// output for every representative `LasDiff` (`diff::demo_diff_cases()`).
+        #[test]
+        fn diff_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for d in diff::demo_diff_cases() {
+                let printed = d.print_diff();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
+            }
+        }
+
+        /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
+        /// snapshot pack (`encode_pack`, envelope-unwrapped first, matching how
+        /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
+        /// mutation's `encode_op`, and every demo diff's `encode_diff` — asserting `consumed ==
+        /// bytes.len()`.
+        #[test]
+        fn protocol_walk_law() {
+            let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+            let packed = store::ArtifactPack::encode_pack(&demo_las_snapshot());
+            let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
+            let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+            assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
+
+            let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+            for mutation in mutations::demo_mutation_cases() {
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
+            }
+
+            let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+            for d in diff::demo_diff_cases() {
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
+            }
+        }
+
+        /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
+        /// `print_dsl`/`encode_pack` output of `demo_las_snapshot()` — `parse_dsl(fixture) ==
+        /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
+        /// fixtures can never silently drift back to a fake again.
+        #[test]
+        fn fixture_honesty_law() {
+            const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+
+            let demo = demo_las_snapshot();
+
+            let parsed = <LasSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_las_snapshot()");
+            assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_las_snapshot()) drifted from the shipped .dsl.semio fixture");
+
+            let decoded = <LasSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_las_snapshot()");
+            assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_las_snapshot()) drifted from the shipped .pack.semio fixture");
+        }
+    }
+    //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests

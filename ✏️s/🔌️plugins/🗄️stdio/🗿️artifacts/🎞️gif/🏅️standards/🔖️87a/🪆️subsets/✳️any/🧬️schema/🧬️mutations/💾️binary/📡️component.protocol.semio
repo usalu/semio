@@ -1,3 +1,31 @@
-dialect protocol stdio.gif.mutations
-magic = %x00
-payload = *OCTET
+dialect protocol
+protocol stdio.gif.mutations
+version 1
+schema stdio.gif.op
+start op
+
+# `protocol::OpBinary::encode_op`/`decode_op` (../🦀️component.rs) forward straight to
+# `dsl::variants_binary::encode_op`/`decode_op` — this was ALREADY real binary before this
+# program touched it, NOT the F6-era `print_op().into_bytes()` text-as-binary shortcut
+# (confirmed by direct reading: `encode_op` calls `os_pack::encode_record_body`, never
+# `print_op`). Layout, byte-for-byte, per that helper's own doc comment (`OP_BINARY_FORMAT`):
+# a fixed `format` byte (always `1`), the matched variant's ordinal as a `varint`
+# (declaration order: `NoMutation`=0, `SetSnapshot`=1, `SetScreenSize`=2,
+# `SetGlobalColorTable`=3, `SetBackgroundColorIndex`=4, `SetPixelAspectRatio`=5,
+# `InsertImage`=6, `RemoveImage`=7, `MoveImage`=8, `SetImageGeometry`=9, `SetImagePixels`=10,
+# `SetImageInterlace`=11 — `dsl::DslVariants::variants()`'s own emission order), then the
+# variant's own field payload, `os_pack::encode_record_body(spec, record)` — itself a
+# varint-prefixed STRING-SYMBOL TABLE followed by a generic, self-describing per-field-id
+# TAG+value wire. This inner wire is the FRAMEWORK's own generic record-body encoding —
+# shared verbatim by every `#[derive(dsl::DslRecord)]`/`DslOps`/`DslDiff` type in the whole
+# repo, not anything specific to `stdio.gif`, and is genuinely NOT expressible by this
+# dialect's `Array`/`Ref`/`repeat` primitives as they stand today (no dynamic per-field TAG
+# dispatch keyed by a runtime field-id, no symbol-table back-reference resolution) — the same
+# `txt-opbinary-record-body-wire-is-framework-generic` gap txt's own sibling protocol file
+# documents (`📄txt/…/🧬️mutations/💾️binary/📡️component.protocol.semio`), copied verbatim per
+# its own "copy the shape" instruction. Modeled honestly: `format`/`ordinal` are genuinely,
+# individually byte-walked and validated; the remaining record-body bytes are one opaque tail.
+framing record
+field format u8
+field ordinal varint
+chain bytes

@@ -1,10 +1,9 @@
-/** 🧬️ SemioVideoArtifact schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioVideoArtifact
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface SemioVideoArtifactEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ SemioVideoArtifact schema — full artifact state, mirrors `SemioVideoSnapshot` field for
+ * field (see `📸️snapshot/🟦️component.ts`). */
+export type { SemioVideoStream, SemioVideoSample, SemioVideoStreamKind, SemioRational } from "./📸️snapshot/🟦️component.ts";
+import type { SemioVideoStream } from "./📸️snapshot/🟦️component.ts";
+
 export interface SemioVideoArtifact {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioVideoArtifactEntry[];
+  /** @state persistent */ streams: SemioVideoStream[];
 }

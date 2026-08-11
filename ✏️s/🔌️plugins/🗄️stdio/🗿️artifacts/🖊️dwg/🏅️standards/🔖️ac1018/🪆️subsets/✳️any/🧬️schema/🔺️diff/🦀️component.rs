@@ -176,6 +176,31 @@ pub fn diff_remove_section_name(base: &DwgSnapshot, name: &str) -> DwgDiff {
 }
 //#endregion 🔖️MutationDiffBuilders
 
+//#region 🔖️DemoCases
+/// 🎬️ Representative `DwgDiff` cases, one per field-transition shape — reused by
+/// `diff_codec_text_binary_roundtrip_law` below AND by `⚙️engine`'s
+/// `conformance_laws::diff_grammar_conformance_law`/`protocol_walk_law` (mirrors
+/// `BinaryDiff::demo_diff_cases`, `💾️binary/…/🔺️diff/🦀️component.rs`).
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<DwgDiff> {
+    vec![
+        DwgDiff::default(),
+        DwgDiff { version: Some("AC1018".into()), ..Default::default() },
+        DwgDiff { maintenance_version: Some(9), codepage: Some(65001), ..Default::default() },
+        DwgDiff { bytes: Some(vec![0xAA, 0xBB, 0x00, 0xFF]), ..Default::default() },
+        DwgDiff { section_names: Some(vec!["AcDb:Header".into(), "AcDb:Classes".into()]), ..Default::default() },
+        DwgDiff { section_names: Some(vec![]), ..Default::default() },
+        DwgDiff {
+            version: Some("AC1032".into()),
+            maintenance_version: Some(2),
+            codepage: Some(30),
+            bytes: Some(vec![1, 2, 3, 4, 5]),
+            section_names: Some(vec!["AcDb:Handles".into()]),
+        },
+    ]
+}
+//#endregion 🔖️DemoCases
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -186,22 +211,7 @@ mod tests {
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
-        let cases = vec![
-            DwgDiff::default(),
-            DwgDiff { version: Some("AC1018".into()), ..Default::default() },
-            DwgDiff { maintenance_version: Some(9), codepage: Some(65001), ..Default::default() },
-            DwgDiff { bytes: Some(vec![0xAA, 0xBB, 0x00, 0xFF]), ..Default::default() },
-            DwgDiff { section_names: Some(vec!["AcDb:Header".into(), "AcDb:Classes".into()]), ..Default::default() },
-            DwgDiff { section_names: Some(vec![]), ..Default::default() },
-            DwgDiff {
-                version: Some("AC1032".into()),
-                maintenance_version: Some(2),
-                codepage: Some(30),
-                bytes: Some(vec![1, 2, 3, 4, 5]),
-                section_names: Some(vec!["AcDb:Handles".into()]),
-            },
-        ];
-        for d in cases {
+        for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
             let parsed = DwgDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));

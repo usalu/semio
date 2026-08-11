@@ -1,4 +1,33 @@
-dialect protocol stdio.jpg.mutations
-magic = %x00
-payload = json-utf8 ; JSON-encoded JpgMutation (see ../🔣️component.json), not raw octets --
-                     ; `OpBinary` goes through `serde_json::to_vec`/`from_slice` directly.
+dialect protocol
+protocol stdio.jpg.mutations
+version 1
+schema stdio.jpg
+start record
+
+# P2-FG2: REAL binary op frame, replacing F6's `print_op().into_bytes()` text-as-binary shortcut
+# (`../../🦀️component.rs`'s old `OpBinary::encode_op` -- see that file's `#region OpCodecs` for the
+# upgraded implementation). `format u8` (`store::OP_BINARY_FORMAT` convention) + `tag u8` (the
+# `JpgMutation` variant's declaration-order ordinal, 0=`NoMutation` .. 11=`SetReEncodeQuality`,
+# same order `print_jpg_mutation`'s own match arms use) as two REAL fixed fields, individually
+# protocol-walked.
+#
+# Past that header, the variant's own payload (which may embed a full `JpgSnapshot` for
+# `SetSnapshot`, or an id/index-keyed collection item) is one opaque trailing `bytes` chain rather
+# than sixteen tag-conditional field lists: `Cond` can only guard on a field's WHOLE value against
+# a literal (real here -- `tag`'s value genuinely selects the payload SHAPE), but `walk_protocol`
+# has no per-tag-value BRANCHING construct for an ARM-shaped field list outside `repeat` (`repeat`
+# itself is for a REPEATED tag-dispatched sequence, not a single one-shot tag-then-payload
+# record) -- and `SetSnapshot`'s own payload independently hits the `protocol-array-of-records`
+# mechanism gap (`📖️grammar-recipe.md` §5: quant/huffman-table/other-segment lists are
+# heterogeneous-shaped repeated records, not one repeated scalar `Prim`). The Rust
+# `encode_op`/`decode_op` side (`../../🦀️component.rs`'s `#region OpCodecs`/`§SnapshotBinaryCodec`)
+# stays genuinely, fully structured (tag-dispatched, real varint/fixed-width fields, real
+# collection counts, reusing `../🔺️diff/🦀️component.rs`'s own real binary value codecs) and
+# round-trip tested independently -- this protocol file's opaque tail is a DESCRIPTION-layer
+# boundary only, the same honest treatment `📰xml`'s own upgraded mutations protocol gives its
+# recursive `XmlNode`/`XmlNodePath` payload.
+framing record
+header fixed 2
+field format u8
+field tag u8
+chain payload bytes

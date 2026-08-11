@@ -1,7 +1,17 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
 package semio.s_stdio_epw.artifact;
+
+import "s_stdio_epw/snapshot.proto";
+
 message EpwArtifact {
   string schema = 1;
-  string entries_wire = 2;
+  semio.s_stdio_epw.snapshot.EpwLocation location = 2;
+  string design_conditions = 3;
+  string typical_extreme_periods = 4;
+  string ground_temperatures = 5;
+  string holidays_dst = 6;
+  string comments_1 = 7;
+  string comments_2 = 8;
+  semio.s_stdio_epw.snapshot.EpwDataPeriods data_periods = 9;
+  repeated semio.s_stdio_epw.snapshot.EpwRecord records = 10;
 }

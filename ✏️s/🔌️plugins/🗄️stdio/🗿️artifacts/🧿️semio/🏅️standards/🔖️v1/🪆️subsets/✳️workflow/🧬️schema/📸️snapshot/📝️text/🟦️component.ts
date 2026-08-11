@@ -1,10 +1,32 @@
-/** 🧬️ Semio_semio_workflow_snapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_workflow_snapshot
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_workflow_snapshotEntry {
+/** 🧬️ SemioWorkflowSnapshot schema (TEXT representation facet mirror) — real, matches the facet
+ * root's shape; the wire ENCODING is envelope + hex-encoded JSON (see 📝️text/📖️component.grammar.semio). */
+export interface SemioPoint2 {
+  x: number;
+  y: number;
+}
+export interface PortRef {
+  node: string;
+  port: string;
+}
+export interface WorkflowParam {
   key: string;
   value: string;
 }
-export interface Semio_semio_workflow_snapshot {
+export interface WorkflowNode {
+  id: string;
+  kind: string;
+  label: string;
+  params: WorkflowParam[];
+  position: SemioPoint2;
+}
+export interface WorkflowEdge {
+  id: string;
+  from: PortRef;
+  to: PortRef;
+  kind: string;
+}
+export interface SemioWorkflowSnapshot {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_workflow_snapshotEntry[];
+  /** @state persistent */ nodes: WorkflowNode[];
+  /** @state persistent */ edges: WorkflowEdge[];
 }

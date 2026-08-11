@@ -1,5 +1,9 @@
-module Semio_semio_video_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_semio_video_snapshot;
+# stdio.semio.video snapshot binary envelope — magic + version + length-prefixed JSON body; see
+# ../🔣️component.json for the JSON body's own structure.
 type Document = unit {
-    magic: bytes &size=26;
+    magic: bytes &size=17; # "stdio.semio.video"
+    version: uint8;
+    body_len: uint32;
+    body_bytes: bytes &size=self.body_len;
 };

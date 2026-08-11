@@ -1,3 +1,8 @@
-dialect protocol stdio.semio.brep.diff
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.brep.diff"
+dialect protocol
+protocol stdio.semio.brep.diff
+version 1
+schema stdio.semio.brep.diff
+start frame
+; payload bytes are the UTF-8 diff-line text verbatim (protocol::DiffCodec::encode_diff is
+; print_diff().into_bytes()) -- see ../💾️binary/🔠️component.abnf for its real grammar.
+segment payload varint bytes

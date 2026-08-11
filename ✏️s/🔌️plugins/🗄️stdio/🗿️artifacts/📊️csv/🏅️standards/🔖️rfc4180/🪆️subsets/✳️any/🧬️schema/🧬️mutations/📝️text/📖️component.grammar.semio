@@ -1,8 +1,51 @@
-dialect grammar stdio.csv.mutations
-root = mutation
-; wire text IS the JSON serialization of CsvMutation (protocol::OpText — serde_json),
-; tagged on "mutation" per 🦀️component.rs's enum
-mutation = "{" '"mutation"' ":" tag ("," member)* "}"
-tag = '"noMutation"' / '"setSnapshot"' / '"setHasHeader"'
-    / '"insertRecord"' / '"removeRecord"' / '"setField"'
-member = STRING ":" JSON_VALUE
+dialect grammar
+grammar stdio.csv.mutations
+start op
+
+# Real one-line `keyword key=value ...` op-text form this artifact's `OpText::print_op`/
+# `parse_op` ALREADY emits (🧬️mutations/🦀️component.rs `print_csv_mutation`/`parse_csv_mutation`)
+# — NOT the pre-F6 serde-JSON shape this file used to describe (F6 replaced serde_json transfer
+# for ops/diffs repo-wide; this grammar was simply never updated to match until now).
+comment none
+
+# Every production body is kept on ONE physical line — this dialect's alternation/sequence
+# parsing stops at the first Newline token (no line-continuation syntax exists).
+op = no-mutation-op | set-snapshot-op | set-has-header-op | insert-record-op | remove-record-op | set-field-op
+
+no-mutation-op = "no-mutation"
+set-snapshot-op = "set-snapshot" "snapshot" "=" snapshot-value
+set-has-header-op = "set-has-header" "has-header" "=" bit
+insert-record-op = "insert-record" "index" "=" INT "record" "=" record-value
+remove-record-op = "remove-record" "index" "=" INT
+set-field-op = "set-field" "record-index" "=" INT "field-index" "=" INT "value" "=" hex "quoted" "=" bit
+
+# Positional-tuple value grammars — the SAME shape `enc_csv_snapshot`/`enc_record`/`enc_field`
+# (🔺️diff/🦀️component.rs, reused by 🧬️mutations/🦀️component.rs) print. Whitespace between
+# `keyword`/`key=value` tokens needs no terminal of its own — it is lexer trivia, exactly like
+# every other space-separated grammar already in this repo (e.g. note.document's `schema-line`).
+snapshot-value = "[" hex "," bit "," "[" record-list? "]" "]"
+record-list = record-value {"," record-value}*
+record-value = "[" field-list? "]"
+field-list = field-value {"," field-value}*
+field-value = "[" hex "," bit "]"
+bit = "0" | "1"
+
+# A `CsvField.value` may legally contain any of this grammar's own separator characters
+# (`,`/`[`/`]`/space) — hex-encoding sidesteps escaping entirely, matching the real codec
+# (`enc_str`/`dec_str`, 🔺️diff/🦀️component.rs).
+#
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in `hex`
+# MACRO (`📖️grammar/🦀️component.rs`'s `default_macros`/`macro_hex_ok`) — a run of lowercase hex
+# digits, incl. the empty string. This dialect has no dedicated hex-digit-run TERMINAL, so a hex
+# string fragments unpredictably across the fixed INT/IDENT/FLOAT token boundaries depending on its
+# own digit/letter mix (see this artifact's report, mechanism_gaps "csv-hex-token-fragmentation");
+# `hex` MUST be the macro, not a hand-rolled `{INT|IDENT}*`-shaped production, for two independent,
+# live-confirmed reasons: (1) a production's `Star` never backtracks (`Symbol::Star`'s doc comment),
+# so `set-field-op`'s real wire shape `value=<hex> quoted=<bit>` — the literal `quoted` tokenizes as
+# a plain `IDENT`, exactly like a stray hex letter run would — gets silently swallowed INTO a greedy
+# `hex` Star, desyncing everything after it; (2) a hex run containing `<digits>e<digits>` (`e` is
+# itself a valid lowercase hex digit) lexes as one `FLOAT` token, not alternating `INT`/`IDENT`. The
+# macro's own backtracking (`Recognizer::match_macro_span` tries the largest token span first and
+# shrinks until `try_match` accepts) handles both, with no grammar-file workaround needed — same
+# mechanism as the sibling json artifact's
+# `../../../../../🔣️json/…/🧬️mutations/📝️text/📖️component.grammar.semio`'s `hex` doc comment.

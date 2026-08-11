@@ -1,5 +1,6 @@
-module Semio_html_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_html_snapshot;
+
+# `pack` payload: UTF-8 HTML5 document text (canonical form), same grammar as the sibling text facet.
 type Document = unit {
-    magic: bytes &size=19;
+    payload: bytes &eod &convert=$$.decode("utf-8");
 };

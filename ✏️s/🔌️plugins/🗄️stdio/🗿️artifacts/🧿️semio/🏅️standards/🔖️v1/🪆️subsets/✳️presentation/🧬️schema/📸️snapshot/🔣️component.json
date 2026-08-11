@@ -1,10 +1,34 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.presentation/snapshot.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "SemioPresentationSnapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
   "type": "object",
+  "required": ["schema", "masters", "layouts", "slides"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "schema": { "type": "string" },
+    "masters": { "type": "array", "items": { "$ref": "#/definitions/SlideMaster" } },
+    "layouts": { "type": "array", "items": { "$ref": "#/definitions/SlideLayout" } },
+    "slides": { "type": "array", "items": { "$ref": "#/definitions/Slide" } }
+  },
+  "definitions": {
+    "SemioPoint2": { "type": "object", "required": ["x", "y"], "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
+    "SlideFrame": { "type": "object", "required": ["origin", "width", "height"], "properties": { "origin": { "$ref": "#/definitions/SemioPoint2" }, "width": { "type": "number" }, "height": { "type": "number" } } },
+    "SlidePictureImage": { "type": "object", "required": ["assetId", "mime", "bytes"], "properties": { "assetId": { "type": "string" }, "mime": { "type": "string" }, "bytes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } } } },
+    "PlaceholderKind": { "type": "object", "required": ["kind"], "properties": { "kind": { "enum": ["title", "subtitle", "body", "footer", "slideNumber", "dateTime", "other"] }, "value": { "type": "string" } } },
+    "SlideTableCell": { "type": "object", "required": ["blocks"], "properties": { "blocks": { "type": "array" } } },
+    "SlideTableRow": { "type": "object", "required": ["cells"], "properties": { "cells": { "type": "array", "items": { "$ref": "#/definitions/SlideTableCell" } } } },
+    "SlideShape": {
+      "type": "object", "required": ["shapeKind", "frame"],
+      "properties": {
+        "shapeKind": { "enum": ["textBox", "picture", "table", "placeholder"] },
+        "frame": { "$ref": "#/definitions/SlideFrame" },
+        "blocks": { "type": "array" },
+        "image": { "$ref": "#/definitions/SlidePictureImage" },
+        "rows": { "type": "array", "items": { "$ref": "#/definitions/SlideTableRow" } },
+        "kind": { "$ref": "#/definitions/PlaceholderKind" }
+      }
+    },
+    "SlideMaster": { "type": "object", "required": ["id", "shapes"], "properties": { "id": { "type": "string" }, "shapes": { "type": "array", "items": { "$ref": "#/definitions/SlideShape" } } } },
+    "SlideLayout": { "type": "object", "required": ["id", "masterId", "shapes"], "properties": { "id": { "type": "string" }, "masterId": { "type": "string" }, "shapes": { "type": "array", "items": { "$ref": "#/definitions/SlideShape" } } } },
+    "Slide": { "type": "object", "required": ["id", "shapes", "notes"], "properties": { "id": { "type": "string" }, "layoutId": { "type": ["string", "null"] }, "shapes": { "type": "array", "items": { "$ref": "#/definitions/SlideShape" } }, "notes": { "type": "array" } } }
   }
 }

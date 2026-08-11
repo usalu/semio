@@ -1,3 +1,4 @@
-//! 🚧 scaffolded by W1b — text representation marker for `stdio.semio.audio.snapshot`. Full grammar-backed
-//! parse/print lands in W2/W3.
-pub const TEXT_MARKER: &str = "stdio.semio.audio.snapshot";
+//! 📝️ Text representation codec surface for `s.stdio.semio.audio` (snapshot).
+
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");

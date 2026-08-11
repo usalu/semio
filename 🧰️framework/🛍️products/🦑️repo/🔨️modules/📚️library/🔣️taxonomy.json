@@ -448,8 +448,8 @@
   ],
   "areas": {
     "✏️s/🔌️plugins": "clean",
-    "✏️s/🔨️modules": "legacy",
-    "🧰️framework": "legacy",
+    "✏️s/🔨️modules": "mixed",
+    "🧰️framework": "mixed",
     "🌎️hub": "legacy",
     "♻️mit-bestand": "legacy",
     "compose": "exempt",

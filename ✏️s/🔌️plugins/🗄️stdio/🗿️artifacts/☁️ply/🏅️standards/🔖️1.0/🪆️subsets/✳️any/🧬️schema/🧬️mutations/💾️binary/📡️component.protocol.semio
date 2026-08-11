@@ -1,3 +1,27 @@
-dialect protocol stdio.ply.mutations
-magic = %x00
-payload = *OCTET
+dialect protocol
+protocol stdio.ply.mutations
+version 1
+schema stdio.ply.op
+start op
+
+# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG3: real binary op
+# frame `protocol::OpBinary::encode_op`/`decode_op` for `PlyMutation` — upgraded this program
+# (P2-FG3) from the F6-era `print_op().into_bytes()` text-as-binary shortcut. `PlyMutation` is
+# HAND-ROLLED (not `#[derive(dsl::DslOps)]`-able — `PlyValue`/`PlySnapshot`/`PlyElement`/`PlyRow`
+# are all `DslField`-unsatisfied, see `../🦀️component.rs`'s module doc comment for the real
+# `cargo check` citation), so there is no `dsl::variants_binary`-generated frame to forward to
+# (unlike gif89a's own sibling protocol file, whose `GifMutation` DOES derive cleanly). Modeled
+# by hand instead, same shape as json's own hand-rolled `JsonMutation` frame
+# (`📖️grammar-recipe.md` §2.5): `format u8` (`store::pack_rt::OP_BINARY_FORMAT` convention) +
+# `tag u8` (the `PlyMutation` variant ordinal, same 0-9 order `print_ply_mutation`'s own match
+# uses) as two REAL fixed fields, then the variant's own payload as one opaque trailing `bytes`
+# chain — genuinely, fully structured on the Rust side (`../🦀️component.rs`'s
+# `RealBinaryOpFrame` region, reusing the sibling diff file's `pub(crate)` binary primitives),
+# opaque only at THIS protocol-description layer for the same `protocol-prim-ref-recursion`
+# reason the sibling diff protocol file documents (`PlyElement`/`PlyRow`/`PlySnapshot`/`PlyValue`
+# are all reachable from some variant's own payload).
+framing record
+header fixed 2
+field format u8
+field tag u8
+chain payload bytes

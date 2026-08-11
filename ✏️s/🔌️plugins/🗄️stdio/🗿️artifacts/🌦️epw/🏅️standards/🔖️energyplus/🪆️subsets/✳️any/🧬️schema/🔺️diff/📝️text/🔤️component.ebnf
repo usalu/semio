@@ -1,3 +1,20 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.epw.diff" ;
+(* Hand-rolled `stdio.epw.diff` wire text (see 🦀️component.rs `print_epw_diff`/`parse_epw_diff`
+   for the real, authoritative implementation). *)
+diff = token, { sp, token } ;
+token = "location=", hex
+      | "design-conditions=", hex
+      | "typical-extreme-periods=", hex
+      | "ground-temperatures=", hex
+      | "holidays-dst=", hex
+      | "comments-1=", hex
+      | "comments-2=", hex
+      | "data-periods=", hex
+      | "records{", removed, ";", modified, ";", added, "}" ;
+removed = "[", [ int, { ",", int } ], "]" ;
+modified = "[", [ modentry, { ",", modentry } ], "]" ;
+modentry = int, ":", "[", 35 * ( option, [ "," ] ), "]" ;
+added = "[", [ addentry, { ",", addentry } ], "]" ;
+addentry = int, ":", "[", 35 * ( hex, [ "," ] ), "]" ;
+option = "[0]" | "[1,", hex, "]" ;
+hex = { hexdigit, hexdigit } ;
+sp = " " ;

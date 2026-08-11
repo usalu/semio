@@ -1,10 +1,40 @@
-/** 🧬️ SemioCadDiff schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioCadDiff
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface SemioCadDiffEntry {
+/** 🔺️ SemioCadDiff schema — real facet mirror of `🦀️component.rs` (source of truth). Sparse,
+ * handcrafted, name/handle-keyed triples over `../📸️snapshot/🟦️component.ts`'s domain types. */
+import type { CadBlock, CadEntity, CadLayer, SemioPoint2 } from "../📸️snapshot/🟦️component";
+
+export interface NamedModified<D> {
   key: string;
-  value: string;
+  diff: D;
 }
+export interface NamedTripleDiff<D, T> {
+  removed: string[];
+  modified: NamedModified<D>[];
+  added: T[];
+}
+
+export interface CadLayerDiff {
+  colorIndex?: number;
+  lineType?: string;
+  visible?: boolean;
+}
+
+export interface CadEntityRecordDiff {
+  layer?: string;
+  /** whole-value replaced (weak value, never sub-diffed) */
+  entity?: CadEntity;
+}
+
+export interface CadBlockDiff {
+  basePoint?: SemioPoint2;
+  entities?: NamedTripleDiff<CadEntityRecordDiff, import("../📸️snapshot/🟦️component").CadEntityRecord>;
+}
+
+export type CadLayersDiff = NamedTripleDiff<CadLayerDiff, CadLayer>;
+export type CadBlocksDiff = NamedTripleDiff<CadBlockDiff, CadBlock>;
+export type CadEntitiesDiff = NamedTripleDiff<CadEntityRecordDiff, import("../📸️snapshot/🟦️component").CadEntityRecord>;
+
 export interface SemioCadDiff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioCadDiffEntry[];
+  layers?: CadLayersDiff;
+  blocks?: CadBlocksDiff;
+  entities?: CadEntitiesDiff;
 }

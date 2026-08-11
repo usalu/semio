@@ -1,3 +1,10 @@
 dialect protocol stdio.mp4.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.mp4.snapshot"
+; shared `.semio` binary envelope (store::semio_format::wrap_binary) wrapping the REAL
+; ISO-BMFF file bytes this artifact's engine (⚙️engine::{decode_mp4,encode_mp4}) decodes/encodes.
+envelope-magic = %x89.53.45.4D.0D.0A.1A.0A
+token-len = U32LE
+token = UTF8(18)                            ; "stdio.mp4.pack v1"
+iso-bmff-box-stream = iso-bmff-box*
+iso-bmff-box = size32:U32BE fourcc:ASCII(4) body:BYTES(size32 - 8)
+; §4.3 ftyp — see ../🥋️component.ksy for the fully typed per-box bodies (tkhd/avcC/stbl tables).
+ftyp-body = major-brand:ASCII(4) minor-version:U32BE compatible-brand:ASCII(4)*

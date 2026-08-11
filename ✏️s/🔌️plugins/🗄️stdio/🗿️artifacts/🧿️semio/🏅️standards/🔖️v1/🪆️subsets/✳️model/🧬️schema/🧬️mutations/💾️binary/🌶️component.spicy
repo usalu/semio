@@ -1,5 +1,7 @@
-module Semio_semio_model_mutations;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_semio_model_mutation;
+
+# No envelope: the binary form is exactly serde_json::to_vec of the tagged SemioModelMutation
+# enum (same grammar as the sibling text facet).
 type Document = unit {
-    magic: bytes &size=27;
+    json: bytes &eod &convert=$$.decode("utf-8");
 };

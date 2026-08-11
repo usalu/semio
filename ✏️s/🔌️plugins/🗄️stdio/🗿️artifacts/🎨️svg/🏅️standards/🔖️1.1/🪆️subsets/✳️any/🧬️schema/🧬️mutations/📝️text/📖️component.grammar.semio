@@ -1,8 +1,78 @@
-dialect grammar stdio.svg.mutations
-root = document
-document = payload
-; SvgMutation's text representation IS its JSON serialization (see the sibling
-; ../🔣️component.json for the SvgMutation JSON Schema) -- serde(rename_all = "camelCase"),
-; tag-discriminated unions via a "mutation" field. No custom textual grammar beyond JSON's own
-; (well-known, not reproduced here).
-payload = json-value
+dialect grammar
+grammar stdio.svg.mutations
+extension svg
+start document
+comment none
+
+# P2-FG3: real one-line `OpText::print_op`/`parse_op` shape ALREADY emitted by
+# `../../🦀️component.rs` (`print_svg_mutation`/`parse_svg_mutation`), replacing the F6-era
+# placeholder that described a serde-JSON `SvgMutation` wire struct the Rust codec never emits.
+# Every keyword/field-name token below is copied verbatim from the real `format!(...)` call sites.
+# `SvgMutation` has 11 variants (3 more than `📰xml`'s own 8-variant `XmlMutation`): the extra
+# `SetElementName`/`SetViewBox`/`SetTransform` are svg's own flagship mutation-vocabulary additions
+# (plan D2); `InsertElement`/`RemoveElement` address their target via a `parent=` arg (not `path=`,
+# unlike xml's own sibling grammar -- copied verbatim from the real format string).
+#
+# `hex` (bare `hex`, referenced below but deliberately NOT defined as a production in this file) is
+# the framework's built-in `hex` MACRO -- `Symbol::Ref` falls back production-name -> macro-name
+# automatically; see `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2 for why a hand-rolled
+# `{INT|IDENT}*` production is wrong here.
+document = no-mutation | set-snapshot | set-declaration | set-doctype | insert-element | remove-element | set-element-name | set-attribute | set-text | set-view-box | set-transform
+
+no-mutation = "no-mutation"
+set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
+set-declaration = "set-declaration" "declaration" "=" opt-declaration
+set-doctype = "set-doctype" "doctype" "=" opt-hex
+insert-element = "insert-element" "parent" "=" path "index" "=" INT "node" "=" xml-node
+remove-element = "remove-element" "parent" "=" path "index" "=" INT
+set-element-name = "set-element-name" "path" "=" path "name" "=" hex
+set-attribute = "set-attribute" "path" "=" path "name" "=" hex "value" "=" opt-hex
+set-text = "set-text" "path" "=" path "text" "=" hex
+set-view-box = "set-view-box" "path" "=" path "view-box" "=" opt-view-box
+set-transform = "set-transform" "path" "=" path "transform" "=" opt-transform-list
+
+# `enc_node_path`/`dec_node_path` -- `[i0,i1,...]`, a plain index chain.
+path = "[" path-item* "]"
+path-item = INT ","?
+
+# `enc_svg_snapshot`/`dec_svg_snapshot` -- `[hex(schema),opt(root),opt(doctype),opt(declaration)]`.
+snapshot-lit = "[" hex "," opt-xml-node "," opt-hex "," opt-declaration "]"
+
+# `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4).
+opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
+opt-bool = "[" "0" "]" | "[" "1" "," bool-lit "]"
+bool-lit = "0" | "1"
+opt-xml-node = "[" "0" "]" | "[" "1" "," xml-node "]"
+
+# `enc_declaration`/`dec_declaration` -- `[hex(version),opt-hex(encoding),opt-bool(standalone)]`.
+opt-declaration = "[" "0" "]" | "[" "1" "," declaration-lit "]"
+declaration-lit = "[" hex "," opt-hex "," opt-bool "]"
+
+# `enc_xml_node`/`dec_xml_node` -- restated here (svg reuses xml's `XmlNode` type directly, per
+# Phase 1's own design) so this leaf grammar is self-contained, matching the repo's existing
+# per-facet convention. Genuinely recursive: `E`'s children slot references `xml-node` (via
+# `node-item`) which references `xml-node` back.
+xml-node = "E" "[" hex "," "[" attr-item* "]" "," "[" node-item* "]" "]" | "T" "[" hex "]" | "D" "[" hex "]" | "M" "[" hex "]" | "P" "[" hex "," hex "]"
+attr-item = "[" hex "," hex "]" ","?
+node-item = xml-node ","?
+
+# `enc_view_box`/`dec_view_box` (`SetViewBox`'s typed op payload -- distinct from the DOCUMENT-level
+# `viewBox` ATTRIBUTE-value micro-grammar restated informationally in
+# ../../📸️snapshot/📝️text/📖️component.grammar.semio's own trailer; THIS shape is real, reachable
+# structure, since `enc_view_box` prints plain decimal `f64` literals via `Display`, not a
+# hex-encoded attribute string): `[min_x,min_y,width,height]`.
+opt-view-box = "[" "0" "]" | "[" "1" "," view-box-lit "]"
+view-box-lit = "[" number "," number "," number "," number "]"
+number = INT | FLOAT
+
+# `enc_transform_op`/`dec_transform_op` -- `TransformOp` is itself a data-carrying enum, tag-prefixed
+# like `xml-node`: `M[a,b,c,d,e,f]` (matrix) / `T[x,opt-number]` (translate) / `S[x,opt-number]`
+# (scale) / `R[angle,opt-center]` (rotate) / `X[angle]` (skewX) / `Y[angle]` (skewY).
+transform-op = "M" "[" number "," number "," number "," number "," number "," number "]" | "T" "[" number "," opt-number "]" | "S" "[" number "," opt-number "]" | "R" "[" number "," opt-center "]" | "X" "[" number "]" | "Y" "[" number "]"
+opt-number = "[" "0" "]" | "[" "1" "," number "]"
+opt-center = "[" "0" "]" | "[" "1" "," "[" number "," number "]" "]"
+
+# `enc_transform_list`/`dec_transform_list` (`SetTransform`'s typed op payload) -- `[op,op,...]`.
+opt-transform-list = "[" "0" "]" | "[" "1" "," transform-list "]"
+transform-list = "[" transform-item* "]"
+transform-item = transform-op ","?

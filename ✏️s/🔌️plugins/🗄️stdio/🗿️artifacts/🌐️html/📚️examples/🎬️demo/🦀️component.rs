@@ -1,5 +1,6 @@
-//! 📚️ Example demo for stdio.html. 🚧 scaffolded by W1b — a trivial hex-encoded instance,
-//! matching gif's own demo convention (a short marker, not a fully worked-out document).
+//! 📚️ Example demo for stdio.html — a small literal, well-formed HTML5 document (HTML is a
+//! text-based format, like svg/md; unlike gif's binary demo, no hex encoding is needed —
+//! `HtmlSnapshot::parse_dsl` accepts this text directly).
 
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 

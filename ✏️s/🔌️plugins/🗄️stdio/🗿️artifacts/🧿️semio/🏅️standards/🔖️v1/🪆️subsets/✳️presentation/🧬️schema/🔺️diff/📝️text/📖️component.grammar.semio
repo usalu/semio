@@ -1,5 +1,14 @@
 dialect grammar stdio.semio.presentation.diff
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.presentation.diff"
+root = line
+line = [token (SP token)*]
+token = "masters=" triple | "layouts=" triple | "slides=" triple
+; triple is the shared `[removed];[modified];[added]` shape every IndexedTripleDiff/
+; NamedTripleDiff instantiation in this subset uses (bracket-depth-aware, hex-encoded strings).
+triple = "[" csv-list "];[" kv-list "];[" csv-or-list "]"
+csv-list = [item ("," item)*]
+kv-list = [kv ("," kv)*]
+kv = key ":" value
+csv-or-list = [value ("," value)*]
+item = *OCTET
+key = *DIGIT
+value = *OCTET

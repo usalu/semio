@@ -1,3 +1,7 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.video.snapshot" ;
+(* stdio.semio.video snapshot text grammar — envelope header + hex(JSON) body; JSON payload
+   structure is the sibling 🔣️component.json, not this grammar's job to reproduce. *)
+document = header, newline, body ;
+header = "schema", " ", "stdio.semio.video" ;
+body = { hex digit, hex digit } ;
+hex digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" ;
+newline = "\n" ;

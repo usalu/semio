@@ -466,6 +466,72 @@ pub fn decode_glb(bytes: &[u8]) -> Result<GltfSnapshot, String> {
 pub fn empty_gltf_snapshot() -> GltfSnapshot {
     GltfSnapshot::default()
 }
+
+/// 🌳️ P2-FG3: a genuinely non-trivial persisted snapshot (one scene/node/mesh/accessor/material/
+/// buffer PLUS one of every WEAK collection item — bufferView/texture/image/sampler/skin/
+/// animation/camera — and populated `extensionsUsed`/`extras`) — used by this engine's own
+/// conformance-law tests AND by the shipped `.dsl.semio`/`.pack.semio` example fixtures (never a
+/// bare fake like the pre-FG3 `{"hello":"stdio.gltf","n":1}` stub, `fixture_honesty_law`'s own
+/// mandate). Mirrors `demo_json_snapshot`'s own role in json's pilot report.
+pub fn demo_gltf_snapshot() -> GltfSnapshot {
+    use crate::artifacts::gltf::schema::snapshot::{
+        GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAsset, GltfCamera,
+        GltfCameraProjection, GltfImage, GltfInterpolation, GltfMaterial, GltfNode, GltfPbrMetallicRoughness,
+        GltfPerspective, GltfSampler, GltfScene, GltfSkin, GltfTexture,
+    };
+    use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
+
+    let document = GltfDocument {
+        asset: GltfAsset { version: "2.0".into(), generator: Some("semio".into()), ..GltfAsset::default() },
+        scene: Some(0),
+        scenes: vec![GltfScene { nodes: vec![0], name: Some("root-scene".into()), ..GltfScene::default() }],
+        nodes: vec![GltfNode { mesh: Some(0), camera: Some(0), name: Some("root-node".into()), ..GltfNode::default() }],
+        meshes: vec![GltfMesh {
+            primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], indices: None, material: Some(0), mode: Some(4), extensions: None, extras: None }],
+            ..GltfMesh::default()
+        }],
+        accessors: vec![GltfAccessor {
+            buffer_view: Some(0), byte_offset: 0, component_type: GltfComponentType::Float, normalized: false, count: 3,
+            kind: GltfAccessorType::Vec3, max: Some(vec![1.0, 1.0, 1.0]), min: Some(vec![0.0, 0.0, 0.0]), sparse: None,
+            name: Some("positions".into()), extensions: None, extras: None,
+        }],
+        buffer_views: vec![GltfBufferView { buffer: 0, byte_offset: 0, byte_length: 36, byte_stride: None, target: Some(34962), name: None, extensions: None, extras: None }],
+        // A real `data:` URI (not `None`) -- `None` would round-trip LOSSY through the TEXT
+        // facet specifically (`serialize_gltf_document` embeds any uri-less buffer as a data URI
+        // on print, so re-parsing would fabricate a `Some(..)` that never matches this demo's own
+        // `None`, a real asymmetry discovered by `fixture_honesty_law` -- setting a genuine data
+        // URI up front keeps BOTH the text (`parse_gltf_document`) and GLB (`decode_glb`, which
+        // never embeds when a buffer already declares a `uri`) facets byte-for-byte lossless.
+        buffers: vec![GltfBuffer { byte_length: 36, uri: Some(encode_data_uri("application/octet-stream", &[0u8; 36])), name: Some("geometry".into()), extensions: None, extras: None }],
+        materials: vec![GltfMaterial {
+            name: Some("triangle-material".into()),
+            pbr_metallic_roughness: Some(GltfPbrMetallicRoughness { base_color_factor: [1.0, 0.0, 0.0, 1.0], metallic_factor: 0.0, roughness_factor: 0.8, ..GltfPbrMetallicRoughness::default() }),
+            ..GltfMaterial::default()
+        }],
+        textures: vec![GltfTexture { sampler: Some(0), source: Some(0), name: None, extensions: None, extras: None }],
+        images: vec![GltfImage { uri: Some("texture.png".into()), ..GltfImage::default() }],
+        samplers: vec![GltfSampler::default()],
+        skins: vec![GltfSkin { joints: vec![0], name: Some("root-skin".into()), ..GltfSkin::default() }],
+        animations: vec![GltfAnimation {
+            channels: vec![GltfAnimationChannel { sampler: 0, target: GltfAnimationChannelTarget { node: Some(0), path: GltfAnimationPath::Translation, extensions: None, extras: None }, extensions: None, extras: None }],
+            samplers: vec![crate::artifacts::gltf::schema::snapshot::GltfAnimationSampler { input: 0, interpolation: GltfInterpolation::Linear, output: 0, extensions: None, extras: None }],
+            name: Some("spin".into()),
+            extensions: None,
+            extras: None,
+        }],
+        cameras: vec![GltfCamera {
+            projection: GltfCameraProjection::Perspective(GltfPerspective { aspect_ratio: Some(1.777), yfov: 0.8, zfar: Some(100.0), znear: 0.1, extensions: None, extras: None }),
+            name: Some("main-camera".into()),
+            extensions: None,
+            extras: None,
+        }],
+        extensions_used: vec!["KHR_materials_unlit".into()],
+        extensions_required: Vec::new(),
+        extensions: None,
+        extras: Some(GltfJson::Object(vec![("generator-note".into(), GltfJson::String("fg3 demo fixture".into()))])),
+    };
+    GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: vec![vec![0u8; 36]], source_form: GltfSourceForm::Json }
+}
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Register
@@ -477,7 +543,12 @@ pub fn register() {
     store::register_document_codec(store::ArtifactCodec::of::<GltfSnapshot, GltfMutation>(STDIO_GLTF_DOCUMENT_SCHEMA));
 }
 
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) — the 5-role
+/// `LanguageSpec` scheme (`p2-w0-recon-report.md`/json's own `register_pilot_languages`
+/// exemplar): `stdio.gltf` (Document), `stdio.gltf.op` (Ops), `stdio.gltf.diff` (Diff,
+/// `protocol: None` — the 5-role scheme has no dedicated "diff binary" role even though a real
+/// diff protocol file now exists), `stdio.gltf.pack` (Pack, reuses the snapshot's own real `.glb`
+/// grammar+protocol pair), `stdio.gltf.spr` (Spr, reuses the mutations' own real op protocol).
 pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.gltf",
@@ -488,6 +559,46 @@ pub fn register_pilot_languages() {
         protocol: Some(crate::artifacts::gltf::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::gltf::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.gltf"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.gltf.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::gltf::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::gltf::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::gltf::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::gltf::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.gltf.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.gltf.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::gltf::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::gltf::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("stdio.gltf.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.gltf.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::gltf::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::gltf::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.gltf.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.gltf.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::gltf::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::gltf::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.gltf.spr"),
     });
 }
 
@@ -530,9 +641,17 @@ mod tests {
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <GltfSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed.schema, snap.schema);
+        // P2-FG3: `ArtifactPack::encode_pack`/`decode_pack` now route through the REAL `.glb`
+        // binary container (`encode_glb`/`decode_glb`), not the prior JSON-as-"binary" shortcut —
+        // decoding real GLB bytes always reports `source_form: Glb` (the byte form genuinely IS a
+        // glb container now), which is the one field expected to legitimately differ from `snap`'s
+        // own `Json` provenance; document/buffers/schema stay byte-for-byte lossless.
         let bytes = store::ArtifactPack::encode_pack(&snap);
         let decoded = <GltfSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
-        assert_eq!(decoded, snap);
+        assert_eq!(decoded.schema, snap.schema);
+        assert_eq!(decoded.document, snap.document);
+        assert_eq!(decoded.buffers, snap.buffers);
+        assert_eq!(decoded.source_form, GltfSourceForm::Glb);
     }
 
     //#region 🔖️Base64Tests
@@ -784,5 +903,138 @@ mod tests {
         assert_eq!(reparsed.buffers[0], bytes);
     }
     //#endregion 🔖️DualCodecTests
+
+    //#region 🔖️ConformanceLaws
+    /// 🧪️ P2-FG3: per-artifact conformance laws (recipe §4's deliverable list, item 6) — grammar/
+    /// protocol parseability, `Recognizer` against real fixtures AND real `print_op`/`print_diff`
+    /// output, `walk_protocol` against real `encode_pack`/`encode_op`/`encode_diff` bytes, and the
+    /// fixture-honesty round-trip. Lives here (the engine's own test region), not any framework
+    /// file — `m5` auto-discovers the snapshot grammar+`.dsl.semio`/protocol+`.pack.semio` pairs
+    /// independently (`🧪️fixture-sweep/🦀️component.rs`'s `m5_auto_discovery`); these tests are this
+    /// artifact's OWN early-warning, plus direct coverage of the mutations/diff facets that harness
+    /// does not auto-discover at all. Copies json's own `conformance_laws` module shape verbatim
+    /// (`🔣️json/🏅️standards/🔖️rfc8259/⚙️engine/🦀️component.rs`), per the recipe's own instruction.
+    mod conformance_laws {
+        use super::*;
+        use crate::artifacts::gltf::schema::{diff, mutations, snapshot};
+        use protocol::{DiffCodec, OpBinary, OpText};
+
+        /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
+        /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
+        /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
+        #[test]
+        fn committed_facet_files_parse() {
+            for (label, text) in [
+                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
+            ] {
+                let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+                assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+            }
+            for (label, text) in [
+                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
+            ] {
+                dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+            }
+        }
+
+        /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output for
+        /// the demo (genuinely non-trivial) snapshot — same preamble-stripped body reconstruction
+        /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses, so this is a
+        /// direct proof this artifact will pass that harness once graduated, not merely an analogue.
+        #[test]
+        fn grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            let text = store::ArtifactDsl::print_dsl(&demo_gltf_snapshot());
+            let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
+            let reconstructed = format!("{}\n{body}", envelope.envelope_id());
+            assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+        }
+
+        /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
+        /// for every `GltfMutation` variant (`mutations::demo_mutation_cases()`).
+        #[test]
+        fn ops_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for mutation in mutations::demo_mutation_cases() {
+                let printed = mutation.print_op();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
+            }
+        }
+
+        /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
+        /// for every representative `GltfDiff` (`diff::demo_diff_cases()`), incl. the empty
+        /// (all-`None`) diff and the fully-populated rich diff.
+        #[test]
+        fn diff_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for d in diff::demo_diff_cases() {
+                let printed = d.print_diff();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
+            }
+        }
+
+        /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
+        /// snapshot pack (`encode_pack`, envelope-unwrapped first, matching how
+        /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo mutation's
+        /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
+        #[test]
+        fn protocol_walk_law() {
+            let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+            let packed = store::ArtifactPack::encode_pack(&demo_gltf_snapshot());
+            let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
+            let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+            assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
+
+            let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+            for mutation in mutations::demo_mutation_cases() {
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
+            }
+
+            let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+            for d in diff::demo_diff_cases() {
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
+            }
+        }
+
+        /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
+        /// `print_dsl`/`encode_pack` output of `demo_gltf_snapshot()` — `parse_dsl(fixture) ==
+        /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
+        /// fixtures can never silently drift back to a fake (the pre-FG3 `{"hello":"stdio.gltf",
+        /// "n":1}` stub this program's own recipe explicitly calls out as the wrong shape).
+        #[test]
+        fn fixture_honesty_law() {
+            const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+
+            let demo = demo_gltf_snapshot();
+
+            let parsed = <GltfSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_gltf_snapshot()");
+            assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_gltf_snapshot()) drifted from the shipped .dsl.semio fixture");
+
+            // P2-FG3: `decode_pack` routes through the real `.glb` container (`decode_glb`),
+            // which always reports `source_form: Glb` (the byte form genuinely IS a glb container
+            // now) — the one field expected to legitimately differ from `demo`'s own `Json`
+            // provenance, same treatment `codec_round_trip` (⚙️engine's own `mod tests`) gives.
+            let decoded = <GltfSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            assert_eq!(decoded.schema, demo.schema, "shipped .pack.semio fixture does not decode back to demo_gltf_snapshot()'s schema");
+            assert_eq!(decoded.document, demo.document, "shipped .pack.semio fixture does not decode back to demo_gltf_snapshot()'s document");
+            assert_eq!(decoded.buffers, demo.buffers, "shipped .pack.semio fixture does not decode back to demo_gltf_snapshot()'s buffers");
+            assert_eq!(decoded.source_form, GltfSourceForm::Glb, "decode_pack must report source_form: Glb");
+            assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_gltf_snapshot()) drifted from the shipped .pack.semio fixture");
+        }
+    }
+    //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests

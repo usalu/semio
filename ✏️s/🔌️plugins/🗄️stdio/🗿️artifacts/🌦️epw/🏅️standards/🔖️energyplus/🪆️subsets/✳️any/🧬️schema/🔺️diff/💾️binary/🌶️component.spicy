@@ -1,5 +1,7 @@
-module Semio_epw_diff;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_epw_diff;
+
+# Raw UTF-8 bytes of the hand-rolled stdio.epw.diff text. Not wrapped in the shared
+# `.semio` binary envelope.
 type Document = unit {
-    magic: bytes &size=14;
+    payload: bytes &eod;
 };

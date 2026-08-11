@@ -1,3 +1,7 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.brep.mutations" ;
+(* Real hand-rolled `SemioBrepMutation` op text grammar (protocol::OpText) -- one line of
+   compact RFC8259 JSON, tag field "mutation" discriminating the 23 variants; see
+   ../🔣️component.json for the variant/field enumeration. *)
+op line = json value ;
+json value = json object ;
+json object = "{", [ json member, { ",", json member } ], "}" ;
+json member = json string, ":", json value ;

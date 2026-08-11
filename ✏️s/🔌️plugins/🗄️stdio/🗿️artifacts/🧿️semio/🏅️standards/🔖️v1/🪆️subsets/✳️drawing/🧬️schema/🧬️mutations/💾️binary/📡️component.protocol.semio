@@ -1,3 +1,5 @@
-dialect protocol stdio.semio.drawing.mutations
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.drawing.mutations"
+dialect protocol stdio.semio.drawing.mutation
+; serde_json::to_vec, no separate envelope -- bytes ARE UTF-8 mutation-tagged JSON, see
+; ../📝️text/📖️component.grammar.semio
+json_bytes = *OCTET
+

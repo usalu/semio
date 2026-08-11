@@ -1,10 +1,32 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.model/mutations.json",
+  "$id": "https://semio.tech/schema/s.stdio.semio.model/mutation.json",
   "title": "SemioModelMutation",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Named-variant mutation vocabulary, discriminated on the mutation field.",
   "type": "object",
+  "required": ["mutation"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "mutation": {
+      "enum": [
+        "noMutation", "setSnapshot",
+        "insertSpatialNode", "removeSpatialNode", "setSpatialNode",
+        "insertElement", "removeElement", "setElement",
+        "insertRelation", "removeRelation", "setRelation"
+      ]
+    },
+    "snapshot": { "type": "object" },
+    "node": { "type": "object" },
+    "element": { "type": "object" },
+    "relation": { "type": "object" },
+    "id": { "type": "string" },
+    "kind": {},
+    "name": { "type": "string" },
+    "parentId": { "type": ["string", "null"] },
+    "placement": { "type": "object" },
+    "class": { "type": "object" },
+    "geometry": { "type": "object" },
+    "spatialId": { "type": ["string", "null"] },
+    "psets": { "type": "array" },
+    "from": { "type": "string" },
+    "to": { "type": "string" }
   }
 }

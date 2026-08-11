@@ -1,9 +1,13 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Mp4SnapshotEntry {
-  key: String!
-  value: String!
-}
+type Mp4Ftyp { majorBrand: String! minorVersion: Int! compatibleBrands: [String!]! }
+union Mp4Codec = Mp4CodecAvc | Mp4CodecOther
+type Mp4CodecAvc { sps: [[Int!]!]! pps: [[Int!]!]! nalLengthSize: Int! }
+type Mp4CodecOther { fourcc: String! raw: [Int!]! }
+type Mp4Sample { data: [Int!]! duration: Int! ctsOffset: Int! sync: Boolean! }
+type Mp4Track { trackId: Int! timescale: Int! codec: Mp4Codec! width: Int! height: Int! samples: [Mp4Sample!]! }
+type Mp4Box { fourcc: String! data: [Int!]! }
 type Mp4Snapshot {
   schema: String! @state(class: PERSISTENT)
-  entries: [Mp4SnapshotEntry!]! @state(class: PERSISTENT)
+  ftyp: Mp4Ftyp! @state(class: PERSISTENT)
+  tracks: [Mp4Track!]! @state(class: PERSISTENT)
+  unknownBoxes: [Mp4Box!]! @state(class: PERSISTENT)
 }

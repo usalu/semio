@@ -1,8 +1,11 @@
 meta:
-  id: semio_image_mutations
-  endian: le
+  id: semio_image_mutation_binary
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  Real binary layout for `SemioImageMutation::encode_op`/`decode_op` — a documented
+  simplification (matching gif's own hand-rolled op codec): `encode_op` is the 📝️text
+  sibling's `op` grammar UTF-8 bytes, verbatim, with no separate binary framing.
 seq:
-  - id: magic
-    contents: "stdio.semio.image.mutations"
+  - id: op_utf8
+    type: str
+    size: _io.size - _io.pos
+    encoding: UTF-8

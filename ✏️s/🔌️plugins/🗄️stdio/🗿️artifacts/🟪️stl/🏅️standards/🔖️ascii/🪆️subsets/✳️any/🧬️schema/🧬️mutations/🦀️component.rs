@@ -218,18 +218,139 @@ impl protocol::OpText for StlMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim (same simplification `StlDiff`'s hand-rolled `DiffCodec`
-/// uses — see its doc comment).
-impl protocol::OpBinary for StlMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(print_stl_op(self).into_bytes())
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        parse_stl_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+//#region 🔖️OpBinaryCodec
+/// 🧪️ P2-FG1-FIX: real recursive binary twin of [`enc_snapshot`]/[`dec_snapshot`] above —
+/// `StlSnapshot` is genuinely flat (`Vec<StlTriangle>`, no self-recursion), so this is real
+/// varint-framed binary all the way down, reusing `diff`'s `pub(crate)` binary value codecs
+/// (`enc_triangle_bin`/`dec_triangle_bin`) rather than duplicating them — same intra-artifact
+/// reuse pattern this file's own text `enc_snapshot` already establishes over `diff::enc_triangle`.
+fn enc_snapshot_bin(s: &StlSnapshot, out: &mut Vec<u8>) {
+    diff::write_str_bin(out, &s.schema);
+    diff::write_str_bin(out, &s.solid_name);
+    store::pack_rt::write_varint_u64(out, s.triangles.len() as u64);
+    for t in &s.triangles {
+        diff::enc_triangle_bin(t, out);
     }
 }
+fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StlSnapshot, String> {
+    let schema = diff::read_str_bin(reader)?;
+    let solid_name = diff::read_str_bin(reader)?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut triangles = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        triangles.push(diff::dec_triangle_bin(reader)?);
+    }
+    Ok(StlSnapshot { schema, solid_name, triangles })
+}
+
+/// 🧪️ P2-FG1-FIX: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// upgraded from the prior `print_stl_op(self).into_bytes()` text-as-binary shortcut. `tag` is
+/// the `StlMutation` variant's declaration-order ordinal (0=`NoMutation` .. 6=
+/// `SetTriangleVertices`, same order `enum StlMutation` declares them). Every variant's payload is
+/// real field-by-field binary (`write_varint_u64` for `index: usize`, `write_f64_bin`/
+/// `enc_vec3_bin`/`enc_vertices_bin`/`enc_triangle_bin`/`enc_snapshot_bin` for the rest) — `
+/// StlMutation`'s payload tree has ZERO self-recursion, so nothing here is opaque at the Rust
+/// layer; only the protocol-dialect file still frames the payload as one opaque trailing chain
+/// (`SetSnapshot`'s `Vec<StlTriangle>` is a variable-length vector-of-records, the same
+/// `protocol-array-of-records` `walk_protocol` gap the sibling diff protocol file documents).
+impl protocol::OpBinary for StlMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, 0u8];
+        let tag: u8 = match self {
+            StlMutation::NoMutation => 0,
+            StlMutation::SetSnapshot { snapshot } => { enc_snapshot_bin(snapshot, &mut out); 1 }
+            StlMutation::SetSolidName { name } => { diff::write_str_bin(&mut out, name); 2 }
+            StlMutation::InsertTriangle { index, triangle } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                diff::enc_triangle_bin(triangle, &mut out);
+                3
+            }
+            StlMutation::RemoveTriangle { index } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                4
+            }
+            StlMutation::SetTriangleNormal { index, normal } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                diff::enc_vec3_bin(normal, &mut out);
+                5
+            }
+            StlMutation::SetTriangleVertices { index, vertices } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                diff::enc_vertices_bin(vertices, &mut out);
+                6
+            }
+        };
+        out[1] = tag;
+        Ok(out)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
+        let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
+        let tag = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: e.to_string() })?;
+        match tag {
+            0 => Ok(StlMutation::NoMutation),
+            1 => {
+                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op snapshot", offset: reader.position() as u64, detail: e })?;
+                Ok(StlMutation::SetSnapshot { snapshot })
+            }
+            2 => {
+                let name = diff::read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op name", offset: reader.position() as u64, detail: e })?;
+                Ok(StlMutation::SetSolidName { name })
+            }
+            3 => {
+                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
+                let triangle = diff::dec_triangle_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op triangle", offset: reader.position() as u64, detail: e })?;
+                Ok(StlMutation::InsertTriangle { index, triangle })
+            }
+            4 => {
+                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
+                Ok(StlMutation::RemoveTriangle { index })
+            }
+            5 => {
+                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
+                let normal = diff::dec_vec3_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op normal", offset: reader.position() as u64, detail: e })?;
+                Ok(StlMutation::SetTriangleNormal { index, normal })
+            }
+            6 => {
+                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
+                let vertices = diff::dec_vertices_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op vertices", offset: reader.position() as u64, detail: e })?;
+                Ok(StlMutation::SetTriangleVertices { index, vertices })
+            }
+            other => Err(protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("unknown tag {other}") }),
+        }
+    }
+}
+//#endregion 🔖️OpBinaryCodec
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🎯 FG1: one representative case per `StlMutation` variant, incl. the two struct-valued payloads
+/// (`SetSnapshot`, `InsertTriangle`) and the fixed-size-array payloads (`SetTriangleNormal`,
+/// `SetTriangleVertices`) that carry the doubly-nested `[[f64; 3]; 3]` — shared by
+/// `op_text_binary_roundtrip_law` below AND `⚙️engine::conformance_laws`'s `ops_grammar_
+/// conformance_law`/`protocol_walk_law` (same reuse pattern `binary`'s own `demo_mutation_cases`
+/// establishes).
+pub(crate) fn demo_mutation_cases() -> Vec<StlMutation> {
+    let base = StlSnapshot {
+        schema: crate::artifacts::stl::STDIO_STL_DOCUMENT_SCHEMA.into(),
+        solid_name: "mesh".into(),
+        triangles: vec![StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] }],
+    };
+    vec![
+        StlMutation::NoMutation,
+        StlMutation::SetSnapshot { snapshot: StlSnapshot { solid_name: "renamed".into(), ..base } },
+        StlMutation::SetSolidName { name: "renamed".into() },
+        StlMutation::InsertTriangle {
+            index: 1,
+            triangle: StlTriangle { normal: [1.0, 0.0, 0.0], vertices: [[99.0, 0.0, 0.0], [100.0, 0.0, 0.0], [99.0, 1.0, 0.0]] },
+        },
+        StlMutation::RemoveTriangle { index: 1 },
+        StlMutation::SetTriangleNormal { index: 0, normal: [1.0, 0.0, 0.0] },
+        StlMutation::SetTriangleVertices { index: 0, vertices: [[9.0, 9.0, 9.0], [8.0, 8.0, 8.0], [7.0, 7.0, 7.0]] },
+    ]
+}
+//#endregion 🔖️DemoCases
 
 //#region Tests
 #[cfg(test)]
@@ -551,16 +672,10 @@ mod tests {
     /// blocks.
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = base_snapshot();
-        for mutation in [
-            StlMutation::NoMutation,
-            StlMutation::SetSnapshot { snapshot: StlSnapshot { solid_name: "renamed".into(), ..base.clone() } },
-            StlMutation::SetSolidName { name: "renamed".into() },
-            StlMutation::InsertTriangle { index: 1, triangle: tri(1.0, 0.0, 0.0, 99.0) },
-            StlMutation::RemoveTriangle { index: 1 },
-            StlMutation::SetTriangleNormal { index: 0, normal: [1.0, 0.0, 0.0] },
-            StlMutation::SetTriangleVertices { index: 0, vertices: [[9.0, 9.0, 9.0], [8.0, 8.0, 8.0], [7.0, 7.0, 7.0]] },
-        ] {
+        // FG1: reuses `demo_mutation_cases()` (this file's own `DemoCases` region, above), the
+        // single source of truth also exercised by `⚙️engine::conformance_laws`'s `ops_grammar_
+        // conformance_law`/`protocol_walk_law` — same reuse pattern `binary`'s own pilot precedent.
+        for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = StlMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
@@ -578,14 +693,10 @@ mod tests {
     /// real `between()` results in both directions.
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {
-        let a = sweep_a();
-        let b = sweep_b();
-        let cases = vec![
-            StlDiff::default(),
-            <StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &b),
-            <StlDiff as DiffAlgebra<StlSnapshot>>::between(&b, &a),
-        ];
-        for d in cases {
+        // FG1: reuses `diff::demo_diff_cases()` (this artifact's `🔺️diff::component`'s own
+        // `DemoCases` region), the single source of truth also exercised by `⚙️engine::
+        // conformance_laws`'s `diff_grammar_conformance_law`/`protocol_walk_law`.
+        for d in diff::demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
             let parsed = StlDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));

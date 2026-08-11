@@ -1,10 +1,16 @@
-/** 🧬️ Semio_avi_mutations schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_avi_mutations
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_avi_mutationsEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_avi_mutations {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_avi_mutationsEntry[];
-}
+// stdio.avi mutations 💾️binary facet — same shape as ../🟦️component.ts.
+/** 🧬️ AviMutation — named-variant vocabulary. Mirrors 🦀️component.rs field-for-field. */
+export type AviMutation =
+  | { mutation: "noMutation" }
+  | { mutation: "setSnapshot"; snapshot: import("../📸️snapshot/🟦️component").AviSnapshot }
+  | { mutation: "setMainHeader"; mainHeader: import("../📸️snapshot/🟦️component").AviMainHeader }
+  | { mutation: "setIdx1Present"; idx1Present: boolean }
+  | { mutation: "insertStream"; index: number; stream: import("../📸️snapshot/🟦️component").AviStream }
+  | { mutation: "removeStream"; index: number }
+  | { mutation: "setStreamHeader"; streamIndex: number; strh: import("../📸️snapshot/🟦️component").AviStreamHeader }
+  | { mutation: "setStreamFormat"; streamIndex: number; strf: import("../📸️snapshot/🟦️component").AviStreamFormat }
+  | { mutation: "insertChunk"; streamIndex: number; index: number; chunk: import("../📸️snapshot/🟦️component").AviChunk }
+  | { mutation: "removeChunk"; streamIndex: number; index: number }
+  | { mutation: "setChunkKeyframe"; streamIndex: number; index: number; keyframe: boolean }
+  | { mutation: "addUnknownChunk"; index: number; item: import("../📸️snapshot/🟦️component").RiffChunk }
+  | { mutation: "removeUnknownChunk"; index: number };

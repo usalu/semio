@@ -1,3 +1,5 @@
 dialect protocol stdio.semio.video.mutations
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.video.mutations"
+; encode_op is the UTF-8 bytes of print_op verbatim (protocol::OpBinary's own documented
+; simplification, matching DocxMutation's own hand-rolled codec) — no separate binary layout. See
+; the sibling 📝️text/📖️component.grammar.semio for the normative text grammar these bytes decode as.
+body = UTF8-OCTET *

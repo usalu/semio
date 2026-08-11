@@ -1,0 +1,15 @@
+
+warning: `semio-framework-os-kernel` (lib test) generated 147 warnings (run `cargo fix --lib -p semio-framework-os-kernel --tests` to apply 115 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 0.76s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_framework_os_kernel-8dd276505ca0f69c)
+
+running 6 tests
+test os_dsl::registry::tests::full_resolver_resolves_the_diff_schema_id_separately_from_its_document_id ... ok
+test os_dsl::registry::tests::full_resolver_from_map_bypasses_the_global_registry ... ok
+test os_dsl::registry::tests::full_resolver_resolves_a_registered_schema_and_none_for_an_unregistered_one ... ok
+test os_dsl::component::tests::dsl_idiom_registry_resolves_by_lang_and_canonicalizes_through_the_hooks ... ok
+test os_dsl::component::tests::language_registry_resolves_by_id_and_semio_content ... ok
+test os_pack::cli::tests::cli_to_dsl_and_from_dsl_round_trip_via_registry ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 757 filtered out; finished in 0.04s
+

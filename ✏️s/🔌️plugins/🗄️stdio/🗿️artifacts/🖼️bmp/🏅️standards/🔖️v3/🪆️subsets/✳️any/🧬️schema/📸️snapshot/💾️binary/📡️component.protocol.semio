@@ -1,32 +1,103 @@
-dialect protocol stdio.bmp.snapshot
-; shared `.semio` binary envelope (store::semio_format::wrap_binary)
-magic = %x89.53.45.4D.0D.0A.1A.0A
-token-len = U32LE
-token = *OCTET                       ; UTF-8 "stdio.bmp.pack v1", token-len bytes
-payload = bmp-file                   ; the real on-disk BMP bytes
+dialect protocol
+protocol stdio.bmp.snapshot
+version 1
+schema stdio.bmp
+start bmp-file
 
-; --- real BMP byte layout (see ../📝️text/📖️component.grammar.semio for the wire-text hex
-; encoding of these SAME bytes, and ../../💾️binary/🔠️component.abnf for the field-by-field
-; ABNF this mirrors) ---
-bmp-file = file-header info-header [bitfield-masks] [palette] pixel-data
-file-header = %x42.4D file-size reserved1 reserved2 data-offset   ; "BM" + ...
-file-size = U32LE
-reserved1 = U16LE
-reserved2 = U16LE
-data-offset = U32LE
-info-header = header-size width height planes bits-per-pixel compression image-size
-              x-ppm y-ppm colors-used colors-important
-header-size = U32LE          ; >= 40 (only the 40-byte core is decoded field-by-field)
-width = I32LE
-height = I32LE               ; sign selects row order
-planes = U16LE
-bits-per-pixel = U16LE
-compression = U32LE          ; 0 = BI_RGB, 3 = BI_BITFIELDS
-image-size = U32LE
-x-ppm = I32LE
-y-ppm = I32LE
-colors-used = U32LE
-colors-important = U32LE
-bitfield-masks = 3*4( U32LE )                    ; present only when compression = BI_BITFIELDS
-palette = *( OCTET OCTET OCTET OCTET )           ; b,g,r,reserved entries; present only when bits-per-pixel <= 8
-pixel-data = *OCTET                              ; padded rows, order per height's sign
+# P2-FG2: real M2 protocol dialect, replacing the pre-M2 ABNF-styled placeholder this file used
+# to hold. Per M3's own guidance (`p2-m3-report.md` §5 point 4 / this ticket's own recipe §2.1):
+# "model it as if the bytes you're walking already start at the payload" -- the SEMIO binary
+# envelope (`store::semio_format::wrap_binary`/`unwrap_binary`) is described ONCE, framework-side
+# (`semio.envelope`), and is stripped BEFORE `walk_protocol` ever sees these bytes (confirmed by
+# reading `m5_handcrafted_protocol_conformance::inner_payload_from_semio_example`, which
+# `unwrap_binary`s the real `.pack.semio` fixture first) -- this file does NOT re-describe it.
+#
+# What remains is the REAL on-disk BMP byte stream `engine::decode_bmp`/`encode_bmp`
+# (../../../⚙️engine/🦀️component.rs) read/write field-by-field: BITMAPFILEHEADER (14 bytes) +
+# the 40-byte BITMAPINFOHEADER core (11 real fields, header_size>=40 is honestly modeled, but
+# only the CLASSIC 40-byte core is field-by-field -- the same documented scope cut
+# `decode_bmp`/`encode_bmp` themselves make for V2-V5 extended headers, header_size>40) +
+# conditional BI_BITFIELDS masks + conditional palette + trailing pixel data.
+#
+# `framing magic` cannot honestly represent BMP's real signature: `Framing::Magic` always reads
+# and compares exactly 8 bytes (`magic_bytes`/`walk_protocol`'s `Framing::Magic` arm,
+# 📖️grammar/🦀️component.rs), but BMP's real on-disk magic is only 2 bytes ("BM",
+# `engine::BMP_MAGIC`) immediately followed by a real, non-zero `file_size` field -- there is no
+# way to zero-pad "BM" out to 8 bytes and have it match real file bytes 2..8 (unlike PNG, whose
+# OWN 8-byte signature happens to fill the primitive exactly). This is a genuine dialect gap
+# (recorded as `mechanism_gaps` id `protocol-magic-shorter-than-8-bytes` in this wave's own
+# report) shared by every OTHER short-magic binary-native format in this same wave (gif87a/89a's
+# 6-byte "GIF87a"/"GIF89a", jpg's 2-byte 0xFFD8, tiff's 2-byte "II"/"MM"). Honest workaround used
+# here, matching `binary`/raw's own "no structure to assert" precedent: `framing record`, and
+# model the 2 magic bytes as a genuine, individually-walked (but content-UNVALIDATED by this
+# dialect) `fixed 2` field -- deep content validation (`bytes[0..2] == b"BM"`) stays Rust-side,
+# same division of labor the dialect already gives every checksum/CRC (structurally irreducible
+# at the protocol-description layer, not silently skipped).
+framing record
+
+header fixed 14
+field bmp_magic fixed 2
+field file_size u32
+field reserved1 u16
+field reserved2 u16
+field data_offset u32
+
+# The 40-byte BITMAPINFOHEADER core, unconditional (always present per `decode_bmp`'s own
+# `header_size < 40` rejection) -- every field individually, honestly walked, in real on-disk
+# order (`decode_bmp` offsets 14+0..14+40).
+segment info_header {
+  header_size u32
+  width i32
+  height i32
+  planes u16
+  bits_per_pixel u16
+  compression u32
+  image_size u32
+  x_pixels_per_meter i32
+  y_pixels_per_meter i32
+  colors_used u32
+  colors_important u32
+}
+
+# BI_BITFIELDS (`compression == 3`) 16/32bpp channel masks -- M2's conditional-presence
+# construct, gated on `compression` (decoded by the earlier `info_header` segment, resolved via
+# M2's cross-block field-env threading). Models the classic Win9x 3-DWORD-mask extension
+# (`decode_bmp`'s `header_size == 40` branch) only -- the OPTIONAL 4th (alpha) mask is gated in
+# the real codec by a POSITION comparison (`cursor + 4 <= data_offset`), which this dialect's
+# `Cond` cannot express (`Cond` compares one earlier field against a fixed constant, never two
+# runtime values against each other) -- recorded as `mechanism_gaps` id
+# `protocol-cond-field-vs-field` below; the real committed `.pack.semio` fixture never exercises
+# BI_BITFIELDS (encode_bmp is scope-cut to 24-bit BI_RGB only, see `EncodeScopeNote`) so this
+# never blocks `protocol_walk_law`. The BITMAPV2/V3/V4/V5INFOHEADER in-header mask placement
+# (`header_size >= 56`) is the SAME documented "only the 40-byte core is field-by-field" scope
+# cut as `decode_bmp` itself makes.
+segment bitfield_masks if compression eq 3 {
+  mask_r u32
+  mask_g u32
+  mask_b u32
+}
+
+# Color palette, present only when `bits_per_pixel <= 8` (M2 conditional-presence segment) --
+# a real count-from-field repeated structure (M2 cross-block field-env threading), not opaque:
+# `colors_used` entries, each a real 4-byte (b,g,r,reserved) span. `decode_bmp`'s own real count
+# formula additionally falls back to `1 << bits_per_pixel` when `colors_used == 0` (the common
+# "full default palette" case) -- `Count::Field` only resolves a DIRECT field value, with no
+# conditional-default arithmetic, so that fallback is not expressible here (`mechanism_gaps` id
+# `protocol-count-field-no-default`); the real committed fixture is 24bpp (no palette at all,
+# segment absent) so this never blocks `protocol_walk_law` either. Each entry stays one opaque
+# 4-byte span (b/g/r/reserved not broken into named sub-fields) since `Array`'s own inner `Prim`
+# is a single scalar/fixed type, never a multi-field record (`protocol-array-of-records`, this
+# ticket's own recipe §5).
+segment palette if bits_per_pixel le 8 {
+  entries Array(Fixed(4), Field(colors_used))
+}
+
+# Pixel data: row-padded-to-4-byte-boundary DIB rows (`row_bytes = ((width*bpp+31)/32)*4`),
+# bottom-up by default (top-down when `height` was negative -- BOTH already captured, honestly,
+# by `row_order`'s real sign read above; the physical row DIRECTION and the per-row PADDING
+# stride are real, Rust-side facts this dialect has no computed-arithmetic primitive to restate
+# -- `Count`/`Array` only take a literal/varint/direct-field count, never a formula over two
+# fields -- so, per this ticket's own brief, the payload stays one opaque trailing byte run; the
+# stride formula is documented here rather than silently omitted). Always the LAST block, so it
+# can honestly consume "rest of buffer" with no length prefix.
+chain pixel_data bytes

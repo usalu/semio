@@ -1,3 +1,7 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.presentation.snapshot" ;
+(* SemioPresentationSnapshot text envelope. *)
+document = header , body ;
+header   = "schema" , " " , "stdio.semio.presentation.snapshot" , newline ;
+body     = payload , [ newline ] ;
+payload  = { hexdigit } ;
+hexdigit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" ;
+newline  = "\n" ;

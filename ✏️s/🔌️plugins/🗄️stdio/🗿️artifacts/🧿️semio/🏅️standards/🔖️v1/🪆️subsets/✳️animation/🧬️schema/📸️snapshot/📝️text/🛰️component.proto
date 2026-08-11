@@ -1,7 +1,7 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_semio_animation_snapshot.text;
-message Semio_semio_animation_snapshot {
-  string schema = 1;
-  string entries_wire = 2;
-}
+package semio.stdio_semio_animation.snapshot_text;
+message Timeline { optional string name = 1; repeated Channel channels = 2; }
+message Channel { Target target = 1; Interpolation interpolation = 2; repeated Keyframe keyframes = 3; }
+message Target { string node = 1; string property = 2; }
+enum Interpolation { LINEAR = 0; STEP = 1; CUBIC_SPLINE = 2; }
+message Keyframe { double t = 1; bytes value = 2; }

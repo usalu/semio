@@ -493,14 +493,79 @@ pub fn diff_set_snapshot(base: &BmpSnapshot, next: &BmpSnapshot) -> BmpDiff {
 }
 //#endregion 🔖️Diff
 
+//#region 🔖️DemoDiffCases
+/// 🧬️ Module-level (not nested in `mod tests`, mirroring `stdio.png`'s own
+/// `demo_snap_a`/`demo_diff_cases` placement) so `⚙️engine/🦀️component.rs`'s
+/// `conformance_laws` module can reach these too.
+#[cfg(test)]
+fn entry(b: u8, g: u8, r: u8, reserved: u8) -> BmpPaletteEntry {
+    BmpPaletteEntry { b, g, r, reserved }
+}
+
+#[cfg(test)]
+pub(crate) fn demo_snap_a() -> BmpSnapshot {
+    BmpSnapshot {
+        schema: "stdio.bmp".into(),
+        header_size: 40,
+        width: 4,
+        height: 3,
+        row_order: BmpRowOrder::BottomUp,
+        planes: 1,
+        bits_per_pixel: 8,
+        compression: 0,
+        image_size: 48,
+        x_pixels_per_meter: 2835,
+        y_pixels_per_meter: 2835,
+        colors_used: 3,
+        colors_important: 0,
+        palette: vec![entry(0, 0, 255, 0), entry(0, 255, 0, 0)],
+        pixels: vec![0u8; 4 * 3 * 4],
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn demo_snap_b() -> BmpSnapshot {
+    BmpSnapshot {
+        schema: "stdio.bmp".into(),
+        header_size: 56,
+        width: 8,
+        height: 6,
+        row_order: BmpRowOrder::TopDown,
+        planes: 2,
+        bits_per_pixel: 24,
+        compression: 3,
+        image_size: 200,
+        x_pixels_per_meter: 3000,
+        y_pixels_per_meter: 4000,
+        colors_used: 5,
+        colors_important: 2,
+        // 🔺 index 0 stable, index 1 modified vs. `demo_snap_a`, index 2 brand-new (asymmetric
+        // length on purpose, mirrors gif89a/csv's own "one direction can't show both removed AND
+        // added" fixture design) so `a->b` exercises `modified`+`added`.
+        palette: vec![entry(0, 0, 255, 0), entry(99, 88, 77, 1), entry(200, 201, 202, 0)],
+        pixels: (0..(8 * 6 * 4)).map(|i| ((i * 7 + 3) % 256) as u8).collect(),
+    }
+}
+
+/// ✅️ P2-FG2: representative `BmpDiff` cases (incl. the empty/default diff) — exercises every
+/// scalar field plus all three sections (`removed`/`modified`/`added`) of the `palette`
+/// collection triple, via a real `between()` result. Single case list
+/// `diff_codec_text_binary_roundtrip_law` (`mod tests` below) AND
+/// `diff_grammar_conformance_law`/`protocol_walk_law` (`⚙️engine/🦀️component.rs`'s
+/// `conformance_laws` module) all exercise — same consolidation `stdio.png`'s own
+/// `demo_diff_cases()` already made (single source of truth, per this repo's own CLAUDE.md).
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<BmpDiff> {
+    let a = demo_snap_a();
+    let b = demo_snap_b();
+    vec![BmpDiff::default(), BmpDiff::between(&a, &b), BmpDiff::between(&b, &a)]
+}
+//#endregion 🔖️DemoDiffCases
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn entry(b: u8, g: u8, r: u8, reserved: u8) -> BmpPaletteEntry {
-        BmpPaletteEntry { b, g, r, reserved }
-    }
 
     /// 🧪️ F6: `diff_codec_text_binary_roundtrip_law` — exercises every scalar field plus all
     /// three sections (`removed`/`modified`/`added`) of the `palette` collection triple, via a
@@ -509,50 +574,7 @@ mod tests {
     fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
 
-        let a = BmpSnapshot {
-            schema: "stdio.bmp".into(),
-            header_size: 40,
-            width: 4,
-            height: 3,
-            row_order: BmpRowOrder::BottomUp,
-            planes: 1,
-            bits_per_pixel: 8,
-            compression: 0,
-            image_size: 48,
-            x_pixels_per_meter: 2835,
-            y_pixels_per_meter: 2835,
-            colors_used: 3,
-            colors_important: 0,
-            palette: vec![entry(0, 0, 255, 0), entry(0, 255, 0, 0)],
-            pixels: vec![0u8; 4 * 3 * 4],
-        };
-        let b = BmpSnapshot {
-            schema: "stdio.bmp".into(),
-            header_size: 56,
-            width: 8,
-            height: 6,
-            row_order: BmpRowOrder::TopDown,
-            planes: 2,
-            bits_per_pixel: 24,
-            compression: 3,
-            image_size: 200,
-            x_pixels_per_meter: 3000,
-            y_pixels_per_meter: 4000,
-            colors_used: 5,
-            colors_important: 2,
-            // 🔺 index 0 stable, index 1 modified vs. `a`, index 2 brand-new (asymmetric length
-            // on purpose, mirrors gif89a/csv's own "one direction can't show both removed AND
-            // added" fixture design) so `a->b` exercises `modified`+`added`.
-            palette: vec![entry(0, 0, 255, 0), entry(99, 88, 77, 1), entry(200, 201, 202, 0)],
-            pixels: (0..(8 * 6 * 4)).map(|i| ((i * 7 + 3) % 256) as u8).collect(),
-        };
-
-        let cases = vec![
-            BmpDiff::default(),
-            BmpDiff::between(&a, &b),
-            BmpDiff::between(&b, &a),
-        ];
-        for d in cases {
+        for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
             let parsed = BmpDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
@@ -565,6 +587,8 @@ mod tests {
 
         // 🔍 Sanity: `a->b` must actually populate both `modified` and `added` (the collection
         // triple's own coverage, not just the codec round-trip).
+        let a = demo_snap_a();
+        let b = demo_snap_b();
         let ab = BmpDiff::between(&a, &b);
         let pd = ab.palette.as_ref().expect("palette diff must be populated a->b");
         assert!(pd.removed.is_empty(), "a->b must not need a removal (palette grows)");

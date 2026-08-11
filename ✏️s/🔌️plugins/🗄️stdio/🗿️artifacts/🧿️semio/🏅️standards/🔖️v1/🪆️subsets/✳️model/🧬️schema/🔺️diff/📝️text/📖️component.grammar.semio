@@ -1,5 +1,26 @@
-dialect grammar stdio.semio.model.diff
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.model.diff"
+dialect grammar
+grammar stdio.semio.model.diff
+extension diff
+start line
+
+; The real hand-rolled `SemioModelDiff::print_diff`/`parse_diff` grammar (🔺️diff/🦀️component.rs
+; §HandcraftedDiffCodec) -- a single line of space-separated `field=value` tokens, one token per
+; present (non-`None`) top-level diff field; an empty diff prints as the empty line. NOT
+; envelope-wrapped (unlike the snapshot facet): `encode_diff`/`decode_diff` are the
+; print_diff/parse_diff text bytes verbatim. Quoted strings below are literal wire characters;
+; unquoted `[...]`/`*(...)` are this grammar dialect's own optional/repetition meta-syntax.
+line = token *(SP token)
+token = ("spatial=" / "elements=" / "relations=") named-triple
+
+; Shared `🧰️triples::enc_named_triple`/`dec_named_triple` wire shape -- bracket-depth-aware so a
+; nested "[...]" payload inside one entry never confuses the outer split (see
+; `⚙️engine/🧰️triples/🦀️component.rs`).
+named-triple = "[" removed-csv "]" ";" "[" modified-csv "]" ";" "[" added-csv "]"
+removed-csv = hex *("," hex)
+modified-csv = modified-entry *("," modified-entry)
+modified-entry = hex ":" diff-body
+added-csv = item *("," item)
+diff-body = "[" 1*OCTET "]"   ; per-collection diff-value codec, see 🔺️diff/🦀️component.rs §DiffValueCodecs
+item = "[" 1*OCTET "]"           ; full item payload, see 🔺️diff/🦀️component.rs §ValueCodecs
+hex = 1*(%x30-39 / %x61-66)      ; hex-encoded string field (id/key), see §Primitives hex_encode
+SP = %x20

@@ -1,3 +1,4 @@
 dialect protocol stdio.semio.document.mutations
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.document.mutations"
+; Binary op form = the text op's UTF-8 bytes verbatim (protocol::OpBinary::encode_op wraps
+; print_op() directly).
+textOpUtf8 = *OCTET

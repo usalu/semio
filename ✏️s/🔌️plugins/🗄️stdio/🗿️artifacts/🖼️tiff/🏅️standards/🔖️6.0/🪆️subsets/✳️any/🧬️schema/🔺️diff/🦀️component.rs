@@ -563,6 +563,28 @@ pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
 pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
+
+//#region 🔖️BinaryPrimitives
+/// 🧪️ P2-FG2: real LEB128-varint-framed binary primitives (length-prefixed bytes/utf8) backing
+/// the upgraded `DiffCodec`/`OpBinary` frames below (and, via re-export, `../🧬️mutations/
+/// 🦀️component.rs`'s own upgraded `OpBinary`) — reuses `store::pack_rt::write_varint_u64`/
+/// `store::ByteReader` rather than reinventing varint encode/decode, same shape `xml`'s own
+/// `write_str_lp`/`read_str_lp` uses.
+pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+//#endregion 🔖️BinaryPrimitives
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
@@ -652,6 +674,175 @@ pub(crate) fn dec_ifd(s: &str) -> Result<TiffIfd, String> {
 }
 //#endregion 🔖️ValueCodecs
 
+//#region 🔖️ValueBinaryCodecs
+/// 🧪️ P2-FG2: real recursive binary twins of [`enc_tag`]/[`dec_tag`]/[`enc_ifd`]/[`dec_ifd`]/
+/// [`enc_values`]/[`dec_values`] above — a 1-byte kind tag (`0`=Byte/`1`=Ascii/`2`=Short/`3`=Long/
+/// `4`=Rational/`5`=SByte/`6`=Undefined/`7`=SShort/`8`=SLong/`9`=SRational/`10`=Float/`11`=Double,
+/// distinct numbering from the text codec's letter tags) followed by the real typed payload
+/// (varint-length-prefixed bytes for `Byte`/`Ascii`/`Undefined`, a varint COUNT then that many
+/// fixed-width LE elements for every numeric list, `Rational`/`SRational` pairs as two consecutive
+/// fixed-width elements) — genuinely typed binary, NOT text-as-bytes. Backs the upgraded
+/// `DiffCodec`/`OpBinary` frames below (`../🧬️mutations/🦀️component.rs` reuses these via its own
+/// `pub(crate)` re-export, same intra-artifact reuse convention `xml`'s `enc_xml_node_bin` uses).
+pub(crate) fn enc_values_bin(v: &TiffValues, out: &mut Vec<u8>) {
+    match v {
+        TiffValues::Byte(b) => {
+            out.push(0);
+            write_bytes_lp(out, b);
+        }
+        TiffValues::Ascii(s) => {
+            out.push(1);
+            write_str_lp(out, s);
+        }
+        TiffValues::Short(v) => {
+            out.push(2);
+            store::pack_rt::write_varint_u64(out, v.len() as u64);
+            v.iter().for_each(|&x| out.extend_from_slice(&x.to_le_bytes()));
+        }
+        TiffValues::Long(v) => {
+            out.push(3);
+            store::pack_rt::write_varint_u64(out, v.len() as u64);
+            v.iter().for_each(|&x| out.extend_from_slice(&x.to_le_bytes()));
+        }
+        TiffValues::Rational(v) => {
+            out.push(4);
+            store::pack_rt::write_varint_u64(out, v.len() as u64);
+            v.iter().for_each(|&(n, d)| {
+                out.extend_from_slice(&n.to_le_bytes());
+                out.extend_from_slice(&d.to_le_bytes());
+            });
+        }
+        TiffValues::SByte(v) => {
+            out.push(5);
+            store::pack_rt::write_varint_u64(out, v.len() as u64);
+            v.iter().for_each(|&x| out.push(x as u8));
+        }
+        TiffValues::Undefined(b) => {
+            out.push(6);
+            write_bytes_lp(out, b);
+        }
+        TiffValues::SShort(v) => {
+            out.push(7);
+            store::pack_rt::write_varint_u64(out, v.len() as u64);
+            v.iter().for_each(|&x| out.extend_from_slice(&x.to_le_bytes()));
+        }
+        TiffValues::SLong(v) => {
+            out.push(8);
+            store::pack_rt::write_varint_u64(out, v.len() as u64);
+            v.iter().for_each(|&x| out.extend_from_slice(&x.to_le_bytes()));
+        }
+        TiffValues::SRational(v) => {
+            out.push(9);
+            store::pack_rt::write_varint_u64(out, v.len() as u64);
+            v.iter().for_each(|&(n, d)| {
+                out.extend_from_slice(&n.to_le_bytes());
+                out.extend_from_slice(&d.to_le_bytes());
+            });
+        }
+        TiffValues::Float(v) => {
+            out.push(10);
+            store::pack_rt::write_varint_u64(out, v.len() as u64);
+            v.iter().for_each(|&x| out.extend_from_slice(&x.to_le_bytes()));
+        }
+        TiffValues::Double(v) => {
+            out.push(11);
+            store::pack_rt::write_varint_u64(out, v.len() as u64);
+            v.iter().for_each(|&x| out.extend_from_slice(&x.to_le_bytes()));
+        }
+    }
+}
+pub(crate) fn dec_values_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffValues, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let count = |reader: &mut store::ByteReader<'_>| -> Result<u64, String> { reader.read_varint_u64().map_err(|e| e.to_string()) };
+    match tag {
+        0 => Ok(TiffValues::Byte(read_bytes_lp(reader)?)),
+        1 => Ok(TiffValues::Ascii(read_str_lp(reader)?)),
+        2 => {
+            let n = count(reader)?;
+            (0..n).map(|_| reader.read_u16_le().map_err(|e| e.to_string())).collect::<Result<Vec<_>, _>>().map(TiffValues::Short)
+        }
+        3 => {
+            let n = count(reader)?;
+            (0..n).map(|_| reader.read_u32_le().map_err(|e| e.to_string())).collect::<Result<Vec<_>, _>>().map(TiffValues::Long)
+        }
+        4 => {
+            let n = count(reader)?;
+            (0..n)
+                .map(|_| {
+                    let a = reader.read_u32_le().map_err(|e| e.to_string())?;
+                    let b = reader.read_u32_le().map_err(|e| e.to_string())?;
+                    Ok((a, b))
+                })
+                .collect::<Result<Vec<_>, String>>()
+                .map(TiffValues::Rational)
+        }
+        5 => {
+            let n = count(reader)?;
+            (0..n).map(|_| reader.read_u8().map_err(|e| e.to_string()).map(|b| b as i8)).collect::<Result<Vec<_>, _>>().map(TiffValues::SByte)
+        }
+        6 => Ok(TiffValues::Undefined(read_bytes_lp(reader)?)),
+        7 => {
+            let n = count(reader)?;
+            (0..n).map(|_| reader.read_u16_le().map_err(|e| e.to_string()).map(|x| x as i16)).collect::<Result<Vec<_>, _>>().map(TiffValues::SShort)
+        }
+        8 => {
+            let n = count(reader)?;
+            (0..n).map(|_| reader.read_u32_le().map_err(|e| e.to_string()).map(|x| x as i32)).collect::<Result<Vec<_>, _>>().map(TiffValues::SLong)
+        }
+        9 => {
+            let n = count(reader)?;
+            (0..n)
+                .map(|_| {
+                    let a = reader.read_u32_le().map_err(|e| e.to_string())? as i32;
+                    let b = reader.read_u32_le().map_err(|e| e.to_string())? as i32;
+                    Ok((a, b))
+                })
+                .collect::<Result<Vec<_>, String>>()
+                .map(TiffValues::SRational)
+        }
+        10 => {
+            let n = count(reader)?;
+            (0..n)
+                .map(|_| reader.read_bytes(4).map_err(|e| e.to_string()).map(|b| f32::from_le_bytes(b.try_into().expect("4 bytes"))))
+                .collect::<Result<Vec<_>, _>>()
+                .map(TiffValues::Float)
+        }
+        11 => {
+            let n = count(reader)?;
+            (0..n).map(|_| reader.read_f64_le().map_err(|e| e.to_string())).collect::<Result<Vec<_>, _>>().map(TiffValues::Double)
+        }
+        other => Err(format!("tiff values binary: unknown tag {other}")),
+    }
+}
+/// 🏷️ Binary twin of [`enc_tag`]/[`dec_tag`] — `tag:u16le, kind:u8 (TIFF field-type code 1-12,
+/// always fits one byte), values:enc_values_bin`.
+pub(crate) fn enc_tag_bin(t: &TiffTag, out: &mut Vec<u8>) {
+    out.extend_from_slice(&t.tag.to_le_bytes());
+    out.push(t.kind.to_u16() as u8);
+    enc_values_bin(&t.values, out);
+}
+pub(crate) fn dec_tag_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffTag, String> {
+    let tag = reader.read_u16_le().map_err(|e| e.to_string())?;
+    let kind = TiffFieldType::from_u16(reader.read_u8().map_err(|e| e.to_string())? as u16)?;
+    let values = dec_values_bin(reader)?;
+    Ok(TiffTag { tag, kind, values })
+}
+/// 🗂️ Binary twin of [`enc_ifd`]/[`dec_ifd`] — varint entry count, then that many [`enc_tag_bin`]
+/// entries.
+pub(crate) fn enc_ifd_bin(ifd: &TiffIfd, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, ifd.entries.len() as u64);
+    ifd.entries.iter().for_each(|t| enc_tag_bin(t, out));
+}
+pub(crate) fn dec_ifd_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffIfd, String> {
+    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut entries = Vec::with_capacity(n as usize);
+    for _ in 0..n {
+        entries.push(dec_tag_bin(reader)?);
+    }
+    Ok(TiffIfd { entries })
+}
+//#endregion 🔖️ValueBinaryCodecs
+
 //#region 🔖️DiffValueCodecs
 /// 🔺️ Tag-id-keyed `entries` triple: `[removed];[modified];[added]`, `modified`/`added` entries
 /// are `tag:kind:values` (colon-separated — safe since `kind` is bare decimal and `values` never
@@ -703,6 +894,90 @@ pub(crate) fn dec_ifds_diff(body: &str) -> Result<TiffIfdsDiff, String> {
 }
 //#endregion 🔖️DiffValueCodecs
 
+//#region 🔖️DiffValueBinaryCodecs
+/// 🧪️ P2-FG2: real recursive binary twins of [`enc_tags_diff`]/[`dec_tags_diff`]/
+/// [`enc_ifds_diff`]/[`dec_ifds_diff`] — every `removed`/`modified`/`added` triple becomes a
+/// varint-counted, recursively-encoded list (same shape XML's `enc_children_diff_bin`/
+/// `enc_attrs_diff_bin` use), backing the upgraded `DiffCodec::encode_diff`/`decode_diff` below.
+pub(crate) fn enc_tags_diff_bin(d: &TiffTagsDiff, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
+    d.removed.iter().for_each(|&t| out.extend_from_slice(&t.to_le_bytes()));
+    store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
+    for m in &d.modified {
+        out.extend_from_slice(&m.tag.to_le_bytes());
+        out.push(m.kind.to_u16() as u8);
+        enc_values_bin(&m.values, out);
+    }
+    store::pack_rt::write_varint_u64(out, d.added.len() as u64);
+    for a in &d.added {
+        out.extend_from_slice(&a.tag.to_le_bytes());
+        out.push(a.kind.to_u16() as u8);
+        enc_values_bin(&a.values, out);
+    }
+}
+pub(crate) fn dec_tags_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffTagsDiff, String> {
+    let rn = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(rn as usize);
+    for _ in 0..rn {
+        removed.push(reader.read_u16_le().map_err(|e| e.to_string())?);
+    }
+    let mn = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(mn as usize);
+    for _ in 0..mn {
+        let tag = reader.read_u16_le().map_err(|e| e.to_string())?;
+        let kind = TiffFieldType::from_u16(reader.read_u8().map_err(|e| e.to_string())? as u16)?;
+        let values = dec_values_bin(reader)?;
+        modified.push(TiffTagModified { tag, kind, values });
+    }
+    let an = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(an as usize);
+    for _ in 0..an {
+        let tag = reader.read_u16_le().map_err(|e| e.to_string())?;
+        let kind = TiffFieldType::from_u16(reader.read_u8().map_err(|e| e.to_string())? as u16)?;
+        let values = dec_values_bin(reader)?;
+        added.push(TiffTagAdded { tag, kind, values });
+    }
+    Ok(TiffTagsDiff { removed, modified, added })
+}
+
+pub(crate) fn enc_ifds_diff_bin(d: &TiffIfdsDiff, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
+    d.removed.iter().for_each(|&i| store::pack_rt::write_varint_u64(out, i as u64));
+    store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
+    for m in &d.modified {
+        store::pack_rt::write_varint_u64(out, m.index as u64);
+        enc_tags_diff_bin(&m.diff, out);
+    }
+    store::pack_rt::write_varint_u64(out, d.added.len() as u64);
+    for a in &d.added {
+        store::pack_rt::write_varint_u64(out, a.index as u64);
+        enc_ifd_bin(&a.ifd, out);
+    }
+}
+pub(crate) fn dec_ifds_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffIfdsDiff, String> {
+    let rn = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(rn as usize);
+    for _ in 0..rn {
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+    }
+    let mn = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(mn as usize);
+    for _ in 0..mn {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let diff = dec_tags_diff_bin(reader)?;
+        modified.push(TiffIfdModified { index, diff });
+    }
+    let an = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(an as usize);
+    for _ in 0..an {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let ifd = dec_ifd_bin(reader)?;
+        added.push(TiffIfdAdded { index, ifd });
+    }
+    Ok(TiffIfdsDiff { removed, modified, added })
+}
+//#endregion 🔖️DiffValueBinaryCodecs
+
 //#region 🔖️TopLevel
 fn print_tiff_diff(d: &TiffDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
@@ -743,18 +1018,94 @@ impl protocol::DiffCodec for TiffDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_tiff_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`'s hand-rolled
-    /// codecs use — satisfies every `DiffCodec` law without inventing a second wire format.
+    /// 🧪️ P2-FG2: REAL binary frame (`format u8 | flags u8 | [byte_order][ifds][pixels]`),
+    /// matching `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload
+    /// bytes` shape — upgraded from F6's `print_diff().into_bytes()` text-as-binary shortcut (100%
+    /// of stdio's `DiffCodec` impls were still on that shortcut per the P2-W0 census). `flags` bits
+    /// 0/1/2 mark `byte_order`/`ifds`/`pixels` presence; each present field's own real typed
+    /// payload follows in that fixed order (`ifds` recurses through [`enc_ifds_diff_bin`] into the
+    /// tag-id-keyed triples and the 12-variant `TiffValues` union, genuinely structured all the
+    /// way down, never text-as-bytes).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let mut flags: u8 = 0;
+        if self.byte_order.is_some() {
+            flags |= 0b001;
+        }
+        if self.ifds.is_some() {
+            flags |= 0b010;
+        }
+        if self.pixels.is_some() {
+            flags |= 0b100;
+        }
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
+        if let Some(v) = self.byte_order {
+            out.push(match v {
+                TiffByteOrder::LittleEndian => 0,
+                TiffByteOrder::BigEndian => 1,
+            });
+        }
+        if let Some(d) = &self.ifds {
+            enc_ifds_diff_bin(d, &mut out);
+        }
+        if let Some(p) = &self.pixels {
+            write_bytes_lp(&mut out, p);
+        }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let byte_order = if flags & 0b001 != 0 {
+            let v = reader.read_u8().map_err(|e| malformed("diff byte_order", reader.position(), e.to_string()))?;
+            Some(if v == 0 { TiffByteOrder::LittleEndian } else { TiffByteOrder::BigEndian })
+        } else {
+            None
+        };
+        let ifds = if flags & 0b010 != 0 { Some(dec_ifds_diff_bin(&mut reader).map_err(|e| malformed("diff ifds", reader.position(), e))?) } else { None };
+        let pixels = if flags & 0b100 != 0 { Some(read_bytes_lp(&mut reader).map_err(|e| malformed("diff pixels", reader.position(), e))?) } else { None };
+        Ok(TiffDiff { byte_order, ifds, pixels })
     }
 }
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG2: representative `TiffDiff` values (byte_order/ifds/pixels all exercised, IFD-level
+/// index-keyed removed/modified/added AND nested tag-id-keyed removed/modified/added, every
+/// `TiffValues` field-type family) — the single source of truth reused by
+/// `diff_grammar_conformance_law`/`protocol_walk_law` below (`⚙️engine/🦀️component.rs`).
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<TiffDiff> {
+    fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {
+        TiffTag { tag: id, kind, values }
+    }
+    let a = TiffSnapshot {
+        schema: "stdio.tiff".into(),
+        byte_order: TiffByteOrder::LittleEndian,
+        ifds: vec![TiffIfd {
+            entries: vec![
+                tag(256, TiffFieldType::Long, TiffValues::Long(vec![4])),
+                tag(258, TiffFieldType::Short, TiffValues::Short(vec![8, 8, 8])),
+                tag(315, TiffFieldType::Ascii, TiffValues::Ascii("An Author".into())),
+                tag(282, TiffFieldType::Rational, TiffValues::Rational(vec![(72, 1)])),
+            ],
+        }],
+        pixels: vec![0u8; 16],
+    };
+    let mut b = a.clone();
+    b.byte_order = TiffByteOrder::BigEndian;
+    b.ifds[0].entries.retain(|t| t.tag != 258); // remove
+    b.ifds[0].entries.iter_mut().find(|t| t.tag == 315).unwrap().values = TiffValues::Ascii("New Author".into()); // modify
+    b.ifds[0].entries.push(tag(37380, TiffFieldType::SRational, TiffValues::SRational(vec![(-3, 10)]))); // add
+    b.ifds[0].entries.push(tag(50003, TiffFieldType::Float, TiffValues::Float(vec![1.5, -2.25])));
+    b.ifds.push(TiffIfd { entries: vec![tag(2, TiffFieldType::Long, TiffValues::Long(vec![9]))] }); // whole IFD added
+    b.pixels = vec![9u8; 16];
+    let c = TiffSnapshot { schema: "stdio.tiff".into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![], pixels: vec![] };
+    vec![TiffDiff::default(), TiffDiff::between(&a, &b), TiffDiff::between(&b, &a), TiffDiff::between(&a, &c), TiffDiff::between(&c, &a)]
+}
+//#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
 #[cfg(test)]

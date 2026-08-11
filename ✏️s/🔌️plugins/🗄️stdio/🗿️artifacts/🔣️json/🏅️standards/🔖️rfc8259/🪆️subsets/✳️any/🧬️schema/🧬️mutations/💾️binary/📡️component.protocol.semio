@@ -3,15 +3,32 @@ protocol json.mutations
 version 1
 schema stdio.json
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-; payload bytes are UTF-8 JSON text of the tagged JsonMutation struct (compact form).
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+
+# P2-P1: REAL binary op frame, replacing F6's `print_op().into_bytes()` text-as-binary shortcut
+# (`🔣️json/…/🧬️mutations/🦀️component.rs`'s old `OpBinary::encode_op` — see that file's `#region
+# OpCodecs` for the upgraded implementation). `JsonMutation` is a genuine data-carrying enum whose
+# variants embed a recursive `JsonValue`/`JsonPath` (itself a data-carrying `Vec<enum>`) — no
+# `DslField` impl exists or can exist for either (blanket impls cover only ints/bool/String/Vec<T
+# where T: DslField>/BTreeMap/[T;N]/DslValue/Wire, never a data-carrying enum), so the generic
+# `format u8 | ordinal varint | record body` layout (`pack_rt::encode_record_body` /
+# `dsl::variants_binary::encode_op`, which both require a `RecordSpec` derived FROM a `DslField`
+# impl) genuinely does not fit — confirmed by re-reading the type, not assumed. Handcrafted instead:
+# `format u8` (`store::OP_BINARY_FORMAT` convention) + `tag u8` (the `JsonMutation` variant ordinal,
+# same 0-6 ordering as `parse_json_mutation`'s keyword match) as two REAL fixed fields, then the
+# variant's own recursive path/key/value payload as one opaque trailing `bytes` chain.
+#
+# The recursive payload itself is real LEB128-varint-framed binary (`enc_json_value_bin`/
+# `enc_json_path_bin` in the same `🦀️component.rs`, reusing `store::pack_rt::write_varint_u64` /
+# `store::ByteReader`) — NOT re-modeled field-by-field here because `Prim::Ref` (the only construct
+# that could describe JsonValue's self-recursion at the protocol-dialect level) unconditionally
+# errors during `walk_protocol` (confirmed live, P2-M2's own recorded open question — recursive
+# protocol structures were explicitly out of that wave's scope, not fixed by this wave either). This
+# is the same honest-boundary treatment the plan itself prescribes for a compressed payload segment
+# — opaque at the protocol layer, genuinely structured (and round-trip-tested) at the Rust layer.
+# Filed as `mechanism_gaps` in this wave's report (non-blocking; worked around locally exactly as
+# described here).
+framing record
+header fixed 2
+field format u8
+field tag u8
+chain payload bytes

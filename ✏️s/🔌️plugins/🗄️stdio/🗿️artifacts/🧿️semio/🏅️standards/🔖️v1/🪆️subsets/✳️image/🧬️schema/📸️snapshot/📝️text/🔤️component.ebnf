@@ -1,3 +1,10 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.image.snapshot" ;
+(* Real wire grammar for `s.stdio.semio.image`'s text (`ArtifactDsl`) form. The preamble line is
+   produced by `store::semio_format::wrap_text`, parsed by `split_text_preamble`; the body is the
+   snapshot's own serde_json bytes, lowercase-hex encoded (neutral semio type, not an on-disk file
+   format — see the module doc comment on the `🦀️component.rs` sibling one level up). *)
+document = preamble, newline, hex body, [ newline ] ;
+preamble = "semio", " ", "s.stdio.semio.image.dsl", " ", "v", digit, { digit } ;
+hex body = { hex digit } ;
+hex digit = digit | "a" | "b" | "c" | "d" | "e" | "f" ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+newline = "\n" | "\r\n" ;

@@ -1,3 +1,34 @@
-dialect protocol stdio.dwg.diff
-magic = %x00
-payload = *OCTET
+dialect protocol
+protocol stdio.dwg.ac1024.diff
+version 1
+schema stdio.dwg.diff
+start diff
+
+# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: `protocol::DiffCodec`
+# for `DwgDiff` (ac1024) is CONFIRMED ALREADY REAL — `#[derive(dsl::DslDiff)]` (../🦀️component.rs)
+# generates `encode_diff`/`decode_diff` that call `store::pack_rt::encode_document`/
+# `decode_document`. `DwgDiff` has zero `Option<Option<T>>` tri-state fields and zero
+# data-carrying enums reachable from it (`sections: Option<DwgSectionsDiff>` is a plain struct of
+# `Vec`s; `DwgDecodeStatus` doesn't even appear in the diff — it's derived, never diffed
+# directly). Same framework-generic `.spk` container as ac1018's own sibling protocol file —
+# copied verbatim per the recipe's own §2.4 worked example.
+framing magic 0x8953504B0D0A1A0A
+header fixed 24
+field version_major u16
+field version_minor u16
+field required_flags u32
+field optional_flags u32
+field header_crc32 u32
+field reserved fixed 8
+
+repeat segments {
+  tag u8
+  trailer u32
+  until 0
+  arm 3 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+  arm 4 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+  arm 1 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+  arm 0 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+}
+
+footer fixed 84

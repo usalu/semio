@@ -1,3 +1,4 @@
 dialect protocol stdio.semio.mesh.diff
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.mesh.diff"
+; identical to the TEXT grammar (../📝️text/📖️component.grammar.semio), UTF-8 encoded, no
+; additional binary framing — encode_diff() is print_diff().into_bytes() verbatim.
+document = UTF8(*)

@@ -1,3 +1,7 @@
 dialect protocol stdio.semio.drawing.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.drawing.snapshot"
+; real semio_format::wrap_binary envelope; JSON payload structure: sibling 🔣️component.json
+magic = %x89 "SEM" %x0D %x0A %x1A %x0A
+token_len = u32le
+token = bytes(token_len)  ; UTF-8 "stdio.semio.drawing.pack v1"
+json_bytes = *json_byte
+json_byte = OCTET

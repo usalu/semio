@@ -1,7 +1,12 @@
+// 🧬️ SemioPresentationArtifact — full artifact state.
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.s_stdio_semio_presentation.artifact;
+package stdio.semio.presentation;
+
+import "📸️snapshot/component.proto";
+
 message SemioPresentationArtifact {
   string schema = 1;
-  string entries_wire = 2;
+  repeated stdio.semio.presentation.snapshot.SlideMaster masters = 2;
+  repeated stdio.semio.presentation.snapshot.SlideLayout layouts = 3;
+  repeated stdio.semio.presentation.snapshot.Slide slides = 4;
 }

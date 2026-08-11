@@ -1,11 +1,33 @@
-dialect grammar stdio.tiff.snapshot
-root = document
-; preamble line + its trailing newline are stripped before this grammar runs
-; (store::semio_format::split_text_preamble). TIFF has no textual syntax of its own — the
-; DSL text is a whitespace-tolerant ASCII hex dump of the REAL binary TIFF bytes (byte-order
-; mark + IFD chain + generic tag entries); see ../💾️binary/🥋️component.ksy for that binary's
-; own honest grammar.
-document = hex_byte (WS hex_byte)*
-hex_byte = HEXDIG HEXDIG
-HEXDIG = %x30-39 / %x41-46 / %x61-66
-WS = *(%x20 / %x09 / %x0D / %x0A)
+dialect grammar
+grammar stdio.tiff.snapshot
+extension tiff
+start document
+
+# TIFF has no textual syntax of its own — `store::ArtifactDsl::print_dsl`/`parse_dsl`
+# (../../🦀️component.rs, the `HandcraftedArtifactCodecs` region) hex-encode/decode the REAL
+# binary TIFF 6.0 file bytes (byte-order mark + IFD chain, TIFF6 §2) verbatim, byte-for-byte —
+# this is png's own honest precedent from Phase 1's survey (P2-W0 §1b: "hex-dump grammar per
+# png's own precedent"), not an aspiration. See ../💾️binary/📡️component.protocol.semio for that
+# same binary's real structural grammar (runtime-endian header + first-IFD entry table).
+comment none
+
+# `dsl::fixture_sweep`'s `dsl_body_from_fixture` feeds the Recognizer
+# "<envelope-id>\n<body>" (`SemioEnvelope::envelope_id` = "stdio.tiff", the real preamble
+# line's own trailing "v<n>" already stripped by the harness) — the shared lexer treats the
+# preamble's newline as trivia, so `envelope-mark` and the hex body sit directly adjacent in
+# the significant token stream, matching json/csv/png's own grammars' identical convention.
+envelope-mark = "stdio.tiff"
+document = envelope-mark hex-body
+
+# The rest of the DSL text is one lowercase-hex digit run — the real TIFF file's bytes (8-byte
+# header + IFD chain + generic tag/type/value entries + strip pixel data), hex-encoded
+# losslessly (`encode_tiff`/`decode_tiff`, ⚙️engine/🦀️component.rs). `hex` (bare `hex`,
+# deliberately NOT defined as a production here) is the framework's built-in `hex` MACRO
+# (`📖️grammar/🦀️component.rs`'s `default_macros`/`macro_hex_ok`) — the dialect-recipe's own
+# documented rule (`📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2): a hand-rolled
+# `{INT | IDENT}*`-shaped production would silently mis-lex a `<digits>e<digits>` byte run as
+# one FLOAT token instead of alternating INT/IDENT; the macro's own largest-span-first
+# backtracking (`Recognizer::match_macro_span`) handles it correctly with no grammar-file
+# workaround needed — same mechanism json's/csv's/png's own `hex` doc comments already document
+# for their op/diff payloads.
+hex-body = hex

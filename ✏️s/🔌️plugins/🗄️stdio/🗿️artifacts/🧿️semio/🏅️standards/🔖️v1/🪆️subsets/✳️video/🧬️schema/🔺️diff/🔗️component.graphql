@@ -1,9 +1,47 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioVideoDiffEntry {
-  key: String!
-  value: String!
+# 🔺️ SemioVideoDiff facet mirror — sparse index-keyed triples, recursive at the samples level.
+type SemioVideoSampleDiff {
+  pts: Int
+  key: Boolean
+  data: String # hex-encoded opaque bytes
 }
+
+type SemioVideoSampleAdded {
+  index: Int!
+  item: SemioVideoSample!
+}
+type SemioVideoSampleModified {
+  index: Int!
+  diff: SemioVideoSampleDiff!
+}
+type SemioVideoSamplesDiff {
+  removed: [Int!]!
+  modified: [SemioVideoSampleModified!]!
+  added: [SemioVideoSampleAdded!]!
+}
+
+type SemioVideoStreamDiff {
+  kind: SemioVideoStreamKind
+  codec: String
+  width: Int
+  height: Int
+  rate: SemioRational
+  samples: SemioVideoSamplesDiff
+}
+
+type SemioVideoStreamAdded {
+  index: Int!
+  item: SemioVideoStream!
+}
+type SemioVideoStreamModified {
+  index: Int!
+  diff: SemioVideoStreamDiff!
+}
+type SemioVideoStreamsDiff {
+  removed: [Int!]!
+  modified: [SemioVideoStreamModified!]!
+  added: [SemioVideoStreamAdded!]!
+}
+
 type SemioVideoDiff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioVideoDiffEntry!]! @state(class: PERSISTENT)
+  streams: SemioVideoStreamsDiff
 }

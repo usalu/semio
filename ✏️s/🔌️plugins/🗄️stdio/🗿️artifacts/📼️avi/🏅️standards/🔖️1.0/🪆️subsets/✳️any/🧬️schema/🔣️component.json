@@ -1,10 +1,13 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.avi/artifact.json",
+  "$id": "https://semio.tech/schema/stdio.avi.json",
   "title": "AviArtifact",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Full artifact state, mirrors AviSnapshot field for field.",
   "type": "object",
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "mainHeader": { "type": "object", "x-semio-state": "persistent" },
+    "streams": { "type": "array", "x-semio-state": "persistent" },
+    "idx1Present": { "type": "boolean", "x-semio-state": "persistent" },
+    "unknownChunks": { "type": "array", "x-semio-state": "persistent" }
   }
 }

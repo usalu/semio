@@ -15,7 +15,7 @@
 
 use std::collections::HashMap;
 
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{PdfDiff, PdfPathSegment};
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::PdfMutation;
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{
     ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot,
@@ -1122,6 +1122,13 @@ fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u
                             if let Some(name) = &current_font { if let Some(fd) = font_cache.get(name) { out.push_str(&fd.decode(s)); } }
                         }
                     }
+                    // 🆕️ `T*` moves to the start of the next line (PDF32000-1 §9.4.2, equivalent
+                    // to `0 tl Td`) — a real newline signal preceding a subsequent `Tj`, distinct
+                    // from `'`/`"` (which fold the same move into the text-showing op itself).
+                    // `encode_pdf` emits exactly this `T*`-then-`Tj` shape for multi-line text.
+                    "T*" if in_text => {
+                        if !out.is_empty() { out.push('\n'); }
+                    }
                     "'" | "\"" if in_text => {
                         if let Some(ContentOperand::Str(s)) = operands.last() {
                             if let Some(name) = &current_font { if let Some(fd) = font_cache.get(name) { if !out.is_empty() { out.push('\n'); } out.push_str(&fd.decode(s)); } }
@@ -1469,6 +1476,7 @@ pub fn register() {
         crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor(),
     );
     store::register_document_codec(store::ArtifactCodec::of::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA));
+    register_pilot_languages();
     // 🛡️ D5's generic validate-on-build hook: registers each real subset's SubsetValidator so
     // `io_dispatch`/`wire_artifact_compose` re-check them for free. Each ComposerEntry itself is
     // registered separately via this standard's own `composer::entries()` aggregation.
@@ -1478,6 +1486,88 @@ pub fn register() {
     crate::artifacts::pdf::standards::v1_7::subsets::ua::composer::register();
     crate::artifacts::pdf::standards::v1_7::subsets::vt::composer::register();
     crate::artifacts::pdf::standards::v1_7::subsets::h::composer::register();
+}
+
+/// 📌️ P2-FG3: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr) for `stdio.pdf.1.7`
+/// -- same shape as the recipe's exemplar. `diff`'s `protocol` slot stays `None` (the 5-role
+/// scheme has no dedicated "diff binary" role, even though `🔺️diff/💾️binary/📡️component.protocol.
+/// semio` is a real, conformance-tested file -- its binary form is exercised directly by
+/// `protocol_walk_law` below).
+///
+/// `dsl::registry::register_schema_spec` is deliberately NOT called for this standard:
+/// `PdfSnapshot`/`PdfDiff`/`PdfMutation` are all fully hand-rolled (no `#[derive(dsl::DslRecord)]`/
+/// `DslDiff`/`DslOps` -- confirmed rejected for real, `PdfObject`/`PdfValueDiff` are genuine
+/// data-carrying enums with no `DslField` impl, see `🔺️diff/🦀️component.rs`'s/`🧬️mutations/
+/// 🦀️component.rs`'s own doc comments), so no `__dsl_spec`/`__dsl_diff_spec` genuinely exists to
+/// register — same `register-schema-spec-needs-recordspec` scope boundary json/csv/zip/png/xml
+/// document, not a fabricated call.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.pdf.1.7", extension: Some("pdf"), role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.pdf.1.7"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.pdf.1.7.op", extension: None, role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.pdf.1.7.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.pdf.1.7.diff", extension: None, role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: None, protocol_path: None,
+        hooks: dsl::passthrough_hooks("stdio.pdf.1.7.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.pdf.1.7.pack", extension: None, role: dsl::LanguageRole::Pack,
+        grammar: None, grammar_path: None,
+        protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.pdf.1.7.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.pdf.1.7.spr", extension: None, role: dsl::LanguageRole::Spr,
+        grammar: None, grammar_path: None,
+        protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.pdf.1.7.spr"),
+    });
+}
+
+/// 📄️ The demo `stdio.pdf.1.7` document -- the single source of truth for `🏅️standards/🔖️1.7/
+/// 📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally this
+/// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` below).
+///
+/// Deliberately the real `decode_pdf(encode_pdf(seed))` FIXED POINT, not a hand-built struct with
+/// empty `objects`/`trailer`: `encode_pdf` only ever reads `pages`/`info` from its input (the
+/// writer's own doc comment: "the original `objects` graph is deliberately NOT re-emitted") and
+/// regenerates a FRESH Catalog/Pages/Font/Content-stream object graph every time; `decode_pdf`
+/// then reads that fresh graph back into `objects`/`trailer`. A hand-built snapshot with
+/// `objects: vec![]` would make `parse_dsl(print_dsl(demo)) != demo` (confirmed empirically: the
+/// real `decode_pdf` output has 6 populated `objects` + a real `trailer`, never empty) -- `parse_
+/// dsl` genuinely calls `decode_pdf` on the hex-decoded bytes, not an identity round-trip, same
+/// "1.7 stays a frozen stub" pattern 1.4's own `demo_pdf_snapshot` doc comment documents for its
+/// hardcoded `width`/`height`. `pages`/`info` DO survive this round trip losslessly (the
+/// bachelor-thesis example's own `decode_encode_decode_is_structurally_equal_at_page_level` test
+/// already proves this at scale) -- only `objects`/`trailer` need the fixed-point construction.
+pub fn demo_pdf17_snapshot() -> PdfSnapshot {
+    let seed = PdfSnapshot {
+        schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(),
+        declared_version: "1.7".into(),
+        pages: vec![PdfPage { media_box: [0.0, 0.0, 200.0, 300.0], crop_box: None, rotate: 0, text: "Semio".into() }],
+        info: PdfInfo::default(),
+        objects: Vec::new(),
+        trailer: Vec::new(),
+    };
+    let bytes = encode_pdf(&seed).expect("encode_pdf(seed) must succeed");
+    decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")
 }
 //#endregion 🔖️Register
 
@@ -1528,6 +1618,195 @@ mod tests {
         assert_eq!(decode_xref_row(&[0x00, 0x10, 0x00], [0, 2, 1]), (1, 0x0010, 0));
     }
     //#endregion Filters
+
+    #[test]
+    fn demo_snapshot_round_trip() {
+        let snap = demo_pdf17_snapshot();
+        let text = store::ArtifactDsl::print_dsl(&snap);
+        let parsed = <PdfSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        assert_eq!(parsed, snap);
+        let bytes = store::ArtifactPack::encode_pack(&snap);
+        let decoded = <PdfSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        assert_eq!(decoded, snap);
+    }
+
+    //#region 🔖️ConformanceLaws
+    /// 🧪️ P2-FG3: per-artifact conformance laws — grammar/protocol parseability, `Recognizer`
+    /// against real fixtures AND real `print_op`/`print_diff` output, `walk_protocol` against real
+    /// `encode_pack`/`encode_op`/`encode_diff` bytes (asserting a bounded `consumed`, NOT
+    /// `== len`, since the snapshot protocol declares a `backward` block -- `📖️grammar-recipe.md`
+    /// §2.3's own documented exception), and the fixture-honesty round-trip.
+    mod conformance_laws {
+        use super::*;
+        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::{diff, mutations, snapshot};
+        use protocol::{DiffCodec, OpBinary, OpText};
+        use protocol::command::DiffAlgebra;
+
+        fn oref(num: u32, gen: u16) -> ObjRef { ObjRef { num, gen } }
+
+        /// 🧹 Every `PdfMutation` variant (tags 0-14), incl. object-graph/path-addressing
+        /// variants that exercise `pdf-object`'s full recursive grammar (Array/Dict/Ref/Stream).
+        fn demo_mutation_cases() -> Vec<PdfMutation> {
+            vec![
+                PdfMutation::NoMutation,
+                PdfMutation::SetSnapshot { snapshot: demo_pdf17_snapshot() },
+                PdfMutation::InsertPage { index: 1, page: PdfPage { media_box: [0.0, 0.0, 100.0, 100.0], crop_box: Some([1.0, 1.0, 90.0, 90.0]), rotate: 90, text: "second".into() } },
+                PdfMutation::RemovePage { index: 0 },
+                PdfMutation::SetPageMediaBox { index: 0, media_box: [0.0, 0.0, 200.0, 300.0] },
+                PdfMutation::SetPageCropBox { index: 0, crop_box: Some([1.0, 1.0, 100.0, 100.0]) },
+                PdfMutation::SetPageCropBox { index: 0, crop_box: None },
+                PdfMutation::AppendPageContent { index: 0, text: "more\nlines".into() },
+                PdfMutation::SetInfo { info: PdfInfo { title: Some("Demo".into()), author: Some("Semio".into()), ..Default::default() } },
+                PdfMutation::InsertObject { id: oref(3, 0), value: PdfObject::Array(vec![PdfObject::Int(-5), PdfObject::Real(1.5), PdfObject::Str(vec![0, 255]), PdfObject::Ref(oref(1, 0))]) },
+                PdfMutation::RemoveObject { id: oref(2, 0) },
+                PdfMutation::SetObjectValue { id: oref(1, 0), value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "Length".into(), value: PdfObject::Int(2) }], data: vec![1, 2], raw_filter: Some("FlateDecode".into()) } },
+                PdfMutation::SetDictEntry { id: oref(1, 0), path: vec![PdfPathSegment::DictKey { key: "Kids".into() }, PdfPathSegment::ArrayIndex { index: 0 }], key: "Rotate".into(), value: PdfObject::Int(90) },
+                PdfMutation::RemoveDictEntry { id: oref(1, 0), path: vec![], key: "Type".into() },
+                PdfMutation::SetTrailerEntry { key: "Prev".into(), value: PdfObject::Int(100) },
+                PdfMutation::RemoveTrailerEntry { key: "Size".into() },
+            ]
+        }
+
+        /// 🧹 A representative `PdfDiff` sweep: every top-level field set, plus every
+        /// `PdfValueDiff` tag (Replace/scalar/Array/Dict/Stream) reachable through `objects`.
+        fn demo_diff_cases() -> Vec<PdfDiff> {
+            let a = demo_pdf17_snapshot();
+            let mut b = a.clone();
+            b.declared_version = "1.4".into();
+            b.info = PdfInfo { title: Some("Changed".into()), ..Default::default() };
+            b.pages[0].text = "changed".into();
+            b.objects = vec![
+                PdfIndirectObject { id: oref(1, 0), value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Catalog".into()) }]) },
+            ];
+            b.trailer = vec![PdfDictEntry { key: "Root".into(), value: PdfObject::Ref(oref(1, 0)) }];
+            let mut c = b.clone();
+            c.objects = vec![
+                PdfIndirectObject { id: oref(1, 0), value: PdfObject::Array(vec![PdfObject::Int(1), PdfObject::Bool(true), PdfObject::Name("X".into())]) },
+                PdfIndirectObject { id: oref(2, 0), value: PdfObject::Stream { dict: vec![], data: vec![9, 9], raw_filter: None } },
+            ];
+            vec![PdfDiff::between(&a, &b), PdfDiff::between(&b, &c), PdfDiff::default()]
+        }
+
+        /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
+        /// parse under the real dialect.
+        #[test]
+        fn committed_facet_files_parse() {
+            for (label, text) in [
+                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
+            ] {
+                let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+                assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+            }
+            for (label, text) in [
+                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
+            ] {
+                dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+            }
+        }
+
+        /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output.
+        #[test]
+        fn grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            let text = store::ArtifactDsl::print_dsl(&demo_pdf17_snapshot());
+            let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
+            let reconstructed = format!("{}\n{body}", envelope.envelope_id());
+            assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+        }
+
+        /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
+        /// output for every demo `PdfMutation` variant.
+        #[test]
+        fn ops_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for mutation in demo_mutation_cases() {
+                let printed = mutation.print_op();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
+            }
+        }
+
+        /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output.
+        #[test]
+        fn diff_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for d in demo_diff_cases() {
+                let printed = d.print_diff();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
+            }
+        }
+
+        /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets. The
+        /// snapshot protocol declares a `backward` block, so its own walk asserts a bounded
+        /// `consumed` (not `== len`) — mutations/diff frames still consume every byte exactly.
+        #[test]
+        fn protocol_walk_law() {
+            let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+            let packed = store::ArtifactPack::encode_pack(&demo_pdf17_snapshot());
+            let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
+            let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+            assert!(trace.consumed <= inner.len(), "pack walk consumed more than the buffer holds");
+            assert!(trace.consumed > 0, "pack walk must consume at least the real 5-byte %PDF- magic");
+
+            let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+            for mutation in demo_mutation_cases() {
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
+            }
+
+            let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+            for d in demo_diff_cases() {
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
+            }
+        }
+
+        /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
+        /// `print_dsl`/`encode_pack` output of `demo_pdf17_snapshot()`.
+        #[test]
+        fn fixture_honesty_law() {
+            const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+
+            let demo = demo_pdf17_snapshot();
+
+            let parsed = <PdfSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_pdf17_snapshot()");
+            assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_pdf17_snapshot()) drifted from the shipped .dsl.semio fixture");
+
+            let decoded = <PdfSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_pdf17_snapshot()");
+            assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_pdf17_snapshot()) drifted from the shipped .pack.semio fixture");
+        }
+
+        /// ✅️ `op_diff_codec_binary_roundtrip_law`: the upgraded REAL `OpBinary`/`DiffCodec`
+        /// binary frames round-trip every demo case (the FG1/FG2 binary-frame lesson's own early
+        /// warning — independent of `protocol_walk_law`'s dialect-level check above).
+        #[test]
+        fn op_diff_codec_binary_roundtrip_law() {
+            for mutation in demo_mutation_cases() {
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                assert_eq!(bytes[0], store::pack_rt::OP_BINARY_FORMAT, "op format byte must be OP_BINARY_FORMAT");
+                let decoded = PdfMutation::decode_op(&bytes).unwrap_or_else(|e| panic!("decode_op failed for {mutation:?}: {e:?}"));
+                assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+            }
+            for d in demo_diff_cases() {
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                assert_eq!(bytes[0], store::pack_rt::OP_BINARY_FORMAT, "diff format byte must be OP_BINARY_FORMAT");
+                let decoded = PdfDiff::decode_diff(&bytes).unwrap_or_else(|e| panic!("decode_diff failed for {d:?}: {e:?}"));
+                assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch for {d:?}");
+            }
+        }
+    }
+    //#endregion 🔖️ConformanceLaws
 
     //#region WriterReaderRoundTrip
     fn sample_snapshot() -> PdfSnapshot {

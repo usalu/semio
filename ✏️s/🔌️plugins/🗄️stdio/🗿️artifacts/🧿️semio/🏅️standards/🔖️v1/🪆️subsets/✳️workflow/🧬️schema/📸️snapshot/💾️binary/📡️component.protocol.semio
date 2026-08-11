@@ -1,3 +1,7 @@
 dialect protocol stdio.semio.workflow.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.workflow.snapshot"
+; envelope + JSON blob binary wire format — see the module doc comment on
+; 📸️snapshot/💾️binary/🥋️component.ksy.
+magic = "stdio.semio.workflow"
+component-tag = byte
+version = byte
+json-payload = rest-of-stream

@@ -1,10 +1,20 @@
-/** 🧬️ HtmlSnapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the HtmlSnapshot
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface HtmlSnapshotEntry {
-  key: string;
-  value: string;
+/** 🧬️ HtmlSnapshot schema — own HtmlNode recursive tree model (own types, HTML is not XML). */
+export interface HtmlAttr {
+  name: string;
+  /** `undefined` = valueless boolean attribute (e.g. `disabled`). */
+  value?: string;
 }
+
+export type RawTextKind = 'script' | 'style';
+
+export type HtmlNode =
+  | { kind: 'element'; name: string; attributes: HtmlAttr[]; children: HtmlNode[] }
+  | { kind: 'text'; text: string }
+  | { kind: 'comment'; text: string }
+  | { kind: 'rawText'; parentKind: RawTextKind; text: string };
+
 export interface HtmlSnapshot {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: HtmlSnapshotEntry[];
+  /** @state persistent */ doctype?: string;
+  /** @state persistent */ root: HtmlNode;
 }

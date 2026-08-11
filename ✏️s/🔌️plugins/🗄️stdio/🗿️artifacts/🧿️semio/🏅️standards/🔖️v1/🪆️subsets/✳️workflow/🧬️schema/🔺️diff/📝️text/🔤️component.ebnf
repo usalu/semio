@@ -1,3 +1,12 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.workflow.diff" ;
+(* ISO-14977-style EBNF for the s.stdio.semio.workflow diff text wire format
+   (SemioWorkflowDiff::print_diff/parse_diff) -- see the module doc comment on
+   🔺️diff/📝️text/📖️component.grammar.semio for the full nested-value grammar. *)
+diff line = [ token, { space, token } ] ;
+token = 'nodes=', named triple | 'edges=', named triple ;
+named triple = '[', key list, ']', ';', '[', modified list, ']', ';', '[', added list, ']' ;
+key list = [ hex str, { ',', hex str } ] ;
+modified list = [ modified, { ',', modified } ] ;
+modified = hex str, ':', bracketed ;
+added list = [ bracketed, { ',', bracketed } ] ;
+hex str = { hex digit } ;
+hex digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' ;

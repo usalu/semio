@@ -1,23 +1,165 @@
-dialect protocol stdio.jpg.snapshot
-; 📡 Real pack encoding: semio binary envelope (magic "SEMI" + schema/component/version header,
-; see `store::semio_format::wrap_binary`/`unwrap_binary`) wrapping the ACTUAL JFIF byte stream
-; `engine::encode_jpg`/`decode_jpg` produce/consume — ITU-T T.81/ISO 10918-1 marker-segment
-; structure, not a raw octet blob.
-magic = %x53.45.4D.49                      ; "SEMI"
-envelope-header = 28OCTET                  ; schema id hash + component + version + length
-payload = jpeg-stream
-jpeg-stream = SOI segment* app0 segment* sof0 segment* sos entropy-data EOI
-SOI = %xFF.D8
-EOI = %xFF.D9
-segment = marker length body
-marker = %xFF octet-not-D8-D9-DA
-length = 2OCTET                            ; big-endian, includes itself
-body = *OCTET
-app0 = %xFF.E0 length "JFIF" %x00 version units x-density y-density thumb-w thumb-h thumb-rgb
-sof0 = %xFF.C0 length precision height width n-components component+
-dqt  = %xFF.DB length (table-id precision-tbl 64qk)+
-dht  = %xFF.C4 length (class-id 16-counts symbol*)+
-dri  = %xFF.DD length restart-interval
-sos  = %xFF.DA length n-scan-components scan-component+ Ss Se AhAl
-entropy-data = (byte-stuffed-octet / restart-marker)* ; %xFF followed by %x00 is a literal
-                                                        ; %xFF data byte (byte-stuffing, T.81 F.1.2.3)
+dialect protocol
+protocol stdio.jpg.snapshot
+version 1
+schema stdio.jpg
+start markers
+
+# P2-FG2: REAL binary layout, replacing the pre-Phase-2 ABNF-flavored placeholder (wrong header
+# dialect, `%x` ranges, `/` alternation -- none of it this dialect's real syntax). Matches this
+# artifact's own real encoder field-for-field (⚙️engine/component.rs `encode_jpg`/
+# `encode_jfif_app0`/`write_dht`) for the fixed, non-arithmetic-dependent portion of every marker
+# segment -- ITU-T T.81/ISO 10918-1 + JFIF 1.02 (ITU-T T.871). `walk_protocol` is tested (this
+# artifact's own `protocol_walk_law`) against `unwrap_binary(encode_pack(demo_jpg_snapshot()))` --
+# i.e. REAL `encode_jpg` output -- not a hand-fabricated fixture.
+#
+# `framing record` (not `framing magic`): `framing magic` always reads/compares exactly 8 raw
+# bytes (`magic_bytes(u64)`, confirmed by direct read of `walk_protocol`'s `Framing::Magic` arm),
+# but JPEG's SOI is only 2 bytes (0xFFD8) -- forcing an 8-byte compare would misalign against the
+# very next marker's own leading bytes. SOI is modeled as an ordinary 2-byte header field instead
+# (still genuinely, individually walked -- just not via the magic-framing shortcut).
+framing record
+header fixed 2
+field soi u16be
+
+# P2-FG2 mechanism gap (new -- not yet in the recipe's §5 consolidated table; recorded here AND in
+# this wave's report for the periodic table-consolidation pass): `repeat`'s own `length <prim>`
+# directive computes `expected_end = body_start + length` -- i.e. it assumes an EXCLUSIVE length
+# (PNG/GIF convention: `length` = bytes AFTER the length field itself). JPEG's own `Lp` field is
+# INCLUSIVE of the two length bytes themselves (T.81 §B.1.1.4) -- declaring `length` at the
+# `repeat` dispatch level (or feeding it into an `Array(_, Field(name))` count) would overcount
+# every segment's real remaining body by exactly 2 bytes and eat the next marker's leading
+# `0xFF`+type byte, corrupting the walk. No subtraction/arithmetic primitive exists anywhere in
+# this dialect (`Cond` only tests equality against a literal, `Field(name)` binds a decoded count
+# verbatim, no `-2` adjustment is expressible) -- confirmed by direct read of
+# `walk_repeat`/`walk_fields`/`resolve_count`, not guessed. Worked around below: `length` is
+# declared as an ORDINARY field in every arm (genuinely, individually decoded -- just never used to
+# drive a byte count), and every marker's remaining REAL fixed fields are spelled out exactly, so
+# the walker's natural field-by-field advance lands precisely on the next marker's `0xFF` without
+# ever relying on `Lp`'s own (inclusive) value. This is exact (not approximate) for every arm below
+# because `encode_jpg` itself emits exactly these fixed shapes (verified against the real encoder's
+# own `len = 2 + ... ` / `sof_len = 8 + 3*n` / `sos_len = 6 + 2*n` formulas) PROVIDED the encoded
+# snapshot carries no JFIF thumbnail and no `other_segments` (see the two arithmetic-count gaps
+# noted below, both real, both non-blocking for this artifact's own conformance fixture).
+repeat markers {
+tag marker(0xFF)
+until 0xDA
+arm 0xE0 {
+length u16be
+identifier fixed 5
+version_major u8
+version_minor u8
+density_units u8
+x_density u16be
+y_density u16be
+thumb_width u8
+thumb_height u8
+}
+arm 0xDB {
+length u16be
+table_id_and_precision u8
+values Array(u8, Fixed(64))
+}
+arm 0xC0 {
+length u16be
+precision u8
+height u16be
+width u16be
+component_count u8
+comp1_id u8
+comp1_sampling u8
+comp1_quant_table_id u8
+comp2_id u8
+comp2_sampling u8
+comp2_quant_table_id u8
+comp3_id u8
+comp3_sampling u8
+comp3_quant_table_id u8
+}
+arm 0xC4 {
+length u16be
+class_and_id u8
+len1 u8
+len2 u8
+len3 u8
+len4 u8
+len5 u8
+len6 u8
+len7 u8
+len8 u8
+len9 u8
+len10 u8
+len11 u8
+len12 u8
+len13 u8
+len14 u8
+len15 u8
+len16 u8
+syms1 Array(u8, Field(len1))
+syms2 Array(u8, Field(len2))
+syms3 Array(u8, Field(len3))
+syms4 Array(u8, Field(len4))
+syms5 Array(u8, Field(len5))
+syms6 Array(u8, Field(len6))
+syms7 Array(u8, Field(len7))
+syms8 Array(u8, Field(len8))
+syms9 Array(u8, Field(len9))
+syms10 Array(u8, Field(len10))
+syms11 Array(u8, Field(len11))
+syms12 Array(u8, Field(len12))
+syms13 Array(u8, Field(len13))
+syms14 Array(u8, Field(len14))
+syms15 Array(u8, Field(len15))
+syms16 Array(u8, Field(len16))
+}
+arm 0xDD {
+length u16be
+restart_interval u16be
+}
+arm 0xDA {
+length u16be
+scan_component_count u8
+scan1_id u8
+scan1_table_selectors u8
+scan2_id u8
+scan2_table_selectors u8
+scan3_id u8
+scan3_table_selectors u8
+spectral_start u8
+spectral_end u8
+approx u8
+}
+}
+
+# Two further, real, non-blocking mechanism gaps hit by the SAME "no subtraction/arithmetic
+# primitive" root cause as above, both sidestepped by this artifact's own conformance fixture
+# rather than fixed:
+#  - APP0's thumbnail RGB payload (`thumb_width * thumb_height * 3` bytes) needs a PRODUCT of two
+#    already-decoded fields as an array count -- `Field(name)` binds exactly one prior field
+#    verbatim, no multiplication is expressible. `demo_jpg_snapshot()` carries no JFIF thumbnail
+#    (`jfif_thumbnail: None`, real width=height=0 on wire), so this arm's own fixed fields above
+#    already consume the segment's entire real body with nothing left over -- not exercised, not
+#    silently mismodeled.
+#  - `other_segments` (generic retained APPn/COM markers) has a length-prefixed OPAQUE body whose
+#    true remaining byte count is `Lp - 2` -- the SAME inclusive-length problem the main comment
+#    above documents, this time with no fixed-field decomposition available at all (the payload IS
+#    the opaque content). `demo_jpg_snapshot()` carries no `other_segments`, so no such marker ever
+#    appears in the walked fixture. A real file WITH a thumbnail or other_segments still decodes
+#    correctly Rust-side (`⚙️engine::decode_jpg` has no such limitation -- this gap is a
+#    protocol-DESCRIPTION-layer boundary only, same class as PNG's own `PLTE`/`tRNS` opaque-arm
+#    precedent, `📖️grammar-recipe.md` §5).
+
+# The entropy-coded scan segment (T.81 §F.1.2.3, byte-stuffed `0xFF00`, embedded `RSTn` markers) is
+# NOT marker-structured -- opaque, honest boundary (same carve-out class as any compressed/
+# entropy-coded payload elsewhere in the program, `📖️grammar-recipe.md` §6's own precedent).
+# `bytes` is greedy "rest of buffer minus reserved trailing bytes" -- the trailing `footer fixed 2`
+# below reserves exactly the 2-byte EOI marker, so this field consumes precisely the scan data and
+# nothing past it (`trailing_reserved` walks blocks AFTER this one and stops at the next
+# structural block, confirmed by direct read of `walk_protocol`'s per-block `reserved` computation).
+segment entropy {
+scan_data bytes
+}
+
+# EOI (0xFFD9) -- an opaque fixed trailer, same treatment PDF's xref/DWG's encrypted-segment
+# trailer get (`📖️grammar-recipe.md` §6): the real value is always exactly `0xFFD9` but this
+# dialect's `footer` block has no field-level detail to assert that literally.
+footer fixed 2

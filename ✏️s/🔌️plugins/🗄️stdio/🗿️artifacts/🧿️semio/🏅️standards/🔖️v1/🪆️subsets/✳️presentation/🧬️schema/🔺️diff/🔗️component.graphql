@@ -1,9 +1,15 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioPresentationDiffEntry {
-  key: String!
-  value: String!
-}
+# 🔺️ SemioPresentationDiff — sparse, handcrafted.
+type IndexModified { index: Int!, diffJson: String! }
+type IndexAdded { index: Int!, itemJson: String! }
+type IndexedTripleDiffMeta { removed: [Int!]!, modified: [IndexModified!]!, added: [IndexAdded!]! }
+type NamedModified { key: String!, diffJson: String! }
+type NamedTripleDiffMeta { removed: [String!]!, modified: [NamedModified!]!, added: [String!]! }
+
+type SlideFrameDiff { origin: SemioPoint2, width: Float, height: Float }
+type SlideDiff { layoutId: String, shapesJson: String, notesJson: String }
+
 type SemioPresentationDiff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioPresentationDiffEntry!]! @state(class: PERSISTENT)
+  mastersJson: String
+  layoutsJson: String
+  slidesJson: String
 }

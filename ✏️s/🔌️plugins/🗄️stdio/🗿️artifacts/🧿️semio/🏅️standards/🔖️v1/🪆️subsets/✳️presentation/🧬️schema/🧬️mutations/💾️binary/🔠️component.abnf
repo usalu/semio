@@ -1,3 +1,2 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.presentation.mutations"
+binary = line
+line   = *OCTET  ; UTF-8 bytes of the 📝️text facet's grammar output, verbatim

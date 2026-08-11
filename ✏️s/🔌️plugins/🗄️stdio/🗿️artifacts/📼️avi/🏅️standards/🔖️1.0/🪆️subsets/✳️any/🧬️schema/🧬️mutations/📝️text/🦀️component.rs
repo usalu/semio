@@ -1,3 +1,5 @@
-//! 🚧 scaffolded by W1b — text representation marker for `stdio.avi.mutations`. Full grammar-backed
-//! parse/print lands in W2/W3.
-pub const TEXT_MARKER: &str = "stdio.avi.mutations";
+//! 📝️ Text representation codec surface for `stdio.avi` (mutations) — the real op text
+//! codec is `protocol::OpText` in ../🦀️component.rs.
+
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");

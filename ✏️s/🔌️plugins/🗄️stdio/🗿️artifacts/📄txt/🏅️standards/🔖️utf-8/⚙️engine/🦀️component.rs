@@ -8,6 +8,13 @@ use crate::artifacts::txt::{TxtArtifact, TxtDiff, TxtMutation, TxtSnapshot, STDI
 pub fn empty_txt_snapshot() -> TxtSnapshot {
     TxtSnapshot::default()
 }
+
+/// 📄️ The `demo` example, parsed once from `examples::demo::PRIMARY_TEXT` — the single source
+/// of truth `🗣️example.dsl.semio` is genuinely `print_dsl` of (P2-P3 `fixture_honesty_law`),
+/// same pattern as `note::semio_example_snapshot`/`csv::demo_csv_snapshot`.
+pub fn demo_txt_snapshot() -> TxtSnapshot {
+    <TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::txt::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_txt_snapshot())
+}
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Register
@@ -16,10 +23,31 @@ pub fn register() {
     crate::artifacts::txt::composer::register();
     register_artifact_schema();
     register_pilot_languages();
+    register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA));
 }
 
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
+/// 📇️ P2-P3: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion API) — real,
+/// non-fabricated calls (unlike json/csv, `TxtSnapshot`/`TxtDiff` DO carry genuine derived
+/// `RecordSpec` constructors: `#[derive(dsl::DslRecord)]`/`#[derive(dsl::DslDiff)]` emit
+/// `__dsl_spec`/`__dsl_diff_spec` respectively, see ../🪆️subsets/✳️any/🧬️schema/📸️snapshot and
+/// 🔺️diff's own doc comments). Covers both the document's own schema id and its `"<doc>#diff"`
+/// diff schema id, per design ruling B-R4. `#[cfg]`-gated to match `os_dsl::registry`'s own
+/// `#[cfg(not(target_arch = "wasm32"))]` (📇️registry/🦀️component.rs) -- the registry simply does
+/// not exist as a compiled item on `wasm32`.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn register_schema_specs() {
+    dsl::registry::register_schema_spec("stdio.txt", TxtSnapshot::__dsl_spec);
+    dsl::registry::register_schema_spec("stdio.txt#diff", TxtDiff::__dsl_diff_spec);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn register_schema_specs() {}
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) — 5-role
+/// `LanguageSpec` set (Document/Ops/Diff/Pack/Spr), following `note`'s exemplar pattern exactly
+/// (`✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/⚙️engine/🦀️component.rs`), same as
+/// the sibling `stdio.csv`/`stdio.json` P2 pilots.
 pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.txt",
@@ -30,6 +58,46 @@ pub fn register_pilot_languages() {
         protocol: Some(crate::artifacts::txt::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::txt::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.txt"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.txt.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::txt::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::txt::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::txt::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::txt::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.txt.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.txt.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::txt::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::txt::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::txt::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::txt::schema::diff::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.txt.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.txt.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::txt::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::txt::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.txt.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.txt.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::txt::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::txt::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.txt.spr"),
     });
 }
 
@@ -182,5 +250,104 @@ mod tests {
         assert!(TxtDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
     }
     //#endregion 🔖️FieldSweep
+
+    //#region 🔖️P2P3GrammarProtocolFixtureLaws
+    /// 🧪️ P2-P3: `dsl::parse_grammar` + `dsl::Recognizer::compile` + `.recognize` against the
+    /// REAL fixture body — the snapshot text facet's own real grammar (preamble + `REST`-captured
+    /// whole body) recognizes the genuine `print_dsl` output, envelope-id-normalized the same way
+    /// `dsl::fixture_sweep::m5_handcrafted_grammar_conformance::dsl_body_from_fixture` feeds the
+    /// Recognizer (mirrored here so this law does not depend on the framework's own harness).
+    #[test]
+    fn grammar_conformance_law() {
+        let grammar_text = crate::artifacts::txt::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO;
+        let grammar = dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
+        assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar);
+        let recognizer = dsl::Recognizer::compile(&grammar);
+        let fixture = crate::artifacts::txt::examples::demo::PRIMARY_TEXT;
+        let (envelope, body) = store::semio_format::split_text_preamble(fixture).expect("real preamble");
+        let normalized = format!("{}\n{body}", envelope.envelope_id());
+        let ok = recognizer.recognize(&normalized).expect("recognize should not error");
+        assert!(ok, "snapshot grammar must recognize the real demo fixture body");
+    }
+
+    /// 🧪️ P2-P3: `dsl::parse_protocol` + `dsl::walk_protocol` against REAL bytes for all three
+    /// binary facets (Pack/Spr/Diff), asserting `consumed == bytes.len()` exactly (the walker's
+    /// own law) — snapshot's Pack facet walks the post-`unwrap_binary` payload of a genuine
+    /// `encode_pack` call; mutations' Spr facet walks a genuine `encode_op` frame; diff's own
+    /// protocol facet walks a genuine `encode_diff` frame.
+    #[test]
+    fn protocol_walk_law() {
+        // Pack (snapshot binary facet).
+        let snap = demo_txt_snapshot();
+        let pack_bytes = <TxtSnapshot as store::ArtifactPack>::encode_pack(&snap);
+        let (_, payload) = store::semio_format::unwrap_binary(&pack_bytes).expect("unwrap_binary");
+        let pack_protocol = dsl::parse_protocol(crate::artifacts::txt::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+        let trace = dsl::walk_protocol(&pack_protocol, &payload).expect("walk snapshot protocol");
+        assert_eq!(trace.consumed, payload.len(), "snapshot protocol must consume the whole post-envelope payload");
+
+        // Spr (mutations binary facet) — a real, non-trivial mutation.
+        let mutation = TxtMutation::InsertLine { index: 1, text: "x".into() };
+        let op_bytes = <TxtMutation as protocol::OpBinary>::encode_op(&mutation).expect("encode_op");
+        let spr_protocol = dsl::parse_protocol(crate::artifacts::txt::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        let trace = dsl::walk_protocol(&spr_protocol, &op_bytes).expect("walk mutations protocol");
+        assert_eq!(trace.consumed, op_bytes.len(), "mutations protocol must consume the whole op frame");
+
+        // Diff binary facet.
+        let mut before = snap.clone();
+        let diff = crate::artifacts::txt::schema::mutations::apply_txt_mutation(&mut before, &mutation);
+        let diff_bytes = <TxtDiff as protocol::DiffCodec>::encode_diff(&diff).expect("encode_diff");
+        let diff_protocol = dsl::parse_protocol(crate::artifacts::txt::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        let trace = dsl::walk_protocol(&diff_protocol, &diff_bytes).expect("walk diff protocol");
+        assert_eq!(trace.consumed, diff_bytes.len(), "diff protocol must consume the whole diff frame (32-byte header + opaque .spk tail)");
+    }
+
+    /// 🧪️ P2-P3: fixture honesty — the committed `.dsl.semio`/`.pack.semio` fixtures are
+    /// genuinely `print_dsl`/`encode_pack` output of the SAME demo snapshot, round-tripping both
+    /// ways (never allowed to silently drift again).
+    #[test]
+    fn fixture_honesty_law() {
+        let demo = demo_txt_snapshot();
+        assert_eq!(<TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::txt::examples::demo::PRIMARY_TEXT).unwrap(), demo);
+        assert_eq!(<TxtSnapshot as store::ArtifactDsl>::print_dsl(&demo), crate::artifacts::txt::examples::demo::PRIMARY_TEXT);
+
+        assert_eq!(<TxtSnapshot as store::ArtifactPack>::decode_pack(crate::artifacts::txt::examples::demo::PACK_BYTES).unwrap(), demo);
+        assert_eq!(<TxtSnapshot as store::ArtifactPack>::encode_pack(&demo), crate::artifacts::txt::examples::demo::PACK_BYTES.to_vec());
+
+        let mutation = TxtMutation::InsertLine { index: 1, text: "x".into() };
+        assert_eq!(<TxtMutation as protocol::OpBinary>::encode_op(&mutation).unwrap(), crate::artifacts::txt::examples::demo::SPR_BYTES.to_vec());
+        assert_eq!(<TxtMutation as protocol::OpBinary>::decode_op(crate::artifacts::txt::examples::demo::SPR_BYTES).unwrap(), mutation);
+    }
+
+    /// 🧪️ P2-P3: every committed grammar/protocol file for this standard genuinely parses under
+    /// `dsl::parse_grammar`/`dsl::parse_protocol` — this artifact's own early warning, independent
+    /// of the eventual repo-wide policy gate.
+    #[test]
+    fn committed_grammar_and_protocol_files_parse() {
+        let g1 = dsl::parse_grammar(crate::artifacts::txt::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO);
+        assert!(g1.is_ok(), "snapshot grammar must parse: {g1:?}");
+        let g2 = dsl::parse_grammar(crate::artifacts::txt::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO);
+        assert!(g2.is_ok(), "mutations grammar must parse: {g2:?}");
+        let g3 = dsl::parse_grammar(crate::artifacts::txt::schema::diff::text::COMPONENT_GRAMMAR_SEMIO);
+        assert!(g3.is_ok(), "diff grammar must parse: {g3:?}");
+        let p1 = dsl::parse_protocol(crate::artifacts::txt::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO);
+        assert!(p1.is_ok(), "snapshot protocol must parse: {p1:?}");
+        let p2 = dsl::parse_protocol(crate::artifacts::txt::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO);
+        assert!(p2.is_ok(), "mutations protocol must parse: {p2:?}");
+        let p3 = dsl::parse_protocol(crate::artifacts::txt::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO);
+        assert!(p3.is_ok(), "diff protocol must parse: {p3:?}");
+    }
+
+    /// 🧪️ P2-P3: `register_schema_spec` genuinely resolves both the document and diff schema ids
+    /// through `dsl::registry::full_resolver()` once `register()` has run.
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn schema_spec_registration_resolves() {
+        use dsl::os_pack::cli::SchemaResolver;
+        register_schema_specs();
+        let resolver = dsl::registry::full_resolver();
+        assert!(resolver.resolve("stdio.txt").is_some(), "stdio.txt must resolve");
+        assert!(resolver.resolve("stdio.txt#diff").is_some(), "stdio.txt#diff must resolve");
+    }
+    //#endregion 🔖️P2P3GrammarProtocolFixtureLaws
 }
 //#endregion 🧪️Tests

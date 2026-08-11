@@ -138,6 +138,21 @@ impl protocol::OpBinary for BinaryMutation {
 }
 //#endregion OpCodecs
 
+/// 🧪️ P2-P3: representative `BinaryMutation` cases, one per variant, against [`tests::base`]'s
+/// canonical `[1,2,3,4,5]` snapshot -- single source of truth shared by the round-trip/law tests
+/// below AND the new `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests in
+/// `⚙️engine/🦀️component.rs`, per CLAUDE.md (no duplicated literal case lists).
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<BinaryMutation> {
+    vec![
+        BinaryMutation::NoMutation,
+        BinaryMutation::SetSnapshot { snapshot: BinarySnapshot { bytes: vec![9, 9], ..Default::default() } },
+        BinaryMutation::Splice { offset: 1, remove_len: 2, insert: vec![0xAA, 0xBB, 0xCC] },
+        BinaryMutation::AppendBytes { data: vec![0xEE, 0xFF] },
+        BinaryMutation::TruncateAt { offset: 4 },
+    ]
+}
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -145,24 +160,14 @@ mod tests {
     use protocol::MutationDiff;
     use protocol::os_spr::command::DiffAlgebra;
 
-    fn base() -> BinarySnapshot {
+    pub(crate) fn base() -> BinarySnapshot {
         BinarySnapshot { bytes: vec![1, 2, 3, 4, 5], ..Default::default() }
-    }
-
-    fn all_variants(b: &BinarySnapshot) -> Vec<BinaryMutation> {
-        vec![
-            BinaryMutation::NoMutation,
-            BinaryMutation::SetSnapshot { snapshot: BinarySnapshot { bytes: vec![9, 9], ..Default::default() } },
-            BinaryMutation::Splice { offset: 1, remove_len: 2, insert: vec![0xAA, 0xBB, 0xCC] },
-            BinaryMutation::AppendBytes { data: vec![0xEE, 0xFF] },
-            BinaryMutation::TruncateAt { offset: b.bytes.len().saturating_sub(1) },
-        ]
     }
 
     #[test]
     fn mutation_diff_law() {
         let b = base();
-        for m in all_variants(&b) {
+        for m in demo_mutation_cases() {
             let mut via_apply = b.clone();
             let returned = apply_binary_mutation(&mut via_apply, &m);
             let expected_diff = m.diff(&b);
@@ -174,7 +179,7 @@ mod tests {
     #[test]
     fn inverse_law() {
         let b = base();
-        for m in all_variants(&b) {
+        for m in demo_mutation_cases() {
             let mut mutated = b.clone();
             apply_binary_mutation(&mut mutated, &m);
             for undo in m.inverse(&b) {
@@ -182,7 +187,7 @@ mod tests {
             }
             assert_eq!(mutated, b, "mutation-level inverse round-trip failed for {m:?}");
         }
-        for m in all_variants(&b) {
+        for m in demo_mutation_cases() {
             let d = m.diff(&b);
             let next = d.apply(&b);
             let inv = d.inverse(&b);
@@ -193,7 +198,7 @@ mod tests {
     #[test]
     fn absorb_law_cartesian() {
         let b = base();
-        let variants = all_variants(&b);
+        let variants = demo_mutation_cases();
         for m1 in &variants {
             let d1 = m1.diff(&b);
             let mid = d1.apply(&b);
@@ -211,8 +216,7 @@ mod tests {
     /// `dsl::DslOps`-derived `DslVariants`).
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let b = base();
-        for m in all_variants(&b) {
+        for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = BinaryMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

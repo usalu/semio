@@ -906,6 +906,71 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 //#endregion 🔖️Primitives
 
+//#region 🔖️BinaryPrimitives
+/// 🧪️ P2-FG1: real LEB128-varint-framed binary primitives (length-prefixed strings, a tag-byte
+/// `Option<T>` wrapper) backing the upgraded `OpBinary` (`../../🧬️mutations/🦀️component.rs`) and
+/// `DiffCodec` (below) frames — mirrors json's own `write_str_lp`/`read_str_lp` shape, reusing
+/// `store::pack_rt::write_varint_u64`/`store::ByteReader` rather than reinventing varint encode/
+/// decode. `pub(crate)` so the mutations sibling can reuse these rather than duplicating them a
+/// second time in that file (same intra-artifact-reuse split the TEXT codec primitives above use).
+pub(crate) fn write_bool_bin(out: &mut Vec<u8>, b: bool) {
+    out.push(if b { 1 } else { 0 });
+}
+pub(crate) fn read_bool_bin(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
+    Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
+}
+pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+    store::pack_rt::write_varint_u64(out, s.len() as u64);
+    out.extend_from_slice(s.as_bytes());
+}
+pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+}
+pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
+    match opt {
+        None => out.push(0),
+        Some(v) => {
+            out.push(1);
+            enc(v, out);
+        }
+    }
+}
+pub(crate) fn read_option_bin<T>(
+    reader: &mut store::ByteReader<'_>,
+    dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>,
+) -> Result<Option<T>, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(None),
+        1 => Ok(Some(dec(reader)?)),
+        other => Err(format!("option binary: unknown tag {other}")),
+    }
+}
+/// 🏳️ Tri-state `Option<Option<T>>` binary wrapper (`MdBlockDiff::List.start`/`CodeBlock.info`) —
+/// `0`=unchanged (`None`), `1`=cleared (`Some(None)`), `2`=set (`Some(Some(v))`).
+pub(crate) fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option<T>>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
+    match opt {
+        None => out.push(0),
+        Some(None) => out.push(1),
+        Some(Some(v)) => {
+            out.push(2);
+            enc(v, out);
+        }
+    }
+}
+pub(crate) fn read_tristate_bin<T>(
+    reader: &mut store::ByteReader<'_>,
+    dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>,
+) -> Result<Option<Option<T>>, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(None),
+        1 => Ok(Some(None)),
+        2 => Ok(Some(Some(dec(reader)?))),
+        other => Err(format!("tristate binary: unknown tag {other}")),
+    }
+}
+//#endregion 🔖️BinaryPrimitives
+
 //#region 🔖️InlineCodec
 /// 🌳 `MdInline`, tag range A-I (see file doc comment) — order matches its declaration.
 pub(crate) fn enc_inline(n: &MdInline) -> String {
@@ -955,6 +1020,85 @@ pub(crate) fn enc_inline_list(list: &[MdInline]) -> String {
 pub(crate) fn dec_inline_list(s: &str) -> Result<Vec<MdInline>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_inline).collect()
 }
+
+//#region 🔖️InlineBinaryCodec
+/// 🧪️ P2-FG1: real recursive binary twin of [`enc_inline`]/[`dec_inline`] above — same 0-8
+/// ordinal order as the text codec's `A`-`I` tag range, backing the upgraded `OpBinary`/`DiffCodec`
+/// frames (`../../🧬️mutations/🦀️component.rs`, `#region 🔖️TopLevel` below).
+pub(crate) fn enc_inline_bin(n: &MdInline, out: &mut Vec<u8>) {
+    match n {
+        MdInline::Text { text } => {
+            out.push(0);
+            write_str_bin(out, text);
+        }
+        MdInline::Emphasis { inlines } => {
+            out.push(1);
+            enc_inline_list_bin(inlines, out);
+        }
+        MdInline::Strong { inlines } => {
+            out.push(2);
+            enc_inline_list_bin(inlines, out);
+        }
+        MdInline::Code { literal } => {
+            out.push(3);
+            write_str_bin(out, literal);
+        }
+        MdInline::Link { text, url, title } => {
+            out.push(4);
+            enc_inline_list_bin(text, out);
+            write_str_bin(out, url);
+            write_option_bin(out, title, |v, o| write_str_bin(o, v));
+        }
+        MdInline::Image { alt, url, title } => {
+            out.push(5);
+            write_str_bin(out, alt);
+            write_str_bin(out, url);
+            write_option_bin(out, title, |v, o| write_str_bin(o, v));
+        }
+        MdInline::SoftBreak => out.push(6),
+        MdInline::HardBreak => out.push(7),
+        MdInline::HtmlInline { raw } => {
+            out.push(8);
+            write_str_bin(out, raw);
+        }
+    }
+}
+pub(crate) fn dec_inline_bin(reader: &mut store::ByteReader<'_>) -> Result<MdInline, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    match tag {
+        0 => Ok(MdInline::Text { text: read_str_bin(reader)? }),
+        1 => Ok(MdInline::Emphasis { inlines: dec_inline_list_bin(reader)? }),
+        2 => Ok(MdInline::Strong { inlines: dec_inline_list_bin(reader)? }),
+        3 => Ok(MdInline::Code { literal: read_str_bin(reader)? }),
+        4 => {
+            let text = dec_inline_list_bin(reader)?;
+            let url = read_str_bin(reader)?;
+            let title = read_option_bin(reader, read_str_bin)?;
+            Ok(MdInline::Link { text, url, title })
+        }
+        5 => {
+            let alt = read_str_bin(reader)?;
+            let url = read_str_bin(reader)?;
+            let title = read_option_bin(reader, read_str_bin)?;
+            Ok(MdInline::Image { alt, url, title })
+        }
+        6 => Ok(MdInline::SoftBreak),
+        7 => Ok(MdInline::HardBreak),
+        8 => Ok(MdInline::HtmlInline { raw: read_str_bin(reader)? }),
+        other => Err(format!("inline binary: unknown tag {other}")),
+    }
+}
+pub(crate) fn enc_inline_list_bin(list: &[MdInline], out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, list.len() as u64);
+    for n in list {
+        enc_inline_bin(n, out);
+    }
+}
+pub(crate) fn dec_inline_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdInline>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    (0..count).map(|_| dec_inline_bin(reader)).collect()
+}
+//#endregion 🔖️InlineBinaryCodec
 //#endregion 🔖️InlineCodec
 
 //#region 🔖️BlockCodec
@@ -1022,6 +1166,92 @@ pub(crate) fn enc_item_list(items: &[Vec<MdBlock>]) -> String {
 pub(crate) fn dec_item_list(s: &str) -> Result<Vec<Vec<MdBlock>>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_block_list).collect()
 }
+
+//#region 🔖️BlockBinaryCodec
+/// 🧪️ P2-FG1: real recursive binary twin of [`enc_block`]/[`dec_block`] above — same 0-6 ordinal
+/// order as the text codec's `J`-`P` tag range.
+pub(crate) fn enc_block_bin(b: &MdBlock, out: &mut Vec<u8>) {
+    match b {
+        MdBlock::Heading { level, inlines } => {
+            out.push(0);
+            out.push(*level);
+            enc_inline_list_bin(inlines, out);
+        }
+        MdBlock::Paragraph { inlines } => {
+            out.push(1);
+            enc_inline_list_bin(inlines, out);
+        }
+        MdBlock::List { ordered, start, tight, items } => {
+            out.push(2);
+            write_bool_bin(out, *ordered);
+            write_option_bin(out, start, |v, o| store::pack_rt::write_varint_u64(o, *v as u64));
+            write_bool_bin(out, *tight);
+            enc_item_list_bin(items, out);
+        }
+        MdBlock::CodeBlock { info, literal } => {
+            out.push(3);
+            write_option_bin(out, info, |v, o| write_str_bin(o, v));
+            write_str_bin(out, literal);
+        }
+        MdBlock::BlockQuote { blocks } => {
+            out.push(4);
+            enc_block_list_bin(blocks, out);
+        }
+        MdBlock::ThematicBreak => out.push(5),
+        MdBlock::HtmlBlock { raw } => {
+            out.push(6);
+            write_str_bin(out, raw);
+        }
+    }
+}
+pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlock, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    match tag {
+        0 => {
+            let level = reader.read_u8().map_err(|e| e.to_string())?;
+            let inlines = dec_inline_list_bin(reader)?;
+            Ok(MdBlock::Heading { level, inlines })
+        }
+        1 => Ok(MdBlock::Paragraph { inlines: dec_inline_list_bin(reader)? }),
+        2 => {
+            let ordered = read_bool_bin(reader)?;
+            let start = read_option_bin(reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as u32))?;
+            let tight = read_bool_bin(reader)?;
+            let items = dec_item_list_bin(reader)?;
+            Ok(MdBlock::List { ordered, start, tight, items })
+        }
+        3 => {
+            let info = read_option_bin(reader, read_str_bin)?;
+            let literal = read_str_bin(reader)?;
+            Ok(MdBlock::CodeBlock { info, literal })
+        }
+        4 => Ok(MdBlock::BlockQuote { blocks: dec_block_list_bin(reader)? }),
+        5 => Ok(MdBlock::ThematicBreak),
+        6 => Ok(MdBlock::HtmlBlock { raw: read_str_bin(reader)? }),
+        other => Err(format!("block binary: unknown tag {other}")),
+    }
+}
+pub(crate) fn enc_block_list_bin(list: &[MdBlock], out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, list.len() as u64);
+    for b in list {
+        enc_block_bin(b, out);
+    }
+}
+pub(crate) fn dec_block_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdBlock>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    (0..count).map(|_| dec_block_bin(reader)).collect()
+}
+pub(crate) fn enc_item_list_bin(items: &[Vec<MdBlock>], out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, items.len() as u64);
+    for item in items {
+        enc_block_list_bin(item, out);
+    }
+}
+pub(crate) fn dec_item_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Vec<MdBlock>>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    (0..count).map(|_| dec_block_list_bin(reader)).collect()
+}
+//#endregion 🔖️BlockBinaryCodec
 //#endregion 🔖️BlockCodec
 
 //#region 🔖️DiffValueCodecs
@@ -1139,6 +1369,162 @@ fn dec_list_items_diff(body: &str) -> Result<MdListItemsDiff, String> {
 }
 //#endregion 🔖️DiffValueCodecs
 
+//#region 🔖️DiffValueBinaryCodecs
+/// 🧪️ P2-FG1: real recursive binary twin of [`enc_block_diff`]/[`dec_block_diff`] — same 0-7
+/// ordinal order as the text codec's `Q`-`X` tag range (`7`=`Replace`), backing the upgraded
+/// `DiffCodec::encode_diff`/`decode_diff` below. `List`/`CodeBlock`'s tri-state fields use
+/// [`write_tristate_bin`]/[`read_tristate_bin`]; every other `Option<T>` field uses the plain
+/// [`write_option_bin`]/[`read_option_bin`] pair.
+pub(crate) fn enc_block_diff_bin(d: &MdBlockDiff, out: &mut Vec<u8>) {
+    match d {
+        MdBlockDiff::Heading { level, inlines } => {
+            out.push(0);
+            write_option_bin(out, level, |v, o| o.push(*v));
+            write_option_bin(out, inlines, |v, o| enc_inline_list_bin(v, o));
+        }
+        MdBlockDiff::Paragraph { inlines } => {
+            out.push(1);
+            write_option_bin(out, inlines, |v, o| enc_inline_list_bin(v, o));
+        }
+        MdBlockDiff::List { ordered, start, tight, items } => {
+            out.push(2);
+            write_option_bin(out, ordered, |v, o| write_bool_bin(o, *v));
+            write_tristate_bin(out, start, |v, o| store::pack_rt::write_varint_u64(o, *v as u64));
+            write_option_bin(out, tight, |v, o| write_bool_bin(o, *v));
+            write_option_bin(out, items, |v, o| enc_list_items_diff_bin(v, o));
+        }
+        MdBlockDiff::CodeBlock { info, literal } => {
+            out.push(3);
+            write_tristate_bin(out, info, |v, o| write_str_bin(o, v));
+            write_option_bin(out, literal, |v, o| write_str_bin(o, v));
+        }
+        MdBlockDiff::BlockQuote { blocks } => {
+            out.push(4);
+            write_option_bin(out, blocks, |v, o| enc_blocks_diff_bin(v, o));
+        }
+        MdBlockDiff::ThematicBreak => out.push(5),
+        MdBlockDiff::HtmlBlock { raw } => {
+            out.push(6);
+            write_option_bin(out, raw, |v, o| write_str_bin(o, v));
+        }
+        MdBlockDiff::Replace { block } => {
+            out.push(7);
+            enc_block_bin(block, out);
+        }
+    }
+}
+pub(crate) fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlockDiff, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    match tag {
+        0 => {
+            let level = read_option_bin(reader, |r| r.read_u8().map_err(|e| e.to_string()))?;
+            let inlines = read_option_bin(reader, dec_inline_list_bin)?;
+            Ok(MdBlockDiff::Heading { level, inlines })
+        }
+        1 => Ok(MdBlockDiff::Paragraph { inlines: read_option_bin(reader, dec_inline_list_bin)? }),
+        2 => {
+            let ordered = read_option_bin(reader, read_bool_bin)?;
+            let start = read_tristate_bin(reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as u32))?;
+            let tight = read_option_bin(reader, read_bool_bin)?;
+            let items = read_option_bin(reader, dec_list_items_diff_bin)?;
+            Ok(MdBlockDiff::List { ordered, start, tight, items })
+        }
+        3 => {
+            let info = read_tristate_bin(reader, read_str_bin)?;
+            let literal = read_option_bin(reader, read_str_bin)?;
+            Ok(MdBlockDiff::CodeBlock { info, literal })
+        }
+        4 => Ok(MdBlockDiff::BlockQuote { blocks: read_option_bin(reader, dec_blocks_diff_bin)? }),
+        5 => Ok(MdBlockDiff::ThematicBreak),
+        6 => Ok(MdBlockDiff::HtmlBlock { raw: read_option_bin(reader, read_str_bin)? }),
+        7 => Ok(MdBlockDiff::Replace { block: dec_block_bin(reader)? }),
+        other => Err(format!("block diff binary: unknown tag {other}")),
+    }
+}
+
+/// 🌳 `MdBlocksDiff` binary twin of [`enc_blocks_diff`]/[`dec_blocks_diff`] — three varint-counted,
+/// recursively-encoded lists (removed/modified/added), genuinely structured binary.
+pub(crate) fn enc_blocks_diff_bin(d: &MdBlocksDiff, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
+    for idx in &d.removed {
+        store::pack_rt::write_varint_u64(out, *idx as u64);
+    }
+    store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
+    for entry in &d.modified {
+        store::pack_rt::write_varint_u64(out, entry.index as u64);
+        enc_block_diff_bin(&entry.diff, out);
+    }
+    store::pack_rt::write_varint_u64(out, d.added.len() as u64);
+    for entry in &d.added {
+        store::pack_rt::write_varint_u64(out, entry.index as u64);
+        enc_block_bin(&entry.item, out);
+    }
+}
+pub(crate) fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlocksDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(removed_count as usize);
+    for _ in 0..removed_count {
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+    }
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(modified_count as usize);
+    for _ in 0..modified_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let diff = dec_block_diff_bin(reader)?;
+        modified.push(MdBlockModified { index, diff });
+    }
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(added_count as usize);
+    for _ in 0..added_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let item = dec_block_bin(reader)?;
+        added.push(MdBlockAdded { index, item });
+    }
+    Ok(MdBlocksDiff { removed, modified, added })
+}
+
+/// 🌳 `MdListItemsDiff` binary twin of [`enc_list_items_diff`]/[`dec_list_items_diff`] — same
+/// 3-part shape, `modified.diff` a recursive `MdBlocksDiff`, `added.item` a `Vec<MdBlock>`.
+pub(crate) fn enc_list_items_diff_bin(d: &MdListItemsDiff, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
+    for idx in &d.removed {
+        store::pack_rt::write_varint_u64(out, *idx as u64);
+    }
+    store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
+    for entry in &d.modified {
+        store::pack_rt::write_varint_u64(out, entry.index as u64);
+        enc_blocks_diff_bin(&entry.diff, out);
+    }
+    store::pack_rt::write_varint_u64(out, d.added.len() as u64);
+    for entry in &d.added {
+        store::pack_rt::write_varint_u64(out, entry.index as u64);
+        enc_block_list_bin(&entry.item, out);
+    }
+}
+pub(crate) fn dec_list_items_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdListItemsDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(removed_count as usize);
+    for _ in 0..removed_count {
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+    }
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(modified_count as usize);
+    for _ in 0..modified_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let diff = dec_blocks_diff_bin(reader)?;
+        modified.push(MdListItemModified { index, diff });
+    }
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(added_count as usize);
+    for _ in 0..added_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let item = dec_block_list_bin(reader)?;
+        added.push(MdListItemAdded { index, item });
+    }
+    Ok(MdListItemsDiff { removed, modified, added })
+}
+//#endregion 🔖️DiffValueBinaryCodecs
+
 //#region 🔖️TopLevel
 fn print_md_diff(d: &MdDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
@@ -1169,19 +1555,168 @@ impl protocol::DiffCodec for MdDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_md_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`'s hand-rolled
-    /// codecs use (and the repo's only other hand-rolled `DiffCodec`, `WriterDiff`) — satisfies
-    /// every `DiffCodec` law without inventing a second wire format.
+    /// 🧪️ P2-FG1: REAL binary frame (`format u8 | has_value u8 | blocks-diff payload`), matching
+    /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+    /// upgraded from F6's `print_diff().into_bytes()` text-as-binary shortcut (100% of stdio's
+    /// `DiffCodec` impls were still on that shortcut per the P2-W0 census).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, if self.blocks.is_some() { 1 } else { 0 }];
+        if let Some(blocks) = &self.blocks {
+            enc_blocks_diff_bin(blocks, &mut out);
+        }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
+        let has_value = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
+        let blocks = if has_value != 0 {
+            Some(dec_blocks_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks", offset: reader.position() as u64, detail: e })?)
+        } else {
+            None
+        };
+        Ok(MdDiff { blocks })
     }
 }
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG1: representative `MdDiff` values — the single source of truth reused by
+/// `diff_codec_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
+/// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests.
+#[cfg(test)]
+fn demo_snapshot(blocks: Vec<MdBlock>) -> MdSnapshot {
+    MdSnapshot { schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
+}
+
+/// 🌈 One instance of every `MdInline` variant (both `Option<title>` branches for
+/// `Link`/`Image`), with `Emphasis`/`Strong` nesting another variant inside themselves so the
+/// recursive `enc_inline_list`/`dec_inline_list` path gets exercised too.
+#[cfg(test)]
+fn all_inline_kinds() -> Vec<MdInline> {
+    vec![
+        MdInline::Text { text: "hi".into() },
+        MdInline::Emphasis { inlines: vec![MdInline::Text { text: "em".into() }] },
+        MdInline::Strong { inlines: vec![MdInline::Code { literal: "x=1".into() }] },
+        MdInline::Code { literal: "code".into() },
+        MdInline::Link { text: vec![MdInline::Text { text: "go".into() }], url: "http://a".into(), title: Some("t".into()) },
+        MdInline::Link { text: vec![MdInline::Text { text: "go2".into() }], url: "http://b".into(), title: None },
+        MdInline::Image { alt: "pic".into(), url: "http://img".into(), title: Some("cap".into()) },
+        MdInline::Image { alt: "pic2".into(), url: "http://img2".into(), title: None },
+        MdInline::SoftBreak,
+        MdInline::HardBreak,
+        MdInline::HtmlInline { raw: "<br/>".into() },
+    ]
+}
+
+/// 🌱 `md_a`/`md_b`: differ across every `MdBlockDiff` kind (`Heading`/`Paragraph`/`List`/
+/// `CodeBlock`/`BlockQuote`/`HtmlBlock` via matched-kind field changes, plus one same-index
+/// kind-CHANGE pair -- `HtmlBlock` -> `Heading` -- for `Replace`), both tri-states going
+/// `Some(x) -> Some(None)` (`List.start`, `CodeBlock.info`), and an asymmetric length (9 vs 8
+/// top-level blocks, 2 vs 3 `List` items) so `between(a,b)`/`between(b,a)` together exercise
+/// `removed` AND `added` on BOTH `MdBlocksDiff` (top-level tail, `BlockQuote.blocks`) and
+/// `MdListItemsDiff` (`List.items`) -- the same dual-direction trick `SvgMutation`'s
+/// `sweep_a`/`sweep_b` fixtures use, since the recipe's naive positional `between` can only ever
+/// show one of {removed-tail, added-tail} per single call. `md_a[6]`/`md_b[6]` are IDENTICAL
+/// (proves an unchanged block correctly produces no diff entry at all).
+#[cfg(test)]
+fn md_a() -> Vec<MdBlock> {
+    vec![
+        MdBlock::Heading { level: 1, inlines: vec![MdInline::Text { text: "Intro".into() }] },
+        MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "para one".into() }, MdInline::SoftBreak] },
+        MdBlock::List {
+            ordered: false,
+            start: Some(3),
+            tight: true,
+            items: vec![
+                vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item-a1".into() }] }],
+                vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item-a2".into() }] }],
+            ],
+        },
+        MdBlock::CodeBlock { info: Some("rust".into()), literal: "fn a(){}".into() },
+        MdBlock::BlockQuote { blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "quoted-a".into() }] }] },
+        MdBlock::HtmlBlock { raw: "<div>a</div>".into() },
+        MdBlock::Paragraph { inlines: vec![MdInline::Strong { inlines: vec![MdInline::Text { text: "unchanged".into() }] }] },
+        MdBlock::HtmlBlock { raw: "<span>willBecomeHeading</span>".into() },
+        MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "tail-only-in-a".into() }] },
+    ]
+}
+#[cfg(test)]
+fn md_b() -> Vec<MdBlock> {
+    vec![
+        MdBlock::Heading { level: 2, inlines: all_inline_kinds() },
+        MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "para one CHANGED".into() }] },
+        MdBlock::List {
+            ordered: true,
+            start: None,
+            tight: false,
+            items: vec![
+                vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item-b1".into() }] }],
+                vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item-b2".into() }] }],
+                vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item-b3-added".into() }] }],
+            ],
+        },
+        MdBlock::CodeBlock { info: None, literal: "fn b(){}".into() },
+        MdBlock::BlockQuote {
+            blocks: vec![
+                MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "quoted-a".into() }] },
+                MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "quoted-b-added".into() }] },
+            ],
+        },
+        MdBlock::HtmlBlock { raw: "<div>b</div>".into() },
+        MdBlock::Paragraph { inlines: vec![MdInline::Strong { inlines: vec![MdInline::Text { text: "unchanged".into() }] }] },
+        MdBlock::Heading { level: 3, inlines: vec![MdInline::Text { text: "nowHeading".into() }] },
+    ]
+}
+
+/// 🧪️ P2-FG1: representative `MdDiff` values — exercises the recursive `MdBlockDiff` enum (7 of
+/// its 8 variants reachable via `between`, `Replace` incl.), every `MdInline` variant (via
+/// `all_inline_kinds`), both tri-states (`List.start`, `CodeBlock.info`), and both
+/// `MdBlocksDiff`/`MdListItemsDiff` triples at multiple nesting depths (top-level,
+/// `BlockQuote.blocks`, `List.items`). `MdBlockDiff::ThematicBreak` is UNREACHABLE via `between`
+/// (two `ThematicBreak`s are always structurally equal, per that variant's own doc comment) so it
+/// gets one manually-constructed case here instead.
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<MdDiff> {
+    let a = demo_snapshot(md_a());
+    let b = demo_snapshot(md_b());
+    let empty = demo_snapshot(Vec::new());
+
+    let mut cases = vec![
+        MdDiff::default(),
+        MdDiff::between(&a, &b),
+        MdDiff::between(&b, &a),
+        MdDiff::between(&a, &empty),
+        MdDiff::between(&empty, &a),
+    ];
+    // 🍃 Manual case: `ThematicBreak` diff (never produced by `between`) + `Replace` at a nested
+    // `BlockQuote` depth, proving the codec handles both even off the `between` path.
+    cases.push(MdDiff {
+        blocks: Some(MdBlocksDiff {
+            removed: Vec::new(),
+            modified: vec![
+                MdBlockModified { index: 0, diff: MdBlockDiff::ThematicBreak },
+                MdBlockModified {
+                    index: 1,
+                    diff: MdBlockDiff::BlockQuote {
+                        blocks: Some(MdBlocksDiff {
+                            removed: vec![2, 0],
+                            modified: vec![MdBlockModified { index: 1, diff: MdBlockDiff::Replace { block: MdBlock::ThematicBreak } }],
+                            added: vec![MdBlockAdded { index: 0, item: MdBlock::HtmlBlock { raw: "<hr/>".into() } }],
+                        }),
+                    },
+                },
+            ],
+            added: vec![MdBlockAdded {
+                index: 2,
+                item: MdBlock::List { ordered: true, start: Some(1), tight: false, items: vec![vec![MdBlock::ThematicBreak], Vec::new()] },
+            }],
+        }),
+    });
+    cases
+}
+//#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -1189,138 +1724,11 @@ mod handcrafted_diff_codec_tests {
     use super::*;
     use protocol::DiffCodec;
 
-    fn snapshot(blocks: Vec<MdBlock>) -> MdSnapshot {
-        MdSnapshot { schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
-    }
-
-    /// 🌈 One instance of every `MdInline` variant (both `Option<title>` branches for
-    /// `Link`/`Image`), with `Emphasis`/`Strong` nesting another variant inside themselves so the
-    /// recursive `enc_inline_list`/`dec_inline_list` path gets exercised too.
-    fn all_inline_kinds() -> Vec<MdInline> {
-        vec![
-            MdInline::Text { text: "hi".into() },
-            MdInline::Emphasis { inlines: vec![MdInline::Text { text: "em".into() }] },
-            MdInline::Strong { inlines: vec![MdInline::Code { literal: "x=1".into() }] },
-            MdInline::Code { literal: "code".into() },
-            MdInline::Link { text: vec![MdInline::Text { text: "go".into() }], url: "http://a".into(), title: Some("t".into()) },
-            MdInline::Link { text: vec![MdInline::Text { text: "go2".into() }], url: "http://b".into(), title: None },
-            MdInline::Image { alt: "pic".into(), url: "http://img".into(), title: Some("cap".into()) },
-            MdInline::Image { alt: "pic2".into(), url: "http://img2".into(), title: None },
-            MdInline::SoftBreak,
-            MdInline::HardBreak,
-            MdInline::HtmlInline { raw: "<br/>".into() },
-        ]
-    }
-
-    /// 🌱 `md_a`/`md_b`: differ across every `MdBlockDiff` kind (`Heading`/`Paragraph`/`List`/
-    /// `CodeBlock`/`BlockQuote`/`HtmlBlock` via matched-kind field changes, plus one same-index
-    /// kind-CHANGE pair -- `HtmlBlock` -> `Heading` -- for `Replace`), both tri-states going
-    /// `Some(x) -> Some(None)` (`List.start`, `CodeBlock.info`), and an asymmetric length (9 vs 8
-    /// top-level blocks, 2 vs 3 `List` items) so `between(a,b)`/`between(b,a)` together exercise
-    /// `removed` AND `added` on BOTH `MdBlocksDiff` (top-level tail, `BlockQuote.blocks`) and
-    /// `MdListItemsDiff` (`List.items`) -- the same dual-direction trick `SvgMutation`'s
-    /// `sweep_a`/`sweep_b` fixtures use, since the recipe's naive positional `between` can only ever
-    /// show one of {removed-tail, added-tail} per single call. `md_a[6]`/`md_b[6]` are IDENTICAL
-    /// (proves an unchanged block correctly produces no diff entry at all).
-    fn md_a() -> Vec<MdBlock> {
-        vec![
-            MdBlock::Heading { level: 1, inlines: vec![MdInline::Text { text: "Intro".into() }] },
-            MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "para one".into() }, MdInline::SoftBreak] },
-            MdBlock::List {
-                ordered: false,
-                start: Some(3),
-                tight: true,
-                items: vec![
-                    vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item-a1".into() }] }],
-                    vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item-a2".into() }] }],
-                ],
-            },
-            MdBlock::CodeBlock { info: Some("rust".into()), literal: "fn a(){}".into() },
-            MdBlock::BlockQuote { blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "quoted-a".into() }] }] },
-            MdBlock::HtmlBlock { raw: "<div>a</div>".into() },
-            MdBlock::Paragraph { inlines: vec![MdInline::Strong { inlines: vec![MdInline::Text { text: "unchanged".into() }] }] },
-            MdBlock::HtmlBlock { raw: "<span>willBecomeHeading</span>".into() },
-            MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "tail-only-in-a".into() }] },
-        ]
-    }
-    fn md_b() -> Vec<MdBlock> {
-        vec![
-            MdBlock::Heading { level: 2, inlines: all_inline_kinds() },
-            MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "para one CHANGED".into() }] },
-            MdBlock::List {
-                ordered: true,
-                start: None,
-                tight: false,
-                items: vec![
-                    vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item-b1".into() }] }],
-                    vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item-b2".into() }] }],
-                    vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "item-b3-added".into() }] }],
-                ],
-            },
-            MdBlock::CodeBlock { info: None, literal: "fn b(){}".into() },
-            MdBlock::BlockQuote {
-                blocks: vec![
-                    MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "quoted-a".into() }] },
-                    MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "quoted-b-added".into() }] },
-                ],
-            },
-            MdBlock::HtmlBlock { raw: "<div>b</div>".into() },
-            MdBlock::Paragraph { inlines: vec![MdInline::Strong { inlines: vec![MdInline::Text { text: "unchanged".into() }] }] },
-            MdBlock::Heading { level: 3, inlines: vec![MdInline::Text { text: "nowHeading".into() }] },
-        ]
-    }
-
-    /// 🧪️ F6: `DiffCodec` round-trip laws over the hand-rolled `MdDiff` grammar — exercises the
-    /// recursive `MdBlockDiff` enum (7 of its 8 variants reachable via `between`, `Replace` incl.),
-    /// every `MdInline` variant (via `all_inline_kinds`), both tri-states (`List.start`,
-    /// `CodeBlock.info`), and both `MdBlocksDiff`/`MdListItemsDiff` triples at multiple nesting
-    /// depths (top-level, `BlockQuote.blocks`, `List.items`). `MdBlockDiff::ThematicBreak` is
-    /// UNREACHABLE via `between` (two `ThematicBreak`s are always structurally equal, per that
-    /// variant's own doc comment) so it gets one manually-constructed case below instead.
+    /// 🧪️ F6/P2-FG1: `DiffCodec` round-trip laws over the hand-rolled `MdDiff` grammar — see
+    /// `demo_diff_cases()`'s own doc comment for exactly what each case exercises.
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {
-        let a = snapshot(md_a());
-        let b = snapshot(md_b());
-        let empty = snapshot(Vec::new());
-
-        let mut cases = vec![
-            MdDiff::default(),
-            MdDiff::between(&a, &b),
-            MdDiff::between(&b, &a),
-            MdDiff::between(&a, &empty),
-            MdDiff::between(&empty, &a),
-        ];
-        // 🍃 Manual case: `ThematicBreak` diff (never produced by `between`) + `Replace` at a
-        // nested `BlockQuote` depth, proving the codec handles both even off the `between` path.
-        cases.push(MdDiff {
-            blocks: Some(MdBlocksDiff {
-                removed: Vec::new(),
-                modified: vec![
-                    MdBlockModified { index: 0, diff: MdBlockDiff::ThematicBreak },
-                    MdBlockModified {
-                        index: 1,
-                        diff: MdBlockDiff::BlockQuote {
-                            blocks: Some(MdBlocksDiff {
-                                removed: vec![2, 0],
-                                modified: vec![MdBlockModified { index: 1, diff: MdBlockDiff::Replace { block: MdBlock::ThematicBreak } }],
-                                added: vec![MdBlockAdded { index: 0, item: MdBlock::HtmlBlock { raw: "<hr/>".into() } }],
-                            }),
-                        },
-                    },
-                ],
-                added: vec![MdBlockAdded {
-                    index: 2,
-                    item: MdBlock::List {
-                        ordered: true,
-                        start: Some(1),
-                        tight: false,
-                        items: vec![vec![MdBlock::ThematicBreak], Vec::new()],
-                    },
-                }],
-            }),
-        });
-
-        for d in cases {
+        for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
             let parsed = MdDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));

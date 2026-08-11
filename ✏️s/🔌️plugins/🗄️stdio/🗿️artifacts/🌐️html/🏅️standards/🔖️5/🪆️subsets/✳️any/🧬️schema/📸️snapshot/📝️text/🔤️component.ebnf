@@ -1,3 +1,26 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.html.snapshot" ;
+(* ISO-14977-style EBNF for the WHATWG HTML5 well-formed subset (`stdio.html`'s on-disk body). *)
+document = [ doctype ], element ;
+doctype = '<!', doctypeKeyword, { character - '>' }, '>' ;
+doctypeKeyword = 'D'|'d', 'O'|'o', 'C'|'c', 'T'|'t', 'Y'|'y', 'P'|'p', 'E'|'e' ;
+
+element = voidElement | rawTextElement | normalElement ;
+
+voidElement = '<', voidName, { attribute }, [ '/' ], '>' ;
+voidName = 'area' | 'base' | 'br' | 'col' | 'embed' | 'hr' | 'img' | 'input'
+         | 'link' | 'meta' | 'param' | 'source' | 'track' | 'wbr' ;
+
+rawTextElement = '<', rawTextName, { attribute }, '>', rawText, '</', rawTextName, '>' ;
+rawTextName = 'script' | 'style' ;
+rawText = ? any characters, up to (not including) the matching case-insensitive close tag ? ;
+
+normalElement = '<', name, { attribute }, '>', { content }, '</', name, '>' ;
+content = element | comment | text ;
+comment = '<!--', { character - '-->' }, '-->' ;
+text = ? any characters except '<', entity-decoded on parse, entity-encoded on write ? ;
+
+attribute = name, [ '=', attributeValue ] ;
+attributeValue = '"', { character - '"' }, '"'
+               | "'", { character - "'" }, "'"
+               | { character - ( ' ' | tab | newline | '>' ) } ;
+
+name = letter, { letter | digit | '-' | '_' | ':' | '.' } ;

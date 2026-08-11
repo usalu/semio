@@ -696,6 +696,120 @@ fn parse_csv_diff(line: &str) -> Result<CsvDiff, String> {
     Ok(d)
 }
 
+//#region 🔖️RealBinaryDiffFrame
+/// 🧪️ P2-P1: **real binary diff-frame** for `CsvDiff` — upgraded from the F6-era
+/// `print_diff().into_bytes()` text-as-binary shortcut. `CsvDiff` is a STRUCT
+/// (`has_header: Option<bool>`, `records: Option<CsvRecordsDiff>`), so the frame is one
+/// presence-flag byte PER field (not an ordinal dispatch — that's the mutations enum's own
+/// shape) directly modeling `../💾️binary/📡️component.protocol.semio`'s real
+/// `field X u8` / `field Y u8 if X eq 1` conditional-presence layout (P2-M2 item 4). The
+/// `records` triple's own recursive removed/modified/added contents are hand-rolled via
+/// `dsl::ByteWriter`/`dsl::ByteReader` and placed LAST so they can honestly consume "rest of
+/// buffer" with no length prefix — see the protocol file's own doc comment for why (no
+/// `Ref`-to-struct / no heterogeneous `Array` in this dialect yet).
+fn write_bin_field_diff(w: &mut dsl::ByteWriter, d: &CsvFieldDiff) {
+    match &d.value {
+        None => w.write_u8(0),
+        Some(v) => {
+            w.write_u8(1);
+            let bytes = v.as_bytes();
+            w.write_varint_u64(bytes.len() as u64);
+            w.write_bytes(bytes);
+        }
+    }
+    match d.quoted {
+        None => w.write_u8(0),
+        Some(v) => {
+            w.write_u8(1);
+            w.write_u8(if v { 1 } else { 0 });
+        }
+    }
+}
+fn read_bin_field_diff(r: &mut dsl::ByteReader) -> Result<CsvFieldDiff, dsl::PackError> {
+    let mut d = CsvFieldDiff::default();
+    if r.read_u8()? == 1 {
+        let len = r.read_varint_u64()? as usize;
+        let bytes = r.read_bytes(len)?;
+        d.value = Some(String::from_utf8(bytes.to_vec()).map_err(|e| dsl::PackError::Malformed { what: "csv diff field value utf8", offset: 0, detail: e.to_string() })?);
+    }
+    if r.read_u8()? == 1 {
+        d.quoted = Some(r.read_u8()? != 0);
+    }
+    Ok(d)
+}
+fn write_bin_record_diff(w: &mut dsl::ByteWriter, d: &CsvRecordDiff) {
+    match &d.fields {
+        None => w.write_u8(0),
+        Some(v) => {
+            w.write_u8(1);
+            w.write_varint_u64(v.len() as u64);
+            for item in v {
+                match item {
+                    None => w.write_u8(0),
+                    Some(fd) => {
+                        w.write_u8(1);
+                        write_bin_field_diff(w, fd);
+                    }
+                }
+            }
+        }
+    }
+}
+fn read_bin_record_diff(r: &mut dsl::ByteReader) -> Result<CsvRecordDiff, dsl::PackError> {
+    let fields = if r.read_u8()? == 1 {
+        let n = r.read_varint_u64()? as usize;
+        let mut items = Vec::with_capacity(n);
+        for _ in 0..n {
+            items.push(if r.read_u8()? == 1 { Some(read_bin_field_diff(r)?) } else { None });
+        }
+        Some(items)
+    } else {
+        None
+    };
+    Ok(CsvRecordDiff { fields })
+}
+fn write_bin_records_diff(w: &mut dsl::ByteWriter, d: &CsvRecordsDiff) {
+    w.write_varint_u64(d.removed.len() as u64);
+    for idx in &d.removed {
+        w.write_varint_u64(*idx as u64);
+    }
+    w.write_varint_u64(d.modified.len() as u64);
+    for m in &d.modified {
+        w.write_varint_u64(m.index as u64);
+        write_bin_record_diff(w, &m.diff);
+    }
+    w.write_varint_u64(d.added.len() as u64);
+    for a in &d.added {
+        w.write_varint_u64(a.index as u64);
+        crate::artifacts::csv::schema::mutations::write_bin_record(w, &a.record);
+    }
+}
+fn read_bin_records_diff(r: &mut dsl::ByteReader) -> Result<CsvRecordsDiff, dsl::PackError> {
+    let removed_n = r.read_varint_u64()? as usize;
+    let mut removed = Vec::with_capacity(removed_n);
+    for _ in 0..removed_n {
+        removed.push(r.read_varint_u64()? as usize);
+    }
+    let modified_n = r.read_varint_u64()? as usize;
+    let mut modified = Vec::with_capacity(modified_n);
+    for _ in 0..modified_n {
+        let index = r.read_varint_u64()? as usize;
+        let diff = read_bin_record_diff(r)?;
+        modified.push(CsvRecordModified { index, diff });
+    }
+    let added_n = r.read_varint_u64()? as usize;
+    let mut added = Vec::with_capacity(added_n);
+    for _ in 0..added_n {
+        let index = r.read_varint_u64()? as usize;
+        let record = crate::artifacts::csv::schema::mutations::read_bin_record(r)?;
+        added.push(CsvRecordAdded { index, record });
+    }
+    Ok(CsvRecordsDiff { removed, modified, added })
+}
+fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+    protocol::ProtocolError::Malformed { what: "csv diff binary", offset: 0, detail: e.to_string() }
+}
+
 impl protocol::DiffCodec for CsvDiff {
     fn print_diff(&self) -> String {
         print_csv_diff(self)
@@ -703,17 +817,34 @@ impl protocol::DiffCodec for CsvDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_csv_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim — same simplification `WriterDiff`/gif89a/svg's
-    /// hand-rolled `DiffCodec`s use: satisfies every `DiffCodec` law (round-trips, deterministic)
-    /// without inventing a second, denser wire format.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let mut w = dsl::ByteWriter::new();
+        match self.has_header {
+            Some(v) => {
+                w.write_u8(1);
+                w.write_u8(if v { 1 } else { 0 });
+            }
+            None => w.write_u8(0),
+        }
+        match &self.records {
+            Some(r) => {
+                w.write_u8(1);
+                write_bin_records_diff(&mut w, r);
+            }
+            None => w.write_u8(0),
+        }
+        Ok(w.into_bytes())
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let mut r = dsl::ByteReader::new(bytes);
+        let hh_flag = r.read_u8().map_err(diff_pack_err)?;
+        let has_header = if hh_flag == 1 { Some(r.read_u8().map_err(diff_pack_err)? != 0) } else { None };
+        let rec_flag = r.read_u8().map_err(diff_pack_err)?;
+        let records = if rec_flag == 1 { Some(read_bin_records_diff(&mut r).map_err(diff_pack_err)?) } else { None };
+        Ok(CsvDiff { has_header, records })
     }
 }
+//#endregion 🔖️RealBinaryDiffFrame
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
 
@@ -766,5 +897,42 @@ mod handcrafted_diff_codec_tests {
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }
+
+    //#region 🔖️DiffGrammarConformanceLaw
+    /// 🧪️ P2-P1 item 6: `dsl::parse_grammar` + `dsl::Recognizer` recognize REAL `print_diff`
+    /// output for several real diffs, including the `records` COLLECTION-TRIPLE production
+    /// (removed/modified/added) — the first real collection-triple grammar in this program.
+    #[test]
+    fn diff_grammar_conformance_law() {
+        let grammar_text = crate::artifacts::csv::schema::diff::text::COMPONENT_GRAMMAR_SEMIO;
+        let grammar = dsl::parse_grammar(grammar_text).expect("parse diff grammar");
+        let recognizer = dsl::Recognizer::compile(&grammar);
+
+        let a = CsvSnapshot {
+            schema: "stdio.csv".into(),
+            has_header: true,
+            records: vec![
+                record(&[("name", false), ("note, with comma", true)]),
+                record(&[("a", false), ("b", false)]),
+                record(&[("x", false), ("y", false)]),
+            ],
+        };
+        let b = CsvSnapshot {
+            schema: "stdio.csv".into(),
+            has_header: false,
+            records: vec![
+                record(&[("new-a", true), ("new-b", false)]),
+                record(&[("x", false), ("y", false)]),
+                record(&[("brand [new]", true)]),
+            ],
+        };
+        let diffs = vec![CsvDiff::default(), CsvDiff::between(&a, &b), CsvDiff::between(&b, &a)];
+        for d in diffs {
+            let printed = d.print_diff();
+            let ok = recognizer.recognize(&printed).unwrap_or_else(|e| panic!("recognize({printed:?}) errored: {e:?}"));
+            assert!(ok, "diff grammar must recognize real print_diff output {printed:?}");
+        }
+    }
+    //#endregion 🔖️DiffGrammarConformanceLaw
 }
 //#endregion 🧪️Tests

@@ -1,9 +1,71 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioWorkflowDiffEntry {
+# 🔺️ SemioWorkflowDiff schema — real facet mirror of 🦀️component.rs.
+type SemioPoint2 {
+  x: Float!
+  y: Float!
+}
+type PortRef {
+  node: String!
+  port: String!
+}
+type WorkflowParam {
   key: String!
   value: String!
 }
+type WorkflowParamDiff {
+  value: String
+}
+type WorkflowParamModified {
+  key: String!
+  diff: WorkflowParamDiff!
+}
+type WorkflowParamsDiff {
+  removed: [String!]!
+  modified: [WorkflowParamModified!]!
+  added: [WorkflowParam!]!
+}
+type WorkflowNode {
+  id: String!
+  kind: String!
+  label: String!
+  params: [WorkflowParam!]!
+  position: SemioPoint2!
+}
+type WorkflowNodeDiff {
+  kind: String
+  label: String
+  params: WorkflowParamsDiff
+  position: SemioPoint2
+}
+type WorkflowNodeModified {
+  key: String!
+  diff: WorkflowNodeDiff!
+}
+type WorkflowNodesDiff {
+  removed: [String!]!
+  modified: [WorkflowNodeModified!]!
+  added: [WorkflowNode!]!
+}
+type WorkflowEdge {
+  id: String!
+  from: PortRef!
+  to: PortRef!
+  kind: String!
+}
+type WorkflowEdgeDiff {
+  from: PortRef
+  to: PortRef
+  kind: String
+}
+type WorkflowEdgeModified {
+  key: String!
+  diff: WorkflowEdgeDiff!
+}
+type WorkflowEdgesDiff {
+  removed: [String!]!
+  modified: [WorkflowEdgeModified!]!
+  added: [WorkflowEdge!]!
+}
 type SemioWorkflowDiff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioWorkflowDiffEntry!]! @state(class: PERSISTENT)
+  nodes: WorkflowNodesDiff @state(class: PERSISTENT)
+  edges: WorkflowEdgesDiff @state(class: PERSISTENT)
 }

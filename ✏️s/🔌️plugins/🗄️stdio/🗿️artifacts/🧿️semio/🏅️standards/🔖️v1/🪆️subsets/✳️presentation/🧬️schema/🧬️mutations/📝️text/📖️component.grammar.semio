@@ -1,5 +1,7 @@
 dialect grammar stdio.semio.presentation.mutations
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.presentation.mutations"
+root = line
+line = "no-mutation" | keyword (SP arg)*
+keyword = "no-mutation" | "set-snapshot" | "insert-slide" | "remove-slide" | "set-slide-layout" | "set-slide-notes" | "insert-shape" | "remove-shape" | "set-shape-frame" | "set-textbox-blocks" | "insert-master" | "remove-master" | "insert-layout" | "remove-layout" | "set-layout-master"
+arg = name "=" value
+name = 1*(ALPHA / "-")
+value = *OCTET

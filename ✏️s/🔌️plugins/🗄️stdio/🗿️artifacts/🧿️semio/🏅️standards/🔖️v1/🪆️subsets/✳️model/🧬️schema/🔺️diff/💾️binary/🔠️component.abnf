@@ -1,3 +1,6 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.model.diff"
+; abnf stdio.semio.model diff (binary form)
+; `encode_diff`/`decode_diff` carry NO envelope -- the binary form is exactly the UTF-8 bytes of
+; `print_diff()`'s one-line text (see the sibling 📡️component.protocol.semio and
+; ../📝️text/📖️component.grammar.semio for the `line` grammar those bytes decode as).
+document = line-bytes
+line-bytes = 1*OCTET  ; UTF-8 encoding of the text-facet `line` production, to end of stream

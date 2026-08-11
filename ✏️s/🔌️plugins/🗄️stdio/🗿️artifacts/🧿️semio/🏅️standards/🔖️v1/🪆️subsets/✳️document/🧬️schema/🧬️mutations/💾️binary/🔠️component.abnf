@@ -1,3 +1,4 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.document.mutations"
+; Binary op form = the text op's UTF-8 bytes verbatim (protocol::OpBinary::encode_op wraps
+; print_op() directly; no separate binary framing, same simplification the diff codec uses).
+document = text-op-bytes
+text-op-bytes = *OCTET  ; exactly the print_op() ASCII output, re-encoded as UTF-8

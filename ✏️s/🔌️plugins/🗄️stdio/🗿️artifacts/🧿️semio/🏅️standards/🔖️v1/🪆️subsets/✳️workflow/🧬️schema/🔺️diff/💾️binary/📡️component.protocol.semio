@@ -1,3 +1,4 @@
 dialect protocol stdio.semio.workflow.diff
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.workflow.diff"
+; UTF-8 bytes of the diff TEXT wire format verbatim — see 🔺️diff/📝️text/📖️component.grammar.semio
+; for the real token grammar.
+diff-line-utf8 = rest-of-stream

@@ -1,7 +1,3 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_tsv_diff.text;
-message Semio_tsv_diff {
-  string schema = 1;
-  string entries_wire = 2;
-}
+package semio.stdio_tsv.diff_text;
+message Artifact { string schema = 1; bytes payload = 2; }

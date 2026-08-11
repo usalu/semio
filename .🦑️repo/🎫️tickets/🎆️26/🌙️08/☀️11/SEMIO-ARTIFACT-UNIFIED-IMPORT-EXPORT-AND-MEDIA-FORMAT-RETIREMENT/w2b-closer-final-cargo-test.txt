@@ -1,0 +1,20 @@
+
+failures:
+    artifacts::csv::standards::v_rfc4180::engine::tests::committed_grammar_and_protocol_files_parse
+    artifacts::csv::standards::v_rfc4180::engine::tests::grammar_conformance_law
+    artifacts::csv::standards::v_rfc4180::subsets::any::schema::diff::component::handcrafted_diff_codec_tests::diff_grammar_conformance_law
+    artifacts::csv::standards::v_rfc4180::subsets::any::schema::mutations::component::tests::ops_grammar_conformance_law
+    artifacts::json::standards::v_rfc8259::engine::tests::conformance_laws::committed_facet_files_parse
+    artifacts::json::standards::v_rfc8259::engine::tests::conformance_laws::diff_grammar_conformance_law
+    artifacts::json::standards::v_rfc8259::engine::tests::conformance_laws::grammar_conformance_law
+    artifacts::json::standards::v_rfc8259::engine::tests::conformance_laws::ops_grammar_conformance_law
+    artifacts::json::standards::v_rfc8259::engine::tests::conformance_laws::protocol_walk_law
+    artifacts::semio::standards::v1::subsets::brep::schema::diff::component::tests::field_sweep_every_field_present_in_diff
+    artifacts::semio::standards::v1::subsets::mesh::schema::mutations::component::tests::between_roundtrip_law
+    artifacts::semio::standards::v1::subsets::mesh::schema::mutations::component::tests::field_sweep
+    artifacts::semio::standards::v1::subsets::mesh::schema::mutations::component::tests::inverse_law
+    artifacts::semio::standards::v1::subsets::model::schema::mutations::component::tests::op_text_binary_roundtrip_law
+
+test result: FAILED. 1483 passed; 14 failed; 1 ignored; 0 measured; 0 filtered out; finished in 7.97s
+
+error: test failed, to rerun pass `-p semio-s-plugin-stdio --lib`

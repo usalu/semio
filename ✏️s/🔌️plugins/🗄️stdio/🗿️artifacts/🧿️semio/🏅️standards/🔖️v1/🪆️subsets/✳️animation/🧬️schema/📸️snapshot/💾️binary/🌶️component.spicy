@@ -1,5 +1,5 @@
-module Semio_semio_animation_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_semio_animation_snapshot;
 type Document = unit {
-    magic: bytes &size=30;
+    magic: bytes &size=1;
+    body: bytes &eod &convert=$$.decode() # hex-encoded JSON envelope body
 };

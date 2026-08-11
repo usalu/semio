@@ -1,10 +1,7 @@
 {
-  "$id": "https://semio.tech/schema/stdio.semio.mesh.diff/text.json",
-  "title": "Semio_semio_mesh_diff",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
-  "type": "object",
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+  "$id": "https://semio.tech/schema/s.stdio.semio.mesh/diff/text.json",
+  "title": "Stdio_semio_mesh_diff_text",
+  "description": "Real hand-rolled DiffCodec text grammar: space-separated key=value tokens (meshes/materials/textures), each value a bracket-depth-aware [removed];[modified];[added] named triple.",
+  "type": "string",
+  "pattern": "^((meshes|materials|textures)=\\[[^;]*\\];\\[[^;]*\\];\\[[^;]*\\])?( (meshes|materials|textures)=\\[[^;]*\\];\\[[^;]*\\];\\[[^;]*\\])*$"
 }

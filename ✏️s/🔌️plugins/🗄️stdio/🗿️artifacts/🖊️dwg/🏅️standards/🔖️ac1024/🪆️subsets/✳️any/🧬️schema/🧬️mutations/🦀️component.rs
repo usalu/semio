@@ -188,6 +188,39 @@ impl protocol::OpBinary for DwgMutation {
 }
 //#endregion OpCodecs
 
+//#region 🔖️DemoCases
+/// 🎬️ Representative `DwgMutation` cases, one per variant — reused by `op_text_binary_roundtrip_law`
+/// below AND by `⚙️engine`'s `conformance_laws::ops_grammar_conformance_law`/`protocol_walk_law`
+/// (mirrors `BinaryMutation::demo_mutation_cases`, `💾️binary/…/🧬️mutations/🦀️component.rs`).
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<DwgMutation> {
+    let demo_section = |name: &str, compressed: bool, declared_size: u64, page_number: i32, file_address: u64, compressed_size: u32, decoded: &[u8]| DwgSection {
+        name: name.into(),
+        compressed,
+        declared_size,
+        pages: vec![DwgSectionPage { page_number, file_address, compressed_size, decoded: decoded.to_vec(), error: None }],
+    };
+    let base = DwgSnapshot {
+        schema: "stdio.dwg".into(),
+        version: "AC1024".into(),
+        maintenance_version: 2,
+        codepage: 30,
+        bytes: b"AC1024\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00".to_vec(),
+        section_names: vec!["AcDb:Header".into(), "AcDb:Classes".into()],
+        sections: vec![demo_section("AcDb:Header", true, 100, 0, 0x200, 50, b"header-bytes"), demo_section("AcDb:Classes", true, 200, 1, 0x300, 80, b"classes-bytes")],
+        decode_status: crate::artifacts::dwg::schema::snapshot::DwgDecodeStatus::SectionsDecompressed,
+    };
+    vec![
+        DwgMutation::NoMutation,
+        DwgMutation::SetSnapshot { snapshot: base },
+        DwgMutation::SetVersionInfo { version: "AC1024".into(), maintenance_version: 9, codepage: 65001 },
+        DwgMutation::InsertSection { index: 1, section: demo_section("AcDb:Template", true, 10, 9, 0x900, 10, b"new") },
+        DwgMutation::RemoveSection { name: "AcDb:Classes".into() },
+        DwgMutation::SetSectionData { name: "AcDb:Header".into(), compressed: false, declared_size: 999, pages: vec![DwgSectionPage { page_number: 0, file_address: 0x999, compressed_size: 5, decoded: b"patched".to_vec(), error: None }] },
+    ]
+}
+//#endregion 🔖️DemoCases
+
 //#region Tests
 #[cfg(test)]
 mod tests {
@@ -491,36 +524,27 @@ mod tests {
 
     //#region 🔖️op_text_binary_roundtrip_law
     /// 🧪️ F6: `OpText`/`OpBinary` round-trip law (handcrafted impls over the `dsl::DslOps`-derived
-    /// `DslVariants`) — every variant, including `SetSnapshot`'s whole-nested-`DwgSnapshot`
-    /// payload and `InsertSection`'s nested `DwgSection` (itself carrying a `DwgSectionPage`
-    /// with an `Option<String>` `error` field).
+    /// `DslVariants`) — every `demo_mutation_cases()` variant, including `SetSnapshot`'s
+    /// whole-nested-`DwgSnapshot` payload, PLUS one extra `InsertSection` case exercising a
+    /// `DwgSectionPage` with an `Option<String>` `error` field (`demo_mutation_cases()` itself
+    /// never sets `error`, since it doubles as the engine's own `protocol_walk_law`/
+    /// `ops_grammar_conformance_law` fixture and a genuinely-failed page is not representative of
+    /// a "successfully decoded" demo section).
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = base_snapshot();
-        let variants: Vec<DwgMutation> = vec![
-            DwgMutation::NoMutation,
-            DwgMutation::SetSnapshot { snapshot: base.clone() },
-            DwgMutation::SetVersionInfo { version: "AC1024".into(), maintenance_version: 9, codepage: 65001 },
-            DwgMutation::InsertSection {
-                index: 1,
-                section: {
-                    let mut s = section("AcDb:Template", true, 10, vec![page(9, 0x900, 10, b"new")]);
-                    s.pages.push({
-                        let mut p = page(10, 0x901, 3, b"");
-                        p.error = Some("bad page".into());
-                        p
-                    });
-                    s
-                },
+        let mut variants = demo_mutation_cases();
+        variants.push(DwgMutation::InsertSection {
+            index: 1,
+            section: {
+                let mut s = section("AcDb:Template", true, 10, vec![page(9, 0x900, 10, b"new")]);
+                s.pages.push({
+                    let mut p = page(10, 0x901, 3, b"");
+                    p.error = Some("bad page".into());
+                    p
+                });
+                s
             },
-            DwgMutation::RemoveSection { name: "AcDb:Classes".into() },
-            DwgMutation::SetSectionData {
-                name: "AcDb:Header".into(),
-                compressed: false,
-                declared_size: 999,
-                pages: vec![page(0, 0x999, 5, b"patched")],
-            },
-        ];
+        });
         for m in variants {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

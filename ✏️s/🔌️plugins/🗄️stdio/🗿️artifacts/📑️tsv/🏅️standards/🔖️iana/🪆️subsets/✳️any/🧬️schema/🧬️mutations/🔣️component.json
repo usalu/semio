@@ -1,10 +1,13 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.tsv/mutations.json",
+  "$id": "https://semio.tech/schema/s.stdio.tsv/mutation.tsv",
   "title": "TsvMutation",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
-  "type": "object",
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+  "oneOf": [
+    { "type": "object", "additionalProperties": false, "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.tsv/snapshot.tsv" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "trailingNewline"], "properties": { "mutation": { "const": "setTrailingNewline" }, "trailingNewline": { "type": "boolean" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "lineEnding"], "properties": { "mutation": { "const": "setLineEnding" }, "lineEnding": { "type": "string", "enum": ["lf", "crlf"] } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index", "row"], "properties": { "mutation": { "const": "insertRow" }, "index": { "type": "integer", "minimum": 0 }, "row": { "type": "array", "items": { "type": "string" } } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index"], "properties": { "mutation": { "const": "removeRow" }, "index": { "type": "integer", "minimum": 0 } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "rowIndex", "fieldIndex", "value"], "properties": { "mutation": { "const": "setCell" }, "rowIndex": { "type": "integer", "minimum": 0 }, "fieldIndex": { "type": "integer", "minimum": 0 }, "value": { "type": "string" } } }
+  ]
 }

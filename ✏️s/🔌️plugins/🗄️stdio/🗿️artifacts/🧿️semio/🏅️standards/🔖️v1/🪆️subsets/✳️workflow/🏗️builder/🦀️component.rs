@@ -1,5 +1,7 @@
-//! 🏗️ SemioWorkflowBuilder — 🚧 scaffolded by W1b: local `ArtifactBuilder` round-tripping the
-//! minimal snapshot. W2 adds typed constructors + the real mutation vocabulary.
+//! 🏗️ SemioWorkflowBuilder — real `ArtifactBuilder`: `empty`/`from_snapshot`/`from_text`/
+//! `from_binary`/`mutate`/`absorb`/`build`, delegating to the real mutation vocabulary in
+//! `schema::mutations` (13 named variants) and the hand-rolled `ArtifactDsl`/`ArtifactPack` codecs
+//! in `schema::snapshot`.
 
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::semio::standards::v1::subsets::workflow::schema::diff::SemioWorkflowDiff;

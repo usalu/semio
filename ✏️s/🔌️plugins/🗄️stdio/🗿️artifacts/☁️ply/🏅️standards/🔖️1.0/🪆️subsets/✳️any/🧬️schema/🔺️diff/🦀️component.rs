@@ -910,6 +910,227 @@ fn dec_elements_diff(body: &str) -> Result<PlyElementsDiff, String> {
 }
 //#endregion 🔖️DiffValueCodecs
 
+//#region 🔖️RealBinaryPrimitives
+/// 🧪️ P2-FG3: real binary value codecs for `PlyDiff`'s (and `PlyMutation`'s, which reuses these
+/// `pub(crate)` fns the same way it already reuses the text-codec primitives above) nested
+/// types — mirrors the text codecs field-for-field, using `dsl::ByteWriter`/`dsl::ByteReader`
+/// (the same real LEB128-varint/length-prefixed framework primitives gif89a's own upgraded
+/// `GifDiff` binary frame uses, `🎞️gif/…/🏅️standards/🔖️89a/…/🔺️diff/🦀️component.rs`'s
+/// `RealBinaryPrimitives`/`RealBinaryDiffFrame` regions — `dsl`/`store`/`protocol` all alias the
+/// same kernel crate root, reachable with no `use` needed beyond the absolute path). `ByteWriter`/
+/// `ByteReader` have no i8/i16/f32 methods (only u8/u16/u32/u64/f64 + varint), so the signed/
+/// narrow PLY scalar kinds go through raw `to_le_bytes`/`from_le_bytes` via `write_bytes`/
+/// `read_bytes`, exactly like `⚙️engine/🦀️component.rs`'s own `push_scalar_bin`/`read_scalar_bin`.
+pub(crate) fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
+    w.write_varint_u64(bytes.len() as u64);
+    w.write_bytes(bytes);
+}
+pub(crate) fn read_bin_blob(r: &mut dsl::ByteReader) -> Result<Vec<u8>, dsl::PackError> {
+    let len = r.read_varint_u64()? as usize;
+    Ok(r.read_bytes(len)?.to_vec())
+}
+pub(crate) fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
+    write_bin_blob(w, s.as_bytes());
+}
+pub(crate) fn read_bin_str(r: &mut dsl::ByteReader) -> Result<String, dsl::PackError> {
+    let bytes = read_bin_blob(r)?;
+    String::from_utf8(bytes).map_err(|e| dsl::PackError::Malformed { what: "ply binary utf8 string", offset: 0, detail: e.to_string() })
+}
+pub(crate) fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
+    w.write_varint_u64(items.len() as u64);
+    for item in items {
+        write_item(w, item);
+    }
+}
+pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader, mut read_item: impl FnMut(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
+    let n = r.read_varint_u64()? as usize;
+    let mut out = Vec::with_capacity(n);
+    for _ in 0..n {
+        out.push(read_item(r)?);
+    }
+    Ok(out)
+}
+/// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
+pub(crate) fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+    match v {
+        None => w.write_u8(0),
+        Some(val) => { w.write_u8(1); write_value(w, val); }
+    }
+}
+pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(None),
+        1 => Ok(Some(read_value(r)?)),
+        other => Err(dsl::PackError::Malformed { what: "ply binary option tag", offset: 0, detail: format!("unknown tag {other}") }),
+    }
+}
+pub(crate) fn write_bin_format(w: &mut dsl::ByteWriter, f: PlyFormat) {
+    w.write_u8(match f { PlyFormat::Ascii => 0, PlyFormat::BinaryLittleEndian => 1, PlyFormat::BinaryBigEndian => 2 });
+}
+pub(crate) fn read_bin_format(r: &mut dsl::ByteReader) -> Result<PlyFormat, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(PlyFormat::Ascii),
+        1 => Ok(PlyFormat::BinaryLittleEndian),
+        2 => Ok(PlyFormat::BinaryBigEndian),
+        other => Err(dsl::PackError::Malformed { what: "ply binary format tag", offset: 0, detail: format!("unknown tag {other}") }),
+    }
+}
+pub(crate) fn write_bin_scalar_type(w: &mut dsl::ByteWriter, k: PlyScalarType) {
+    w.write_u8(match k {
+        PlyScalarType::Char => 0, PlyScalarType::UChar => 1, PlyScalarType::Short => 2, PlyScalarType::UShort => 3,
+        PlyScalarType::Int => 4, PlyScalarType::UInt => 5, PlyScalarType::Float => 6, PlyScalarType::Double => 7,
+    });
+}
+pub(crate) fn read_bin_scalar_type(r: &mut dsl::ByteReader) -> Result<PlyScalarType, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(PlyScalarType::Char), 1 => Ok(PlyScalarType::UChar), 2 => Ok(PlyScalarType::Short), 3 => Ok(PlyScalarType::UShort),
+        4 => Ok(PlyScalarType::Int), 5 => Ok(PlyScalarType::UInt), 6 => Ok(PlyScalarType::Float), 7 => Ok(PlyScalarType::Double),
+        other => Err(dsl::PackError::Malformed { what: "ply binary scalar type tag", offset: 0, detail: format!("unknown tag {other}") }),
+    }
+}
+/// 🔣️ `PlyValue` real binary — one tag byte (matching `write_bin_scalar_type`'s own 0-7 order for
+/// the 8 scalar kinds) then the raw little-endian payload at its declared width, plus `8` for the
+/// recursive `List(Vec<PlyValue>)` variant (self-recursion, real — not opaque, `write_bin_vec`
+/// calling back into `write_bin_value` for every item).
+pub(crate) fn write_bin_value(w: &mut dsl::ByteWriter, v: &PlyValue) {
+    match v {
+        PlyValue::Char(x) => { w.write_u8(0); w.write_bytes(&x.to_le_bytes()); }
+        PlyValue::UChar(x) => { w.write_u8(1); w.write_u8(*x); }
+        PlyValue::Short(x) => { w.write_u8(2); w.write_bytes(&x.to_le_bytes()); }
+        PlyValue::UShort(x) => { w.write_u8(3); w.write_u16_le(*x); }
+        PlyValue::Int(x) => { w.write_u8(4); w.write_bytes(&x.to_le_bytes()); }
+        PlyValue::UInt(x) => { w.write_u8(5); w.write_u32_le(*x); }
+        PlyValue::Float(x) => { w.write_u8(6); w.write_bytes(&x.to_le_bytes()); }
+        PlyValue::Double(x) => { w.write_u8(7); w.write_f64_le(*x); }
+        PlyValue::List(items) => { w.write_u8(8); write_bin_vec(w, items, write_bin_value); }
+    }
+}
+pub(crate) fn read_bin_value(r: &mut dsl::ByteReader) -> Result<PlyValue, dsl::PackError> {
+    let malformed = |offset: usize, detail: String| dsl::PackError::Malformed { what: "ply binary value", offset: offset as u64, detail };
+    match r.read_u8()? {
+        0 => Ok(PlyValue::Char(i8::from_le_bytes(r.read_bytes(1)?.try_into().map_err(|_| malformed(r.position(), "expected 1 byte".into()))?))),
+        1 => Ok(PlyValue::UChar(r.read_u8()?)),
+        2 => Ok(PlyValue::Short(i16::from_le_bytes(r.read_bytes(2)?.try_into().map_err(|_| malformed(r.position(), "expected 2 bytes".into()))?))),
+        3 => Ok(PlyValue::UShort(r.read_u16_le()?)),
+        4 => Ok(PlyValue::Int(i32::from_le_bytes(r.read_bytes(4)?.try_into().map_err(|_| malformed(r.position(), "expected 4 bytes".into()))?))),
+        5 => Ok(PlyValue::UInt(r.read_u32_le()?)),
+        6 => Ok(PlyValue::Float(f32::from_le_bytes(r.read_bytes(4)?.try_into().map_err(|_| malformed(r.position(), "expected 4 bytes".into()))?))),
+        7 => Ok(PlyValue::Double(r.read_f64_le()?)),
+        8 => Ok(PlyValue::List(read_bin_vec(r, read_bin_value)?)),
+        other => Err(dsl::PackError::Malformed { what: "ply binary value tag", offset: 0, detail: format!("unknown tag {other}") }),
+    }
+}
+/// 🔣️ `PlyProperty` real binary — `0`=Scalar`{name,kind}`, `1`=List`{name,count_kind,value_kind}`.
+pub(crate) fn write_bin_property(w: &mut dsl::ByteWriter, p: &PlyProperty) {
+    match p {
+        PlyProperty::Scalar { name, kind } => { w.write_u8(0); write_bin_str(w, name); write_bin_scalar_type(w, *kind); }
+        PlyProperty::List { name, count_kind, value_kind } => { w.write_u8(1); write_bin_str(w, name); write_bin_scalar_type(w, *count_kind); write_bin_scalar_type(w, *value_kind); }
+    }
+}
+pub(crate) fn read_bin_property(r: &mut dsl::ByteReader) -> Result<PlyProperty, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(PlyProperty::Scalar { name: read_bin_str(r)?, kind: read_bin_scalar_type(r)? }),
+        1 => Ok(PlyProperty::List { name: read_bin_str(r)?, count_kind: read_bin_scalar_type(r)?, value_kind: read_bin_scalar_type(r)? }),
+        other => Err(dsl::PackError::Malformed { what: "ply binary property tag", offset: 0, detail: format!("unknown tag {other}") }),
+    }
+}
+pub(crate) fn write_bin_row(w: &mut dsl::ByteWriter, row: &PlyRow) {
+    write_bin_vec(w, &row.values, write_bin_value);
+}
+pub(crate) fn read_bin_row(r: &mut dsl::ByteReader) -> Result<PlyRow, dsl::PackError> {
+    Ok(PlyRow { values: read_bin_vec(r, read_bin_value)? })
+}
+pub(crate) fn write_bin_element(w: &mut dsl::ByteWriter, e: &PlyElement) {
+    write_bin_str(w, &e.name);
+    w.write_varint_u64(e.count as u64);
+    write_bin_vec(w, &e.properties, write_bin_property);
+    write_bin_vec(w, &e.rows, write_bin_row);
+}
+pub(crate) fn read_bin_element(r: &mut dsl::ByteReader) -> Result<PlyElement, dsl::PackError> {
+    let name = read_bin_str(r)?;
+    let count = r.read_varint_u64()? as usize;
+    let properties = read_bin_vec(r, read_bin_property)?;
+    let rows = read_bin_vec(r, read_bin_row)?;
+    Ok(PlyElement { name, count, properties, rows })
+}
+/// 🔣️ `PlySnapshot` real binary — needed by `PlyMutation::SetSnapshot`'s own real binary op frame
+/// (`../🧬️mutations/🦀️component.rs`, which imports this the same way it already imports the
+/// text-codec `enc_snapshot`/`dec_snapshot` primitives from this file).
+pub(crate) fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PlySnapshot) {
+    write_bin_str(w, &s.schema);
+    write_bin_format(w, s.format);
+    write_bin_vec(w, &s.comments, |w, c: &String| write_bin_str(w, c));
+    write_bin_vec(w, &s.elements, write_bin_element);
+}
+pub(crate) fn read_bin_snapshot(r: &mut dsl::ByteReader) -> Result<PlySnapshot, dsl::PackError> {
+    let schema = read_bin_str(r)?;
+    let format = read_bin_format(r)?;
+    let comments = read_bin_vec(r, read_bin_str)?;
+    let elements = read_bin_vec(r, read_bin_element)?;
+    Ok(PlySnapshot { schema, format, comments, elements })
+}
+fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+    protocol::ProtocolError::Malformed { what: "ply diff binary", offset: 0, detail: e.to_string() }
+}
+//#endregion 🔖️RealBinaryPrimitives
+
+//#region 🔖️RealBinaryDiffFrame
+/// 🧪️ P2-FG3: real binary encodings for `PlyRowDiff`/`PlyRowsDiff`/`PlyElementDiff`/
+/// `PlyElementsDiff` — each produces one opaque `Vec<u8>` blob matching
+/// `../💾️binary/📡️component.protocol.semio`'s `Array(u8, Field(<name>_len))` fields exactly (the
+/// blob's OWN internal removed/modified/added shape isn't further protocol-walkable, see that
+/// file's own doc comment); the Rust codec here IS genuinely, fully structured (real varint
+/// counts, real per-item recursive encoding, incl. `PlyValue::List`'s own self-recursion), never
+/// text-as-bytes.
+fn write_bin_row_field_change(w: &mut dsl::ByteWriter, c: &PlyRowFieldChange) {
+    write_bin_str(w, &c.name);
+    write_bin_value(w, &c.value);
+}
+fn read_bin_row_field_change(r: &mut dsl::ByteReader) -> Result<PlyRowFieldChange, dsl::PackError> {
+    Ok(PlyRowFieldChange { name: read_bin_str(r)?, value: read_bin_value(r)? })
+}
+fn write_bin_row_diff(w: &mut dsl::ByteWriter, d: &PlyRowDiff) {
+    write_bin_vec(w, &d.fields, write_bin_row_field_change);
+}
+fn read_bin_row_diff(r: &mut dsl::ByteReader) -> Result<PlyRowDiff, dsl::PackError> {
+    Ok(PlyRowDiff { fields: read_bin_vec(r, read_bin_row_field_change)? })
+}
+fn write_bin_rows_diff(w: &mut dsl::ByteWriter, d: &PlyRowsDiff) {
+    write_bin_vec(w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
+    write_bin_vec(w, &d.modified, |w, m: &PlyRowModified| { w.write_varint_u64(m.index as u64); write_bin_row_diff(w, &m.diff); });
+    write_bin_vec(w, &d.added, |w, a: &PlyRowAdded| { w.write_varint_u64(a.index as u64); write_bin_row(w, &a.row); });
+}
+fn read_bin_rows_diff(r: &mut dsl::ByteReader) -> Result<PlyRowsDiff, dsl::PackError> {
+    let removed = read_bin_vec(r, |r| Ok(r.read_varint_u64()? as usize))?;
+    let modified = read_bin_vec(r, |r| { let index = r.read_varint_u64()? as usize; let diff = read_bin_row_diff(r)?; Ok(PlyRowModified { index, diff }) })?;
+    let added = read_bin_vec(r, |r| { let index = r.read_varint_u64()? as usize; let row = read_bin_row(r)?; Ok(PlyRowAdded { index, row }) })?;
+    Ok(PlyRowsDiff { removed, modified, added })
+}
+fn write_bin_element_diff(w: &mut dsl::ByteWriter, d: &PlyElementDiff) {
+    write_bin_option(w, &d.properties, |w, props: &Vec<PlyProperty>| write_bin_vec(w, props, write_bin_property));
+    write_bin_option(w, &d.rows, write_bin_rows_diff);
+}
+fn read_bin_element_diff(r: &mut dsl::ByteReader) -> Result<PlyElementDiff, dsl::PackError> {
+    let properties = read_bin_option(r, |r| read_bin_vec(r, read_bin_property))?;
+    let rows = read_bin_option(r, read_bin_rows_diff)?;
+    Ok(PlyElementDiff { properties, rows })
+}
+fn enc_elements_diff_bin(d: &PlyElementsDiff) -> Vec<u8> {
+    let mut w = dsl::ByteWriter::new();
+    write_bin_vec(&mut w, &d.removed, |w, n: &String| write_bin_str(w, n));
+    write_bin_vec(&mut w, &d.modified, |w, m: &PlyElementModified| { write_bin_str(w, &m.name); write_bin_element_diff(w, &m.diff); });
+    write_bin_vec(&mut w, &d.added, |w, a: &PlyElementAdded| { w.write_varint_u64(a.index as u64); write_bin_element(w, &a.element); });
+    w.into_bytes()
+}
+fn dec_elements_diff_bin(bytes: &[u8]) -> Result<PlyElementsDiff, dsl::PackError> {
+    let mut r = dsl::ByteReader::new(bytes);
+    let removed = read_bin_vec(&mut r, read_bin_str)?;
+    let modified = read_bin_vec(&mut r, |r| { let name = read_bin_str(r)?; let diff = read_bin_element_diff(r)?; Ok(PlyElementModified { name, diff }) })?;
+    let added = read_bin_vec(&mut r, |r| { let index = r.read_varint_u64()? as usize; let element = read_bin_element(r)?; Ok(PlyElementAdded { index, element }) })?;
+    Ok(PlyElementsDiff { removed, modified, added })
+}
+//#endregion 🔖️RealBinaryDiffFrame
+
 //#region 🔖️TopLevel
 fn print_ply_diff(d: &PlyDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
@@ -941,94 +1162,125 @@ impl protocol::DiffCodec for PlyDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_ply_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim (same simplification `WriterDiff`/gif89a/svg's
-    /// hand-rolled `DiffCodec` impls use): satisfies every `DiffCodec` law (round-trips,
-    /// deterministic) without inventing a second, denser wire format.
+    /// ⚡️ P2-FG3: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
+    /// text-as-binary shortcut (100% of stdio's `DiffCodec` impls were still on that shortcut per
+    /// the P2-W0 census). Matches `../💾️binary/📡️component.protocol.semio`'s real flag-per-field
+    /// layout exactly, field for field, in struct order (`format`, `comments`, `elements`).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let mut w = dsl::ByteWriter::new();
+        write_bin_option(&mut w, &self.format, |w, f| write_bin_format(w, *f));
+        write_bin_option(&mut w, &self.comments, |w, v: &Vec<String>| {
+            let mut inner = dsl::ByteWriter::new();
+            write_bin_vec(&mut inner, v, |w, c: &String| write_bin_str(w, c));
+            write_bin_blob(w, &inner.into_bytes());
+        });
+        write_bin_option(&mut w, &self.elements, |w, v| write_bin_blob(w, &enc_elements_diff_bin(v)));
+        Ok(w.into_bytes())
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let mut r = dsl::ByteReader::new(bytes);
+        let format = read_bin_option(&mut r, |r| read_bin_format(r)).map_err(diff_pack_err)?;
+        let comments = read_bin_option(&mut r, |r| {
+            let blob = read_bin_blob(r)?;
+            let mut inner = dsl::ByteReader::new(&blob);
+            read_bin_vec(&mut inner, read_bin_str)
+        }).map_err(diff_pack_err)?;
+        let elements = read_bin_option(&mut r, |r| dec_elements_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
+        Ok(PlyDiff { format, comments, elements })
     }
 }
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
 
+//#region 🔖️DemoDiffCases
+/// ✅️ Every representative `PlyDiff` shape (empty, plus a real `between()` result in BOTH
+/// directions over `sweep_a()`/`sweep_b()`) — the single case list `diff_codec_text_binary_
+/// roundtrip_law` (this file) AND `diff_grammar_conformance_law`/`protocol_walk_law`
+/// (`⚙️engine/🦀️component.rs`) all exercise. Covers every scalar field, the name-keyed `elements`
+/// triple in all three flavors (removed/modified/added) simultaneously, the nested index-keyed
+/// `rows` triple, the weak `properties` replace, and both `PlyProperty`/`PlyValue` enum tag
+/// families (incl. `PlyValue::List`'s recursion).
+#[cfg(test)]
+fn sweep_a() -> PlySnapshot {
+    PlySnapshot {
+        schema: crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA.into(),
+        format: PlyFormat::Ascii,
+        comments: vec!["a".into()],
+        elements: vec![
+            PlyElement {
+                name: "vertex".into(),
+                count: 2,
+                properties: vec![
+                    PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float },
+                    PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float },
+                ],
+                rows: vec![
+                    PlyRow { values: vec![PlyValue::Float(0.0), PlyValue::Float(0.0)] },
+                    PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0)] },
+                ],
+            },
+            PlyElement {
+                name: "face".into(),
+                count: 1,
+                properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::Int }],
+                rows: vec![PlyRow { values: vec![PlyValue::List(vec![PlyValue::Int(0), PlyValue::Int(1), PlyValue::Int(2)])] }],
+            },
+        ],
+    }
+}
+
+#[cfg(test)]
+fn sweep_b() -> PlySnapshot {
+    PlySnapshot {
+        schema: crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA.into(),
+        format: PlyFormat::BinaryLittleEndian,
+        comments: vec!["a".into(), "b".into()],
+        elements: vec![
+            PlyElement {
+                name: "vertex".into(),
+                count: 1,
+                properties: vec![
+                    PlyProperty::Scalar { name: "nx".into(), kind: PlyScalarType::Double },
+                    PlyProperty::Scalar { name: "ny".into(), kind: PlyScalarType::Double },
+                ],
+                rows: vec![PlyRow { values: vec![PlyValue::Double(9.0), PlyValue::Double(-9.5)] }],
+            },
+            PlyElement {
+                name: "edge".into(),
+                count: 1,
+                properties: vec![PlyProperty::Scalar { name: "weight".into(), kind: PlyScalarType::Double }],
+                rows: vec![PlyRow { values: vec![PlyValue::Double(3.5)] }],
+            },
+        ],
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<PlyDiff> {
+    let a = sweep_a();
+    let b = sweep_b();
+    vec![
+        PlyDiff::default(),
+        <PlyDiff as DiffAlgebra<PlySnapshot>>::between(&a, &b),
+        <PlyDiff as DiffAlgebra<PlySnapshot>>::between(&b, &a),
+    ]
+}
+//#endregion 🔖️DemoDiffCases
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod codec_tests {
     use super::*;
-    use crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA;
 
-    fn sweep_a() -> PlySnapshot {
-        PlySnapshot {
-            schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
-            format: PlyFormat::Ascii,
-            comments: vec!["a".into()],
-            elements: vec![
-                PlyElement {
-                    name: "vertex".into(),
-                    count: 2,
-                    properties: vec![
-                        PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float },
-                        PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float },
-                    ],
-                    rows: vec![
-                        PlyRow { values: vec![PlyValue::Float(0.0), PlyValue::Float(0.0)] },
-                        PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0)] },
-                    ],
-                },
-                PlyElement {
-                    name: "face".into(),
-                    count: 1,
-                    properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::Int }],
-                    rows: vec![PlyRow { values: vec![PlyValue::List(vec![PlyValue::Int(0), PlyValue::Int(1), PlyValue::Int(2)])] }],
-                },
-            ],
-        }
-    }
-
-    fn sweep_b() -> PlySnapshot {
-        PlySnapshot {
-            schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
-            format: PlyFormat::BinaryLittleEndian,
-            comments: vec!["a".into(), "b".into()],
-            elements: vec![
-                PlyElement {
-                    name: "vertex".into(),
-                    count: 1,
-                    properties: vec![
-                        PlyProperty::Scalar { name: "nx".into(), kind: PlyScalarType::Double },
-                        PlyProperty::Scalar { name: "ny".into(), kind: PlyScalarType::Double },
-                    ],
-                    rows: vec![PlyRow { values: vec![PlyValue::Double(9.0), PlyValue::Double(-9.5)] }],
-                },
-                PlyElement {
-                    name: "edge".into(),
-                    count: 1,
-                    properties: vec![PlyProperty::Scalar { name: "weight".into(), kind: PlyScalarType::Double }],
-                    rows: vec![PlyRow { values: vec![PlyValue::Double(3.5)] }],
-                },
-            ],
-        }
-    }
-
-    /// 🧪️ F6: `DiffCodec` round-trip laws for the hand-rolled `PlyDiff` text/binary grammar —
-    /// exercises every scalar field, the name-keyed `elements` triple in ALL THREE flavors
-    /// (removed/modified/added) simultaneously via a real `between()` result in both directions,
-    /// the nested index-keyed `rows` triple, the weak `properties` replace, and both
-    /// `PlyProperty`/`PlyValue` enum tag families (incl. `PlyValue::List`'s recursion).
+    /// 🧪️ F6/P2-FG3: `DiffCodec` round-trip laws for the hand-rolled `PlyDiff` text AND (now
+    /// real, no longer text-as-bytes) binary grammar — `demo_diff_cases()` exercises every
+    /// scalar field, the name-keyed `elements` triple in ALL THREE flavors (removed/modified/
+    /// added) simultaneously via a real `between()` result in both directions, the nested
+    /// index-keyed `rows` triple, the weak `properties` replace, and both `PlyProperty`/
+    /// `PlyValue` enum tag families (incl. `PlyValue::List`'s recursion).
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {
-        let a = sweep_a();
-        let b = sweep_b();
-        let cases = vec![
-            PlyDiff::default(),
-            <PlyDiff as DiffAlgebra<PlySnapshot>>::between(&a, &b),
-            <PlyDiff as DiffAlgebra<PlySnapshot>>::between(&b, &a),
-        ];
-        for d in cases {
+        for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
             let parsed = PlyDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));

@@ -1,10 +1,33 @@
-/** 🧬️ SemioImageDiff schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioImageDiff
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface SemioImageDiffEntry {
-  key: string;
-  value: string;
+/** 🔺️ SemioImageDiff schema — real facet mirror of the Rust `🦀️component.rs` sibling. Sparse
+ * per-field diff; `frames`/`metadata` are index/name-keyed collection triples. */
+import type { SemioColorspace, SemioImageFrame, SemioImageMetadataEntry } from "../📸️snapshot/🟦️component.ts";
+
+export interface SemioImageFrameDiff {
+  delayMs?: number;
+  rgba8?: string;
 }
+export interface IndexModified<D> { index: number; diff: D }
+export interface IndexAdded<T> { index: number; item: T }
+export interface SemioImageFramesDiff {
+  removed: number[];
+  modified: IndexModified<SemioImageFrameDiff>[];
+  added: IndexAdded<SemioImageFrame>[];
+}
+
+export interface NamedModified<D> { key: string; diff: D }
+export interface SemioImageMetadataDiff {
+  removed: string[];
+  modified: NamedModified<string>[]; // weak collection: diff IS the whole new value
+  added: SemioImageMetadataEntry[];
+}
+
 export interface SemioImageDiff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioImageDiffEntry[];
+  width?: number;
+  height?: number;
+  colorspace?: SemioColorspace;
+  bitDepth?: number;
+  /** tri-state: absent = unchanged, null = cleared, string = set (hex) */
+  icc?: string | null;
+  frames?: SemioImageFramesDiff;
+  metadata?: SemioImageMetadataDiff;
 }

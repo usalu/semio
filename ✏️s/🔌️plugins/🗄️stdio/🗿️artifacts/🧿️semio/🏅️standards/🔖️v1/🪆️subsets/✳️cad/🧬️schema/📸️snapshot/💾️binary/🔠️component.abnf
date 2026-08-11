@@ -1,3 +1,26 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.cad.snapshot"
+; abnf stdio.semio.cad snapshot (binary) — the shared `.semio` binary envelope
+; (store::semio_format::wrap_binary) wrapping a NEUTRAL semio snapshot payload. The payload
+; genuinely IS serde_json::to_vec(SemioCadSnapshot) verbatim, all remaining bytes (no length
+; prefix by design), so it is modeled here as the REAL RFC 8259 JSON text grammar rather than a
+; byte catch-all; see ../🔣️component.json for the semantic shape (which object keys/array shapes
+; actually occur: layers/blocks/entities/9-variant CadEntity).
+document      = envelope-magic token-len token payload
+envelope-magic = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A   ; 8 bytes: 0x89 "SEM" CR LF SUB LF
+token-len     = 4OCTET                                      ; u32, little-endian
+token         = 17OCTET                                     ; ASCII "semio.cad.pack v1"
+payload       = json-text                                   ; UTF-8; see ../🔣️component.json
+
+; RFC 8259 Appendix A, condensed for this leaf's own use.
+json-text = ws value ws
+value = %x66.61.6c.73.65 / %x6e.75.6c.6c / %x74.72.75.65 / object / array / number / string
+object = %x7B ws [ member *( ws %x2C ws member ) ] ws %x7D
+member = string ws %x3A ws value
+array = %x5B ws [ value *( ws %x2C ws value ) ] ws %x5D
+number = [ %x2D ] int [ frac ] [ exp ]
+int = %x30 / ( %x31-39 *DIGIT )
+frac = %x2E 1*DIGIT
+exp = ( %x65 / %x45 ) [ %x2B / %x2D ] 1*DIGIT
+string = %x22 *char %x22
+char = unescaped / ( %x5C ( %x22 / %x5C / %x2F / %x62 / %x66 / %x6E / %x72 / %x74 / ( %x75 4HEXDIG ) ) )
+unescaped = %x20-21 / %x23-5B / %x5D-10FFFF
+ws = *( %x20 / %x09 / %x0A / %x0D )

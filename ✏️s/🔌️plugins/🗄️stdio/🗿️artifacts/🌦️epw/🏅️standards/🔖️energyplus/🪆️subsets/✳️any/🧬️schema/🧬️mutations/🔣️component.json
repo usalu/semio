@@ -1,10 +1,19 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.epw/mutations.json",
+  "$id": "https://semio.tech/schema/s.stdio.epw/mutation.epw",
   "title": "EpwMutation",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
-  "type": "object",
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+  "oneOf": [
+    { "type": "object", "additionalProperties": false, "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.epw/snapshot.epw" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "location"], "properties": { "mutation": { "const": "setLocation" }, "location": { "$ref": "https://semio.tech/schema/s.stdio.epw/snapshot.epw#/$defs/EpwLocation" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "value"], "properties": { "mutation": { "const": "setDesignConditions" }, "value": { "type": "string" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "value"], "properties": { "mutation": { "const": "setTypicalExtremePeriods" }, "value": { "type": "string" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "value"], "properties": { "mutation": { "const": "setGroundTemperatures" }, "value": { "type": "string" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "value"], "properties": { "mutation": { "const": "setHolidaysDst" }, "value": { "type": "string" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "value"], "properties": { "mutation": { "const": "setComments1" }, "value": { "type": "string" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "value"], "properties": { "mutation": { "const": "setComments2" }, "value": { "type": "string" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "dataPeriods"], "properties": { "mutation": { "const": "setDataPeriods" }, "dataPeriods": { "$ref": "https://semio.tech/schema/s.stdio.epw/snapshot.epw#/$defs/EpwDataPeriods" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index", "record"], "properties": { "mutation": { "const": "insertRecord" }, "index": { "type": "integer", "minimum": 0 }, "record": { "$ref": "https://semio.tech/schema/s.stdio.epw/snapshot.epw#/$defs/EpwRecord" } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "index"], "properties": { "mutation": { "const": "removeRecord" }, "index": { "type": "integer", "minimum": 0 } } },
+    { "type": "object", "additionalProperties": false, "required": ["mutation", "recordIndex", "fieldIndex", "value"], "properties": { "mutation": { "const": "setRecordField" }, "recordIndex": { "type": "integer", "minimum": 0 }, "fieldIndex": { "type": "integer", "minimum": 0 }, "value": { "type": "string" } } }
+  ]
 }

@@ -1,27 +1,76 @@
-dialect grammar stdio.obj.snapshot
-; envelope preamble line + its trailing newline are stripped before this grammar runs
-; (store::semio_format::split_text_preamble). Statements may appear in ANY order (real
-; Wavefront OBJ files interleave v/vt/vn/f/o/g/usemtl/mtllib/s freely); this is the real,
-; commonly-implemented grammar the decoder accepts, not the encoder's own canonical
-; output order (see ⚙️engine module docs for that documented normal form).
-root = document
+dialect grammar
+grammar stdio.obj.snapshot
+extension obj
+start document
+comment none
+
+# P2-FG1: real Wavefront OBJ 3.0 keyword-statement grammar, replacing the old ABNF placeholder
+# this file used to contain (unparseable by the repo's own `parse_grammar` — wrong header
+# dialect, `;` comments, `/`-alternation, `%x` char-class ranges all outside this dialect's
+# lexer alphabet). Mirrors this artifact's own real `decode_obj`/`parse_face_vertex`
+# (⚙️engine/component.rs:81-218/57-74) exactly: statements may appear in ANY order (real OBJ
+# files interleave v/vt/vn/f/o/g/usemtl/mtllib/s freely) — this is the real, commonly-implemented
+# grammar the DECODER accepts, not the ENCODER's own documented normal-form emission order (see
+# that module's own doc comment for the distinction; this grammar only needs to recognize real
+# `print_dsl` output, which already follows the documented order, a strict subset of what this
+# grammar accepts).
+#
+# `comment none` (P2-M1 item 4): real OBJ `#`-comment lines are NOT framework-level comment
+# trivia here — `decode_obj` retains them verbatim in `unknown_statements` (line 106-109),
+# exactly like any other unrecognized statement line, and `encode_obj` re-emits them in the
+# trailer. Declaring `comment none` stops the shared lexer from silently stripping `#...` content
+# before this grammar ever sees it, so `unknown-stmt` below can genuinely capture it — the same
+# reasoning `stdio.csv`/`stdio.txt`'s own `comment none` directives document for their own
+# legitimately-`#`-containing real content.
 document = statement*
-statement = comment / vertex / texcoord / normal / face / object_stmt / group_stmt
-          / usemtl_stmt / mtllib_stmt / smoothing_stmt / unknown_stmt
-comment = "#" *OCTET NL
-vertex = "v" SP float SP float SP float (SP float)? NL           ; x y z [w]
-texcoord = "vt" SP float (SP float)? (SP float)? NL               ; u [v] [w]
-normal = "vn" SP float SP float SP float NL                       ; x y z
-face = "f" (SP face_vertex)3*  NL                                 ; n-gon, >= 3 refs
-face_vertex = index ("/" index? "/" index / "/" index)?
-index = ["-"] 1*DIGIT
-object_stmt = "o" (SP name)? NL
-group_stmt = "g" (SP name)* NL                                    ; 0+ simultaneous names
-usemtl_stmt = "usemtl" (SP name)? NL
-mtllib_stmt = "mtllib" (SP name)+ NL                               ; 1+ library names
-smoothing_stmt = "s" SP ("off" / 1*DIGIT) NL
-unknown_stmt = *OCTET NL                                          ; any other real line,
-                                                                    ; retained verbatim in
-                                                                    ; `unknown_statements`
-float = ["-"] 1*DIGIT ["." 1*DIGIT] [("e" / "E") ["-" / "+"] 1*DIGIT]
-name = 1*(%x21-7E)                                                 ; whitespace-free token
+statement = vertex-stmt | texcoord-stmt | normal-stmt | face-stmt | object-stmt | group-stmt | usemtl-stmt | mtllib-stmt | smoothing-stmt | unknown-stmt
+
+# `v x y z [w]` — decode_obj:112-118. Rust's own `f64` `Display` (`fmt_f64`-equivalent `{}`
+# formatting `encode_obj` uses throughout) prints a whole-valued float WITHOUT a decimal point
+# (`1.0` -> `"1"`), so every coordinate below accepts INT as well as FLOAT — not merely FLOAT —
+# matching real emitted text, not just the RFC-shaped literal.
+number = FLOAT | INT
+vertex-stmt = "v" number number number number?
+# `vt u [v] [w]` — decode_obj:119-124; encode_obj always emits BOTH u and v (only w is ever
+# omitted — ObjTexCoord.v is a plain, always-present f64, never optional at the wire level).
+texcoord-stmt = "vt" number number number?
+# `vn x y z` — decode_obj:125-129; always exactly 3 components, both directions.
+normal-stmt = "vn" number number number
+
+# `f <face_vertex>+` (>= 3 per decode_obj:136-138); the dialect has no "at least N" quantifier —
+# modeled as 3 required occurrences then a `*` tail, matching real >=3-vertex n-gon faces exactly.
+face-stmt = "f" face-vertex face-vertex face-vertex face-vertex*
+# `v`, `v/vt`, `v//vn`, `v/vt/vn` — parse_face_vertex:57-74. Longest-alternative-first ordering:
+# an alternation tries alternatives in order and commits to the first that matches its own full
+# symbol sequence, so the 2-slash forms must precede the 1-slash/bare forms or a bare `INT` would
+# wrongly swallow just the leading index of a slash-separated triplet.
+face-vertex = INT "/" INT "/" INT | INT "/" "/" INT | INT "/" INT | INT
+
+# `o [name]` — decode_obj:164-166 (`cur_active_object = parts.next()...`, i.e. a single token, but
+# may legitimately be absent). Per this ticket's own W0 census gap: `o`/`g` names are real
+# "rest-of-line" content (arbitrary, possibly multi-token per `g`'s own real semantics below) —
+# M1's `LINE` raw-span terminal (📖️grammar/🦀️component.rs's own worked example literally names
+# "obj's o/g names") captures this verbatim, past whatever the shared lexer would otherwise
+# fragment an unusual name into. A bare `LINE` may legitimately be empty (no name).
+object-stmt = "o" LINE
+# `g [name]*` — decode_obj:167-169 (`cur_active_groups = parts.map(...).collect()`, i.e. ZERO OR
+# MORE space-separated names active simultaneously) — same `LINE` rest-of-line capture.
+group-stmt = "g" LINE
+# `usemtl [material]` — decode_obj:170-178 (a single optional token per real parsing, but a
+# hand-crafted `SetUsemtl`/mutation-driven material name could contain arbitrary text never
+# produced by the real text decoder — `LINE` is the honest superset that always structurally
+# recognizes real `usemtl <name>\n` output either way).
+usemtl-stmt = "usemtl" LINE
+# `mtllib <name> [name]*` — decode_obj:179-184 (ALL remaining tokens rejoined with a single space
+# — `rest.join(" ")` — genuinely multi-word library-name lists are real content here).
+mtllib-stmt = "mtllib" LINE
+# `s off|<N>` — decode_obj:185-195; encode_obj:296-305 always emits exactly one of the two forms.
+smoothing-stmt = "s" {"off" | INT}
+
+# Catch-all: any physical line not matched by an earlier alternative — `#`-comment lines AND
+# genuinely-unrecognized keyword lines alike, decode_obj:106-109/196-198 both fold into the SAME
+# `unknown_statements` sink with no distinction beyond the raw text, so one shared fallback
+# production models both honestly (the "nothing silently dropped" rule this ticket's own brief
+# names) — must stay the LAST alternative in `statement` so the specific keyword productions above
+# get first refusal.
+unknown-stmt = LINE

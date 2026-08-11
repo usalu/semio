@@ -1,10 +1,37 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.tsv/diff.json",
+  "$id": "https://semio.tech/schema/s.stdio.tsv/diff.tsv",
   "title": "TsvDiff",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "trailingNewline": { "type": "boolean" },
+    "lineEnding": { "type": "string", "enum": ["lf", "crlf"] },
+    "records": { "$ref": "#/$defs/TsvRowsDiff" }
+  },
+  "$defs": {
+    "TsvRowDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Positional per-column patch list; null at a position means that column is unchanged.",
+      "properties": {
+        "fields": { "type": "array", "items": { "anyOf": [{ "type": "string" }, { "type": "null" }] } }
+      }
+    },
+    "TsvRowModified": {
+      "type": "object", "additionalProperties": false, "required": ["index", "diff"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "diff": { "$ref": "#/$defs/TsvRowDiff" } }
+    },
+    "TsvRowAdded": {
+      "type": "object", "additionalProperties": false, "required": ["index", "row"],
+      "properties": { "index": { "type": "integer", "minimum": 0 }, "row": { "type": "array", "items": { "type": "string" } } }
+    },
+    "TsvRowsDiff": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/TsvRowModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/TsvRowAdded" } }
+      }
+    }
   }
 }

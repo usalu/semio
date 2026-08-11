@@ -1,3 +1,38 @@
-dialect protocol stdio.ifc.mutations
-magic = %x00
-payload = *OCTET
+# 📡️ P2-FG1: REAL binary op frame, replacing F6's `print_op().into_bytes()` text-as-binary
+# shortcut (`../../🦀️component.rs`'s old `OpBinary::encode_op`) -- `IfcMutation` was one of 4 of
+# stdio's 7 FG1 standards still on that shortcut per this wave's own P2-FG1 census (md/xml/dxf
+# already did the same real upgrade this wave, proving it's achievable). `IfcMutation` is a genuine
+# data-carrying enum whose variants embed `IfcEntity`/`IfcValue` (itself a data-carrying enum with a
+# self-recursive `Aggregate`/`TypedValue` case) -- no `DslField` impl exists or can exist for either
+# (blanket impls cover only ints/bool/String/Vec<T where T: DslField>/BTreeMap/[T;N]/DslValue/Wire,
+# never a data-carrying enum), so the generic `format u8 | ordinal varint | record body` layout
+# (`pack_rt::encode_record_body`/`dsl::variants_binary::encode_op`, both requiring a `RecordSpec`
+# derived FROM a `DslField` impl) genuinely does not fit -- same structural blocker `IfcMutation`'s
+# own doc comment cites, mirrored from `SvgMutation`/`MdMutation`/`XmlMutation`'s.
+#
+# Handcrafted instead: `format u8` (`store::OP_BINARY_FORMAT` convention) + `tag u8` (the
+# `IfcMutation` variant ordinal, same 0-10 order `parse_ifc_mutation`'s own keyword match uses) as
+# two REAL fixed fields, then the variant's own id/index/name/entity/value payload as one trailing
+# `bytes` chain. Unlike md's own mutations frame (whose recursive payload genuinely bottoms out
+# only via `Prim::Ref`), every flat field here (`id`/`index`/`name`) IS real field-by-field binary
+# at the Rust layer (`enc_entity_bin`/`enc_ifc_value_bin`/`write_str_bin` in
+# `../../🔺️diff/🦀️component.rs`, reusing `store::pack_rt::write_varint_u64`/`store::ByteReader`) --
+# only `IfcValue::Aggregate`/`TypedValue`'s self-recursion into `Vec<IfcValue>` (and `IfcEntity`'s
+# own `args: Vec<IfcValue>`) cannot be re-modeled field-by-field AT THIS DIALECT LAYER, because
+# `Prim::Ref` (the only construct that could describe that self-recursion here) unconditionally
+# errors during `walk_protocol` (`protocol-prim-ref-recursion`, recipe §5 -- confirmed unchanged
+# through every FG-wave pilot, not fixed by this wave either). Same honest-boundary treatment the
+# plan prescribes: opaque at the protocol layer, genuinely structured (and round-trip-tested) at
+# the Rust layer. Filed as `mechanism_gaps` in this wave's report (non-blocking; worked around
+# locally exactly as described here, same as json/csv/zip/png/binary/md/xml/dxf).
+dialect protocol
+protocol stdio.ifc.mutation
+version 1
+schema stdio.ifc
+start record
+
+framing record
+header fixed 2
+field format u8
+field tag u8
+chain payload bytes

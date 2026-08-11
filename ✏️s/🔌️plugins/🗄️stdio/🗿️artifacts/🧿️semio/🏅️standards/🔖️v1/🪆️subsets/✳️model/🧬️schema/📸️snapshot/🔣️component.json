@@ -1,10 +1,81 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.model/snapshot.json",
   "title": "SemioModelSnapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Spatial hierarchy (site/building/storey/space) + elements + relations, from ifc/4.",
   "type": "object",
+  "required": ["schema", "spatial", "elements", "relations"],
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "spatial": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "name", "placement"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "enum": ["site", "building", "storey", "space"] },
+          "name": { "type": "string" },
+          "parentId": { "type": ["string", "null"] },
+          "placement": { "$ref": "#/$defs/transform" }
+        }
+      }
+    },
+    "elements": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": {
+        "type": "object",
+        "required": ["id", "class", "placement", "geometry", "psets"],
+        "properties": {
+          "id": { "type": "string" },
+          "class": { "$ref": "#/$defs/elementClass" },
+          "placement": { "$ref": "#/$defs/transform" },
+          "geometry": { "$ref": "#/$defs/geometryRef" },
+          "spatialId": { "type": ["string", "null"] },
+          "psets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "properties"],
+              "properties": {
+                "name": { "type": "string" },
+                "properties": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["key", "value"],
+                    "properties": { "key": { "type": "string" }, "value": { "$ref": "#/$defs/psetValue" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "relations": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "from", "to"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "$ref": "#/$defs/relationKind" },
+          "from": { "type": "string" },
+          "to": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "point3": { "type": "object", "required": ["x", "y", "z"], "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } } },
+    "quaternion": { "type": "object", "required": ["x", "y", "z", "w"], "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" }, "w": { "type": "number" } } },
+    "transform": { "type": "object", "required": ["translation", "rotation", "scale"], "properties": { "translation": { "$ref": "#/$defs/point3" }, "rotation": { "$ref": "#/$defs/quaternion" }, "scale": { "$ref": "#/$defs/point3" } } },
+    "elementClass": { "type": "object", "required": ["kind"], "properties": { "kind": { "enum": ["wall", "slab", "column", "beam", "door", "window", "roof", "stair", "furniture", "other"] }, "name": { "type": "string" } } },
+    "geometryRef": { "type": "object", "required": ["kind"], "properties": { "kind": { "enum": ["none", "brep", "mesh"] }, "brepId": { "type": "string" }, "meshId": { "type": "string" } } },
+    "psetValue": { "type": "object", "required": ["kind"], "properties": { "kind": { "enum": ["text", "number", "boolean"] }, "value": {} } },
+    "relationKind": { "type": "object", "required": ["kind"], "properties": { "kind": { "enum": ["aggregates", "containedIn", "connectsTo", "fillsVoid", "voidsElement", "other"] }, "label": { "type": "string" } } }
   }
 }

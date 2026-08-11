@@ -1,9 +1,31 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type HtmlMutationEntry {
-  key: String!
-  value: String!
+# 🌳 `HtmlNode` is NOT redefined here -- this facet relies on the sibling
+# `../📸️snapshot/🔗️component.graphql` types being present in the assembled schema.
+
+enum HtmlMutationKind {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_DOCTYPE
+  INSERT_NODE
+  REMOVE_NODE
+  SET_ELEMENT_NAME
+  SET_ATTRIBUTE
+  SET_TEXT
+  SET_COMMENT
+  SET_RAW_TEXT
 }
+
+""" 🧬️ HtmlMutation union, flattened -- only the fields matching `mutation` are set.
+`insertNode`/`removeNode`'s `parent` addresses the PARENT element; every other path-carrying
+variant's `path` addresses the target node itself. """
 type HtmlMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [HtmlMutationEntry!]! @state(class: PERSISTENT)
+  mutation: HtmlMutationKind!
+  snapshot: HtmlSnapshot
+  doctype: String
+  parent: [Int!]
+  path: [Int!]
+  index: Int
+  node: HtmlNode
+  name: String
+  value: String
+  text: String
 }

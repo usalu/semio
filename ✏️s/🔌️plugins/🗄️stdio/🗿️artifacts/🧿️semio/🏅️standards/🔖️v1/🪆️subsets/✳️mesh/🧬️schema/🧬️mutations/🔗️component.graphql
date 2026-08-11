@@ -1,9 +1,45 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioMeshMutationEntry {
-  key: String!
-  value: String!
+# 🧬️ SemioMeshMutation schema — real mirror of `🦀️component.rs`. Discriminated union on the
+# `mutation` tag.
+union SemioMeshMutation =
+    NoMutation
+  | SetSnapshot
+  | AddMesh
+  | RemoveMesh
+  | AddPrimitive
+  | RemovePrimitive
+  | SetPrimitiveTopology
+  | SetPrimitiveGeometry
+  | SetPrimitiveMaterial
+  | AddMaterial
+  | RemoveMaterial
+  | SetMaterialBaseColor
+  | SetMaterialPbr
+  | AddTexture
+  | RemoveTexture
+  | SetTextureBytes
+
+type NoMutation { mutation: String! }
+type SetSnapshot { mutation: String! snapshot: SemioMeshSnapshot! }
+type AddMesh { mutation: String! mesh: SemioMesh! }
+type RemoveMesh { mutation: String! id: String! }
+type AddPrimitive { mutation: String! meshId: String! primitive: SemioPrimitive! }
+type RemovePrimitive { mutation: String! meshId: String! primitiveId: String! }
+type SetPrimitiveTopology { mutation: String! meshId: String! primitiveId: String! topology: SemioTopology! }
+type SetPrimitiveGeometry {
+  mutation: String!
+  meshId: String!
+  primitiveId: String!
+  positions: [SemioPoint3!]!
+  normals: [SemioPoint3!]!
+  uvs: [SemioUv!]!
+  colors: [SemioRgba!]!
+  indices: [Int!]!
 }
-type SemioMeshMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioMeshMutationEntry!]! @state(class: PERSISTENT)
-}
+type SetPrimitiveMaterial { mutation: String! meshId: String! primitiveId: String! materialId: String }
+type AddMaterial { mutation: String! material: SemioMaterial! }
+type RemoveMaterial { mutation: String! id: String! }
+type SetMaterialBaseColor { mutation: String! id: String! baseColor: SemioRgba! }
+type SetMaterialPbr { mutation: String! id: String! metallic: Float! roughness: Float! }
+type AddTexture { mutation: String! texture: SemioTexture! }
+type RemoveTexture { mutation: String! id: String! }
+type SetTextureBytes { mutation: String! id: String! mime: String! bytes: [Int!]! }

@@ -1,7 +1,6 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.s_stdio_semio_audio.mutations;
+package semio.s_stdio_semio_audio.mutation;
 message SemioAudioMutation {
   string schema = 1;
-  string entries_wire = 2;
+  string bytes_wire = 2;
 }

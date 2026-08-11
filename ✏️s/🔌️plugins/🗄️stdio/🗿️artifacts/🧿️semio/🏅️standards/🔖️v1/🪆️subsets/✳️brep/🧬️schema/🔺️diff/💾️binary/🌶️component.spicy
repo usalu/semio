@@ -1,5 +1,7 @@
-module Semio_semio_brep_diff;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_semio_brep_diff;
+
+# Binary payload: UTF-8 diff-line text verbatim (protocol::DiffCodec::encode_diff is
+# print_diff().into_bytes()), same grammar as the sibling text facet.
 type Document = unit {
-    magic: bytes &size=21;
+    payload: bytes &eod &convert=$$.decode("utf-8");
 };

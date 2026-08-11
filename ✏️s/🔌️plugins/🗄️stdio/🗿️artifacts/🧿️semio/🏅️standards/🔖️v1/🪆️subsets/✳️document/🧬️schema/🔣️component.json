@@ -1,10 +1,13 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.document/artifact.json",
   "title": "SemioDocumentArtifact",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Full artifact state, mirrors SemioDocumentSnapshot field for field.",
   "type": "object",
+  "required": ["schema", "styles", "images", "blocks"],
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "styles": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } },
+    "images": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } },
+    "blocks": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
   }
 }

@@ -1,10 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.html.mutations/text.json",
-  "title": "Semio_html_mutations",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
-  "type": "object",
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+  "$id": "https://semio.tech/schema/stdio.html/mutations/text.json",
+  "title": "HtmlMutationText",
+  "description": "Hand-rolled 'keyword arg=value ...' grammar per the sibling ../📖️component.grammar.semio -- not JSON.",
+  "type": "string"
 }

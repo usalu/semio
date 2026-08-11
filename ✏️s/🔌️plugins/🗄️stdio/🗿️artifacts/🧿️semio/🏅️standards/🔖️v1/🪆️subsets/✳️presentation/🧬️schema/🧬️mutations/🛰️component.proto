@@ -1,7 +1,39 @@
+// 🧬️ SemioPresentationMutation — named-variant vocabulary, one message per variant.
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.s_stdio_semio_presentation.mutations;
+package stdio.semio.presentation.mutations;
+
+message NoMutation {}
+message SetSnapshot { bytes snapshot = 1; }
+message InsertSlide { uint64 index = 1; bytes slide = 2; }
+message RemoveSlide { uint64 index = 1; }
+message SetSlideLayout { uint64 index = 1; optional string layout_id = 2; }
+message SetSlideNotes { uint64 index = 1; repeated bytes notes = 2; }
+message InsertShape { uint64 slide_index = 1; uint64 shape_index = 2; bytes shape = 3; }
+message RemoveShape { uint64 slide_index = 1; uint64 shape_index = 2; }
+message SetShapeFrame { uint64 slide_index = 1; uint64 shape_index = 2; bytes frame = 3; }
+message SetTextBoxBlocks { uint64 slide_index = 1; uint64 shape_index = 2; repeated bytes blocks = 3; }
+message InsertMaster { bytes master = 1; }
+message RemoveMaster { string id = 1; }
+message InsertLayout { bytes layout = 1; }
+message RemoveLayout { string id = 1; }
+message SetLayoutMaster { string id = 1; string master_id = 2; }
+
 message SemioPresentationMutation {
-  string schema = 1;
-  string entries_wire = 2;
+  oneof body {
+    NoMutation no_mutation = 1;
+    SetSnapshot set_snapshot = 2;
+    InsertSlide insert_slide = 3;
+    RemoveSlide remove_slide = 4;
+    SetSlideLayout set_slide_layout = 5;
+    SetSlideNotes set_slide_notes = 6;
+    InsertShape insert_shape = 7;
+    RemoveShape remove_shape = 8;
+    SetShapeFrame set_shape_frame = 9;
+    SetTextBoxBlocks set_textbox_blocks = 10;
+    InsertMaster insert_master = 11;
+    RemoveMaster remove_master = 12;
+    InsertLayout insert_layout = 13;
+    RemoveLayout remove_layout = 14;
+    SetLayoutMaster set_layout_master = 15;
+  }
 }

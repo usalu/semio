@@ -1,0 +1,23 @@
+error: could not compile `semio-s-plugin-stdio` (lib test) due to 62 previous errors; 359 warnings emitted
+error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/../../../../../../../📚️examples/🎬️demo/🖼️assets/example.html`: No such file or directory (os error 2)
+error[E0308]: `?` operator has incompatible types
+error[E0308]: mismatched types
+error[E0432]: unresolved import `protocol::DiffAlgebra`
+error[E0599]: no associated function or constant named `decode_diff` found for struct `image::schema::diff::component::SemioImageDiff` in the current scope
+error[E0599]: no associated function or constant named `parse_diff` found for struct `image::schema::diff::component::SemioImageDiff` in the current scope
+error[E0599]: no method named `absorb` found for struct `energyplus::subsets::any::schema::diff::component::EpwDiff` in the current scope
+error[E0599]: no method named `apply` found for struct `animation::schema::diff::component::SemioAnimationDiff` in the current scope
+error[E0599]: no method named `apply` found for struct `energyplus::subsets::any::schema::diff::component::EpwDiff` in the current scope
+error[E0599]: no method named `apply` found for struct `mpeg1_layer3::subsets::any::schema::diff::component::Mp3Diff` in the current scope
+error[E0599]: no method named `apply` found for struct `riff_pcm::subsets::any::schema::diff::component::WavDiff` in the current scope
+error[E0599]: no method named `encode_diff` found for struct `image::schema::diff::component::SemioImageDiff` in the current scope
+error[E0599]: no method named `inverse` found for struct `mpeg1_layer3::subsets::any::schema::diff::component::Mp3Diff` in the current scope
+error[E0599]: no method named `inverse` found for struct `riff_pcm::subsets::any::schema::diff::component::WavDiff` in the current scope
+error[E0599]: no method named `print_diff` found for struct `image::schema::diff::component::SemioImageDiff` in the current scope
+error[E0599]: no method named `print_op` found for reference `&image::schema::mutations::component::SemioImageMutation` in the current scope
+error[E0599]: no variant, associated function, or constant named `parse_op` found for enum `image::schema::mutations::component::SemioImageMutation` in the current scope
+error[E0609]: no field `id` on type `NamedAdded<object::schema::snapshot::component::SemioObjectNode>`
+error[E0609]: no field `key` on type `NamedAdded<object::schema::snapshot::component::SemioObjectEntry>`
+error[E0609]: no field `value` on type `NamedAdded<object::schema::snapshot::component::SemioObjectEntry>`
+error[E0609]: no field `value` on type `NamedAdded<object::schema::snapshot::component::SemioObjectNode>`
+error[E0631]: type mismatch in function arguments

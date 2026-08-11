@@ -1,10 +1,2 @@
-/** 🧬️ Semio_epw_diff schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_epw_diff
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_epw_diffEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_epw_diff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_epw_diffEntry[];
-}
+/** 📝️ Text representation for `stdio.epw` (diff): the hand-rolled `keyword=hex` token line. */
+export type EpwDiffText = string;

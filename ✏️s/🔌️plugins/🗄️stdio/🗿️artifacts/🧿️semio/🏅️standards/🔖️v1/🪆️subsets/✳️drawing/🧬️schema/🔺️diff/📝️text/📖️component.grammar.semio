@@ -1,5 +1,17 @@
-dialect grammar stdio.semio.drawing.diff
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
+dialect grammar stdio.semio.drawing.diff.text
+; real hand-rolled DiffCodec grammar (🦀️component.rs print_diff/parse_diff) -- self-delimiting
+; bracket-depth-aware tokens, never a raw unbounded octet run
 root = document
-document = marker
-marker = "stdio.semio.drawing.diff"
+document = [token *(SP token)]
+token = canvas-tok / styles-tok / layers-tok
+canvas-tok = "canvas=" bracketed
+styles-tok = "styles=" triple
+layers-tok = "layers=" triple
+triple = "[" list "];[" list "];[" list "]"
+bracketed = "[" list "]"
+list = *(entry ",")
+entry = hex-value / index ":" hex-value / hex-key ":" hex-value
+hex-value = *HEXDIG   ; hex-encoded JSON leaf value -- full field structure: 🔣️component.json
+hex-key = *HEXDIG
+index = 1*DIGIT
+

@@ -1,10 +1,35 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.avi/snapshot.json",
+  "$id": "https://semio.tech/schema/stdio.avi.snapshot.json",
   "title": "AviSnapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "RIFF/AVI 1.0: avih typed, per-stream strh typed + strf discriminated by fccType, movi chunks assigned to their stream with idx1-derived keyframe flags, everything else typed-raw.",
   "type": "object",
+  "required": ["schema", "mainHeader", "streams", "idx1Present", "unknownChunks"],
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "mainHeader": {
+      "type": "object", "x-semio-state": "persistent",
+      "properties": {
+        "microSecPerFrame": { "type": "integer" }, "maxBytesPerSec": { "type": "integer" }, "paddingGranularity": { "type": "integer" }, "flags": { "type": "integer" },
+        "totalFrames": { "type": "integer" }, "initialFrames": { "type": "integer" }, "streams": { "type": "integer" }, "suggestedBufferSize": { "type": "integer" },
+        "width": { "type": "integer" }, "height": { "type": "integer" }, "reserved": { "type": "array", "items": { "type": "integer" } }
+      }
+    },
+    "streams": {
+      "type": "array", "x-semio-state": "persistent",
+      "items": {
+        "type": "object",
+        "properties": {
+          "strh": { "type": "object" },
+          "strf": { "oneOf": [
+            { "type": "object", "properties": { "format": { "const": "bitmapInfo" } } },
+            { "type": "object", "properties": { "format": { "const": "waveFormat" } } },
+            { "type": "object", "properties": { "format": { "const": "raw" } } }
+          ] },
+          "chunks": { "type": "array", "items": { "type": "object", "properties": { "fourcc": { "type": "string" }, "data": { "type": "array" }, "keyframe": { "type": "boolean" } } } }
+        }
+      }
+    },
+    "idx1Present": { "type": "boolean", "x-semio-state": "persistent" },
+    "unknownChunks": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object", "properties": { "fourcc": { "type": "string" }, "data": { "type": "array" } } } }
   }
 }

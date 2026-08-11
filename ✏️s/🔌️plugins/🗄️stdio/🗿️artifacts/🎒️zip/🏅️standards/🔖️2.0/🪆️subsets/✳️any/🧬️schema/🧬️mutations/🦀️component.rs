@@ -283,6 +283,64 @@ impl protocol::OpBinary for ZipMutation {
 }
 //#endregion OpCodecs
 
+//#region 🔖️DemoCases
+/// 🧪️ P2-P2: representative `ZipEntry`/`ZipSnapshot` fixtures + every `ZipMutation` variant —
+/// the single source of truth reused by `op_text_binary_roundtrip_law` below AND by
+/// `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law` conformance
+/// tests, so a new variant only needs adding here once (same convention P2-P1's json pilot
+/// established: `mutations::demo_mutation_cases()`/`diff::demo_diff_cases()`).
+#[cfg(test)]
+pub(crate) fn entry(name: &str, data: &[u8]) -> ZipEntry {
+    ZipEntry {
+        name: name.into(),
+        data: data.to_vec(),
+        method: ZipCompressionMethod::Stored,
+        dos_date: 0x5678,
+        dos_time: 0x1234,
+        unix_mtime: Some(1_700_000_000),
+        flags: 0,
+        version_made_by: 20,
+        version_needed: 20,
+        internal_attrs: 0,
+        external_attrs: 0o100644 << 16,
+        local_extra: vec![ZipExtraField { id: 0x5455, payload: vec![1, 2, 3] }],
+        central_extra: vec![],
+        comment: String::new(),
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn base_snapshot() -> ZipSnapshot {
+    ZipSnapshot {
+        schema: "stdio.zip".into(),
+        entries: vec![entry("a.txt", b"aaa"), entry("b.txt", b"bbb"), entry("c.txt", b"ccc")],
+        comment: "archive".into(),
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<ZipMutation> {
+    let base = base_snapshot();
+    vec![
+        ZipMutation::NoMutation,
+        ZipMutation::SetSnapshot { snapshot: base.clone() },
+        ZipMutation::SetArchiveComment { comment: "new comment".into() },
+        ZipMutation::AddEntry { index: 1, entry: entry("x.bin", b"xxx") },
+        ZipMutation::RemoveEntry { name: "b.txt".into() },
+        ZipMutation::RenameEntry { name: "a.txt".into(), new_name: "a2.txt".into() },
+        ZipMutation::SetEntryData { name: "a.txt".into(), data: b"new-data".to_vec() },
+        ZipMutation::SetEntryMethod { name: "a.txt".into(), method: ZipCompressionMethod::Deflate },
+        ZipMutation::SetEntryTimestamps { name: "a.txt".into(), dos_date: 1, dos_time: 2, unix_mtime: Some(1_234_567) },
+        ZipMutation::SetEntryTimestamps { name: "a.txt".into(), dos_date: 1, dos_time: 2, unix_mtime: None },
+        ZipMutation::SetEntryFlags { name: "a.txt".into(), flags: 0x0800 },
+        ZipMutation::SetEntryVersions { name: "a.txt".into(), version_made_by: 63, version_needed: 45 },
+        ZipMutation::SetEntryAttributes { name: "a.txt".into(), internal_attrs: 1, external_attrs: 0o100755 << 16 },
+        ZipMutation::SetEntryExtra { name: "a.txt".into(), local_extra: vec![ZipExtraField { id: 1, payload: vec![1, 2] }], central_extra: vec![] },
+        ZipMutation::SetEntryComment { name: "a.txt".into(), comment: "hi".into() },
+    ]
+}
+//#endregion 🔖️DemoCases
+
 //#region Tests
 #[cfg(test)]
 mod tests {
@@ -291,35 +349,6 @@ mod tests {
     use protocol::MutationDiff;
     use protocol::command::DiffAlgebra;
     use protocol::{DiffCodec, OpBinary, OpText};
-
-    //#region Fixtures
-    fn entry(name: &str, data: &[u8]) -> ZipEntry {
-        ZipEntry {
-            name: name.into(),
-            data: data.to_vec(),
-            method: ZipCompressionMethod::Stored,
-            dos_date: 0x5678,
-            dos_time: 0x1234,
-            unix_mtime: Some(1_700_000_000),
-            flags: 0,
-            version_made_by: 20,
-            version_needed: 20,
-            internal_attrs: 0,
-            external_attrs: 0o100644 << 16,
-            local_extra: vec![ZipExtraField { id: 0x5455, payload: vec![1, 2, 3] }],
-            central_extra: vec![],
-            comment: String::new(),
-        }
-    }
-
-    fn base_snapshot() -> ZipSnapshot {
-        ZipSnapshot {
-            schema: "stdio.zip".into(),
-            entries: vec![entry("a.txt", b"aaa"), entry("b.txt", b"bbb"), entry("c.txt", b"ccc")],
-            comment: "archive".into(),
-        }
-    }
-    //#endregion Fixtures
 
     //#region 🔖️mutation_diff_law
     fn assert_mutation_diff_law(base: &ZipSnapshot, mutation: ZipMutation) {
@@ -653,25 +682,7 @@ mod tests {
     /// a whole nested record (`SetSnapshot`, `AddEntry`).
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = base_snapshot();
-        let variants = vec![
-            ZipMutation::NoMutation,
-            ZipMutation::SetSnapshot { snapshot: base.clone() },
-            ZipMutation::SetArchiveComment { comment: "new comment".into() },
-            ZipMutation::AddEntry { index: 1, entry: entry("x.bin", b"xxx") },
-            ZipMutation::RemoveEntry { name: "b.txt".into() },
-            ZipMutation::RenameEntry { name: "a.txt".into(), new_name: "a2.txt".into() },
-            ZipMutation::SetEntryData { name: "a.txt".into(), data: b"new-data".to_vec() },
-            ZipMutation::SetEntryMethod { name: "a.txt".into(), method: ZipCompressionMethod::Deflate },
-            ZipMutation::SetEntryTimestamps { name: "a.txt".into(), dos_date: 1, dos_time: 2, unix_mtime: Some(1_234_567) },
-            ZipMutation::SetEntryTimestamps { name: "a.txt".into(), dos_date: 1, dos_time: 2, unix_mtime: None },
-            ZipMutation::SetEntryFlags { name: "a.txt".into(), flags: 0x0800 },
-            ZipMutation::SetEntryVersions { name: "a.txt".into(), version_made_by: 63, version_needed: 45 },
-            ZipMutation::SetEntryAttributes { name: "a.txt".into(), internal_attrs: 1, external_attrs: 0o100755 << 16 },
-            ZipMutation::SetEntryExtra { name: "a.txt".into(), local_extra: vec![ZipExtraField { id: 1, payload: vec![1, 2] }], central_extra: vec![] },
-            ZipMutation::SetEntryComment { name: "a.txt".into(), comment: "hi".into() },
-        ];
-        for m in variants {
+        for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = ZipMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

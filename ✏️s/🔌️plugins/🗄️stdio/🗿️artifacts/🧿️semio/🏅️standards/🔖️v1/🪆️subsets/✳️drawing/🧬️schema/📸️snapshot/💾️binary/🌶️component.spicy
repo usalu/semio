@@ -1,5 +1,9 @@
 module Semio_semio_drawing_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+# real semio_format::wrap_binary envelope: 8-byte magic, u32-LE token length, UTF-8 token, then
+# raw JSON(SemioDrawingSnapshot) bytes to end of input (structure of that JSON: 🔣️component.json).
 type Document = unit {
-    magic: bytes &size=28;
+    magic: bytes &size=8;
+    token_len: uint32 &byte-order=spicy::ByteOrder::Little;
+    token: bytes &size=self.token_len;
+    json_bytes: bytes &eod;
 };

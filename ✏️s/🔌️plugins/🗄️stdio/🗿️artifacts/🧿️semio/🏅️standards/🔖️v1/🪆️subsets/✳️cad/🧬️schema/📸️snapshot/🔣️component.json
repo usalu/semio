@@ -1,10 +1,63 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.cad/snapshot.json",
   "title": "SemioCadSnapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Real facet mirror of 🦀️component.rs (source of truth) -- layers/blocks/entities, dxf r12-informed CadEntity vocabulary.",
+  "type": "object",
+  "definitions": {
+    "point2": {
+      "type": "object",
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" } },
+      "required": ["x", "y"]
+    },
+    "entity": {
+      "oneOf": [
+        { "type": "object", "properties": { "kind": { "const": "line" }, "a": { "$ref": "#/definitions/point2" }, "b": { "$ref": "#/definitions/point2" } }, "required": ["kind", "a", "b"] },
+        { "type": "object", "properties": { "kind": { "const": "arc" }, "center": { "$ref": "#/definitions/point2" }, "radius": { "type": "number" }, "startAngle": { "type": "number" }, "endAngle": { "type": "number" } }, "required": ["kind", "center", "radius", "startAngle", "endAngle"] },
+        { "type": "object", "properties": { "kind": { "const": "circle" }, "center": { "$ref": "#/definitions/point2" }, "radius": { "type": "number" } }, "required": ["kind", "center", "radius"] },
+        { "type": "object", "properties": { "kind": { "const": "ellipse" }, "center": { "$ref": "#/definitions/point2" }, "majorAxisEnd": { "$ref": "#/definitions/point2" }, "ratio": { "type": "number" }, "startParam": { "type": "number" }, "endParam": { "type": "number" } }, "required": ["kind", "center", "majorAxisEnd", "ratio", "startParam", "endParam"] },
+        { "type": "object", "properties": { "kind": { "const": "polyline" }, "vertices": { "type": "array", "items": { "$ref": "#/definitions/point2" } }, "closed": { "type": "boolean" } }, "required": ["kind", "vertices", "closed"] },
+        { "type": "object", "properties": { "kind": { "const": "text" }, "position": { "$ref": "#/definitions/point2" }, "height": { "type": "number" }, "rotation": { "type": "number" }, "content": { "type": "string" } }, "required": ["kind", "position", "height", "rotation", "content"] },
+        { "type": "object", "properties": { "kind": { "const": "insert" }, "blockName": { "type": "string" }, "insertionPoint": { "$ref": "#/definitions/point2" }, "scale": { "$ref": "#/definitions/point2" }, "rotation": { "type": "number" } }, "required": ["kind", "blockName", "insertionPoint", "scale", "rotation"] },
+        { "type": "object", "properties": { "kind": { "const": "solid" }, "p1": { "$ref": "#/definitions/point2" }, "p2": { "$ref": "#/definitions/point2" }, "p3": { "$ref": "#/definitions/point2" }, "p4": { "$ref": "#/definitions/point2" } }, "required": ["kind", "p1", "p2", "p3", "p4"] },
+        { "type": "object", "properties": { "kind": { "const": "dimension" }, "defPoint": { "$ref": "#/definitions/point2" }, "textPosition": { "$ref": "#/definitions/point2" }, "measurement": { "type": "number" }, "text": { "type": "string" } }, "required": ["kind", "defPoint", "textPosition", "measurement", "text"] }
+      ]
+    },
+    "layer": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "colorIndex": { "type": "integer" },
+        "lineType": { "type": "string" },
+        "visible": { "type": "boolean" }
+      },
+      "required": ["name", "colorIndex", "lineType", "visible"]
+    },
+    "entityRecord": {
+      "type": "object",
+      "description": "handle is the id key; layer must name a real layer (checked by SemioCadValidator, not this schema).",
+      "properties": {
+        "handle": { "type": "string" },
+        "layer": { "type": "string" },
+        "entity": { "$ref": "#/definitions/entity" }
+      },
+      "required": ["handle", "layer", "entity"]
+    },
+    "block": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "basePoint": { "$ref": "#/definitions/point2" },
+        "entities": { "type": "array", "items": { "$ref": "#/definitions/entityRecord" } }
+      },
+      "required": ["name", "basePoint", "entities"]
+    }
+  },
   "type": "object",
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+    "layers": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/layer" } },
+    "blocks": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/block" } },
+    "entities": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/entityRecord" } }
+  },
+  "required": ["schema", "layers", "blocks", "entities"]
 }

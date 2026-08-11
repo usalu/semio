@@ -1,1 +1,22 @@
-{"hello":"stdio.json","n":1}
+semio stdio.json.dsl v1
+{
+  "name": "semio",
+  "count": 42,
+  "ratio": 3.5,
+  "active": true,
+  "missing": null,
+  "tags": [
+    "a",
+    "b",
+    "c"
+  ],
+  "nested": {
+    "deep": {
+      "deeper": [
+        1,
+        2,
+        3
+      ]
+    }
+  }
+}

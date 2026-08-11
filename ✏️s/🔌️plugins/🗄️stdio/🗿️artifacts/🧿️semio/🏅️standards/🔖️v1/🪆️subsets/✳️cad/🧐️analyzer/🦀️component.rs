@@ -1,5 +1,6 @@
-//! 🧐️ SemioCadAnalyzer — 🚧 scaffolded by W1b: JSON-pack decode only. `sniff()` genuinely
-//! inspects the payload for this subset's document-schema marker (not an always-High/Low stub).
+//! 🧐️ SemioCadAnalyzer — real JSON-pack/DSL decode. `sniff()` genuinely inspects the payload for
+//! this subset's document-schema marker (not an always-High/Low stub); `analyze()` fully decodes
+//! into the real `SemioCadSnapshot` (layers/blocks/entities), not a partial parse.
 
 use semio_framework_plugin::{ArtifactAnalyzer, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};

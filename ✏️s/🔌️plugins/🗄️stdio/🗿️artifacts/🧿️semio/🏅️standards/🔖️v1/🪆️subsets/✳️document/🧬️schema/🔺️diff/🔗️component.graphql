@@ -1,9 +1,18 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioDocumentDiffEntry {
-  key: String!
-  value: String!
+# Handcrafted sparse SemioDocumentDiff -- name-keyed styles/images triples + an index-keyed
+# recursive blocks triple. GraphQL exposes the triple shape generically since the item/diff
+# payload types vary per collection.
+type IndexTripleShape {
+  removedIndices: [Int!]!
+  modifiedCount: Int!
+  addedCount: Int!
+}
+type NamedTripleShape {
+  removedKeys: [String!]!
+  modifiedCount: Int!
+  addedCount: Int!
 }
 type SemioDocumentDiff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioDocumentDiffEntry!]! @state(class: PERSISTENT)
+  styles: NamedTripleShape
+  images: NamedTripleShape
+  blocks: IndexTripleShape
 }

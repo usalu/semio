@@ -1,6 +1,155 @@
-dialect grammar stdio.docx.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.docx' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.docx.diff
+extension docx
+start document
+comment none
+
+# FG-wave: real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `../../🦀️component.rs` (`print_docx_diff`/`parse_docx_diff`, ~L1813-1830), replacing the F6-era
+# `*OCTET` hex-dump placeholder. Every keyword/token below is copied verbatim from the real
+# `format!(...)`/`enc_*`/`dec_*` call sites (`../🦀️component.rs`), not invented -- this is the
+# largest FG diff grammar in the OPC family (recursive `DocxBlock`/`DocxBlockDiff` tree via
+# `Table`, plus the OPC layer's own `content_types`/`parts`/`relationships`-by-owner collection
+# triples, all reused/hoisted per this file's own `DocxOpcDiff` doc comment).
+#
+# `hex` (bare `hex`, referenced but deliberately NOT defined as a production) is the framework's
+# built-in `hex` MACRO -- `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2.
+#
+# `[0]`/`[1,x]` is `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4);
+# `Option<Option<T>>` fields (`document.styles[k].based_on`, `paragraph.style`,
+# `opc.relationships[owner].modified[k].target_mode`) nest that shape twice (`opt-opt-hex`/
+# `opt-target-mode`-wrapping-`opt-hex`-style patterns below).
+document = opc-tok? document-tok?
+opc-tok = "opc" "=" opc-diff
+document-tok = "document" "=" document-diff
+
+# ── `DocxOpcDiff` -- `[opt(content_types),opt(parts),opt(relationships)]` ────────────────────────
+opc-diff = "[" opt-content-types-diff "," opt-parts-diff "," opt-relationships-diff "]"
+
+opt-content-types-diff = "[" "0" "]" | "[" "1" "," content-types-diff "]"
+content-types-diff = "[" opt-ct-entries-diff "," opt-ct-entries-diff "]"
+opt-ct-entries-diff = "[" "0" "]" | "[" "1" "," ct-entries-diff-body "]"
+ct-entries-diff-body = "[" ct-removed-list? "]" ";" "[" ct-modified-list? "]" ";" "[" ct-added-list? "]"
+ct-removed-list = hex {"," hex}*
+ct-modified-list = ct-modified-item {"," ct-modified-item}*
+ct-modified-item = hex ":" hex
+ct-added-list = ct-entry {"," ct-entry}*
+ct-entry = "[" hex "," hex "]"
+
+opt-parts-diff = "[" "0" "]" | "[" "1" "," parts-diff-body "]"
+parts-diff-body = "[" parts-removed-list? "]" ";" "[" parts-modified-list? "]" ";" "[" parts-added-list? "]"
+parts-removed-list = hex {"," hex}*
+parts-modified-list = parts-modified-item {"," parts-modified-item}*
+parts-modified-item = hex ":" opc-part-diff
+opc-part-diff = "[" opt-hex "," opt-hex "]"
+parts-added-list = opc-part {"," opc-part}*
+opc-part = "[" hex "," hex "," hex "]"
+
+opt-relationships-diff = "[" "0" "]" | "[" "1" "," relationships-diff-body "]"
+relationships-diff-body = "[" rel-owner-removed-list? "]" ";" "[" rel-owner-modified-list? "]" ";" "[" rel-owner-added-list? "]"
+rel-owner-removed-list = hex {"," hex}*
+rel-owner-modified-list = rel-owner-modified-item {"," rel-owner-modified-item}*
+rel-owner-modified-item = hex ":" rel-list-diff-body
+rel-owner-added-list = rel-owner-entry {"," rel-owner-entry}*
+rel-owner-entry = "[" hex "," "[" rel-list? "]" "]"
+rel-list = rel {"," rel}*
+rel = "[" hex "," hex "," hex "," target-mode "]"
+target-mode = "0" | "1"
+
+rel-list-diff-body = "[" rel-removed-list? "]" ";" "[" rel-modified-list? "]" ";" "[" rel-added-list? "]"
+rel-removed-list = hex {"," hex}*
+rel-modified-list = rel-modified-item {"," rel-modified-item}*
+rel-modified-item = hex ":" rel-diff
+rel-diff = "[" opt-hex "," opt-hex "," opt-target-mode "]"
+opt-target-mode = "[" "0" "]" | "[" "1" "," target-mode "]"
+rel-added-list = rel {"," rel}*
+
+# ── `DocxDocumentDiff` -- `[opt(body),opt(styles)]` ──────────────────────────────────────────────
+document-diff = "[" opt-blocks-diff "," opt-styles-diff "]"
+
+opt-blocks-diff = "[" "0" "]" | "[" "1" "," blocks-diff-body "]"
+blocks-diff-body = "[" blocks-removed-list? "]" ";" "[" blocks-modified-list? "]" ";" "[" blocks-added-list? "]"
+blocks-removed-list = INT {"," INT}*
+blocks-modified-list = blocks-modified-item {"," blocks-modified-item}*
+blocks-modified-item = INT ":" block-diff
+blocks-added-list = blocks-added-item {"," blocks-added-item}*
+blocks-added-item = INT ":" block
+
+# `DocxBlockDiff` -- `P<paragraph-diff>` / `T<table-diff>` / `R[<block>]` (wholesale replace, block
+# KIND changed) -- genuinely recursive: `table-diff` -> `table-row-diff` -> `table-cell-diff` ->
+# `opt-blocks-diff` closes back to THIS production's own `blocks-diff-body`
+# (`📖️grammar-recipe.md` §1.3(g), already-proven-safe self-recursion).
+block-diff = "P" paragraph-diff | "T" table-diff | "R" "[" block "]"
+
+paragraph-diff = "[" opt-runs-diff "," opt-opt-hex "]"
+opt-runs-diff = "[" "0" "]" | "[" "1" "," runs-diff-body "]"
+runs-diff-body = "[" runs-removed-list? "]" ";" "[" runs-modified-list? "]" ";" "[" runs-added-list? "]"
+runs-removed-list = INT {"," INT}*
+runs-modified-list = runs-modified-item {"," runs-modified-item}*
+runs-modified-item = INT ":" run-diff
+runs-added-list = runs-added-item {"," runs-added-item}*
+runs-added-item = INT ":" run
+run-diff = "[" opt-hex "," opt-bool "," opt-bool "," opt-bool "]"
+opt-bool = "[" "0" "]" | "[" "1" "," bool-lit "]"
+bool-lit = "0" | "1"
+opt-opt-hex = "[" "0" "]" | "[" "1" "," opt-hex "]"
+opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
+
+table-diff = "[" opt-table-rows-diff "]"
+opt-table-rows-diff = "[" "0" "]" | "[" "1" "," table-rows-diff-body "]"
+table-rows-diff-body = "[" rows-removed-list? "]" ";" "[" rows-modified-list? "]" ";" "[" rows-added-list? "]"
+rows-removed-list = INT {"," INT}*
+rows-modified-list = rows-modified-item {"," rows-modified-item}*
+rows-modified-item = INT ":" table-row-diff
+rows-added-list = rows-added-item {"," rows-added-item}*
+rows-added-item = INT ":" row
+
+table-row-diff = "[" opt-table-cells-diff "]"
+opt-table-cells-diff = "[" "0" "]" | "[" "1" "," table-cells-diff-body "]"
+table-cells-diff-body = "[" cells-removed-list? "]" ";" "[" cells-modified-list? "]" ";" "[" cells-added-list? "]"
+cells-removed-list = INT {"," INT}*
+cells-modified-list = cells-modified-item {"," cells-modified-item}*
+cells-modified-item = INT ":" table-cell-diff
+cells-added-list = cells-added-item {"," cells-added-item}*
+cells-added-item = INT ":" cell
+
+table-cell-diff = "[" opt-blocks-diff "]"
+
+opt-styles-diff = "[" "0" "]" | "[" "1" "," styles-diff-body "]"
+styles-diff-body = "[" styles-removed-list? "]" ";" "[" styles-modified-list? "]" ";" "[" styles-added-list? "]"
+styles-removed-list = hex {"," hex}*
+styles-modified-list = styles-modified-item {"," styles-modified-item}*
+styles-modified-item = hex ":" style-diff
+styles-added-list = style {"," style}*
+style-diff = "[" opt-hex "," opt-opt-hex "]"
+
+# ── Restated (not `use`d) whole-item value shapes -- the exact payload every `added`/`Replace`
+# list above carries, mirrored from this file's own `../🦀️component.rs` `enc_block`/`enc_run`/
+# `enc_paragraph`/`enc_table`/`enc_row`/`enc_cell`/`enc_style`/`enc_opc_part`/`enc_rel`/
+# `enc_rel_owner_entry` -- same per-facet self-containment convention xml's own diff grammar
+# documents (its own `xml-node` production restated off its sibling snapshot facet).
+block = "P" paragraph | "T" table
+paragraph = "[" runs-list "," opt-hex "," extra-list "]"
+runs-list = "[" run-item* "]"
+run-item = run ","?
+run = "[" hex "," bool-lit "," bool-lit "," bool-lit "," extra-list "]"
+extra-list = "[" x-node-item* "]"
+x-node-item = x-node ","?
+table = "[" rows-list "," extra-list "]"
+rows-list = "[" row-item* "]"
+row-item = row ","?
+row = "[" cells-list "," extra-list "]"
+cells-list = "[" cell-item* "]"
+cell-item = cell ","?
+cell = "[" blocks-list "," extra-list "]"
+blocks-list = "[" block-item* "]"
+block-item = block ","?
+style = "[" hex "," hex "," opt-hex "]"
+
+# Restated `XmlNode` value shape (this artifact's `extra_*_properties: Vec<XmlNode>` raw-retention
+# payload), verbatim from `📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/📖️component.grammar.semio`'s
+# own `xml-node` production, `x-`-prefixed here to stay a distinct namespace from this file's own
+# docx-specific production names (same restatement convention this file's sibling snapshot grammar
+# already established for its own `x-elem` productions).
+x-node = "E" "[" hex "," "[" x-attr-item* "]" "," "[" x-node-item* "]" "]" | "T" "[" hex "]" | "D" "[" hex "]" | "M" "[" hex "]" | "P" "[" hex "," hex "]"
+x-attr-item = "[" hex "," hex "]" ","?

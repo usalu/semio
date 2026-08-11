@@ -1,5 +1,10 @@
-module Semio_semio_model_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_semio_model_snapshot;
+
+# Real semio_format envelope: 8-byte magic, u32le token length, utf8 token, then payload bytes to
+# end of stream (compact-JSON SemioModelSnapshot -- same grammar as the sibling text facet).
 type Document = unit {
-    magic: bytes &size=26;
+    magic: bytes &size=8;
+    token_len: uint32 &byte-order=spicy::ByteOrder::Little;
+    token: bytes &size=self.token_len;
+    payload:  bytes &eod;  # compact-JSON SemioModelSnapshot, genuinely to end of data (no field follows)
 };

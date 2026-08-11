@@ -1,5 +1,4 @@
-module Semio_semio_presentation_diff;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=29;
+module SemioPresentationDiff;
+public type Binary = unit {
+    line: bytes &eod; # UTF-8 text of the diff grammar, verbatim
 };

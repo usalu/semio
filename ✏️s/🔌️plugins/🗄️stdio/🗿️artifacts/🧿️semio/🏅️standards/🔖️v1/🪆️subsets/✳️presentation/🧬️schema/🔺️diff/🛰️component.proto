@@ -1,7 +1,15 @@
+// 🔺️ SemioPresentationDiff — sparse, handcrafted; generic triples own local message shapes.
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.s_stdio_semio_presentation.diff;
+package stdio.semio.presentation.diff;
+
+message IndexModified { uint64 index = 1; bytes diff = 2; }
+message IndexAdded { uint64 index = 1; bytes item = 2; }
+message IndexedTripleDiff { repeated uint64 removed = 1; repeated IndexModified modified = 2; repeated IndexAdded added = 3; }
+message NamedModified { string key = 1; bytes diff = 2; }
+message NamedTripleDiff { repeated string removed = 1; repeated NamedModified modified = 2; repeated bytes added = 3; }
+
 message SemioPresentationDiff {
-  string schema = 1;
-  string entries_wire = 2;
+  optional NamedTripleDiff masters = 1;
+  optional NamedTripleDiff layouts = 2;
+  optional IndexedTripleDiff slides = 3;
 }

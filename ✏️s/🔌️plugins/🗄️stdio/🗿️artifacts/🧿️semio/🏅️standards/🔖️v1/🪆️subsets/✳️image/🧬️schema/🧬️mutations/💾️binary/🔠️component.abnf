@@ -1,3 +1,4 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.image.mutations"
+; Real binary wire grammar for `SemioImageMutation::encode_op`/`decode_op` — a documented
+; simplification (matching gif's own hand-rolled op codec): `encode_op` is `print_op`'s UTF-8
+; bytes verbatim, no separate binary framing. See the `📝️text` sibling for the `op` grammar.
+op-binary = *OCTET   ; UTF-8 bytes of the 📝️text sibling's `op` production, no trailing NUL

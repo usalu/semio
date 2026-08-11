@@ -1,0 +1,7 @@
+21524 high-priority breach(es) across 25 rule(s):
+  19352  handcrafted-grammar/spec-distinctness
+    486  taxonomy/emoji-prefix
+    273  artifact-schema/facet-completeness
+    270  os-state-authority/item-scope-global
+  taxonomy/emoji-prefix  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/📄set-snapshot  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/📄set-snapshot" is missing U+FE0F variation selector on its emoji prefix
+  os-state-authority/item-scope-global  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🎹️composer/🦀️component.rs:113  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🎹️composer/🦀️component.rs:113" declares item-scope OnceLock<…> outside the OS product

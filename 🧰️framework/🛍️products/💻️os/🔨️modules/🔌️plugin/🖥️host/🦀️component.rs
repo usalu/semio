@@ -990,6 +990,16 @@ impl ExtensionRuntime {
         ExtensionHostState { wasi: WasiCtxBuilder::new().build(), table: ResourceTable::new(), extension_id: extension_id.to_string() }
     }
 
+    /// ⛽️ Both `consume_fuel` and `epoch_interruption` are enabled on this runtime's `Engine`
+    /// (`build_engine`), so every store MUST have fuel + an epoch deadline set before its first wasm
+    /// call or wasmtime traps immediately (`all fuel consumed` / `interrupt`) — a fresh `Store`'s
+    /// fuel and epoch deadline both default to zero. Nothing in this runtime increments the engine's
+    /// epoch, so `u64::MAX` is effectively "never interrupt" rather than a real cooperative budget.
+    fn prepare_call(store: &mut Store<ExtensionHostState>) {
+        store.set_fuel(PLUGIN_FUEL_BUDGET).ok();
+        store.set_epoch_deadline(u64::MAX);
+    }
+
     fn extension_result<T>(result: Result<T, extension_bindings::semio::framework::types::PluginError>) -> Result<T, PluginHostError> {
         result.map_err(|error| match error {
             extension_bindings::semio::framework::types::PluginError::Fault(bytes) => PluginHostError::Plugin(dsl::decode_fault_bytes(&bytes).message),
@@ -1010,10 +1020,12 @@ impl ExtensionRuntime {
     pub fn load_bytes(&self, wasm_bytes: &[u8]) -> Result<String, PluginHostError> {
         let component = Component::from_binary(&self.engine, wasm_bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let mut store = Store::new(&self.engine, Self::host_state("bootstrap"));
+        Self::prepare_call(&mut store);
         let (bindings, _instance) =
             extension_bindings::ExtensionWorld::instantiate(&mut store, &component, &self.linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let manifest = Self::decode_manifest(&mut store, &bindings)?;
         store.data_mut().extension_id = manifest.extension_id.clone();
+        Self::prepare_call(&mut store);
         let activation = bindings.semio_framework_extension().call_activate(&mut store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         Self::extension_result(activation)?;
         let extension_id = manifest.extension_id.clone();
@@ -1033,6 +1045,7 @@ impl ExtensionRuntime {
         let loaded = self.instances.lock().map_err(|_| PluginHostError::LockPoisoned("extension instances"))?.remove(extension_id);
         if let Some(loaded) = loaded {
             let mut store = loaded.store.lock().map_err(|_| PluginHostError::LockPoisoned("extension store"))?;
+            Self::prepare_call(&mut store);
             loaded.bindings.semio_framework_extension().call_deactivate(&mut *store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         }
         Ok(())
@@ -1055,7 +1068,7 @@ impl ExtensionRuntime {
                 .ok_or_else(|| dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("extension.unknown"), format!("no extension loaded with id `{extension_id}`")))?
         };
         let mut store = loaded.store.lock().map_err(|_| dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("extension.lock-poisoned"), "extension store lock poisoned"))?;
-        store.set_fuel(PLUGIN_FUEL_BUDGET).ok();
+        Self::prepare_call(&mut store);
         let result = loaded
             .bindings
             .semio_framework_extension()

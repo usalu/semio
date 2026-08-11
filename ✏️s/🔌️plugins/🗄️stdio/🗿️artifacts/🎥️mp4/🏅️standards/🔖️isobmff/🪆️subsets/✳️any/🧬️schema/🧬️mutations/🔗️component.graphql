@@ -1,9 +1,11 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Mp4MutationEntry {
-  key: String!
-  value: String!
-}
+enum Mp4MutationKind { NO_MUTATION SET_SNAPSHOT SET_FTYP INSERT_TRACK REMOVE_TRACK SET_TRACK_DIMENSIONS SET_TRACK_CODEC INSERT_SAMPLE REMOVE_SAMPLE SET_SAMPLE_SYNC ADD_UNKNOWN_BOX REMOVE_UNKNOWN_BOX }
 type Mp4Mutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Mp4MutationEntry!]! @state(class: PERSISTENT)
+  mutation: Mp4MutationKind!
+  snapshot: Mp4Snapshot
+  ftyp: Mp4Ftyp
+  index: Int
+  trackIndex: Int
+  width: Int
+  height: Int
+  sync: Boolean
 }

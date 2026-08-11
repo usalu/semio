@@ -1509,6 +1509,384 @@ fn dec_unknown_chunks_diff(body: &str) -> Result<PngUnknownChunksDiff, String> {
 }
 //#endregion 🔖️DiffValueCodecs
 
+//#region 🔖️RealBinaryPrimitives
+// 🧪️ P2-P2: real binary value codecs for `PngDiff`/`PngMutation`'s shared nested types —
+// mirrors the text codecs immediately above (`enc_str`/`enc_rgb`/…) field-for-field, using
+// `dsl::ByteWriter`/`dsl::ByteReader` (the real framework LEB128-varint/length-prefixed
+// primitives, `🧰️framework/…/🎒️pack/🧾️codec/🦀️component.rs`, reachable exactly like csv's own
+// precedent — `dsl`/`store`/`protocol` all alias the same kernel crate root). `pub(crate)` so
+// `🧬️mutations/🦀️component.rs`'s own `OpBinary` impl reuses these instead of duplicating (same
+// intra-artifact reuse direction the text codecs above already establish).
+pub(crate) fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
+    let bytes = s.as_bytes();
+    w.write_varint_u64(bytes.len() as u64);
+    w.write_bytes(bytes);
+}
+pub(crate) fn read_bin_str(r: &mut dsl::ByteReader) -> Result<String, dsl::PackError> {
+    let len = r.read_varint_u64()? as usize;
+    let bytes = r.read_bytes(len)?;
+    String::from_utf8(bytes.to_vec()).map_err(|e| dsl::PackError::Malformed { what: "png binary utf8 string", offset: 0, detail: e.to_string() })
+}
+pub(crate) fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
+    w.write_varint_u64(bytes.len() as u64);
+    w.write_bytes(bytes);
+}
+pub(crate) fn read_bin_blob(r: &mut dsl::ByteReader) -> Result<Vec<u8>, dsl::PackError> {
+    let len = r.read_varint_u64()? as usize;
+    Ok(r.read_bytes(len)?.to_vec())
+}
+pub(crate) fn write_bin_rgb(w: &mut dsl::ByteWriter, c: &PngRgb) {
+    w.write_u8(c.r);
+    w.write_u8(c.g);
+    w.write_u8(c.b);
+}
+pub(crate) fn read_bin_rgb(r: &mut dsl::ByteReader) -> Result<PngRgb, dsl::PackError> {
+    Ok(PngRgb { r: r.read_u8()?, g: r.read_u8()?, b: r.read_u8()? })
+}
+pub(crate) fn write_bin_transparency(w: &mut dsl::ByteWriter, t: &PngTransparency) {
+    match t {
+        PngTransparency::Indexed { alpha } => {
+            w.write_u8(0);
+            write_bin_blob(w, alpha);
+        }
+        PngTransparency::Grayscale { gray } => {
+            w.write_u8(1);
+            w.write_u16_le(*gray);
+        }
+        PngTransparency::Rgb { r, g, b } => {
+            w.write_u8(2);
+            w.write_u16_le(*r);
+            w.write_u16_le(*g);
+            w.write_u16_le(*b);
+        }
+    }
+}
+pub(crate) fn read_bin_transparency(r: &mut dsl::ByteReader) -> Result<PngTransparency, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(PngTransparency::Indexed { alpha: read_bin_blob(r)? }),
+        1 => Ok(PngTransparency::Grayscale { gray: r.read_u16_le()? }),
+        2 => {
+            let rr = r.read_u16_le()?;
+            let g = r.read_u16_le()?;
+            let b = r.read_u16_le()?;
+            Ok(PngTransparency::Rgb { r: rr, g, b })
+        }
+        other => Err(dsl::PackError::Malformed { what: "png transparency tag", offset: 0, detail: format!("unknown tag {other}") }),
+    }
+}
+pub(crate) fn write_bin_chromaticities(w: &mut dsl::ByteWriter, c: &PngChromaticities) {
+    for v in [c.white_x, c.white_y, c.red_x, c.red_y, c.green_x, c.green_y, c.blue_x, c.blue_y] {
+        w.write_u32_le(v);
+    }
+}
+pub(crate) fn read_bin_chromaticities(r: &mut dsl::ByteReader) -> Result<PngChromaticities, dsl::PackError> {
+    Ok(PngChromaticities {
+        white_x: r.read_u32_le()?, white_y: r.read_u32_le()?, red_x: r.read_u32_le()?, red_y: r.read_u32_le()?,
+        green_x: r.read_u32_le()?, green_y: r.read_u32_le()?, blue_x: r.read_u32_le()?, blue_y: r.read_u32_le()?,
+    })
+}
+pub(crate) fn write_bin_physical_dims(w: &mut dsl::ByteWriter, p: &PngPhysicalDims) {
+    w.write_u32_le(p.ppu_x);
+    w.write_u32_le(p.ppu_y);
+    w.write_u8(if p.unit_is_meter { 1 } else { 0 });
+}
+pub(crate) fn read_bin_physical_dims(r: &mut dsl::ByteReader) -> Result<PngPhysicalDims, dsl::PackError> {
+    Ok(PngPhysicalDims { ppu_x: r.read_u32_le()?, ppu_y: r.read_u32_le()?, unit_is_meter: r.read_u8()? != 0 })
+}
+pub(crate) fn write_bin_timestamp(w: &mut dsl::ByteWriter, t: &PngTimestamp) {
+    w.write_u16_le(t.year);
+    w.write_u8(t.month);
+    w.write_u8(t.day);
+    w.write_u8(t.hour);
+    w.write_u8(t.minute);
+    w.write_u8(t.second);
+}
+pub(crate) fn read_bin_timestamp(r: &mut dsl::ByteReader) -> Result<PngTimestamp, dsl::PackError> {
+    Ok(PngTimestamp { year: r.read_u16_le()?, month: r.read_u8()?, day: r.read_u8()?, hour: r.read_u8()?, minute: r.read_u8()?, second: r.read_u8()? })
+}
+pub(crate) fn write_bin_background(w: &mut dsl::ByteWriter, b: &PngBackground) {
+    match b {
+        PngBackground::Grayscale { gray } => {
+            w.write_u8(0);
+            w.write_u16_le(*gray);
+        }
+        PngBackground::Rgb { r, g, b } => {
+            w.write_u8(1);
+            w.write_u16_le(*r);
+            w.write_u16_le(*g);
+            w.write_u16_le(*b);
+        }
+        PngBackground::Indexed { index } => {
+            w.write_u8(2);
+            w.write_u8(*index);
+        }
+    }
+}
+pub(crate) fn read_bin_background(r: &mut dsl::ByteReader) -> Result<PngBackground, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(PngBackground::Grayscale { gray: r.read_u16_le()? }),
+        1 => {
+            let rr = r.read_u16_le()?;
+            let g = r.read_u16_le()?;
+            let b = r.read_u16_le()?;
+            Ok(PngBackground::Rgb { r: rr, g, b })
+        }
+        2 => Ok(PngBackground::Indexed { index: r.read_u8()? }),
+        other => Err(dsl::PackError::Malformed { what: "png background tag", offset: 0, detail: format!("unknown tag {other}") }),
+    }
+}
+fn enc_text_kind_u8(k: PngTextKind) -> u8 {
+    match k { PngTextKind::Text => 0, PngTextKind::ZText => 1, PngTextKind::IText => 2 }
+}
+fn dec_text_kind_u8(v: u8) -> Result<PngTextKind, dsl::PackError> {
+    match v {
+        0 => Ok(PngTextKind::Text),
+        1 => Ok(PngTextKind::ZText),
+        2 => Ok(PngTextKind::IText),
+        other => Err(dsl::PackError::Malformed { what: "png text kind tag", offset: 0, detail: format!("unknown tag {other}") }),
+    }
+}
+pub(crate) fn write_bin_text_chunk(w: &mut dsl::ByteWriter, c: &PngTextChunk) {
+    write_bin_str(w, &c.keyword);
+    write_bin_str(w, &c.value);
+    w.write_u8(if c.compressed { 1 } else { 0 });
+    w.write_u8(enc_text_kind_u8(c.kind));
+    write_bin_str(w, &c.language_tag);
+    write_bin_str(w, &c.translated_keyword);
+}
+pub(crate) fn read_bin_text_chunk(r: &mut dsl::ByteReader) -> Result<PngTextChunk, dsl::PackError> {
+    Ok(PngTextChunk {
+        keyword: read_bin_str(r)?,
+        value: read_bin_str(r)?,
+        compressed: r.read_u8()? != 0,
+        kind: dec_text_kind_u8(r.read_u8()?)?,
+        language_tag: read_bin_str(r)?,
+        translated_keyword: read_bin_str(r)?,
+    })
+}
+pub(crate) fn write_bin_chunk(w: &mut dsl::ByteWriter, c: &PngChunk) {
+    w.write_bytes(&c.kind);
+    write_bin_blob(w, &c.data);
+}
+pub(crate) fn read_bin_chunk(r: &mut dsl::ByteReader) -> Result<PngChunk, dsl::PackError> {
+    let kind_bytes = r.read_bytes(4)?;
+    let kind: [u8; 4] = kind_bytes.try_into().map_err(|_| dsl::PackError::Malformed { what: "png chunk kind", offset: 0, detail: "expected 4 bytes".into() })?;
+    Ok(PngChunk { kind, data: read_bin_blob(r)? })
+}
+pub(crate) fn write_bin_chunk_marker(w: &mut dsl::ByteWriter, m: &PngChunkMarker) {
+    match m {
+        PngChunkMarker::Ihdr => w.write_u8(0),
+        PngChunkMarker::Plte => w.write_u8(1),
+        PngChunkMarker::Trns => w.write_u8(2),
+        PngChunkMarker::Gama => w.write_u8(3),
+        PngChunkMarker::Chrm => w.write_u8(4),
+        PngChunkMarker::Srgb => w.write_u8(5),
+        PngChunkMarker::Phys => w.write_u8(6),
+        PngChunkMarker::Time => w.write_u8(7),
+        PngChunkMarker::Bkgd => w.write_u8(8),
+        PngChunkMarker::Idat => w.write_u8(9),
+        PngChunkMarker::Iend => w.write_u8(10),
+        PngChunkMarker::Text { index } => { w.write_u8(11); w.write_varint_u64(*index as u64); }
+        PngChunkMarker::Unknown { index } => { w.write_u8(12); w.write_varint_u64(*index as u64); }
+    }
+}
+pub(crate) fn read_bin_chunk_marker(r: &mut dsl::ByteReader) -> Result<PngChunkMarker, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(PngChunkMarker::Ihdr),
+        1 => Ok(PngChunkMarker::Plte),
+        2 => Ok(PngChunkMarker::Trns),
+        3 => Ok(PngChunkMarker::Gama),
+        4 => Ok(PngChunkMarker::Chrm),
+        5 => Ok(PngChunkMarker::Srgb),
+        6 => Ok(PngChunkMarker::Phys),
+        7 => Ok(PngChunkMarker::Time),
+        8 => Ok(PngChunkMarker::Bkgd),
+        9 => Ok(PngChunkMarker::Idat),
+        10 => Ok(PngChunkMarker::Iend),
+        11 => Ok(PngChunkMarker::Text { index: r.read_varint_u64()? as usize }),
+        12 => Ok(PngChunkMarker::Unknown { index: r.read_varint_u64()? as usize }),
+        other => Err(dsl::PackError::Malformed { what: "png chunk marker tag", offset: 0, detail: format!("unknown tag {other}") }),
+    }
+}
+/// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
+pub(crate) fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+    match v {
+        None => w.write_u8(0),
+        Some(val) => { w.write_u8(1); write_value(w, val); }
+    }
+}
+pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(None),
+        1 => Ok(Some(read_value(r)?)),
+        other => Err(dsl::PackError::Malformed { what: "png binary option tag", offset: 0, detail: format!("unknown tag {other}") }),
+    }
+}
+pub(crate) fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
+    w.write_varint_u64(items.len() as u64);
+    for item in items {
+        write_item(w, item);
+    }
+}
+pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader, mut read_item: impl FnMut(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
+    let n = r.read_varint_u64()? as usize;
+    let mut out = Vec::with_capacity(n);
+    for _ in 0..n {
+        out.push(read_item(r)?);
+    }
+    Ok(out)
+}
+/// 🧩 Whole-`PngSnapshot` real binary encoding — reused by `PngMutation::SetSnapshot`'s own
+/// binary op arm (`🧬️mutations/🦀️component.rs`) so a full snapshot payload isn't hand-encoded
+/// a second time.
+pub(crate) fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PngSnapshot) {
+    write_bin_str(w, &s.schema);
+    w.write_u32_le(s.width);
+    w.write_u32_le(s.height);
+    w.write_u8(s.bit_depth);
+    w.write_u8(s.color_type.to_u8());
+    w.write_u8(if s.interlace { 1 } else { 0 });
+    write_bin_option(w, &s.plte, |w, v: &Vec<PngRgb>| write_bin_vec(w, v, write_bin_rgb));
+    write_bin_option(w, &s.trns, write_bin_transparency);
+    write_bin_option(w, &s.gama, |w, v: &u32| w.write_u32_le(*v));
+    write_bin_option(w, &s.chrm, write_bin_chromaticities);
+    write_bin_option(w, &s.srgb, |w, v: &PngSrgbIntent| w.write_u8(v.to_u8()));
+    write_bin_option(w, &s.phys, write_bin_physical_dims);
+    write_bin_option(w, &s.time, write_bin_timestamp);
+    write_bin_option(w, &s.bkgd, write_bin_background);
+    write_bin_vec(w, &s.text_chunks, write_bin_text_chunk);
+    write_bin_blob(w, &s.pixels);
+    write_bin_vec(w, &s.chunk_order, write_bin_chunk_marker);
+    write_bin_vec(w, &s.unknown_chunks, write_bin_chunk);
+}
+pub(crate) fn read_bin_snapshot(r: &mut dsl::ByteReader) -> Result<PngSnapshot, dsl::PackError> {
+    Ok(PngSnapshot {
+        schema: read_bin_str(r)?,
+        width: r.read_u32_le()?,
+        height: r.read_u32_le()?,
+        bit_depth: r.read_u8()?,
+        color_type: PngColorType::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png color type", offset: 0, detail: e })?,
+        interlace: r.read_u8()? != 0,
+        plte: read_bin_option(r, |r| read_bin_vec(r, read_bin_rgb))?,
+        trns: read_bin_option(r, read_bin_transparency)?,
+        gama: read_bin_option(r, |r| r.read_u32_le())?,
+        chrm: read_bin_option(r, read_bin_chromaticities)?,
+        srgb: read_bin_option(r, |r| PngSrgbIntent::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png srgb intent", offset: 0, detail: e }))?,
+        phys: read_bin_option(r, read_bin_physical_dims)?,
+        time: read_bin_option(r, read_bin_timestamp)?,
+        bkgd: read_bin_option(r, read_bin_background)?,
+        text_chunks: read_bin_vec(r, read_bin_text_chunk)?,
+        pixels: read_bin_blob(r)?,
+        chunk_order: read_bin_vec(r, read_bin_chunk_marker)?,
+        unknown_chunks: read_bin_vec(r, read_bin_chunk)?,
+    })
+}
+//#endregion 🔖️RealBinaryPrimitives
+
+//#region 🔖️RealBinaryDiffFrame
+// 🧪️ P2-P2: real binary encodings for the three collection-triple diff types
+// (`PngPlteDiff`/`PngTextChunksDiff`/`PngChunkOrderDiff`/`PngUnknownChunksDiff`) — each
+// produces one opaque `Vec<u8>` blob matching `../💾️binary/📡️component.protocol.semio`'s
+// `Array(u8, Field(<name>_len))` fields exactly (the blob's OWN internal removed/modified/
+// added shape isn't further protocol-walkable, see that file's own doc comment).
+fn enc_plte_diff_bin(d: &PngPlteDiff) -> Vec<u8> {
+    let mut w = dsl::ByteWriter::new();
+    write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
+    write_bin_vec(&mut w, &d.modified, |w, m: &PngPlteEntryModified| { w.write_varint_u64(m.index as u64); write_bin_rgb(w, &m.rgb); });
+    write_bin_vec(&mut w, &d.added, |w, a: &PngPlteEntryAdded| { w.write_varint_u64(a.index as u64); write_bin_rgb(w, &a.rgb); });
+    w.into_bytes()
+}
+fn dec_plte_diff_bin(bytes: &[u8]) -> Result<PngPlteDiff, dsl::PackError> {
+    let mut r = dsl::ByteReader::new(bytes);
+    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
+    let modified = read_bin_vec(&mut r, |r| { let index = r.read_varint_u64()? as usize; let rgb = read_bin_rgb(r)?; Ok(PngPlteEntryModified { index, rgb }) })?;
+    let added = read_bin_vec(&mut r, |r| { let index = r.read_varint_u64()? as usize; let rgb = read_bin_rgb(r)?; Ok(PngPlteEntryAdded { index, rgb }) })?;
+    Ok(PngPlteDiff { removed, modified, added })
+}
+fn write_bin_text_chunk_diff(w: &mut dsl::ByteWriter, d: &PngTextChunkDiff) {
+    write_bin_option(w, &d.keyword, |w, v: &String| write_bin_str(w, v));
+    write_bin_option(w, &d.value, |w, v: &String| write_bin_str(w, v));
+    write_bin_option(w, &d.compressed, |w, v: &bool| w.write_u8(if *v { 1 } else { 0 }));
+    write_bin_option(w, &d.kind, |w, v: &PngTextKind| w.write_u8(enc_text_kind_u8(*v)));
+    write_bin_option(w, &d.language_tag, |w, v: &String| write_bin_str(w, v));
+    write_bin_option(w, &d.translated_keyword, |w, v: &String| write_bin_str(w, v));
+}
+fn read_bin_text_chunk_diff(r: &mut dsl::ByteReader) -> Result<PngTextChunkDiff, dsl::PackError> {
+    Ok(PngTextChunkDiff {
+        keyword: read_bin_option(r, read_bin_str)?,
+        value: read_bin_option(r, read_bin_str)?,
+        compressed: read_bin_option(r, |r| Ok(r.read_u8()? != 0))?,
+        kind: read_bin_option(r, |r| dec_text_kind_u8(r.read_u8()?))?,
+        language_tag: read_bin_option(r, read_bin_str)?,
+        translated_keyword: read_bin_option(r, read_bin_str)?,
+    })
+}
+fn enc_text_chunks_diff_bin(d: &PngTextChunksDiff) -> Vec<u8> {
+    let mut w = dsl::ByteWriter::new();
+    write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
+    write_bin_vec(&mut w, &d.modified, |w, m: &PngTextChunkModified| { w.write_varint_u64(m.index as u64); write_bin_text_chunk_diff(w, &m.diff); });
+    write_bin_vec(&mut w, &d.added, |w, a: &PngTextChunkAdded| { w.write_varint_u64(a.index as u64); write_bin_text_chunk(w, &a.chunk); });
+    w.into_bytes()
+}
+fn dec_text_chunks_diff_bin(bytes: &[u8]) -> Result<PngTextChunksDiff, dsl::PackError> {
+    let mut r = dsl::ByteReader::new(bytes);
+    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
+    let modified = read_bin_vec(&mut r, |r| { let index = r.read_varint_u64()? as usize; let diff = read_bin_text_chunk_diff(r)?; Ok(PngTextChunkModified { index, diff }) })?;
+    let added = read_bin_vec(&mut r, |r| { let index = r.read_varint_u64()? as usize; let chunk = read_bin_text_chunk(r)?; Ok(PngTextChunkAdded { index, chunk }) })?;
+    Ok(PngTextChunksDiff { removed, modified, added })
+}
+fn enc_chunk_order_diff_bin(d: &PngChunkOrderDiff) -> Vec<u8> {
+    let mut w = dsl::ByteWriter::new();
+    write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
+    write_bin_vec(&mut w, &d.modified, |w, m: &PngChunkOrderModified| { w.write_varint_u64(m.index as u64); write_bin_chunk_marker(w, &m.marker); });
+    write_bin_vec(&mut w, &d.added, |w, a: &PngChunkOrderAdded| { w.write_varint_u64(a.index as u64); write_bin_chunk_marker(w, &a.marker); });
+    w.into_bytes()
+}
+fn dec_chunk_order_diff_bin(bytes: &[u8]) -> Result<PngChunkOrderDiff, dsl::PackError> {
+    let mut r = dsl::ByteReader::new(bytes);
+    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
+    let modified = read_bin_vec(&mut r, |r| { let index = r.read_varint_u64()? as usize; let marker = read_bin_chunk_marker(r)?; Ok(PngChunkOrderModified { index, marker }) })?;
+    let added = read_bin_vec(&mut r, |r| { let index = r.read_varint_u64()? as usize; let marker = read_bin_chunk_marker(r)?; Ok(PngChunkOrderAdded { index, marker }) })?;
+    Ok(PngChunkOrderDiff { removed, modified, added })
+}
+fn enc_unknown_chunks_diff_bin(d: &PngUnknownChunksDiff) -> Vec<u8> {
+    let mut w = dsl::ByteWriter::new();
+    write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
+    write_bin_vec(&mut w, &d.modified, |w, m: &PngUnknownChunkModified| { w.write_varint_u64(m.index as u64); write_bin_chunk(w, &m.chunk); });
+    write_bin_vec(&mut w, &d.added, |w, a: &PngUnknownChunkAdded| { w.write_varint_u64(a.index as u64); write_bin_chunk(w, &a.chunk); });
+    w.into_bytes()
+}
+fn dec_unknown_chunks_diff_bin(bytes: &[u8]) -> Result<PngUnknownChunksDiff, dsl::PackError> {
+    let mut r = dsl::ByteReader::new(bytes);
+    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
+    let modified = read_bin_vec(&mut r, |r| { let index = r.read_varint_u64()? as usize; let chunk = read_bin_chunk(r)?; Ok(PngUnknownChunkModified { index, chunk }) })?;
+    let added = read_bin_vec(&mut r, |r| { let index = r.read_varint_u64()? as usize; let chunk = read_bin_chunk(r)?; Ok(PngUnknownChunkAdded { index, chunk }) })?;
+    Ok(PngUnknownChunksDiff { removed, modified, added })
+}
+/// 🧩 3-way flag (`0`=unchanged, `1`=cleared-to-`None`, `2`=set-to-`Some(value)`) for every
+/// TRI-STATE `Option<Option<T>>` field — see the protocol file's own doc comment for why this
+/// avoids chaining two `if`-guarded conditional fields (`Cond::eval` errors on a field that
+/// was itself only conditionally decoded).
+fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+    match v {
+        None => w.write_u8(0),
+        Some(None) => w.write_u8(1),
+        Some(Some(val)) => { w.write_u8(2); write_value(w, val); }
+    }
+}
+fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(None),
+        1 => Ok(Some(None)),
+        2 => Ok(Some(Some(read_value(r)?))),
+        other => Err(dsl::PackError::Malformed { what: "png diff tri-flag", offset: 0, detail: format!("unknown flag {other}") }),
+    }
+}
+fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+    protocol::ProtocolError::Malformed { what: "png diff binary", offset: 0, detail: e.to_string() }
+}
+//#endregion 🔖️RealBinaryDiffFrame
+
 //#region 🔖️TopLevel
 fn print_png_diff(d: &PngDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
@@ -1566,89 +1944,158 @@ impl protocol::DiffCodec for PngDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_png_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`/`WriterDiff`
-    /// use — satisfies every `DiffCodec` law without inventing a second wire format.
+
+    /// ⚡️ P2-P2: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
+    /// text-as-binary shortcut. Matches `../💾️binary/📡️component.protocol.semio`'s real
+    /// flag-per-field layout exactly, field for field, in struct order (see that file's own
+    /// doc comment for the 2-way/3-way flag design).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let mut w = dsl::ByteWriter::new();
+        write_bin_option(&mut w, &self.width, |w, v| w.write_u32_le(*v));
+        write_bin_option(&mut w, &self.height, |w, v| w.write_u32_le(*v));
+        write_bin_option(&mut w, &self.bit_depth, |w, v| w.write_u8(*v));
+        write_bin_option(&mut w, &self.color_type, |w, v| w.write_u8(v.to_u8()));
+        write_bin_option(&mut w, &self.interlace, |w, v| w.write_u8(if *v { 1 } else { 0 }));
+
+        write_bin_tri_flag(&mut w, &self.plte, |w, v| write_bin_blob(w, &enc_plte_diff_bin(v)));
+        write_bin_tri_flag(&mut w, &self.trns, |w, v| {
+            let mut inner = dsl::ByteWriter::new();
+            write_bin_transparency(&mut inner, v);
+            write_bin_blob(w, &inner.into_bytes());
+        });
+        write_bin_tri_flag(&mut w, &self.gama, |w, v| w.write_u32_le(*v));
+        write_bin_tri_flag(&mut w, &self.chrm, |w, v| write_bin_chromaticities(w, v));
+        write_bin_tri_flag(&mut w, &self.srgb, |w, v| w.write_u8(v.to_u8()));
+        write_bin_tri_flag(&mut w, &self.phys, |w, v| write_bin_physical_dims(w, v));
+        write_bin_tri_flag(&mut w, &self.time, |w, v| write_bin_timestamp(w, v));
+        write_bin_tri_flag(&mut w, &self.bkgd, |w, v| {
+            let mut inner = dsl::ByteWriter::new();
+            write_bin_background(&mut inner, v);
+            write_bin_blob(w, &inner.into_bytes());
+        });
+
+        write_bin_option(&mut w, &self.text_chunks, |w, v| write_bin_blob(w, &enc_text_chunks_diff_bin(v)));
+        write_bin_option(&mut w, &self.pixels, |w, v| write_bin_blob(w, v));
+        write_bin_option(&mut w, &self.chunk_order, |w, v| write_bin_blob(w, &enc_chunk_order_diff_bin(v)));
+        write_bin_option(&mut w, &self.unknown_chunks, |w, v| write_bin_blob(w, &enc_unknown_chunks_diff_bin(v)));
+
+        Ok(w.into_bytes())
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let mut r = dsl::ByteReader::new(bytes);
+        let width = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
+        let height = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
+        let bit_depth = read_bin_option(&mut r, |r| r.read_u8()).map_err(diff_pack_err)?;
+        let color_type = read_bin_option(&mut r, |r| PngColorType::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png diff color type", offset: 0, detail: e })).map_err(diff_pack_err)?;
+        let interlace = read_bin_option(&mut r, |r| Ok(r.read_u8()? != 0)).map_err(diff_pack_err)?;
+
+        let plte = read_bin_tri_flag(&mut r, |r| dec_plte_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
+        let trns = read_bin_tri_flag(&mut r, |r| {
+            let blob = read_bin_blob(r)?;
+            let mut inner = dsl::ByteReader::new(&blob);
+            read_bin_transparency(&mut inner)
+        }).map_err(diff_pack_err)?;
+        let gama = read_bin_tri_flag(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
+        let chrm = read_bin_tri_flag(&mut r, read_bin_chromaticities).map_err(diff_pack_err)?;
+        let srgb = read_bin_tri_flag(&mut r, |r| PngSrgbIntent::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png diff srgb intent", offset: 0, detail: e })).map_err(diff_pack_err)?;
+        let phys = read_bin_tri_flag(&mut r, read_bin_physical_dims).map_err(diff_pack_err)?;
+        let time = read_bin_tri_flag(&mut r, read_bin_timestamp).map_err(diff_pack_err)?;
+        let bkgd = read_bin_tri_flag(&mut r, |r| {
+            let blob = read_bin_blob(r)?;
+            let mut inner = dsl::ByteReader::new(&blob);
+            read_bin_background(&mut inner)
+        }).map_err(diff_pack_err)?;
+
+        let text_chunks = read_bin_option(&mut r, |r| dec_text_chunks_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
+        let pixels = read_bin_option(&mut r, |r| read_bin_blob(r)).map_err(diff_pack_err)?;
+        let chunk_order = read_bin_option(&mut r, |r| dec_chunk_order_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
+        let unknown_chunks = read_bin_option(&mut r, |r| dec_unknown_chunks_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
+
+        Ok(PngDiff { width, height, bit_depth, color_type, interlace, plte, trns, gama, chrm, srgb, phys, time, bkgd, text_chunks, pixels, chunk_order, unknown_chunks })
     }
 }
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
 
+//#region 🔖️DemoDiffCases
+/// 🧪️ P2-P2: shared demo diff fixtures — `diff_grammar_conformance_law`/`protocol_walk_law`
+/// (`⚙️engine/🦀️component.rs`'s `conformance_laws` module) call this directly instead of
+/// duplicating the literal case list; `handcrafted_diff_codec_tests::diff_codec_text_binary_
+/// roundtrip_law` below now calls it too (single source of truth, per CLAUDE.md).
+#[cfg(test)]
+pub(crate) fn demo_snap_a() -> PngSnapshot {
+    PngSnapshot {
+        schema: "stdio.png".into(),
+        width: 10, height: 20, bit_depth: 8, color_type: PngColorType::Rgba, interlace: false,
+        plte: Some(vec![PngRgb { r: 1, g: 1, b: 1 }, PngRgb { r: 2, g: 2, b: 2 }]),
+        trns: Some(PngTransparency::Grayscale { gray: 5 }),
+        gama: Some(45455),
+        chrm: Some(PngChromaticities { white_x: 1, white_y: 2, red_x: 3, red_y: 4, green_x: 5, green_y: 6, blue_x: 7, blue_y: 8 }),
+        srgb: Some(PngSrgbIntent::Perceptual),
+        phys: Some(PngPhysicalDims { ppu_x: 100, ppu_y: 100, unit_is_meter: true }),
+        time: Some(PngTimestamp { year: 2020, month: 1, day: 1, hour: 0, minute: 0, second: 0 }),
+        bkgd: Some(PngBackground::Grayscale { gray: 255 }),
+        text_chunks: vec![
+            PngTextChunk { keyword: "Author".into(), value: "orig".into(), compressed: false, kind: PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() },
+            PngTextChunk { keyword: "Trash".into(), value: "gone".into(), compressed: false, kind: PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() },
+        ],
+        pixels: vec![0u8, 0, 0, 255, 255, 255, 255, 255],
+        chunk_order: vec![PngChunkMarker::Gama, PngChunkMarker::Chrm, PngChunkMarker::Text { index: 0 }],
+        unknown_chunks: vec![PngChunk { kind: *b"prIV", data: vec![1, 2, 3] }, PngChunk { kind: *b"gone", data: vec![9, 9] }],
+    }
+}
+#[cfg(test)]
+pub(crate) fn demo_snap_b() -> PngSnapshot {
+    PngSnapshot {
+        schema: "stdio.png".into(),
+        width: 11, height: 21, bit_depth: 16, color_type: PngColorType::Palette, interlace: true,
+        plte: Some(vec![PngRgb { r: 9, g: 9, b: 9 }]),
+        trns: None, gama: None, chrm: None,
+        srgb: Some(PngSrgbIntent::AbsoluteColorimetric),
+        phys: None, time: None, bkgd: None,
+        text_chunks: vec![PngTextChunk { keyword: "Creator".into(), value: "changed".into(), compressed: true, kind: PngTextKind::IText, language_tag: "en".into(), translated_keyword: "Auteur".into() }],
+        pixels: vec![1u8, 1, 1, 255],
+        chunk_order: vec![PngChunkMarker::Srgb, PngChunkMarker::Unknown { index: 0 }],
+        unknown_chunks: vec![PngChunk { kind: *b"prIV", data: vec![4, 5, 6] }],
+    }
+}
+#[cfg(test)]
+pub(crate) fn demo_empty_snap() -> PngSnapshot {
+    PngSnapshot { schema: "stdio.png".into(), ..Default::default() }
+}
+/// ✅️ Representative `PngDiff` cases, incl. the empty (`None`) diff and the `Replace`-shaped
+/// transitions to/from an all-defaults snapshot — exercises every scalar, every tri-state
+/// (both `Some(Some) -> Some(None)` and `None -> Some(Some)`), and every collection triple's
+/// removed/modified/added arms.
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<PngDiff> {
+    let a = demo_snap_a();
+    let b = demo_snap_b();
+    let c = demo_empty_snap();
+    vec![
+        PngDiff::default(),
+        PngDiff::between(&a, &b),
+        PngDiff::between(&b, &a),
+        PngDiff::between(&a, &c),
+        PngDiff::between(&c, &a),
+    ]
+}
+//#endregion 🔖️DemoDiffCases
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod handcrafted_diff_codec_tests {
     use super::*;
-    use crate::artifacts::png::schema::snapshot::PngTextKind;
     use protocol::DiffCodec;
 
-    fn text_chunk(keyword: &str, value: &str) -> PngTextChunk {
-        PngTextChunk { keyword: keyword.into(), value: value.into(), compressed: false, kind: PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() }
-    }
-
-    /// 🌱 `snap_a`/`snap_b` differ in every mutable field (mirrors `🧬️mutations`' own
-    /// `sweep_a`/`sweep_b` fixtures) so `PngDiff::between` in both directions, plus a diff
-    /// against an all-defaults snapshot, exercises every scalar, every tri-state (both `Some ->
-    /// None` and `None -> Some`), and every collection triple's removed/modified/added arms.
-    fn snap_a() -> PngSnapshot {
-        PngSnapshot {
-            schema: "stdio.png".into(),
-            width: 10, height: 20, bit_depth: 8, color_type: PngColorType::Rgba, interlace: false,
-            plte: Some(vec![PngRgb { r: 1, g: 1, b: 1 }, PngRgb { r: 2, g: 2, b: 2 }]),
-            trns: Some(PngTransparency::Grayscale { gray: 5 }),
-            gama: Some(45455),
-            chrm: Some(PngChromaticities { white_x: 1, white_y: 2, red_x: 3, red_y: 4, green_x: 5, green_y: 6, blue_x: 7, blue_y: 8 }),
-            srgb: Some(PngSrgbIntent::Perceptual),
-            phys: Some(PngPhysicalDims { ppu_x: 100, ppu_y: 100, unit_is_meter: true }),
-            time: Some(PngTimestamp { year: 2020, month: 1, day: 1, hour: 0, minute: 0, second: 0 }),
-            bkgd: Some(PngBackground::Grayscale { gray: 255 }),
-            text_chunks: vec![text_chunk("Author", "orig"), text_chunk("Trash", "gone")],
-            pixels: vec![0u8, 0, 0, 255, 255, 255, 255, 255],
-            chunk_order: vec![PngChunkMarker::Gama, PngChunkMarker::Chrm, PngChunkMarker::Text { index: 0 }],
-            unknown_chunks: vec![PngChunk { kind: *b"prIV", data: vec![1, 2, 3] }, PngChunk { kind: *b"gone", data: vec![9, 9] }],
-        }
-    }
-
-    fn snap_b() -> PngSnapshot {
-        PngSnapshot {
-            schema: "stdio.png".into(),
-            width: 11, height: 21, bit_depth: 16, color_type: PngColorType::Palette, interlace: true,
-            plte: Some(vec![PngRgb { r: 9, g: 9, b: 9 }]),
-            trns: None, gama: None, chrm: None,
-            srgb: Some(PngSrgbIntent::AbsoluteColorimetric),
-            phys: None, time: None, bkgd: None,
-            text_chunks: vec![PngTextChunk { keyword: "Creator".into(), value: "changed".into(), compressed: true, kind: PngTextKind::IText, language_tag: "en".into(), translated_keyword: "Auteur".into() }],
-            pixels: vec![1u8, 1, 1, 255],
-            chunk_order: vec![PngChunkMarker::Srgb, PngChunkMarker::Unknown { index: 0 }],
-            unknown_chunks: vec![PngChunk { kind: *b"prIV", data: vec![4, 5, 6] }],
-        }
-    }
-
-    fn empty_snap() -> PngSnapshot {
-        PngSnapshot { schema: "stdio.png".into(), ..Default::default() }
-    }
-
-    /// 🧪️ `DiffCodec` round-trip laws over the hand-rolled `PngDiff` grammar — exercises every
-    /// scalar field, every tri-state `Some(None)`/`Some(Some(_))` transition (incl. `plte`'s
-    /// tri-state-wrapping-a-triple shape), and every collection triple's removed/modified/added
-    /// arms (both directions, plus transitions to/from an all-defaults snapshot).
+    /// 🧪️ `DiffCodec` round-trip laws over the hand-rolled `PngDiff` grammar AND the real binary
+    /// frame (`demo_diff_cases()` above — `snap_a`/`snap_b` differ in every mutable field,
+    /// plus transitions to/from an all-defaults snapshot) — exercises every scalar field, every
+    /// tri-state `Some(None)`/`Some(Some(_))` transition (incl. `plte`'s tri-state-wrapping-a-
+    /// triple shape), and every collection triple's removed/modified/added arms.
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {
-        let a = snap_a();
-        let b = snap_b();
-        let c = empty_snap();
-        let cases = vec![
-            PngDiff::default(),
-            PngDiff::between(&a, &b),
-            PngDiff::between(&b, &a),
-            PngDiff::between(&a, &c),
-            PngDiff::between(&c, &a),
-        ];
-        for d in cases {
+        for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
             let parsed = PngDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));

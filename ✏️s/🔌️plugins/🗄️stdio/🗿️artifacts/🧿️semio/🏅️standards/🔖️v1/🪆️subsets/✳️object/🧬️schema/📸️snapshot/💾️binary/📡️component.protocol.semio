@@ -1,3 +1,17 @@
-dialect protocol stdio.semio.object.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.object.snapshot"
+dialect protocol
+protocol semio.object.snapshot
+version 1
+schema stdio.semio.object
+start body
+
+# This subset is TEXT-NATIVE like `json`: there is no distinct "binary SemioValue" -- the pack
+# container IS the semio envelope (magic `0x8953454D0D0A1A0A` + LE u32 token length + UTF-8 token,
+# described once at `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/📡️protocol/📡️component.protocol.semio`,
+# not re-inlined here) wrapping the artifact's own compact-JSON `SemioObjectSnapshot` bytes verbatim
+# (`ArtifactPack::encode_pack_with` in this subset's own `📸️snapshot/🦀️component.rs`:
+# `serde_json::to_vec(self)` passed straight to `store::semio_format::wrap_binary`). The payload
+# itself is opaque, unstructured UTF-8 bytes at the BINARY layer by construction -- its real
+# internal grammar (the `SemioValue` tagged-union recursion) is `📝️text/📖️component.grammar.semio`'s
+# job, not the protocol dialect's.
+framing record
+chain payload utf8

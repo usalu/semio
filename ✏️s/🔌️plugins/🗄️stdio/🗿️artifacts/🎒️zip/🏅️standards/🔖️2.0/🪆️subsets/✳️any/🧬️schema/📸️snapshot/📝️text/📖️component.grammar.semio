@@ -1,6 +1,22 @@
-dialect grammar stdio.zip.snapshot
-root = document
-document = header body
-header = 'schema' SP 'stdio.zip' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.zip.snapshot
+extension zip
+start document
+
+# 🎒️ P2-P2: real hex-dump grammar of `stdio.zip`'s DSL text form. `stdio.zip` is BINARY-NATIVE
+# (per this program's own classification) — its text/DSL representation is honestly just a hex
+# dump of the real container bytes, matching png's own accurate hex-dump-grammar precedent.
+# `ZipSnapshot::print_dsl` (../🦀️component.rs, `impl store::ArtifactDsl`) hex-encodes the REAL
+# `encode_zip(self)` container bytes (../../../⚙️engine/🦀️component.rs) after the mandatory
+# `semio stdio.zip.dsl v1` preamble; `parse_dsl` strips whitespace from the body and decodes the
+# hex digits straight back through `decode_zip`. `artifact-mark` matches the m5 harness's own
+# preamble-stripped body reconstruction (`envelope_id()` token replaces the `semio ... v1` line —
+# see `🧪️fixture-sweep/🦀️component.rs`'s `dsl_body_from_fixture`), exactly like every other
+# stdio artifact's snapshot grammar in this program.
+#
+# The REAL byte layout (local file headers, central directory, EOCD via backward-scan+jump) is
+# `../💾️binary/📡️component.protocol.semio`'s job, not this file's — this file only proves the DSL
+# TEXT wrapper (preamble + hex string) is honestly modeled, per this artifact's own actual
+# `print_dsl`/`parse_dsl` implementation (not an aspiration).
+artifact-mark = "stdio.zip"
+document = artifact-mark hex

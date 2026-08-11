@@ -1,3 +1,9 @@
-dialect protocol stdio.semio.image.diff
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.image.diff"
+dialect protocol
+protocol s.stdio.semio.image.diff.binary
+start diff-binary
+
+diff-binary = *OCTET
+
+; -- real: `encode_diff` is the 📝️text sibling's `line` grammar UTF-8 bytes, verbatim -- a
+; -- documented simplification matching gif's own hand-rolled `DiffCodec` (see the `🔺️diff`
+; -- `🦀️component.rs` sibling's `🔖️TopLevel` region doc comment).

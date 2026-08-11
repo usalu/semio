@@ -1,3 +1,10 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.drawing.diff" ;
+(* ebnf stdio.semio.drawing diff text -- real hand-rolled DiffCodec grammar (self-delimiting
+   bracket-depth-aware tokens; see 🅰️component.g4 for the same shape in ANTLR form) *)
+document = [ token , { " " , token } ] ;
+token = "canvas=" , bracketed | "styles=" , triple | "layers=" , triple ;
+triple = "[" , list , "];[" , list , "];[" , list , "]" ;
+bracketed = "[" , list , "]" ;
+list = { entry , "," } ;
+entry = hex value ;
+hex value = { hex digit } ;
+hex digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" ;

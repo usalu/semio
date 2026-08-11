@@ -168,7 +168,16 @@ impl store::ArtifactDsl for PlySnapshot {
 impl store::ArtifactPack for PlySnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::ply::engine::encode_ply(self).map_err(|e| store::PackError::Schema(e))?;
+        // 🐛️ P2-FG3 bugfix: the Pack facet is the artifact's REAL on-disk byte-exact
+        // representation and must respect the snapshot's own persisted `format` (ascii /
+        // binary_little_endian / binary_big_endian) — unlike `print_dsl` below, which
+        // deliberately NORMALIZES to ascii so the DSL/text facet stays legible UTF-8 regardless
+        // of `format` (see this artifact's own P2-FG3 report). Previously this called the
+        // ascii-forcing `encode_ply(self)` unconditionally, silently discarding `self.format` on
+        // every Pack round-trip for a binary-format snapshot (`decode_pack(encode_pack(snap))`
+        // would come back with `format: Ascii` regardless of what was persisted) — a real,
+        // pre-existing correctness bug, fixed here.
+        let raw = crate::artifacts::ply::engine::encode_ply_with_format(self, self.format).map_err(|e| store::PackError::Schema(e))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,

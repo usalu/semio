@@ -1,3 +1,11 @@
-dialect protocol stdio.semio.model.diff
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.model.diff"
+dialect protocol
+protocol stdio.semio.model.diff
+version 1
+schema stdio.semio.model.diff
+; `SemioModelDiff::encode_diff`/`decode_diff` (🔺️diff/🦀️component.rs §TopLevel) -- deliberately NO
+; envelope framing (unlike the snapshot facet): the binary form is just the `print_diff()` text
+; bytes verbatim, same simplification GifDiff/SvgDiff/BcfDiff all use.
+start frame
+segment line_utf8_bytes eos bytes
+; line_utf8_bytes decodes as UTF-8 text matching ../📝️text/📖️component.grammar.semio's `line`
+; production -- there is no separate binary layout to describe beyond "it's the text bytes".

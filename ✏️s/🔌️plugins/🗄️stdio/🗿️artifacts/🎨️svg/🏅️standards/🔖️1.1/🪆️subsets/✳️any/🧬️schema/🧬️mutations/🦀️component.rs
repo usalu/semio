@@ -9,6 +9,7 @@ use crate::artifacts::svg::schema::diff::{
     decode_option, dec_declaration, dec_str, dec_xml_node, encode_option, enc_declaration, enc_str, enc_xml_node,
     split_top_level, strip_brackets,
 };
+use crate::artifacts::svg::schema::diff::{dec_declaration_bin, dec_xml_node_bin, enc_declaration_bin, enc_xml_node_bin, read_str_lp, write_str_lp};
 use crate::artifacts::svg::schema::snapshot::{
     element_attr, node_at, parse_transform_list, parse_view_box, transform_list_to_string, view_box_to_string,
     NodePath, TransformOp, ViewBox,
@@ -378,17 +379,361 @@ impl protocol::OpText for SvgMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification as `SvgDiff`'s hand-rolled codec.
+//#region 🔖️OpBinaryCodec
+/// 🧪️ P2-FG3: real recursive binary primitives backing the upgraded `OpBinary` impl below --
+/// mirrors `📰xml`'s own `enc_node_path_bin`/`enc_xml_snapshot_bin` shape
+/// (`📰xml/…/🧬️mutations/🦀️component.rs`), reusing `store::pack_rt::write_varint_u64`/
+/// `store::ByteReader` plus `SvgDiff`'s own `write_str_lp`/`read_str_lp`/`enc_xml_node_bin`/
+/// `dec_xml_node_bin`/`enc_declaration_bin`/`dec_declaration_bin` (`../🔺️diff/🦀️component.rs`,
+/// `pub(crate)` to this artifact).
+fn enc_node_path_bin(p: &NodePath, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, p.len() as u64);
+    for index in p {
+        store::pack_rt::write_varint_u64(out, *index as u64);
+    }
+}
+fn dec_node_path_bin(reader: &mut store::ByteReader<'_>) -> Result<NodePath, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut path = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        path.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+    }
+    Ok(path)
+}
+/// 📐️ `ViewBox` -- four fixed-width LE `f64` fields, in `min_x`/`min_y`/`width`/`height` order.
+fn enc_view_box_bin(v: &ViewBox, out: &mut Vec<u8>) {
+    out.extend_from_slice(&v.min_x.to_le_bytes());
+    out.extend_from_slice(&v.min_y.to_le_bytes());
+    out.extend_from_slice(&v.width.to_le_bytes());
+    out.extend_from_slice(&v.height.to_le_bytes());
+}
+fn dec_view_box_bin(reader: &mut store::ByteReader<'_>) -> Result<ViewBox, String> {
+    Ok(ViewBox {
+        min_x: reader.read_f64_le().map_err(|e| e.to_string())?,
+        min_y: reader.read_f64_le().map_err(|e| e.to_string())?,
+        width: reader.read_f64_le().map_err(|e| e.to_string())?,
+        height: reader.read_f64_le().map_err(|e| e.to_string())?,
+    })
+}
+/// 🔄️ `TransformOp` -- 1-byte kind tag (`0`=Matrix/`1`=Translate/`2`=Scale/`3`=Rotate/`4`=SkewX/
+/// `5`=SkewY, distinct numbering from the text codec's letter tags) followed by its fixed-width LE
+/// `f64` fields; an `Option<f64>`/`Option<(f64,f64)>` slot gets its own presence byte first.
+fn enc_transform_op_bin(t: &TransformOp, out: &mut Vec<u8>) {
+    let opt_f64 = |out: &mut Vec<u8>, v: &Option<f64>| {
+        out.push(if v.is_some() { 1 } else { 0 });
+        if let Some(v) = v {
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+    };
+    match t {
+        TransformOp::Matrix { a, b, c, d, e, f } => {
+            out.push(0);
+            for v in [a, b, c, d, e, f] {
+                out.extend_from_slice(&v.to_le_bytes());
+            }
+        }
+        TransformOp::Translate { x, y } => {
+            out.push(1);
+            out.extend_from_slice(&x.to_le_bytes());
+            opt_f64(out, y);
+        }
+        TransformOp::Scale { x, y } => {
+            out.push(2);
+            out.extend_from_slice(&x.to_le_bytes());
+            opt_f64(out, y);
+        }
+        TransformOp::Rotate { angle, center } => {
+            out.push(3);
+            out.extend_from_slice(&angle.to_le_bytes());
+            out.push(if center.is_some() { 1 } else { 0 });
+            if let Some((cx, cy)) = center {
+                out.extend_from_slice(&cx.to_le_bytes());
+                out.extend_from_slice(&cy.to_le_bytes());
+            }
+        }
+        TransformOp::SkewX { angle } => {
+            out.push(4);
+            out.extend_from_slice(&angle.to_le_bytes());
+        }
+        TransformOp::SkewY { angle } => {
+            out.push(5);
+            out.extend_from_slice(&angle.to_le_bytes());
+        }
+    }
+}
+fn dec_transform_op_bin(reader: &mut store::ByteReader<'_>) -> Result<TransformOp, String> {
+    let opt_f64 = |reader: &mut store::ByteReader<'_>| -> Result<Option<f64>, String> {
+        Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_f64_le().map_err(|e| e.to_string())?) } else { None })
+    };
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    match tag {
+        0 => {
+            let mut vals = [0.0f64; 6];
+            for v in vals.iter_mut() {
+                *v = reader.read_f64_le().map_err(|e| e.to_string())?;
+            }
+            Ok(TransformOp::Matrix { a: vals[0], b: vals[1], c: vals[2], d: vals[3], e: vals[4], f: vals[5] })
+        }
+        1 => {
+            let x = reader.read_f64_le().map_err(|e| e.to_string())?;
+            let y = opt_f64(reader)?;
+            Ok(TransformOp::Translate { x, y })
+        }
+        2 => {
+            let x = reader.read_f64_le().map_err(|e| e.to_string())?;
+            let y = opt_f64(reader)?;
+            Ok(TransformOp::Scale { x, y })
+        }
+        3 => {
+            let angle = reader.read_f64_le().map_err(|e| e.to_string())?;
+            let center = if reader.read_u8().map_err(|e| e.to_string())? != 0 {
+                let cx = reader.read_f64_le().map_err(|e| e.to_string())?;
+                let cy = reader.read_f64_le().map_err(|e| e.to_string())?;
+                Some((cx, cy))
+            } else {
+                None
+            };
+            Ok(TransformOp::Rotate { angle, center })
+        }
+        4 => Ok(TransformOp::SkewX { angle: reader.read_f64_le().map_err(|e| e.to_string())? }),
+        5 => Ok(TransformOp::SkewY { angle: reader.read_f64_le().map_err(|e| e.to_string())? }),
+        other => Err(format!("transform op binary: unknown tag {other}")),
+    }
+}
+fn enc_transform_list_bin(list: &[TransformOp], out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, list.len() as u64);
+    for op in list {
+        enc_transform_op_bin(op, out);
+    }
+}
+fn dec_transform_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<TransformOp>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut list = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        list.push(dec_transform_op_bin(reader)?);
+    }
+    Ok(list)
+}
+fn enc_svg_snapshot_bin(s: &SvgSnapshot, out: &mut Vec<u8>) {
+    write_str_lp(out, &s.schema);
+    out.push(if s.doc.root.is_some() { 1 } else { 0 });
+    if let Some(root) = &s.doc.root {
+        enc_xml_node_bin(root, out);
+    }
+    out.push(if s.doc.doctype.is_some() { 1 } else { 0 });
+    if let Some(doctype) = &s.doc.doctype {
+        write_str_lp(out, doctype);
+    }
+    out.push(if s.doc.declaration.is_some() { 1 } else { 0 });
+    if let Some(declaration) = &s.doc.declaration {
+        enc_declaration_bin(declaration, out);
+    }
+}
+fn dec_svg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let root = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
+    let doctype = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let declaration = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_declaration_bin(reader)?) } else { None };
+    Ok(SvgSnapshot { schema, doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root, doctype, declaration } })
+}
+//#endregion 🔖️OpBinaryCodec
+
+/// 🧪️ P2-FG3: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
+/// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
+/// `SvgMutation` variant ordinal, in the same 0-10 order `print_svg_mutation`'s own keyword match
+/// uses.
 impl protocol::OpBinary for SvgMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let tag: u8 = match self {
+            SvgMutation::NoMutation => 0,
+            SvgMutation::SetSnapshot { .. } => 1,
+            SvgMutation::SetDeclaration { .. } => 2,
+            SvgMutation::SetDoctype { .. } => 3,
+            SvgMutation::InsertElement { .. } => 4,
+            SvgMutation::RemoveElement { .. } => 5,
+            SvgMutation::SetElementName { .. } => 6,
+            SvgMutation::SetAttribute { .. } => 7,
+            SvgMutation::SetText { .. } => 8,
+            SvgMutation::SetViewBox { .. } => 9,
+            SvgMutation::SetTransform { .. } => 10,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            SvgMutation::NoMutation => {}
+            SvgMutation::SetSnapshot { snapshot } => enc_svg_snapshot_bin(snapshot, &mut out),
+            SvgMutation::SetDeclaration { declaration } => {
+                out.push(if declaration.is_some() { 1 } else { 0 });
+                if let Some(declaration) = declaration {
+                    enc_declaration_bin(declaration, &mut out);
+                }
+            }
+            SvgMutation::SetDoctype { doctype } => {
+                out.push(if doctype.is_some() { 1 } else { 0 });
+                if let Some(doctype) = doctype {
+                    write_str_lp(&mut out, doctype);
+                }
+            }
+            SvgMutation::InsertElement { parent, index, node } => {
+                enc_node_path_bin(parent, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_xml_node_bin(node, &mut out);
+            }
+            SvgMutation::RemoveElement { parent, index } => {
+                enc_node_path_bin(parent, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+            }
+            SvgMutation::SetElementName { path, name } => {
+                enc_node_path_bin(path, &mut out);
+                write_str_lp(&mut out, name);
+            }
+            SvgMutation::SetAttribute { path, name, value } => {
+                enc_node_path_bin(path, &mut out);
+                write_str_lp(&mut out, name);
+                out.push(if value.is_some() { 1 } else { 0 });
+                if let Some(value) = value {
+                    write_str_lp(&mut out, value);
+                }
+            }
+            SvgMutation::SetText { path, text } => {
+                enc_node_path_bin(path, &mut out);
+                write_str_lp(&mut out, text);
+            }
+            SvgMutation::SetViewBox { path, view_box } => {
+                enc_node_path_bin(path, &mut out);
+                out.push(if view_box.is_some() { 1 } else { 0 });
+                if let Some(view_box) = view_box {
+                    enc_view_box_bin(view_box, &mut out);
+                }
+            }
+            SvgMutation::SetTransform { path, transform } => {
+                enc_node_path_bin(path, &mut out);
+                out.push(if transform.is_some() { 1 } else { 0 });
+                if let Some(transform) = transform {
+                    enc_transform_list_bin(transform, &mut out);
+                }
+            }
+        }
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(SvgMutation::NoMutation),
+            1 => {
+                let snapshot = dec_svg_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                Ok(SvgMutation::SetSnapshot { snapshot })
+            }
+            2 => {
+                let has = reader.read_u8().map_err(|e| malformed("op declaration presence", reader.position(), e.to_string()))?;
+                let declaration = if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("op declaration", reader.position(), e))?) } else { None };
+                Ok(SvgMutation::SetDeclaration { declaration })
+            }
+            3 => {
+                let has = reader.read_u8().map_err(|e| malformed("op doctype presence", reader.position(), e.to_string()))?;
+                let doctype = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op doctype", reader.position(), e))?) } else { None };
+                Ok(SvgMutation::SetDoctype { doctype })
+            }
+            4 => {
+                let parent = dec_node_path_bin(&mut reader).map_err(|e| malformed("op parent", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let node = dec_xml_node_bin(&mut reader).map_err(|e| malformed("op node", reader.position(), e))?;
+                Ok(SvgMutation::InsertElement { parent, index, node })
+            }
+            5 => {
+                let parent = dec_node_path_bin(&mut reader).map_err(|e| malformed("op parent", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                Ok(SvgMutation::RemoveElement { parent, index })
+            }
+            6 => {
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                Ok(SvgMutation::SetElementName { path, name })
+            }
+            7 => {
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let has = reader.read_u8().map_err(|e| malformed("op value presence", reader.position(), e.to_string()))?;
+                let value = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?) } else { None };
+                Ok(SvgMutation::SetAttribute { path, name, value })
+            }
+            8 => {
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", reader.position(), e))?;
+                Ok(SvgMutation::SetText { path, text })
+            }
+            9 => {
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let has = reader.read_u8().map_err(|e| malformed("op view_box presence", reader.position(), e.to_string()))?;
+                let view_box = if has != 0 { Some(dec_view_box_bin(&mut reader).map_err(|e| malformed("op view_box", reader.position(), e))?) } else { None };
+                Ok(SvgMutation::SetViewBox { path, view_box })
+            }
+            10 => {
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let has = reader.read_u8().map_err(|e| malformed("op transform presence", reader.position(), e.to_string()))?;
+                let transform = if has != 0 { Some(dec_transform_list_bin(&mut reader).map_err(|e| malformed("op transform", reader.position(), e))?) } else { None };
+                Ok(SvgMutation::SetTransform { path, transform })
+            }
+            other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
+        }
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG3: representative `SvgMutation` values (every variant, incl. `InsertElement`'s bare
+/// `XmlNode` payload, `SetSnapshot`'s full nested-document payload, and `SetViewBox`/
+/// `SetTransform`'s typed geometry payloads) — the single source of truth reused by
+/// `op_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
+/// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests.
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<SvgMutation> {
+    use crate::artifacts::xml::schema::snapshot::XmlAttr;
+
+    let base = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect x="0" y="0" width="5" height="5"/></svg>"#,
+    )
+    .unwrap();
+    vec![
+        SvgMutation::NoMutation,
+        SvgMutation::SetSnapshot { snapshot: base.clone() },
+        SvgMutation::SetDeclaration { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }) },
+        SvgMutation::SetDeclaration { declaration: None },
+        SvgMutation::SetDoctype { doctype: Some("<!DOCTYPE svg>".into()) },
+        SvgMutation::SetDoctype { doctype: None },
+        SvgMutation::InsertElement {
+            parent: vec![],
+            index: 1,
+            node: XmlNode::Element { name: "circle".into(), attrs: vec![XmlAttr { name: "r".into(), value: "1".into() }], children: vec![] },
+        },
+        SvgMutation::RemoveElement { parent: vec![0], index: 2 },
+        SvgMutation::SetElementName { path: vec![0], name: "g".into() },
+        SvgMutation::SetAttribute { path: vec![0], name: "width".into(), value: Some("99".into()) },
+        SvgMutation::SetAttribute { path: vec![0], name: "width".into(), value: None },
+        SvgMutation::SetText { path: vec![0, 1], text: "hello world".into() },
+        SvgMutation::SetViewBox { path: vec![], view_box: Some(ViewBox { min_x: 0.0, min_y: 0.0, width: 10.5, height: 20.25 }) },
+        SvgMutation::SetViewBox { path: vec![], view_box: None },
+        SvgMutation::SetTransform {
+            path: vec![],
+            transform: Some(vec![
+                TransformOp::Matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 5.0, f: -5.0 },
+                TransformOp::Translate { x: 1.0, y: Some(2.0) },
+                TransformOp::Translate { x: 1.0, y: None },
+                TransformOp::Scale { x: 2.0, y: None },
+                TransformOp::Rotate { angle: 90.0, center: Some((1.0, 2.0)) },
+                TransformOp::Rotate { angle: 90.0, center: None },
+                TransformOp::SkewX { angle: 15.0 },
+                TransformOp::SkewY { angle: 15.0 },
+            ]),
+        },
+        SvgMutation::SetTransform { path: vec![], transform: None },
+    ]
+}
+//#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -850,40 +1195,14 @@ mod tests {
     }
     //#endregion 🔖️FieldSweep
 
-    /// 🧪️ F6-PILOT: `OpText`/`OpBinary` round-trip laws for the hand-rolled `SvgMutation` grammar
-    /// — exercises every variant incl. `InsertElement`'s bare `XmlNode` payload and
-    /// `SetTransform`'s `TransformOp` enum list.
+    /// 🧪️ `OpText`/`OpBinary` round-trip laws for the hand-rolled `SvgMutation` grammar —
+    /// exercises every variant incl. `InsertElement`'s bare `XmlNode` payload, `SetSnapshot`'s
+    /// full nested-document payload, and `SetViewBox`/`SetTransform`'s typed geometry payloads.
+    /// Reuses `demo_mutation_cases()` (the single source of truth also consumed by
+    /// `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`).
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = fixture();
-        let mutations = vec![
-            SvgMutation::NoMutation,
-            SvgMutation::SetSnapshot { snapshot: base.clone() },
-            SvgMutation::SetDeclaration { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }) },
-            SvgMutation::SetDeclaration { declaration: None },
-            SvgMutation::SetDoctype { doctype: Some("<!DOCTYPE svg>".into()) },
-            SvgMutation::SetDoctype { doctype: None },
-            SvgMutation::InsertElement { parent: vec![], index: 1, node: XmlNode::Element { name: "circle".into(), attrs: vec![XmlAttr { name: "r".into(), value: "1".into() }], children: vec![] } },
-            SvgMutation::RemoveElement { parent: vec![0], index: 2 },
-            SvgMutation::SetElementName { path: vec![0], name: "g".into() },
-            SvgMutation::SetAttribute { path: vec![0], name: "width".into(), value: Some("99".into()) },
-            SvgMutation::SetAttribute { path: vec![0], name: "width".into(), value: None },
-            SvgMutation::SetText { path: vec![0, 1], text: "hello world".into() },
-            SvgMutation::SetViewBox { path: vec![], view_box: Some(ViewBox { min_x: 0.0, min_y: 0.0, width: 10.5, height: 20.25 }) },
-            SvgMutation::SetViewBox { path: vec![], view_box: None },
-            SvgMutation::SetTransform { path: vec![], transform: Some(vec![
-                TransformOp::Matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 5.0, f: -5.0 },
-                TransformOp::Translate { x: 1.0, y: Some(2.0) },
-                TransformOp::Translate { x: 1.0, y: None },
-                TransformOp::Scale { x: 2.0, y: None },
-                TransformOp::Rotate { angle: 90.0, center: Some((1.0, 2.0)) },
-                TransformOp::Rotate { angle: 90.0, center: None },
-                TransformOp::SkewX { angle: 15.0 },
-                TransformOp::SkewY { angle: 15.0 },
-            ]) },
-            SvgMutation::SetTransform { path: vec![], transform: None },
-        ];
-        for mutation in mutations {
+        for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = SvgMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

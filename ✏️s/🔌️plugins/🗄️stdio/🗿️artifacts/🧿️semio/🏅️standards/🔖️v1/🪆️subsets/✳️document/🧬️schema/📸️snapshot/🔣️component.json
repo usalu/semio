@@ -1,10 +1,50 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.document/snapshot.json",
   "title": "SemioDocumentSnapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Complete-per-spec document snapshot: named styles + id-keyed images + the top-level block tree.",
   "type": "object",
+  "required": ["schema", "styles", "images", "blocks"],
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "styles": {
+      "type": "array", "x-semio-state": "persistent",
+      "items": {
+        "type": "object", "required": ["id", "name"],
+        "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "basedOn": { "type": "string" } }
+      }
+    },
+    "images": {
+      "type": "array", "x-semio-state": "persistent",
+      "items": {
+        "type": "object", "required": ["id", "mime", "bytes"],
+        "properties": { "id": { "type": "string" }, "mime": { "type": "string" }, "bytes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } } }
+      }
+    },
+    "blocks": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/docBlock" } }
+  },
+  "$defs": {
+    "runStyle": {
+      "type": "object",
+      "properties": {
+        "bold": { "type": "boolean" }, "italic": { "type": "boolean" }, "underline": { "type": "boolean" },
+        "size": { "type": "number" }, "font": { "type": "string" }, "color": { "type": "string" }, "link": { "type": "string" }
+      }
+    },
+    "docRun": { "type": "object", "required": ["text", "style"], "properties": { "text": { "type": "string" }, "style": { "$ref": "#/$defs/runStyle" } } },
+    "docBlock": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": { "kind": { "enum": ["paragraph", "heading", "list", "table", "code", "quote", "image", "pageBreak"] } },
+      "oneOf": [
+        { "properties": { "kind": { "const": "paragraph" }, "styleId": { "type": "string" }, "runs": { "type": "array", "items": { "$ref": "#/$defs/docRun" } } } },
+        { "properties": { "kind": { "const": "heading" }, "level": { "type": "integer", "minimum": 1, "maximum": 255 }, "styleId": { "type": "string" }, "runs": { "type": "array", "items": { "$ref": "#/$defs/docRun" } } } },
+        { "properties": { "kind": { "const": "list" }, "ordered": { "type": "boolean" }, "items": { "type": "array", "items": { "type": "object", "properties": { "blocks": { "type": "array", "items": { "$ref": "#/$defs/docBlock" } } } } } } },
+        { "properties": { "kind": { "const": "table" }, "rows": { "type": "array", "items": { "type": "object", "properties": { "cells": { "type": "array", "items": { "type": "object", "properties": { "blocks": { "type": "array", "items": { "$ref": "#/$defs/docBlock" } } } } } } } } } },
+        { "properties": { "kind": { "const": "code" }, "language": { "type": "string" }, "text": { "type": "string" } } },
+        { "properties": { "kind": { "const": "quote" }, "blocks": { "type": "array", "items": { "$ref": "#/$defs/docBlock" } } } },
+        { "properties": { "kind": { "const": "image" }, "imageId": { "type": "string" }, "alt": { "type": "string" }, "width": { "type": "number" }, "height": { "type": "number" } } },
+        { "properties": { "kind": { "const": "pageBreak" } } }
+      ]
+    }
   }
 }

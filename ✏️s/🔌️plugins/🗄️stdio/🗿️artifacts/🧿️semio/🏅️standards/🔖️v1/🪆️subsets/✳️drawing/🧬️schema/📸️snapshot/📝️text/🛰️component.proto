@@ -1,7 +1,7 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// 📝️ Text-wire representation: preamble line + hex-encoded JSON body (real shape: 🅰️component.g4).
 package semio.stdio_semio_drawing_snapshot.text;
-message Semio_semio_drawing_snapshot {
-  string schema = 1;
-  string entries_wire = 2;
+message SemioDrawingSnapshotText {
+  string preamble = 1; // always "semio stdio.semio.drawing.dsl v1"
+  string hex_body = 2;
 }

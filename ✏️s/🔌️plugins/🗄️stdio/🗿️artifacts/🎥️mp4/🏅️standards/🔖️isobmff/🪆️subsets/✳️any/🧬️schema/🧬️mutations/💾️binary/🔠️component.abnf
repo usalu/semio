@@ -1,3 +1,2 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.mp4.mutations"
+; abnf stdio.mp4 mutations (binary) — one JSON-serialized Mp4Mutation op payload.
+document = *OCTET                                    ; UTF-8 JSON bytes

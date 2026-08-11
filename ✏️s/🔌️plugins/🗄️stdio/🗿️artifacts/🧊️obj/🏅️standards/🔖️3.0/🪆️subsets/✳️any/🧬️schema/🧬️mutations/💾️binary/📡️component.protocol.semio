@@ -1,7 +1,35 @@
-dialect protocol stdio.obj.mutations
-; ObjMutation's wire binary IS its serde_json encoding (protocol::OpBinary), tagged on
-; "mutation"; shares the same envelope shape as every other .semio binary facet.
-magic = %x89.53.45.4D.0D.0A.1A.0A
-token-len = U32LE
-token = *OCTET                      ; UTF-8 "stdio.obj.mutations v1"
-payload = *OCTET                    ; UTF-8 JSON bytes of ObjMutation (see ../📝️text/📖️component.grammar.semio)
+dialect protocol
+protocol stdio.obj.mutations
+version 1
+schema stdio.obj.op
+start op
+
+# P2-FG1: `protocol::OpBinary::encode_op`/`decode_op` (../🦀️component.rs `OpCodecs` region)
+# forward straight to `dsl::variants_binary::encode_op`/`decode_op`
+# (`🗣️dsl/🦀️component.rs`'s `OpRt` region) — this was ALREADY real binary before this wave
+# touched it, NOT the F6-era `print_op().into_bytes()` text-as-binary shortcut (confirmed by
+# direct reading, not assumed: `encode_op` calls `os_pack::encode_record_body`, never
+# `print_op`) — same already-real situation `stdio.txt`'s own mutations protocol file documents.
+# Layout, byte-for-byte, per that helper's own doc comment (`OP_BINARY_FORMAT`): a fixed
+# `format` byte (always `1`), the matched `ObjMutation` variant's ordinal as a `varint`
+# (declaration order: `NoMutation`=0, `SetSnapshot`=1, `InsertVertex`=2, `RemoveVertex`=3,
+# `SetVertex`=4, `InsertTexCoord`=5, `RemoveTexCoord`=6, `SetTexCoord`=7, `InsertNormal`=8,
+# `RemoveNormal`=9, `SetNormal`=10, `InsertFace`=11, `RemoveFace`=12, `SetFace`=13,
+# `SetGroup`=14, `RemoveGroup`=15, `SetObject`=16, `RemoveObject`=17, `SetMtllib`=18,
+# `SetUsemtl`=19, `SetSmoothingGroups`=20, `SetUnknownStatements`=21 — `dsl::DslVariants::
+# variants()`'s own emission order, matching `../🦀️component.rs`'s `ObjMutation` declaration),
+# then the variant's own field payload, `os_pack::encode_record_body(spec, record)` — itself a
+# varint-prefixed STRING-SYMBOL TABLE followed by a generic, self-describing per-field-id
+# TAG+value wire (`🎒️pack/🔢️value/🦀️component.rs`'s `encode_record_body`/`encode_record_fields`).
+# This inner wire is the FRAMEWORK's own generic record-body encoding — shared verbatim by every
+# `#[derive(dsl::DslRecord)]`/`DslOps`/`DslDiff` type in the whole repo, not anything specific to
+# `stdio.obj` — and is genuinely NOT expressible by this dialect's `Array`/`Ref`/`repeat`
+# primitives as they stand today (no dynamic per-field TAG dispatch keyed by a runtime field-id,
+# no symbol-table back-reference resolution) — the SAME `txt-opbinary-record-body-wire-is-
+# framework-generic` mechanism gap `stdio.txt`'s own pilot wave first named. Modeled honestly:
+# `format`/`ordinal` are genuinely, individually byte-walked and validated; the remaining
+# record-body bytes are one opaque tail.
+framing record
+field format u8
+field ordinal varint
+chain bytes

@@ -3,26 +3,50 @@ grammar json.diff
 extension json
 start document
 
-document = header body
-header = "schema" SP "stdio.json" NL
-body = json-text NL?
+# P2-P1: real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `🔣️json/…/🔺️diff/🦀️component.rs` (`print_json_diff`/`parse_json_diff`) — replaces the F6-era
+# placeholder describing a serde-JSON `JsonDiff` wire struct the codec never emits. `JsonDiff` has
+# exactly one diffable field (`schema` is identity-only, never diffed — see that file's own doc
+# comment), so the line is either EMPTY (unchanged: `d.value == None`) or exactly one
+# `value=<value-diff>` token — `document`'s `?` makes the whole line optional, correctly recognizing
+# the empty string (`Optional` degrades to a no-op when its inner `Ref` fails to match at an empty
+# token stream, same mechanism used by the `?` on every list item below).
+document = value-line?
+value-line = "value" "=" value-diff
 
-; -- The diff's wire text form is itself an RFC8259 JSON document (serde-tagged `JsonDiff`
-; -- struct) -- same value grammar as ../📸️snapshot/📝️text/📖️component.grammar.semio; restated
-; -- here so this leaf is self-contained.
-json-text = ws value ws
-value = object | array | string | number | "true" | "false" | "null"
-object = "{" ws ( member ( ws "," ws member )* )? ws "}"
-member = string ws ":" ws value
-array = "[" ws ( value ( ws "," ws value )* )? ws "]"
-string = quote ( unescaped | escape )* quote
-quote = %x22
-unescaped = %x20-21 | %x23-5B | %x5D-10FFFF
-escape = "\" ( %x22 | "\" | "/" | "b" | "f" | "n" | "r" | "t" | ( "u" hexdig hexdig hexdig hexdig ) )
-number = "-"? int frac? exp?
-int = "0" | ( %x31-39 digit* )
-frac = "." digit+
-exp = ( "e" | "E" ) ( "+" | "-" )? digit+
-digit = %x30-39
-hexdig = digit | %x41-46 | %x61-66
-ws = ( %x20 | %x09 | %x0A | %x0D )*
+# `enc_value_diff` / `dec_value_diff` — `JsonValueDiff` needs its own tag (`R`=Replace in addition
+# to `B`/`N`/`S`/`A`/`O`) since, unlike a bare `JsonValue`, it can appear standalone at the top-level
+# `value=` token position, not only nested inside a bracketed container. Genuinely recursive: `A`/`O`
+# reference `value-diff` (via `array-modified-item`/`object-modified-item`) which references them
+# back through nested collection diffs — exercised end-to-end by this artifact's own
+# `diff_grammar_conformance_law` test against real `print_diff` output covering every
+# `JsonValueDiff` variant, incl. the `Replace` kind-change fallback and nested array/object triples.
+value-diff = "R" "[" value "]" | "B" "[" INT "]" | "N" "[" hex "]" | "S" "[" hex "]" | "A" "[" array-diff-body "]" | "O" "[" object-diff-body "]"
+
+# `enc_array_diff`/`dec_array_diff` — `[removed];[modified];[added]`, index-keyed.
+array-diff-body = "[" array-removed-item* "]" ";" "[" array-modified-item* "]" ";" "[" array-added-item* "]"
+array-removed-item = INT ","?
+array-modified-item = INT ":" value-diff ","?
+array-added-item = INT ":" value ","?
+
+# `enc_object_diff`/`dec_object_diff` — `[removed];[modified];[added]`, name-keyed (`added` entries
+# additionally carry the FINAL Vec position ahead of the hex-encoded key: `index:key:item`).
+object-diff-body = "[" object-removed-item* "]" ";" "[" object-modified-item* "]" ";" "[" object-added-item* "]"
+object-removed-item = hex ","?
+object-modified-item = hex ":" value-diff ","?
+object-added-item = INT ":" hex ":" value ","?
+
+# `enc_json_value`/`dec_json_value` — restated here (same shape as the sibling
+# ../../📸️snapshot/📝️text/📖️component.grammar.semio's `value`/../../🧬️mutations/📝️text's `value`)
+# so this leaf grammar is self-contained, matching the repo's existing per-facet convention.
+value = "Z" | "B" "[" INT "]" | "N" "[" hex "]" | "S" "[" hex "]" | "A" "[" arr-item* "]" | "O" "[" obj-item* "]"
+arr-item = value ","?
+obj-item = hex ":" value ","?
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in `hex`
+# MACRO (`📖️grammar/🦀️component.rs`'s `default_macros`/`macro_hex_ok`), not a
+# `hex = {INT | IDENT}*`-shaped production — see the sibling
+# `../../🧬️mutations/📝️text/📖️component.grammar.semio`'s `hex` doc comment for why: a production's
+# `Star` never backtracks, and (separately) a `<digits>e<digits>` hex run lexes as one `FLOAT` token,
+# not alternating `INT`/`IDENT`; the macro's own backtracking (`Recognizer::match_macro_span`)
+# handles both, with no grammar-file workaround needed.

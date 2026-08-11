@@ -1,1 +1,4 @@
-{"hello":"stdio.svg","n":1}
+semio stdio.svg.dsl v1
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE svg>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100"><!-- demo scene --><?xml-stylesheet text?><rect x="0" y="0" width="10" height="10" fill="red"/><text x="5">Tom &amp; Jerry</text><circle cx="1"/><![CDATA[raw markup]]></svg>

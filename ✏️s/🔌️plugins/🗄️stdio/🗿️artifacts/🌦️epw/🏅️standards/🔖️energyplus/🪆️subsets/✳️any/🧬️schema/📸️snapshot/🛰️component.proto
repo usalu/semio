@@ -1,7 +1,46 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
 package semio.s_stdio_epw.snapshot;
+
+message EpwLocation {
+  string city = 1; string state_province = 2; string country = 3; string source = 4; string wmo = 5;
+  string latitude = 6; string longitude = 7; string time_zone = 8; string elevation = 9;
+}
+
+message EpwDataPeriod {
+  string name = 1; string start_day_of_week = 2; string start_date = 3; string end_date = 4;
+}
+
+message EpwDataPeriods {
+  uint32 records_per_hour = 1;
+  repeated EpwDataPeriod periods = 2;
+}
+
+// One hourly EPW data record — all 35 spec columns, in spec order.
+message EpwRecord {
+  string year = 1; string month = 2; string day = 3; string hour = 4; string minute = 5;
+  string data_source_uncertainty = 6; string dry_bulb_temp = 7; string dew_point_temp = 8;
+  string relative_humidity = 9; string atmospheric_pressure = 10;
+  string extraterrestrial_horizontal_radiation = 11; string extraterrestrial_direct_normal_radiation = 12;
+  string horizontal_infrared_radiation = 13; string global_horizontal_radiation = 14;
+  string direct_normal_radiation = 15; string diffuse_horizontal_radiation = 16;
+  string global_horizontal_illuminance = 17; string direct_normal_illuminance = 18;
+  string diffuse_horizontal_illuminance = 19; string zenith_luminance = 20;
+  string wind_direction = 21; string wind_speed = 22; string total_sky_cover = 23; string opaque_sky_cover = 24;
+  string visibility = 25; string ceiling_height = 26; string present_weather_observation = 27;
+  string present_weather_codes = 28; string precipitable_water = 29; string aerosol_optical_depth = 30;
+  string snow_depth = 31; string days_since_last_snowfall = 32; string albedo = 33;
+  string liquid_precip_depth = 34; string liquid_precip_quantity = 35;
+}
+
 message EpwSnapshot {
   string schema = 1;
-  string entries_wire = 2;
+  EpwLocation location = 2;
+  string design_conditions = 3;
+  string typical_extreme_periods = 4;
+  string ground_temperatures = 5;
+  string holidays_dst = 6;
+  string comments_1 = 7;
+  string comments_2 = 8;
+  EpwDataPeriods data_periods = 9;
+  repeated EpwRecord records = 10;
 }

@@ -1,5 +1,6 @@
-//! 🏗️ SemioCadBuilder — 🚧 scaffolded by W1b: local `ArtifactBuilder` round-tripping the
-//! minimal snapshot. W2 adds typed constructors + the real mutation vocabulary.
+//! 🏗️ SemioCadBuilder — `ArtifactBuilder` impl over the real `SemioCadSnapshot`/`SemioCadMutation`/
+//! `SemioCadDiff` triad; `mutate` delegates to `apply_semio_cad_mutation` (the single semantics
+//! source shared with the mutation triad's `set-snapshot` leaf).
 
 use semio_framework_plugin::ArtifactBuilder;
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::diff::SemioCadDiff;

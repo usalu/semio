@@ -1,0 +1,15 @@
+...
+2350 |       pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib test) generated 147 warnings (run `cargo fix --lib -p semio-framework-os-kernel --tests` to apply 115 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 0.20s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_framework_os_kernel-8dd276505ca0f69c)
+
+running 3 tests
+test os_dsl::fixture_sweep::m5_semio_envelope_protocol::semio_envelope_protocol_parses_under_the_real_dialect ... ok
+test os_dsl::fixture_sweep::m5_semio_envelope_protocol::semio_envelope_protocol_walks_a_different_token_length_and_an_empty_payload ... ok
+test os_dsl::fixture_sweep::m5_semio_envelope_protocol::semio_envelope_protocol_walks_a_real_wrap_binary_payload ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 760 filtered out; finished in 0.00s
+

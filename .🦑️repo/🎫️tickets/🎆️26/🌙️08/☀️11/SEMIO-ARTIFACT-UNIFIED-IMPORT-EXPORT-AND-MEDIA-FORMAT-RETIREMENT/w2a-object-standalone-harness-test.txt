@@ -1,0 +1,43 @@
+
+running 33 tests
+test diff::tests::absorb_map_insert_insert_both_survive ... ok
+test diff::tests::absorb_map_insert_then_remove_of_same_added_item_cancels ... ok
+test diff::tests::absorb_list_insert_insert_same_index_both_survive ... ok
+test diff::tests::absorb_list_modify_then_remove_drops_pending_patch ... ok
+test diff::tests::absorb_list_insert_then_remove_of_same_added_item_cancels ... ok
+test diff::tests::absorb_map_associativity ... ok
+test diff::tests::absorb_list_add_then_setfield_patches_added_payload ... ok
+test diff::tests::absorb_map_add_then_setfield_patches_added_payload ... ok
+test diff::tests::absorb_list_insert_then_remove_before ... ok
+test diff::tests::absorb_list_associativity ... ok
+test diff::tests::absorb_map_modify_then_remove_drops_pending_patch ... ok
+test diff::tests::absorb_objects_associativity ... ok
+test diff::tests::absorb_objects_add_then_setfield_patches_added_payload ... ok
+test diff::tests::between_roundtrip_law_nested_collections_and_graph ... ok
+test diff::tests::absorb_objects_modify_then_remove_drops_pending_patch ... ok
+test diff::tests::between_self_is_empty ... ok
+test diff::tests::between_roundtrip_law_scalars_and_kind_change ... ok
+test diff::tests::field_sweep_every_field_present_in_diff ... ok
+test diff::tests::inverse_law_diff_level ... ok
+test diff::tests::field_sweep_between_roundtrips_both_directions ... ok
+test mutations::tests::inverse_law_diff_level_matches_mutation_diff ... ok
+test mutations::tests::inverse_law_mutation_level_round_trips ... ok
+test mutations::tests::mutation_diff_law_all_variants ... ok
+test mutations::tests::remove_map_entry_missing_key_is_noop ... ok
+test mutations::tests::nested_path_targets_inner_entry ... ok
+test mutations::tests::set_map_entry_on_missing_key_adds_at_end ... ok
+test triples::tests::indexed_triple_round_trips_through_hex_shape ... ok
+test mutations::tests::set_object_on_missing_id_inserts ... ok
+test triples::tests::named_triple_round_trips_through_hex_shape ... ok
+test triples::tests::empty_triples_round_trip_to_empty_brackets ... ok
+test triples::tests::nested_bracket_payload_does_not_confuse_the_top_level_split ... ok
+test diff::tests::diff_codec_text_binary_roundtrip_law ... ok
+test mutations::tests::op_text_binary_roundtrip_law ... ok
+
+test result: ok. 33 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

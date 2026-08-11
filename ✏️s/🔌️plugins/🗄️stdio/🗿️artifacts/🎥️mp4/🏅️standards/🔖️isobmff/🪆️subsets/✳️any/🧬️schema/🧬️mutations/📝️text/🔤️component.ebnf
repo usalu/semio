@@ -1,3 +1,3 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.mp4.mutations" ;
+(* stdio.mp4 op text form — one compact single-line JSON object per op *)
+document = json_line ;
+json_line = { any_char_except_newline } ;

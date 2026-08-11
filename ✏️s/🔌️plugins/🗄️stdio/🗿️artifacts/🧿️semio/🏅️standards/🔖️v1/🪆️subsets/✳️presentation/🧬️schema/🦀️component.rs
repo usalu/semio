@@ -1,7 +1,7 @@
-//! 🧬️ SemioPresentationArtifact schema — full artifact state, mirrors `SemioPresentationSnapshot` field for
-//! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
+//! 🧬️ SemioPresentationArtifact schema — full artifact state, mirrors `SemioPresentationSnapshot`
+//! field for field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide};
+use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideLayout, SlideMaster};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -11,6 +11,12 @@ use serde::{Deserialize, Serialize};
 pub struct SemioPresentationArtifact {
     #[state(persistent)]
     pub schema: String,
+    #[state(persistent)]
+    #[serde(default)]
+    pub masters: Vec<SlideMaster>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub layouts: Vec<SlideLayout>,
     #[state(persistent)]
     #[serde(default)]
     pub slides: Vec<Slide>,
@@ -24,17 +30,23 @@ impl SemioPresentationArtifact {
     pub fn to_snapshot(&self) -> SemioPresentationSnapshot {
         SemioPresentationSnapshot {
             schema: self.schema.clone(),
+            masters: self.masters.clone(),
+            layouts: self.layouts.clone(),
             slides: self.slides.clone(),
         }
     }
     pub fn from_snapshot(snapshot: SemioPresentationSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
+            masters: snapshot.masters,
+            layouts: snapshot.layouts,
             slides: snapshot.slides,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioPresentationSnapshot) {
         self.schema = snapshot.schema;
+        self.masters = snapshot.masters;
+        self.layouts = snapshot.layouts;
         self.slides = snapshot.slides;
     }
 }

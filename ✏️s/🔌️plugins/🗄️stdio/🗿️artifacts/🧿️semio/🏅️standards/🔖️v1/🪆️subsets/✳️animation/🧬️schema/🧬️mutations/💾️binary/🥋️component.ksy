@@ -1,8 +1,11 @@
 meta:
-  id: semio_animation_mutations
+  id: stdio_semio_animation_mutations
   endian: le
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  stdio.semio.animation.mutations binary layout — see 📡️component.protocol.semio for the field grammar.
 seq:
   - id: magic
     contents: "stdio.semio.animation.mutations"
+  - id: body
+    size-eos: true
+    doc: hex-encoded JSON envelope body (see the artifact's own ArtifactPack/DiffCodec impl)

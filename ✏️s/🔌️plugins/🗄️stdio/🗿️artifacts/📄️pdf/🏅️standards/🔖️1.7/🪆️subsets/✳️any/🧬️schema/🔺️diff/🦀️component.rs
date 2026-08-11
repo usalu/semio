@@ -1175,6 +1175,290 @@ pub(crate) fn dec_pdf_info(s: &str) -> Result<PdfInfo, String> {
 }
 //#endregion 🔖️ObjectValueCodecs
 
+//#region 🔖️BinaryPrimitives
+/// 🧪️ P2-FG3: real LEB128-varint-framed binary primitives (length-prefixed bytes/utf8, raw
+/// little-endian f64) backing the upgraded `OpBinary` (`../🧬️mutations/🦀️component.rs`, which
+/// `pub(crate)`-reuses everything in this region and the recursive codecs below) and `DiffCodec`
+/// frames -- reuses `store::pack_rt::write_varint_u64`/`store::ByteReader` rather than
+/// reinventing varint encode/decode, same shape xml's own `write_str_lp`/`read_str_lp` uses.
+pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+pub(crate) fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
+    out.extend_from_slice(&v.to_le_bytes());
+}
+pub(crate) fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
+    reader.read_f64_le().map_err(|e| e.to_string())
+}
+/// ➡️ Zigzag-encodes an `i64` into the `u64` varint domain (`store::pack_rt` only re-exports the
+/// UNSIGNED varint writer, `write_varint_u64` -- `store::ByteReader::read_varint_i64` exists as a
+/// real method on the read side, but there is no matching free-function writer, so the encode
+/// half is reproduced here verbatim from `🎒️pack/🧾️codec/🦀️component.rs`'s own private
+/// `zigzag_encode`, same formula, not reinvented).
+pub(crate) fn write_varint_i64_bin(out: &mut Vec<u8>, value: i64) {
+    let zigzag = ((value << 1) ^ (value >> 63)) as u64;
+    store::pack_rt::write_varint_u64(out, zigzag);
+}
+//#endregion 🔖️BinaryPrimitives
+
+//#region 🔖️ObjectValueBinaryCodecs
+/// 🧪️ P2-FG3: real recursive binary twins of [`enc_objref`]/[`enc_box`]/[`enc_pdf_object`]/
+/// [`enc_pdf_page`]/[`enc_pdf_info`] above -- backs the upgraded `OpBinary`
+/// (`../🧬️mutations/🦀️component.rs`, `SetSnapshot`/`InsertObject`/... variants) and `DiffCodec`
+/// frames below. `pub(crate)` so the sibling `../🧬️mutations/🦀️component.rs` (same artifact,
+/// different facet module) can reuse these rather than duplicating them a second time, matching
+/// this file's own existing text-codec reuse convention.
+pub(crate) fn enc_objref_bin(r: &ObjRef, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, r.num as u64);
+    store::pack_rt::write_varint_u64(out, r.gen as u64);
+}
+pub(crate) fn dec_objref_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjRef, String> {
+    let num = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let gen = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    Ok(ObjRef { num, gen })
+}
+pub(crate) fn enc_box_bin(b: &[f64; 4], out: &mut Vec<u8>) {
+    for v in b {
+        write_f64_bin(out, *v);
+    }
+}
+pub(crate) fn dec_box_bin(reader: &mut store::ByteReader<'_>) -> Result<[f64; 4], String> {
+    Ok([read_f64_bin(reader)?, read_f64_bin(reader)?, read_f64_bin(reader)?, read_f64_bin(reader)?])
+}
+pub(crate) fn enc_path_segment_bin(seg: &PdfPathSegment, out: &mut Vec<u8>) {
+    match seg {
+        PdfPathSegment::ArrayIndex { index } => {
+            out.push(0);
+            store::pack_rt::write_varint_u64(out, *index as u64);
+        }
+        PdfPathSegment::DictKey { key } => {
+            out.push(1);
+            write_str_lp(out, key);
+        }
+    }
+}
+pub(crate) fn dec_path_segment_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfPathSegment, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    match tag {
+        0 => Ok(PdfPathSegment::ArrayIndex { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize }),
+        1 => Ok(PdfPathSegment::DictKey { key: read_str_lp(reader)? }),
+        other => Err(format!("path segment binary: unknown tag {other}")),
+    }
+}
+pub(crate) fn enc_path_bin(path: &[PdfPathSegment], out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, path.len() as u64);
+    for seg in path {
+        enc_path_segment_bin(seg, out);
+    }
+}
+pub(crate) fn dec_path_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<PdfPathSegment>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut path = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        path.push(dec_path_segment_bin(reader)?);
+    }
+    Ok(path)
+}
+pub(crate) fn enc_dict_entry_bin(e: &PdfDictEntry, out: &mut Vec<u8>) {
+    write_str_lp(out, &e.key);
+    enc_pdf_object_bin(&e.value, out);
+}
+pub(crate) fn dec_dict_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfDictEntry, String> {
+    let key = read_str_lp(reader)?;
+    let value = dec_pdf_object_bin(reader)?;
+    Ok(PdfDictEntry { key, value })
+}
+/// 🌳 Recursive: a 1-byte kind tag (`0`=Null/`1`=Bool/`2`=Int/`3`=Real/`4`=Str/`5`=Name/`6`=Array/
+/// `7`=Dict/`8`=Ref/`9`=Stream -- distinct numbering from the text codec's letter tags) followed
+/// by the real payload (LEB128 varints for `Int`/counts, raw LE `f64` for `Real`, length-prefixed
+/// bytes/utf8 for `Str`/`Name`, a varint COUNT then that many recursively-encoded items for
+/// `Array`/`Dict` -- genuinely recursive, not text-as-bytes).
+pub(crate) fn enc_pdf_object_bin(v: &PdfObject, out: &mut Vec<u8>) {
+    match v {
+        PdfObject::Null => out.push(0),
+        PdfObject::Bool(b) => {
+            out.push(1);
+            out.push(if *b { 1 } else { 0 });
+        }
+        PdfObject::Int(i) => {
+            out.push(2);
+            write_varint_i64_bin(out, *i);
+        }
+        PdfObject::Real(f) => {
+            out.push(3);
+            write_f64_bin(out, *f);
+        }
+        PdfObject::Str(bytes) => {
+            out.push(4);
+            write_bytes_lp(out, bytes);
+        }
+        PdfObject::Name(s) => {
+            out.push(5);
+            write_str_lp(out, s);
+        }
+        PdfObject::Array(items) => {
+            out.push(6);
+            store::pack_rt::write_varint_u64(out, items.len() as u64);
+            for item in items {
+                enc_pdf_object_bin(item, out);
+            }
+        }
+        PdfObject::Dict(entries) => {
+            out.push(7);
+            store::pack_rt::write_varint_u64(out, entries.len() as u64);
+            for entry in entries {
+                enc_dict_entry_bin(entry, out);
+            }
+        }
+        PdfObject::Ref(r) => {
+            out.push(8);
+            enc_objref_bin(r, out);
+        }
+        PdfObject::Stream { dict, data, raw_filter } => {
+            out.push(9);
+            store::pack_rt::write_varint_u64(out, dict.len() as u64);
+            for entry in dict {
+                enc_dict_entry_bin(entry, out);
+            }
+            write_bytes_lp(out, data);
+            out.push(if raw_filter.is_some() { 1 } else { 0 });
+            if let Some(filter) = raw_filter {
+                write_str_lp(out, filter);
+            }
+        }
+    }
+}
+pub(crate) fn dec_pdf_object_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfObject, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    match tag {
+        0 => Ok(PdfObject::Null),
+        1 => Ok(PdfObject::Bool(reader.read_u8().map_err(|e| e.to_string())? != 0)),
+        2 => Ok(PdfObject::Int(reader.read_varint_i64().map_err(|e| e.to_string())?)),
+        3 => Ok(PdfObject::Real(read_f64_bin(reader)?)),
+        4 => Ok(PdfObject::Str(read_bytes_lp(reader)?)),
+        5 => Ok(PdfObject::Name(read_str_lp(reader)?)),
+        6 => {
+            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let mut items = Vec::with_capacity(count as usize);
+            for _ in 0..count {
+                items.push(dec_pdf_object_bin(reader)?);
+            }
+            Ok(PdfObject::Array(items))
+        }
+        7 => {
+            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let mut entries = Vec::with_capacity(count as usize);
+            for _ in 0..count {
+                entries.push(dec_dict_entry_bin(reader)?);
+            }
+            Ok(PdfObject::Dict(entries))
+        }
+        8 => Ok(PdfObject::Ref(dec_objref_bin(reader)?)),
+        9 => {
+            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let mut dict = Vec::with_capacity(count as usize);
+            for _ in 0..count {
+                dict.push(dec_dict_entry_bin(reader)?);
+            }
+            let data = read_bytes_lp(reader)?;
+            let has_filter = reader.read_u8().map_err(|e| e.to_string())? != 0;
+            let raw_filter = if has_filter { Some(read_str_lp(reader)?) } else { None };
+            Ok(PdfObject::Stream { dict, data, raw_filter })
+        }
+        other => Err(format!("pdf object binary: unknown tag {other}")),
+    }
+}
+pub(crate) fn enc_pdf_page_bin(p: &PdfPage, out: &mut Vec<u8>) {
+    enc_box_bin(&p.media_box, out);
+    out.push(if p.crop_box.is_some() { 1 } else { 0 });
+    if let Some(cb) = &p.crop_box {
+        enc_box_bin(cb, out);
+    }
+    write_varint_i64_bin(out, p.rotate as i64);
+    write_str_lp(out, &p.text);
+}
+pub(crate) fn dec_pdf_page_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfPage, String> {
+    let media_box = dec_box_bin(reader)?;
+    let crop_box = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_box_bin(reader)?) } else { None };
+    let rotate = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
+    let text = read_str_lp(reader)?;
+    Ok(PdfPage { media_box, crop_box, rotate, text })
+}
+pub(crate) fn enc_pdf_info_bin(i: &PdfInfo, out: &mut Vec<u8>) {
+    for field in [&i.title, &i.author, &i.subject, &i.keywords, &i.creator, &i.producer] {
+        out.push(if field.is_some() { 1 } else { 0 });
+        if let Some(v) = field {
+            write_str_lp(out, v);
+        }
+    }
+}
+pub(crate) fn dec_pdf_info_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfInfo, String> {
+    let mut read_opt = || -> Result<Option<String>, String> {
+        Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None })
+    };
+    Ok(PdfInfo {
+        title: read_opt()?,
+        author: read_opt()?,
+        subject: read_opt()?,
+        keywords: read_opt()?,
+        creator: read_opt()?,
+        producer: read_opt()?,
+    })
+}
+pub(crate) fn enc_pdf_snapshot_bin(s: &PdfSnapshot, out: &mut Vec<u8>) {
+    write_str_lp(out, &s.schema);
+    write_str_lp(out, &s.declared_version);
+    store::pack_rt::write_varint_u64(out, s.pages.len() as u64);
+    for page in &s.pages {
+        enc_pdf_page_bin(page, out);
+    }
+    enc_pdf_info_bin(&s.info, out);
+    store::pack_rt::write_varint_u64(out, s.objects.len() as u64);
+    for obj in &s.objects {
+        enc_objref_bin(&obj.id, out);
+        enc_pdf_object_bin(&obj.value, out);
+    }
+    store::pack_rt::write_varint_u64(out, s.trailer.len() as u64);
+    for entry in &s.trailer {
+        enc_dict_entry_bin(entry, out);
+    }
+}
+pub(crate) fn dec_pdf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let declared_version = read_str_lp(reader)?;
+    let page_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut pages = Vec::with_capacity(page_count as usize);
+    for _ in 0..page_count {
+        pages.push(dec_pdf_page_bin(reader)?);
+    }
+    let info = dec_pdf_info_bin(reader)?;
+    let obj_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut objects = Vec::with_capacity(obj_count as usize);
+    for _ in 0..obj_count {
+        let id = dec_objref_bin(reader)?;
+        let value = dec_pdf_object_bin(reader)?;
+        objects.push(PdfIndirectObject { id, value });
+    }
+    let trailer_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut trailer = Vec::with_capacity(trailer_count as usize);
+    for _ in 0..trailer_count {
+        trailer.push(dec_dict_entry_bin(reader)?);
+    }
+    Ok(PdfSnapshot { schema, declared_version, pages, info, objects, trailer })
+}
+//#endregion 🔖️ObjectValueBinaryCodecs
+
 //#region 🔖️DiffValueCodecs
 /// 📦️ Index-keyed `pages` triple — `modified` carries the sparse `PdfPageDiff` (single-letter
 /// tag:value pairs, same shape `GifFrameDiff`'s hand-rolled codec uses), `added` carries a full
@@ -1352,6 +1636,297 @@ fn dec_objects_diff(body: &str) -> Result<PdfObjectsDiff, String> {
 }
 //#endregion 🔖️DiffValueCodecs
 
+//#region 🔖️DiffValueBinaryCodecs
+/// 🧪️ P2-FG3: real recursive binary twins of [`enc_page_diff`]/[`enc_pages_diff`]/
+/// [`enc_dict_diff`]/[`enc_array_diff`]/[`enc_value_diff`]/[`enc_objects_diff`] above -- backs the
+/// upgraded `DiffCodec::encode_diff`/`decode_diff` below. Same 1-byte tag numbering scheme as
+/// [`enc_pdf_object_bin`] for `value-diff`'s scalar arms, plus `0`=Replace and `7`/`8`/`9`=
+/// Array/Dict/Stream (distinct from `enc_pdf_object_bin`'s own numbering since `PdfValueDiff` has
+/// one extra variant, `Replace`, that `PdfObject` doesn't). Collection triples (`removed`/
+/// `modified`/`added`) each encode as three varint-counted, recursively-encoded lists --
+/// genuinely structured binary, never text-as-bytes.
+fn enc_page_diff_bin(d: &PdfPageDiff, out: &mut Vec<u8>) {
+    out.push(if d.media_box.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.media_box {
+        enc_box_bin(v, out);
+    }
+    out.push(if d.crop_box.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.crop_box {
+        out.push(if v.is_some() { 1 } else { 0 });
+        if let Some(b) = v {
+            enc_box_bin(b, out);
+        }
+    }
+    out.push(if d.rotate.is_some() { 1 } else { 0 });
+    if let Some(v) = d.rotate {
+        write_varint_i64_bin(out, v as i64);
+    }
+    out.push(if d.text.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.text {
+        write_str_lp(out, v);
+    }
+}
+fn dec_page_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfPageDiff, String> {
+    let mut d = PdfPageDiff::default();
+    if reader.read_u8().map_err(|e| e.to_string())? != 0 {
+        d.media_box = Some(dec_box_bin(reader)?);
+    }
+    if reader.read_u8().map_err(|e| e.to_string())? != 0 {
+        d.crop_box = Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_box_bin(reader)?) } else { None });
+    }
+    if reader.read_u8().map_err(|e| e.to_string())? != 0 {
+        d.rotate = Some(reader.read_varint_i64().map_err(|e| e.to_string())? as i32);
+    }
+    if reader.read_u8().map_err(|e| e.to_string())? != 0 {
+        d.text = Some(read_str_lp(reader)?);
+    }
+    Ok(d)
+}
+fn enc_pages_diff_bin(d: &PdfPagesDiff, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
+    for idx in &d.removed {
+        store::pack_rt::write_varint_u64(out, *idx as u64);
+    }
+    store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
+    for m in &d.modified {
+        store::pack_rt::write_varint_u64(out, m.index as u64);
+        enc_page_diff_bin(&m.diff, out);
+    }
+    store::pack_rt::write_varint_u64(out, d.added.len() as u64);
+    for a in &d.added {
+        store::pack_rt::write_varint_u64(out, a.index as u64);
+        enc_pdf_page_bin(&a.page, out);
+    }
+}
+fn dec_pages_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfPagesDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(removed_count as usize);
+    for _ in 0..removed_count {
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+    }
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(modified_count as usize);
+    for _ in 0..modified_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let diff = dec_page_diff_bin(reader)?;
+        modified.push(PdfPageModified { index, diff });
+    }
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(added_count as usize);
+    for _ in 0..added_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let page = dec_pdf_page_bin(reader)?;
+        added.push(PdfPageAdded { index, page });
+    }
+    Ok(PdfPagesDiff { removed, modified, added })
+}
+
+fn enc_dict_diff_bin(d: &PdfDictDiff, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
+    for key in &d.removed {
+        write_str_lp(out, key);
+    }
+    store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
+    for m in &d.modified {
+        write_str_lp(out, &m.key);
+        enc_value_diff_bin(&m.diff, out);
+    }
+    store::pack_rt::write_varint_u64(out, d.added.len() as u64);
+    for a in &d.added {
+        store::pack_rt::write_varint_u64(out, a.index as u64);
+        write_str_lp(out, &a.key);
+        enc_pdf_object_bin(&a.item, out);
+    }
+}
+fn dec_dict_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfDictDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(removed_count as usize);
+    for _ in 0..removed_count {
+        removed.push(read_str_lp(reader)?);
+    }
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(modified_count as usize);
+    for _ in 0..modified_count {
+        let key = read_str_lp(reader)?;
+        let diff = dec_value_diff_bin(reader)?;
+        modified.push(PdfDictModified { key, diff });
+    }
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(added_count as usize);
+    for _ in 0..added_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let key = read_str_lp(reader)?;
+        let item = dec_pdf_object_bin(reader)?;
+        added.push(PdfDictAdded { index, key, item });
+    }
+    Ok(PdfDictDiff { removed, modified, added })
+}
+
+fn enc_array_diff_bin(d: &PdfArrayDiff, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
+    for idx in &d.removed {
+        store::pack_rt::write_varint_u64(out, *idx as u64);
+    }
+    store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
+    for m in &d.modified {
+        store::pack_rt::write_varint_u64(out, m.index as u64);
+        enc_value_diff_bin(&m.diff, out);
+    }
+    store::pack_rt::write_varint_u64(out, d.added.len() as u64);
+    for a in &d.added {
+        store::pack_rt::write_varint_u64(out, a.index as u64);
+        enc_pdf_object_bin(&a.item, out);
+    }
+}
+fn dec_array_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfArrayDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(removed_count as usize);
+    for _ in 0..removed_count {
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+    }
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(modified_count as usize);
+    for _ in 0..modified_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let diff = dec_value_diff_bin(reader)?;
+        modified.push(PdfArrayModified { index, diff });
+    }
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(added_count as usize);
+    for _ in 0..added_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let item = dec_pdf_object_bin(reader)?;
+        added.push(PdfArrayAdded { index, item });
+    }
+    Ok(PdfArrayDiff { removed, modified, added })
+}
+
+fn enc_value_diff_bin(d: &PdfValueDiff, out: &mut Vec<u8>) {
+    match d {
+        PdfValueDiff::Replace { value } => {
+            out.push(0);
+            enc_pdf_object_bin(value, out);
+        }
+        PdfValueDiff::Bool { value } => {
+            out.push(1);
+            out.push(if *value { 1 } else { 0 });
+        }
+        PdfValueDiff::Int { value } => {
+            out.push(2);
+            write_varint_i64_bin(out, *value);
+        }
+        PdfValueDiff::Real { value } => {
+            out.push(3);
+            write_f64_bin(out, *value);
+        }
+        PdfValueDiff::Str { value } => {
+            out.push(4);
+            write_bytes_lp(out, value);
+        }
+        PdfValueDiff::Name { value } => {
+            out.push(5);
+            write_str_lp(out, value);
+        }
+        PdfValueDiff::Ref { value } => {
+            out.push(6);
+            enc_objref_bin(value, out);
+        }
+        PdfValueDiff::Array { diff } => {
+            out.push(7);
+            enc_array_diff_bin(diff, out);
+        }
+        PdfValueDiff::Dict { diff } => {
+            out.push(8);
+            enc_dict_diff_bin(diff, out);
+        }
+        PdfValueDiff::Stream { dict, data, raw_filter } => {
+            out.push(9);
+            out.push(if dict.is_some() { 1 } else { 0 });
+            if let Some(v) = dict {
+                enc_dict_diff_bin(v, out);
+            }
+            out.push(if data.is_some() { 1 } else { 0 });
+            if let Some(v) = data {
+                write_bytes_lp(out, v);
+            }
+            out.push(if raw_filter.is_some() { 1 } else { 0 });
+            if let Some(v) = raw_filter {
+                out.push(if v.is_some() { 1 } else { 0 });
+                if let Some(f) = v {
+                    write_str_lp(out, f);
+                }
+            }
+        }
+    }
+}
+fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfValueDiff, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    match tag {
+        0 => Ok(PdfValueDiff::Replace { value: dec_pdf_object_bin(reader)? }),
+        1 => Ok(PdfValueDiff::Bool { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
+        2 => Ok(PdfValueDiff::Int { value: reader.read_varint_i64().map_err(|e| e.to_string())? }),
+        3 => Ok(PdfValueDiff::Real { value: read_f64_bin(reader)? }),
+        4 => Ok(PdfValueDiff::Str { value: read_bytes_lp(reader)? }),
+        5 => Ok(PdfValueDiff::Name { value: read_str_lp(reader)? }),
+        6 => Ok(PdfValueDiff::Ref { value: dec_objref_bin(reader)? }),
+        7 => Ok(PdfValueDiff::Array { diff: dec_array_diff_bin(reader)? }),
+        8 => Ok(PdfValueDiff::Dict { diff: dec_dict_diff_bin(reader)? }),
+        9 => {
+            let dict = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_dict_diff_bin(reader)?) } else { None };
+            let data = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
+            let raw_filter = if reader.read_u8().map_err(|e| e.to_string())? != 0 {
+                Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None })
+            } else {
+                None
+            };
+            Ok(PdfValueDiff::Stream { dict, data, raw_filter })
+        }
+        other => Err(format!("value diff binary: unknown tag {other}")),
+    }
+}
+
+fn enc_objects_diff_bin(d: &PdfObjectsDiff, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
+    for id in &d.removed {
+        enc_objref_bin(id, out);
+    }
+    store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
+    for m in &d.modified {
+        enc_objref_bin(&m.id, out);
+        enc_value_diff_bin(&m.diff, out);
+    }
+    store::pack_rt::write_varint_u64(out, d.added.len() as u64);
+    for a in &d.added {
+        store::pack_rt::write_varint_u64(out, a.index as u64);
+        enc_objref_bin(&a.id, out);
+        enc_pdf_object_bin(&a.value, out);
+    }
+}
+fn dec_objects_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfObjectsDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(removed_count as usize);
+    for _ in 0..removed_count {
+        removed.push(dec_objref_bin(reader)?);
+    }
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(modified_count as usize);
+    for _ in 0..modified_count {
+        let id = dec_objref_bin(reader)?;
+        let diff = dec_value_diff_bin(reader)?;
+        modified.push(PdfObjectModified { id, diff });
+    }
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(added_count as usize);
+    for _ in 0..added_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let id = dec_objref_bin(reader)?;
+        let value = dec_pdf_object_bin(reader)?;
+        added.push(PdfObjectAdded { index, id, value });
+    }
+    Ok(PdfObjectsDiff { removed, modified, added })
+}
+//#endregion 🔖️DiffValueBinaryCodecs
+
 //#region 🔖️TopLevel
 /// **Grammar**: one space-separated `name=value` token per changed top-level field (absent token
 /// = unchanged); `pages`/`objects`/`trailer` print via their own collection-triple/dict-triple
@@ -1392,15 +1967,39 @@ impl protocol::DiffCodec for PdfDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_pdf_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim, same simplification `SvgDiff`/`GifDiff`/`WriterDiff`
-    /// (the repo's other hand-rolled `DiffCodec`s) all use — satisfies every `DiffCodec` law
-    /// without inventing a second wire format.
+    /// 🧪️ P2-FG3: REAL binary frame (`format u8 | flags u8 | [declared_version][info][pages]
+    /// [objects][trailer]`), matching `../💾️binary/📡️component.protocol.semio`'s `header fixed 2`
+    /// + `chain payload bytes` shape — upgraded from F6's `print_diff().into_bytes()`
+    /// text-as-binary shortcut (100% of stdio's `DiffCodec` impls were still on that shortcut per
+    /// the P2-W0 census). `flags` bits 0-4 mark `declared_version`/`info`/`pages`/`objects`/
+    /// `trailer` presence; each present field's own (genuinely recursive, LEB128-varint/
+    /// length-prefixed binary) payload follows in that fixed order.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let mut flags: u8 = 0;
+        if self.declared_version.is_some() { flags |= 0b00001; }
+        if self.info.is_some() { flags |= 0b00010; }
+        if self.pages.is_some() { flags |= 0b00100; }
+        if self.objects.is_some() { flags |= 0b01000; }
+        if self.trailer.is_some() { flags |= 0b10000; }
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
+        if let Some(v) = &self.declared_version { write_str_lp(&mut out, v); }
+        if let Some(v) = &self.info { enc_pdf_info_bin(v, &mut out); }
+        if let Some(v) = &self.pages { enc_pages_diff_bin(v, &mut out); }
+        if let Some(v) = &self.objects { enc_objects_diff_bin(v, &mut out); }
+        if let Some(v) = &self.trailer { enc_dict_diff_bin(v, &mut out); }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let declared_version = if flags & 0b00001 != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("diff declared_version", reader.position(), e))?) } else { None };
+        let info = if flags & 0b00010 != 0 { Some(dec_pdf_info_bin(&mut reader).map_err(|e| malformed("diff info", reader.position(), e))?) } else { None };
+        let pages = if flags & 0b00100 != 0 { Some(dec_pages_diff_bin(&mut reader).map_err(|e| malformed("diff pages", reader.position(), e))?) } else { None };
+        let objects = if flags & 0b01000 != 0 { Some(dec_objects_diff_bin(&mut reader).map_err(|e| malformed("diff objects", reader.position(), e))?) } else { None };
+        let trailer = if flags & 0b10000 != 0 { Some(dec_dict_diff_bin(&mut reader).map_err(|e| malformed("diff trailer", reader.position(), e))?) } else { None };
+        Ok(PdfDiff { declared_version, info, pages, objects, trailer })
     }
 }
 //#endregion 🔖️TopLevel

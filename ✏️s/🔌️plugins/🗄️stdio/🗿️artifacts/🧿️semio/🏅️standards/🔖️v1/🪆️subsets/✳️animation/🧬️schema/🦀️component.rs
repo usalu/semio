@@ -1,5 +1,7 @@
 //! 🧬️ SemioAnimationArtifact schema — full artifact state, mirrors `SemioAnimationSnapshot` field for
-//! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
+//! field (see gif's `GifArtifact` for the precedent this follows). `AnimTimeline`'s own nested
+//! shape (channels/keyframes/target/value) grew richer in W2b; this artifact struct itself needs
+//! no changes since it just carries the top-level `timelines: Vec<AnimTimeline>` field through.
 
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{SemioAnimationSnapshot, AnimTimeline};
 use schema::ArtifactSchema;

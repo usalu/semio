@@ -1,3 +1,11 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.brep.snapshot" ;
+(* stdio.semio.brep DSL text representation (store::ArtifactDsl::parse_dsl / print_dsl). The
+   `semio stdio.semio.brep.dsl v1` preamble line + its trailing newline are stripped by
+   store::semio_format::split_text_preamble BEFORE this grammar's `document` production runs.
+   The snapshot has no textual syntax of its own — the DSL text is a whitespace-tolerant ASCII
+   hex dump of the REAL JSON-pack bytes of a SemioBrepSnapshot (see ../🔣️component.json for that
+   payload's own structure). *)
+document = hex byte, { whitespace, hex byte } ;
+hex byte = hex digit, hex digit ;
+hex digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+          | "a" | "b" | "c" | "d" | "e" | "f" | "A" | "B" | "C" | "D" | "E" | "F" ;
+whitespace = { " " | "\t" | "\r" | "\n" } ;

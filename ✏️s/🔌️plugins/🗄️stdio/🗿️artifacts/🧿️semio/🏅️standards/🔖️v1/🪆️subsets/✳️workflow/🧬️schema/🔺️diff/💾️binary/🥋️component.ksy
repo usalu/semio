@@ -2,7 +2,11 @@ meta:
   id: semio_workflow_diff
   endian: le
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  `s.stdio.semio.workflow` diff BINARY wire format — the UTF-8 bytes of the diff TEXT wire format
+  verbatim (`SemioWorkflowDiff::encode_diff`/`decode_diff`, see 🔺️diff/🦀️component.rs's doc
+  comment: "Binary = the text bytes verbatim... satisfying every DiffCodec law without inventing a
+  second wire format"). See 🔺️diff/📝️text/📖️component.grammar.semio for the real token grammar.
 seq:
-  - id: magic
-    contents: "stdio.semio.workflow.diff"
+  - id: diff_line_utf8
+    size-eos: true
+    doc: "UTF-8 bytes of the print_diff() text line"

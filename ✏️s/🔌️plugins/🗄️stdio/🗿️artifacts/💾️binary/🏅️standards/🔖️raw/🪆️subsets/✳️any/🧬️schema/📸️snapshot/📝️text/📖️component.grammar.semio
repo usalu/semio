@@ -1,10 +1,32 @@
-dialect grammar stdio.binary.snapshot
-root = document
-document = preamble NL hex-body
-preamble = 'semio' SP envelope-id SP 'v' digits
-envelope-id = ident *('.' ident)
-; each byte of `BinarySnapshot::bytes` is printed as two lowercase hex digits; whitespace
-; between pairs is insignificant (stripped before hex-decoding on parse).
-hex-body = *(hex-pair / WSP / NL)
-hex-pair = HEXDIG-LOWER HEXDIG-LOWER
-ident = (ALPHA / '_') *(ALPHA / DIGIT / '_' / '-')
+dialect grammar
+grammar binary.snapshot
+extension bin
+start document
+
+# P2-P3: real `store::ArtifactDsl::print_dsl`/`parse_dsl` shape for `stdio.binary`
+# (📸️snapshot/🦀️component.rs`'s handcrafted `impl store::ArtifactDsl for BinarySnapshot`), replacing
+# the old one-line-header ABNF placeholder (`dialect grammar stdio.binary.snapshot` -- 2 tokens on
+# one line, rejected by this dialect's parser -- plus `%x`/single-quoted-literal/`SP`/`NL` bodies
+# outside this dialect's alphabet entirely). `print_dsl` is `wrap_text(envelope, body)` where `body`
+# is `self.bytes.iter().map(|b| format!("{b:02x}")).collect()` -- a CONTINUOUS run of lowercase hex
+# digit pairs, no separators, no whitespace (confirmed by direct read, not assumed). The framework's
+# own `m5`/artifact-level conformance harness (`dsl_body_from_fixture`,
+# `🗣️dsl/🧪️fixture-sweep/🦀️component.rs`) strips the mandatory `semio stdio.binary.dsl v1` preamble
+# line and substitutes the bare `envelope_id()` token (`"stdio.binary"`) before calling
+# `Recognizer::recognize` -- so `document` starts with that literal, not the full preamble line
+# (matching json/csv's own pilot precedent exactly). No `ws`/`NL` production is needed: whitespace,
+# newlines, and comments are lexer trivia, stripped by `Recognizer::recognize` before matching
+# begins (confirmed by reading that function).
+document = artifact-mark hex-body
+
+artifact-mark = "stdio.binary"
+
+# P2-P1-fix note (mandatory reading, `p2-p1-fix-report.md`): an open-ended hex run MUST be the
+# framework's built-in `hex` MACRO (bare `hex`, no matching production here -- `Symbol::Ref` falls
+# back production-then-macro automatically), never a hand-rolled `{INT | IDENT}*`-shaped production
+# -- `Symbol::Star` is a single greedy, non-backtracking pass, and the macro's own
+# `match_macro_span` tries the largest span first and backtracks correctly (plus already supports
+# the empty-body case, `BinarySnapshot::default()`'s `bytes: vec![]`). `hex-body` here has nothing
+# following it to backtrack off of (it is the last token in the document), so this also sidesteps
+# every hex/keyword-adjacency pitfall that macro was built for in the first place.
+hex-body = hex

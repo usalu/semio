@@ -1,5 +1,5 @@
-module Semio_semio_document_diff;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module SemioDocumentDiff;
+# Binary diff form = the text diff's UTF-8 bytes verbatim (no separate binary framing).
 type Document = unit {
-    magic: bytes &size=25;
+    text_diff_utf8: bytes &eod;
 };

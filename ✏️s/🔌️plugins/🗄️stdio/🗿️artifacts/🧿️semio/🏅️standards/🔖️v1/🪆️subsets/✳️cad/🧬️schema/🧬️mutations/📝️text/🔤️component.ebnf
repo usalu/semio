@@ -1,3 +1,50 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.cad.mutations" ;
+(* protocol::OpText::print_op/parse_op wire grammar for SemioCadMutation -- NO semio envelope;
+   OpBinary is print_op().into_bytes() (byte-identical to ../💾️binary/🔠️component.abnf).
+   Grammar: "keyword arg=value ...". Value shapes mirror the diff facet's own
+   ../../🔺️diff/📝️text/🔤️component.ebnf entity/layer/block/point2/option productions verbatim;
+   each keyword's real arg list is documented in ../📖️component.grammar.semio (informative) and
+   authoritatively in 🦀️component.rs's print_cad_mutation. *)
+document = "no-mutation" | ( keyword, " ", args ) ;
+args = arg, { " ", arg } ;
+arg = key, "=", value ;
+keyword = "set-snapshot" | "add-layer" | "remove-layer" | "set-layer" | "add-block" | "remove-block"
+        | "set-block-base-point" | "add-entity" | "remove-entity" | "set-entity-layer"
+        | "set-entity-geometry" | "add-block-entity" | "remove-block-entity"
+        | "set-block-entity-layer" | "set-block-entity-geometry" ;
+key = { "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o"
+      | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "-" } ;
+value = cad snapshot | layer | block | entity record | entity | point2 | hexstr
+      | option i32 | option str | option bool ;
+
+cad snapshot = "[", hexstr, ",", layer list, ",", block list, ",", entity record list, "]" ;
+layer list = "[", [ layer, { ",", layer } ], "]" ;
+block list = "[", [ block, { ",", block } ], "]" ;
+entity record list = "[", [ entity record, { ",", entity record } ], "]" ;
+
+option i32 = "[0]" | ( "[1,", i32, "]" ) ;
+option str = "[0]" | ( "[1,", hexstr, "]" ) ;
+option bool = "[0]" | ( "[1,", bool01, "]" ) ;
+
+layer = "[", hexstr, ",", i32, ",", hexstr, ",", bool01, "]" ;
+entity record = "[", hexstr, ",", hexstr, ",", entity, "]" ;
+block = "[", hexstr, ",", point2, ",", entity record list, "]" ;
+
+entity = line | arc | circle | ellipse | polyline | text entity | insert | solid | dimension ;
+line = "L[", point2, ",", point2, "]" ;
+arc = "A[", point2, ",", f64, ",", f64, ",", f64, "]" ;
+circle = "C[", point2, ",", f64, "]" ;
+ellipse = "E[", point2, ",", point2, ",", f64, ",", f64, ",", f64, "]" ;
+polyline = "P[", point2 list, ",", bool01, "]" ;
+point2 list = "[", [ point2, { ",", point2 } ], "]" ;
+text entity = "T[", point2, ",", f64, ",", f64, ",", hexstr, "]" ;
+insert = "I[", hexstr, ",", point2, ",", point2, ",", f64, "]" ;
+solid = "S[", point2, ",", point2, ",", point2, ",", point2, "]" ;
+dimension = "D[", point2, ",", point2, ",", f64, ",", hexstr, "]" ;
+
+point2 = "[", f64, ",", f64, "]" ;
+hexstr = { hex digit } ;
+i32 = [ "-" ], digit, { digit } ;
+f64 = [ "-" ], digit, { digit }, [ ".", digit, { digit } ], [ ( "e" | "E" ), [ "+" | "-" ], digit, { digit } ] ;
+bool01 = "0" | "1" ;
+hex digit = digit | "a" | "b" | "c" | "d" | "e" | "f" | "A" | "B" | "C" | "D" | "E" | "F" ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;

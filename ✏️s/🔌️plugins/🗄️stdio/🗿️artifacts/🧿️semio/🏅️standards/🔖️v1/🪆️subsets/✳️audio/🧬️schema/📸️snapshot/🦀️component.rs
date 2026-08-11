@@ -1,11 +1,13 @@
-//! 🧬️ SemioAudioSnapshot — sample_rate + channels{f32 samples} — wav-shaped.
-//! 🚧 scaffolded by W1b: minimal honest fields only (not the full spec shape) — full
-//! implementation lands in W2/W3.
-
-/// 🔊️ Owned by the `audio` subset: `SemioAudioChannel`.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SemioAudioChannel { #[serde(default)] pub samples: Vec<f32> }
+//! 🔊️ SemioAudioSnapshot — complete per the master plan's `audio` row: `sample_rate` +
+//! `format` (typed sample-format enum, describing the ORIGINAL encoding the samples were decoded
+//! from) + `channels` (ordered, index-keyed — index 0 = left/mono, 1 = right, … matching wav's
+//! interleaved-channel-order convention) + `tags` (ordered key/value metadata pairs, ID3/RIFF
+//! `LIST INFO`-shaped — duplicate keys are legal on disk, hence a `Vec`, never a `BTreeMap`).
+//! Per the ticket's honest-boundary note: audio is schema-complete for ITS OWN shape and stores
+//! REAL decoded `f32` samples (unlike `video`, which is deliberately payload-opaque) — decoding a
+//! compressed container's samples into this shape is a W3/W4 codec concern, not this subset's.
+//! Owned types (see `w1b-type-ownership.md`): `SemioAudioSnapshot`, `SemioAudioChannel`. New this
+//! wave: `SemioAudioFormat`, `SemioAudioTag` (the `tags` field was W1b-reserved, not yet defined).
 
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -13,6 +15,49 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Ids
 pub const STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA: &str = "stdio.semio.audio";
 //#endregion 🔖️Ids
+
+//#region 🔖️Format
+/// 🎚️ The sample format the audio was originally encoded in — metadata describing provenance,
+/// independent of this snapshot's own always-`f32` sample storage (see module doc comment).
+/// `wav`-shaped: mirrors PCM8/16/24/32 + IEEE float, the `fmt ` chunk's `wBitsPerSample`/
+/// `wFormatTag` space, without depending on wav's own (future, W3) types — own type, per the
+/// repo-wide "own types, not merged into a sibling format" convention (tsv-vs-csv, docx-vs-xlsx).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum SemioAudioFormat {
+    Pcm8,
+    #[default]
+    Pcm16,
+    Pcm24,
+    Pcm32,
+    Float32,
+    Float64,
+}
+//#endregion 🔖️Format
+
+//#region 🔖️Channel
+/// 🔊️ Owned by the `audio` subset (per `w1b-type-ownership.md`). One channel's full, decoded
+/// sample sequence — a strong, per-field-diffable entity (today one field, `samples`, but kept as
+/// its own struct + collection triple rather than `Vec<Vec<f32>>` so a future field, e.g. a
+/// per-channel gain/pan, slots in without reshaping the collection).
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SemioAudioChannel {
+    #[serde(default)]
+    pub samples: Vec<f32>,
+}
+//#endregion 🔖️Channel
+
+//#region 🔖️Tag
+/// 🏷️ One metadata key/value pair (ID3/RIFF `LIST INFO`-shaped: `title`, `artist`, `comment`, …).
+/// A weak/value entity per the recipe (its "diff" is the whole new pair, never sub-diffed).
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SemioAudioTag {
+    pub key: String,
+    pub value: String,
+}
+//#endregion 🔖️Tag
 
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
@@ -25,24 +70,33 @@ pub struct SemioAudioSnapshot {
     pub sample_rate: u32,
     #[state(persistent)]
     #[serde(default)]
+    pub format: SemioAudioFormat,
+    #[state(persistent)]
+    #[serde(default)]
     pub channels: Vec<SemioAudioChannel>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub tags: Vec<SemioAudioTag>,
 }
 
 impl Default for SemioAudioSnapshot {
     fn default() -> Self {
         Self {
             schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(),
-            sample_rate: Default::default(),
-            channels: Default::default(),
+            sample_rate: 0,
+            format: SemioAudioFormat::default(),
+            channels: Vec::new(),
+            tags: Vec::new(),
         }
     }
 }
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🚧 scaffolded by W1b: JSON-pack round trip (honest, genuinely working — not a per-format
-/// binary codec, since this subset's snapshot is a NEUTRAL semio type, not an on-disk file
-/// format). Wrapped in the same `store::semio_format` envelope every stdio artifact uses.
+/// 🧩️ JSON-pack round trip — honest and genuinely working (not a per-format binary codec, since
+/// this subset's snapshot is a NEUTRAL semio type, not an on-disk file format; matches every other
+/// semio subset's own `ArtifactDsl`/`ArtifactPack` convention). Wrapped in the same
+/// `store::semio_format` envelope every stdio artifact uses.
 impl store::ArtifactDsl for SemioAudioSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str { STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA }
@@ -111,9 +165,22 @@ impl store::ArtifactPack for SemioAudioSnapshot {
 mod tests {
     use super::*;
 
+    fn sample_snapshot() -> SemioAudioSnapshot {
+        SemioAudioSnapshot {
+            sample_rate: 44_100,
+            format: SemioAudioFormat::Float32,
+            channels: vec![
+                SemioAudioChannel { samples: vec![0.0, 0.5, -0.5, 1.0] },
+                SemioAudioChannel { samples: vec![0.0, -0.5, 0.5, -1.0] },
+            ],
+            tags: vec![SemioAudioTag { key: "title".into(), value: "test tone".into() }],
+            ..SemioAudioSnapshot::default()
+        }
+    }
+
     #[test]
     fn json_pack_round_trips() {
-        let snap = SemioAudioSnapshot::default();
+        let snap = sample_snapshot();
         let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioAudioSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
@@ -121,10 +188,18 @@ mod tests {
 
     #[test]
     fn dsl_text_round_trips() {
-        let snap = SemioAudioSnapshot::default();
+        let snap = sample_snapshot();
         let text = <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
+    }
+
+    #[test]
+    fn default_snapshot_has_no_channels_or_tags() {
+        let snap = SemioAudioSnapshot::default();
+        assert!(snap.channels.is_empty());
+        assert!(snap.tags.is_empty());
+        assert_eq!(snap.format, SemioAudioFormat::Pcm16);
     }
 }
 //#endregion 🔖️Tests

@@ -1,10 +1,9 @@
-/** 🧬️ TsvArtifact schema. 🚧 scaffolded by W1b — generic facet mirror; the TsvArtifact
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface TsvArtifactEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ TsvArtifact schema facet — full artifact state, mirrors TsvSnapshot field-for-field. */
+import type { TsvLineEnding } from './📸️snapshot/🟦️component.ts';
+
 export interface TsvArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: TsvArtifactEntry[];
+  schema: string;
+  records: string[][];
+  trailingNewline: boolean;
+  lineEnding: TsvLineEnding;
 }

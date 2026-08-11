@@ -1,3 +1,21 @@
-dialect protocol stdio.dwg.mutations
-magic = %x00
-payload = *OCTET
+dialect protocol
+protocol stdio.dwg.ac1024.mutations
+version 1
+schema stdio.dwg.op
+start op
+
+# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: `protocol::OpBinary`
+# for `DwgMutation` (ac1024) is CONFIRMED ALREADY REAL (../🦀️component.rs's `OpCodecs` region) —
+# a pure forward to `dsl::variants_binary::encode_op`/`decode_op`, same generic
+# `format u8 (=1) | ordinal varint | record body` layout as ac1018's own sibling protocol file
+# (identical shape, richer variant vocabulary — `NoMutation`=0, `SetSnapshot`=1,
+# `SetVersionInfo`=2, `InsertSection`=3, `RemoveSection`=4, `SetSectionData`=5, per
+# `dsl::DslVariants::variants()`'s own declaration-order emission). `format`/`ordinal` are
+# genuinely, individually byte-walked; the record-body tail (framework-generic symbol table +
+# per-field-id tag+value wire — `txt-opbinary-record-body-wire-is-framework-generic`, same gap
+# ac1018's own sibling file documents) is one opaque chain.
+framing record
+header fixed 2
+field format u8
+field ordinal varint
+chain body bytes

@@ -2,7 +2,16 @@ meta:
   id: semio_video_snapshot
   endian: le
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  stdio.semio.video snapshot binary envelope: magic + version + length-prefixed JSON body. The
+  JSON body's own structure is normatively described by the sibling 🔣️component.json
+  (SemioVideoSnapshot: schema, streams[]{kind,codec,width,height,rate,samples}).
 seq:
   - id: magic
-    contents: "stdio.semio.video.snapshot"
+    contents: "stdio.semio.video"
+  - id: version
+    type: u1
+  - id: body_len
+    type: u4
+  - id: body_bytes
+    size: body_len
+    doc: UTF-8 JSON, see ../🔣️component.json

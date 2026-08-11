@@ -1,5 +1,6 @@
-module Semio_semio_video_diff;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_semio_video_diff;
+# stdio.semio.video diff binary layout: UTF-8 bytes of the text grammar (../📝️text) verbatim —
+# protocol::DiffCodec::encode_diff == print_diff().into_bytes(), no separate binary framing.
 type Document = unit {
-    magic: bytes &size=22;
+    text_utf8: bytes &eod &convert=$$.decode("utf8");
 };

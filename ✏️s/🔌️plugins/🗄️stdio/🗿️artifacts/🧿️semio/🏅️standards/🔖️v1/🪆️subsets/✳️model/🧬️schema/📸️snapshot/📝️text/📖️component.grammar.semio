@@ -1,5 +1,21 @@
-dialect grammar stdio.semio.model.snapshot
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.model.snapshot"
+dialect grammar
+grammar stdio.semio.model.snapshot
+extension semio
+start document
+
+; The real on-disk shape of a `stdio.semio.model` DSL (text) document: the shared
+; `store::semio_format` preamble line, then the snapshot body hex-encoded (see
+; `SemioModelSnapshot::print_dsl`/`parse_dsl`, `🧬️schema/📸️snapshot/🦀️component.rs`).
+document = preamble NL body
+preamble = "semio" SP "stdio.semio.model.dsl" SP "v" version
+version = digit+
+
+; body = hex(json-bytes) -- the compact JSON serialization of SemioModelSnapshot, hex-encoded so
+; the DSL body stays a single grammared token stream. See ../🔣️component.json for the JSON shape
+; itself (schema/spatial/elements/relations).
+body = hexbyte*
+hexbyte = hexdigit hexdigit
+hexdigit = digit | %x61-66
+digit = %x30-39
+NL = %x0A
+SP = %x20

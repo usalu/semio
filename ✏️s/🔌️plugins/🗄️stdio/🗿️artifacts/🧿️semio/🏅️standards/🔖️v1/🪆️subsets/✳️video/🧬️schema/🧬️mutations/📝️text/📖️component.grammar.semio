@@ -1,5 +1,25 @@
 dialect grammar stdio.semio.video.mutations
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.video.mutations"
+; One line: "no-mutation" or "<keyword> <arg>=<value> ...", space-separated. See
+; `🧬️mutations/🦀️component.rs` `print_semio_video_mutation`/`parse_semio_video_mutation` for the
+; exact hand-rolled codec this grammar documents.
+root = op
+op = "no-mutation" / set-snapshot / insert-stream / remove-stream / set-stream-meta
+   / insert-sample / remove-sample / set-sample-data / set-sample-flags
+set-snapshot = "set-snapshot snapshot=" snapshot-value
+insert-stream = "insert-stream index=" index " stream=" stream-value
+remove-stream = "remove-stream index=" index
+set-stream-meta = "set-stream-meta index=" index " kind=" kind " codec=" hex-string " width=" index " height=" index " rate=" rational-value
+insert-sample = "insert-sample stream-index=" index " index=" index " sample=" sample-value
+remove-sample = "remove-sample stream-index=" index " index=" index
+set-sample-data = "set-sample-data stream-index=" index " index=" index " data=" hex-string
+set-sample-flags = "set-sample-flags stream-index=" index " index=" index " pts=" index " key=" bool
+snapshot-value = "[" hex-string "," stream-list "]"
+stream-list = "[" *(stream-value ",") "]"
+stream-value = "[" kind "," hex-string "," index "," index "," rational-value "," sample-list "]"
+sample-list = "[" *(sample-value ",") "]"
+sample-value = "[" index "," bool "," hex-string "]"
+rational-value = "[" index "," index "]"
+kind = "V" / "A" / "S"
+bool = "0" / "1"
+index = 1*DIGIT
+hex-string = *2HEXDIG

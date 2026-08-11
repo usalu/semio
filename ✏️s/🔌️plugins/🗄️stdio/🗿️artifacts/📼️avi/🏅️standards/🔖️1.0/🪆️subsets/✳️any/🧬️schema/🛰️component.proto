@@ -1,7 +1,11 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.s_stdio_avi.artifact;
+package semio.stdio_avi;
+import "snapshot.proto";
+
 message AviArtifact {
   string schema = 1;
-  string entries_wire = 2;
+  semio.stdio_avi.snapshot.AviMainHeader main_header = 2;
+  repeated semio.stdio_avi.snapshot.AviStream streams = 3;
+  bool idx1_present = 4;
+  repeated semio.stdio_avi.snapshot.RiffChunk unknown_chunks = 5;
 }

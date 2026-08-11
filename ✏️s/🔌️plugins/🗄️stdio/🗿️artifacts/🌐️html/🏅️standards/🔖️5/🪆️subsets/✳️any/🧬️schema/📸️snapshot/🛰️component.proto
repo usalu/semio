@@ -1,7 +1,46 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
 package semio.s_stdio_html.snapshot;
+
+message HtmlAttr {
+  string name = 1;
+  optional string value = 2; // unset = valueless boolean attribute
+}
+
+enum RawTextKind {
+  SCRIPT = 0;
+  STYLE = 1;
+}
+
+message HtmlNode {
+  oneof node {
+    HtmlElement element = 1;
+    HtmlText text = 2;
+    HtmlComment comment = 3;
+    HtmlRawText raw_text = 4;
+  }
+}
+
+message HtmlElement {
+  string name = 1;
+  repeated HtmlAttr attributes = 2;
+  repeated HtmlNode children = 3;
+}
+
+message HtmlText {
+  string text = 1;
+}
+
+message HtmlComment {
+  string text = 1;
+}
+
+message HtmlRawText {
+  RawTextKind parent_kind = 1;
+  string text = 2;
+}
+
 message HtmlSnapshot {
   string schema = 1;
-  string entries_wire = 2;
+  optional string doctype = 2;
+  HtmlNode root = 3;
 }

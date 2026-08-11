@@ -1,10 +1,44 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.mesh/snapshot.json",
   "title": "SemioMeshSnapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "meshes -> primitives{topology, positions/normals/uvs/colors, indices, material} + materials (PBR base_color/metallic/roughness) + textures{mime, bytes}. Real mirror of the Rust snapshot.",
   "type": "object",
+  "definitions": {
+    "SemioPoint3": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } }, "required": ["x", "y", "z"] },
+    "SemioUv": { "type": "object", "properties": { "u": { "type": "number" }, "v": { "type": "number" } }, "required": ["u", "v"] },
+    "SemioRgba": { "type": "object", "properties": { "r": { "type": "number" }, "g": { "type": "number" }, "b": { "type": "number" }, "a": { "type": "number" } }, "required": ["r", "g", "b", "a"] },
+    "SemioTopology": { "type": "string", "enum": ["points", "lines", "lineStrip", "triangles", "triangleStrip", "triangleFan"] },
+    "SemioPrimitive": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "topology": { "$ref": "#/definitions/SemioTopology" },
+        "positions": { "type": "array", "items": { "$ref": "#/definitions/SemioPoint3" } },
+        "normals": { "type": "array", "items": { "$ref": "#/definitions/SemioPoint3" } },
+        "uvs": { "type": "array", "items": { "$ref": "#/definitions/SemioUv" } },
+        "colors": { "type": "array", "items": { "$ref": "#/definitions/SemioRgba" } },
+        "indices": { "type": "array", "items": { "type": "integer" } },
+        "materialId": { "type": ["string", "null"] }
+      },
+      "required": ["id"]
+    },
+    "SemioMesh": { "type": "object", "properties": { "id": { "type": "string" }, "primitives": { "type": "array", "items": { "$ref": "#/definitions/SemioPrimitive" } } }, "required": ["id"] },
+    "SemioMaterial": {
+      "type": "object",
+      "properties": { "id": { "type": "string" }, "baseColor": { "$ref": "#/definitions/SemioRgba" }, "metallic": { "type": "number" }, "roughness": { "type": "number" } },
+      "required": ["id"]
+    },
+    "SemioTexture": {
+      "type": "object",
+      "properties": { "id": { "type": "string" }, "mime": { "type": "string" }, "bytes": { "type": "array", "items": { "type": "integer" } } },
+      "required": ["id"]
+    }
+  },
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+    "meshes": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/SemioMesh" } },
+    "materials": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/SemioMaterial" } },
+    "textures": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/SemioTexture" } }
+  },
+  "required": ["schema", "meshes", "materials", "textures"]
 }

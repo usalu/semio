@@ -221,6 +221,19 @@ pub fn diff_set_snapshot(base: &BinarySnapshot, snapshot: &BinarySnapshot) -> Bi
     BinaryDiff::between(base, snapshot)
 }
 
+/// 🧪️ P2-P3: representative `BinaryDiff` cases (empty, single-splice, multi-splice incl. a
+/// zero-length no-op splice) -- single source of truth shared by `diff_codec_text_binary_
+/// roundtrip_law` below AND the new `diff_grammar_conformance_law`/`protocol_walk_law`
+/// conformance tests in `⚙️engine/🦀️component.rs`, per CLAUDE.md (no duplicated literal case lists).
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<BinaryDiff> {
+    vec![
+        BinaryDiff::default(),
+        BinaryDiff { splices: vec![ByteSplice { offset: 1, remove_len: 2, insert: vec![9, 9, 9] }] },
+        BinaryDiff { splices: vec![ByteSplice { offset: 0, remove_len: 0, insert: vec![] }, ByteSplice { offset: 5, remove_len: 1, insert: vec![0xAA, 0xBB] }] },
+    ]
+}
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -308,12 +321,7 @@ mod tests {
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
-        let cases = vec![
-            BinaryDiff::default(),
-            BinaryDiff { splices: vec![ByteSplice { offset: 1, remove_len: 2, insert: vec![9, 9, 9] }] },
-            BinaryDiff { splices: vec![ByteSplice { offset: 0, remove_len: 0, insert: vec![] }, ByteSplice { offset: 5, remove_len: 1, insert: vec![0xAA, 0xBB] }] },
-        ];
-        for d in cases {
+        for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
             let parsed = BinaryDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));

@@ -1,10 +1,4 @@
-/** 🧬️ Semio_semio_document_diff schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_document_diff
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_document_diffEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_document_diff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_document_diffEntry[];
-}
+/** 💾️ Binary form marker for `s.stdio.semio.document.diff`: the text diff's UTF-8 bytes
+ * verbatim (see the sibling `🦀️component.rs` marker and `SemioDocumentDiff`'s real `DiffCodec`
+ * impl for the source of truth). */
+export const BINARY_MAGIC = "s.stdio.semio.document.diff";

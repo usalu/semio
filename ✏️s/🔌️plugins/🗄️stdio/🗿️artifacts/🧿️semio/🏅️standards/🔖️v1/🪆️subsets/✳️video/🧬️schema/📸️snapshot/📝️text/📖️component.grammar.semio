@@ -1,5 +1,11 @@
 dialect grammar stdio.semio.video.snapshot
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
+; Envelope line ("schema stdio.semio.video") followed by a hex-encoded UTF-8 JSON document whose
+; own structure is normatively described by the sibling 🔣️component.json (SemioVideoSnapshot:
+; schema, streams[]{kind,codec,width,height,rate{num,den},samples[]{pts,key,data}}). The hex body
+; is opaque to THIS grammar only because JSON is a distinct sibling grammar, not because the
+; payload is unspecified.
 root = document
-document = marker
-marker = "stdio.semio.video.snapshot"
+document = header NL body
+header = "schema" SP "stdio.semio.video"
+body = hex-digit-pair *
+hex-digit-pair = HEXDIG HEXDIG

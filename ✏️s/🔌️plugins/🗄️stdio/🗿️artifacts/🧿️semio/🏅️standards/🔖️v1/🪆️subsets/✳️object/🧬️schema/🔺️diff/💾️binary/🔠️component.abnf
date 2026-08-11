@@ -1,3 +1,30 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.object.diff"
+; abnf stdio.semio.object diff (encode_diff/decode_diff binary payload)
+; payload is the UTF-8 `print_diff` line verbatim -- see ../📝️text/📖️component.grammar.semio for
+; the full grammar; restated here for a self-contained ABNF reading.
+document = [ root-token [ SP objects-token ] / objects-token ]
+root-token = %s"root=" value-diff
+objects-token = %s"objects=" named-triple
+
+value-diff = %s"P[" value %x5D / %s"B[" bit %x5D / %s"I[" hex %x5D / %s"F[" hex %x5D
+           / %s"S[" hex %x5D / %s"Y[" hex %x5D / %s"L[" indexed-triple %x5D
+           / %s"M[" named-triple %x5D / %s"R[" hex %x5D
+bit = %x30 / %x31
+
+indexed-triple = %x5B [ 1*DIGIT *( %x2C 1*DIGIT ) ] %x5D %x3B
+                 %x5B [ index-modified *( %x2C index-modified ) ] %x5D %x3B
+                 %x5B [ index-added *( %x2C index-added ) ] %x5D
+index-modified = 1*DIGIT %x3A value-diff
+index-added = 1*DIGIT %x3A value
+
+named-triple = %x5B [ hex *( %x2C hex ) ] %x5D %x3B
+               %x5B [ named-modified *( %x2C named-modified ) ] %x5D %x3B
+               %x5B [ named-item *( %x2C named-item ) ] %x5D
+named-modified = hex %x3A value-diff
+named-item = 1*DIGIT %x3A hex %x3A value
+
+value = %s"Z" / %s"B[" bit %x5D / %s"I[" hex %x5D / %s"F[" hex %x5D / %s"S[" hex %x5D
+      / %s"Y[" hex %x5D / %s"L[" [ value *( %x2C value ) ] %x5D
+      / %s"M[" [ entry *( %x2C entry ) ] %x5D / %s"R[" hex %x5D
+entry = hex %x3A value
+
+hex = *2HEXDIG

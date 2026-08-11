@@ -1,10 +1,16 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.brep/artifact.json",
   "title": "SemioBrepArtifact",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Full artifact state, mirrors SemioBrepSnapshot field for field. See ./📸️snapshot/🔣️component.json for the entity type definitions.",
   "type": "object",
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+    "vertices": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepVertex" } },
+    "edges": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepEdge" } },
+    "loops": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepLoop" } },
+    "faces": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepFace" } },
+    "shells": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepShell" } },
+    "solids": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepSolid" } }
+  },
+  "required": ["schema", "vertices", "edges", "loops", "faces", "shells", "solids"]
 }

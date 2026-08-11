@@ -1,3 +1,5 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.image.diff"
+; Real binary wire grammar for `SemioImageDiff::encode_diff`/`decode_diff` — a documented
+; simplification (matching gif's own hand-rolled `DiffCodec`, see the `🔺️diff` `🦀️component.rs`
+; sibling's `🔖️TopLevel` region): `encode_diff` is `print_diff`'s UTF-8 bytes verbatim, no separate
+; binary framing. See the `📝️text` sibling for the `line` grammar this wraps.
+diff-binary = *OCTET   ; UTF-8 bytes of the 📝️text sibling's `line` production, no trailing NUL

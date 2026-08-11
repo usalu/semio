@@ -1,10 +1,22 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.image/mutations.json",
   "title": "SemioImageMutation",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Named-variant union, discriminated on the `mutation` tag.",
   "type": "object",
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+  "required": ["mutation"],
+  "oneOf": [
+    { "properties": { "mutation": { "const": "noMutation" } } },
+    { "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } } },
+    { "properties": { "mutation": { "const": "setDimensions" }, "width": { "type": "integer" }, "height": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setColorspace" }, "colorspace": { "enum": ["rgb", "rgba", "grayscale", "grayscaleAlpha", "indexed"] } } },
+    { "properties": { "mutation": { "const": "setBitDepth" }, "bitDepth": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setIcc" }, "icc": { "type": ["string", "null"] } } },
+    { "properties": { "mutation": { "const": "insertFrame" }, "index": { "type": "integer" }, "frame": { "type": "object" } } },
+    { "properties": { "mutation": { "const": "removeFrame" }, "index": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "moveFrame" }, "from": { "type": "integer" }, "to": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setFrameDelay" }, "index": { "type": "integer" }, "delayMs": { "type": "integer" } } },
+    { "properties": { "mutation": { "const": "setFramePixels" }, "index": { "type": "integer" }, "rgba8": { "type": "string" } } },
+    { "properties": { "mutation": { "const": "setMetadataEntry" }, "key": { "type": "string" }, "value": { "type": "string" } } },
+    { "properties": { "mutation": { "const": "removeMetadataEntry" }, "key": { "type": "string" } } }
+  ]
 }

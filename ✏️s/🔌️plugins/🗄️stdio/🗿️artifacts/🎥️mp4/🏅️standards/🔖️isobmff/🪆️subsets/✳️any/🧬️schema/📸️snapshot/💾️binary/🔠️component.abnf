@@ -1,3 +1,25 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.mp4.snapshot"
+; abnf stdio.mp4 snapshot (binary) — the shared `.semio` binary envelope wrapping the REAL
+; ISO-BMFF file bytes (store::semio_format::wrap_binary; magic/token-len/token per that codec).
+document      = envelope-magic token-len token iso-bmff-box-stream
+envelope-magic = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A
+token-len     = 4OCTET                                  ; u32, little-endian
+token         = 18OCTET                                 ; UTF-8 "stdio.mp4.pack v1"
+
+; the real ISO/IEC 14496-12 box stream.
+iso-bmff-box-stream = *iso-bmff-box
+iso-bmff-box  = box-size box-type box-body
+box-size      = 4OCTET                                  ; u32 big-endian; 0 = "to EOF", 1 = 64-bit largesize follows
+box-type      = 4ALPHA                                  ; e.g. "ftyp" "moov" "trak" "mdia" "minf" "stbl" "mdat" "free"
+box-body      = *OCTET                                  ; exactly (box-size - 8) bytes (nested boxes for container types)
+
+; §4.3 ftyp body.
+ftyp-body     = major-brand minor-version *compatible-brand
+major-brand   = 4ALPHA
+minor-version = 4OCTET
+compatible-brand = 4ALPHA
+
+; §8.5.2 stsd first sample entry, avc1 case's avcC child (ISO/IEC 14496-15).
+avcc-body     = config-version profile compat level length-size-byte num-sps *sps-entry num-pps *pps-entry
+config-version = %x01
+sps-entry     = 2OCTET *OCTET                           ; u16 length + NAL bytes
+pps-entry     = 2OCTET *OCTET

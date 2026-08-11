@@ -1,3 +1,2 @@
 dialect protocol stdio.avi.diff
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.avi.diff"
+document = json:UTF8(*)

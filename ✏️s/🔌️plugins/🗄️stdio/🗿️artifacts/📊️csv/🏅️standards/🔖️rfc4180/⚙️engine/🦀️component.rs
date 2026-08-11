@@ -8,6 +8,13 @@ use crate::artifacts::csv::{CsvArtifact, CsvDiff, CsvMutation, CsvSnapshot, STDI
 pub fn empty_csv_snapshot() -> CsvSnapshot {
     CsvSnapshot::default()
 }
+
+/// 📄️ The `demo` example, parsed once from `examples::demo::PRIMARY_TEXT` — the single source
+/// of truth `🗣️example.dsl.semio` is genuinely `print_dsl` of (P2-P1 `fixture_honesty_law`),
+/// same pattern as `note::semio_example_snapshot`.
+pub fn demo_csv_snapshot() -> CsvSnapshot {
+    <CsvSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::csv::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_csv_snapshot())
+}
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Codec
@@ -132,7 +139,9 @@ pub fn register() {
     store::register_document_codec(store::ArtifactCodec::of::<CsvSnapshot, CsvMutation>(STDIO_CSV_DOCUMENT_SCHEMA));
 }
 
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) — 5-role
+/// `LanguageSpec` set (Document/Ops/Diff/Pack/Spr), following `note`'s exemplar pattern exactly
+/// (`✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/⚙️engine/🦀️component.rs`).
 pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.csv",
@@ -143,6 +152,46 @@ pub fn register_pilot_languages() {
         protocol: Some(crate::artifacts::csv::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::artifacts::csv::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.csv"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.csv.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::csv::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::csv::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::csv::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::csv::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.csv.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.csv.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::csv::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::csv::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::csv::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::csv::schema::diff::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.csv.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.csv.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::csv::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::csv::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.csv.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.csv.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::csv::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::csv::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.csv.spr"),
     });
 }
 
@@ -273,5 +322,113 @@ mod tests {
         assert_eq!(reparsed, snap, "re-parsing the re-encoded text must yield the identical snapshot");
     }
     //#endregion 🔖️CodecRetentionLaw
+
+    //#region 🔖️P2P1GrammarProtocolFixtureLaws
+    /// 🧪️ P2-P1: `dsl::parse_grammar` + `dsl::Recognizer::compile` + `.recognize` against the
+    /// REAL fixture body — the snapshot text facet's own real RFC 4180 grammar recognizes the
+    /// genuine `print_dsl` output (envelope-id-normalized, matching how
+    /// `dsl::fixture_sweep::m5_handcrafted_grammar_conformance::dsl_body_from_fixture` feeds the
+    /// Recognizer, mirrored here so this law does not depend on the framework's own harness).
+    #[test]
+    fn grammar_conformance_law() {
+        let grammar_text = crate::artifacts::csv::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO;
+        let grammar = dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
+        assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar);
+        let recognizer = dsl::Recognizer::compile(&grammar);
+        let fixture = crate::artifacts::csv::examples::demo::PRIMARY_TEXT;
+        let (envelope, body) = store::semio_format::split_text_preamble(fixture).expect("real preamble");
+        let normalized = format!("{}\n{body}", envelope.envelope_id());
+        let ok = recognizer.recognize(&normalized).expect("recognize should not error");
+        assert!(ok, "snapshot grammar must recognize the real demo fixture body");
+    }
+
+    /// 🧪️ P2-P1: `dsl::parse_protocol` + `dsl::walk_protocol` against REAL bytes for all three
+    /// binary facets (Pack/Spr/Diff), asserting `consumed == bytes.len()` exactly (the walker's
+    /// own law) — snapshot's Pack facet walks the post-`unwrap_binary` payload of a genuine
+    /// `encode_pack` call; mutations' Spr facet walks a genuine `encode_op` frame; diff's own
+    /// protocol facet walks a genuine `encode_diff` frame.
+    #[test]
+    fn protocol_walk_law() {
+        // Pack (snapshot binary facet).
+        let snap = demo_csv_snapshot();
+        let pack_bytes = <CsvSnapshot as store::ArtifactPack>::encode_pack(&snap);
+        let (_, payload) = store::semio_format::unwrap_binary(&pack_bytes).expect("unwrap_binary");
+        let pack_protocol = dsl::parse_protocol(crate::artifacts::csv::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+        let trace = dsl::walk_protocol(&pack_protocol, &payload).expect("walk snapshot protocol");
+        assert_eq!(trace.consumed, payload.len(), "snapshot protocol must consume the whole post-envelope payload");
+
+        // Spr (mutations binary facet) — a real, non-trivial mutation.
+        let mutation = CsvMutation::InsertRecord { index: 1, record: CsvRecord { fields: vec![CsvField { value: "brand-new".into(), quoted: true }] } };
+        let op_bytes = <CsvMutation as protocol::OpBinary>::encode_op(&mutation).expect("encode_op");
+        let spr_protocol = dsl::parse_protocol(crate::artifacts::csv::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        let trace = dsl::walk_protocol(&spr_protocol, &op_bytes).expect("walk mutations protocol");
+        assert_eq!(trace.consumed, op_bytes.len(), "mutations protocol must consume the whole op frame");
+
+        // Diff binary facet.
+        let mut before = snap.clone();
+        let diff = crate::artifacts::csv::schema::mutations::apply_csv_mutation(&mut before, &mutation);
+        let diff_bytes = <CsvDiff as protocol::DiffCodec>::encode_diff(&diff).expect("encode_diff");
+        let diff_protocol = dsl::parse_protocol(crate::artifacts::csv::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        let trace = dsl::walk_protocol(&diff_protocol, &diff_bytes).expect("walk diff protocol");
+        assert_eq!(trace.consumed, diff_bytes.len(), "diff protocol must consume the whole diff frame");
+    }
+
+    /// 🧪️ P2-P1 item 5: fixture honesty — the committed `.dsl.semio`/`.pack.semio` fixtures are
+    /// genuinely `print_dsl`/`encode_pack` output of the SAME demo snapshot, round-tripping both
+    /// ways (never allowed to silently drift again).
+    #[test]
+    fn fixture_honesty_law() {
+        let demo = demo_csv_snapshot();
+        assert_eq!(<CsvSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::csv::examples::demo::PRIMARY_TEXT).unwrap(), demo);
+        assert_eq!(<CsvSnapshot as store::ArtifactDsl>::print_dsl(&demo), crate::artifacts::csv::examples::demo::PRIMARY_TEXT);
+
+        assert_eq!(<CsvSnapshot as store::ArtifactPack>::decode_pack(crate::artifacts::csv::examples::demo::PACK_BYTES).unwrap(), demo);
+        assert_eq!(<CsvSnapshot as store::ArtifactPack>::encode_pack(&demo), crate::artifacts::csv::examples::demo::PACK_BYTES.to_vec());
+    }
+
+    /// 🧪️ P2-P1 item 6: every committed grammar/protocol file for this standard genuinely
+    /// parses under `dsl::parse_grammar`/`dsl::parse_protocol` — this artifact's own early
+    /// warning, independent of the eventual repo-wide policy gate.
+    #[test]
+    fn committed_grammar_and_protocol_files_parse() {
+        let g1 = dsl::parse_grammar(crate::artifacts::csv::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO);
+        assert!(g1.is_ok(), "snapshot grammar must parse: {g1:?}");
+        let g2 = dsl::parse_grammar(crate::artifacts::csv::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO);
+        assert!(g2.is_ok(), "mutations grammar must parse: {g2:?}");
+        let g3 = dsl::parse_grammar(crate::artifacts::csv::schema::diff::text::COMPONENT_GRAMMAR_SEMIO);
+        assert!(g3.is_ok(), "diff grammar must parse: {g3:?}");
+        let p1 = dsl::parse_protocol(crate::artifacts::csv::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO);
+        assert!(p1.is_ok(), "snapshot protocol must parse: {p1:?}");
+        let p2 = dsl::parse_protocol(crate::artifacts::csv::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO);
+        assert!(p2.is_ok(), "mutations protocol must parse: {p2:?}");
+        let p3 = dsl::parse_protocol(crate::artifacts::csv::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO);
+        assert!(p3.is_ok(), "diff protocol must parse: {p3:?}");
+    }
+    //#endregion 🔖️P2P1GrammarProtocolFixtureLaws
+
+    //#region 🔖️ScratchFixtureGen
+    /// 🧪️[DEBUG] one-shot scratch generator — writes real `encode_pack`/`encode_op` bytes to the
+    /// committed fixture paths. Run once via `--ignored`, then this region is deleted (never a
+    /// permanent side-effecting test; CLAUDE.md bans migration scripts left behind).
+    #[test]
+    #[ignore]
+    fn zzz_generate_p2p1_fixtures() {
+        let repo_root = {
+            let mut dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            loop {
+                if dir.join("nx.json").is_file() { break dir; }
+                assert!(dir.pop(), "could not find repo root");
+            }
+        };
+        let assets = repo_root.join("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📚️examples/🎬️demo/🖼️assets");
+        let demo = demo_csv_snapshot();
+        let pack_bytes = <CsvSnapshot as store::ArtifactPack>::encode_pack(&demo);
+        std::fs::write(assets.join("🎒️example.pack.semio"), &pack_bytes).unwrap();
+        let mutation = CsvMutation::InsertRecord { index: 1, record: CsvRecord { fields: vec![CsvField { value: "brand-new".into(), quoted: true }] } };
+        let op_bytes = <CsvMutation as protocol::OpBinary>::encode_op(&mutation).unwrap();
+        std::fs::write(assets.join("📡️example.spr.semio"), &op_bytes).unwrap();
+        eprintln!("[DEBUG] wrote {} pack bytes, {} spr bytes", pack_bytes.len(), op_bytes.len());
+    }
+    //#endregion 🔖️ScratchFixtureGen
 }
 //#endregion 🧪️Tests

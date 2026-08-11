@@ -1,9 +1,30 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type EpwMutationEntry {
-  key: String!
-  value: String!
+# 🧬️ EpwMutation union — mirrors 🦀️component.rs's tagged enum (modeled as one input type
+# with the tag plus optional per-variant payload fields, mirroring the JSON Schema facet's oneOf).
+
+enum EpwMutationTag {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_LOCATION
+  SET_DESIGN_CONDITIONS
+  SET_TYPICAL_EXTREME_PERIODS
+  SET_GROUND_TEMPERATURES
+  SET_HOLIDAYS_DST
+  SET_COMMENTS_1
+  SET_COMMENTS_2
+  SET_DATA_PERIODS
+  INSERT_RECORD
+  REMOVE_RECORD
+  SET_RECORD_FIELD
 }
-type EpwMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [EpwMutationEntry!]! @state(class: PERSISTENT)
+
+input EpwMutationInput {
+  mutation: EpwMutationTag!
+  snapshot: EpwSnapshotInput
+  location: EpwLocationInput
+  value: String
+  dataPeriods: EpwDataPeriodsInput
+  index: Int
+  record: EpwRecordInput
+  recordIndex: Int
+  fieldIndex: Int
 }

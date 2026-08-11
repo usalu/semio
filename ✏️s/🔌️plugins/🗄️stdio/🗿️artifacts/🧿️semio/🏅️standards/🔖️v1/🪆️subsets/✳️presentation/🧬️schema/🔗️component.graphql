@@ -1,9 +1,7 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioPresentationArtifactEntry {
-  key: String!
-  value: String!
-}
+# 🧬️ SemioPresentationArtifact — full artifact state.
 type SemioPresentationArtifact {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioPresentationArtifactEntry!]! @state(class: PERSISTENT)
+  schema: String!
+  masters: [SlideMaster!]!
+  layouts: [SlideLayout!]!
+  slides: [Slide!]!
 }

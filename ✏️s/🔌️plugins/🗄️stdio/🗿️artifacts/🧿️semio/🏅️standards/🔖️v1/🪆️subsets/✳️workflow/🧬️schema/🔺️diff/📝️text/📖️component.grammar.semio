@@ -1,5 +1,33 @@
-dialect grammar stdio.semio.workflow.diff
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.workflow.diff"
+dialect grammar
+grammar semio.workflow.diff
+extension semio
+start diff-line
+
+; -- Real wire grammar for `SemioWorkflowDiff::print_diff`/`parse_diff` (🔺️diff/🦀️component.rs) --
+; -- token-per-nonempty-field, space-separated; each collection field encodes as the shared
+; -- `engine::triples` `[removed];[modified];[added]` bracket-depth-aware triple.
+diff-line = [ token ( SP token )* ]
+token = "nodes=" named-triple / "edges=" named-triple
+
+named-triple = "[" key-list "]" ";" "[" modified-list "]" ";" "[" added-list "]"
+key-list = [ hex-str ( "," hex-str )* ]
+modified-list = [ modified ( "," modified )* ]
+modified = hex-str ":" bracketed
+added-list = [ bracketed ( "," bracketed )* ]
+
+; -- `bracketed` is one of the node/edge/node-diff/edge-diff value grammars below (own bracket
+; -- nesting; the top-level split is bracket-depth-aware so a nested "," never confuses the outer
+; -- list split -- see `engine::triples::split_top_level`).
+node = "[" hex-str "," hex-str "," hex-str "," params "," point2 "]"
+params = "[" [ param ( "," param )* ] "]"
+param = "[" hex-str "," hex-str "]"
+point2 = "[" number "," number "]"
+edge = "[" hex-str "," port-ref "," port-ref "," hex-str "]"
+port-ref = "[" hex-str "," hex-str "]"
+
+node-diff = "[" option-hex-str "," option-hex-str "," option-params-diff "," option-point2 "]"
+edge-diff = "[" option-port-ref "," option-port-ref "," option-hex-str "]"
+option-x = "[0]" / ( "[1," x "]" )
+
+hex-str = *hexdig
+hexdig = %x30-39 | %x61-66

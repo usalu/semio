@@ -1,10 +1,3 @@
-/** 🧬️ Semio_semio_drawing_mutations schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_drawing_mutations
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_drawing_mutationsEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_drawing_mutations {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_drawing_mutationsEntry[];
-}
+/** 💾️ Binary-wire representation for `stdio.semio.drawing` (mutation): `serde_json::to_vec`, no
+ * separate envelope. Real shape: `../📝️text/🅰️component.g4`. */
+export type SemioDrawingMutationBinary = Uint8Array;

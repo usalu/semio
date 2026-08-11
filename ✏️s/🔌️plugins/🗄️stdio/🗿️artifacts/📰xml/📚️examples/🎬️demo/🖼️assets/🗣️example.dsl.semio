@@ -1,1 +1,4 @@
-{"hello":"stdio.xml","n":1}
+semio stdio.xml.dsl v1
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE catalog>
+<catalog xmlns:c="urn:example:catalog" version="2"><!-- demo catalog --><?xml-stylesheet text?><item id="1">Tom &amp; Jerry</item><empty flag="true"/><![CDATA[raw markup]]></catalog>

@@ -1,6 +1,34 @@
-dialect grammar stdio.gif.snapshot
-root = document
-document = header body
-header = 'schema' SP 'stdio.gif' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.gif.snapshot
+extension gif
+start document
+
+# GIF87a has no textual syntax of its own — `store::ArtifactDsl::print_dsl`/`parse_dsl`
+# (../../🦀️component.rs, the `HandcraftedArtifactCodecs` region) hex-encode/decode the REAL
+# binary GIF87a file bytes (magic + logical screen descriptor + optional GCT + image/trailer
+# block sequence) verbatim, byte-for-byte — this is png's own honest precedent (P2-W0 §1b:
+# "hex-dump grammar per png's own precedent"), applied here for the identical reason: GIF's
+# own real byte layout is what ../💾️binary/📡️component.protocol.semio models structurally;
+# this grammar honestly models the DSL TEXT form (a hex digit run), never the binary bytes
+# themselves.
+comment none
+
+# `dsl::fixture_sweep`'s `dsl_body_from_fixture` feeds the Recognizer
+# "<envelope-id>\n<body>" (`SemioEnvelope::envelope_id` = "stdio.gif", the real preamble
+# line's own trailing "v<n>" already stripped by the harness) — the shared lexer treats the
+# preamble's newline as trivia, so `envelope-mark` and the hex body sit directly adjacent in
+# the significant token stream, matching png/json/csv's own grammars' identical convention.
+envelope-mark = "stdio.gif"
+document = envelope-mark hex-body
+
+# The rest of the DSL text is one lowercase-hex digit run — the real GIF87a file's bytes
+# (`GIF87a` magic + screen descriptor + optional GCT + block sequence), hex-encoded
+# losslessly (`encode_gif`/`decode_gif`, ../../⚙️engine/🦀️component.rs). `hex` (bare `hex`,
+# deliberately NOT defined as a production) is the framework's built-in `hex` MACRO
+# (`📖️grammar/🦀️component.rs`'s `default_macros`/`macro_hex_ok`) — a hand-rolled
+# `{INT | IDENT}*`-shaped production would silently mis-lex a `<digits>e<digits>` byte run as
+# one FLOAT token instead of alternating INT/IDENT; the macro's own largest-span-first
+# backtracking (`Recognizer::match_macro_span`) handles it correctly with no grammar-file
+# workaround needed (P2-P1 fix report item 2; the same convention every stdio pilot's own hex
+# payload uses).
+hex-body = hex

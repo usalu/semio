@@ -1,9 +1,5 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioAudioDiffEntry {
-  key: String!
-  value: String!
-}
+# 🧬️ SemioAudioDiff
 type SemioAudioDiff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioAudioDiffEntry!]! @state(class: PERSISTENT)
+  schema: String
+  bytes: String
 }

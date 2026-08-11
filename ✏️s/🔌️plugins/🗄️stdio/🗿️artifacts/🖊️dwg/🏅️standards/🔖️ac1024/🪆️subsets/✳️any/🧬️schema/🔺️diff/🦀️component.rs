@@ -358,18 +358,53 @@ pub fn diff_set_section_data(name: &str, compressed: bool, declared_size: u64, p
 }
 //#endregion 🔖️MutationDiffBuilders
 
+//#region 🔖️DemoCases
+/// 🎬️ Representative `DwgDiff` cases — the default (empty) diff, every scalar field plus every
+/// arm of the `sections` triple (`removed`/`modified`/`added`) at once (incl. a
+/// `DwgSectionPage.error: Some(String)` payload, the derive's `Option<String>` single-layer, NOT
+/// tri-state, path), and a real `diff_set_version_info` builder call. Reused by
+/// `diff_codec_text_binary_roundtrip_law` below AND by `⚙️engine`'s
+/// `conformance_laws::diff_grammar_conformance_law`/`protocol_walk_law` (mirrors
+/// `BinaryDiff::demo_diff_cases`, `💾️binary/…/🔺️diff/🦀️component.rs`).
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<DwgDiff> {
+    let page = |n: i32, addr: u64, size: u32, decoded: &[u8]| DwgSectionPage { page_number: n, file_address: addr, compressed_size: size, decoded: decoded.to_vec(), error: None };
+    vec![
+        DwgDiff::default(),
+        DwgDiff {
+            version: Some("AC1032".into()),
+            maintenance_version: Some(9),
+            codepage: Some(65001),
+            bytes: Some(vec![0xAA, 0xBB, 0xCC]),
+            sections: Some(DwgSectionsDiff {
+                removed: vec!["gone".into()],
+                modified: vec![DwgSectionModified {
+                    name: "stay".into(),
+                    diff: DwgSectionDiff {
+                        compressed: Some(false),
+                        declared_size: Some(999),
+                        pages: Some(vec![
+                            page(0, 0x900, 50, b"after"),
+                            {
+                                let mut p = page(1, 0x901, 10, b"");
+                                p.error = Some("truncated page".into());
+                                p
+                            },
+                        ]),
+                    },
+                }],
+                added: vec![DwgSectionAdded { index: 2, section: DwgSection { name: "new".into(), compressed: true, declared_size: 5, pages: vec![page(2, 0x30, 5, b"brand new")] } }],
+            }),
+        },
+        diff_set_version_info(&DwgSnapshot::default(), "AC1024", 2, 30),
+    ]
+}
+//#endregion 🔖️DemoCases
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn page(n: i32, addr: u64, size: u32, decoded: &[u8]) -> DwgSectionPage {
-        DwgSectionPage { page_number: n, file_address: addr, compressed_size: size, decoded: decoded.to_vec(), error: None }
-    }
-
-    fn section(name: &str, compressed: bool, declared_size: u64, pages: Vec<DwgSectionPage>) -> DwgSection {
-        DwgSection { name: name.into(), compressed, declared_size, pages }
-    }
 
     /// 🧪️ F6: `DiffCodec` round-trip law (derived via `dsl::DslDiff`) — exercises every scalar
     /// field plus every arm of the `sections` triple (`removed`/`modified`/`added`) at once,
@@ -378,36 +413,7 @@ mod tests {
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
-        let cases = vec![
-            DwgDiff::default(),
-            DwgDiff {
-                version: Some("AC1032".into()),
-                maintenance_version: Some(9),
-                codepage: Some(65001),
-                bytes: Some(vec![0xAA, 0xBB, 0xCC]),
-                sections: Some(DwgSectionsDiff {
-                    removed: vec!["gone".into()],
-                    modified: vec![DwgSectionModified {
-                        name: "stay".into(),
-                        diff: DwgSectionDiff {
-                            compressed: Some(false),
-                            declared_size: Some(999),
-                            pages: Some(vec![
-                                page(0, 0x900, 50, b"after"),
-                                {
-                                    let mut p = page(1, 0x901, 10, b"");
-                                    p.error = Some("truncated page".into());
-                                    p
-                                },
-                            ]),
-                        },
-                    }],
-                    added: vec![DwgSectionAdded { index: 2, section: section("new", true, 5, vec![page(2, 0x30, 5, b"brand new")]) }],
-                }),
-            },
-            diff_set_version_info(&DwgSnapshot::default(), "AC1024", 2, 30),
-        ];
-        for d in cases {
+        for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
             let parsed = DwgDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));

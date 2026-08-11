@@ -1,3 +1,10 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.mesh.mutations" ;
+(* s.stdio.semio.mesh OpText grammar (protocol::OpText::print_op/parse_op). Either the literal
+   "no-mutation", or "keyword arg=value ..." (space-separated), one keyword per
+   SemioMeshMutation variant (kebab-case, e.g. "add-mesh", "set-primitive-topology"). *)
+document = "no-mutation" | keyword, { " ", arg } ;
+arg = name, "=", value ;
+keyword = letter, { letter | "-" } ;
+name = letter, { letter | "-" } ;
+value = { ? any char except " " ? } ;
+letter = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
+       | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" ;

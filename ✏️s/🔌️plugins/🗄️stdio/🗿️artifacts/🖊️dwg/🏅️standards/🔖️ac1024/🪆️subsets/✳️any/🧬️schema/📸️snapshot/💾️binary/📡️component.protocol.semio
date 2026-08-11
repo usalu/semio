@@ -1,3 +1,56 @@
-dialect protocol stdio.dwg.snapshot
-magic = %x00
-payload = *OCTET
+dialect protocol
+protocol stdio.dwg.ac1024.snapshot
+version 1
+schema stdio.dwg
+start file
+
+# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: `stdio.dwg`
+# (ac1024, R2004+) is BINARY-NATIVE. This file describes the PACK CONTAINER's post-unwrap
+# PAYLOAD — `DwgSnapshot.bytes`, the REAL on-disk `.dwg` file verbatim (`encode_dwg` returns
+# `snap.bytes.clone()`, zero further framing of its own; the SEMIO envelope itself is described
+# ONCE framework-side, see ac1018's own sibling protocol file's identical note).
+#
+# THIS IS THE DOCUMENTED, PRE-APPROVED M2 SCOPE BOUNDARY (§6 of `📖️grammar-recipe.md`, restated
+# verbatim in this FG2 brief) — ac1024's decrypt+decompress+two-level-compressed-indirection
+# pipeline (LCG-XOR header decrypt with a position-dependent per-page key, a bespoke LZ77
+# variant, double indirect lookup across two independently-decompressed side-tables — the REAL
+# D1/D2 pipeline, `⚙️engine/🦀️component.rs`'s `locate_r2004_sections`/`decode_r2004_sections`) is
+# an imperative transform pipeline, not a declarative layout description — building it into the
+# protocol walker "would mean a different kind of system" (M2's own words). This is NOT a gap to
+# work around; it is a correct, pre-approved scope limit.
+#
+# What this codec DOES read cleanly, declaratively, WITHOUT any decrypt/decompress step first —
+# verified by direct read of `../🦀️component.rs`'s `dwg_version_sentinel`/
+# `parse_version_header_fields` (byte-for-byte identical offsets to ac1018's own sibling facet,
+# since both standards share the same plain, unencrypted AC1015+ preamble layout per LibreDWG's
+# `header.spec`):
+#   - the 6-byte `AC10xx` version sentinel at offset 0x00 (GENERIC across every AC10xx version —
+#     not hardcoded to literally "AC1024")
+#   - `maintenance_version` (RC, one byte at 0x12) and `codepage` (RS, little-endian u16 at
+#     0x13-0x14)
+# Byte-checked against the real `architectural.dwg` fixture (F5's own conformance fixture,
+# `📚️examples/🏛️architectural/🖼️assets/📄️architectural.dwg`): offset 0x12 == 0x02
+# (`maintenance_version`), offset 0x13 == 0x1E (30 decimal, ANSI_1252 codepage) — both confirmed
+# by `⚙️engine/🦀️component.rs`'s own doc comments AND independently re-verified here (`xxd`).
+#
+# Everything past `codepage` (offset 0x15 onward) is the encrypted R2004+ file header (itself
+# starting at the fixed offset 0x80, per `locate_r2004_sections`), the compressed
+# section-page-map, the compressed section-info directory, and every named section's own
+# encrypted+compressed pages — the full D1/D2 pipeline above, genuinely irreducible to a
+# declarative field list. Modeled as ONE opaque trailing chain; the real Rust decode/encode side
+# stays fully structured and independently tested (`real_fixture_d1_locates_every_named_section`/
+# `real_fixture_d2_decompresses_every_section`, `⚙️engine/🦀️component.rs`).
+#
+# `framing record` (NOT `framing magic ...`) — same `protocol-framing-magic-fixed-8-bytes` gap
+# ac1018's own sibling protocol file documents (`Framing::Magic` unconditionally reads/compares
+# EXACTLY 8 raw bytes regardless of a shorter declared literal's own width; confirmed live by a
+# real `walk_protocol` run against this exact 6-byte "AC1024" magic). `field magic fixed 6` is
+# genuinely walked but not byte-validated at the protocol layer (the real Rust
+# `dwg_version_sentinel` already validates the `AC` + 4-digit shape).
+framing record
+header fixed 21
+field magic fixed 6
+field reserved fixed 12
+field maintenance_version u8
+field codepage u16
+chain remainder bytes

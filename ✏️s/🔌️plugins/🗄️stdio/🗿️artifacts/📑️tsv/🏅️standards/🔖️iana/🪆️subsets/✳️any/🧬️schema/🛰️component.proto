@@ -1,7 +1,11 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
 package semio.s_stdio_tsv.artifact;
+
+import "s_stdio_tsv/snapshot.proto";
+
 message TsvArtifact {
   string schema = 1;
-  string entries_wire = 2;
+  repeated semio.s_stdio_tsv.snapshot.TsvRow records = 2;
+  bool trailing_newline = 3;
+  semio.s_stdio_tsv.snapshot.TsvLineEnding line_ending = 4;
 }

@@ -1204,10 +1204,18 @@ impl store::ArtifactDsl for SvgSnapshot {
     }
 }
 
+/// 🧪️ P2-FG3: `stdio.svg` is TEXT-NATIVE (per the W0 census row) — there is no "binary SVG"; the
+/// pack container is the SEMIO envelope wrapping the artifact's own REAL wire text
+/// (`write_svg_xml`/`parse_svg_xml`, themselves `xml_document_to_text`/`xml_document_from_text`)
+/// verbatim, same treatment `📰xml`'s own `ArtifactPack` gives its restated XML text
+/// (`📰xml/…/📸️snapshot/🦀️component.rs`'s own P2-FG1 fix). Replaces the previous
+/// `serde_json::to_vec`/`from_slice` placeholder, which satisfied the trait but was a
+/// literal-JSON-payload-disguised-as-binary violation of `POLICY_STDIO_JSON_TRANSFER_BAN` (flagged
+/// by name in the P2-W0 recon report, `svg` row, "Yes — in scope").
 impl store::ArtifactPack for SvgSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = serde_json::to_vec(&self.doc).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = write_svg_xml(&self.doc).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -1226,7 +1234,8 @@ impl store::ArtifactPack for SvgSnapshot {
             )));
         }
         let _ = options;
-        let doc = serde_json::from_slice(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let doc = parse_svg_xml(text).map_err(store::PackError::Schema)?;
         Ok(Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc })
     }
 }

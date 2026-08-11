@@ -1,3 +1,7 @@
 grammar Semio_semio_presentation_snapshot;
-// 🚧 scaffolded by W1b — full production rules land in W2/W3. Top-level rule name only.
-ROOT: 'stdio.semio.presentation.snapshot' ;
+document: header body EOF;
+header: 'schema' WS 'stdio.semio.presentation.snapshot' NL;
+body: PAYLOAD NL?;
+WS: ' ';
+NL: '\n';
+PAYLOAD: [0-9a-f]* ; // hex(serde_json(SemioPresentationSnapshot)) -- see sibling JSON Schema

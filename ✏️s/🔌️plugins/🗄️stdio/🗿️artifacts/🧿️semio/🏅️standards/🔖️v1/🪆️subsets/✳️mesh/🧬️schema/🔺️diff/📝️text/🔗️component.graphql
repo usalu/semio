@@ -1,9 +1,10 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_semio_mesh_diffEntry {
-  key: String!
-  value: String!
+# 🔗️ GraphQL mirror of `s.stdio.semio.mesh`'s hand-rolled DiffCodec TEXT grammar.
+type SemioMeshDiffTextToken {
+  key: String!    # "meshes" | "materials" | "textures"
+  removed: [String!]!
+  modified: [String!]!   # each "key:diff" encoded
+  added: [String!]!
 }
-type Semio_semio_mesh_diff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_mesh_diffEntry!]! @state(class: PERSISTENT)
+type SemioMeshDiffText {
+  tokens: [SemioMeshDiffTextToken!]!   # space-separated in the real wire form
 }

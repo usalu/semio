@@ -1,10 +1,18 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.tsv/snapshot.json",
+  "$id": "https://semio.tech/schema/s.stdio.tsv/snapshot.tsv",
   "title": "TsvSnapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
   "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "records", "trailingNewline", "lineEnding"],
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "records": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "description": "Raw row grid; IANA TSV draws no structural header/data distinction.",
+      "items": { "type": "array", "items": { "type": "string" } }
+    },
+    "trailingNewline": { "type": "boolean", "x-semio-state": "persistent" },
+    "lineEnding": { "type": "string", "enum": ["lf", "crlf"], "x-semio-state": "persistent" }
   }
 }

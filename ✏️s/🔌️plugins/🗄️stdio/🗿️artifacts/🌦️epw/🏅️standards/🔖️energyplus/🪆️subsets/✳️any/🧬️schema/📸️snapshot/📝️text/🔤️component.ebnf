@@ -1,3 +1,20 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.epw.snapshot" ;
+(* Real EnergyPlus Weather File (EPW) wire grammar
+   (https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html).
+   Bare text: the `semio stdio.epw.dsl v1` preamble line and its trailing newline are stripped by
+   `store::semio_format::split_text_preamble` BEFORE this grammar's `file` production runs. *)
+file = location, crlf, design conditions, crlf, typical extreme periods, crlf, ground temperatures, crlf,
+       holidays dst, crlf, comments 1, crlf, comments 2, crlf, data periods, crlf, { record, crlf } ;
+location = "LOCATION", 9 * ( comma, field ) ;
+design conditions = "DESIGN CONDITIONS", { comma, field } ;
+typical extreme periods = "TYPICAL/EXTREME PERIODS", { comma, field } ;
+ground temperatures = "GROUND TEMPERATURES", { comma, field } ;
+holidays dst = "HOLIDAYS/DAYLIGHT SAVINGS", { comma, field } ;
+comments 1 = "COMMENTS 1", { comma, field } ;
+comments 2 = "COMMENTS 2", { comma, field } ;
+data periods = "DATA PERIODS", comma, field, comma, field, { 4 * ( comma, field ) } ;
+record = field, 34 * ( comma, field ) ;  (* exactly 35 columns, spec order — see ⚙️engine *)
+field = { text data } ;
+comma = "," ;
+crlf = "\r", "\n" | "\n" ;
+(* text data = any character except comma, cr, lf *)
+text data = ? any UTF-8 scalar value except ',' '\r' '\n' ? ;

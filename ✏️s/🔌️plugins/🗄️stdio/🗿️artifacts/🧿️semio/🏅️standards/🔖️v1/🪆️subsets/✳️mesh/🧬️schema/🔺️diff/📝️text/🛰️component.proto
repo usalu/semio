@@ -1,7 +1,12 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_semio_mesh_diff.text;
-message Semio_semio_mesh_diff {
-  string schema = 1;
-  string entries_wire = 2;
+// 🛰️ Proto mirror of `s.stdio.semio.mesh`'s hand-rolled DiffCodec TEXT grammar.
+package semio.s_stdio_semio_mesh.diff.text;
+message Stdio_semio_mesh_diff_text_token {
+  string key = 1;              // "meshes" | "materials" | "textures"
+  repeated string removed = 2;
+  repeated string modified = 3; // "key:diff" encoded entries
+  repeated string added = 4;
+}
+message Stdio_semio_mesh_diff_text {
+  repeated Stdio_semio_mesh_diff_text_token tokens = 1;
 }

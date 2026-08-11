@@ -1,1 +1,14 @@
-Hello, stdio.ply!
+semio stdio.ply.dsl v1
+ply
+format ascii 1.0
+comment semio demo
+element vertex 2
+property float x
+property float y
+property float z
+element face 1
+property list uchar int vertex_indices
+end_header
+0 0 0
+1 0.5 -1.5
+2 0 1

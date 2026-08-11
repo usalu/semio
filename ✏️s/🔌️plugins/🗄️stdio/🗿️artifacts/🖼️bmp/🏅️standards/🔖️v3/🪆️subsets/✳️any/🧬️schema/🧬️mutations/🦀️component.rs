@@ -243,118 +243,136 @@ impl protocol::OpBinary for BmpMutation {
 }
 //#endregion OpCodecs
 
+//#region 🔖️DemoFixtures
+/// 🧬️ 4x3 8-bit indexed base with a small, non-trivial palette — enough to exercise
+/// insert/remove/set-entry mutations meaningfully. Module-level (not nested in `mod tests`,
+/// mirroring `stdio.png`'s own `demo_base_snapshot()` placement) so `demo_mutation_cases()`
+/// below AND `⚙️engine/🦀️component.rs`'s `conformance_laws` module can both reach it.
+#[cfg(test)]
+fn entry(b: u8, g: u8, r: u8, reserved: u8) -> BmpPaletteEntry {
+    BmpPaletteEntry { b, g, r, reserved }
+}
+
+#[cfg(test)]
+fn base_snapshot() -> BmpSnapshot {
+    BmpSnapshot {
+        schema: "stdio.bmp".into(),
+        header_size: 40,
+        width: 4,
+        height: 3,
+        row_order: BmpRowOrder::BottomUp,
+        planes: 1,
+        bits_per_pixel: 8,
+        compression: 0,
+        image_size: 48,
+        x_pixels_per_meter: 2835,
+        y_pixels_per_meter: 2835,
+        colors_used: 3,
+        colors_important: 0,
+        palette: vec![entry(0, 0, 255, 0), entry(0, 255, 0, 0), entry(255, 0, 0, 0)],
+        pixels: vec![0u8; 4 * 3 * 4],
+    }
+}
+
+/// 🧬️ Canonical "differs in every mutable field" snapshot A: every scalar header field set
+/// to one value, a 2-entry palette (index 0 stable, index 1 will be modified in every
+/// field), 4x3 pixels.
+#[cfg(test)]
+fn sweep_a() -> BmpSnapshot {
+    BmpSnapshot {
+        schema: "stdio.bmp".into(),
+        header_size: 40,
+        width: 4,
+        height: 3,
+        row_order: BmpRowOrder::BottomUp,
+        planes: 1,
+        bits_per_pixel: 8,
+        compression: 0,
+        image_size: 100,
+        x_pixels_per_meter: 1000,
+        y_pixels_per_meter: 2000,
+        colors_used: 2,
+        colors_important: 1,
+        palette: vec![entry(10, 20, 30, 0), entry(1, 2, 3, 0)],
+        pixels: (0..(4 * 3 * 4)).map(|i| (i % 256) as u8).collect(),
+    }
+}
+/// 🧬️ Sweep B: every scalar header field flips to a DIFFERENT value, the palette grows to
+/// 3 entries (index 0 stable, index 1 modified in every field vs. `sweep_a`, index 2
+/// brand-new — asymmetric length on purpose, see `~/.claude/plans/…journal.md`'s F1-txt
+/// trap note: a single same-length `between()` call cannot show both `removed` AND `added`
+/// from one direction, so this fixture is deliberately asymmetric and the field_sweep test
+/// below splits its collection assertions across BOTH `between()` directions), and pixels
+/// change size (8x6) + content.
+#[cfg(test)]
+fn sweep_b() -> BmpSnapshot {
+    BmpSnapshot {
+        schema: "stdio.bmp".into(),
+        header_size: 56,
+        width: 8,
+        height: 6,
+        row_order: BmpRowOrder::TopDown,
+        planes: 2,
+        bits_per_pixel: 24,
+        compression: 3,
+        image_size: 200,
+        x_pixels_per_meter: 3000,
+        y_pixels_per_meter: 4000,
+        colors_used: 5,
+        colors_important: 2,
+        palette: vec![entry(10, 20, 30, 0), entry(99, 88, 77, 1), entry(200, 201, 202, 0)],
+        pixels: (0..(8 * 6 * 4)).map(|i| ((i * 7 + 3) % 256) as u8).collect(),
+    }
+}
+
+/// ✅️ P2-FG2: every `BmpMutation` variant (incl. two out-of-range no-op cases) built off
+/// `base_snapshot()` — the single case list `mutation_diff_law`/`inverse_law`/
+/// `op_text_binary_roundtrip_law` (`mod tests` below) AND `ops_grammar_conformance_law`/
+/// `protocol_walk_law` (`⚙️engine/🦀️component.rs`'s `conformance_laws` module) all exercise —
+/// same consolidation `stdio.png`'s own `demo_mutation_cases()` already made (single source of
+/// truth, per this repo's own CLAUDE.md).
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<BmpMutation> {
+    let base = base_snapshot();
+    vec![
+        BmpMutation::NoMutation,
+        BmpMutation::SetSnapshot { snapshot: sweep_b() },
+        BmpMutation::SetHeaderFields {
+            header_size: Some(56),
+            width: Some(9),
+            height: None,
+            row_order: Some(BmpRowOrder::TopDown),
+            planes: None,
+            bits_per_pixel: None,
+            compression: None,
+            image_size: None,
+            x_pixels_per_meter: Some(5000),
+            y_pixels_per_meter: None,
+            colors_used: None,
+            colors_important: None,
+        },
+        BmpMutation::InsertPaletteEntry { index: 1, entry: entry(9, 9, 9, 0) },
+        BmpMutation::RemovePaletteEntry { index: 0 },
+        BmpMutation::SetPaletteEntry { index: 2, entry: entry(1, 1, 1, 1) },
+        BmpMutation::SetPixelData { pixels: vec![7u8; base.pixels.len()] },
+        // Out-of-range targets: graceful no-ops, still law-compliant.
+        BmpMutation::RemovePaletteEntry { index: 99 },
+        BmpMutation::SetPaletteEntry { index: 99, entry: entry(0, 0, 0, 0) },
+    ]
+}
+//#endregion 🔖️DemoFixtures
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use protocol::command::DiffAlgebra;
 
-    //#region 🔖️Fixtures
-    fn entry(b: u8, g: u8, r: u8, reserved: u8) -> BmpPaletteEntry {
-        BmpPaletteEntry { b, g, r, reserved }
-    }
-
-    /// 🧬️ 4x3 8-bit indexed base with a small, non-trivial palette — enough to exercise
-    /// insert/remove/set-entry mutations meaningfully.
-    fn base_snapshot() -> BmpSnapshot {
-        BmpSnapshot {
-            schema: "stdio.bmp".into(),
-            header_size: 40,
-            width: 4,
-            height: 3,
-            row_order: BmpRowOrder::BottomUp,
-            planes: 1,
-            bits_per_pixel: 8,
-            compression: 0,
-            image_size: 48,
-            x_pixels_per_meter: 2835,
-            y_pixels_per_meter: 2835,
-            colors_used: 3,
-            colors_important: 0,
-            palette: vec![entry(0, 0, 255, 0), entry(0, 255, 0, 0), entry(255, 0, 0, 0)],
-            pixels: vec![0u8; 4 * 3 * 4],
-        }
-    }
-    //#endregion 🔖️Fixtures
-
-    //#region 🔖️FieldSweepFixtures
-    /// 🧬️ Canonical "differs in every mutable field" snapshot A: every scalar header field set
-    /// to one value, a 2-entry palette (index 0 stable, index 1 will be modified in every
-    /// field), 4x3 pixels.
-    fn sweep_a() -> BmpSnapshot {
-        BmpSnapshot {
-            schema: "stdio.bmp".into(),
-            header_size: 40,
-            width: 4,
-            height: 3,
-            row_order: BmpRowOrder::BottomUp,
-            planes: 1,
-            bits_per_pixel: 8,
-            compression: 0,
-            image_size: 100,
-            x_pixels_per_meter: 1000,
-            y_pixels_per_meter: 2000,
-            colors_used: 2,
-            colors_important: 1,
-            palette: vec![entry(10, 20, 30, 0), entry(1, 2, 3, 0)],
-            pixels: (0..(4 * 3 * 4)).map(|i| (i % 256) as u8).collect(),
-        }
-    }
-    /// 🧬️ Sweep B: every scalar header field flips to a DIFFERENT value, the palette grows to
-    /// 3 entries (index 0 stable, index 1 modified in every field vs. `sweep_a`, index 2
-    /// brand-new — asymmetric length on purpose, see `~/.claude/plans/…journal.md`'s F1-txt
-    /// trap note: a single same-length `between()` call cannot show both `removed` AND `added`
-    /// from one direction, so this fixture is deliberately asymmetric and the field_sweep test
-    /// below splits its collection assertions across BOTH `between()` directions), and pixels
-    /// change size (8x6) + content.
-    fn sweep_b() -> BmpSnapshot {
-        BmpSnapshot {
-            schema: "stdio.bmp".into(),
-            header_size: 56,
-            width: 8,
-            height: 6,
-            row_order: BmpRowOrder::TopDown,
-            planes: 2,
-            bits_per_pixel: 24,
-            compression: 3,
-            image_size: 200,
-            x_pixels_per_meter: 3000,
-            y_pixels_per_meter: 4000,
-            colors_used: 5,
-            colors_important: 2,
-            palette: vec![entry(10, 20, 30, 0), entry(99, 88, 77, 1), entry(200, 201, 202, 0)],
-            pixels: (0..(8 * 6 * 4)).map(|i| ((i * 7 + 3) % 256) as u8).collect(),
-        }
-    }
-    //#endregion 🔖️FieldSweepFixtures
-
     //#region 🔖️MutationDiffLaw
     #[test]
     fn mutation_diff_law() {
         let base = base_snapshot();
-        let variants = vec![
-            BmpMutation::NoMutation,
-            BmpMutation::SetSnapshot { snapshot: sweep_b() },
-            BmpMutation::SetHeaderFields {
-                header_size: Some(56),
-                width: None,
-                height: None,
-                row_order: Some(BmpRowOrder::TopDown),
-                planes: None,
-                bits_per_pixel: None,
-                compression: None,
-                image_size: None,
-                x_pixels_per_meter: Some(5000),
-                y_pixels_per_meter: None,
-                colors_used: None,
-                colors_important: None,
-            },
-            BmpMutation::InsertPaletteEntry { index: 1, entry: entry(9, 9, 9, 0) },
-            BmpMutation::RemovePaletteEntry { index: 0 },
-            BmpMutation::SetPaletteEntry { index: 2, entry: entry(1, 1, 1, 1) },
-            BmpMutation::SetPixelData { pixels: vec![7u8; 4 * 3 * 4] },
-        ];
-        for m in variants {
+        for m in demo_mutation_cases() {
             let diff = m.diff(&base);
             let expected = diff.apply(&base);
 
@@ -371,29 +389,7 @@ mod tests {
     #[test]
     fn inverse_law() {
         let base = base_snapshot();
-        let variants = vec![
-            BmpMutation::NoMutation,
-            BmpMutation::SetSnapshot { snapshot: sweep_b() },
-            BmpMutation::SetHeaderFields {
-                header_size: Some(56),
-                width: Some(9),
-                height: None,
-                row_order: Some(BmpRowOrder::TopDown),
-                planes: None,
-                bits_per_pixel: None,
-                compression: None,
-                image_size: None,
-                x_pixels_per_meter: None,
-                y_pixels_per_meter: None,
-                colors_used: None,
-                colors_important: None,
-            },
-            BmpMutation::InsertPaletteEntry { index: 1, entry: entry(9, 9, 9, 0) },
-            BmpMutation::RemovePaletteEntry { index: 0 },
-            BmpMutation::SetPaletteEntry { index: 2, entry: entry(1, 1, 1, 1) },
-            BmpMutation::SetPixelData { pixels: vec![7u8; 4 * 3 * 4] },
-        ];
-        for m in variants {
+        for m in demo_mutation_cases() {
             // 🔁️ mutation-level round trip
             let mut forward = base.clone();
             apply_bmp_mutation(&mut forward, &m);
@@ -549,29 +545,7 @@ mod tests {
     fn op_text_binary_roundtrip_law() {
         use protocol::{OpBinary, OpText};
 
-        let mutations = vec![
-            BmpMutation::NoMutation,
-            BmpMutation::SetSnapshot { snapshot: sweep_b() },
-            BmpMutation::SetHeaderFields {
-                header_size: Some(56),
-                width: Some(9),
-                height: None,
-                row_order: Some(BmpRowOrder::TopDown),
-                planes: None,
-                bits_per_pixel: None,
-                compression: None,
-                image_size: None,
-                x_pixels_per_meter: Some(5000),
-                y_pixels_per_meter: None,
-                colors_used: None,
-                colors_important: None,
-            },
-            BmpMutation::InsertPaletteEntry { index: 1, entry: entry(9, 9, 9, 0) },
-            BmpMutation::RemovePaletteEntry { index: 0 },
-            BmpMutation::SetPaletteEntry { index: 2, entry: entry(1, 1, 1, 1) },
-            BmpMutation::SetPixelData { pixels: vec![7u8; 4 * 3 * 4] },
-        ];
-        for m in mutations {
+        for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = BmpMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

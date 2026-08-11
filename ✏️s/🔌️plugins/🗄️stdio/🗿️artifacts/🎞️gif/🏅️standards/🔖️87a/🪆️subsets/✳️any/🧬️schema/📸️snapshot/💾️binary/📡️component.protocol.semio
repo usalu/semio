@@ -1,3 +1,66 @@
-dialect protocol stdio.gif.snapshot
-magic = %x00
-payload = *OCTET
+dialect protocol
+protocol stdio.gif.snapshot
+version 1
+schema stdio.gif
+start header
+
+# Real GIF87a §18-27 file structure, matching this artifact's real `encode_gif`/`decode_gif`
+# (../../⚙️engine/🦀️component.rs) field-for-field: 6-byte ASCII magic "GIF87a", then the
+# Logical Screen Descriptor (width/height u16LE x2, one packed flags byte incl. GCT-present/
+# color-resolution/sort/GCT-size, bg color index, pixel aspect ratio) — ALL real, individually
+# walked fields, exactly matching PNG's own IHDR treatment (P2-M2's own worked PNG example).
+#
+# This is the SEMIO-envelope-UNWRAPPED payload (P2-M3 §3/§5 point 4) — `GifSnapshot::
+# encode_pack_with` (../../🦀️component.rs) is `encode_gif(self)` wrapped by `store::
+# semio_format::wrap_binary`, so the bytes this file walks start exactly where the envelope's
+# own 8-byte magic + u32le token-length + token hand off (described once, framework-side, at
+# 🧰️framework/…/🧬️semio/📡️protocol/📡️component.protocol.semio) — NOT re-described here.
+#
+# P2-FG2 NEW mechanism-gap, confirmed live (not assumed) by a real `walk_protocol` run:
+# `framing magic` unconditionally reads EXACTLY 8 bytes for its byte-check, regardless of how
+# many hex digits the declared literal has (`0x474946383761`, GIF87a's real 6-byte "GIF87a"
+# signature, still got read/compared as `[0,0,71,73,70,56,55,97]` — an 8-byte, left-zero-
+# padded value — against the real on-disk 6-byte magic immediately followed by 2 real screen-
+# descriptor bytes, a genuine mismatch). Every existing real `framing magic` precedent in this
+# repo (PNG's 8-byte signature, the framework's own SEMIO-envelope magic, the `.spk` container
+# magic) happens to be exactly 8 bytes — this is the first artifact whose real magic is
+# SHORTER. Recorded as `protocol-framing-magic-fixed-8-bytes` (not yet in the recipe's §5
+# table). Modeled honestly: `framing record` (no magic byte-check) + a real, individually-read
+# `field magic fixed 6` — genuinely walked but not byte-validated at the PROTOCOL layer
+# (the real Rust `decode_gif` already validates it byte-for-byte, `data[0..6] != b"GIF87a"`).
+framing record
+
+header fixed 13
+field magic fixed 6
+field width u16
+field height u16
+field packed u8
+field bg_color_index u8
+field pixel_aspect_ratio u8
+
+# Past the fixed 13-byte magic + Logical Screen Descriptor, the real remaining bytes are: an OPTIONAL
+# Global Color Table (`3 * 2^((packed & 0x07) + 1)` bytes, present iff `packed & 0x80 != 0`),
+# then a repeated block sequence (0x2C Image Descriptor + optional Local Color Table + a
+# LZW-compressed sub-block chain, terminated by the 0x3B trailer byte) — a genuine, real
+# tag-dispatched `repeat` shape (§2.3), same construct PNG's own chunk loop uses.
+#
+# This artifact CANNOT express that `repeat` here, for TWO independent, genuine dialect
+# reasons (neither is a PNG-style single-arm gap — both block the ENTIRE remainder, not one
+# arm):
+#   (a) `packed`'s GCT-presence bit IS testable (`Cond`'s `ge`/`eq` against the whole `packed`
+#       byte value can gate presence), but the GCT's own BYTE LENGTH is `3 * 2^(size+1)` where
+#       `size` is `packed`'s low 3 BITS — this dialect has no bitfield/sub-byte field
+#       decomposition primitive at all (confirmed by reading `Prim`/`Cond`'s full grammar,
+#       §2.2/§2.3 of the recipe) and no arithmetic-expression `Array` count source (`Count`
+#       binds only to a literal `Fixed(n)`, `Varint`, or a named `Field`, never `field * k`).
+#   (b) Since the GCT's own length can never be computed, the repeated block sequence's own
+#       START position is unknowable declaratively — `repeat`'s own tag-dispatch (§2.3) needs
+#       a known starting offset, which nothing past `packed` can supply.
+# Recorded as a NEW mechanism-gap (not yet in the recipe's §5 consolidated table):
+# `protocol-bitfield-bytelen-computation` — packed-byte bit-subfields driving a computed
+# Array/segment byte length. The Rust `encode_gif`/`decode_gif` side IS genuinely, fully
+# structured (real bit-shift GCT-size decode, real tag-dispatched block loop, real LZW
+# sub-block chain) — this is purely a limit on how deep the PROTOCOL DESCRIPTION can validate
+# structurally past the fixed screen descriptor, same documented-limitation shape as PNG's own
+# `protocol-repeat-length-not-named`/DWG's encrypted-segment carve-out (§6).
+chain rest bytes

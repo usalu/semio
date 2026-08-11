@@ -1,3 +1,5 @@
-//! 🚧 scaffolded by W1b — text representation marker for `stdio.html.diff`. Full grammar-backed
-//! parse/print lands in W2/W3.
-pub const TEXT_MARKER: &str = "stdio.html.diff";
+//! 📝️ Text representation codec surface for `stdio.html` (diff). The REAL codec is the
+//! hand-rolled `print_diff`/`parse_diff` in the sibling `🦀️component.rs` two levels up.
+
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");

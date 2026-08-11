@@ -1,9 +1,24 @@
-dialect grammar stdio.binary.diff
-root = diff
-; a splice list: each entry replaces [offset, offset+removeLen) with `insert`, processed
-; DESCENDING by offset against the BASE buffer on apply -- see the Rust `BinaryDiff::apply` docs.
-diff = '{' ['"splices":' splice-array] '}'
-splice-array = '[' [splice *(',' splice)] ']'
-splice = '{"offset":' digits ',"removeLen":' digits ',"insert":' byte-array '}'
-byte-array = '[' [byte *(',' byte)] ']'
-byte = 1*3DIGIT
+dialect grammar
+grammar binary.diff
+extension bin
+start document
+
+# P2-P3: real `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by `🔺️diff/🦀️component.rs`'s
+# `#[derive(dsl::DslDiff)]`-generated impl over `BinaryDiff { splices: Vec<ByteSplice> }` (a plain
+# struct, `#[serde(skip_serializing_if = "Vec::is_empty")]`), replacing the F6-era placeholder that
+# never matched any real wire shape. `splices` is a single keyed `Vec<record>` field; `print_record_
+# fields` prints a keyed list field as `<key>=[ <item>* ]` with NO separator between items (no
+# comma, `ByteSplice`'s own fields print bare positional-less/keyed `offset=.. remove-len=..
+# insert=..` inside each item) -- copied verbatim from direct observation of real `print_diff()`
+# output for representative cases, not invented:
+#   splices=[ ]
+#   splices=[ offset=1 remove-len=2 insert="CQkJ" ]
+#   splices=[ offset=0 remove-len=0 insert="" offset=5 remove-len=1 insert="qrs=" ]
+# (the third case shows two back-to-back `splice-item`s with no separator between them -- `*`
+# already handles this correctly, no comma/`","?`  convention needed here unlike json/csv's own
+# comma-joined lists). `insert` is `#[dsl(base64)]`, so it prints as one quoted `TEXT` token exactly
+# like the sibling mutations grammar's `insert`/`data` fields (including the empty-string case,
+# `insert=""`, when a splice's `insert` is `vec![]`).
+document = "splices" "=" "[" splice-item* "]"
+
+splice-item = "offset" "=" INT "remove-len" "=" INT "insert" "=" TEXT

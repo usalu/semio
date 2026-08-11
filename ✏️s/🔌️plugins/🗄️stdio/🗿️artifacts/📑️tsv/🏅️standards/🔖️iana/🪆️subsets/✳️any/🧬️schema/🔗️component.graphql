@@ -1,9 +1,11 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type TsvArtifactEntry {
-  key: String!
-  value: String!
-}
+# 🧬️ TsvArtifact schema facet — full artifact state, mirrors TsvSnapshot field-for-field.
+
+enum TsvArtifactLineEnding { LF CRLF }
+type TsvArtifactRow { fields: [String!]! }
+
 type TsvArtifact {
-  schema: String! @state(class: PERSISTENT)
-  entries: [TsvArtifactEntry!]! @state(class: PERSISTENT)
+  schema: String!
+  records: [TsvArtifactRow!]!
+  trailingNewline: Boolean!
+  lineEnding: TsvArtifactLineEnding!
 }

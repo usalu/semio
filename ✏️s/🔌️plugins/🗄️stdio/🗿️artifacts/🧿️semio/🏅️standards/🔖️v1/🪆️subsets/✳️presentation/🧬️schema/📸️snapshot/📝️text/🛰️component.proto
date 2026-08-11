@@ -1,7 +1,4 @@
+// Text-envelope shape descriptor (structured payload is snapshot/component.proto).
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_semio_presentation_snapshot.text;
-message Semio_semio_presentation_snapshot {
-  string schema = 1;
-  string entries_wire = 2;
-}
+package stdio.semio.presentation.snapshot.text;
+message Envelope { string header = 1; string hex_payload = 2; }

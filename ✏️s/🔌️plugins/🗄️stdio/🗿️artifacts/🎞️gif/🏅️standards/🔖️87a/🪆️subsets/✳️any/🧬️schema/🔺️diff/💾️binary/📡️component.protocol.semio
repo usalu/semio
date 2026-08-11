@@ -1,3 +1,55 @@
-dialect protocol stdio.gif.diff
-magic = %x00
-payload = *OCTET
+dialect protocol
+protocol stdio.gif.diff
+version 1
+schema stdio.gif.diff
+start diff
+
+# Real binary diff-frame `protocol::DiffCodec::encode_diff`/`decode_diff` NOW emit for
+# `GifDiff` — upgraded, this program (P2-FG2), from the F6-era `print_diff().into_bytes()`
+# text-as-binary shortcut (see this artifact's report; the FG1 wave's own closer report
+# flagged leaving this un-upgraded as a real defect to not repeat). `GifDiff` is a STRUCT
+# (not an enum) with a mix of PLAIN `Option<T>` fields (`width`/`height`/
+# `background_color_index`/`pixel_aspect_ratio`/`images`) and ONE TRI-STATE
+# `Option<Option<T>>` field (`gct`) — so every field gets its own presence-FLAG byte, directly
+# modeling M2's real conditional-field-presence mechanism (item 4): a plain field uses a
+# 2-way flag (`0`=unchanged, `1`=changed); the tri-state `gct` field uses a 3-way flag
+# (`0`=unchanged, `1`=cleared-to-None, `2`=set-to-Some(value)) rather than TWO chained
+# `if`-guarded fields — chaining would need a second field's `if` guard to reference a field
+# that was ITSELF only conditionally decoded (the outer flag), and `eval_cond` unconditionally
+# errors ("condition references unknown field") when its guarded field was never read
+# (confirmed by reading `eval_cond`/`walk_fields`, `📖️grammar/🦀️component.rs`) — a real,
+# concrete instance of this artifact's report `mechanism_gaps` entry
+# `protocol-cond-cannot-chain` (PNG's own precedent). The single-flat-flag-per-field design
+# below sidesteps it entirely (every `if` guard here references a field that is ALWAYS
+# unconditionally read, one line above).
+#
+# `gct` (variable-length: `GifColorTable` has a Vec of RGB triples) and `images` (the
+# `removed`/`modified`/`added` collection triple, itself containing recursively-nested
+# `GifImage`/`GifImageDiff` values) are both length-prefixed opaque byte blobs (`<name>_len
+# varint` + `Array(u8, Field(<name>_len))`) — `Prim::Ref` to a struct/enum still
+# unconditionally errors at walk time (confirmed unchanged since P2-M2, `protocol-prim-ref-
+# recursion`), so their own internal shape isn't further protocol-walkable; the Rust
+# `encode_diff`/`decode_diff` side (`../🦀️component.rs`'s `RealBinaryDiffFrame`/
+# `RealBinaryPrimitives` regions) IS genuinely, fully structured real binary (real varint
+# counts, real per-item recursive encoding) — this is purely a limit on how deep the PROTOCOL
+# DESCRIPTION itself can validate structurally, same documented limitation as every other
+# stdio pilot's own nested-payload field.
+framing record
+
+field width_flag u8
+field width_value u32 if width_flag eq 1
+field height_flag u8
+field height_value u32 if height_flag eq 1
+
+field gct_flag u8
+field gct_len varint if gct_flag eq 2
+field gct_value Array(u8, Field(gct_len)) if gct_flag eq 2
+
+field background_color_index_flag u8
+field background_color_index_value u8 if background_color_index_flag eq 1
+field pixel_aspect_ratio_flag u8
+field pixel_aspect_ratio_value u8 if pixel_aspect_ratio_flag eq 1
+
+field images_flag u8
+field images_len varint if images_flag eq 1
+field images_value Array(u8, Field(images_len)) if images_flag eq 1

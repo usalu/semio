@@ -1,6 +1,77 @@
-dialect grammar stdio.las.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.las' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.las.mutations
+start op
+
+# Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: real one-line
+# OpText grammar matching `LasMutation`'s hand-rolled `print_las_mutation`/`parse_las_mutation`
+# (../🦀️component.rs's `TopLevel` region) -- replacing the pre-existing placeholder (`header =
+# 'schema' SP 'stdio.las' NL` / `body = payload NL?` / `payload = *OCTET`) which used pseudo-ABNF
+# syntax entirely outside this framework's real dialect and did not match `print_las_mutation`'s
+# actual output at all. Every keyword/field-key token below is copied verbatim from a real,
+# directly-observed `print_op()` shape for every variant -- not invented:
+#   no-mutation
+#   set-version major=1 minor=4
+#   insert-vlr index=1 vlr=[<hex>,200,<hex>,<hex>]
+#   set-snapshot snapshot=[<header-25-tuple>,[<vlr>,...],[<point>,...]]
+# `set-snapshot`'s payload is a genuinely unbounded, arbitrarily-nested composite (a whole
+# `LasHeader` positional 25-tuple plus two runtime-length `vlrs`/`points` lists) -- modeled
+# honestly as `REST` (M1's raw-span terminal, reads the ORIGINAL source text to EOF past whatever
+# the shared lexer already fragmented, so it correctly swallows arbitrarily-nested `[`/`,` content
+# verbatim), the same honest-boundary treatment zip's own `set-snapshot`/`add-entry` variants use
+# for their own nested-block payloads. Every OTHER variant (14 of 15, every field a plain scalar or
+# one bounded fixed-shape record) is modeled precisely, field-for-field, token-for-token below.
+
+op = no-mutation | set-snapshot | set-version | set-system-identifier | set-software-info | set-creation-date | set-scale-and-offset | set-bounds | set-points-by-return | insert-vlr | remove-vlr | set-vlr-data | insert-point | remove-point | set-point
+
+# `f64::to_string()` prints a whole value like `100.0` as `100` (no decimal point) -- both lex
+# through the shared lexer, `FLOAT` for a value with a `.`/exponent, `INT` otherwise.
+number = FLOAT | INT
+
+no-mutation = "no-mutation"
+
+# Genuinely unbounded nested-record payload (`snapshot=[ ... ]`) -- see module doc comment.
+set-snapshot = "set-snapshot" REST
+
+set-version = "set-version" "major" "=" INT "minor" "=" INT
+
+set-system-identifier = "set-system-identifier" "system-identifier" "=" hex
+
+set-software-info = "set-software-info" "generating-software" "=" hex
+
+set-creation-date = "set-creation-date" "day-of-year" "=" INT "year" "=" INT
+
+set-scale-and-offset = "set-scale-and-offset" "scale" "=" f64x3 "offset" "=" f64x3
+
+set-bounds = "set-bounds" "max" "=" f64x3 "min" "=" f64x3
+
+set-points-by-return = "set-points-by-return" "counts" "=" u32x5
+
+insert-vlr = "insert-vlr" "index" "=" INT "vlr" "=" vlr-body
+
+remove-vlr = "remove-vlr" "index" "=" INT
+
+set-vlr-data = "set-vlr-data" "index" "=" INT "data" "=" hex
+
+insert-point = "insert-point" "index" "=" INT "point" "=" point-body
+
+remove-point = "remove-point" "index" "=" INT
+
+set-point = "set-point" "index" "=" INT "point" "=" point-body
+
+f64x3 = "[" number "," number "," number "]"
+
+u32x5 = "[" INT "," INT "," INT "," INT "," INT "]"
+
+# `enc_vlr`'s full positional 4-tuple (user_id, record_id, description, data) -- same bounded
+# fixed-shape record the sibling diff facet's own `vlr-body` production describes (own copy, no
+# cross-facet grammar sharing).
+vlr-body = "[" hex "," INT "," hex "," hex "]"
+
+# `enc_point`'s full positional 14-tuple, field order matching `LasPoint`'s struct declaration
+# exactly (x, y, z, intensity, return_number, number_of_returns, scan_direction_flag,
+# edge_of_flight_line, classification, scan_angle_rank, user_data, point_source_id, gps_time, rgb).
+point-body = "[" number "," number "," number "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," gps-opt "," rgb-opt "]"
+
+gps-opt = "[" "0" "]" | "[" "1" "," number "]"
+rgb-opt = "[" "0" "]" | "[" "1" "," rgb-value "]"
+rgb-value = "[" INT "," INT "," INT "]"

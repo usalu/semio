@@ -1,9 +1,34 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type HtmlSnapshotEntry {
-  key: String!
-  value: String!
+# 🧬️ HtmlSnapshot schema — own HtmlNode recursive tree model (own types, HTML is not XML).
+type HtmlAttr {
+  name: String!
+  """ Absent = valueless boolean attribute (e.g. `disabled`). """
+  value: String
 }
+
+enum RawTextKind {
+  SCRIPT
+  STYLE
+}
+
+enum HtmlNodeKind {
+  ELEMENT
+  TEXT
+  COMMENT
+  RAW_TEXT
+}
+
+""" 🌳 HTML5 document tree node -- tagged union flattened, only the fields matching `kind` are set. """
+type HtmlNode {
+  kind: HtmlNodeKind!
+  name: String
+  attributes: [HtmlAttr!]
+  children: [HtmlNode!]
+  text: String
+  parentKind: RawTextKind
+}
+
 type HtmlSnapshot {
   schema: String! @state(class: PERSISTENT)
-  entries: [HtmlSnapshotEntry!]! @state(class: PERSISTENT)
+  doctype: String @state(class: PERSISTENT)
+  root: HtmlNode! @state(class: PERSISTENT)
 }

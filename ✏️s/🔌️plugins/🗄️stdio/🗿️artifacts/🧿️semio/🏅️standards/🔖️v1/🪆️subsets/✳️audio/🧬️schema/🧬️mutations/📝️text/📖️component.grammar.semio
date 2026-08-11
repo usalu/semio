@@ -1,5 +1,6 @@
 dialect grammar stdio.semio.audio.mutations
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
 root = document
-document = marker
-marker = "stdio.semio.audio.mutations"
+document = header body
+header = 'schema' SP 'stdio.semio.audio' NL
+body = payload NL?
+payload = *OCTET

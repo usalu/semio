@@ -1,6 +1,57 @@
-dialect grammar stdio.gif.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.gif' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.gif.diff
+start diff
+
+# Real one-line `print_diff`/`parse_diff` form this artifact's hand-rolled `DiffCodec` emits
+# (../🦀️component.rs `print_gif_diff`/`parse_gif_diff`) — a space-separated `name=value` token
+# per changed top-level scalar/tri-state field, `images` printed as the real
+# removed/modified/added COLLECTION-TRIPLE (`images{[removed];[modified];[added]}`, csv's own
+# first-landed shape, P2-P1 csv report §2).
+comment none
+
+# Field order matches `GifDiff`'s own struct field order exactly (`print_gif_diff` always
+# emits in this order; `parse_gif_diff` itself accepts any subset/order via a token-keyed
+# loop, but the Recognizer only needs to accept what `print_diff` ACTUALLY emits). Kept on
+# ONE physical line — this dialect's sequence parsing stops at the first Newline token, no
+# line-continuation syntax exists (P2-P1 csv report §3 item 1).
+diff = width-clause? height-clause? gct-clause? bg-clause? par-clause? images-clause?
+
+width-clause = "width" "=" INT
+height-clause = "height" "=" INT
+bg-clause = "bg" "=" INT
+par-clause = "par" "=" INT
+
+# `GifColorTable`'s outer tri-state (`Option<Option<GifColorTable>>`) — `encode_option`'s
+# uniform tag: `[0]` = None, `[1,<value>]` = Some(value).
+gct-clause = "gct" "=" gct-opt
+gct-opt = "[" "0" "]" | "[" "1" "," color-table-value "]"
+color-table-value = "[" bit "," "[" rgb-list? "]" "]"
+rgb-list = rgb-value {"," rgb-value}*
+rgb-value = "[" INT "," INT "," INT "]"
+bit = "0" | "1"
+
+# The FIRST collection-triple production for this artifact's diff (P2-P1 csv report §2's
+# copy-pasteable shape): `<name>-clause = "<name>" "{" "[" removed-list? "]" ";" "[" modified-
+# list? "]" ";" "[" added-list? "]" "}"`. `<key>` is `INT` — `images` is index-keyed (GIF
+# images have no stable name/identity, matching csv's own record-index precedent).
+removed-list = INT {"," INT}*
+
+images-clause = "images" "{" "[" removed-list? "]" ";" "[" images-modified-list? "]" ";" "[" images-added-list? "]" "}"
+images-modified-list = images-modified {"," images-modified}*
+images-modified = INT ":" image-diff-value
+images-added-list = images-added {"," images-added}*
+images-added = INT ":" image-value
+
+# `GifImageDiff`'s own sparse fields print as single-letter `tag:value` pairs
+# (`L`/`T`/`W`/`H`/`I`/`C`/`X`) inside its own `[...]` — `enc_image_diff`/`dec_image_diff`.
+image-diff-value = "[" image-diff-items? "]"
+image-diff-items = image-diff-item {"," image-diff-item}*
+image-diff-item = "L" ":" INT | "T" ":" INT | "W" ":" INT | "H" ":" INT | "I" ":" bit | "C" ":" gct-opt | "X" ":" hex
+
+# `GifImage` — positional `[left,top,width,height,interlace,lct,indices]` tuple —
+# `enc_image`/`dec_image`.
+image-value = "[" INT "," INT "," INT "," INT "," bit "," gct-opt "," hex "]"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production) is the framework's built-in
+# `hex` MACRO — see ../../🧬️mutations/📝️text/📖️component.grammar.semio's own `hex` doc comment
+# for why a macro, not a `{INT | IDENT}*`-shaped production, is required here.

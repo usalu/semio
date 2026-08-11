@@ -1,0 +1,60 @@
+
+---- artifacts::semio::standards::v1::subsets::mesh::schema::mutations::component::tests::inverse_law stdout ----
+
+thread 'artifacts::semio::standards::v1::subsets::mesh::schema::mutations::component::tests::inverse_law' (175230827) panicked at ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:599:13:
+assertion `left == right` failed: inverse_law (mutation-level) failed for SetSnapshot { snapshot: SemioMeshSnapshot { schema: "stdio.semio.mesh", meshes: [SemioMesh { id: "toModify", primitives: [SemioPrimitive { id: "toModify", topology: Lines, positions: [SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 }], normals: [SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }], uvs: [SemioUv { u: 1.0, v: 1.0 }], colors: [SemioRgba { r: 0.0, g: 0.0, b: 0.0, a: 1.0 }], indices: [0, 0], material_id: None }, SemioPrimitive { id: "added", topology: Points, positions: [], normals: [], uvs: [], colors: [], indices: [], material_id: None }] }, SemioMesh { id: "keep", primitives: [] }, SemioMesh { id: "added", primitives: [] }], materials: [SemioMaterial { id: "toModify", base_color: SemioRgba { r: 0.0, g: 0.0, b: 0.0, a: 1.0 }, metallic: 1.0, roughness: 1.0 }, SemioMaterial { id: "matKeep", base_color: SemioRgba { r: 0.2, g: 0.2, b: 0.2, a: 1.0 }, metallic: 0.5, roughness: 0.5 }, SemioMaterial { id: "added", base_color: SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, metallic: 0.3, roughness: 0.7 }], textures: [SemioTexture { id: "toModify", mime: "image/jpeg", bytes: [9, 8, 7] }, SemioTexture { id: "added", mime: "image/webp", bytes: [5] }] } }
+  left: SemioMeshSnapshot { schema: "stdio.semio.mesh", meshes: [SemioMesh { id: "toModify", primitives: [SemioPrimitive { id: "toModify", topology: Triangles, positions: [SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }], normals: [SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }], uvs: [SemioUv { u: 0.0, v: 0.0 }], colors: [SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }], indices: [0], material_id: Some("matKeep") }, SemioPrimitive { id: "toRemove", topology: Points, positions: [], normals: [], uvs: [], colors: [], indices: [], material_id: None }] }, SemioMesh { id: "keep", primitives: [] }, SemioMesh { id: "toRemove", primitives: [] }], materials: [SemioMaterial { id: "toModify", base_color: SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }, metallic: 0.0, roughness: 0.0 }, SemioMaterial { id: "matKeep", base_color: SemioRgba { r: 0.2, g: 0.2, b: 0.2, a: 1.0 }, metallic: 0.5, roughness: 0.5 }, SemioMaterial { id: "toRemove", base_color: SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }, metallic: 0.0, roughness: 0.0 }], textures: [SemioTexture { id: "toModify", mime: "image/png", bytes: [1, 2, 3] }, SemioTexture { id: "toRemove", mime: "image/png", bytes: [0] }] }
+ right: SemioMeshSnapshot { schema: "stdio.semio.mesh", meshes: [SemioMesh { id: "toRemove", primitives: [] }, SemioMesh { id: "toModify", primitives: [SemioPrimitive { id: "toRemove", topology: Points, positions: [], normals: [], uvs: [], colors: [], indices: [], material_id: None }, SemioPrimitive { id: "toModify", topology: Triangles, positions: [SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }], normals: [SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }], uvs: [SemioUv { u: 0.0, v: 0.0 }], colors: [SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }], indices: [0], material_id: Some("matKeep") }] }, SemioMesh { id: "keep", primitives: [] }], materials: [SemioMaterial { id: "toRemove", base_color: SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }, metallic: 0.0, roughness: 0.0 }, SemioMaterial { id: "toModify", base_color: SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }, metallic: 0.0, roughness: 0.0 }, SemioMaterial { id: "matKeep", base_color: SemioRgba { r: 0.2, g: 0.2, b: 0.2, a: 1.0 }, metallic: 0.5, roughness: 0.5 }], textures: [SemioTexture { id: "toRemove", mime: "image/png", bytes: [0] }, SemioTexture { id: "toModify", mime: "image/png", bytes: [1, 2, 3] }] }
+
+---- artifacts::semio::standards::v1::subsets::model::schema::mutations::component::tests::op_text_binary_roundtrip_law stdout ----
+
+thread 'artifacts::semio::standards::v1::subsets::model::schema::mutations::component::tests::op_text_binary_roundtrip_law' (175230847) panicked at ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/🧬️mutations/🦀️component.rs:284:13:
+assertion `left == right` failed: print_op/parse_op round-trip mismatch for SetElement { id: "e1", class: None, placement: None, geometry: Some(None), spatial_id: Some(None), psets: None }
+  left: SetElement { id: "e1", class: None, placement: None, geometry: Some(None), spatial_id: None, psets: None }
+ right: SetElement { id: "e1", class: None, placement: None, geometry: Some(None), spatial_id: Some(None), psets: None }
+
+---- artifacts::semio::standards::v1::subsets::workflow::schema::diff::component::tests::between_roundtrip_law stdout ----
+
+thread 'artifacts::semio::standards::v1::subsets::workflow::schema::diff::component::tests::between_roundtrip_law' (175230933) panicked at ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️workflow/🧬️schema/🔺️diff/🦀️component.rs:692:9:
+assertion `left == right` failed
+  left: SemioWorkflowSnapshot { schema: "stdio.semio.workflow", nodes: [WorkflowNode { id: "keep", kind: "old-kind", label: "Old Label", params: [WorkflowParam { key: "toModify", value: "old" }, WorkflowParam { key: "stay", value: "same" }, WorkflowParam { key: "toRemove", value: "gone" }], position: SemioPoint2 { x: 0.0, y: 0.0 } }, WorkflowNode { id: "toRemoveNode", kind: "sink", label: "Gone", params: [], position: SemioPoint2 { x: 5.0, y: 5.0 } }], edges: [WorkflowEdge { id: "keepEdge", from: PortRef { node: "keep", port: "out" }, to: PortRef { node: "toRemoveNode", port: "in" }, kind: "old-kind" }, WorkflowEdge { id: "toRemoveEdge", from: PortRef { node: "toRemoveNode", port: "out" }, to: PortRef { node: "keep", port: "in" }, kind: "data" }] }
+ right: SemioWorkflowSnapshot { schema: "stdio.semio.workflow", nodes: [WorkflowNode { id: "keep", kind: "old-kind", label: "Old Label", params: [WorkflowParam { key: "toRemove", value: "gone" }, WorkflowParam { key: "toModify", value: "old" }, WorkflowParam { key: "stay", value: "same" }], position: SemioPoint2 { x: 0.0, y: 0.0 } }, WorkflowNode { id: "toRemoveNode", kind: "sink", label: "Gone", params: [], position: SemioPoint2 { x: 5.0, y: 5.0 } }], edges: [WorkflowEdge { id: "keepEdge", from: PortRef { node: "keep", port: "out" }, to: PortRef { node: "toRemoveNode", port: "in" }, kind: "old-kind" }, WorkflowEdge { id: "toRemoveEdge", from: PortRef { node: "toRemoveNode", port: "out" }, to: PortRef { node: "keep", port: "in" }, kind: "data" }] }
+
+---- artifacts::semio::standards::v1::subsets::workflow::schema::diff::component::tests::field_sweep stdout ----
+
+thread 'artifacts::semio::standards::v1::subsets::workflow::schema::diff::component::tests::field_sweep' (175230936) panicked at ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️workflow/🧬️schema/🔺️diff/🦀️component.rs:735:9:
+assertion `left == right` failed
+  left: SemioWorkflowSnapshot { schema: "stdio.semio.workflow", nodes: [WorkflowNode { id: "keep", kind: "old-kind", label: "Old Label", params: [WorkflowParam { key: "toModify", value: "old" }, WorkflowParam { key: "stay", value: "same" }, WorkflowParam { key: "toRemove", value: "gone" }], position: SemioPoint2 { x: 0.0, y: 0.0 } }, WorkflowNode { id: "toRemoveNode", kind: "sink", label: "Gone", params: [], position: SemioPoint2 { x: 5.0, y: 5.0 } }], edges: [WorkflowEdge { id: "keepEdge", from: PortRef { node: "keep", port: "out" }, to: PortRef { node: "toRemoveNode", port: "in" }, kind: "old-kind" }, WorkflowEdge { id: "toRemoveEdge", from: PortRef { node: "toRemoveNode", port: "out" }, to: PortRef { node: "keep", port: "in" }, kind: "data" }] }
+ right: SemioWorkflowSnapshot { schema: "stdio.semio.workflow", nodes: [WorkflowNode { id: "keep", kind: "old-kind", label: "Old Label", params: [WorkflowParam { key: "toRemove", value: "gone" }, WorkflowParam { key: "toModify", value: "old" }, WorkflowParam { key: "stay", value: "same" }], position: SemioPoint2 { x: 0.0, y: 0.0 } }, WorkflowNode { id: "toRemoveNode", kind: "sink", label: "Gone", params: [], position: SemioPoint2 { x: 5.0, y: 5.0 } }], edges: [WorkflowEdge { id: "keepEdge", from: PortRef { node: "keep", port: "out" }, to: PortRef { node: "toRemoveNode", port: "in" }, kind: "old-kind" }, WorkflowEdge { id: "toRemoveEdge", from: PortRef { node: "toRemoveNode", port: "out" }, to: PortRef { node: "keep", port: "in" }, kind: "data" }] }
+
+---- artifacts::tsv::standards::iana::subsets::any::schema::mutations::component::tests::field_sweep_every_mutable_field_changes stdout ----
+
+thread 'artifacts::tsv::standards::iana::subsets::any::schema::mutations::component::tests::field_sweep_every_mutable_field_changes' (175231171) panicked at ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:410:9:
+removed must be non-empty (row 0 dropped)
+
+
+failures:
+    artifacts::csv::standards::v_rfc4180::engine::tests::committed_grammar_and_protocol_files_parse
+    artifacts::csv::standards::v_rfc4180::engine::tests::grammar_conformance_law
+    artifacts::csv::standards::v_rfc4180::subsets::any::schema::diff::component::handcrafted_diff_codec_tests::diff_grammar_conformance_law
+    artifacts::csv::standards::v_rfc4180::subsets::any::schema::mutations::component::tests::ops_grammar_conformance_law
+    artifacts::epw::standards::energyplus::subsets::any::schema::mutations::component::tests::field_sweep_every_mutable_field_changes
+    artifacts::json::standards::v_rfc8259::engine::tests::conformance_laws::committed_facet_files_parse
+    artifacts::json::standards::v_rfc8259::engine::tests::conformance_laws::diff_grammar_conformance_law
+    artifacts::json::standards::v_rfc8259::engine::tests::conformance_laws::grammar_conformance_law
+    artifacts::json::standards::v_rfc8259::engine::tests::conformance_laws::ops_grammar_conformance_law
+    artifacts::json::standards::v_rfc8259::engine::tests::conformance_laws::protocol_walk_law
+    artifacts::semio::standards::v1::subsets::animation::schema::diff::component::tests::field_sweep_covers_every_mutable_field
+    artifacts::semio::standards::v1::subsets::brep::schema::diff::component::tests::field_sweep_every_field_present_in_diff
+    artifacts::semio::standards::v1::subsets::mesh::schema::mutations::component::tests::between_roundtrip_law
+    artifacts::semio::standards::v1::subsets::mesh::schema::mutations::component::tests::field_sweep
+    artifacts::semio::standards::v1::subsets::mesh::schema::mutations::component::tests::inverse_law
+    artifacts::semio::standards::v1::subsets::model::schema::mutations::component::tests::op_text_binary_roundtrip_law
+    artifacts::semio::standards::v1::subsets::workflow::schema::diff::component::tests::between_roundtrip_law
+    artifacts::semio::standards::v1::subsets::workflow::schema::diff::component::tests::field_sweep
+    artifacts::tsv::standards::iana::subsets::any::schema::mutations::component::tests::field_sweep_every_mutable_field_changes
+
+test result: FAILED. 1478 passed; 19 failed; 1 ignored; 0 measured; 0 filtered out; finished in 7.68s
+
+error: test failed, to rerun pass `-p semio-s-plugin-stdio --lib`
+exit:101

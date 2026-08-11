@@ -1,7 +1,60 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// 🔺️ SemioDrawingDiff — mirrors the real Rust 🔺️diff/🦀️component.rs. between(base, other)
+// computes the schema delta against the base snapshot; items of Transform carry
+// translation/rotation/scale (strokeWidth lives on style items); the DiffCodec's line is built
+// from space-separated tokens; NodePath{layer, path} addresses a node.
 package semio.s_stdio_semio_drawing.diff;
+
+message DrawCanvasDiff {
+  optional double width = 1;
+  optional double height = 2;
+  bool background_changed = 3; // tri-state: field 4 only meaningful when true
+  optional bytes background_wire = 4; // hex-JSON Rgba, absent = cleared
+}
+message DrawStyleDiff {
+  bool fill_changed = 1; optional bytes fill_wire = 2;
+  bool stroke_changed = 3; optional bytes stroke_wire = 4;
+  bool stroke_width_changed = 5; optional double stroke_width = 6;
+  bool opacity_changed = 7; optional float opacity = 8;
+}
+message StylesDiff {
+  repeated string removed = 1;
+  message Modified { string key = 1; DrawStyleDiff diff = 2; }
+  repeated Modified modified = 2;
+  repeated bytes added_wire = 3; // hex-JSON DrawStyle
+}
+
+message DrawNodeDiff {
+  enum Kind { PATH = 0; TEXT = 1; GROUP = 2; IMAGE = 3; REPLACE = 4; }
+  Kind kind = 1;
+  repeated bytes segments_wire = 2;
+  bool style_changed = 3; optional string style = 4;
+  optional string value = 5;
+  optional bytes at_wire = 6;
+  optional bytes transform_wire = 7;
+  optional bytes children_wire = 8; // recursive IndexedTripleDiff<DrawNodeDiff, DrawNode>
+  optional double width = 9;
+  optional double height = 10;
+  optional string mime = 11;
+  optional bytes image_bytes = 12;
+  optional bytes replace_node_wire = 13;
+}
+message DrawLayerDiff {
+  optional string id = 1;
+  optional string name = 2;
+  optional bool visible = 3;
+  DrawNodeDiff root = 4;
+}
+message LayersDiff {
+  repeated uint32 removed = 1;
+  message Modified { uint32 index = 1; DrawLayerDiff diff = 2; }
+  repeated Modified modified = 2;
+  message Added { uint32 index = 1; bytes item_wire = 2; }
+  repeated Added added = 3;
+}
+
 message SemioDrawingDiff {
-  string schema = 1;
-  string entries_wire = 2;
+  DrawCanvasDiff canvas = 1;
+  StylesDiff styles = 2;
+  LayersDiff layers = 3;
 }

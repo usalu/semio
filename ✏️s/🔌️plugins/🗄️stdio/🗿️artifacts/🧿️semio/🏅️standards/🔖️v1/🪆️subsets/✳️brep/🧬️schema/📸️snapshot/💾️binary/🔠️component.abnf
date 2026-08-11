@@ -1,3 +1,8 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.brep.snapshot"
+; abnf stdio.semio.brep snapshot (dsl/text payload)
+; the DSL text is a whitespace-tolerant ASCII hex dump of the REAL JSON-pack bytes of a
+; SemioBrepSnapshot (see ../🔣️component.json for that payload's own structure) -- the snapshot
+; has no textual syntax of its own; this restates the ../📖️component.grammar.semio production for
+; a self-contained ABNF reading.
+document = hex-byte *(WS hex-byte)
+hex-byte = HEXDIG HEXDIG
+WS = *(%x20 / %x09 / %x0D / %x0A)

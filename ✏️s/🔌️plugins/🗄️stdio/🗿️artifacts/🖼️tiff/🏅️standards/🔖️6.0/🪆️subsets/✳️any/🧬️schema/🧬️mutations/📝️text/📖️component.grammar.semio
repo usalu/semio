@@ -1,11 +1,51 @@
-dialect grammar stdio.tiff.mutation
-root = mutation
-; wire text IS the JSON serialization of TiffMutation (protocol::OpText — serde_json,
-; #[serde(tag = "mutation")]); this names the real 8 variant tags, not RFC 8259's own
-; JSON grammar
-mutation = "{" '"mutation"' ":" variant_tag ("," member)* "}"
-variant_tag = '"noMutation"' / '"setSnapshot"' / '"setByteOrder"' / '"insertIfd"'
-            / '"removeIfd"' / '"setTag"' / '"removeTag"' / '"setPixels"'
-member = STRING ":" json_value
-json_value = "{" (member ("," member)*)? "}" / "[" json_value* "]" / STRING / INT / BOOL / "null"
-BOOL = "true" / "false"
+dialect grammar
+grammar stdio.tiff.mutations
+extension tiff
+start document
+comment none
+
+# P2-FG2: real one-line `OpText::print_op`/`parse_op` shape ALREADY emitted by
+# `../../🦀️component.rs` (`print_tiff_mutation`/`parse_tiff_mutation`), replacing the F6-era
+# placeholder that described neither the real snapshot NOR the real mutation wire shape (F6 moved
+# every stdio op codec to `keyword key=value ...` text). Every keyword/field-name token below is
+# copied verbatim from the real `format!(...)` call sites.
+#
+# `hex` (bare `hex`, referenced below but deliberately NOT defined as a production in this file)
+# is the framework's built-in `hex` MACRO -- `Symbol::Ref` falls back production-name -> macro-
+# name automatically; see `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2 for why a hand-rolled
+# `{INT|IDENT}*` production is wrong here (no backtracking -- would silently swallow a following
+# bareword keyword like `index`/`tag`/`values`).
+document = no-mutation | set-snapshot | set-byte-order | insert-ifd | remove-ifd | set-tag | remove-tag | set-pixels
+
+no-mutation = "no-mutation"
+set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
+set-byte-order = "set-byte-order" "byte-order" "=" byte-order-lit
+insert-ifd = "insert-ifd" "index" "=" INT "ifd" "=" ifd-lit
+remove-ifd = "remove-ifd" "index" "=" INT
+set-tag = "set-tag" "ifd-index" "=" INT "tag" "=" INT "kind" "=" INT "values" "=" tiff-values
+remove-tag = "remove-tag" "ifd-index" "=" INT "tag" "=" INT
+set-pixels = "set-pixels" "pixels" "=" hex
+
+byte-order-lit = "0" | "1"
+
+# `enc_snapshot`/`dec_snapshot` -- `[hex(schema),byte-order,[ifd,...],hex(pixels)]`.
+snapshot-lit = "[" hex "," byte-order-lit "," ifds-list "," hex "]"
+ifds-list = "[" ifd-item-list? "]"
+ifd-item-list = ifd-lit {"," ifd-lit}*
+
+# `enc_ifd`/`dec_ifd`/`enc_tag`/`dec_tag` -- restated here (same shape as
+# ../../🔺️diff/📝️text/📖️component.grammar.semio's own `ifd-lit`/`tag-lit`) so this leaf grammar
+# is self-contained, matching the repo's existing per-facet convention.
+ifd-lit = "[" ifd-entry-list? "]"
+ifd-entry-list = tag-lit {"," tag-lit}*
+tag-lit = "[" INT "," INT "," tiff-values "]"
+
+# `enc_values`/`dec_values` -- restated here too (same shape as the sibling diff grammar's own
+# `tiff-values`): single-uppercase-letter tag prefix + bracketed positional payload.
+tiff-values = "B" "[" hex "]" | "A" "[" hex "]" | "S" number-list | "L" number-list | "R" rational-list | "E" number-list | "U" "[" hex "]" | "H" number-list | "G" number-list | "Q" rational-list | "F" number-list | "D" number-list
+number-list = "[" number-comma-list? "]"
+number-comma-list = number {"," number}*
+number = FLOAT | INT
+rational-list = "[" rational-comma-list? "]"
+rational-comma-list = rational-item {"," rational-item}*
+rational-item = "[" number "," number "]"

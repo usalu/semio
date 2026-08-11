@@ -1,5 +1,11 @@
 dialect grammar stdio.semio.animation.snapshot
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
 root = document
-document = marker
-marker = "stdio.semio.animation.snapshot"
+document = header body
+header = 'schema' SP 'stdio.semio.animation.snapshot' NL
+body = timeline*
+timeline = name? channel*
+channel = target interpolation keyframe*
+target = node property
+property = 'translation' / 'rotation' / 'scale' / 'weights' / ('custom' name)
+keyframe = t value
+value = ('scalar' f64) / ('vec3' f64 f64 f64) / ('quat' f64 f64 f64 f64) / ('weights' f64*)

@@ -1,13 +1,40 @@
-dialect grammar stdio.txt.diff
-root = diff
-; every field is optional (present = changed) -- mirrors TxtDiff/TxtLinesDiff exactly, no
-; full-snapshot replace slot.
-diff = '{' [member *(',' member)] '}'
-member = trailing-newline-m / line-ending-m / lines-m
-trailing-newline-m = '"trailingNewline":' bool
-line-ending-m = '"lineEnding":' ('"lf"' / '"crLf"')
-lines-m = '"lines":' lines-diff
-lines-diff = '{"removed":' int-array ',"modified":' line-entries ',"added":' line-entries '}'
-line-entries = '[' [line-entry *(',' line-entry)] ']'
-line-entry = '{"index":' digits ',"text":' json-string '}'
-int-array = '[' [digits *(',' digits)] ']'
+dialect grammar
+grammar stdio.txt.diff
+start diff
+
+# P2-P3: real one-line `print_diff`/`parse_diff` form -- `TxtDiff` derives `dsl::DslDiff`, whose
+# `DiffCodec::print_diff` is `dsl::print(&self.__dsl_diff_to_record(), &Self::__dsl_diff_spec(),
+# dsl::JoinMode::Inline)` -- the SAME generic derive-driven printer the sibling mutations grammar
+# (../../🧬️mutations/📝️text/📖️component.grammar.semio) documents, applied here to a STRUCT
+# instead of an enum: no leading keyword at all (`TxtDiff::__dsl_diff_spec()`'s own
+# `RecordSpec::keyword` is `None`, since no `#[dsl(keyword = "...")]` container attribute is set
+# -- every field prints as a bare `key=value`/`key=<nested-fields>` run). Every top-level field is
+# `Option<T>` (present = changed, absent = unchanged); an all-`None` diff prints as the empty
+# string (verified: `TxtDiff::default().print_diff() == ""`).
+comment none
+
+diff = trailing-newline-field? line-ending-field? lines-field?
+trailing-newline-field = "trailing-newline" "=" bit
+line-ending-field = "line-ending" "=" line-ending-value
+bit = "true" | "false"
+line-ending-value = "lf" | "cr-lf"
+
+# `TxtLinesDiff` is itself a `#[derive(dsl::DslRecord)]` struct with no container keyword either
+# -- printed as a flat run of its own 3 keyed fields directly after `lines=`, with no wrapping
+# delimiter of its own (only the `[...]` lists below are self-delimiting; the normative apply
+# order -- modified, then removed descending, then added ascending clamped to `min(index,len)` --
+# is documented on `TxtLinesDiff` itself, ../../🔺️diff/🦀️component.rs, not repeated here).
+lines-field = "lines" "=" lines-diff
+lines-diff = removed-field modified-field added-field
+removed-field = "removed" "=" "[" INT* "]"
+modified-field = "modified" "=" "[" line-modified-entry* "]"
+added-field = "added" "=" "[" line-added-entry* "]"
+
+# `TxtLineModified`/`TxtLineAdded` are likewise keyword-less `#[derive(dsl::DslRecord)]` structs
+# -- each list ITEM prints as its own flat `index=<N> text=<value>` run, back to back with no
+# item separator (list-of-record boundary recovery is structural: the next item's own `index=`
+# key marks where the previous item ended -- the SAME "next real field's own leading key IS the
+# boundary" pattern the sibling mutations grammar's `snapshot-fields` sequence already relies on).
+line-modified-entry = "index" "=" INT "text" "=" text-value
+line-added-entry = "index" "=" INT "text" "=" text-value
+text-value = IDENT | TEXT

@@ -1,10 +1,24 @@
-dialect protocol stdio.stl.snapshot
-; Binary STL (https://en.wikipedia.org/wiki/STL_(file_format)) — auto-detected sibling of the
-; ASCII grammar (../📝️text/📖️component.grammar.semio); dispatched on triangle-count framing.
-header = 80OCTET ; used as solid_name (trailing NUL/whitespace trimmed)
-count = u32-le
-document = header count facet{count}
-facet = normal vertex vertex vertex attribute-byte-count
-normal = f32-le f32-le f32-le
-vertex = f32-le f32-le f32-le
-attribute-byte-count = u16-le
+dialect protocol
+protocol stdio.stl.snapshot
+version 1
+schema stdio.stl
+start body
+
+# FG1: `stdio.stl` is TEXT-NATIVE for the `ArtifactPack` role — `encode_pack_with`/
+# `decode_pack_with` (📸️snapshot/🦀️component.rs) wrap `encode_stl_ascii(self)`/`decode_stl_ascii`
+# verbatim UTF-8 ASCII-STL text inside the SEMIO binary envelope (magic + token, described ONCE
+# framework-side at `semio.envelope`'s own `.protocol.semio` per P2-M3, never re-described here).
+# This is NOT the real, separate binary-STL byte layout the old placeholder described
+# (`decode_stl_binary`/`encode_stl_binary`, ⚙️engine/component.rs:99-157) — that is a wholly
+# different codec this artifact exposes only for cross-artifact export to `stdio.binary`
+# (🚪️io/📤️export/…/💾️binary/🔖️raw/✳️any/🦀️component.rs's `serialize`), never reachable through
+# `ArtifactPack`/this pack facet at all, so it is not honestly what THIS file describes.
+#
+# Model the bytes as if the walk already starts right after the envelope's token, matching every
+# other text-native pilot (json's own worked §2.1 example, `🔣️json/…/📸️snapshot/💾️binary/📡️component.
+# protocol.semio`) — cross-artifact `use semio.envelope` does not resolve at walk time yet (P2-M3).
+# The payload itself is opaque, unstructured UTF-8 bytes at the BINARY layer by construction (its
+# real internal grammar is `../📝️text/📖️component.grammar.semio`'s job, not the protocol dialect's) —
+# `chain ... utf8` is the honest boundary.
+framing record
+chain payload utf8

@@ -1,7 +1,7 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_semio_mesh_snapshot.text;
-message Semio_semio_mesh_snapshot {
-  string schema = 1;
-  string entries_wire = 2;
+// 🛰️ Proto mirror of `s.stdio.semio.mesh`'s DSL TEXT representation.
+package semio.s_stdio_semio_mesh.snapshot.text;
+message Stdio_semio_mesh_snapshot_dsl_text {
+  string preamble = 1;   // "semio stdio.semio.mesh.dsl v1"
+  string hex_body = 2;   // whitespace-tolerant ASCII hex dump of SemioMeshSnapshot's JSON bytes
 }

@@ -1,7 +1,10 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.s_stdio_mp4.artifact;
+package semio.stdio_mp4;
+import "snapshot.proto";
+
 message Mp4Artifact {
   string schema = 1;
-  string entries_wire = 2;
+  semio.stdio_mp4.snapshot.Mp4Ftyp ftyp = 2;
+  repeated semio.stdio_mp4.snapshot.Mp4Track tracks = 3;
+  repeated semio.stdio_mp4.snapshot.Mp4Box unknown_boxes = 4;
 }

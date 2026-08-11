@@ -1,10 +1,10 @@
-/** 🧬️ SemioDocumentArtifact schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioDocumentArtifact
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface SemioDocumentArtifactEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ SemioDocumentArtifact — full artifact state, mirrors `SemioDocumentSnapshot` field for
+ * field (see `📸️snapshot/🟦️component.ts` for the real per-field shapes). */
+import type { DocBlock, DocImage, DocStyle } from "./📸️snapshot/🟦️component";
+
 export interface SemioDocumentArtifact {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioDocumentArtifactEntry[];
+  /** @state persistent */ styles: DocStyle[];
+  /** @state persistent */ images: DocImage[];
+  /** @state persistent */ blocks: DocBlock[];
 }

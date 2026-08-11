@@ -1,5 +1,33 @@
-dialect grammar stdio.html.snapshot
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.html.snapshot"
+dialect grammar
+grammar html.snapshot
+extension html
+start document
+
+; -- The WHATWG HTML5 well-formed subset this artifact accepts (see the component.rs module doc
+; -- comment for the honest error-recovery boundary). The envelope preamble (schema line) used by
+; -- the DSL wrapper is a store::semio_format concern, not part of this grammar; this describes the
+; -- HTML BODY text `parse_html_document`/`write_html_document` operate on.
+document = doctype? SP? element trailing-ws?
+doctype = "<!" doctype-kw *(%x20-3D / %x3F-10FFFF) ">"   ; raw content up to '>', case-insensitive "DOCTYPE"
+doctype-kw = "D" "O" "C" "T" "Y" "P" "E"
+
+element = void-element / raw-text-element / normal-element
+
+void-element = "<" void-name *attribute ["/"] ">"
+void-name = "area" / "base" / "br" / "col" / "embed" / "hr" / "img" / "input"
+          / "link" / "meta" / "param" / "source" / "track" / "wbr"
+
+raw-text-element = "<" raw-text-name *attribute ">" raw-text "</" raw-text-name ">"
+raw-text-name = "script" / "style"
+raw-text = *OCTET   ; verbatim up to the matching case-insensitive close tag, no entity decoding
+
+normal-element = "<" name *attribute ">" *content "</" name ">"
+content = element / comment / text
+comment = "<!--" *OCTET "-->"           ; up to the literal "-->", not nested
+text = *(OCTET / entity)                ; decoded on parse (small named+numeric subset), re-escaped on write
+
+attribute = name ["=" attr-value]
+attr-value = DQUOTE *(OCTET / entity) DQUOTE / SQUOTE *(OCTET / entity) SQUOTE / 1*(OCTET / entity)
+
+name = ALPHA *(ALPHA / DIGIT / "-" / "_" / ":" / ".")
+entity = "&amp;" / "&lt;" / "&gt;" / "&quot;" / "&apos;" / "&#" 1*DIGIT ";" / "&#x" 1*HEXDIG ";"

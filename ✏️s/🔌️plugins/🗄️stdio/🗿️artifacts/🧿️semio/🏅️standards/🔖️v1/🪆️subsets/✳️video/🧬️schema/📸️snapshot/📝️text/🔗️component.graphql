@@ -1,9 +1,6 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_semio_video_snapshotEntry {
-  key: String!
-  value: String!
-}
-type Semio_semio_video_snapshot {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_video_snapshotEntry!]! @state(class: PERSISTENT)
+# 📝️ Text representation mirror for `stdio.semio.video` (snapshot) — envelope header + hex(JSON)
+# body; the JSON body's own structure is ../🔗️component.graphql's SemioVideoSnapshot.
+type SemioVideoSnapshotTextEnvelope {
+  header: String!
+  bodyHex: String!
 }

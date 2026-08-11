@@ -1,11 +1,38 @@
-dialect grammar stdio.txt.snapshot
-root = document
-document = preamble NL body
-preamble = 'semio' SP envelope-id SP 'v' digits
-envelope-id = ident *('.' ident)
-; body is the line-sequence itself: `lines` joined by `line_ending`, plus one more
-; `line_ending` at the end iff `trailing_newline` is set -- never a raw octet blob.
-body = [line *(line-ending line)] [line-ending]
-line = *(OCTET-except-CR-LF)
-line-ending = LF / CRLF
-ident = (ALPHA / '_') *(ALPHA / DIGIT / '_' / '-')
+dialect grammar
+grammar stdio.txt.snapshot
+extension txt
+start document
+
+# P2-P3: `stdio.txt`'s real DSL text form (🧬️schema/📸️snapshot/🦀️component.rs
+# `ArtifactDsl::print_dsl` -> `store::semio_format::wrap_text`) is the mandatory preamble line,
+# a newline, then the ENTIRE remaining document body VERBATIM: `TxtSnapshot::to_body()` is
+# arbitrary UTF-8 text, not itself a line-structured grammar (a `stdio.txt` document literally
+# IS "a text file" -- Phase 1's own final-gate audit already called this artifact's old,
+# unparseable ABNF placeholder the single most CONCEPTUALLY accurate handcrafted grammar in the
+# whole stdio set; this file ports that same precision into the real, parseable dialect). Uses
+# M1's `REST` raw-span terminal (P2-M1 report, Item 2: `Symbol::Terminal("REST")` -- reads the
+# ORIGINAL source text from the current byte offset to EOF, past whatever the shared lexer
+# already fragmented into tokens, so it correctly captures a body containing characters outside
+# this dialect's fixed token alphabet) -- the ONE primitive built for exactly this whole-body
+# capture case.
+comment none
+
+# `dsl::fixture_sweep::m5_handcrafted_grammar_conformance::dsl_body_from_fixture` (and this
+# artifact's own `grammar_conformance_law`, mirroring it) feeds the Recognizer
+# `"<envelope-id>\n<body>"` -- the full `"semio {plugin}.{artifact}.{component} v{n}"` preamble
+# line is a FRAMEWORK-level envelope concern, already described once at
+# 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/📡️protocol/📡️component.protocol.semio (P2-M3
+# deliverable 3) and stripped down to the bare `SemioEnvelope::envelope_id()` (`"stdio.txt"`)
+# before this grammar ever sees it -- same convention every sibling artifact's own snapshot
+# grammar already uses (e.g. csv's `envelope-mark = "stdio.csv"`).
+document = envelope-mark body
+envelope-mark = "stdio.txt"
+
+# The rest of the file, byte-for-byte, past the envelope mark's own trailing newline.
+# `wrap_text` (🧬️semio/🦀️component.rs) `trim_start()`s the body before gluing it after the real
+# preamble, so a genuine `print_dsl` output never has leading blank lines here -- `REST`'s own
+# first captured byte lands exactly on the body's real first character (see
+# `codec_retention_law`'s own doc comment, ⚙️engine/🦀️component.rs, for the one pre-existing,
+# out-of-ownership-boundary lossy case this framework behavior has: a body that legitimately
+# STARTS with its own blank line).
+body = REST

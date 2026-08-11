@@ -1,10 +1,11 @@
-/** 🧬️ TsvSnapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the TsvSnapshot
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface TsvSnapshotEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ TsvSnapshot schema facet — mirrors 🦀️component.rs field-for-field. IANA TSV has no
+ * quoting/escaping; `records` is a raw row grid with no header/data structural distinction. */
+
+export type TsvLineEnding = 'lf' | 'crlf';
+
 export interface TsvSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: TsvSnapshotEntry[];
+  schema: string;
+  records: string[][];
+  trailingNewline: boolean;
+  lineEnding: TsvLineEnding;
 }

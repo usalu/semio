@@ -1,10 +1,2 @@
-/** 🧬️ Semio_semio_animation_diff schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_animation_diff
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_animation_diffEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_animation_diff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_animation_diffEntry[];
-}
+/** 💾️ Binary representation for `stdio.semio.animation.diff`. */
+export type SemioAnimationDiffBinary = Uint8Array;

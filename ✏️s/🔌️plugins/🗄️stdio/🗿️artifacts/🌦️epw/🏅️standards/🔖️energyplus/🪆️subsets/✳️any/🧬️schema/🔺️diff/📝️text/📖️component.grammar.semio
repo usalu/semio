@@ -1,5 +1,25 @@
 dialect grammar stdio.epw.diff
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.epw.diff"
+root = diff
+; wire text is the hand-rolled space-separated token grammar `protocol::DiffCodec` prints
+; (see 🦀️component.rs `print_epw_diff`/`parse_epw_diff`) — not JSON. Every top-level field
+; that changed appears as one `name=value` token; string/struct values are lowercase hex
+; (EPW columns may contain `,`/`?`/spaces, which this grammar's own separators are built from).
+diff = token *(SP token)
+token = "location=" hexbrackets
+      / "design-conditions=" hexstr
+      / "typical-extreme-periods=" hexstr
+      / "ground-temperatures=" hexstr
+      / "holidays-dst=" hexstr
+      / "comments-1=" hexstr
+      / "comments-2=" hexstr
+      / "data-periods=" hexbrackets
+      / "records{" removed ";" modified ";" added "}"
+removed = "[" *(INT ",") "]"
+modified = "[" *(INT ":" recorddiff ",") "]"
+added = "[" *(INT ":" record ",") "]"
+recorddiff = "[" 35(option ",") "]"          ; one [0]/[1,hexstr] slot per column, wire order
+record = "[" 35(hexstr ",") "]"              ; 35 hex-encoded columns, wire order
+option = "[0]" / "[1," hexstr "]"
+hexstr = *HEXDIG                             ; even count, 2 hex digits per byte
+hexbrackets = "[" *(hexstr ",") "]"
+SP = " "

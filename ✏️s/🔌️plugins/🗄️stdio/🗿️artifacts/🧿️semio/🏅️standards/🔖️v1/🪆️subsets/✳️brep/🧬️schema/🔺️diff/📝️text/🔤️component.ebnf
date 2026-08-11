@@ -1,3 +1,7 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.brep.diff" ;
+(* Real hand-rolled `SemioBrepDiff::print_diff`/`parse_diff` grammar (protocol::DiffCodec) --
+   see ../💾️binary/🔠️component.abnf for the full per-collection field grammar this restates at the
+   top-level token shape. *)
+diff line = [ token, { " ", token } ] ;
+token = collection, "=", named triple ;
+collection = "vertices" | "edges" | "loops" | "faces" | "shells" | "solids" ;
+named triple = "[", removed list, "]", ";", "[", modified list, "]", ";", "[", added list, "]" ;

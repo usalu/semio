@@ -1,9 +1,29 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioVideoMutationEntry {
-  key: String!
-  value: String!
+# 🧬️ SemioVideoMutation facet mirror — named-variant union, discriminated on `mutation`.
+enum SemioVideoMutationTag {
+  NO_MUTATION
+  SET_SNAPSHOT
+  INSERT_STREAM
+  REMOVE_STREAM
+  SET_STREAM_META
+  INSERT_SAMPLE
+  REMOVE_SAMPLE
+  SET_SAMPLE_DATA
+  SET_SAMPLE_FLAGS
 }
+
 type SemioVideoMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioVideoMutationEntry!]! @state(class: PERSISTENT)
+  mutation: SemioVideoMutationTag!
+  snapshot: SemioVideoSnapshot
+  index: Int
+  stream: SemioVideoStream
+  kind: SemioVideoStreamKind
+  codec: String
+  width: Int
+  height: Int
+  rate: SemioRational
+  streamIndex: Int
+  sample: SemioVideoSample
+  data: String
+  pts: Int
+  key: Boolean
 }

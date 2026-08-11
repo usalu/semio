@@ -1,3 +1,35 @@
-dialect protocol stdio.ifc.diff
-magic = %x00
-payload = *OCTET
+# 📡️ P2-FG1: REAL binary diff frame, replacing F6's `print_diff().into_bytes()` text-as-binary
+# shortcut (`../../🦀️component.rs`'s old `DiffCodec::encode_diff`) -- `IfcDiff` was one of 4 of
+# stdio's 7 FG1 standards still on that shortcut per this wave's own P2-FG1 census (md/xml/dxf
+# already did the same real upgrade this wave, proving it's achievable). Same structural reasoning
+# as the sibling `../../🧬️mutations/💾️binary/📡️component.protocol.semio` (read that file's comment
+# for the full `DslField`/recursion rationale -- it applies identically here, `IfcEntitiesDiff`/
+# `IfcEntityDiff`/`IfcArgsDiff` are the diff-shaped twin of the same `IfcValue`/`IfcEntity`
+# recursion problem).
+#
+# `format u8` + `flags u8` (bit0..3 = `file_description`/`file_name`/`file_schema`/`entities`
+# presence, same order the text grammar's token list uses) as two REAL fixed fields, then each
+# present field's payload in that order as one trailing `bytes` chain. `file_description`/
+# `file_name`/`file_schema` (flat `Vec<IfcValue>`) and `entities`' own `removed`/`modified.id`/
+# `added.index` keys are real field-by-field binary at the Rust layer
+# (`enc_ifc_value_list_bin`/`enc_entities_diff_bin` in `../../🦀️component.rs`, reusing
+# `store::pack_rt::write_varint_u64`/`store::ByteReader`) -- only `IfcValue::Aggregate`/
+# `TypedValue`'s self-recursion into `Vec<IfcValue>` cannot be re-modeled field-by-field AT THIS
+# DIALECT LAYER, because `Prim::Ref` (the only construct that could describe that self-recursion
+# here) unconditionally errors during `walk_protocol` (`protocol-prim-ref-recursion`, recipe §5 --
+# confirmed unchanged through every FG-wave pilot, not fixed by this wave either). Same
+# honest-boundary treatment the plan prescribes: opaque at the protocol layer, genuinely structured
+# (and round-trip-tested) at the Rust layer. Filed as `mechanism_gaps` in this wave's report
+# (non-blocking; worked around locally exactly as described here, same as json/csv/zip/png/binary/
+# md/xml/dxf).
+dialect protocol
+protocol stdio.ifc.diff
+version 1
+schema stdio.ifc
+start record
+
+framing record
+header fixed 2
+field format u8
+field flags u8
+chain payload bytes

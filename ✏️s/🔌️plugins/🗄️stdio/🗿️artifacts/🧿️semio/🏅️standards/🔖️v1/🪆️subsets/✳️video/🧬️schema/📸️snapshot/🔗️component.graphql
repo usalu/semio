@@ -1,9 +1,31 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioVideoSnapshotEntry {
-  key: String!
-  value: String!
+# 🧬️ SemioVideoSnapshot facet mirror — container-typed, payload-opaque.
+enum SemioVideoStreamKind {
+  VIDEO
+  AUDIO
+  SUBTITLE
 }
+
+type SemioRational {
+  num: Int!
+  den: Int!
+}
+
+type SemioVideoSample {
+  pts: Int!
+  key: Boolean!
+  data: String! # hex-encoded opaque bytes
+}
+
+type SemioVideoStream {
+  kind: SemioVideoStreamKind!
+  codec: String!
+  width: Int!
+  height: Int!
+  rate: SemioRational!
+  samples: [SemioVideoSample!]!
+}
+
 type SemioVideoSnapshot {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioVideoSnapshotEntry!]! @state(class: PERSISTENT)
+  streams: [SemioVideoStream!]! @state(class: PERSISTENT)
 }

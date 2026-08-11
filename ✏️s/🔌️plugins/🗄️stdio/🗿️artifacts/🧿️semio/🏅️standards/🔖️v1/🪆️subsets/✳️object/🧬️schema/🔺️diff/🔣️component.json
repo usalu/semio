@@ -1,10 +1,43 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.object/diff.json",
   "title": "SemioObjectDiff",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Sparse, handcrafted diff over SemioObjectSnapshot — mirrors the 🦀️component.rs sibling's real fields.",
+  "$defs": {
+    "objectId": { "type": "object", "properties": { "value": { "type": "string" } }, "required": ["value"] },
+    "semioValue": { "type": "object" },
+    "semioObjectEntry": { "type": "object", "properties": { "key": { "type": "string" }, "value": { "$ref": "#/$defs/semioValue" } } },
+    "semioObjectNode": { "type": "object", "properties": { "id": { "$ref": "#/$defs/objectId" }, "value": { "$ref": "#/$defs/semioValue" } } },
+    "semioValueDiff": {
+      "type": "object",
+      "properties": {
+        "kind": { "enum": ["replace", "bool", "int", "float", "str", "bytes", "list", "map", "ref"] },
+        "value": {},
+        "lexeme": { "type": "string" },
+        "diff": { "$ref": "#/$defs/indexedTripleDiff" },
+        "id": { "$ref": "#/$defs/objectId" }
+      },
+      "required": ["kind"]
+    },
+    "indexedTripleDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "diff": { "$ref": "#/$defs/semioValueDiff" } } } },
+        "added": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "item": { "$ref": "#/$defs/semioValue" } } } }
+      }
+    },
+    "namedTripleDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array" },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "key": {}, "diff": { "$ref": "#/$defs/semioValueDiff" } } } },
+        "added": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "item": {} } } }
+      }
+    }
+  },
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "root": { "$ref": "#/$defs/semioValueDiff", "x-semio-state": "persistent" },
+    "objects": { "$ref": "#/$defs/namedTripleDiff", "x-semio-state": "persistent" }
   }
 }

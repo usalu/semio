@@ -1,6 +1,14 @@
-dialect protocol stdio.ifc.snapshot
-; Real semio binary envelope wrapping ISO 10303-21 exchange-structure text.
-magic = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A
-token_len = u32le
-token = utf8(token_len)
-payload = utf8(eof)
+# 📡️ P2-FG1: `IfcSnapshot::encode_pack_with` wraps a `SemioEnvelope` header (`wrap_binary`, envelope
+# id `stdio.ifc`, component `Pack`, version 1) around the UTF-8 bytes of
+# `write_part21(&to_part21_document(self))` — the SAME Part-21 text the DSL facet emits. No packed
+# binary layout of its own exists at this facet; text-native, same shape as the sibling STEP
+# artifact's own snapshot protocol (both reuse the shared Part-21 tokenizer). The SEMIO envelope is
+# described ONCE, framework-side — this file describes ONLY the post-unwrap payload.
+dialect protocol
+protocol stdio.ifc.snapshot
+version 1
+schema stdio.ifc
+start body
+
+framing record
+chain payload utf8

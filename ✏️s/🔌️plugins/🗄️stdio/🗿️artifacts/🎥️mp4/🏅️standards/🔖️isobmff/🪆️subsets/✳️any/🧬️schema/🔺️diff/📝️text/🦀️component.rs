@@ -1,3 +1,4 @@
-//! 🚧 scaffolded by W1b — text representation marker for `stdio.mp4.diff`. Full grammar-backed
-//! parse/print lands in W2/W3.
-pub const TEXT_MARKER: &str = "stdio.mp4.diff";
+//! 📝️ Text representation codec surface for `stdio.mp4` (diff).
+
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");

@@ -1,9 +1,2 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_semio_animation_mutationsEntry {
-  key: String!
-  value: String!
-}
-type Semio_semio_animation_mutations {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_animation_mutationsEntry!]! @state(class: PERSISTENT)
-}
+# stdio.semio.animation.mutations text grammar schema
+union SemioAnimationMutation = NoMutation | SetSnapshot | InsertTimeline | RemoveTimeline | SetTimelineName | InsertChannel | RemoveChannel | SetChannelTarget | SetChannelInterpolation | InsertKeyframe | RemoveKeyframe | SetKeyframeTime | SetKeyframeValue

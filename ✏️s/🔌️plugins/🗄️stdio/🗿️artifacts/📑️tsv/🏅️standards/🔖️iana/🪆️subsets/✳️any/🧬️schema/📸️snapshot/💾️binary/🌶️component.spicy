@@ -1,5 +1,10 @@
-module Semio_tsv_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_tsv_snapshot;
+
+# Shared `.semio` binary envelope wrapping a stdio.tsv payload: the UTF-8 bytes of the
+# same TSV document the text facet parses.
 type Document = unit {
-    magic: bytes &size=18;
+    magic: bytes &size=8;
+    token_len: uint32 &byte-order=spicy::ByteOrder::Little;
+    token: bytes &size=self.token_len;   # UTF-8 "stdio.tsv.pack v1"
+    payload: bytes &eod;                 # UTF-8 TSV text
 };

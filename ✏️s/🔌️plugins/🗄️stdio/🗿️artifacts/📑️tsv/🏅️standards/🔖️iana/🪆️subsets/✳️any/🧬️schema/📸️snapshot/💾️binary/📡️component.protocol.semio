@@ -1,3 +1,6 @@
 dialect protocol stdio.tsv.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.tsv.snapshot"
+; shared `.semio` binary envelope (store::semio_format::wrap_binary)
+magic = %x89.53.45.4D.0D.0A.1A.0A
+token-len = U32LE
+token = *OCTET                      ; UTF-8 "stdio.tsv.pack v1", token-len bytes
+payload = *OCTET                    ; UTF-8 TSV text (see ../📝️text/📖️component.grammar.semio)

@@ -1,7 +1,9 @@
 //! 🧬️ SemioBrepArtifact schema — full artifact state, mirrors `SemioBrepSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{SemioBrepSnapshot, BrepSolid};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
+    BrepEdge, BrepFace, BrepLoop, BrepShell, BrepSolid, BrepVertex, SemioBrepSnapshot,
+};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -11,6 +13,21 @@ use serde::{Deserialize, Serialize};
 pub struct SemioBrepArtifact {
     #[state(persistent)]
     pub schema: String,
+    #[state(persistent)]
+    #[serde(default)]
+    pub vertices: Vec<BrepVertex>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub edges: Vec<BrepEdge>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub loops: Vec<BrepLoop>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub faces: Vec<BrepFace>,
+    #[state(persistent)]
+    #[serde(default)]
+    pub shells: Vec<BrepShell>,
     #[state(persistent)]
     #[serde(default)]
     pub solids: Vec<BrepSolid>,
@@ -24,18 +41,27 @@ impl SemioBrepArtifact {
     pub fn to_snapshot(&self) -> SemioBrepSnapshot {
         SemioBrepSnapshot {
             schema: self.schema.clone(),
+            vertices: self.vertices.clone(),
+            edges: self.edges.clone(),
+            loops: self.loops.clone(),
+            faces: self.faces.clone(),
+            shells: self.shells.clone(),
             solids: self.solids.clone(),
         }
     }
     pub fn from_snapshot(snapshot: SemioBrepSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
+            vertices: snapshot.vertices,
+            edges: snapshot.edges,
+            loops: snapshot.loops,
+            faces: snapshot.faces,
+            shells: snapshot.shells,
             solids: snapshot.solids,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: SemioBrepSnapshot) {
-        self.schema = snapshot.schema;
-        self.solids = snapshot.solids;
+        *self = Self::from_snapshot(snapshot);
     }
 }
 

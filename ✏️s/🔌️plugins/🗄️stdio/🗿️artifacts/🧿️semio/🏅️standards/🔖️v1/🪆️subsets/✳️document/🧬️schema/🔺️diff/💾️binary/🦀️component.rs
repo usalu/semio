@@ -1,3 +1,4 @@
-//! 🚧 scaffolded by W1b — binary representation marker for `stdio.semio.document.diff`. Full field-layout
-//! parse/print lands in W2/W3.
-pub const BINARY_MAGIC: &str = "stdio.semio.document.diff";
+//! 💾️ Binary representation marker for `s.stdio.semio.document.diff`: `SemioDocumentDiff`'s
+//! `protocol::DiffCodec::encode_diff` is the `print_diff()` text bytes verbatim (see
+//! `🦀️component.rs`'s `HandcraftedDiffCodec` region) — no separate binary framing.
+pub const BINARY_MAGIC: &str = "s.stdio.semio.document.diff";

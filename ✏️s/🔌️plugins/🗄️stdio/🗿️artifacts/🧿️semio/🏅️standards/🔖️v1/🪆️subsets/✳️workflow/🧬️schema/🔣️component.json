@@ -1,10 +1,31 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.workflow/artifact.json",
   "title": "SemioWorkflowArtifact",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "🧬️ Real facet mirror of 🦀️component.rs — mirrors SemioWorkflowSnapshot field for field.",
   "type": "object",
+  "definitions": {
+    "SemioPoint2": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
+    "PortRef": { "type": "object", "properties": { "node": { "type": "string" }, "port": { "type": "string" } } },
+    "WorkflowParam": { "type": "object", "properties": { "key": { "type": "string" }, "value": { "type": "string" } } },
+    "WorkflowNode": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "type": "string" },
+        "label": { "type": "string" },
+        "params": { "type": "array", "items": { "$ref": "#/definitions/WorkflowParam" } },
+        "position": { "$ref": "#/definitions/SemioPoint2" }
+      }
+    },
+    "WorkflowEdge": {
+      "type": "object",
+      "properties": { "id": { "type": "string" }, "from": { "$ref": "#/definitions/PortRef" }, "to": { "$ref": "#/definitions/PortRef" }, "kind": { "type": "string" } }
+    }
+  },
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+    "nodes": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/WorkflowNode" } },
+    "edges": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/WorkflowEdge" } }
+  },
+  "required": ["schema", "nodes", "edges"]
 }

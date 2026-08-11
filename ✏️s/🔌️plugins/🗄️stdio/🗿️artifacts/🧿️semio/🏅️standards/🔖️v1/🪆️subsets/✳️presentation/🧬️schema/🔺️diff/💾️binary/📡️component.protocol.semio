@@ -1,3 +1,3 @@
-dialect protocol stdio.semio.presentation.diff
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.presentation.diff"
+protocol stdio.semio.presentation.diff.binary
+binary = line:utf8
+; line is exactly the diff facet's own 📝️text grammar output

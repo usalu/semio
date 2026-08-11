@@ -1,9 +1,12 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_mp4_mutationsEntry {
-  key: String!
-  value: String!
-}
-type Semio_mp4_mutations {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_mp4_mutationsEntry!]! @state(class: PERSISTENT)
+# stdio.mp4 mutations 📝️text facet — same shape as ../🔗️component.graphql.
+enum Mp4MutationKind { NO_MUTATION SET_SNAPSHOT SET_FTYP INSERT_TRACK REMOVE_TRACK SET_TRACK_DIMENSIONS SET_TRACK_CODEC INSERT_SAMPLE REMOVE_SAMPLE SET_SAMPLE_SYNC ADD_UNKNOWN_BOX REMOVE_UNKNOWN_BOX }
+type Mp4Mutation {
+  mutation: Mp4MutationKind!
+  snapshot: Mp4Snapshot
+  ftyp: Mp4Ftyp
+  index: Int
+  trackIndex: Int
+  width: Int
+  height: Int
+  sync: Boolean
 }

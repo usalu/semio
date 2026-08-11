@@ -1,3 +1,5 @@
 dialect protocol stdio.semio.drawing.diff
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.drawing.diff"
+; no separate binary envelope -- bytes ARE the UTF-8 text-facet grammar verbatim, see
+; ../📝️text/📖️component.grammar.semio
+text_bytes = *OCTET  ; UTF-8 encoding of the text-facet document
+

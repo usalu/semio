@@ -6,7 +6,7 @@ use crate::artifacts::csv::schema::diff::{
     dec_record, dec_str, diff_set_snapshot, enc_record, enc_str, split_top_level, strip_brackets,
     CsvDiff, CsvFieldDiff, CsvRecordAdded, CsvRecordDiff, CsvRecordModified, CsvRecordsDiff,
 };
-use crate::artifacts::csv::schema::snapshot::CsvRecord;
+use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
 use crate::artifacts::csv::CsvSnapshot;
 use protocol::{Mutation, MutationDiff, OpText};
 use serde::{Deserialize, Serialize};
@@ -228,16 +228,134 @@ impl OpText for CsvMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification as `CsvDiff`'s hand-rolled codec.
-impl protocol::OpBinary for CsvMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+//#region 🔖️RealBinaryOpFrame
+/// 🧪️ P2-P1: **real binary op-frame** for `CsvMutation` — upgraded from the F6-era
+/// `print_op().into_bytes()` text-as-binary shortcut. `tag u8` ordinal (hand-assigned, this
+/// enum cannot use `#[derive(dsl::DslOps)]`, see the doc comment above) + per-variant fields,
+/// via `dsl::ByteWriter`/`dsl::ByteReader` (the real framework LEB128-varint/length-prefixed
+/// primitives, `🧰️framework/…/🎒️pack/🧾️codec/🦀️component.rs`, reachable from stdio because
+/// `extern crate self as pack;` is re-exported at the kernel crate root and `dsl`/`store`/
+/// `protocol` all alias that SAME crate root). Matches
+/// `../💾️binary/📡️component.protocol.semio`'s real `repeat`/`arm` shape exactly — see that
+/// file's own doc comment for why the deeply nested `CsvSnapshot`/`CsvRecord` payload inside
+/// arms 1/3 is one honest opaque tail blob rather than individually walked.
+fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
+    let bytes = s.as_bytes();
+    w.write_varint_u64(bytes.len() as u64);
+    w.write_bytes(bytes);
+}
+fn read_bin_str(r: &mut dsl::ByteReader) -> Result<String, dsl::PackError> {
+    let len = r.read_varint_u64()? as usize;
+    let bytes = r.read_bytes(len)?;
+    String::from_utf8(bytes.to_vec()).map_err(|e| dsl::PackError::Malformed { what: "csv binary utf8 string", offset: 0, detail: e.to_string() })
+}
+pub(crate) fn write_bin_field(w: &mut dsl::ByteWriter, f: &CsvField) {
+    write_bin_str(w, &f.value);
+    w.write_u8(if f.quoted { 1 } else { 0 });
+}
+pub(crate) fn read_bin_field(r: &mut dsl::ByteReader) -> Result<CsvField, dsl::PackError> {
+    let value = read_bin_str(r)?;
+    let quoted = r.read_u8()? != 0;
+    Ok(CsvField { value, quoted })
+}
+pub(crate) fn write_bin_record(w: &mut dsl::ByteWriter, rec: &CsvRecord) {
+    w.write_varint_u64(rec.fields.len() as u64);
+    for f in &rec.fields {
+        write_bin_field(w, f);
     }
 }
+pub(crate) fn read_bin_record(r: &mut dsl::ByteReader) -> Result<CsvRecord, dsl::PackError> {
+    let n = r.read_varint_u64()? as usize;
+    let mut fields = Vec::with_capacity(n);
+    for _ in 0..n {
+        fields.push(read_bin_field(r)?);
+    }
+    Ok(CsvRecord { fields })
+}
+fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &CsvSnapshot) {
+    write_bin_str(w, &s.schema);
+    w.write_u8(if s.has_header { 1 } else { 0 });
+    w.write_varint_u64(s.records.len() as u64);
+    for r in &s.records {
+        write_bin_record(w, r);
+    }
+}
+fn read_bin_snapshot(r: &mut dsl::ByteReader) -> Result<CsvSnapshot, dsl::PackError> {
+    let schema = read_bin_str(r)?;
+    let has_header = r.read_u8()? != 0;
+    let n = r.read_varint_u64()? as usize;
+    let mut records = Vec::with_capacity(n);
+    for _ in 0..n {
+        records.push(read_bin_record(r)?);
+    }
+    Ok(CsvSnapshot { schema, has_header, records })
+}
+fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+    protocol::ProtocolError::Malformed { what: "csv op binary", offset: 0, detail: e.to_string() }
+}
+
+impl protocol::OpBinary for CsvMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let mut w = dsl::ByteWriter::new();
+        match self {
+            CsvMutation::NoMutation => {
+                w.write_u8(0);
+            }
+            CsvMutation::SetSnapshot { snapshot } => {
+                w.write_u8(1);
+                write_bin_snapshot(&mut w, snapshot);
+            }
+            CsvMutation::SetHasHeader { has_header } => {
+                w.write_u8(2);
+                w.write_u8(if *has_header { 1 } else { 0 });
+            }
+            CsvMutation::InsertRecord { index, record } => {
+                w.write_u8(3);
+                w.write_varint_u64(*index as u64);
+                write_bin_record(&mut w, record);
+            }
+            CsvMutation::RemoveRecord { index } => {
+                w.write_u8(4);
+                w.write_varint_u64(*index as u64);
+            }
+            CsvMutation::SetField { record_index, field_index, value, quoted } => {
+                w.write_u8(5);
+                w.write_varint_u64(*record_index as u64);
+                w.write_varint_u64(*field_index as u64);
+                w.write_u8(if *quoted { 1 } else { 0 });
+                write_bin_str(&mut w, value);
+            }
+        }
+        Ok(w.into_bytes())
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut r = dsl::ByteReader::new(bytes);
+        let ordinal = r.read_u8().map_err(op_pack_err)?;
+        let mutation = match ordinal {
+            0 => CsvMutation::NoMutation,
+            1 => CsvMutation::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(op_pack_err)? },
+            2 => CsvMutation::SetHasHeader { has_header: r.read_u8().map_err(op_pack_err)? != 0 },
+            3 => {
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                let record = read_bin_record(&mut r).map_err(op_pack_err)?;
+                CsvMutation::InsertRecord { index, record }
+            }
+            4 => CsvMutation::RemoveRecord { index: r.read_varint_u64().map_err(op_pack_err)? as usize },
+            5 => {
+                let record_index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                let field_index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                let quoted = r.read_u8().map_err(op_pack_err)? != 0;
+                let value = read_bin_str(&mut r).map_err(op_pack_err)?;
+                CsvMutation::SetField { record_index, field_index, value, quoted }
+            }
+            other => {
+                return Err(protocol::ProtocolError::Malformed { what: "csv op ordinal", offset: 0, detail: format!("unknown ordinal {other}") });
+            }
+        };
+        Ok(mutation)
+    }
+}
+//#endregion 🔖️RealBinaryOpFrame
 //#endregion OpCodecs
 
 //#region 🧪️Tests
@@ -503,5 +621,31 @@ mod tests {
         }
     }
     //#endregion 🔖️OpTextBinaryRoundtripLaw
+
+    //#region 🔖️OpsGrammarConformanceLaw
+    /// 🧪️ P2-P1 item 6: `dsl::parse_grammar` + `dsl::Recognizer` recognize REAL `print_op`
+    /// output for several real mutations (not just one trivial case), incl. `SetSnapshot`'s own
+    /// nested positional-tuple `snapshot-value` production.
+    #[test]
+    fn ops_grammar_conformance_law() {
+        let grammar_text = crate::artifacts::csv::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO;
+        let grammar = dsl::parse_grammar(grammar_text).expect("parse mutations grammar");
+        let recognizer = dsl::Recognizer::compile(&grammar);
+
+        let mutations = vec![
+            CsvMutation::NoMutation,
+            CsvMutation::SetHasHeader { has_header: false },
+            CsvMutation::InsertRecord { index: 1, record: record(&[("new", true)]) },
+            CsvMutation::RemoveRecord { index: 0 },
+            CsvMutation::SetField { record_index: 1, field_index: 0, value: "changed".into(), quoted: true },
+            CsvMutation::SetSnapshot { snapshot: sweep_b() },
+        ];
+        for m in mutations {
+            let printed = m.print_op();
+            let ok = recognizer.recognize(&printed).unwrap_or_else(|e| panic!("recognize({printed:?}) errored: {e:?}"));
+            assert!(ok, "mutations grammar must recognize real print_op output {printed:?} for {m:?}");
+        }
+    }
+    //#endregion 🔖️OpsGrammarConformanceLaw
 }
 //#endregion 🧪️Tests

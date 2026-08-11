@@ -1,3 +1,12 @@
-dialect protocol stdio.semio.object.mutations
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.object.mutations"
+dialect protocol
+protocol semio.object.mutations
+version 1
+schema stdio.semio.object.mutations
+start body
+
+# `OpBinary::encode_op`/`decode_op` (this subset's own `🧬️mutations/🦀️component.rs`) are the
+# TEXT `print_op` bytes verbatim (`self.print_op().into_bytes()`), same simplification the sibling
+# `🔺️diff` facet's hand-rolled `DiffCodec` uses -- opaque UTF-8 at this layer; its real grammar is
+# `../📝️text/📖️component.grammar.semio`'s job.
+framing record
+chain payload utf8

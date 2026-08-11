@@ -1,5 +1,12 @@
 dialect grammar stdio.semio.document.diff
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
+; Space-separated key=value tokens; each value a `[removed];[modified];[added]` triple.
 root = document
-document = marker
-marker = "stdio.semio.document.diff"
+document = *(token SP) / ""
+token = stylesToken / imagesToken / blocksToken
+stylesToken = "styles=" triple
+imagesToken = "images=" triple
+blocksToken = "blocks=" triple
+triple = "[" removedList "];[" modifiedList "];[" addedList "]"
+removedList = *(key ",")
+modifiedList = *(key ":" itemDiff ",")
+addedList = *(item ",")

@@ -1,1 +1,144 @@
-{"hello":"stdio.gltf","n":1}
+semio stdio.gltf.dsl v1
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "semio"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ],
+      "name": "root-scene"
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "camera": 0,
+      "name": "root-node"
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 3,
+      "type": "VEC3",
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "min": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "positions"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 36,
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 36,
+      "uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "name": "geometry"
+    }
+  ],
+  "materials": [
+    {
+      "name": "triangle-material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.8
+      }
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    }
+  ],
+  "images": [
+    {
+      "uri": "texture.png"
+    }
+  ],
+  "samplers": [
+    {}
+  ],
+  "skins": [
+    {
+      "joints": [
+        0
+      ],
+      "name": "root-skin"
+    }
+  ],
+  "animations": [
+    {
+      "channels": [
+        {
+          "sampler": 0,
+          "target": {
+            "node": 0,
+            "path": "translation"
+          }
+        }
+      ],
+      "samplers": [
+        {
+          "input": 0,
+          "output": 0
+        }
+      ],
+      "name": "spin"
+    }
+  ],
+  "cameras": [
+    {
+      "type": "perspective",
+      "perspective": {
+        "aspectRatio": 1.777,
+        "yfov": 0.8,
+        "zfar": 100.0,
+        "znear": 0.1
+      },
+      "name": "main-camera"
+    }
+  ],
+  "extensionsUsed": [
+    "KHR_materials_unlit"
+  ],
+  "extras": {
+    "generator-note": "fg3 demo fixture"
+  }
+}

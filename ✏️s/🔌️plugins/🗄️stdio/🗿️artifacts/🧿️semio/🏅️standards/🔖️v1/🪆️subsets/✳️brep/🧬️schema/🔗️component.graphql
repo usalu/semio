@@ -1,9 +1,11 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioBrepArtifactEntry {
-  key: String!
-  value: String!
-}
+# 🧬️ SemioBrepArtifact schema — full artifact state, mirrors SemioBrepSnapshot field for field.
+# See ./📸️snapshot/🔗️component.graphql for the entity type definitions.
 type SemioBrepArtifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioBrepArtifactEntry!]! @state(class: PERSISTENT)
+  vertices: [BrepVertex!]! @state(class: PERSISTENT)
+  edges: [BrepEdge!]! @state(class: PERSISTENT)
+  loops: [BrepLoop!]! @state(class: PERSISTENT)
+  faces: [BrepFace!]! @state(class: PERSISTENT)
+  shells: [BrepShell!]! @state(class: PERSISTENT)
+  solids: [BrepSolid!]! @state(class: PERSISTENT)
 }

@@ -1,5 +1,13 @@
-dialect grammar stdio.semio.image.snapshot
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.image.snapshot"
+dialect grammar
+grammar s.stdio.semio.image.snapshot.text
+extension semio
+start document
+
+document = preamble NL hex-body NL?
+preamble = "semio" SP "s.stdio.semio.image.dsl" SP "v" 1*DIGIT
+hex-body = *HEXDIG
+
+; -- real wire shape (store::semio_format::wrap_text/split_text_preamble): the body is the
+; -- SemioImageSnapshot's own serde_json bytes, lowercase-hex encoded. Honest boundary: this
+; -- subset is a NEUTRAL semio type (not an on-disk file format), so its JSON shape -- not a
+; -- format-specific byte layout -- IS the real payload; see the JSON Schema sibling for that shape.

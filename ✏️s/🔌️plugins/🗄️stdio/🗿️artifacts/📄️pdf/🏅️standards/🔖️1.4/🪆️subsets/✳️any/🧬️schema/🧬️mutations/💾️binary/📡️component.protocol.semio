@@ -1,3 +1,29 @@
-dialect protocol stdio.pdf.mutations
-magic = %x00
-payload = *OCTET
+dialect protocol
+protocol stdio.pdf.mutations
+version 1
+schema stdio.pdf.op
+start op
+
+# P2-FG3: `protocol::OpBinary::encode_op`/`decode_op` for `stdio.pdf` (1.4) forward straight to
+# `dsl::variants_binary::encode_op`/`decode_op` (../../🦀️component.rs) -- ALREADY real binary
+# before this wave touched it, NOT the F6-era `print_op().into_bytes()` text-as-binary shortcut
+# (confirmed empirically, not assumed: a real `[DEBUG]` dump shows `encode_op(NoMutation) == [1,
+# 0, 0, 0]` -- format=1, ordinal=varint(0), then `os_pack::encode_record_body`'s own
+# symbol-count=varint(0), zero fields -- byte-identical to stdio.txt's own documented example for
+# the same generic derive-path wire). Layout: a fixed `format` byte (always `1`), the matched
+# `PdfMutation` variant's ordinal as a `varint` (declaration order: `NoMutation`=0,
+# `SetSnapshot`=1 -- `dsl::DslVariants::variants()`'s own emission order), then the variant's own
+# field payload via `os_pack::encode_record_body` -- a varint-prefixed STRING-SYMBOL TABLE
+# followed by a generic, self-describing per-field-id TAG+value wire, shared verbatim by every
+# `#[derive(dsl::DslRecord)]`/`DslOps`/`DslDiff` type in the whole repo (not stdio.pdf-specific),
+# and genuinely NOT expressible by this dialect's `Array`/`Ref`/`repeat` primitives as they stand
+# today (no dynamic per-field TAG dispatch keyed by a runtime field-id, no symbol-table
+# back-reference resolution) -- the SAME structurally-irreducible gap stdio.txt's own identical
+# protocol file documents (`txt-opbinary-record-body-wire-is-framework-generic`, recorded once
+# more here in this wave's `mechanism_gaps`, not re-solved locally). Modeled honestly:
+# `format`/`ordinal` are genuinely, individually byte-walked and validated; the remaining
+# record-body bytes are one opaque tail.
+framing record
+field format u8
+field ordinal varint
+chain bytes

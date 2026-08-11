@@ -1,7 +1,7 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_semio_cad_mutations.text;
-message Semio_semio_cad_mutations {
-  string schema = 1;
-  string entries_wire = 2;
+// stdio.semio.cad mutations text (OpText) representation -- no semio envelope; see
+// ../🛰️component.proto for the decoded mutation's real schema.
+package semio.s_stdio_semio_cad.mutations.text;
+message Document {
+  string payload = 1;
 }

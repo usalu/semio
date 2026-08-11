@@ -1,10 +1,4 @@
-/** 🧬️ Semio_semio_document_diff schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_document_diff
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_document_diffEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_document_diff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_document_diffEntry[];
-}
+/** 📄️ Text form marker for `s.stdio.semio.document.diff`: space-separated `key=value` tokens,
+ * each value a `[removed];[modified];[added]` triple (see the sibling `🦀️component.rs` marker and
+ * `SemioDocumentDiff`'s real `DiffCodec` impl for the source of truth). */
+export const TEXT_MARKER = "s.stdio.semio.document.diff";

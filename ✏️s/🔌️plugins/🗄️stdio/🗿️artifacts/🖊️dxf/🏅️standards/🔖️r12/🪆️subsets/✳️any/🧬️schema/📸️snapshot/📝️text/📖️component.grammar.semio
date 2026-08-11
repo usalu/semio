@@ -1,21 +1,42 @@
-dialect grammar stdio.dxf.snapshot
-; envelope preamble line + its trailing newline are stripped before this grammar runs
-; (store::semio_format::split_text_preamble). Every DXF token is a TWO-LINE (group code,
-; value) pair. R12 has exactly four section kinds (HEADER/TABLES/BLOCKS/ENTITIES) — no
-; CLASSES/OBJECTS/thumbnail sections, those are R14+.
-root = document
-document = section* eof_tag
-section = tag0 "SECTION" NL code2 section_name NL entry* endsec_tag
-section_name = "HEADER" / "TABLES" / "BLOCKS" / "ENTITIES"
-entry = tag                                                        ; header var / table entry /
-                                                                    ; block header / entity tag,
-                                                                    ; dispatched by the codec on
-                                                                    ; group code 0/2/9 context
-tag = group_code NL value NL
-tag0 = "0" NL
-code2 = "2" NL
-group_code = ["-"] 1*DIGIT
-value = *(%x00-09 / %x0B-FF)                                       ; any octet but LF
-endsec_tag = "0" NL "ENDSEC" NL
-eof_tag = "0" NL "EOF" NL
-NL = [%x0D] %x0A
+dialect grammar
+grammar stdio.dxf.snapshot
+extension dxf
+start document
+comment none
+
+# P2-FG1: real DXF R12 ASCII group-code/value line-pair grammar, replacing the old ABNF-dialect
+# placeholder (wrong header syntax entirely — `dialect grammar stdio.dxf.snapshot` on one line,
+# `;` comments, `/` alternation, `%x` char ranges, none of which this repo's real `parse_grammar`
+# dialect understands). Matches this artifact's own real tokenizer 1:1
+# (🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs `tokenize_dxf`:322-338):
+# every DXF tag is exactly TWO physical lines — an integer group-code line, then an arbitrary-text
+# value line. `LINE` (P2-M1's raw-span terminal) is the exact primitive `tokenize_dxf`'s own doc
+# comment at `📖️grammar/🦀️component.rs`'s `RawSpanEnd::Newline` cites BY NAME ("dxf's opaque
+# group-code value lines") — it captures the value line's rest-of-physical-line VERBATIM from the
+# original source text, past whatever the shared lexer already fragmented it into (arbitrary
+# punctuation like `SOME TEXT, with punctuation!`, or a `$`-prefixed header var name like
+# `$ACADVER` — `$` never needs its own promoted-token handling here because `LINE` never
+# re-tokenizes its span at all, sidestepping the W0 recon's item (2) concern by construction, not
+# by declaring the `DOLLAR` terminal). `comment none` because a real value line may legally contain
+# a literal `#` (e.g. a `TEXT` entity's string value) — same reasoning csv/txt's own grammars use.
+#
+# Per-code semantic typing (string vs int vs double vs point, chosen by an EARLIER group code —
+# W0 recon item (3)) stays exactly what the mission brief calls it: a Rust-side POST-PARSE concern
+# (`classify_group_code_value`), not a lexical-shape decision this grammar needs to encode — this
+# grammar's only job is recognizing the real (code-line, value-line) pair shape, genuinely, which
+# it does for every section (HEADER/TABLES/BLOCKS/ENTITIES) and every nested record (table entries,
+# block headers, entity bodies, POLYLINE/VERTEX/SEQEND) uniformly, since they all share the same
+# flat two-line tag shape at the tokenizer level — section/record structure is a Rust-side walk
+# over the flat tag stream (`parse_header_section`/`parse_tables_section`/`parse_blocks_section`/
+# `parse_entities_until`), not a grammar-level nesting concern (same "flat token stream, walked by
+# Rust" split obj/stl/txt's own grammars use for their own record-oriented formats).
+#
+# `document` matches the m5 harness's own reconstructed body shape: the mandatory
+# `semio stdio.dxf.dsl v1` preamble line is stripped and replaced with the bare `envelope_id()`
+# token before recognition (`grammar_conformance_law`, `⚙️engine/🦀️component.rs`), so
+# `artifact-mark` below matches literally `stdio.dxf` (one token — `.` is an ident-continue
+# character in this lexer), not the full preamble line — same convention json's own snapshot
+# grammar uses.
+artifact-mark = "stdio.dxf"
+document = artifact-mark tag*
+tag = INT LINE

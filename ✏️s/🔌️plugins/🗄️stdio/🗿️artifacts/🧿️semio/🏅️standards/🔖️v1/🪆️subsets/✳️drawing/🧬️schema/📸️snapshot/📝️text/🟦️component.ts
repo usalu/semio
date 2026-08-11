@@ -1,10 +1,3 @@
-/** 🧬️ Semio_semio_drawing_snapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_semio_drawing_snapshot
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_semio_drawing_snapshotEntry {
-  key: string;
-  value: string;
-}
-export interface Semio_semio_drawing_snapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_drawing_snapshotEntry[];
-}
+/** 📝️ Text-wire representation for `stdio.semio.drawing` (snapshot): a preamble line + hex body.
+ * Real shape: `🅰️component.g4`. */
+export type SemioDrawingSnapshotText = string;

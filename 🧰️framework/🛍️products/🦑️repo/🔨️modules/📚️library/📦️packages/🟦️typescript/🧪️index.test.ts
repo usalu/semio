@@ -1343,11 +1343,17 @@ describe("validateTaxonomy", () => {
 
 describe("areaOf", () => {
   test("longest-prefix matches a plugin path to its declared area", () => {
-    expect(areaOf("✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust")).toBe("mixed");
+    // 🕵️ "✏️s/🔌️plugins" graduated "legacy" -> "clean" in an earlier wave of
+    // 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT; this assertion was never updated to match.
+    expect(areaOf("✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust")).toBe("clean");
   });
 
-  test("longest-prefix matches framework paths to legacy", () => {
-    expect(areaOf("🧰️framework/🛍️products/💻️os")).toBe("legacy");
+  test("longest-prefix matches framework paths to mixed", () => {
+    // 🕵️ W7 of 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT graduated "🧰️framework" (and
+    // "✏️s/🔨️modules") "legacy" -> "mixed": most of the tree is still pre-Shape-V2, but enough
+    // packages have migrated (schema self-registration, geometry relocation, s.*->os.* naming, WIT
+    // extension-world) that "legacy" undersold it — "clean" would overclaim full Shape V2 purity.
+    expect(areaOf("🧰️framework/🛍️products/💻️os")).toBe("mixed");
   });
 
   test("returns undefined outside every declared area", () => {

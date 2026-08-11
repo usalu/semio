@@ -1,8 +1,10 @@
 meta:
-  id: html_diff
+  id: stdio_html_diff
   endian: le
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  UTF-8 bytes of `print_diff`'s hand-rolled bracket-token output, verbatim (see the sibling
+  ../📝️text/📖️component.grammar.semio) -- `encode_diff`/`decode_diff` are a pure text<->bytes
+  passthrough, no distinct binary framing.
 seq:
-  - id: magic
-    contents: "stdio.html.diff"
+  - id: diff_text
+    size-eos: true

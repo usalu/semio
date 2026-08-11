@@ -15,10 +15,11 @@
 //! (`hex_encode`/`enc_values`/`split_top_level`/…) rather than duplicating them a second time.
 
 use crate::artifacts::tiff::schema::diff::{
-    self, dec_byte_order, dec_field_type, dec_ifd, dec_list, dec_str, dec_values, enc_byte_order, enc_field_type, enc_ifd, enc_list,
-    enc_str, enc_values, hex_decode, hex_encode, parse_num, split_top_level, strip_brackets, TiffDiff,
+    self, dec_byte_order, dec_field_type, dec_ifd, dec_ifd_bin, dec_list, dec_str, dec_values, dec_values_bin, enc_byte_order,
+    enc_field_type, enc_ifd, enc_ifd_bin, enc_list, enc_str, enc_values, enc_values_bin, hex_decode, hex_encode, parse_num,
+    read_bytes_lp, read_str_lp, split_top_level, strip_brackets, write_bytes_lp, write_str_lp, TiffDiff,
 };
-use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffValues};
+use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
 use crate::artifacts::tiff::TiffSnapshot;
 use protocol::{Mutation, MutationDiff, OpText};
 #[cfg(test)]
@@ -195,23 +196,153 @@ impl OpText for TiffMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `TiffDiff`'s hand-rolled codec uses.
+//#region 🔖️OpBinaryCodec
+/// 🧪️ P2-FG2: real recursive binary twin of [`enc_snapshot`]/[`dec_snapshot`] — reuses
+/// `TiffDiff`'s `pub(crate)` [`write_str_lp`]/[`read_str_lp`]/[`write_bytes_lp`]/[`read_bytes_lp`]/
+/// [`enc_ifd_bin`]/[`dec_ifd_bin`] (`../🔺️diff/🦀️component.rs`), same intra-artifact reuse
+/// convention this file's own text codec already uses off `TiffDiff`'s grammar primitives.
+fn enc_snapshot_bin(s: &TiffSnapshot, out: &mut Vec<u8>) {
+    write_str_lp(out, &s.schema);
+    out.push(match s.byte_order {
+        TiffByteOrder::LittleEndian => 0,
+        TiffByteOrder::BigEndian => 1,
+    });
+    store::pack_rt::write_varint_u64(out, s.ifds.len() as u64);
+    s.ifds.iter().for_each(|ifd| enc_ifd_bin(ifd, out));
+    write_bytes_lp(out, &s.pixels);
+}
+fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let byte_order = if reader.read_u8().map_err(|e| e.to_string())? == 0 { TiffByteOrder::LittleEndian } else { TiffByteOrder::BigEndian };
+    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut ifds = Vec::with_capacity(n as usize);
+    for _ in 0..n {
+        ifds.push(dec_ifd_bin(reader)?);
+    }
+    let pixels = read_bytes_lp(reader)?;
+    Ok(TiffSnapshot { schema, byte_order, ifds, pixels })
+}
+//#endregion 🔖️OpBinaryCodec
+
+/// 🧪️ P2-FG2: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
+/// `TiffMutation` variant ordinal, in the same 0-7 order `print_tiff_mutation`'s own keyword
+/// match uses.
 impl protocol::OpBinary for TiffMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let tag: u8 = match self {
+            TiffMutation::NoMutation => 0,
+            TiffMutation::SetSnapshot { .. } => 1,
+            TiffMutation::SetByteOrder { .. } => 2,
+            TiffMutation::InsertIfd { .. } => 3,
+            TiffMutation::RemoveIfd { .. } => 4,
+            TiffMutation::SetTag { .. } => 5,
+            TiffMutation::RemoveTag { .. } => 6,
+            TiffMutation::SetPixels { .. } => 7,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            TiffMutation::NoMutation => {}
+            TiffMutation::SetSnapshot { snapshot } => enc_snapshot_bin(snapshot, &mut out),
+            TiffMutation::SetByteOrder { byte_order } => out.push(match byte_order {
+                TiffByteOrder::LittleEndian => 0,
+                TiffByteOrder::BigEndian => 1,
+            }),
+            TiffMutation::InsertIfd { index, ifd } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_ifd_bin(ifd, &mut out);
+            }
+            TiffMutation::RemoveIfd { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64),
+            TiffMutation::SetTag { ifd_index, tag, kind, values } => {
+                store::pack_rt::write_varint_u64(&mut out, *ifd_index as u64);
+                out.extend_from_slice(&tag.to_le_bytes());
+                out.push(kind.to_u16() as u8);
+                enc_values_bin(values, &mut out);
+            }
+            TiffMutation::RemoveTag { ifd_index, tag } => {
+                store::pack_rt::write_varint_u64(&mut out, *ifd_index as u64);
+                out.extend_from_slice(&tag.to_le_bytes());
+            }
+            TiffMutation::SetPixels { pixels } => write_bytes_lp(&mut out, pixels),
+        }
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(TiffMutation::NoMutation),
+            1 => {
+                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                Ok(TiffMutation::SetSnapshot { snapshot })
+            }
+            2 => {
+                let v = reader.read_u8().map_err(|e| malformed("op byte_order", reader.position(), e.to_string()))?;
+                Ok(TiffMutation::SetByteOrder { byte_order: if v == 0 { TiffByteOrder::LittleEndian } else { TiffByteOrder::BigEndian } })
+            }
+            3 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let ifd = dec_ifd_bin(&mut reader).map_err(|e| malformed("op ifd", reader.position(), e))?;
+                Ok(TiffMutation::InsertIfd { index, ifd })
+            }
+            4 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                Ok(TiffMutation::RemoveIfd { index })
+            }
+            5 => {
+                let ifd_index = reader.read_varint_u64().map_err(|e| malformed("op ifd_index", reader.position(), e.to_string()))? as usize;
+                let tag = reader.read_u16_le().map_err(|e| malformed("op tag", reader.position(), e.to_string()))?;
+                let kind = TiffFieldType::from_u16(reader.read_u8().map_err(|e| malformed("op kind", reader.position(), e.to_string()))? as u16)
+                    .map_err(|e| malformed("op kind", reader.position(), e))?;
+                let values = dec_values_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
+                Ok(TiffMutation::SetTag { ifd_index, tag, kind, values })
+            }
+            6 => {
+                let ifd_index = reader.read_varint_u64().map_err(|e| malformed("op ifd_index", reader.position(), e.to_string()))? as usize;
+                let tag = reader.read_u16_le().map_err(|e| malformed("op tag", reader.position(), e.to_string()))?;
+                Ok(TiffMutation::RemoveTag { ifd_index, tag })
+            }
+            7 => {
+                let pixels = read_bytes_lp(&mut reader).map_err(|e| malformed("op pixels", reader.position(), e))?;
+                Ok(TiffMutation::SetPixels { pixels })
+            }
+            other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
+        }
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🧪️ P2-FG2: representative `TiffMutation` values (every variant, incl. every `TiffValues`
+/// field-type family the recursive `SetTag` payload can carry) — the single source of truth
+/// reused by `ops_grammar_conformance_law`/`protocol_walk_law` below (`⚙️engine/🦀️component.rs`).
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<TiffMutation> {
+    vec![
+        TiffMutation::NoMutation,
+        TiffMutation::SetByteOrder { byte_order: TiffByteOrder::BigEndian },
+        TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { entries: vec![TiffTag { tag: 270, kind: TiffFieldType::Short, values: TiffValues::Short(vec![1]) }] } },
+        TiffMutation::RemoveIfd { index: 0 },
+        TiffMutation::SetTag { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("An Author".into()) },
+        TiffMutation::SetTag { ifd_index: 0, tag: 282, kind: TiffFieldType::Rational, values: TiffValues::Rational(vec![(72, 1)]) },
+        TiffMutation::SetTag { ifd_index: 0, tag: 700, kind: TiffFieldType::Undefined, values: TiffValues::Undefined(vec![0xde, 0xad]) },
+        TiffMutation::SetTag { ifd_index: 0, tag: 33421, kind: TiffFieldType::SRational, values: TiffValues::SRational(vec![(-3, 10)]) },
+        TiffMutation::SetTag { ifd_index: 0, tag: 65001, kind: TiffFieldType::Float, values: TiffValues::Float(vec![1.5, -2.25]) },
+        TiffMutation::SetTag { ifd_index: 0, tag: 65002, kind: TiffFieldType::Double, values: TiffValues::Double(vec![3.14159265358979]) },
+        TiffMutation::RemoveTag { ifd_index: 0, tag: 296 },
+        TiffMutation::SetPixels { pixels: vec![9u8; 16] },
+    ]
+}
+//#endregion 🔖️DemoCases
 
 //#region Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::tiff::schema::snapshot::TiffTag;
     use protocol::command::DiffAlgebra;
 
     //#region 🔖️Fixtures

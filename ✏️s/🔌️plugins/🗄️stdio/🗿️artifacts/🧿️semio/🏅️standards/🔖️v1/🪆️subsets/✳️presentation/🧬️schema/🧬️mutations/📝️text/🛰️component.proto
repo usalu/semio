@@ -1,7 +1,4 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_semio_presentation_mutations.text;
-message Semio_semio_presentation_mutations {
-  string schema = 1;
-  string entries_wire = 2;
-}
+package stdio.semio.presentation.mutations.text;
+message Arg { string name = 1; string value = 2; }
+message Line { string keyword = 1; repeated Arg args = 2; }

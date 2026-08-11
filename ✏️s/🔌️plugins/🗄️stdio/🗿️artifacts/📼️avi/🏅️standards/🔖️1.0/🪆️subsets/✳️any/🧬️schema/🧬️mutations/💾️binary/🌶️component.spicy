@@ -1,5 +1,4 @@
-module Semio_avi_mutations;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=19;
+module Stdio_avi_mutations;
+public type Op = unit {
+    json_utf8: bytes &eod;
 };

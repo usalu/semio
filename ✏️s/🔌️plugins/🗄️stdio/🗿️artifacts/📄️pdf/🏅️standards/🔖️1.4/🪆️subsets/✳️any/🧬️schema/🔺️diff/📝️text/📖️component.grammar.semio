@@ -1,6 +1,19 @@
-dialect grammar stdio.pdf.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.pdf' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.pdf.diff
+start diff
+
+# P2-FG3: real one-line `print_diff`/`parse_diff` form -- `PdfDiff` (1.4) derives `dsl::DslDiff`,
+# whose `DiffCodec::print_diff` is the same generic derive-driven printer stdio.txt's own diff
+# grammar documents, applied here to `PdfDiff{width,height,text}` (all flat `Option<T>` scalars,
+# no nested block, no leading keyword -- `RecordSpec::keyword` is `None`). Confirmed against a
+# real `[DEBUG]` dump of `print_diff`, not guessed: `"width=300.5 height=400.25 text=\"changed
+# text\""` (a full diff) / `""` (the empty/no-op diff). Every present field prints as a bare
+# `key=value`, space-separated, in declaration order; an absent token means unchanged.
+comment none
+
+diff = width-field? height-field? text-field?
+width-field = "width" "=" number
+height-field = "height" "=" number
+text-field = "text" "=" text-value
+text-value = IDENT | TEXT
+number = INT | FLOAT

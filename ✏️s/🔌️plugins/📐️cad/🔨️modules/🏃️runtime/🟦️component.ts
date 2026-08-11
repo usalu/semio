@@ -13,7 +13,8 @@ import * as aecBuildingStructure from "@semio-tech/cad-js-module-aec-building-st
 // #region 🧩️Contributions
 export const CAD_PLAY_APP_ID = "cad-play";
 
-/** @emoji 📋️ Declarative computer/import metadata carried in `Contribution::CadComputer.computersJson`. */
+/** @emoji 📋️ Declarative computer/import metadata carried in the `cadComputer` `TopicContribution` payload's
+ * `computersJson` field (ex `Contribution::CadComputer.computersJson`, pre open-contribution-mechanism migration). */
 export type CadComputersManifest = {
   modelDefinitionIds: string[];
   statComputers: string[];

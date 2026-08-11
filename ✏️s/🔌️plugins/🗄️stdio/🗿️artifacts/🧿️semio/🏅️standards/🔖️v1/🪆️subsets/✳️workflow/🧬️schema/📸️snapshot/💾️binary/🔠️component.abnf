@@ -1,3 +1,7 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.workflow.snapshot"
+; abnf s.stdio.semio.workflow snapshot binary wire format — envelope + JSON blob, see the module
+; doc comment on 📸️snapshot/💾️binary/🥋️component.ksy.
+document      = envelope-id component-tag version json-payload
+envelope-id   = 20OCTET               ; ASCII "stdio.semio.workflow" (padded)
+component-tag = OCTET                  ; store::semio_format::Component::Pack
+version       = OCTET
+json-payload  = *OCTET                 ; serde_json::to_vec(SemioWorkflowSnapshot)

@@ -72,6 +72,67 @@ pub enum GifMutation {
 }
 //#endregion 🔖️Mutations
 
+/// 🧪️ P2-FG2: representative `GifMutation` (89a) cases for `ops_grammar_conformance_law`/
+/// `protocol_walk_law` (`../../../../⚙️engine/🦀️component.rs`'s `conformance_laws` module) —
+/// every one of the 21 real variants, incl. `Some`/`None` shapes of every `Option<T>` field
+/// (`gct`, `loop_count`, `transparent_index`) — mirrors 87a's own `demo_mutation_cases()`.
+pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
+    // 🧭️ Deliberately a small, hand-built snapshot for `SetSnapshot`'s own payload — NOT
+    // `engine::demo_gif_snapshot()` (the real, 800×800/54-frame `dancing.gif` fixture used by
+    // the snapshot-facet conformance laws): embedding that full fixture inside a `SetSnapshot`
+    // op-text payload is unnecessarily large for exercising the mutations grammar's own
+    // shape, which this compact snapshot already covers field-for-field.
+    let base = GifSnapshot {
+        schema: crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::STDIO_GIF89A_DOCUMENT_SCHEMA.into(),
+        width: 2, height: 2,
+        gct: Some(GifColorTable { sorted: false, colors: vec![crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifRgb { r: 4, g: 5, b: 6 }; 2] }),
+        background_color_index: 0,
+        pixel_aspect_ratio: 0,
+        loop_count: Some(0),
+        frames: vec![],
+        comments: vec!["c0".into()],
+        app_extensions: vec![],
+    };
+    let sample_frame = GifFrame {
+        left: 0, top: 0, width: 2, height: 2,
+        interlace: false,
+        lct: Some(GifColorTable { sorted: false, colors: vec![crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifRgb { r: 9, g: 9, b: 9 }; 2] }),
+        indices: vec![0, 1, 1, 0],
+        delay_cs: 10,
+        disposal: GifDisposal::DoNotDispose,
+        transparent_index: None,
+        user_input: false,
+        plain_text: None,
+    };
+    let gct_value = Some(GifColorTable { sorted: true, colors: vec![Default::default(); 2] });
+    vec![
+        GifMutation::NoMutation,
+        GifMutation::SetSnapshot { snapshot: base.clone() },
+        GifMutation::SetScreenSize { width: 10, height: 10 },
+        GifMutation::SetGlobalColorTable { gct: gct_value },
+        GifMutation::SetGlobalColorTable { gct: None },
+        GifMutation::SetBackgroundColorIndex { index: 5 },
+        GifMutation::SetPixelAspectRatio { ratio: 3 },
+        GifMutation::SetLoopCount { loop_count: Some(7) },
+        GifMutation::SetLoopCount { loop_count: None },
+        GifMutation::InsertFrame { index: 1, frame: sample_frame },
+        GifMutation::RemoveFrame { index: 1 },
+        GifMutation::MoveFrame { from: 0, to: 1 },
+        GifMutation::SetFrameGeometry { index: 0, left: 1, top: 1, width: 2, height: 2 },
+        GifMutation::SetFramePixels { index: 0, indices: vec![1, 1, 1, 1] },
+        GifMutation::SetFrameInterlace { index: 0, interlace: true },
+        GifMutation::SetFrameDelay { index: 0, delay_cs: 77 },
+        GifMutation::SetFrameDisposal { index: 0, disposal: GifDisposal::RestoreToBackground },
+        GifMutation::SetFrameTransparency { index: 0, transparent_index: Some(1) },
+        GifMutation::SetFrameTransparency { index: 0, transparent_index: None },
+        GifMutation::SetFrameUserInput { index: 0, user_input: true },
+        GifMutation::InsertComment { index: 0, text: "newc".into() },
+        GifMutation::RemoveComment { index: 0 },
+        GifMutation::AddAppExtension { index: 0, extension: GifAppExtension { identifier: *b"XMPDATA1", auth_code: *b"XMP", data: vec![1] } },
+        GifMutation::RemoveAppExtension { index: 0 },
+    ]
+}
+
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range frame/comment/extension indices are no-ops
 /// rather than panics -- a stale index (e.g. from a concurrent edit) should degrade gracefully.
@@ -396,6 +457,7 @@ mod tests {
 
     /// 🧪️ F6-PILOT: `OpText`/`OpBinary` round-trip laws over the full ~20-variant vocabulary
     /// (handcrafted impls over the `dsl::DslOps`-derived `DslVariants`).
+    #[test]
     #[test]
     fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();

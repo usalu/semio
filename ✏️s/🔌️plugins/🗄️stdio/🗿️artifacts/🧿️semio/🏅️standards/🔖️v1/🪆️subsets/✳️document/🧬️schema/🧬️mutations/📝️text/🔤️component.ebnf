@@ -1,3 +1,9 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.document.mutations" ;
+(* `keyword arg=value ...` (space-separated) or the literal token "no-mutation". *)
+document = "no-mutation" | keyword, { " ", arg } ;
+keyword = "set-snapshot" | "insert-block" | "remove-block" | "set-block-content"
+        | "set-paragraph-style" | "set-heading-level" | "set-list-ordered" | "set-run-text"
+        | "set-run-style" | "set-image-block" | "insert-style" | "remove-style"
+        | "set-style-name" | "set-style-based-on" | "insert-image" | "remove-image"
+        | "set-image-bytes" ;
+arg = ident, "=", value ;
+value = { printable char - " " } ;

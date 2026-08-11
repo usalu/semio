@@ -1,55 +1,70 @@
-dialect grammar stdio.zip.mutation
-; A `ZipMutation` op-text line is `serde_json::to_string` of the `#[serde(tag = "mutation")]`
-; enum — a single-line JSON object whose `"mutation"` member is the camelCase variant name and
-; whose remaining members are that variant's own fields (untagged serde adjacency: no nested
-; payload wrapper).
-root = mutation-line
-mutation-line = mutation-object NL?
-mutation-object = '{' '"mutation"' ':' mutation-kind [ ',' variant-fields ] '}'
-mutation-kind = '"noMutation"' / '"setSnapshot"' / '"setArchiveComment"' / '"addEntry"'
-              / '"removeEntry"' / '"renameEntry"' / '"setEntryData"' / '"setEntryMethod"'
-              / '"setEntryTimestamps"' / '"setEntryFlags"' / '"setEntryVersions"'
-              / '"setEntryAttributes"' / '"setEntryExtra"' / '"setEntryComment"'
-; The concrete member set is exactly one of the following, selected by `mutation-kind` above —
-; `noMutation` has none; the rest are the mutation's own struct fields, camelCase, no member ever
-; omitted (unlike the diff facet, mutation payload fields are not sparse).
-variant-fields = set-snapshot-fields / set-archive-comment-fields / add-entry-fields
-               / remove-entry-fields / rename-entry-fields / set-entry-data-fields
-               / set-entry-method-fields / set-entry-timestamps-fields / set-entry-flags-fields
-               / set-entry-versions-fields / set-entry-attributes-fields / set-entry-extra-fields
-               / set-entry-comment-fields
-set-snapshot-fields = '"snapshot"' ':' zip-snapshot-object
-set-archive-comment-fields = '"comment"' ':' json-string
-add-entry-fields = '"index"' ':' json-number ',' '"entry"' ':' zip-entry-object
-remove-entry-fields = '"name"' ':' json-string
-rename-entry-fields = '"name"' ':' json-string ',' '"newName"' ':' json-string
-set-entry-data-fields = '"name"' ':' json-string ',' '"data"' ':' byte-array
-set-entry-method-fields = '"name"' ':' json-string ',' '"method"' ':' method-literal
-set-entry-timestamps-fields = '"name"' ':' json-string ',' '"dosDate"' ':' json-number ','
-                               '"dosTime"' ':' json-number ','
-                               '"unixMtime"' ':' ( json-number / 'null' )
-set-entry-flags-fields = '"name"' ':' json-string ',' '"flags"' ':' json-number
-set-entry-versions-fields = '"name"' ':' json-string ',' '"versionMadeBy"' ':' json-number ','
-                             '"versionNeeded"' ':' json-number
-set-entry-attributes-fields = '"name"' ':' json-string ',' '"internalAttrs"' ':' json-number ','
-                               '"externalAttrs"' ':' json-number
-set-entry-extra-fields = '"name"' ':' json-string ',' '"localExtra"' ':' extra-field-array ','
-                          '"centralExtra"' ':' extra-field-array
-set-entry-comment-fields = '"name"' ':' json-string ',' '"comment"' ':' json-string
-; Full snapshot/entry shapes — see `📸️snapshot/📝️text/📖️component.grammar.semio` for the
-; complete `ZipEntry` field set this artifact models (`zip-entry-object` reuses it verbatim).
-zip-snapshot-object = '{' '"schema"' ':' json-string ',' '"entries"' ':' '[' *( zip-entry-object ',' ) ']' ','
-                       '"comment"' ':' json-string '}'
-zip-entry-object = '{' '"name"' ':' json-string ',' *( entry-field ',' ) '}'
-entry-field = '"data"' ':' byte-array / '"method"' ':' method-literal / '"dosDate"' ':' json-number
-            / '"dosTime"' ':' json-number / '"unixMtime"' ':' ( json-number / 'null' )
-            / '"flags"' ':' json-number / '"versionMadeBy"' ':' json-number
-            / '"versionNeeded"' ':' json-number / '"internalAttrs"' ':' json-number
-            / '"externalAttrs"' ':' json-number / '"localExtra"' ':' extra-field-array
-            / '"centralExtra"' ':' extra-field-array / '"comment"' ':' json-string
-method-literal = '"stored"' / '"deflate"'
-byte-array = '[' *( json-number ',' ) ']'
-extra-field-array = '[' *( extra-field-object ',' ) ']'
-extra-field-object = '{' '"id"' ':' json-number ',' '"payload"' ':' byte-array '}'
-json-string = DQUOTE *CHAR DQUOTE
-json-number = 1*DIGIT
+dialect grammar
+grammar stdio.zip.mutations
+start op
+
+# P2-P2: real one-line OpText grammar matching `ZipMutation`'s GENERIC `dsl::DslOps`-derived
+# `print_op`/`parse_op` (../🦀️component.rs's `OpCodecs` region: `dsl::DslVariants::
+# to_named_record` + `dsl::print(..., dsl::JoinMode::Inline)` — no per-artifact custom printer,
+# unlike json/csv's own hand-rolled `print_json_mutation`/`print_csv_mutation`). Keyword = the
+# kebab-case of the Rust variant name (`to_kebab`, `🗣️dsl/✨️derive/🦀️component.rs`'s own
+# documented convention: `SetCamera` -> `set-camera`) — `SetEntryData` -> `set-entry-data`. Field
+# keys are likewise kebab-case of the Rust field ident (`new_name` -> `new-name`), printed as
+# `key=value` atoms in `keyed_field_rank` order (`🗣️dsl/🧬️schema/🦀️component.rs`): every field on
+# every `ZipMutation` variant is a scalar (rank 0, since none use `Table`/`Statements`/`Embed`), so
+# print order is exactly Rust declaration order — a stable sort over an already-ordered slice.
+#
+# `AddEntry`/`SetSnapshot`/`SetEntryExtra` embed a nested `#[dsl(block)]` record (a whole
+# `ZipEntry`/`ZipSnapshot`, itself containing further nested records/lists — `ZipSnapshot.entries`
+# is a `Vec<ZipEntry>`, each `ZipEntry` its own multi-field block) or a bare `Vec<ZipExtraField>`
+# list — genuinely recursive composite shapes the generic printer renders as `key={ ... }`/
+# `key=[ ... ]` with no closing delimiter reachable by a fixed, finite production (nesting depth
+# is only bounded by the DATA, not the grammar). Modeled honestly as `REST` (P2-M1's raw-span
+# terminal, `Symbol::Terminal("REST")` — reads the ORIGINAL source text to EOF, past whatever the
+# shared lexer already fragmented, so it correctly swallows arbitrarily-nested `{`/`[`/`=` content
+# verbatim) for exactly these three variants — the same honest-boundary treatment this program
+# gives a compressed payload or a self-recursive protocol value. Every OTHER variant (10 of 13,
+# every field a plain scalar) is modeled precisely, field-for-field, token-for-token below.
+
+op = no-mutation | set-snapshot | set-archive-comment | add-entry | remove-entry | rename-entry | set-entry-data | set-entry-method | set-entry-timestamps | set-entry-flags | set-entry-versions | set-entry-attributes | set-entry-extra | set-entry-comment
+
+# `scalar_to_text` (🗣️dsl/🧬️schema/🦀️component.rs) prints a `String`/`Bytes64` field bare (IDENT)
+# when it lexes back as exactly one identifier (`is_bare_ident`), quoted+escaped (TEXT) otherwise —
+# covers `name`/`new_name`/`comment` (plain `String`) AND `data` (`#[dsl(base64)]` `Vec<u8>`,
+# always printed as a quoted base64 string, still just a `TEXT` token).
+text-value = IDENT | TEXT
+
+# `ZipCompressionMethod` (`#[derive(dsl::DslScalar)]`, ../../📸️snapshot/🦀️component.rs) prints its
+# bare kebab-case variant tag — `Stored` -> `stored`, `Deflate` -> `deflate`.
+method-value = "stored" | "deflate"
+
+no-mutation = "no-mutation"
+
+# Genuinely recursive nested-block payload (`snapshot={ ... }`) — see module doc comment.
+set-snapshot = "set-snapshot" REST
+
+set-archive-comment = "set-archive-comment" "comment" "=" text-value
+
+# Genuinely recursive nested-block payload (`index=<N> entry={ ... }`) — see module doc comment.
+add-entry = "add-entry" REST
+
+remove-entry = "remove-entry" "name" "=" text-value
+
+rename-entry = "rename-entry" "name" "=" text-value "new-name" "=" text-value
+
+set-entry-data = "set-entry-data" "name" "=" text-value "data" "=" text-value
+
+set-entry-method = "set-entry-method" "name" "=" text-value "method" "=" method-value
+
+set-entry-timestamps = "set-entry-timestamps" "name" "=" text-value "dos-date" "=" INT "dos-time" "=" INT {"unix-mtime" "=" INT}?
+
+set-entry-flags = "set-entry-flags" "name" "=" text-value "flags" "=" INT
+
+set-entry-versions = "set-entry-versions" "name" "=" text-value "version-made-by" "=" INT "version-needed" "=" INT
+
+set-entry-attributes = "set-entry-attributes" "name" "=" text-value "internal-attrs" "=" INT "external-attrs" "=" INT
+
+# Genuinely recursive list-of-records payload (`local-extra=[ ... ] central-extra=[ ... ]`) — see
+# module doc comment.
+set-entry-extra = "set-entry-extra" REST
+
+set-entry-comment = "set-entry-comment" "name" "=" text-value "comment" "=" text-value

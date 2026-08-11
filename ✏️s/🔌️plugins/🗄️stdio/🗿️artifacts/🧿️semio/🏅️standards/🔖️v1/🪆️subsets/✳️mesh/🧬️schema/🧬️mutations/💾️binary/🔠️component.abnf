@@ -1,3 +1,3 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.mesh.mutations"
+; abnf s.stdio.semio.mesh mutation (binary) — identical to the TEXT grammar, UTF-8 encoded, no
+; additional framing (encode_op = print_op().into_bytes()).
+document = *OCTET   ; UTF-8 bytes of the ../📝️text/ print_op() grammar

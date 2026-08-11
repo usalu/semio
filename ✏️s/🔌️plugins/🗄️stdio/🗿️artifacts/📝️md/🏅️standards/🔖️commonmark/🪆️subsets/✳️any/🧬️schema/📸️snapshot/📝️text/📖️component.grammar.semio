@@ -1,45 +1,107 @@
-dialect grammar stdio.md.snapshot
-; 🧩 Real (honest-subset) CommonMark block/inline grammar -- matches
-; ⚙️engine::{parse_markdown_blocks, parse_inline} exactly. NOT full CommonMark (reference
-; links, footnotes, tables, setext headings are explicitly out of scope -- see the snapshot
-; module's own doc comment for the complete deviations list).
+dialect grammar
+grammar stdio.md.snapshot
+extension md
+start document
+comment none
 
-root = document
-document = *block
+# P2-FG1: real (honest-subset) CommonMark grammar of `stdio.md`'s wire text -- replaces the
+# pre-Phase-2 ABNF placeholder that was unparseable by the repo's own `parse_grammar` (wrong header
+# dialect entirely: `dialect grammar stdio.md.snapshot` on one line, `;` comments, `/` alternation,
+# `%x`/`0*3SP` char-class quantifiers -- none of them in this dialect's lexer alphabet). `comment
+# none` is MANDATORY here: an ATX heading starts its line with `#`, which this dialect's shared
+# lexer treats as a LINE-COMMENT marker by default (would silently swallow the whole heading line as
+# trivia) -- the same fix csv's/txt's own real grammars needed for their own meaningful leading
+# characters (recipe §1.1). With `comment none`, `#` instead lexes as an ordinary one-char `Error`
+# token (`🔍️lexer/🦀️component.rs`'s own `comment_line_marker_is_configurable_and_disableable` test),
+# matchable by an ordinary `Symbol::Literal("#")` (`Literal` compares TOKEN TEXT only, never token
+# KIND -- `📖️grammar/🦀️component.rs`'s `match_symbol_tracked`).
+#
+# ⚠️ MECHANISM GAP (P2-W0 §1a, EXPLICITLY EXCLUDED -- not fixed here, not worked around cleverly):
+# CommonMark's LEADING-WHITESPACE-COUNT block nesting -- list-item dedent (`list_item_marker`'s own
+# `indent+marker_len` continuation-line width, `⚙️engine/🦀️component.rs:87-104,283-350`) -- is
+# architecturally impossible for this shared TOKEN-based, whitespace-as-TRIVIA lexer: whitespace
+# never becomes a token at all, so no grammar production can ever count it. `MdBlock::List` is
+# therefore NOT modeled below (no `list`/`list-item` production exists anywhere in this file). This
+# does NOT weaken round-trip correctness: `render_markdown_blocks` (the real `print_dsl`/
+# `encode_pack` encoder) ALWAYS re-emits code blocks FENCED, never 4-space-indented
+# (`⚙️engine/🦀️component.rs`'s own documented normal form) -- 4-space indented code literally never
+# appears in real rendered output either, so that half of the excluded gap costs nothing here.
+# `MdBlock::HtmlBlock` is ALSO left unmodeled: its real end condition ("next blank line") is
+# LINE-COUNT-bounded the same fragile way `paragraph` below is (no `NEWLINE` terminal exists to
+# delimit it -- `csv-newline-trivia` gap, restated), and it is not one of the 5 kinds this wave's own
+# recipe brief names as in-scope (ATX headings, fenced code blocks, thematic breaks, block quotes,
+# paragraph text) -- documented scope cut, not silently dropped.
+#
+# `FENCE` is this dialect's own BUILT-IN raw-multi-line-span token
+# (`🔍️lexer/🦀️component.rs`'s `Shape::Embed`-only special case, ```lang\ncontent\n``` scanned as ONE
+# token) -- it matches `render_block`'s `MdBlock::CodeBlock` output (always exactly 3 backticks,
+# never indented, never tilde-fenced -- `⚙️engine`'s documented normal form) almost exactly; the
+# "mismatched from CommonMark's own fence rule" caveat P2-W0 §1a records only bites content that
+# ITSELF needs a bare `` ``` `` closing line inside a block quote's `"> "`-prefixed rendering, which
+# this grammar's demo fixture (below) deliberately avoids.
+#
+# `LINE`/`REST` (P2-M1 item 2) capture `Heading`/`Paragraph`'s prose content verbatim past their
+# marker, honestly NOT recursively re-parsing `MdInline` structure at this layer -- the recipe's own
+# explicit guidance for this wave. The real `MdInline`/`MdBlock` recursion IS exercised genuinely,
+# with a typed `Ref` self-recursion matching json's own `value` precedent, by the sibling
+# `../../🧬️mutations/📝️text/📖️component.grammar.semio` /
+# `../../🔺️diff/📝️text/📖️component.grammar.semio` wire grammars (both walk the identical
+# `md-block`/`md-inline` shape `enc_block`/`enc_inline` in
+# `../../🔺️diff/🦀️component.rs` actually emit).
+#
+# `paragraph` is modeled as EXACTLY ONE physical `LINE`, never `LINE+`: `Symbol::Plus`/`Symbol::Star`
+# never backtrack (§3 pitfall #2), and this dialect has no `NEWLINE` terminal to bound how many
+# consecutive lines belong to one paragraph vs. the next block -- a `LINE+` paragraph would greedily
+# swallow the ENTIRE REST of the document as "more paragraph" (`LINE` always succeeds while any
+# token remains), never stopping at a following block's own marker. A genuine multi-line paragraph
+# (produced by an embedded `SoftBreak`/`HardBreak` inline) is consequently NOT grammar-recognizable
+# here -- `⚙️engine/🦀️component.rs`'s own `demo_md_snapshot()` fixture (used by this wave's
+# `grammar_conformance_law`/`fixture_honesty_law`) deliberately avoids one, same documented-scope-cut
+# category as `List`/`HtmlBlock` above.
+#
+# `block-quote` IS genuinely recursive (`Ref(block)`) -- CommonMark's `>` marker is a real per-line
+# KEYWORD/promoted-token check (M1's promoted `GT` terminal), not an indentation COUNT, so it does
+# NOT hit the excluded gap above. Each `GT block` iteration recognizes one already-rendered
+# `"> "`-prefixed physical line as one recursive `block` (matches `render_block`'s own per-inner-line
+# `"> "`-prefixing of its flattened `render_blocks` output, `⚙️engine/🦀️component.rs:657-669`) --
+# proven end-to-end against a genuinely 2-level-nested `BlockQuote{BlockQuote{Paragraph}}` fixture by
+# this wave's own `grammar_conformance_law`. A block quote wrapping MULTIPLE sibling blocks (which
+# renders internal blank `"> "` lines between them) is NOT recognizable this way -- an empty
+# continuation of `"> "` with nothing left on that physical line has no next same-line token for
+# `LINE` to bound itself against, so it would incorrectly swallow the FOLLOWING quoted line instead
+# -- `demo_md_snapshot()` therefore always nests exactly one block per block-quote level.
+#
+# 🐛 A SECOND, independent gotcha (a genuine shared-LEXER BUG, not this grammar's own design, filed
+# as `mechanism_gaps` id `md-fence-byte-offset-corruption`, non-blocking, worked around locally):
+# `🔍️lexer/🦀️component.rs`'s `FENCE`-token scanning loop increments its running `byte_offset` for
+# every consumed char EXCEPT `'\n'` -- so every token positioned AFTER a fenced block whose content
+# spans N lines gets its OWN `byte_range` under-reported by N bytes, which can desync
+# `match_raw_span`'s `text.get(start_byte..).find('\n')` lookup enough to make a `LINE`/`REST` match
+# immediately following the fence silently zero-width (confirmed by direct reproduction: a `FENCE`
+# then `block-quote`'s own nested `paragraph = LINE` consistently breaks this way; `atx-heading`/
+# `paragraph`/`thematic-break` placed directly after a fence were empirically NOT observed to trip
+# it for the specific layouts tested, but the underlying corruption is real and general, not
+# layout-specific luck worth depending on). `⚙️engine/🦀️component.rs`'s `demo_md_snapshot()`
+# deliberately places `CodeBlock` LAST, followed only by `ThematicBreak` (a pure-literal-token
+# production that never calls `LINE`/`REST`, so it's structurally immune) -- not a fix to the shared
+# lexer (out of this wave's ownership boundary), just an honest layout choice that avoids the trap.
+artifact-mark = "stdio.md"
+document = artifact-mark block*
 
-block = thematic-break / fenced-code-block / indented-code-block / block-quote
-      / atx-heading / html-block / list / paragraph
+block = thematic-break | fenced-code-block | block-quote | atx-heading | paragraph
 
-thematic-break = 0*3SP 3*(("-" / "_" / "*") *SP) NL
-fenced-code-block = 0*3SP fence [info-string] NL *code-line fence NL
-fence = 3*"`" / 3*"~"
-indented-code-block = 1*("    " code-line NL)
-block-quote = 1*(0*3SP ">" [SP] line NL)
-atx-heading = 0*3SP 1*6"#" [SP inline-run] [SP 1*"#"] NL
-html-block = ("<" tag-open / "<" "/" tag-open / "<!--" ) *CHAR NL *(line NL)
-list = 1*list-item
-list-item = 0*3SP (bullet / ordinal) SP block *("  " block)
-bullet = "-" / "*" / "+"
-ordinal = 1*9DIGIT ("." / ")")
-paragraph = 1*(line NL) NL
+# `render_block`'s `MdBlock::ThematicBreak` always emits the fixed literal `"---\n\n"` -- `"-"` alone
+# lexes as `Minus`, but two consecutive `-` characters fuse into one `DashArrow` token (text `"--"`,
+# `🔍️lexer/🦀️component.rs`'s own dash-fusion rule) BEFORE the third `-` is reached, so `"---"`
+# tokenizes as `DashArrow("--")` then `Minus("-")` -- two literal tokens, not three.
+thematic-break = "--" "-"
 
-inline-run = *inline
-inline = image / link / code-span / strong / emphasis / html-inline / hard-break / soft-break / text
-image = "!" "[" inline-run "]" "(" url [SP quoted-title] ")"
-link = "[" inline-run "]" "(" url [SP quoted-title] ")"
-code-span = 1*"`" *CHAR 1*"`"
-strong = ("**" / "__") inline-run ("**" / "__")
-emphasis = ("*" / "_") inline-run ("*" / "_")
-html-inline = "<" ["/"] tag-name *(SP attr) ">" / "<!--" *CHAR "-->"
-hard-break = 2*SP NL / "\" NL
-soft-break = NL
-text = 1*CHAR
+fenced-code-block = FENCE
 
-url = 1*CHAR
-quoted-title = DQUOTE *CHAR DQUOTE
-tag-open = tag-name *(SP attr) ">"
-tag-name = ALPHA *(ALPHA / DIGIT / "-")
-attr = tag-name "=" DQUOTE *CHAR DQUOTE
-line = *CHAR
-code-line = *CHAR
-info-string = *CHAR
+block-quote = {GT block}+
+
+# `"#"` (0-6 of them, `render_block`'s own `.clamp(1,6)`) then the heading's rendered inline text,
+# verbatim, to end of line.
+atx-heading = "#"+ LINE
+
+paragraph = LINE

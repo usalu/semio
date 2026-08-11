@@ -1,13 +1,17 @@
-//! 🎹️ SemioBrepComposer (s.stdio.semio/v1/brep) — 🚧 scaffolded by W1b:
-//! analyzer-only compose (decodes the subset's own JSON-pack payload). W2/W4 add real
-//! cross-format compose sources once semio↔format import/export leaves land.
+//! 🎹️ SemioBrepComposer (s.stdio.semio/v1/brep) — analyzer-only compose (decodes the subset's
+//! own JSON-pack payload) PLUS the real semio↔step bridge (W4 `🚪️io` leaves), registered below
+//! via `register_composer_entries`.
 
 use semio_framework_plugin::{
     ArtifactComposer, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId,
     SubsetValidator, SubsetValidatorEntry, register_subset_validator, subset_validator_entry_of,
+    ComposerEntry, deserializer_entry_of, serializer_entry_of, register_composer_entries,
 };
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::brep::analyzer::SemioBrepAnalyzer;
+use crate::artifacts::semio::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
+use crate::artifacts::semio::standards::v1::subsets::brep::io::export::serializers::artifacts::step::v_ap214::any::SemioBrepToStep;
+use std::collections::HashSet;
 
 const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("brep") };
 
@@ -43,8 +47,11 @@ impl ArtifactComposer for SemioBrepComposer {
 //#endregion 🔖️Composer
 
 //#region 🔖️SubsetValidator
-/// 🛡️ 🚧 scaffolded by W1b — decode-only validator (no referential-invariant diagnostics yet;
-/// W2 adds real cross-reference checks).
+/// 🛡️ Decodes the payload as this subset's own `SemioBrepSnapshot` (D5's validate-on-build hook)
+/// and checks referential invariants BETWEEN the subset's own collections: every id an
+/// edge/loop/face/shell/solid references (start/end vertex, loop edge, outer/inner loop, shell
+/// face, solid shell) must resolve to a real entity of the referenced kind in the same snapshot.
+/// Dangling references are reported, never silently dropped or fabricated.
 pub struct SemioBrepValidator;
 
 impl SubsetValidator for SemioBrepValidator {
@@ -55,7 +62,7 @@ impl SubsetValidator for SemioBrepValidator {
             IoPayload::Text(text) => <SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
         };
         match decoded {
-            Some(_) => Vec::new(),
+            Some(snapshot) => check_brep_referential_integrity(&snapshot),
             None => vec![dsl::Diagnostic::error(
                 "stdio.semio_brep.validate-decode-failed",
                 dsl::TextSpan::at(1, 1),
@@ -63,6 +70,62 @@ impl SubsetValidator for SemioBrepValidator {
             )],
         }
     }
+}
+
+/// 🔗️ Real cross-collection referential-invariant check — dangling ids are reported as errors, not
+/// silently ignored (nothing here is decode-only anymore).
+pub fn check_brep_referential_integrity(snapshot: &SemioBrepSnapshot) -> Vec<dsl::Diagnostic> {
+    let vertex_ids: HashSet<&str> = snapshot.vertices.iter().map(|v| v.id.as_str()).collect();
+    let edge_ids: HashSet<&str> = snapshot.edges.iter().map(|e| e.id.as_str()).collect();
+    let loop_ids: HashSet<&str> = snapshot.loops.iter().map(|l| l.id.as_str()).collect();
+    let face_ids: HashSet<&str> = snapshot.faces.iter().map(|f| f.id.as_str()).collect();
+    let shell_ids: HashSet<&str> = snapshot.shells.iter().map(|s| s.id.as_str()).collect();
+
+    let mut diagnostics = Vec::new();
+    let mut dangling = |code: &'static str, message: String| {
+        diagnostics.push(dsl::Diagnostic::error(code, dsl::TextSpan::at(1, 1), message));
+    };
+
+    for e in &snapshot.edges {
+        if !vertex_ids.contains(e.start_vertex.as_str()) {
+            dangling("stdio.semio_brep.dangling-edge-start-vertex", format!("edge {:?} references unknown start vertex {:?}", e.id, e.start_vertex));
+        }
+        if !vertex_ids.contains(e.end_vertex.as_str()) {
+            dangling("stdio.semio_brep.dangling-edge-end-vertex", format!("edge {:?} references unknown end vertex {:?}", e.id, e.end_vertex));
+        }
+    }
+    for l in &snapshot.loops {
+        for le in &l.edges {
+            if !edge_ids.contains(le.edge.as_str()) {
+                dangling("stdio.semio_brep.dangling-loop-edge", format!("loop {:?} references unknown edge {:?}", l.id, le.edge));
+            }
+        }
+    }
+    for f in &snapshot.faces {
+        if !loop_ids.contains(f.outer_loop.as_str()) {
+            dangling("stdio.semio_brep.dangling-face-outer-loop", format!("face {:?} references unknown outer loop {:?}", f.id, f.outer_loop));
+        }
+        for inner in &f.inner_loops {
+            if !loop_ids.contains(inner.as_str()) {
+                dangling("stdio.semio_brep.dangling-face-inner-loop", format!("face {:?} references unknown inner loop {:?}", f.id, inner));
+            }
+        }
+    }
+    for s in &snapshot.shells {
+        for sf in &s.faces {
+            if !face_ids.contains(sf.face.as_str()) {
+                dangling("stdio.semio_brep.dangling-shell-face", format!("shell {:?} references unknown face {:?}", s.id, sf.face));
+            }
+        }
+    }
+    for so in &snapshot.solids {
+        for ss in &so.shells {
+            if !shell_ids.contains(ss.shell.as_str()) {
+                dangling("stdio.semio_brep.dangling-solid-shell", format!("solid {:?} references unknown shell {:?}", so.id, ss.shell));
+            }
+        }
+    }
+    diagnostics
 }
 
 static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
@@ -76,5 +139,77 @@ pub fn register() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::brep::schema::semio_brep_artifact_schema_descriptor());
     store::register_document_codec(store::ArtifactCodec::of::<SemioBrepSnapshot, crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation>(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA));
     register_subset_validator(validator_entry());
+    register_composer_entries(io_bridge_entries());
+}
+
+/// 🌉️ W4 semio↔step bridge — one deserializer entry (writes brep, reads step) + one serializer
+/// entry (writes step, reads brep) give all 4 `IoKey`s via `register_composer_entries`'s own
+/// symmetric import/export insertion (see its doc comment) — no separate reverse registration
+/// needed.
+fn io_bridge_entries() -> &'static [ComposerEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
+    ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioBrepFromStep>(), serializer_entry_of::<SemioBrepToStep>()]).as_slice()
 }
 //#endregion 🔖️Register
+
+//#region 🔖️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
+        BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex,
+    };
+
+    fn valid_snapshot() -> SemioBrepSnapshot {
+        let mut s = SemioBrepSnapshot::default();
+        s.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3::default() }];
+        s.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];
+        s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }] }];
+        s.faces = vec![BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true }];
+        s.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] }];
+        s.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: false }] }];
+        s
+    }
+
+    #[test]
+    fn referential_integrity_passes_on_a_self_consistent_snapshot() {
+        assert!(check_brep_referential_integrity(&valid_snapshot()).is_empty());
+    }
+
+    #[test]
+    fn referential_integrity_flags_every_kind_of_dangling_reference() {
+        let mut s = valid_snapshot();
+        s.edges[0].start_vertex = "v-missing".into();
+        s.loops[0].edges[0].edge = "e-missing".into();
+        s.faces[0].outer_loop = "l-missing".into();
+        s.faces[0].inner_loops = vec!["l-missing-2".into()];
+        s.shells[0].faces[0].face = "f-missing".into();
+        s.solids[0].shells[0].shell = "s-missing".into();
+        let diagnostics = check_brep_referential_integrity(&s);
+        let codes: Vec<&str> = diagnostics.iter().map(|d| d.code.0.as_str()).collect();
+        for expected in [
+            "stdio.semio_brep.dangling-edge-start-vertex",
+            "stdio.semio_brep.dangling-loop-edge",
+            "stdio.semio_brep.dangling-face-outer-loop",
+            "stdio.semio_brep.dangling-face-inner-loop",
+            "stdio.semio_brep.dangling-shell-face",
+            "stdio.semio_brep.dangling-solid-shell",
+        ] {
+            assert!(codes.contains(&expected), "expected {expected} among {codes:?}");
+        }
+    }
+
+    #[test]
+    fn validator_decodes_pack_payload_and_runs_referential_checks() {
+        let bytes = <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&valid_snapshot());
+        assert!(SemioBrepValidator::validate(&IoPayload::Binary(bytes)).is_empty());
+
+        let mut broken = valid_snapshot();
+        broken.edges[0].end_vertex = "v-missing".into();
+        let broken_bytes = <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&broken);
+        let diagnostics = SemioBrepValidator::validate(&IoPayload::Binary(broken_bytes));
+        assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_brep.dangling-edge-end-vertex"));
+    }
+}
+//#endregion 🔖️Tests

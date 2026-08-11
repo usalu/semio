@@ -1,5 +1,27 @@
-dialect grammar stdio.semio.model.mutations
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.model.mutations"
+dialect grammar
+grammar stdio.semio.model.mutation
+extension op
+start line
+
+; `SemioModelMutation`'s hand-rolled `OpText` (🧬️mutations/🦀️component.rs §OpCodecs) -- one line
+; of compact serde_json for the whole tagged enum, no envelope. `mutation` is the serde tag; the
+; remaining members are exactly this variant's struct-variant fields (see the Rust enum for the
+; full 11-variant field list: NoMutation, SetSnapshot, Insert/Remove/Set x {SpatialNode, Element,
+; Relation}).
+line = json-text
+json-text = ws value ws
+value = object | array | string | number | "true" | "false" | "null"
+object = "{" ws ( member ( ws "," ws member )* )? ws "}"
+member = string ws ":" ws value
+array = "[" ws ( value ( ws "," ws value )* )? ws "]"
+string = quote ( unescaped | escape )* quote
+quote = %x22
+unescaped = %x20-21 | %x23-5B | %x5D-10FFFF
+escape = "\" ( %x22 | "\" | "/" | "b" | "f" | "n" | "r" | "t" | ( "u" hexdig hexdig hexdig hexdig ) )
+number = "-"? int frac? exp?
+int = "0" | ( %x31-39 digit* )
+frac = "." digit+
+exp = ( "e" | "E" ) ( "+" | "-" )? digit+
+digit = %x30-39
+hexdig = digit | %x41-46 | %x61-66
+ws = ( %x20 | %x09 )*

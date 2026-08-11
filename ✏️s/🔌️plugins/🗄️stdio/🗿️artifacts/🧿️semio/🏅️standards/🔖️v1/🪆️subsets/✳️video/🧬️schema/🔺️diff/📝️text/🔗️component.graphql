@@ -1,9 +1,5 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_semio_video_diffEntry {
-  key: String!
-  value: String!
-}
-type Semio_semio_video_diff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_video_diffEntry!]! @state(class: PERSISTENT)
+# 📝️ Text representation mirror for `stdio.semio.video` (diff) — one line, empty if unchanged.
+# Structural shape is ../🔗️component.graphql's SemioVideoDiff.
+type SemioVideoDiffTextLine {
+  line: String!
 }

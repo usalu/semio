@@ -1,5 +1,12 @@
 dialect grammar stdio.semio.document.mutations
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
+; `keyword arg=value ...` (space-separated) or the literal token `no-mutation`.
 root = document
-document = marker
-marker = "stdio.semio.document.mutations"
+document = "no-mutation" / (keyword *(SP arg))
+keyword = "set-snapshot" / "insert-block" / "remove-block" / "set-block-content"
+        / "set-paragraph-style" / "set-heading-level" / "set-list-ordered" / "set-run-text"
+        / "set-run-style" / "set-image-block" / "insert-style" / "remove-style"
+        / "set-style-name" / "set-style-based-on" / "insert-image" / "remove-image"
+        / "set-image-bytes"
+arg = ident "=" value
+ident = 1*(ALPHA / "-")
+value = *(%x21-7E)  ; any non-space printable run (hex-encoded strings, bracketed triples, …)

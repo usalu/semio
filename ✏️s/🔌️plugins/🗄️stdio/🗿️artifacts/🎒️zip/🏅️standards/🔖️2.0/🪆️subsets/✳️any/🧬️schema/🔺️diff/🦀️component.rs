@@ -653,17 +653,344 @@ impl protocol::DiffCodec for ZipDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_zip_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim (same simplification `WriterDiff`/gif89a's/svg's
-    /// hand-rolled `DiffCodec`s use — satisfies every LAW without inventing a second, denser wire
-    /// format; a future agent MAY tighten this to a true packed encoding without changing the
-    /// trait contract).
+    /// 🧪️ P2-P2: REAL binary frame (`format u8 | has_comment u8 | has_entries u8 | opaque
+    /// payload`), matching `../💾️binary/📡️component.protocol.semio`'s header shape exactly —
+    /// upgraded from F6's `print_diff().into_bytes()` text-as-binary shortcut (per the P2-W0
+    /// census, 100% of stdio's `DiffCodec` impls were still on that shortcut). Delegates the
+    /// variable-length body to `enc_entries_diff_bin`/`dec_entries_diff_bin` below (real
+    /// LEB128-varint-framed binary, genuinely structured — `ZipDiff` is flat, no self-recursive
+    /// value type, unlike json's `JsonValue`, so this is real record-shaped binary all the way
+    /// down, not text-as-bytes at any layer).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, if self.comment.is_some() { 1 } else { 0 }, if self.entries.is_some() { 1 } else { 0 }];
+        if let Some(comment) = &self.comment {
+            write_str_lp(&mut out, comment);
+        }
+        if let Some(entries) = &self.entries {
+            enc_entries_diff_bin(entries, &mut out);
+        }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
+        let has_comment = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_comment", offset: 1, detail: e.to_string() })?;
+        let has_entries = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_entries", offset: 2, detail: e.to_string() })?;
+        let comment = if has_comment != 0 {
+            Some(read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff comment", offset: reader.position() as u64, detail: e })?)
+        } else {
+            None
+        };
+        let entries = if has_entries != 0 {
+            Some(dec_entries_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff entries", offset: reader.position() as u64, detail: e })?)
+        } else {
+            None
+        };
+        Ok(ZipDiff { comment, entries })
     }
 }
 //#endregion 🔖️TopLevel
+
+//#region 🔖️BinaryDiffCodec
+/// 🧪️ P2-P2: real LEB128-varint-framed binary twins of the hex-text codecs above, backing the
+/// upgraded `DiffCodec::encode_diff`/`decode_diff` (`#region 🔖️TopLevel`) — reuses
+/// `store::pack_rt::write_varint_u64` / `store::ByteReader` rather than reinventing varint
+/// encode/decode (same convention P2-P1's json pilot established).
+//#region 🔖️BinaryPrimitives
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+/// ➡️ `store::pack_rt` re-exports `write_varint_u64` but not its zigzag-signed sibling (only
+/// `ByteReader::read_varint_i64` is public) — this is the write-side counterpart, same zigzag
+/// formula (`(v << 1) ^ (v >> 63)`) `crate::os_pack`'s own `write_varint_i64` uses.
+fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
+    let zigzag = ((value << 1) ^ (value >> 63)) as u64;
+    store::pack_rt::write_varint_u64(out, zigzag);
+}
+//#endregion 🔖️BinaryPrimitives
+
+//#region 🔖️EntryBinaryCodec
+fn method_tag(m: ZipCompressionMethod) -> u8 {
+    match m {
+        ZipCompressionMethod::Stored => 0,
+        ZipCompressionMethod::Deflate => 1,
+    }
+}
+fn method_from_tag(tag: u8) -> Result<ZipCompressionMethod, String> {
+    match tag {
+        0 => Ok(ZipCompressionMethod::Stored),
+        1 => Ok(ZipCompressionMethod::Deflate),
+        other => Err(format!("bad compression method tag {other}")),
+    }
+}
+fn enc_extra_field_bin(f: &ZipExtraField, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, f.id as u64);
+    write_bytes_lp(out, &f.payload);
+}
+fn dec_extra_field_bin(reader: &mut store::ByteReader<'_>) -> Result<ZipExtraField, String> {
+    let id = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let payload = read_bytes_lp(reader)?;
+    Ok(ZipExtraField { id, payload })
+}
+fn enc_extra_list_bin(v: &[ZipExtraField], out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, v.len() as u64);
+    for f in v {
+        enc_extra_field_bin(f, out);
+    }
+}
+fn dec_extra_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<ZipExtraField>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    (0..count).map(|_| dec_extra_field_bin(reader)).collect()
+}
+
+/// 🧭️ A whole `ZipEntry`, positional, field order matching the struct declaration exactly (same
+/// order the sibling text codec's `enc_entry`/`dec_entry` use) — used by `added[]` entries, which
+/// carry a full entry payload, not a sparse patch.
+fn enc_entry_bin(e: &ZipEntry, out: &mut Vec<u8>) {
+    write_str_lp(out, &e.name);
+    write_bytes_lp(out, &e.data);
+    out.push(method_tag(e.method));
+    store::pack_rt::write_varint_u64(out, e.dos_date as u64);
+    store::pack_rt::write_varint_u64(out, e.dos_time as u64);
+    match e.unix_mtime {
+        None => out.push(0),
+        Some(v) => {
+            out.push(1);
+            write_varint_i64(out, v);
+        }
+    }
+    store::pack_rt::write_varint_u64(out, e.flags as u64);
+    store::pack_rt::write_varint_u64(out, e.version_made_by as u64);
+    store::pack_rt::write_varint_u64(out, e.version_needed as u64);
+    store::pack_rt::write_varint_u64(out, e.internal_attrs as u64);
+    store::pack_rt::write_varint_u64(out, e.external_attrs as u64);
+    enc_extra_list_bin(&e.local_extra, out);
+    enc_extra_list_bin(&e.central_extra, out);
+    write_str_lp(out, &e.comment);
+}
+fn dec_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<ZipEntry, String> {
+    let name = read_str_lp(reader)?;
+    let data = read_bytes_lp(reader)?;
+    let method = method_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?;
+    let dos_date = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let dos_time = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let unix_mtime = match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => None,
+        1 => Some(reader.read_varint_i64().map_err(|e| e.to_string())?),
+        other => return Err(format!("bad option tag {other}")),
+    };
+    let flags = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let version_made_by = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let version_needed = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let internal_attrs = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let external_attrs = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let local_extra = dec_extra_list_bin(reader)?;
+    let central_extra = dec_extra_list_bin(reader)?;
+    let comment = read_str_lp(reader)?;
+    Ok(ZipEntry { name, data, method, dos_date, dos_time, unix_mtime, flags, version_made_by, version_needed, internal_attrs, external_attrs, local_extra, central_extra, comment })
+}
+//#endregion 🔖️EntryBinaryCodec
+
+//#region 🔖️EntryDiffBinaryCodec
+/// 🎚️ `ZipEntryDiff` has 14 sparse fields — a `u16` bitmask (one bit per field, declaration
+/// order) says which are present, followed by only the present fields' payloads, in bitmask order.
+const EDF_NAME: u16 = 1 << 0;
+const EDF_DATA: u16 = 1 << 1;
+const EDF_METHOD: u16 = 1 << 2;
+const EDF_DOS_DATE: u16 = 1 << 3;
+const EDF_DOS_TIME: u16 = 1 << 4;
+const EDF_UNIX_MTIME: u16 = 1 << 5;
+const EDF_FLAGS: u16 = 1 << 6;
+const EDF_VERSION_MADE_BY: u16 = 1 << 7;
+const EDF_VERSION_NEEDED: u16 = 1 << 8;
+const EDF_INTERNAL_ATTRS: u16 = 1 << 9;
+const EDF_EXTERNAL_ATTRS: u16 = 1 << 10;
+const EDF_LOCAL_EXTRA: u16 = 1 << 11;
+const EDF_CENTRAL_EXTRA: u16 = 1 << 12;
+const EDF_COMMENT: u16 = 1 << 13;
+
+fn enc_entry_diff_bin(d: &ZipEntryDiff, out: &mut Vec<u8>) {
+    let mut mask = 0u16;
+    if d.name.is_some() { mask |= EDF_NAME; }
+    if d.data.is_some() { mask |= EDF_DATA; }
+    if d.method.is_some() { mask |= EDF_METHOD; }
+    if d.dos_date.is_some() { mask |= EDF_DOS_DATE; }
+    if d.dos_time.is_some() { mask |= EDF_DOS_TIME; }
+    if d.unix_mtime.is_some() { mask |= EDF_UNIX_MTIME; }
+    if d.flags.is_some() { mask |= EDF_FLAGS; }
+    if d.version_made_by.is_some() { mask |= EDF_VERSION_MADE_BY; }
+    if d.version_needed.is_some() { mask |= EDF_VERSION_NEEDED; }
+    if d.internal_attrs.is_some() { mask |= EDF_INTERNAL_ATTRS; }
+    if d.external_attrs.is_some() { mask |= EDF_EXTERNAL_ATTRS; }
+    if d.local_extra.is_some() { mask |= EDF_LOCAL_EXTRA; }
+    if d.central_extra.is_some() { mask |= EDF_CENTRAL_EXTRA; }
+    if d.comment.is_some() { mask |= EDF_COMMENT; }
+    out.extend_from_slice(&mask.to_le_bytes());
+
+    if let Some(v) = &d.name { write_str_lp(out, v); }
+    if let Some(v) = &d.data { write_bytes_lp(out, v); }
+    if let Some(v) = d.method { out.push(method_tag(v)); }
+    if let Some(v) = d.dos_date { store::pack_rt::write_varint_u64(out, v as u64); }
+    if let Some(v) = d.dos_time { store::pack_rt::write_varint_u64(out, v as u64); }
+    if let Some(v) = d.unix_mtime {
+        match v {
+            None => out.push(0),
+            Some(x) => {
+                out.push(1);
+                write_varint_i64(out, x);
+            }
+        }
+    }
+    if let Some(v) = d.flags { store::pack_rt::write_varint_u64(out, v as u64); }
+    if let Some(v) = d.version_made_by { store::pack_rt::write_varint_u64(out, v as u64); }
+    if let Some(v) = d.version_needed { store::pack_rt::write_varint_u64(out, v as u64); }
+    if let Some(v) = d.internal_attrs { store::pack_rt::write_varint_u64(out, v as u64); }
+    if let Some(v) = d.external_attrs { store::pack_rt::write_varint_u64(out, v as u64); }
+    if let Some(v) = &d.local_extra { enc_extra_list_bin(v, out); }
+    if let Some(v) = &d.central_extra { enc_extra_list_bin(v, out); }
+    if let Some(v) = &d.comment { write_str_lp(out, v); }
+}
+fn dec_entry_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ZipEntryDiff, String> {
+    let mask = reader.read_u16_le().map_err(|e| e.to_string())?;
+    let mut d = ZipEntryDiff::default();
+    if mask & EDF_NAME != 0 { d.name = Some(read_str_lp(reader)?); }
+    if mask & EDF_DATA != 0 { d.data = Some(read_bytes_lp(reader)?); }
+    if mask & EDF_METHOD != 0 { d.method = Some(method_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?); }
+    if mask & EDF_DOS_DATE != 0 { d.dos_date = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
+    if mask & EDF_DOS_TIME != 0 { d.dos_time = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
+    if mask & EDF_UNIX_MTIME != 0 {
+        let inner = match reader.read_u8().map_err(|e| e.to_string())? {
+            0 => None,
+            1 => Some(reader.read_varint_i64().map_err(|e| e.to_string())?),
+            other => return Err(format!("bad option tag {other}")),
+        };
+        d.unix_mtime = Some(inner);
+    }
+    if mask & EDF_FLAGS != 0 { d.flags = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
+    if mask & EDF_VERSION_MADE_BY != 0 { d.version_made_by = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
+    if mask & EDF_VERSION_NEEDED != 0 { d.version_needed = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
+    if mask & EDF_INTERNAL_ATTRS != 0 { d.internal_attrs = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
+    if mask & EDF_EXTERNAL_ATTRS != 0 { d.external_attrs = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32); }
+    if mask & EDF_LOCAL_EXTRA != 0 { d.local_extra = Some(dec_extra_list_bin(reader)?); }
+    if mask & EDF_CENTRAL_EXTRA != 0 { d.central_extra = Some(dec_extra_list_bin(reader)?); }
+    if mask & EDF_COMMENT != 0 { d.comment = Some(read_str_lp(reader)?); }
+    Ok(d)
+}
+//#endregion 🔖️EntryDiffBinaryCodec
+
+//#region 🔖️EntriesDiffBinaryCodec
+/// 📦️ The one name-keyed collection triple, three runtime-counted lists — mirrors
+/// `enc_entries_diff`'s three text-codec sections exactly, in the same order.
+fn enc_entries_diff_bin(d: &ZipEntriesDiff, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
+    for name in &d.removed {
+        write_str_lp(out, name);
+    }
+    store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
+    for m in &d.modified {
+        write_str_lp(out, &m.name);
+        enc_entry_diff_bin(&m.diff, out);
+    }
+    store::pack_rt::write_varint_u64(out, d.added.len() as u64);
+    for a in &d.added {
+        store::pack_rt::write_varint_u64(out, a.index as u64);
+        enc_entry_bin(&a.entry, out);
+    }
+}
+fn dec_entries_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ZipEntriesDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed = (0..removed_count).map(|_| read_str_lp(reader)).collect::<Result<Vec<_>, String>>()?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified = (0..modified_count)
+        .map(|_| -> Result<ZipEntryModified, String> {
+            let name = read_str_lp(reader)?;
+            let diff = dec_entry_diff_bin(reader)?;
+            Ok(ZipEntryModified { name, diff })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added = (0..added_count)
+        .map(|_| -> Result<ZipEntryAdded, String> {
+            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+            let entry = dec_entry_bin(reader)?;
+            Ok(ZipEntryAdded { index, entry })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok(ZipEntriesDiff { removed, modified, added })
+}
+//#endregion 🔖️EntriesDiffBinaryCodec
+//#endregion 🔖️BinaryDiffCodec
 //#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🔖️DemoCases
+/// 🧪️ P2-P2: representative `ZipDiff` values (empty, a forward `between`, and its reverse) —
+/// exercises the archive `comment` scalar, the tri-state `unix_mtime` (both `Some(None)`-clear and
+/// `Some(Some(_))`-set), and all three sections of the `entries` collection triple simultaneously.
+/// Single source of truth reused by `diff_codec_text_binary_roundtrip_law`
+/// (`../🧬️mutations/🦀️component.rs`) AND by `../../⚙️engine/🦀️component.rs`'s
+/// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests, same convention P2-P1's
+/// json pilot established (`diff::demo_diff_cases()`).
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<ZipDiff> {
+    fn entry(name: &str, data: &[u8]) -> ZipEntry {
+        ZipEntry {
+            name: name.into(),
+            data: data.to_vec(),
+            method: ZipCompressionMethod::Stored,
+            dos_date: 0x1111,
+            dos_time: 0x2222,
+            unix_mtime: Some(1_600_000_000),
+            flags: 0,
+            version_made_by: 20,
+            version_needed: 20,
+            internal_attrs: 0,
+            external_attrs: 0o100644 << 16,
+            local_extra: vec![ZipExtraField { id: 1, payload: vec![1] }],
+            central_extra: vec![ZipExtraField { id: 2, payload: vec![2] }],
+            comment: "before comment".into(),
+        }
+    }
+
+    let a = ZipSnapshot {
+        schema: "stdio.zip".into(),
+        entries: vec![entry("gone.txt", b"will be removed"), entry("stay.txt", b"before")],
+        comment: "archive before".into(),
+    };
+    let b = ZipSnapshot {
+        schema: "stdio.zip".into(),
+        entries: vec![
+            ZipEntry {
+                data: b"after".to_vec(),
+                method: ZipCompressionMethod::Deflate,
+                dos_date: 0x3333,
+                dos_time: 0x4444,
+                unix_mtime: None, // tri-state: was Some, now cleared -> Some(None) in the diff.
+                flags: 0x0800,
+                version_made_by: 63,
+                version_needed: 45,
+                internal_attrs: 1,
+                external_attrs: 0o100755 << 16,
+                local_extra: vec![ZipExtraField { id: 9, payload: vec![9, 9] }],
+                central_extra: vec![ZipExtraField { id: 10, payload: vec![10] }],
+                comment: "after comment".into(),
+                ..entry("stay.txt", b"after")
+            },
+            entry("new.bin", b"brand new"),
+        ],
+        comment: "archive after".into(),
+    };
+
+    vec![ZipDiff::default(), ZipDiff::between(&a, &b), ZipDiff::between(&b, &a)]
+}
+//#endregion 🔖️DemoCases

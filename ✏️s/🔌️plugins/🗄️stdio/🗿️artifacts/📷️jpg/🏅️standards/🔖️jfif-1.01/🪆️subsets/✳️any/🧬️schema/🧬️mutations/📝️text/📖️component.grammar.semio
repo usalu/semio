@@ -1,8 +1,63 @@
-dialect grammar stdio.jpg.mutations
-root = document
-document = payload
-; JpgMutation's text representation IS its JSON serialization (see the sibling
-; ../🔣️component.json for the JpgMutation JSON Schema) -- serde(rename_all = "camelCase"),
-; tag-discriminated union via the "mutation" field (`OpText::print_op`/`parse_op` both go
-; through `serde_json` directly). No custom textual grammar beyond JSON's own.
-payload = json-value
+dialect grammar
+grammar stdio.jpg.mutations
+extension jpg
+start document
+comment none
+
+# P2-FG2: real one-line `OpText::print_op`/`parse_op` shape ALREADY emitted by
+# `../../🦀️component.rs` (`print_jpg_mutation`/`parse_jpg_mutation`), replacing the pre-Phase-2
+# placeholder that described a serde-JSON `JpgMutation` wire struct the Rust codec never emits (F6
+# moved every stdio op codec to `keyword key=value ...` text). Every keyword/field-name token below
+# is copied verbatim from the real `format!(...)` call sites.
+#
+# `hex` (bare `hex`, referenced below but deliberately NOT defined as a production in this file) is
+# the framework's built-in `hex` MACRO -- see `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2.
+document = no-mutation | set-snapshot | set-jfif-header | set-quant-table | remove-quant-table | set-huffman-table | remove-huffman-table | set-restart-interval | insert-other-segment | remove-other-segment | set-pixels | set-re-encode-quality
+
+no-mutation = "no-mutation"
+set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
+set-jfif-header = "set-jfif-header" "version" "=" version-lit "density-units" "=" INT "x-density" "=" INT "y-density" "=" INT "thumbnail" "=" opt-thumbnail
+set-quant-table = "set-quant-table" "table" "=" quant-table-lit
+remove-quant-table = "remove-quant-table" "id" "=" INT
+set-huffman-table = "set-huffman-table" "table" "=" huffman-table-lit
+remove-huffman-table = "remove-huffman-table" "key" "=" huffman-key-lit
+set-restart-interval = "set-restart-interval" "restart-interval" "=" opt-u16
+insert-other-segment = "insert-other-segment" "index" "=" INT "segment" "=" segment-lit
+remove-other-segment = "remove-other-segment" "index" "=" INT
+set-pixels = "set-pixels" "pixels" "=" hex
+set-re-encode-quality = "set-re-encode-quality" "quality" "=" opt-u8
+
+# `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4).
+opt-u8 = "[" "0" "]" | "[" "1" "," INT "]"
+opt-u16 = "[" "0" "]" | "[" "1" "," INT "]"
+opt-thumbnail = "[" "0" "]" | "[" "1" "," thumbnail-lit "]"
+
+# `enc_version` -- `[major,minor]`. `enc_thumbnail` -- `[width,height,hex(rgb_data)]`.
+version-lit = "[" INT "," INT "]"
+thumbnail-lit = "[" INT "," INT "," hex "]"
+
+# `enc_quant_table` -- `[id,precision,[64 decimal values]]` (bracketed decimal list -- not bytes,
+# so `hex` doesn't apply, `📖️grammar-recipe.md` §4's own noted convention for a fixed-64 quant
+# table).
+quant-table-lit = "[" INT "," INT "," "[" quant-value* "]" "]"
+quant-value = INT ","?
+
+# `enc_huffman_table` -- `[id,class,hex(16 bits),hex(values)]`. `enc_huffman_key` -- `[class,id]`.
+huffman-table-lit = "[" INT "," INT "," hex "," hex "]"
+huffman-key-lit = "[" INT "," INT "]"
+
+# `enc_segment` -- `[marker,hex(data)]`.
+segment-lit = "[" INT "," hex "]"
+
+# `enc_jpg_snapshot` -- positional `[schema,width,height,pixels,re-encode-quality,jfif-version,
+# jfif-density-units,jfif-x-density,jfif-y-density,jfif-thumbnail,frame,sof-marker,arithmetic,
+# [quant-table*],[huffman-table*],restart-interval,[segment*]]` tuple, declaration order.
+snapshot-lit = "[" hex "," INT "," INT "," hex "," opt-u8 "," version-lit "," INT "," INT "," INT "," opt-thumbnail "," opt-frame-header "," INT "," INT "," "[" quant-table-item* "]" "," "[" huffman-table-item* "]" "," opt-u16 "," "[" segment-item* "]" "]"
+quant-table-item = quant-table-lit ","?
+huffman-table-item = huffman-table-lit ","?
+segment-item = segment-lit ","?
+
+# `enc_frame_header` (via `encode_option`) -- `[0]` / `[1,[precision,width,height,[component*]]]`.
+opt-frame-header = "[" "0" "]" | "[" "1" "," frame-header-lit "]"
+frame-header-lit = "[" INT "," INT "," INT "," "[" frame-component* "]" "]"
+frame-component = "[" INT "," INT "," INT "," INT "]" ","?

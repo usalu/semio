@@ -7,7 +7,7 @@
 use crate::artifacts::json::schema::diff::{
     diff_set_snapshot, JsonArrayAdded, JsonArrayDiff, JsonArrayModified, JsonDiff, JsonObjectAdded, JsonObjectDiff, JsonObjectModified, JsonValueDiff,
 };
-use crate::artifacts::json::schema::diff::{dec_json_value, dec_str, enc_json_value, enc_str, parse_usize, split_top_level, strip_brackets};
+use crate::artifacts::json::schema::diff::{dec_json_value, dec_json_value_bin, dec_str, enc_json_value, enc_json_value_bin, enc_str, parse_usize, read_str_lp, split_top_level, strip_brackets, write_str_lp};
 use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
 use crate::artifacts::json::JsonSnapshot;
 use protocol::{Mutation, MutationDiff, OpText};
@@ -330,17 +330,179 @@ impl protocol::OpText for JsonMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `JsonDiff`'s hand-rolled codec uses.
+//#region 🔖️OpBinaryCodec
+/// 🧪️ P2-P1: real recursive binary twins of [`enc_json_path`]/[`dec_json_path`] and
+/// [`enc_json_snapshot`]/[`dec_json_snapshot`] above, reusing `JsonDiff`'s `enc_json_value_bin`/
+/// `dec_json_value_bin`/`write_str_lp`/`read_str_lp` (see `../🔺️diff/🦀️component.rs`) — backs the
+/// upgraded `OpBinary` impl below. `JsonPathSegment` gets its own 1-byte tag (`0`=Key,`1`=Index).
+fn enc_json_path_bin(path: &[JsonPathSegment], out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, path.len() as u64);
+    for segment in path {
+        match segment {
+            JsonPathSegment::Key(key) => {
+                out.push(0);
+                write_str_lp(out, key);
+            }
+            JsonPathSegment::Index(index) => {
+                out.push(1);
+                store::pack_rt::write_varint_u64(out, *index as u64);
+            }
+        }
+    }
+}
+fn dec_json_path_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonPath, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut path = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        let tag = reader.read_u8().map_err(|e| e.to_string())?;
+        match tag {
+            0 => path.push(JsonPathSegment::Key(read_str_lp(reader)?)),
+            1 => path.push(JsonPathSegment::Index(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)),
+            other => return Err(format!("json path binary: unknown segment tag {other}")),
+        }
+    }
+    Ok(path)
+}
+fn enc_json_snapshot_bin(snapshot: &JsonSnapshot, out: &mut Vec<u8>) {
+    write_str_lp(out, &snapshot.schema);
+    enc_json_value_bin(&snapshot.value, out);
+}
+fn dec_json_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let value = dec_json_value_bin(reader)?;
+    Ok(JsonSnapshot { schema, value })
+}
+//#endregion 🔖️OpBinaryCodec
+
+/// 🧪️ P2-P1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut (18/31 stdio `OpBinary`
+/// impls were still on that shortcut per the P2-W0 census). `tag` is the `JsonMutation` variant
+/// ordinal, in the same 0-6 order `print_json_mutation`'s own keyword match uses.
 impl protocol::OpBinary for JsonMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let tag: u8 = match self {
+            JsonMutation::NoMutation => 0,
+            JsonMutation::SetSnapshot { .. } => 1,
+            JsonMutation::SetMember { .. } => 2,
+            JsonMutation::RemoveMember { .. } => 3,
+            JsonMutation::InsertArrayElement { .. } => 4,
+            JsonMutation::RemoveArrayElement { .. } => 5,
+            JsonMutation::SetScalar { .. } => 6,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            JsonMutation::NoMutation => {}
+            JsonMutation::SetSnapshot { snapshot } => enc_json_snapshot_bin(snapshot, &mut out),
+            JsonMutation::SetMember { path, key, value } => {
+                enc_json_path_bin(path, &mut out);
+                write_str_lp(&mut out, key);
+                enc_json_value_bin(value, &mut out);
+            }
+            JsonMutation::RemoveMember { path, key } => {
+                enc_json_path_bin(path, &mut out);
+                write_str_lp(&mut out, key);
+            }
+            JsonMutation::InsertArrayElement { path, index, value } => {
+                enc_json_path_bin(path, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_json_value_bin(value, &mut out);
+            }
+            JsonMutation::RemoveArrayElement { path, index } => {
+                enc_json_path_bin(path, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+            }
+            JsonMutation::SetScalar { path, value } => {
+                enc_json_path_bin(path, &mut out);
+                enc_json_value_bin(value, &mut out);
+            }
+        }
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(JsonMutation::NoMutation),
+            1 => {
+                let snapshot = dec_json_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                Ok(JsonMutation::SetSnapshot { snapshot })
+            }
+            2 => {
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
+                let value = dec_json_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(JsonMutation::SetMember { path, key, value })
+            }
+            3 => {
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
+                Ok(JsonMutation::RemoveMember { path, key })
+            }
+            4 => {
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let value = dec_json_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(JsonMutation::InsertArrayElement { path, index, value })
+            }
+            5 => {
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                Ok(JsonMutation::RemoveArrayElement { path, index })
+            }
+            6 => {
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let value = dec_json_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(JsonMutation::SetScalar { path, value })
+            }
+            other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
+        }
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🧪️ P2-P1: representative `JsonMutation` values (every variant, incl. nested/array/object payload
+/// values and a multi-segment `JsonPath` mixing both `Key`/`Index` segments) — the single source of
+/// truth reused by `op_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
+/// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests, so a new variant only needs
+/// adding here once.
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<JsonMutation> {
+    use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
+    use crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
+
+    fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
+        JsonValue::Object { members: pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect() }
+    }
+    fn arr(items: Vec<JsonValue>) -> JsonValue {
+        JsonValue::Array { items }
+    }
+    fn str_(s: &str) -> JsonValue {
+        JsonValue::String { value: s.into() }
+    }
+    fn num(lexeme: &str) -> JsonValue {
+        JsonValue::Number { lexeme: lexeme.into() }
+    }
+
+    let mixed_path = vec![JsonPathSegment::Key("outer".into()), JsonPathSegment::Index(2), JsonPathSegment::Key("inner".into())];
+    vec![
+        JsonMutation::NoMutation,
+        JsonMutation::SetSnapshot {
+            snapshot: JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: objv(vec![("a", num("1")), ("b", arr(vec![str_("x"), JsonValue::Null, JsonValue::Bool { value: true }]))]) },
+        },
+        JsonMutation::SetMember { path: vec![], key: "a".into(), value: num("2.5e10") },
+        JsonMutation::SetMember { path: mixed_path.clone(), key: "k".into(), value: objv(vec![("nested", str_("v"))]) },
+        JsonMutation::RemoveMember { path: vec![JsonPathSegment::Key("outer".into())], key: "gone".into() },
+        JsonMutation::InsertArrayElement { path: vec![JsonPathSegment::Key("list".into())], index: 1, value: arr(vec![num("1"), num("2")]) },
+        JsonMutation::RemoveArrayElement { path: vec![JsonPathSegment::Index(0)], index: 3 },
+        JsonMutation::SetScalar { path: mixed_path, value: JsonValue::Null },
+    ]
+}
+//#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -461,18 +623,7 @@ mod tests {
     fn op_text_binary_roundtrip_law() {
         use protocol::{OpBinary, OpText};
 
-        let mixed_path = vec![JsonPathSegment::Key("outer".into()), JsonPathSegment::Index(2), JsonPathSegment::Key("inner".into())];
-        let cases = vec![
-            JsonMutation::NoMutation,
-            JsonMutation::SetSnapshot { snapshot: snap(objv(vec![("a", num("1")), ("b", arr(vec![str_("x"), JsonValue::Null, JsonValue::Bool { value: true }]))])) },
-            JsonMutation::SetMember { path: vec![], key: "a".into(), value: num("2.5e10") },
-            JsonMutation::SetMember { path: mixed_path.clone(), key: "k".into(), value: objv(vec![("nested", str_("v"))]) },
-            JsonMutation::RemoveMember { path: vec![JsonPathSegment::Key("outer".into())], key: "gone".into() },
-            JsonMutation::InsertArrayElement { path: vec![JsonPathSegment::Key("list".into())], index: 1, value: arr(vec![num("1"), num("2")]) },
-            JsonMutation::RemoveArrayElement { path: vec![JsonPathSegment::Index(0)], index: 3 },
-            JsonMutation::SetScalar { path: mixed_path, value: JsonValue::Null },
-        ];
-        for m in cases {
+        for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = <JsonMutation as OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

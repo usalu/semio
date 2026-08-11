@@ -1,3 +1,11 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.semio.cad.snapshot" ;
+(* stdio.semio.cad DSL text representation (store::ArtifactDsl::parse_dsl / print_dsl). The
+   `semio stdio.semio.cad.dsl v1` preamble line + its trailing newline are stripped by
+   store::semio_format::split_text_preamble BEFORE this grammar's `document` production runs.
+   This subset's snapshot is a NEUTRAL semio type -- the DSL text is a whitespace-tolerant ASCII
+   hex dump of serde_json::to_vec(SemioCadSnapshot) (see ../🔣️component.json for the decoded
+   JSON's real schema, and ../💾️binary/🥋️component.ksy for the paired binary envelope). *)
+document = hex byte, { whitespace, hex byte } ;
+hex byte = hex digit, hex digit ;
+hex digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+          | "a" | "b" | "c" | "d" | "e" | "f" | "A" | "B" | "C" | "D" | "E" | "F" ;
+whitespace = { " " | "\t" | "\r" | "\n" } ;

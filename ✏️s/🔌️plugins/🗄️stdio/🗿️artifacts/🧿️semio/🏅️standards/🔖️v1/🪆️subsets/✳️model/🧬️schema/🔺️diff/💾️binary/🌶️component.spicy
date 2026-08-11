@@ -1,5 +1,7 @@
-module Semio_semio_model_diff;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_semio_model_diff;
+
+# No envelope: the binary form is exactly the UTF-8 bytes of the hand-rolled `print_diff()`
+# one-line text (same grammar as the sibling text facet).
 type Document = unit {
-    magic: bytes &size=22;
+    line: bytes &eod &convert=$$.decode("utf-8");
 };

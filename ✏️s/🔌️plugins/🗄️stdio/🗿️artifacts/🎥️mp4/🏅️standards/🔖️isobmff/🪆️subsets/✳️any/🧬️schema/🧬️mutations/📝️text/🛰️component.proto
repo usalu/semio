@@ -1,7 +1,27 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
-package semio.stdio_mp4_mutations.text;
-message Semio_mp4_mutations {
-  string schema = 1;
-  string entries_wire = 2;
+package semio.stdio_mp4.mutations;
+import "snapshot.proto";
+
+message Mp4Mutation {
+  oneof mutation {
+    bool no_mutation = 1;
+    semio.stdio_mp4.snapshot.Mp4Snapshot set_snapshot = 2;
+    semio.stdio_mp4.snapshot.Mp4Ftyp set_ftyp = 3;
+    InsertTrack insert_track = 4;
+    uint32 remove_track = 5;
+    SetTrackDimensions set_track_dimensions = 6;
+    SetTrackCodec set_track_codec = 7;
+    InsertSample insert_sample = 8;
+    RemoveSample remove_sample = 9;
+    SetSampleSync set_sample_sync = 10;
+    AddUnknownBox add_unknown_box = 11;
+    uint32 remove_unknown_box = 12;
+  }
 }
+message InsertTrack { uint32 index = 1; semio.stdio_mp4.snapshot.Mp4Track track = 2; }
+message SetTrackDimensions { uint32 track_index = 1; uint32 width = 2; uint32 height = 3; }
+message SetTrackCodec { uint32 track_index = 1; semio.stdio_mp4.snapshot.Mp4Codec codec = 2; }
+message InsertSample { uint32 track_index = 1; uint32 index = 2; semio.stdio_mp4.snapshot.Mp4Sample sample = 3; }
+message RemoveSample { uint32 track_index = 1; uint32 index = 2; }
+message SetSampleSync { uint32 track_index = 1; uint32 index = 2; bool sync = 3; }
+message AddUnknownBox { uint32 index = 1; semio.stdio_mp4.snapshot.Mp4Box item = 2; }
