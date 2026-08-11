@@ -12,9 +12,14 @@ use crate::artifacts::bcf::schema::diff::{
     diff_set_snapshot, wrap_comment_diff, wrap_topic_diff, wrap_viewpoint_diff,
     BcfCommentDiff, BcfCommentsDiff, BcfDiff, BcfTopicDiff, BcfTopicsDiff, BcfViewpointDiff, BcfViewpointsDiff,
 };
+use crate::artifacts::bcf::schema::diff::{
+    dec_bytes, dec_camera, dec_comment, dec_components, dec_list, dec_part, dec_str, dec_topic, dec_viewpoint,
+    decode_option, enc_bytes, enc_camera, enc_comment, enc_components, enc_list, enc_part, enc_str, enc_topic,
+    enc_viewpoint, encode_option, split_top_level, strip_brackets,
+};
 use crate::artifacts::bcf::schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfTopic, BcfViewpoint};
 use crate::artifacts::bcf::BcfSnapshot;
-use protocol::Mutation;
+use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -271,31 +276,119 @@ fn find_viewpoint<'a>(base: &'a BcfSnapshot, topic_guid: &str, guid: &str) -> Op
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-impl protocol::OpText for BcfMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
+/// 🧪️ F6: hand-rolled `OpText`/`OpBinary` for `BcfMutation` (`#[derive(dsl::DslOps)]` confirmed
+/// rejected above via a real `cargo check` error) — reuses the diff module's `pub(crate)` grammar
+/// primitives (`enc_str`/`enc_camera`/`enc_topic`/`encode_option`/...) rather than duplicating them
+/// a second time in this file, same pattern `SvgMutation` established. Grammar: `keyword arg=value
+/// ...` (space-separated), one match arm per variant.
+fn enc_bcf_snapshot(s: &BcfSnapshot) -> String {
+    format!("[{},{},{},{}]", enc_str(&s.schema), enc_str(&s.version), enc_list(&s.topics, enc_topic), enc_list(&s.parts, enc_part))
+}
+fn dec_bcf_snapshot(s: &str) -> Result<BcfSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [schema, version, topics, parts_field] = parts.as_slice() else { return Err(format!("bcf snapshot: expected 4 fields, got {}", parts.len())) };
+    Ok(BcfSnapshot { schema: dec_str(schema)?, version: dec_str(version)?, topics: dec_list(topics, dec_topic)?, parts: dec_list(parts_field, dec_part)? })
+}
+
+fn print_bcf_mutation(m: &BcfMutation) -> String {
+    match m {
+        BcfMutation::NoMutation => "no-mutation".to_string(),
+        BcfMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_bcf_snapshot(snapshot)),
+        BcfMutation::SetVersion { version } => format!("set-version version={}", enc_str(version)),
+        BcfMutation::InsertTopic { topic } => format!("insert-topic topic={}", enc_topic(topic)),
+        BcfMutation::RemoveTopic { guid } => format!("remove-topic guid={}", enc_str(guid)),
+        BcfMutation::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author } => format!(
+            "set-topic-markup guid={} title={} description={} status={} priority={} labels={} creation-date={} creation-author={}",
+            enc_str(guid),
+            encode_option(title, |v: &String| enc_str(v)),
+            encode_option(description, |v: &String| enc_str(v)),
+            encode_option(status, |v: &String| enc_str(v)),
+            encode_option(priority, |v: &String| enc_str(v)),
+            encode_option(labels, |v: &Vec<String>| enc_list(v, |s| enc_str(s))),
+            encode_option(creation_date, |v: &String| enc_str(v)),
+            encode_option(creation_author, |v: &String| enc_str(v)),
+        ),
+        BcfMutation::InsertComment { topic_guid, comment } => format!("insert-comment topic-guid={} comment={}", enc_str(topic_guid), enc_comment(comment)),
+        BcfMutation::RemoveComment { topic_guid, guid } => format!("remove-comment topic-guid={} guid={}", enc_str(topic_guid), enc_str(guid)),
+        BcfMutation::SetComment { topic_guid, guid, date, author, text, viewpoint_ref } => format!(
+            "set-comment topic-guid={} guid={} date={} author={} text={} viewpoint-ref={}",
+            enc_str(topic_guid), enc_str(guid),
+            encode_option(date, |v: &String| enc_str(v)),
+            encode_option(author, |v: &String| enc_str(v)),
+            encode_option(text, |v: &String| enc_str(v)),
+            encode_option(viewpoint_ref, |inner: &Option<String>| encode_option(inner, |v: &String| enc_str(v))),
+        ),
+        BcfMutation::InsertViewpoint { topic_guid, viewpoint } => format!("insert-viewpoint topic-guid={} viewpoint={}", enc_str(topic_guid), enc_viewpoint(viewpoint)),
+        BcfMutation::RemoveViewpoint { topic_guid, guid } => format!("remove-viewpoint topic-guid={} guid={}", enc_str(topic_guid), enc_str(guid)),
+        BcfMutation::SetViewpointCamera { topic_guid, guid, camera } => format!("set-viewpoint-camera topic-guid={} guid={} camera={}", enc_str(topic_guid), enc_str(guid), encode_option(camera, enc_camera)),
+        BcfMutation::SetViewpointComponents { topic_guid, guid, components } => format!("set-viewpoint-components topic-guid={} guid={} components={}", enc_str(topic_guid), enc_str(guid), encode_option(components, enc_components)),
+        BcfMutation::SetViewpointSnapshot { topic_guid, guid, snapshot } => format!("set-viewpoint-snapshot topic-guid={} guid={} snapshot={}", enc_str(topic_guid), enc_str(guid), encode_option(snapshot, |b: &Vec<u8>| enc_bytes(b))),
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+}
+fn parse_bcf_mutation(line: &str) -> Result<BcfMutation, String> {
+    if line == "no-mutation" {
+        return Ok(BcfMutation::NoMutation);
+    }
+    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    let args: std::collections::BTreeMap<&str, &str> = rest
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|tok| tok.split_once('=').ok_or_else(|| format!("bcf mutation: bad arg token {tok:?}")))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .collect();
+    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("bcf mutation: missing arg '{k}' for '{keyword}'"));
+    match keyword {
+        "set-snapshot" => Ok(BcfMutation::SetSnapshot { snapshot: dec_bcf_snapshot(arg("snapshot")?)? }),
+        "set-version" => Ok(BcfMutation::SetVersion { version: dec_str(arg("version")?)? }),
+        "insert-topic" => Ok(BcfMutation::InsertTopic { topic: dec_topic(arg("topic")?)? }),
+        "remove-topic" => Ok(BcfMutation::RemoveTopic { guid: dec_str(arg("guid")?)? }),
+        "set-topic-markup" => Ok(BcfMutation::SetTopicMarkup {
+            guid: dec_str(arg("guid")?)?,
+            title: decode_option(arg("title")?, dec_str)?,
+            description: decode_option(arg("description")?, dec_str)?,
+            status: decode_option(arg("status")?, dec_str)?,
+            priority: decode_option(arg("priority")?, dec_str)?,
+            labels: decode_option(arg("labels")?, |s| dec_list(s, dec_str))?,
+            creation_date: decode_option(arg("creation-date")?, dec_str)?,
+            creation_author: decode_option(arg("creation-author")?, dec_str)?,
+        }),
+        "insert-comment" => Ok(BcfMutation::InsertComment { topic_guid: dec_str(arg("topic-guid")?)?, comment: dec_comment(arg("comment")?)? }),
+        "remove-comment" => Ok(BcfMutation::RemoveComment { topic_guid: dec_str(arg("topic-guid")?)?, guid: dec_str(arg("guid")?)? }),
+        "set-comment" => Ok(BcfMutation::SetComment {
+            topic_guid: dec_str(arg("topic-guid")?)?,
+            guid: dec_str(arg("guid")?)?,
+            date: decode_option(arg("date")?, dec_str)?,
+            author: decode_option(arg("author")?, dec_str)?,
+            text: decode_option(arg("text")?, dec_str)?,
+            viewpoint_ref: decode_option(arg("viewpoint-ref")?, |s| decode_option(s, dec_str))?,
+        }),
+        "insert-viewpoint" => Ok(BcfMutation::InsertViewpoint { topic_guid: dec_str(arg("topic-guid")?)?, viewpoint: dec_viewpoint(arg("viewpoint")?)? }),
+        "remove-viewpoint" => Ok(BcfMutation::RemoveViewpoint { topic_guid: dec_str(arg("topic-guid")?)?, guid: dec_str(arg("guid")?)? }),
+        "set-viewpoint-camera" => Ok(BcfMutation::SetViewpointCamera { topic_guid: dec_str(arg("topic-guid")?)?, guid: dec_str(arg("guid")?)?, camera: decode_option(arg("camera")?, dec_camera)? }),
+        "set-viewpoint-components" => Ok(BcfMutation::SetViewpointComponents { topic_guid: dec_str(arg("topic-guid")?)?, guid: dec_str(arg("guid")?)?, components: decode_option(arg("components")?, dec_components)? }),
+        "set-viewpoint-snapshot" => Ok(BcfMutation::SetViewpointSnapshot { topic_guid: dec_str(arg("topic-guid")?)?, guid: dec_str(arg("guid")?)?, snapshot: decode_option(arg("snapshot")?, dec_bytes)? }),
+        other => Err(format!("bcf mutation: unknown keyword {other:?}")),
     }
 }
 
+impl protocol::OpText for BcfMutation {
+    fn print_op(&self) -> String {
+        print_bcf_mutation(self)
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_bcf_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+}
+
+/// ⚡️ Binary = the text bytes verbatim, same simplification as `BcfDiff`'s hand-rolled codec.
 impl protocol::OpBinary for BcfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        Ok(self.print_op().into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs

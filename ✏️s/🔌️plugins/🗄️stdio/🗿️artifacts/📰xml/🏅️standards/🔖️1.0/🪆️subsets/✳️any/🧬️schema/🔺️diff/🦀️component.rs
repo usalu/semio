@@ -5,6 +5,19 @@
 //! -- via the `Replace` fallback). Origin of the xml/svg node-diff pattern (`.🦑️repo/🎫️tickets/
 //! 🎆️26/🌙️08/☀️10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION/🧬️schema-design.md`):
 //! svg's own diff types build on this shape but are declared separately in svg's own facet dir.
+//!
+//! 🧪️ F6 CONFIRMED (real `cargo check -p semio-s-plugin-stdio --lib`, not guessed): adding
+//! `#[derive(dsl::DslDiff)]` to `XmlDiff` fails with `error[E0277]: the trait bound
+//! ...::XmlNodeDiff: DslField is not satisfied` (root: Option<XmlNodeDiff> — `XmlNodeDiff` is a
+//! genuine data-carrying enum, and `DslField` has no impl for it, only `DslRecord`-derived structs
+//! and `DslScalar`-derived UNIT-only enums implement `DslField`). A second, independent blocker is
+//! also present even without the enum: `declaration`/`doctype` are tri-state `Option<Option<T>>`
+//! fields — same blocker as `GifFrameDiff`/`SvgDiff` (`classify_field` peels exactly one `Option`
+//! layer, and no `impl<T: DslField> DslField for Option<T>` exists). `DiffCodec` is hand-rolled
+//! below, adapting svg's own hand-rolled `enc_xml_node`/`dec_xml_node` primitives (svg embeds this
+//! same `XmlNode` type, so its encoding logic applies verbatim -- svg's copies stay `pub(crate)` to
+//! svg, not importable from here across the artifact boundary, so this file declares its own copies
+//! for `📰xml`'s own crate-visibility scope).
 
 use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlNode};
 use crate::artifacts::xml::XmlSnapshot;
@@ -605,3 +618,322 @@ pub fn diff_set_snapshot(base: &XmlSnapshot, next: &XmlSnapshot) -> XmlDiff {
     XmlDiff::between(base, next)
 }
 //#endregion 🔖️SetSnapshot
+
+//#region 🔖️HandcraftedDiffCodec
+/// 🧪️ F6: hand-rolled `protocol::DiffCodec` for `XmlDiff` — adapted from `🎨️svg`'s own hand-rolled
+/// `SvgDiff` codec (F6-PILOT), which itself builds on this file's `XmlNodeDiff` shape. Same grammar
+/// style `GifDiff`/`SvgDiff` use (bracket-depth-aware split, hex for strings/bytes, `[0]`/`[1,x]`
+/// for `Option<T>`). Primitives duplicated here (not imported from svg — different artifact, svg's
+/// copies are `pub(crate)` to svg's own crate-visibility scope, not reachable from `📰xml`) but
+/// marked `pub(crate)` in THIS file so `📰xml`'s own `🧬️mutations/component.rs` can reuse them for
+/// its hand-rolled `OpText`/`OpBinary` (same intra-artifact reuse pattern svg uses).
+//#region 🔖️Primitives
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+    if s.is_empty() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    let mut depth = 0i32;
+    let mut start = 0usize;
+    for (i, c) in s.char_indices() {
+        match c {
+            '[' => depth += 1,
+            ']' => depth -= 1,
+            c if c == sep && depth == 0 => {
+                out.push(&s[start..i]);
+                start = i + c.len_utf8();
+            }
+            _ => {}
+        }
+    }
+    out.push(&s[start..]);
+    out
+}
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+    s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
+}
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+    match opt {
+        None => "[0]".to_string(),
+        Some(v) => format!("[1,{}]", enc(v)),
+    }
+}
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
+        ["0"] => Ok(None),
+        [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
+        other => Err(format!("option decode: bad shape {other:?}")),
+    }
+}
+//#endregion 🔖️Primitives
+
+//#region 🔖️XmlValueCodecs
+fn enc_attr(a: &XmlAttr) -> String {
+    format!("[{},{}]", enc_str(&a.name), enc_str(&a.value))
+}
+fn dec_attr(s: &str) -> Result<XmlAttr, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [name, value] = parts.as_slice() else { return Err(format!("attr: expected 2 fields, got {}", parts.len())) };
+    Ok(XmlAttr { name: dec_str(name)?, value: dec_str(value)? })
+}
+pub(crate) fn enc_declaration(d: &XmlDeclaration) -> String {
+    format!(
+        "[{},{},{}]",
+        enc_str(&d.version),
+        encode_option(&d.encoding, |v| enc_str(v)),
+        encode_option(&d.standalone, |v| if *v { "1".to_string() } else { "0".to_string() }),
+    )
+}
+pub(crate) fn dec_declaration(s: &str) -> Result<XmlDeclaration, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [version, encoding, standalone] = parts.as_slice() else { return Err(format!("declaration: expected 3 fields, got {}", parts.len())) };
+    Ok(XmlDeclaration {
+        version: dec_str(version)?,
+        encoding: decode_option(encoding, dec_str)?,
+        standalone: decode_option(standalone, |v| Ok(v == "1"))?,
+    })
+}
+/// 🌳 Recursive: `E[name,[attrs],[children]]` / `T[text]` / `D[text]` (CData) / `M[text]` (comment)
+/// / `P[target,data]` (processing instruction) — single-letter tag prefix, no ambiguity with the
+/// hex payload since hex never starts with an uppercase letter.
+pub(crate) fn enc_xml_node(n: &XmlNode) -> String {
+    match n {
+        XmlNode::Element { name, attrs, children } => {
+            let attrs = attrs.iter().map(enc_attr).collect::<Vec<_>>().join(",");
+            let children = children.iter().map(enc_xml_node).collect::<Vec<_>>().join(",");
+            format!("E[{},[{}],[{}]]", enc_str(name), attrs, children)
+        }
+        XmlNode::Text { text } => format!("T[{}]", enc_str(text)),
+        XmlNode::CData { text } => format!("D[{}]", enc_str(text)),
+        XmlNode::Comment { text } => format!("M[{}]", enc_str(text)),
+        XmlNode::ProcessingInstruction { target, data } => format!("P[{},{}]", enc_str(target), enc_str(data)),
+    }
+}
+pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
+    let (tag, rest) = s.split_at(1);
+    let inner = strip_brackets(rest)?;
+    match tag {
+        "E" => {
+            let parts = split_top_level(inner, ',');
+            let [name, attrs, children] = parts.as_slice() else { return Err(format!("element: expected 3 fields, got {}", parts.len())) };
+            let attrs = split_top_level(strip_brackets(attrs)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_attr).collect::<Result<Vec<_>, String>>()?;
+            let children = split_top_level(strip_brackets(children)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_xml_node).collect::<Result<Vec<_>, String>>()?;
+            Ok(XmlNode::Element { name: dec_str(name)?, attrs, children })
+        }
+        "T" => Ok(XmlNode::Text { text: dec_str(inner)? }),
+        "D" => Ok(XmlNode::CData { text: dec_str(inner)? }),
+        "M" => Ok(XmlNode::Comment { text: dec_str(inner)? }),
+        "P" => {
+            let parts = split_top_level(inner, ',');
+            let [target, data] = parts.as_slice() else { return Err(format!("PI: expected 2 fields, got {}", parts.len())) };
+            Ok(XmlNode::ProcessingInstruction { target: dec_str(target)?, data: dec_str(data)? })
+        }
+        other => Err(format!("xml node: unknown tag {other:?}")),
+    }
+}
+//#endregion 🔖️XmlValueCodecs
+
+//#region 🔖️DiffValueCodecs
+fn enc_attrs_diff(d: &XmlAttributesDiff) -> String {
+    let removed = d.removed.iter().map(|n| enc_str(n)).collect::<Vec<_>>().join(",");
+    let modified = d.modified.iter().map(|m| format!("{}:{}", enc_str(&m.name), enc_str(&m.value))).collect::<Vec<_>>().join(",");
+    let added = d.added.iter().map(|a| format!("{}:{}:{}", a.index, enc_str(&a.name), enc_str(&a.value))).collect::<Vec<_>>().join(",");
+    format!("[{removed}];[{modified}];[{added}]")
+}
+fn dec_attrs_diff(body: &str) -> Result<XmlAttributesDiff, String> {
+    let three = split_top_level(body, ';');
+    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("attrs diff: expected 3 sections, got {}", three.len())) };
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (name, value) = entry.split_once(':').ok_or_else(|| format!("attr modified: bad entry {entry:?}"))?;
+        Ok(XmlAttrModified { name: dec_str(name)?, value: dec_str(value)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("attr added: bad entry {entry:?}"))?;
+        let (name, value) = rest.split_once(':').ok_or_else(|| format!("attr added: bad entry {entry:?}"))?;
+        Ok(XmlAttrAdded { index: parse_usize(idx)?, name: dec_str(name)?, value: dec_str(value)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    Ok(XmlAttributesDiff { removed, modified, added })
+}
+
+/// 🌳 Recursive: `XmlNodeDiff` itself needs a tag (`E`=Element, `T`=Text, `R`=Replace) since,
+/// unlike `XmlNode`, it appears standalone (not always inside a bracketed container) at the `root=`
+/// top-level token position.
+fn enc_node_diff(d: &XmlNodeDiff) -> String {
+    match d {
+        XmlNodeDiff::Element(e) => format!(
+            "E[{},{},{}]",
+            encode_option(&e.name, |v| enc_str(v)),
+            match &e.attributes { Some(a) => format!("[1,{}]", enc_attrs_diff(a)), None => "[0]".to_string() },
+            match &e.children { Some(c) => format!("[1,{}]", enc_children_diff(c)), None => "[0]".to_string() },
+        ),
+        XmlNodeDiff::Text { text } => format!("T[{}]", encode_option(text, |v| enc_str(v))),
+        XmlNodeDiff::Replace { node } => format!("R[{}]", encode_option(node, |v| enc_xml_node(v))),
+    }
+}
+fn dec_node_diff(s: &str) -> Result<XmlNodeDiff, String> {
+    let (tag, rest) = s.split_at(1);
+    let inner = strip_brackets(rest)?;
+    match tag {
+        "E" => {
+            let parts = split_top_level(inner, ',');
+            let [name, attributes, children] = parts.as_slice() else { return Err(format!("node diff element: expected 3 fields, got {}", parts.len())) };
+            let attributes = match split_top_level(strip_brackets(attributes)?, ',').as_slice() {
+                ["0"] => None,
+                [tag, rest @ ..] if *tag == "1" => Some(dec_attrs_diff(&rest.join(","))?),
+                other => return Err(format!("node diff element attrs: bad shape {other:?}")),
+            };
+            let children = match split_top_level(strip_brackets(children)?, ',').as_slice() {
+                ["0"] => None,
+                [tag, rest @ ..] if *tag == "1" => Some(dec_children_diff(&rest.join(","))?),
+                other => return Err(format!("node diff element children: bad shape {other:?}")),
+            };
+            Ok(XmlNodeDiff::Element(XmlElementDiff { name: decode_option(name, dec_str)?, attributes, children }))
+        }
+        "T" => Ok(XmlNodeDiff::Text { text: decode_option(inner, dec_str)? }),
+        "R" => Ok(XmlNodeDiff::Replace { node: decode_option(inner, dec_xml_node)? }),
+        other => Err(format!("node diff: unknown tag {other:?}")),
+    }
+}
+fn enc_children_diff(d: &XmlChildrenDiff) -> String {
+    let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
+    let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_node_diff(&m.diff))).collect::<Vec<_>>().join(",");
+    let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_xml_node(&a.item))).collect::<Vec<_>>().join(",");
+    format!("[{removed}];[{modified}];[{added}]")
+}
+fn dec_children_diff(body: &str) -> Result<XmlChildrenDiff, String> {
+    let three = split_top_level(body, ';');
+    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("children diff: expected 3 sections, got {}", three.len())) };
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("child modified: bad entry {entry:?}"))?;
+        Ok(XmlChildModified { index: parse_usize(idx)?, diff: dec_node_diff(rest)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("child added: bad entry {entry:?}"))?;
+        Ok(XmlChildAdded { index: parse_usize(idx)?, item: dec_xml_node(rest)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    Ok(XmlChildrenDiff { removed, modified, added })
+}
+//#endregion 🔖️DiffValueCodecs
+
+//#region 🔖️TopLevel
+fn print_xml_diff(d: &XmlDiff) -> String {
+    let mut tokens: Vec<String> = Vec::new();
+    if let Some(v) = &d.declaration { tokens.push(format!("declaration={}", encode_option(v, enc_declaration))); }
+    if let Some(v) = &d.doctype { tokens.push(format!("doctype={}", encode_option(v, |v| enc_str(v)))); }
+    if let Some(v) = &d.root { tokens.push(format!("root={}", enc_node_diff(v))); }
+    tokens.join(" ")
+}
+fn parse_xml_diff(line: &str) -> Result<XmlDiff, String> {
+    let mut d = XmlDiff::default();
+    if line.is_empty() {
+        return Ok(d);
+    }
+    for token in line.split(' ') {
+        if let Some(rest) = token.strip_prefix("declaration=") { d.declaration = Some(decode_option(rest, dec_declaration)?); }
+        else if let Some(rest) = token.strip_prefix("doctype=") { d.doctype = Some(decode_option(rest, dec_str)?); }
+        else if let Some(rest) = token.strip_prefix("root=") { d.root = Some(dec_node_diff(rest)?); }
+        else { return Err(format!("xml diff: unknown token {token:?}")); }
+    }
+    Ok(d)
+}
+
+impl protocol::DiffCodec for XmlDiff {
+    fn print_diff(&self) -> String {
+        print_xml_diff(self)
+    }
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+        parse_xml_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`'s hand-rolled
+    /// codecs use (and the repo's only other hand-rolled `DiffCodec`, `WriterDiff`) — satisfies
+    /// every `DiffCodec` law without inventing a second wire format.
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(self.print_diff().into_bytes())
+    }
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+    }
+}
+//#endregion 🔖️TopLevel
+//#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod handcrafted_diff_codec_tests {
+    use super::*;
+    use protocol::DiffCodec;
+    use crate::artifacts::xml::schema::snapshot::XmlDocument;
+
+    fn elem(name: &str, attrs: Vec<(&str, &str)>, children: Vec<XmlNode>) -> XmlNode {
+        XmlNode::Element {
+            name: name.to_string(),
+            attrs: attrs.into_iter().map(|(n, v)| XmlAttr { name: n.to_string(), value: v.to_string() }).collect(),
+            children,
+        }
+    }
+
+    fn snapshot(doc: XmlDocument) -> XmlSnapshot {
+        XmlSnapshot { doc, ..Default::default() }
+    }
+
+    /// 🧪️ `DiffCodec` round-trip laws over the hand-rolled `XmlDiff` grammar — exercises the
+    /// recursive enum tree (`Element`/`Text`/`Replace` `XmlNodeDiff` variants), both top-level
+    /// tri-states, attribute add/remove/modify, and nested child add/remove/modify.
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
+        let a = snapshot(XmlDocument {
+            root: Some(elem("root", vec![("width", "10")], vec![elem("child", vec![("x", "0")], vec![])])),
+            doctype: Some("<!DOCTYPE root>".into()),
+            declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
+        });
+        let b = snapshot(XmlDocument {
+            root: Some(elem("root", vec![("width", "20"), ("height", "30")], vec![
+                elem("other", vec![("r", "5")], vec![]),
+                XmlNode::Text { text: "hi".into() },
+            ])),
+            doctype: None,
+            declaration: None,
+        });
+        let c = snapshot(XmlDocument { root: None, doctype: None, declaration: None });
+
+        let cases = vec![
+            XmlDiff::default(),
+            XmlDiff::between(&a, &b),
+            XmlDiff::between(&b, &a),
+            XmlDiff::between(&a, &c),
+            XmlDiff::between(&c, &a),
+        ];
+        for d in cases {
+            let printed = d.print_diff();
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = XmlDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
+
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = XmlDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
+        }
+    }
+}
+//#endregion 🧪️Tests

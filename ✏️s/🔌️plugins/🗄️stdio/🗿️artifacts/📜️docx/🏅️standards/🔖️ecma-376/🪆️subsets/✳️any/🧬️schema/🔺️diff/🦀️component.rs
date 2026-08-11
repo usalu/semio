@@ -17,6 +17,7 @@
 
 use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
 use crate::artifacts::docx::DocxSnapshot;
+use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
 use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -216,6 +217,16 @@ pub struct DocxOpcDiff {
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.docx`.
+/// 🧪️ F6 VERIFIED: `#[derive(dsl::DslDiff)]` on this struct fails to compile with TWO independent,
+/// simultaneous reasons (both captured verbatim via a real `cargo check -p semio-s-plugin-stdio
+/// --lib`, per `f6-recon-report.md` §3, then reverted): (1) enum-in-tree —
+/// `IndexedTripleDiff<DocxBlockDiff, DocxBlock>: DslField` is not satisfied (`DocxBlockDiff` is a
+/// genuine data-carrying enum, `Paragraph`/`Table`/`Replace`, and `DslField` has no impl for it or
+/// for the generic collection-triple type wrapping it); (2) tri-state `Option<Option<T>>` —
+/// `style: Option<Option<String>>` (`DocxParagraphDiff`) and `based_on: Option<Option<String>>`
+/// (`DocxStyleDiff`) both fail with `Option<String>: DslField` is not satisfied, same root cause as
+/// `GifDiff`. `DiffCodec` is hand-rolled below, following the svg/gif template exactly (§5 of the
+/// recon report).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.docx.diff")]
@@ -1322,3 +1333,643 @@ pub fn diff_remove_part(path: &str) -> DocxDiff {
     DocxDiff { opc: Some(DocxOpcDiff { content_types: None, parts: Some(DocxOpcPartsDiff { removed: vec![p], ..Default::default() }), relationships: None }), document: None }
 }
 //#endregion 🔖️SetSnapshot
+
+//#region 🔖️HandcraftedDiffCodec
+/// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `DocxDiff` (real compile errors captured above
+/// on `DocxDiff`'s own doc comment) — same grammar style `GifDiff`/`SvgDiff`'s hand-rolled codecs
+/// use (bracket-depth-aware split, hex for strings/bytes, `[0]`/`[1,x]` for `Option<T>`, a single
+/// uppercase tag letter for data-carrying enums). This file re-derives its own copies of the small
+/// helper functions since each hand-rolled codec is self-contained (no shared "hand-roll helpers"
+/// module exists yet — flagged in `f6-recon-report.md` §5 as a good future extraction once ≥3
+/// artifacts hand-roll, not worth adding here for one more). The `IndexedTripleDiff<D,T>`/
+/// `NamedTripleDiff<K,D,T>` generic collection-triple engine this artifact already introduced
+/// (see `GenericCollectionTriples` above) lets the codec side stay generic too — one
+/// `enc_indexed_triple`/`enc_named_triple` pair, reused across every `body`/`runs`/table
+/// row/cell/`styles`/OPC-parts/OPC-relationships instantiation, instead of five-plus bespoke
+/// per-collection encoders.
+//#region 🔖️Primitives
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+pub(crate) fn enc_bool(b: &bool) -> String {
+    if *b { "1".to_string() } else { "0".to_string() }
+}
+pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
+    match s {
+        "1" => Ok(true),
+        "0" => Ok(false),
+        other => Err(format!("bool: bad value {other:?}")),
+    }
+}
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+    if s.is_empty() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    let mut depth = 0i32;
+    let mut start = 0usize;
+    for (i, c) in s.char_indices() {
+        match c {
+            '[' => depth += 1,
+            ']' => depth -= 1,
+            c if c == sep && depth == 0 => {
+                out.push(&s[start..i]);
+                start = i + c.len_utf8();
+            }
+            _ => {}
+        }
+    }
+    out.push(&s[start..]);
+    out
+}
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+    s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
+}
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+    match opt {
+        None => "[0]".to_string(),
+        Some(v) => format!("[1,{}]", enc(v)),
+    }
+}
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
+        ["0"] => Ok(None),
+        [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
+        other => Err(format!("option decode: bad shape {other:?}")),
+    }
+}
+pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+    format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
+}
+pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
+}
+//#endregion 🔖️Primitives
+
+//#region 🔖️XmlValueCodecs
+/// 🌳️ Recursive: `E[name,[attrs],[children]]` / `T[text]` / `D[text]` (CData) / `M[text]`
+/// (comment) / `P[target,data]` (processing instruction) -- same tag scheme `📰xml`/`🎨️svg`'s own
+/// hand-rolled codecs use (own copy per the no-shared-helpers-module convention). Needed here
+/// because every `extra_*_properties: Vec<XmlNode>` raw-retention field (on `DocxRun`/
+/// `DocxParagraph`/`DocxTableCell`/`DocxTableRow`/`DocxTable`) carries this type verbatim.
+fn enc_attr(a: &XmlAttr) -> String {
+    format!("[{},{}]", enc_str(&a.name), enc_str(&a.value))
+}
+fn dec_attr(s: &str) -> Result<XmlAttr, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [name, value] = parts.as_slice() else { return Err(format!("attr: expected 2 fields, got {}", parts.len())) };
+    Ok(XmlAttr { name: dec_str(name)?, value: dec_str(value)? })
+}
+pub(crate) fn enc_xml_node(n: &XmlNode) -> String {
+    match n {
+        XmlNode::Element { name, attrs, children } => {
+            let attrs = attrs.iter().map(enc_attr).collect::<Vec<_>>().join(",");
+            let children = children.iter().map(enc_xml_node).collect::<Vec<_>>().join(",");
+            format!("E[{},[{}],[{}]]", enc_str(name), attrs, children)
+        }
+        XmlNode::Text { text } => format!("T[{}]", enc_str(text)),
+        XmlNode::CData { text } => format!("D[{}]", enc_str(text)),
+        XmlNode::Comment { text } => format!("M[{}]", enc_str(text)),
+        XmlNode::ProcessingInstruction { target, data } => format!("P[{},{}]", enc_str(target), enc_str(data)),
+    }
+}
+pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
+    let (tag, rest) = s.split_at(1);
+    let inner = strip_brackets(rest)?;
+    match tag {
+        "E" => {
+            let parts = split_top_level(inner, ',');
+            let [name, attrs, children] = parts.as_slice() else { return Err(format!("element: expected 3 fields, got {}", parts.len())) };
+            let attrs = split_top_level(strip_brackets(attrs)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_attr).collect::<Result<Vec<_>, String>>()?;
+            let children = split_top_level(strip_brackets(children)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_xml_node).collect::<Result<Vec<_>, String>>()?;
+            Ok(XmlNode::Element { name: dec_str(name)?, attrs, children })
+        }
+        "T" => Ok(XmlNode::Text { text: dec_str(inner)? }),
+        "D" => Ok(XmlNode::CData { text: dec_str(inner)? }),
+        "M" => Ok(XmlNode::Comment { text: dec_str(inner)? }),
+        "P" => {
+            let parts = split_top_level(inner, ',');
+            let [target, data] = parts.as_slice() else { return Err(format!("PI: expected 2 fields, got {}", parts.len())) };
+            Ok(XmlNode::ProcessingInstruction { target: dec_str(target)?, data: dec_str(data)? })
+        }
+        other => Err(format!("xml node: unknown tag {other:?}")),
+    }
+}
+//#endregion 🔖️XmlValueCodecs
+
+//#region 🔖️ValueCodecs
+/// 🌳️ Full-item (non-diff) codecs for every value type this diff's `added`/`Replace` payloads and
+/// `SetSnapshot`'s mutation-side codec (see `mutations/component.rs`) carry whole. `pub(crate)` so
+/// the mutations file reuses them rather than re-deriving its own copies (same intra-artifact reuse
+/// pattern `SvgDiff`/`SvgMutation` established).
+pub(crate) fn enc_target_mode(m: &OpcTargetMode) -> String {
+    match m {
+        OpcTargetMode::Internal => "0".to_string(),
+        OpcTargetMode::External => "1".to_string(),
+    }
+}
+pub(crate) fn dec_target_mode(s: &str) -> Result<OpcTargetMode, String> {
+    match s {
+        "0" => Ok(OpcTargetMode::Internal),
+        "1" => Ok(OpcTargetMode::External),
+        other => Err(format!("target mode: bad value {other:?}")),
+    }
+}
+
+fn enc_run(r: &DocxRun) -> String {
+    format!("[{},{},{},{},{}]", enc_str(&r.text), enc_bool(&r.bold), enc_bool(&r.italic), enc_bool(&r.underline), enc_list(&r.extra_run_properties, enc_xml_node))
+}
+fn dec_run(s: &str) -> Result<DocxRun, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [text, bold, italic, underline, extra] = parts.as_slice() else { return Err(format!("run: expected 5 fields, got {}", parts.len())) };
+    Ok(DocxRun { text: dec_str(text)?, bold: dec_bool(bold)?, italic: dec_bool(italic)?, underline: dec_bool(underline)?, extra_run_properties: dec_list(extra, dec_xml_node)? })
+}
+
+fn enc_paragraph(p: &DocxParagraph) -> String {
+    format!("[{},{},{}]", enc_list(&p.runs, enc_run), encode_option(&p.style, |v| enc_str(v)), enc_list(&p.extra_paragraph_properties, enc_xml_node))
+}
+fn dec_paragraph(s: &str) -> Result<DocxParagraph, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [runs, style, extra] = parts.as_slice() else { return Err(format!("paragraph: expected 3 fields, got {}", parts.len())) };
+    Ok(DocxParagraph { runs: dec_list(runs, dec_run)?, style: decode_option(style, dec_str)?, extra_paragraph_properties: dec_list(extra, dec_xml_node)? })
+}
+
+fn enc_cell(c: &DocxTableCell) -> String {
+    format!("[{},{}]", enc_list(&c.blocks, enc_block), enc_list(&c.extra_cell_properties, enc_xml_node))
+}
+fn dec_cell(s: &str) -> Result<DocxTableCell, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [blocks, extra] = parts.as_slice() else { return Err(format!("cell: expected 2 fields, got {}", parts.len())) };
+    Ok(DocxTableCell { blocks: dec_list(blocks, dec_block)?, extra_cell_properties: dec_list(extra, dec_xml_node)? })
+}
+
+fn enc_row(r: &DocxTableRow) -> String {
+    format!("[{},{}]", enc_list(&r.cells, enc_cell), enc_list(&r.extra_row_properties, enc_xml_node))
+}
+fn dec_row(s: &str) -> Result<DocxTableRow, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [cells, extra] = parts.as_slice() else { return Err(format!("row: expected 2 fields, got {}", parts.len())) };
+    Ok(DocxTableRow { cells: dec_list(cells, dec_cell)?, extra_row_properties: dec_list(extra, dec_xml_node)? })
+}
+
+fn enc_table(t: &DocxTable) -> String {
+    format!("[{},{}]", enc_list(&t.rows, enc_row), enc_list(&t.extra_table_properties, enc_xml_node))
+}
+fn dec_table(s: &str) -> Result<DocxTable, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [rows, extra] = parts.as_slice() else { return Err(format!("table: expected 2 fields, got {}", parts.len())) };
+    Ok(DocxTable { rows: dec_list(rows, dec_row)?, extra_table_properties: dec_list(extra, dec_xml_node)? })
+}
+
+/// 🌳️ `P[paragraph]` / `T[table]` -- `DocxBlock`'s two variants, tag-prefixed like `enc_xml_node`.
+pub(crate) fn enc_block(b: &DocxBlock) -> String {
+    match b {
+        DocxBlock::Paragraph(p) => format!("P{}", enc_paragraph(p)),
+        DocxBlock::Table(t) => format!("T{}", enc_table(t)),
+    }
+}
+pub(crate) fn dec_block(s: &str) -> Result<DocxBlock, String> {
+    let (tag, rest) = s.split_at(1);
+    match tag {
+        "P" => Ok(DocxBlock::Paragraph(dec_paragraph(rest)?)),
+        "T" => Ok(DocxBlock::Table(dec_table(rest)?)),
+        other => Err(format!("block: unknown tag {other:?}")),
+    }
+}
+
+pub(crate) fn enc_style(s: &DocxStyle) -> String {
+    format!("[{},{},{}]", enc_str(&s.id), enc_str(&s.name), encode_option(&s.based_on, |v| enc_str(v)))
+}
+pub(crate) fn dec_style(s: &str) -> Result<DocxStyle, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [id, name, based_on] = parts.as_slice() else { return Err(format!("style: expected 3 fields, got {}", parts.len())) };
+    Ok(DocxStyle { id: dec_str(id)?, name: dec_str(name)?, based_on: decode_option(based_on, dec_str)? })
+}
+
+pub(crate) fn enc_opc_part(p: &OpcPart) -> String {
+    format!("[{},{},{}]", enc_str(&p.path), enc_str(&p.content_type), hex_encode(&p.bytes))
+}
+pub(crate) fn dec_opc_part(s: &str) -> Result<OpcPart, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [path, content_type, bytes] = parts.as_slice() else { return Err(format!("opc part: expected 3 fields, got {}", parts.len())) };
+    Ok(OpcPart { path: dec_str(path)?, content_type: dec_str(content_type)?, bytes: hex_decode(bytes)? })
+}
+
+pub(crate) fn enc_rel(r: &OpcRelationship) -> String {
+    format!("[{},{},{},{}]", enc_str(&r.id), enc_str(&r.rel_type), enc_str(&r.target), enc_target_mode(&r.target_mode))
+}
+pub(crate) fn dec_rel(s: &str) -> Result<OpcRelationship, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [id, rel_type, target, target_mode] = parts.as_slice() else { return Err(format!("relationship: expected 4 fields, got {}", parts.len())) };
+    Ok(OpcRelationship { id: dec_str(id)?, rel_type: dec_str(rel_type)?, target: dec_str(target)?, target_mode: dec_target_mode(target_mode)? })
+}
+
+pub(crate) fn enc_ct_entry(e: &(String, String)) -> String {
+    format!("[{},{}]", enc_str(&e.0), enc_str(&e.1))
+}
+pub(crate) fn dec_ct_entry(s: &str) -> Result<(String, String), String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [k, v] = parts.as_slice() else { return Err(format!("ct entry: expected 2 fields, got {}", parts.len())) };
+    Ok((dec_str(k)?, dec_str(v)?))
+}
+
+/// 🗺️ One `relationships` map entry (owner path -> that owner's relationship list).
+pub(crate) fn enc_rel_owner_entry(e: &(String, Vec<OpcRelationship>)) -> String {
+    format!("[{},{}]", enc_str(&e.0), enc_list(&e.1, enc_rel))
+}
+pub(crate) fn dec_rel_owner_entry(s: &str) -> Result<(String, Vec<OpcRelationship>), String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [owner, list] = parts.as_slice() else { return Err(format!("rel owner entry: expected 2 fields, got {}", parts.len())) };
+    Ok((dec_str(owner)?, dec_list(list, dec_rel)?))
+}
+//#endregion 🔖️ValueCodecs
+
+//#region 🔖️GenericTripleCodecs
+/// 🌳️ `[removed];[modified];[added]` -- generic over `IndexedTripleDiff<D,T>`'s own `D`/`T`, reused
+/// for every index-keyed collection (`body`/`runs`/table rows/cells) instead of one bespoke
+/// encoder per collection.
+fn enc_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
+    let removed = diff.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
+    let modified = diff.modified.iter().map(|m| format!("{}:{}", m.index, enc_d(&m.diff))).collect::<Vec<_>>().join(",");
+    let added = diff.added.iter().map(|a| format!("{}:{}", a.index, enc_t(&a.item))).collect::<Vec<_>>().join(",");
+    format!("[{removed}];[{modified}];[{added}]")
+}
+fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
+    let three = split_top_level(body, ';');
+    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("indexed triple: expected 3 sections, got {}", three.len())) };
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed modified: bad entry {entry:?}"))?;
+        Ok(IndexModified { index: parse_usize(idx)?, diff: dec_d(rest)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed added: bad entry {entry:?}"))?;
+        Ok(IndexAdded { index: parse_usize(idx)?, item: dec_t(rest)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    Ok(IndexedTripleDiff { removed, modified, added })
+}
+
+/// 🏷️ `[removed];[modified];[added]` -- generic over `NamedTripleDiff<K,D,T>`'s own `K`/`D`/`T`,
+/// reused for `styles` and every OPC-layer name-keyed collection (content-type entries, parts,
+/// relationship lists, relationships-by-owner).
+fn enc_named_triple<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
+    let removed = diff.removed.iter().map(|k| enc_k(k)).collect::<Vec<_>>().join(",");
+    let modified = diff.modified.iter().map(|m| format!("{}:{}", enc_k(&m.key), enc_d(&m.diff))).collect::<Vec<_>>().join(",");
+    let added = diff.added.iter().map(|t| enc_t(t)).collect::<Vec<_>>().join(",");
+    format!("[{removed}];[{modified}];[{added}]")
+}
+fn dec_named_triple<K, D, T>(body: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
+    let three = split_top_level(body, ';');
+    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_k(s)).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (key, rest) = entry.split_once(':').ok_or_else(|| format!("named modified: bad entry {entry:?}"))?;
+        Ok(NamedModified { key: dec_k(key)?, diff: dec_d(rest)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_t(s)).collect::<Result<Vec<_>, String>>()?;
+    Ok(NamedTripleDiff { removed, modified, added })
+}
+//#endregion 🔖️GenericTripleCodecs
+
+//#region 🔖️DiffValueCodecs
+fn enc_runs_diff(d: &DocxRunsDiff) -> String { enc_indexed_triple(d, enc_run_diff, enc_run) }
+fn dec_runs_diff(s: &str) -> Result<DocxRunsDiff, String> { dec_indexed_triple(s, dec_run_diff, dec_run) }
+
+fn enc_blocks_diff(d: &DocxBlocksDiff) -> String { enc_indexed_triple(d, enc_block_diff, enc_block) }
+fn dec_blocks_diff(s: &str) -> Result<DocxBlocksDiff, String> { dec_indexed_triple(s, dec_block_diff, dec_block) }
+
+fn enc_table_rows_diff(d: &DocxTableRowsDiff) -> String { enc_indexed_triple(d, enc_table_row_diff, enc_row) }
+fn dec_table_rows_diff(s: &str) -> Result<DocxTableRowsDiff, String> { dec_indexed_triple(s, dec_table_row_diff, dec_row) }
+
+fn enc_table_cells_diff(d: &DocxTableCellsDiff) -> String { enc_indexed_triple(d, enc_table_cell_diff, enc_cell) }
+fn dec_table_cells_diff(s: &str) -> Result<DocxTableCellsDiff, String> { dec_indexed_triple(s, dec_table_cell_diff, dec_cell) }
+
+fn enc_styles_diff(d: &DocxStylesDiff) -> String { enc_named_triple(d, |k| enc_str(k), enc_style_diff, enc_style) }
+fn dec_styles_diff(s: &str) -> Result<DocxStylesDiff, String> { dec_named_triple(s, dec_str, dec_style_diff, dec_style) }
+
+fn enc_run_diff(d: &DocxRunDiff) -> String {
+    format!("[{},{},{},{}]", encode_option(&d.text, |v| enc_str(v)), encode_option(&d.bold, enc_bool), encode_option(&d.italic, enc_bool), encode_option(&d.underline, enc_bool))
+}
+fn dec_run_diff(s: &str) -> Result<DocxRunDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [text, bold, italic, underline] = parts.as_slice() else { return Err(format!("run diff: expected 4 fields, got {}", parts.len())) };
+    Ok(DocxRunDiff { text: decode_option(text, dec_str)?, bold: decode_option(bold, dec_bool)?, italic: decode_option(italic, dec_bool)?, underline: decode_option(underline, dec_bool)? })
+}
+
+fn enc_paragraph_diff(pd: &DocxParagraphDiff) -> String {
+    format!("[{},{}]", encode_option(&pd.runs, enc_runs_diff), encode_option(&pd.style, |inner: &Option<String>| encode_option(inner, |v| enc_str(v))))
+}
+fn dec_paragraph_diff(s: &str) -> Result<DocxParagraphDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [runs, style] = parts.as_slice() else { return Err(format!("paragraph diff: expected 2 fields, got {}", parts.len())) };
+    Ok(DocxParagraphDiff { runs: decode_option(runs, dec_runs_diff)?, style: decode_option(style, |s| decode_option(s, dec_str))? })
+}
+
+fn enc_table_diff(d: &DocxTableDiff) -> String {
+    format!("[{}]", encode_option(&d.rows, enc_table_rows_diff))
+}
+fn dec_table_diff(s: &str) -> Result<DocxTableDiff, String> {
+    let inner = strip_brackets(s)?;
+    Ok(DocxTableDiff { rows: decode_option(inner, dec_table_rows_diff)? })
+}
+
+fn enc_table_row_diff(d: &DocxTableRowDiff) -> String {
+    format!("[{}]", encode_option(&d.cells, enc_table_cells_diff))
+}
+fn dec_table_row_diff(s: &str) -> Result<DocxTableRowDiff, String> {
+    let inner = strip_brackets(s)?;
+    Ok(DocxTableRowDiff { cells: decode_option(inner, dec_table_cells_diff)? })
+}
+
+fn enc_table_cell_diff(d: &DocxTableCellDiff) -> String {
+    format!("[{}]", encode_option(&d.blocks, enc_blocks_diff))
+}
+fn dec_table_cell_diff(s: &str) -> Result<DocxTableCellDiff, String> {
+    let inner = strip_brackets(s)?;
+    Ok(DocxTableCellDiff { blocks: decode_option(inner, dec_blocks_diff)? })
+}
+
+fn enc_style_diff(d: &DocxStyleDiff) -> String {
+    format!("[{},{}]", encode_option(&d.name, |v| enc_str(v)), encode_option(&d.based_on, |inner: &Option<String>| encode_option(inner, |v| enc_str(v))))
+}
+fn dec_style_diff(s: &str) -> Result<DocxStyleDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [name, based_on] = parts.as_slice() else { return Err(format!("style diff: expected 2 fields, got {}", parts.len())) };
+    Ok(DocxStyleDiff { name: decode_option(name, dec_str)?, based_on: decode_option(based_on, |s| decode_option(s, dec_str))? })
+}
+
+/// 🌳️ `P[paragraph diff]` / `T[table diff]` / `R[block]` (wholesale replace, node-KIND changed).
+fn enc_block_diff(d: &DocxBlockDiff) -> String {
+    match d {
+        DocxBlockDiff::Paragraph(pd) => format!("P{}", enc_paragraph_diff(pd)),
+        DocxBlockDiff::Table(td) => format!("T{}", enc_table_diff(td)),
+        DocxBlockDiff::Replace { block } => format!("R[{}]", enc_block(block)),
+    }
+}
+fn dec_block_diff(s: &str) -> Result<DocxBlockDiff, String> {
+    let (tag, rest) = s.split_at(1);
+    match tag {
+        "P" => Ok(DocxBlockDiff::Paragraph(dec_paragraph_diff(rest)?)),
+        "T" => Ok(DocxBlockDiff::Table(dec_table_diff(rest)?)),
+        "R" => Ok(DocxBlockDiff::Replace { block: dec_block(strip_brackets(rest)?)? }),
+        other => Err(format!("block diff: unknown tag {other:?}")),
+    }
+}
+
+fn enc_ct_entries_diff(d: &DocxOpcCtEntriesDiff) -> String { enc_named_triple(d, |k| enc_str(k), |v: &String| enc_str(v), enc_ct_entry) }
+fn dec_ct_entries_diff(s: &str) -> Result<DocxOpcCtEntriesDiff, String> { dec_named_triple(s, dec_str, dec_str, dec_ct_entry) }
+
+fn enc_parts_diff(d: &DocxOpcPartsDiff) -> String { enc_named_triple(d, |k| enc_str(k), enc_opc_part_diff, enc_opc_part) }
+fn dec_parts_diff(s: &str) -> Result<DocxOpcPartsDiff, String> { dec_named_triple(s, dec_str, dec_opc_part_diff, dec_opc_part) }
+
+fn enc_rel_list_diff(d: &DocxOpcRelListDiff) -> String { enc_named_triple(d, |k| enc_str(k), enc_rel_diff, enc_rel) }
+fn dec_rel_list_diff(s: &str) -> Result<DocxOpcRelListDiff, String> { dec_named_triple(s, dec_str, dec_rel_diff, dec_rel) }
+
+fn enc_relationships_diff(d: &DocxOpcRelationshipsDiff) -> String { enc_named_triple(d, |k| enc_str(k), enc_rel_list_diff, enc_rel_owner_entry) }
+fn dec_relationships_diff(s: &str) -> Result<DocxOpcRelationshipsDiff, String> { dec_named_triple(s, dec_str, dec_rel_list_diff, dec_rel_owner_entry) }
+
+fn enc_opc_part_diff(d: &DocxOpcPartDiff) -> String {
+    format!("[{},{}]", encode_option(&d.content_type, |v| enc_str(v)), encode_option(&d.bytes, |v: &Vec<u8>| hex_encode(v)))
+}
+fn dec_opc_part_diff(s: &str) -> Result<DocxOpcPartDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [ct, bytes] = parts.as_slice() else { return Err(format!("opc part diff: expected 2 fields, got {}", parts.len())) };
+    Ok(DocxOpcPartDiff { content_type: decode_option(ct, dec_str)?, bytes: decode_option(bytes, hex_decode)? })
+}
+
+fn enc_rel_diff(d: &DocxOpcRelDiff) -> String {
+    format!("[{},{},{}]", encode_option(&d.rel_type, |v| enc_str(v)), encode_option(&d.target, |v| enc_str(v)), encode_option(&d.target_mode, enc_target_mode))
+}
+fn dec_rel_diff(s: &str) -> Result<DocxOpcRelDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [rel_type, target, target_mode] = parts.as_slice() else { return Err(format!("rel diff: expected 3 fields, got {}", parts.len())) };
+    Ok(DocxOpcRelDiff { rel_type: decode_option(rel_type, dec_str)?, target: decode_option(target, dec_str)?, target_mode: decode_option(target_mode, dec_target_mode)? })
+}
+
+fn enc_content_types_diff(d: &DocxOpcContentTypesDiff) -> String {
+    format!("[{},{}]", encode_option(&d.defaults, enc_ct_entries_diff), encode_option(&d.overrides, enc_ct_entries_diff))
+}
+fn dec_content_types_diff(s: &str) -> Result<DocxOpcContentTypesDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [defaults, overrides] = parts.as_slice() else { return Err(format!("content types diff: expected 2 fields, got {}", parts.len())) };
+    Ok(DocxOpcContentTypesDiff { defaults: decode_option(defaults, dec_ct_entries_diff)?, overrides: decode_option(overrides, dec_ct_entries_diff)? })
+}
+
+fn enc_opc_diff(d: &DocxOpcDiff) -> String {
+    format!("[{},{},{}]", encode_option(&d.content_types, enc_content_types_diff), encode_option(&d.parts, enc_parts_diff), encode_option(&d.relationships, enc_relationships_diff))
+}
+fn dec_opc_diff(s: &str) -> Result<DocxOpcDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [ct, p, rel] = parts.as_slice() else { return Err(format!("opc diff: expected 3 fields, got {}", parts.len())) };
+    Ok(DocxOpcDiff { content_types: decode_option(ct, dec_content_types_diff)?, parts: decode_option(p, dec_parts_diff)?, relationships: decode_option(rel, dec_relationships_diff)? })
+}
+
+fn enc_document_diff(d: &DocxDocumentDiff) -> String {
+    format!("[{},{}]", encode_option(&d.body, enc_blocks_diff), encode_option(&d.styles, enc_styles_diff))
+}
+fn dec_document_diff(s: &str) -> Result<DocxDocumentDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [body, styles] = parts.as_slice() else { return Err(format!("document diff: expected 2 fields, got {}", parts.len())) };
+    Ok(DocxDocumentDiff { body: decode_option(body, dec_blocks_diff)?, styles: decode_option(styles, dec_styles_diff)? })
+}
+//#endregion 🔖️DiffValueCodecs
+
+//#region 🔖️TopLevel
+fn print_docx_diff(d: &DocxDiff) -> String {
+    let mut tokens: Vec<String> = Vec::new();
+    if let Some(v) = &d.opc { tokens.push(format!("opc={}", enc_opc_diff(v))); }
+    if let Some(v) = &d.document { tokens.push(format!("document={}", enc_document_diff(v))); }
+    tokens.join(" ")
+}
+fn parse_docx_diff(line: &str) -> Result<DocxDiff, String> {
+    let mut d = DocxDiff::default();
+    if line.is_empty() {
+        return Ok(d);
+    }
+    for token in line.split(' ') {
+        if let Some(rest) = token.strip_prefix("opc=") { d.opc = Some(dec_opc_diff(rest)?); }
+        else if let Some(rest) = token.strip_prefix("document=") { d.document = Some(dec_document_diff(rest)?); }
+        else { return Err(format!("docx diff: unknown token {token:?}")); }
+    }
+    Ok(d)
+}
+
+impl protocol::DiffCodec for DocxDiff {
+    fn print_diff(&self) -> String {
+        print_docx_diff(self)
+    }
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+        parse_docx_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`'s hand-rolled
+    /// codecs use (and the repo's only other hand-rolled `DiffCodec`, `WriterDiff`) — satisfies
+    /// every `DiffCodec` law without inventing a second wire format.
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(self.print_diff().into_bytes())
+    }
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+    }
+}
+//#endregion 🔖️TopLevel
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod handcrafted_diff_codec_tests {
+    use super::*;
+    use protocol::DiffCodec;
+
+    fn xml_node(name: &str) -> XmlNode {
+        XmlNode::Element { name: name.to_string(), attrs: vec![XmlAttr { name: "a".into(), value: "1".into() }], children: vec![] }
+    }
+
+    fn snapshot_a() -> DocxSnapshot {
+        let mut opc = OpcPackage::empty();
+        opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
+        opc.content_types.set_default("xml", "application/xml");
+        opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", b"<w:document/>".to_vec());
+        opc.set_part("word/toRemove.xml", "application/xml", b"gone".to_vec());
+        opc.add_relationship("", "rId1", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
+        opc.relationships.insert(
+            "word/toRemove.xml".into(),
+            vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/gone".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }],
+        );
+
+        DocxSnapshot::from_parts(
+            opc,
+            DocxDocument {
+                body: vec![
+                    DocxBlock::Paragraph(DocxParagraph {
+                        runs: vec![DocxRun { text: "old".into(), bold: false, extra_run_properties: vec![xml_node("rPr")], ..Default::default() }],
+                        style: None,
+                        extra_paragraph_properties: Vec::new(),
+                    }),
+                    DocxBlock::Table(DocxTable {
+                        rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }],
+                        ..Default::default()
+                    }),
+                ],
+                styles: vec![
+                    DocxStyle { id: "keep".into(), name: "Keep".into(), based_on: Some("toRemove".into()) },
+                    DocxStyle { id: "toRemove".into(), name: "Gone".into(), based_on: Some("keep".into()) },
+                ],
+            },
+        )
+    }
+
+    fn snapshot_b() -> DocxSnapshot {
+        let mut opc = OpcPackage::empty();
+        opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
+        opc.content_types.set_default("xml", "application/xml");
+        opc.content_types.set_default("added", "application/octet-stream");
+        opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", b"<w:document/>changed".to_vec());
+        opc.set_part("word/added.xml", "application/xml", b"fresh".to_vec());
+        opc.add_relationship("", "rId1", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
+        opc.relationships.insert("word/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::External }]);
+
+        DocxSnapshot::from_parts(
+            opc,
+            DocxDocument {
+                body: vec![DocxBlock::Paragraph(DocxParagraph {
+                    runs: vec![
+                        DocxRun { text: "new".into(), bold: true, italic: true, extra_run_properties: Vec::new(), ..Default::default() },
+                        DocxRun { text: "second".into(), underline: true, ..Default::default() },
+                    ],
+                    style: Some("keep".into()),
+                    extra_paragraph_properties: vec![xml_node("pPr")],
+                })],
+                styles: vec![
+                    DocxStyle { id: "keep".into(), name: "Keep2".into(), based_on: None },
+                    DocxStyle { id: "added".into(), name: "Added".into(), based_on: None },
+                ],
+            },
+        )
+    }
+
+    /// 🧪️ F6: `DiffCodec` round-trip laws over the hand-rolled `DocxDiff` grammar — exercises the
+    /// recursive enum tree (`DocxBlockDiff`'s `Paragraph`/`Table` variants, incl. a nested
+    /// table-cell block list), both `style`/`based_on` tri-states, the OPC layer's content-types/
+    /// parts/relationships-by-owner triples, and every removed/modified/added flavor via a real
+    /// `between()` result in both directions.
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
+        let a = snapshot_a();
+        let b = snapshot_b();
+        let cases = vec![
+            DocxDiff::default(),
+            DocxDiff::between(&a, &b),
+            DocxDiff::between(&b, &a),
+            DocxDiff::between(&a, &a),
+        ];
+        for d in cases {
+            let printed = d.print_diff();
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = DocxDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
+
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = DocxDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
+        }
+
+        // Field sweep: confirm every collection flavor and both tri-states actually got exercised
+        // above, not just "it round-trips" (an all-`None`/empty diff would round-trip trivially).
+        let diff_ab = DocxDiff::between(&a, &b);
+        let opc_diff = diff_ab.opc.as_ref().expect("opc diff present");
+        assert!(opc_diff.content_types.as_ref().expect("content_types diff present").defaults.as_ref().expect("defaults diff present").added.len() > 0);
+        let parts = opc_diff.parts.as_ref().expect("parts diff present");
+        assert!(!parts.removed.is_empty() && !parts.modified.is_empty() && !parts.added.is_empty(), "opc.parts: not every flavor exercised");
+        let rels = opc_diff.relationships.as_ref().expect("relationships diff present");
+        assert!(!rels.removed.is_empty() && !rels.added.is_empty(), "opc.relationships: owner removed/added not exercised");
+        let doc_diff = diff_ab.document.as_ref().expect("document diff present");
+        let body_diff = doc_diff.body.as_ref().expect("body diff present");
+        assert!(!body_diff.removed.is_empty(), "body: removed not exercised");
+        assert_eq!(body_diff.modified.len(), 1);
+        let DocxBlockDiff::Paragraph(p_diff) = &body_diff.modified[0].diff else { panic!("expected paragraph diff") };
+        assert_eq!(p_diff.style, Some(Some("keep".to_string())), "style tri-state Some(Some(_)) not exercised");
+        let runs_diff = p_diff.runs.as_ref().expect("runs diff present");
+        assert!(!runs_diff.modified.is_empty() && !runs_diff.added.is_empty(), "runs: modified/added not exercised");
+        let styles_diff = doc_diff.styles.as_ref().expect("styles diff present");
+        assert!(!styles_diff.removed.is_empty() && !styles_diff.added.is_empty(), "styles: removed/added not exercised");
+        let style_mod = styles_diff.modified.iter().find(|m| m.key == "keep").expect("keep style modified");
+        assert_eq!(style_mod.diff.based_on, Some(None), "based_on tri-state Some(None) not exercised");
+    }
+}
+//#endregion 🧪️Tests
+//#endregion 🔖️HandcraftedDiffCodec

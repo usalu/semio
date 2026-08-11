@@ -4,18 +4,38 @@
 use crate::artifacts::docx::schema::diff::{
     diff_insert_block, diff_insert_style, diff_remove_block, diff_remove_part, diff_remove_style, diff_set_block_content,
     diff_set_part, diff_set_run_formatting, diff_set_run_text, diff_set_snapshot, diff_set_style_based_on, diff_set_style_name,
-    resolve_blocks, DocxBlockPath, DocxDiff,
+    resolve_blocks, DocxBlockPath, DocxDiff, DocxPathSegment,
 };
-use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxStyle};
+use crate::artifacts::docx::schema::diff::{
+    dec_block, dec_bool, dec_ct_entry, dec_opc_part, dec_rel_owner_entry, dec_str, dec_style, decode_option, enc_block, enc_bool,
+    enc_ct_entry, enc_list, enc_opc_part, enc_rel_owner_entry, enc_str, enc_style, encode_option, hex_decode, hex_encode,
+    parse_usize, split_top_level, strip_brackets,
+};
+use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxStyle};
 use crate::artifacts::docx::DocxSnapshot;
-use protocol::Mutation;
+use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage};
+use protocol::{Mutation, OpText};
+#[cfg(test)]
+use protocol::OpBinary;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.docx`. Beyond the baseline `{NoMutation, SetSnapshot}`,
 /// this addresses the `document.body` block tree via `DocxBlockPath` (segments navigate through
 /// nested `Table`s, mirrors svg's `NodePath` precedent), named styles by `DocxStyle::id`, and the
 /// raw OPC layer by part path (for content this typed layer doesn't cover).
+/// 🧪️ F6 VERIFIED: `#[derive(dsl::DslOps)]` on this enum ALSO fails (independent confirmation
+/// beyond `DocxDiff`'s `DiffCodec` blocker, real `cargo check -p semio-s-plugin-stdio --lib`
+/// output, then reverted) — `SetSnapshot{snapshot: DocxSnapshot}` fails with `DocxSnapshot:
+/// DslField` is not satisfied (its `document.body: Vec<DocxBlock>` reaches the same data-carrying
+/// enum `DocxDiff` hits); `InsertBlock`/`SetBlockContent`'s `block: DocxBlock` fails directly for
+/// the same reason (`DocxBlock: DslField` is not satisfied); `InsertStyle`'s `style: DocxStyle` and
+/// every `path: DocxBlockPath`-carrying variant also fail (`DocxStyle`/`DocxBlockPath: DslField` is
+/// not satisfied — neither is itself `#[derive(dsl::DslRecord)]`, a SEPARATE reason from the enum
+/// blocker, but confirms hand-roll is required regardless). `OpText`/`OpBinary` hand-rolled below,
+/// reusing `DocxDiff`'s `pub(crate)` grammar primitives (`hex_encode`/`enc_block`/`enc_style`/
+/// `split_top_level`/...).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum DocxMutation {
@@ -201,31 +221,161 @@ impl Mutation<DocxSnapshot> for DocxMutation {
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-impl protocol::OpText for DocxMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
+/// 🧪️ F6: **hand-rolled** `OpText`/`OpBinary` for `DocxMutation` (`#[derive(dsl::DslOps)]`
+/// confirmed rejected above) — reuses `DocxDiff`'s `pub(crate)` grammar primitives
+/// (`hex_encode`/`enc_block`/`enc_style`/`enc_opc_part`/`split_top_level`/...) rather than
+/// duplicating them a second time in this file. Grammar: `keyword arg=value ...`
+/// (space-separated), same shape the derive's own handcrafted-wrapper convention uses.
+fn enc_path_segment(seg: &DocxPathSegment) -> String {
+    format!("[{},{},{}]", seg.block_index, seg.row, seg.cell)
+}
+fn dec_path_segment(s: &str) -> Result<DocxPathSegment, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [block_index, row, cell] = parts.as_slice() else { return Err(format!("path segment: expected 3 fields, got {}", parts.len())) };
+    Ok(DocxPathSegment { block_index: parse_usize(block_index)?, row: parse_usize(row)?, cell: parse_usize(cell)? })
+}
+fn enc_block_path(p: &DocxBlockPath) -> String {
+    format!("[{},{}]", enc_list(&p.segments, enc_path_segment), p.index)
+}
+fn dec_block_path(s: &str) -> Result<DocxBlockPath, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [segments, index] = parts.as_slice() else { return Err(format!("block path: expected 2 fields, got {}", parts.len())) };
+    Ok(DocxBlockPath { segments: dec_list_segments(segments)?, index: parse_usize(index)? })
+}
+fn dec_list_segments(s: &str) -> Result<Vec<DocxPathSegment>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_segment).collect()
+}
+
+/// 🌱 Full (non-diff) `OpcContentTypes`/`OpcPackage`/`DocxDocument`/`DocxSnapshot` codecs — only
+/// `SetSnapshot`'s whole-payload encoding needs these, so (unlike `DocxDiff`'s value codecs) they
+/// live here rather than in the diff file.
+fn enc_opc_content_types(ct: &OpcContentTypes) -> String {
+    format!("[{},{}]", enc_list(&ct.defaults, enc_ct_entry), enc_list(&ct.overrides, enc_ct_entry))
+}
+fn dec_opc_content_types(s: &str) -> Result<OpcContentTypes, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [defaults, overrides] = parts.as_slice() else { return Err(format!("content types: expected 2 fields, got {}", parts.len())) };
+    Ok(OpcContentTypes {
+        defaults: split_top_level(strip_brackets(defaults)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_ct_entry).collect::<Result<Vec<_>, String>>()?,
+        overrides: split_top_level(strip_brackets(overrides)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_ct_entry).collect::<Result<Vec<_>, String>>()?,
+    })
+}
+/// 🗺️ `relationships: HashMap<String, Vec<OpcRelationship>>` -- owners sorted for a deterministic
+/// encoding (`DiffCodec`/`OpText` LAWS both require determinism; `HashMap` iteration order does not
+/// guarantee it).
+fn enc_opc_package(pkg: &OpcPackage) -> String {
+    let mut owners: Vec<&String> = pkg.relationships.keys().collect();
+    owners.sort();
+    let rel_entries: Vec<(String, Vec<crate::artifacts::zip::opc::OpcRelationship>)> = owners.into_iter().map(|o| (o.clone(), pkg.relationships[o].clone())).collect();
+    format!("[{},{},{}]", enc_list(&pkg.parts, enc_opc_part), enc_opc_content_types(&pkg.content_types), enc_list(&rel_entries, enc_rel_owner_entry))
+}
+fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [p, ct, rels] = parts.as_slice() else { return Err(format!("opc package: expected 3 fields, got {}", parts.len())) };
+    let parts_list = split_top_level(strip_brackets(p)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_opc_part).collect::<Result<Vec<_>, String>>()?;
+    let rel_entries = split_top_level(strip_brackets(rels)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_rel_owner_entry).collect::<Result<Vec<_>, String>>()?;
+    Ok(OpcPackage { parts: parts_list, content_types: dec_opc_content_types(ct)?, relationships: rel_entries.into_iter().collect::<HashMap<_, _>>() })
+}
+fn enc_docx_document(doc: &DocxDocument) -> String {
+    format!("[{},{}]", enc_list(&doc.body, enc_block), enc_list(&doc.styles, enc_style))
+}
+fn dec_docx_document(s: &str) -> Result<DocxDocument, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [body, styles] = parts.as_slice() else { return Err(format!("document: expected 2 fields, got {}", parts.len())) };
+    Ok(DocxDocument {
+        body: split_top_level(strip_brackets(body)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_block).collect::<Result<Vec<_>, String>>()?,
+        styles: split_top_level(strip_brackets(styles)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_style).collect::<Result<Vec<_>, String>>()?,
+    })
+}
+fn enc_docx_snapshot(s: &DocxSnapshot) -> String {
+    format!("[{},{},{}]", enc_str(&s.schema), enc_opc_package(&s.opc), enc_docx_document(&s.document))
+}
+fn dec_docx_snapshot(s: &str) -> Result<DocxSnapshot, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [schema, opc, document] = parts.as_slice() else { return Err(format!("snapshot: expected 3 fields, got {}", parts.len())) };
+    Ok(DocxSnapshot { schema: dec_str(schema)?, opc: dec_opc_package(opc)?, document: dec_docx_document(document)? })
+}
+
+fn print_docx_mutation(m: &DocxMutation) -> String {
+    match m {
+        DocxMutation::NoMutation => "no-mutation".to_string(),
+        DocxMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_docx_snapshot(snapshot)),
+        DocxMutation::InsertBlock { path, block } => format!("insert-block path={} block={}", enc_block_path(path), enc_block(block)),
+        DocxMutation::RemoveBlock { path } => format!("remove-block path={}", enc_block_path(path)),
+        DocxMutation::SetBlockContent { path, block } => format!("set-block-content path={} block={}", enc_block_path(path), enc_block(block)),
+        DocxMutation::SetRunText { path, run_index, text } => format!("set-run-text path={} run-index={} text={}", enc_block_path(path), run_index, enc_str(text)),
+        DocxMutation::SetRunFormatting { path, run_index, bold, italic, underline } => format!(
+            "set-run-formatting path={} run-index={} bold={} italic={} underline={}",
+            enc_block_path(path), run_index, enc_bool(bold), enc_bool(italic), enc_bool(underline)
+        ),
+        DocxMutation::InsertStyle { style } => format!("insert-style style={}", enc_style(style)),
+        DocxMutation::RemoveStyle { id } => format!("remove-style id={}", enc_str(id)),
+        DocxMutation::SetStyleName { id, name } => format!("set-style-name id={} name={}", enc_str(id), enc_str(name)),
+        DocxMutation::SetStyleBasedOn { id, based_on } => format!("set-style-based-on id={} based-on={}", enc_str(id), encode_option(based_on, |v| enc_str(v))),
+        DocxMutation::SetPart { path, content_type, bytes } => format!("set-part path={} content-type={} bytes={}", enc_str(path), enc_str(content_type), hex_encode(bytes)),
+        DocxMutation::RemovePart { path } => format!("remove-part path={}", enc_str(path)),
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+}
+fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
+    if line == "no-mutation" {
+        return Ok(DocxMutation::NoMutation);
+    }
+    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    let args: std::collections::BTreeMap<&str, &str> = rest
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|tok| tok.split_once('=').ok_or_else(|| format!("docx mutation: bad arg token {tok:?}")))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .collect();
+    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("docx mutation: missing arg '{k}' for '{keyword}'"));
+    let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
+    match keyword {
+        "set-snapshot" => Ok(DocxMutation::SetSnapshot { snapshot: dec_docx_snapshot(arg("snapshot")?)? }),
+        "insert-block" => Ok(DocxMutation::InsertBlock { path: dec_block_path(arg("path")?)?, block: dec_block(arg("block")?)? }),
+        "remove-block" => Ok(DocxMutation::RemoveBlock { path: dec_block_path(arg("path")?)? }),
+        "set-block-content" => Ok(DocxMutation::SetBlockContent { path: dec_block_path(arg("path")?)?, block: dec_block(arg("block")?)? }),
+        "set-run-text" => Ok(DocxMutation::SetRunText { path: dec_block_path(arg("path")?)?, run_index: usize_arg("run-index")?, text: dec_str(arg("text")?)? }),
+        "set-run-formatting" => Ok(DocxMutation::SetRunFormatting {
+            path: dec_block_path(arg("path")?)?,
+            run_index: usize_arg("run-index")?,
+            bold: dec_bool(arg("bold")?)?,
+            italic: dec_bool(arg("italic")?)?,
+            underline: dec_bool(arg("underline")?)?,
+        }),
+        "insert-style" => Ok(DocxMutation::InsertStyle { style: dec_style(arg("style")?)? }),
+        "remove-style" => Ok(DocxMutation::RemoveStyle { id: dec_str(arg("id")?)? }),
+        "set-style-name" => Ok(DocxMutation::SetStyleName { id: dec_str(arg("id")?)?, name: dec_str(arg("name")?)? }),
+        "set-style-based-on" => Ok(DocxMutation::SetStyleBasedOn { id: dec_str(arg("id")?)?, based_on: decode_option(arg("based-on")?, dec_str)? }),
+        "set-part" => Ok(DocxMutation::SetPart { path: dec_str(arg("path")?)?, content_type: dec_str(arg("content-type")?)?, bytes: hex_decode(arg("bytes")?)? }),
+        "remove-part" => Ok(DocxMutation::RemovePart { path: dec_str(arg("path")?)? }),
+        other => Err(format!("docx mutation: unknown keyword {other:?}")),
     }
 }
 
+impl protocol::OpText for DocxMutation {
+    fn print_op(&self) -> String {
+        print_docx_mutation(self)
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_docx_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+}
+
+/// ⚡️ Binary = the text bytes verbatim, same simplification as `DocxDiff`'s hand-rolled codec.
 impl protocol::OpBinary for DocxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        Ok(self.print_op().into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
@@ -759,5 +909,47 @@ mod tests {
         assert_eq!(style_mod_ba.diff.based_on, Some(None), "style based_on tri-state Some(None) not exercised");
     }
     //#endregion 🔖️FieldSweep
+
+    //#region 🔖️OpTextBinaryRoundtripLaw
+    /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `DocxMutation` grammar —
+    /// exercises every variant, incl. `InsertBlock`/`SetBlockContent`'s bare `DocxBlock` payload
+    /// (a `Table` carrying nested rows/cells/blocks), `SetSnapshot`'s whole `DocxSnapshot` (OPC
+    /// parts/content-types/relationships-by-owner plus the typed document/styles), and the
+    /// `Option<String>` tri-state on `SetStyleBasedOn`.
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        let table_block = DocxBlock::Table(DocxTable {
+            rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }],
+            ..Default::default()
+        });
+        let mutations = vec![
+            DocxMutation::NoMutation,
+            DocxMutation::SetSnapshot { snapshot: sweep_b() },
+            DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 1 }, block: table_block.clone() },
+            DocxMutation::InsertBlock { path: table_path(0, 0, 0, 0), block: DocxBlock::paragraph("nested") },
+            DocxMutation::RemoveBlock { path: DocxBlockPath { segments: vec![], index: 0 } },
+            DocxMutation::SetBlockContent { path: DocxBlockPath { segments: vec![], index: 0 }, block: table_block },
+            DocxMutation::SetRunText { path: DocxBlockPath { segments: vec![], index: 0 }, run_index: 0, text: "hello world".into() },
+            DocxMutation::SetRunFormatting { path: DocxBlockPath { segments: vec![], index: 0 }, run_index: 0, bold: true, italic: false, underline: true },
+            DocxMutation::InsertStyle { style: DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) } },
+            DocxMutation::RemoveStyle { id: "Normal".into() },
+            DocxMutation::SetStyleName { id: "Normal".into(), name: "Body Text".into() },
+            DocxMutation::SetStyleBasedOn { id: "Normal".into(), based_on: Some("Other".into()) },
+            DocxMutation::SetStyleBasedOn { id: "Normal".into(), based_on: None },
+            DocxMutation::SetPart { path: "word/numbering.xml".into(), content_type: "application/xml".into(), bytes: b"<w:numbering/>".to_vec() },
+            DocxMutation::RemovePart { path: "word/styles.xml".into() },
+        ];
+        for mutation in mutations {
+            let printed = mutation.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = DocxMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
+
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = DocxMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+        }
+    }
+    //#endregion 🔖️OpTextBinaryRoundtripLaw
 }
 //#endregion 🧪️Tests

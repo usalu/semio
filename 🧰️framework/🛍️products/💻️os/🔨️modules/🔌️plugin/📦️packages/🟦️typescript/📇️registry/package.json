@@ -6,7 +6,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./📜️script.ts"
+    ".": "./📜️script.ts",
+    "./catalog": "./🟦️catalog.ts"
   },
   "scripts": {
     "generate": "bun nx run @semio-tech/plugin-registry:generate",

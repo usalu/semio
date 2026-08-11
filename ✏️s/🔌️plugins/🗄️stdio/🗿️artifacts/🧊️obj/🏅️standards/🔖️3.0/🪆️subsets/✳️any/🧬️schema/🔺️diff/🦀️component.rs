@@ -1444,3 +1444,126 @@ pub fn diff_set_unknown_statements(unknown_statements: Vec<ObjUnknownStatement>)
     ObjDiff { unknown_statements: Some(unknown_statements), ..Default::default() }
 }
 //#endregion 🔖️MutationDiffBuilders
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 🧬️ Canonical "differs in every mutable field" snapshot A — every index-keyed collection
+    /// has 2 items (a stable prefix item + one that will be modified); every name-keyed
+    /// collection has 2 named entries (one that will be removed, one that will be modified).
+    /// Mirrors `🧬️mutations`' own `sweep_a`/`sweep_b` fixtures (kept local to this file per the
+    /// ticket's "no additional test files" rule — this module can't import a sibling module's
+    /// `#[cfg(test)]`-only helpers).
+    fn sweep_a() -> ObjSnapshot {
+        ObjSnapshot {
+            schema: "stdio.obj".into(),
+            vertices: vec![
+                ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None },
+                ObjVertex { x: 1.0, y: 1.0, z: 1.0, w: None },
+            ],
+            texcoords: vec![
+                ObjTexCoord { u: 0.0, v: 0.0, w: None },
+                ObjTexCoord { u: 1.0, v: 1.0, w: Some(5.0) },
+            ],
+            normals: vec![
+                ObjNormal { x: 0.0, y: 0.0, z: 1.0 },
+                ObjNormal { x: 1.0, y: 1.0, z: 1.0 },
+            ],
+            faces: vec![
+                ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
+                ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
+            ],
+            groups: vec![
+                ObjGroup { name: "G1".into(), faces: vec![0] },
+                ObjGroup { name: "G2".into(), faces: vec![1] },
+            ],
+            objects: vec![
+                ObjObject { name: "O1".into(), faces: vec![0] },
+                ObjObject { name: "O2".into(), faces: vec![1] },
+            ],
+            mtllib: Some("a.mtl".into()),
+            usemtl: vec![ObjUsemtlRange { face_index_from: 0, material: "Red".into() }],
+            smoothing_groups: vec![ObjSmoothingRange { face_index_from: 0, group: Some(1) }],
+            unknown_statements: vec![ObjUnknownStatement { line_index: 0, raw: "# a".into() }],
+        }
+    }
+
+    /// 🧬️ Sweep B: every index-keyed collection's index-0 item is UNCHANGED, its index-1 item is
+    /// MODIFIED in every field (incl. a tri-state `Some(None)` on `texcoords[1].w`), and gains a
+    /// brand-new item at index 2. Name-keyed `groups`/`objects` show removed+modified+added
+    /// simultaneously from ONE `between(a,b)` call. `mtllib` exercises `Some->None` tri-state.
+    fn sweep_b() -> ObjSnapshot {
+        ObjSnapshot {
+            schema: "stdio.obj".into(),
+            vertices: vec![
+                ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None },
+                ObjVertex { x: 9.0, y: 9.0, z: 9.0, w: Some(0.5) },
+                ObjVertex { x: 5.0, y: 5.0, z: 5.0, w: Some(1.0) },
+            ],
+            texcoords: vec![
+                ObjTexCoord { u: 0.0, v: 0.0, w: None },
+                ObjTexCoord { u: 2.0, v: 2.0, w: None },
+                ObjTexCoord { u: 5.0, v: 5.0, w: None },
+            ],
+            normals: vec![
+                ObjNormal { x: 0.0, y: 0.0, z: 1.0 },
+                ObjNormal { x: -1.0, y: -1.0, z: -1.0 },
+                ObjNormal { x: 0.0, y: 1.0, z: 0.0 },
+            ],
+            faces: vec![
+                ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: None, normal: None }] },
+                ObjFace { vertices: vec![ObjFaceVertex { vertex: 1, texcoord: Some(0), normal: Some(0) }] },
+                ObjFace { vertices: vec![ObjFaceVertex { vertex: 2, texcoord: None, normal: None }] },
+            ],
+            groups: vec![
+                ObjGroup { name: "G2".into(), faces: vec![1, 2] },
+                ObjGroup { name: "G3".into(), faces: vec![3] },
+            ],
+            objects: vec![
+                ObjObject { name: "O2".into(), faces: vec![1, 2] },
+                ObjObject { name: "O3".into(), faces: vec![3] },
+            ],
+            mtllib: None,
+            usemtl: vec![
+                ObjUsemtlRange { face_index_from: 0, material: "Blue".into() },
+                ObjUsemtlRange { face_index_from: 2, material: "Green".into() },
+            ],
+            smoothing_groups: vec![ObjSmoothingRange { face_index_from: 0, group: None }],
+            unknown_statements: vec![
+                ObjUnknownStatement { line_index: 5, raw: "# b".into() },
+                ObjUnknownStatement { line_index: 6, raw: "weird".into() },
+            ],
+        }
+    }
+
+    /// 🧪️ F6: `DiffCodec` round-trip laws for the hand-rolled `ObjDiff` text/binary grammar —
+    /// exercises every scalar, both tri-states (`mtllib` at the top level, `texcoords[1].w`
+    /// inside a modified item), and all three collection-triple kinds — index-keyed
+    /// (`vertices`/`texcoords`/`normals`/`faces`) AND name-keyed (`groups`/`objects`) — via a real
+    /// `between()` result in both directions.
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
+        let a = sweep_a();
+        let b = sweep_b();
+        let ab = <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&a, &b);
+        assert_eq!(ab.mtllib, Some(None), "mtllib tri-state must exercise Some(None)");
+        let td = ab.texcoords.as_ref().expect("texcoords diff populated");
+        assert_eq!(td.modified[0].diff.w, Some(None), "texcoord w tri-state must exercise Some(None)");
+        assert!(!ab.groups.as_ref().unwrap().removed.is_empty() && !ab.groups.as_ref().unwrap().modified.is_empty() && !ab.groups.as_ref().unwrap().added.is_empty(), "groups triple must exercise all 3 kinds");
+
+        let cases = vec![ObjDiff::default(), ab, <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&b, &a)];
+        for d in cases {
+            let printed = d.print_diff();
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = ObjDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
+
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = ObjDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
+        }
+    }
+}
+//#endregion 🧪️Tests

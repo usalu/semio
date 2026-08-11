@@ -2,8 +2,9 @@
 /**
  * 📜️ `@semio-tech/plugin-registry` — single-source plugin/playground/framework catalog codegen from
  * workspace packages. Discovery is the shared repo-wide contract (`🔣️taxonomy.json` +
- * `discoverPackages()` in `🦑️repo/📚️library`), not path regexes local to this script; the plugin area's
- * declared `AreaState` decides how much pre-Shape-V2 layout is still tolerated.
+ * `discoverPackages()` in `🦑️repo/📚️library`), not path regexes local to this script; every plugin area
+ * root comes from `taxonomy.pluginAreas`, and each declared `AreaState` decides whether the taxonomy
+ * tree audit warns or hard-fails.
  *
  * `generate` writes `🤖️generated/*` plus `.vscode/launch.json` (both derived from the same playground
  * catalog); `check` byte-compares every one of those artifacts and never writes.
@@ -43,23 +44,36 @@ export type PluginRegistryEntry = {
  * `26/08/06/MECHANISM-VOCABULARY-AND-DISCOVERY-LIBRARY`. */
 const TAXONOMY = loadTaxonomy();
 
-/** @emoji 🗺️ Area root of the plugin tree, cross-checked against `taxonomy.areas` at load time so this
- * literal can never outlive a vocabulary rename: the area's declared `AreaState` — not a hand-flipped
- * boolean — decides whether pre-Shape-V2 crates are still discovered and whether taxonomy findings warn
- * or fail (see `PLUGINS_AREA_STATE`). */
-const PLUGINS_AREA = "✏️s/🔌️plugins";
-if (!(PLUGINS_AREA in TAXONOMY.areas)) throw new Error(`📇️registry: "${PLUGINS_AREA}" is not a declared area in 🔣️taxonomy.json (${Object.keys(TAXONOMY.areas).join(", ")})`);
+/** @emoji 🔌️ `pluginAreas` isn't declared on the shared `Taxonomy` TS interface yet (it lives in
+ * `🦑️repo/📚️library`'s discovery module, outside this ticket's file ownership) — read it here via a
+ * narrow local cast instead of widening that shared type.
+ * @see .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT */
+type TaxonomyWithPluginAreas = typeof TAXONOMY & { readonly pluginAreas: readonly string[] };
 
-/** @emoji 🗺️ Declared migration state of the plugin area — the per-area replacement for the removed
- * `LEGACY_LAYOUT_TOLERANT` boolean. `legacy`/`mixed` ⇒ pre-Shape-V2 crates are still part of the catalog
- * and taxonomy findings are warn-only; `clean` ⇒ the legacy arm goes silent and the findings fail the
- * gate (the W10 finalization flip becomes a one-word vocabulary edit, not a code change). */
-const PLUGINS_AREA_STATE: AreaState = areaOf(PLUGINS_AREA, TAXONOMY) ?? "legacy";
-
-/** @emoji 🏚️ True while an area still admits the pre-Shape-V2 sandwich layout. */
-function areaAdmitsLegacyShape(state: AreaState): boolean {
-  return state === "legacy" || state === "mixed";
+/** @emoji 🗺️ Every area root that may hold a plugin crate, cross-checked against `taxonomy.areas` at
+ * load time so none of these literals can outlive a vocabulary rename. Membership across this array —
+ * never equality against one hand-picked literal — is how every plugin-tree path test below decides
+ * "is this under a plugin area"; an area's declared `AreaState` decides whether taxonomy findings warn
+ * or fail (see `PLUGIN_AREAS_STATE`). */
+const PLUGIN_AREAS: readonly string[] = (TAXONOMY as TaxonomyWithPluginAreas).pluginAreas;
+if (!Array.isArray(PLUGIN_AREAS) || PLUGIN_AREAS.length === 0) throw new Error(`📇️registry: 🔣️taxonomy.json must declare a non-empty "pluginAreas" array`);
+for (const area of PLUGIN_AREAS) {
+  if (!(area in TAXONOMY.areas)) throw new Error(`📇️registry: "${area}" is not a declared area in 🔣️taxonomy.json (${Object.keys(TAXONOMY.areas).join(", ")})`);
 }
+
+/** @emoji 🗺️ Merges every declared plugin area's `AreaState` to the most permissive member, so one
+ * still-migrating area can never be silently masked by a sibling area that already reached `clean`. */
+function mergeAreaStates(states: readonly AreaState[]): AreaState {
+  if (states.includes("legacy")) return "legacy";
+  if (states.includes("mixed")) return "mixed";
+  return "clean";
+}
+
+/** @emoji 🗺️ Declared migration state across every plugin area — the per-area replacement for the
+ * removed `LEGACY_LAYOUT_TOLERANT` boolean. `legacy`/`mixed` ⇒ taxonomy findings are warn-only; `clean`
+ * ⇒ they fail the gate (the W10 finalization flip becomes a one-word vocabulary edit, not a code
+ * change). */
+const PLUGIN_AREAS_STATE: AreaState = mergeAreaStates(PLUGIN_AREAS.map((area) => areaOf(area, TAXONOMY) ?? "legacy"));
 
 /** @emoji 🎛️ Taxonomy tree segment names, single-sourced from the vocabulary: anything deriving an
  * app-root path (the constitutional gate, example discovery, the window audit) shares one value. */
@@ -83,11 +97,6 @@ function isExampleSlugName(name: string): boolean {
 }
 
 const RUST_LANG = "🦀️rust";
-const RUST_MANIFEST_FILENAME = TAXONOMY.ecosystems[RUST_LANG].manifestFilename ?? "Cargo.toml";
-
-/** @emoji 🚫️ Build/vendor noise and dot-directories (e.g. `.claude/worktrees/…`, which used to leak
- * duplicate registry rows for every crate that also exists inside a worktree checkout). */
-const WALK_SKIP_DIRS = new Set(["node_modules", "target", "🤖️generated"]);
 
 /** @emoji 🧩️ Roles whose packages may carry a `[package.metadata.component]` wasm component and thus
  * belong in the plugin catalog: the plugin itself and the extensions it contributes. Every other role
@@ -102,64 +111,15 @@ function discoverComponentPackages(repoRoot: string): DiscoveredPackage[] {
   return discoverPackages(repoRoot, TAXONOMY).filter((pkg) => pkg.lang === RUST_LANG && COMPONENT_ROLES.has(pkg.role));
 }
 
-/** @emoji 🏚️ Absolute path of a legacy `<dir>/<forbidden segment>/🦀️rust/Cargo.toml` sandwich manifest
- * when one exists — the vocabulary-driven replacement for the `"⚡️implementations"` literals this
- * script used to splice into paths by hand (both spellings are covered, per
- * `taxonomy.forbiddenPathSegments`). */
-function legacyRustManifestIn(dir: string): string | undefined {
-  for (const segment of TAXONOMY.forbiddenPathSegments) {
-    const manifestPath = join(dir, segment, RUST_LANG, RUST_MANIFEST_FILENAME);
-    if (existsSync(manifestPath)) return manifestPath;
-  }
-  return undefined;
-}
-
-/**
- * @emoji 🏚️ Pre-Shape-V2 component crates still on disk inside the plugin area: a
- * `<forbidden segment>/🦀️rust/Cargo.toml` sandwich (the legacy plugin bundle crate and its
- * `🧩️extensions` siblings). Selected structurally from the vocabulary — `forbiddenPathSegments` plus
- * the rust ecosystem's manifest filename — instead of the three hand-written path regexes this script
- * used to carry, and gated on the plugin area's declared state so the whole arm disappears by
- * vocabulary edit at the finalization flip. Crates matching the shape without a
- * `[package.metadata.component]` package are dropped downstream by `tryParsePluginCargo`, exactly as
- * before.
- */
-function findLegacyComponentManifests(repoRoot: string): string[] {
-  if (!areaAdmitsLegacyShape(PLUGINS_AREA_STATE)) return [];
-  const forbidden = new Set(TAXONOMY.forbiddenPathSegments);
-  const out: string[] = [];
-  function walk(dir: string) {
-    for (const name of readdirSync(dir)) {
-      if (name.startsWith(".") || WALK_SKIP_DIRS.has(name) || name === TAXONOMY.packagesDirName) continue;
-      const path = join(dir, name);
-      let st: ReturnType<typeof statSync>;
-      try {
-        st = statSync(path);
-      } catch {
-        continue;
-      }
-      if (!st.isDirectory()) continue;
-      if (forbidden.has(name)) {
-        const manifestPath = join(path, RUST_LANG, RUST_MANIFEST_FILENAME);
-        if (existsSync(manifestPath)) out.push(manifestPath);
-        continue;
-      }
-      walk(path);
-    }
-  }
-  const areaRoot = join(repoRoot, ...PLUGINS_AREA.split("/"));
-  if (existsSync(areaRoot)) walk(areaRoot);
-  return out;
-}
 //#endregion 🏛️DiscoveryContract
 
-/** @emoji 🧭️ Every manifest that may contribute a row to the plugin catalog: the shared package
- * discovery contract plus, while the plugin area is pre-`clean`, the legacy sandwich crates a plugin
- * sheds when it migrates. A plugin discoverable under both shapes at once is "in-flight", not an
- * error. */
+/** @emoji 🧭️ Every manifest that may contribute a row to the plugin catalog, via the shared package
+ * discovery contract. The pre-Shape-V2 legacy sandwich shape this used to also admit was removed once
+ * every declared plugin area reached `clean` — see `PLUGIN_AREAS_STATE`. */
 function findPluginCargoFiles(root: string): string[] {
-  const contract = discoverComponentPackages(root).map((pkg) => join(root, pkg.manifestPath));
-  return [...new Set([...contract, ...findLegacyComponentManifests(root)])].sort();
+  return discoverComponentPackages(root)
+    .map((pkg) => join(root, pkg.manifestPath))
+    .sort();
 }
 
 function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistryEntry {
@@ -180,7 +140,7 @@ function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistr
   const extendsHost = semioText.match(/^extends\s*=\s*"([^"]+)"/m)?.[1];
   const hostBlock = semioText.match(/^host\s*=\s*\{([^}]*)\}/m)?.[1];
   const landingAppId = hostBlock?.match(/landing\s*=\s*"([^"]+)"/)?.[1];
-  const hostAppId = hostBlock?.match(/studio\s*=\s*"([^"]+)"/)?.[1];
+  const hostAppId = hostBlock?.match(/shell\s*=\s*"([^"]+)"/)?.[1];
   const host = landingAppId && hostAppId ? { landingAppId, hostAppId } : undefined;
   return {
     pluginId: componentPackage,
@@ -310,9 +270,11 @@ function parseAssetsForCrate(manifestPath: string): AssetSpecRow[] {
  */
 function discoverExamplesForPlayground(repoRoot: string, cratePath: string, pluginId: string, variant: string): string[] {
   const segments = cratePath.split("/");
-  const areaSegments = PLUGINS_AREA.split("/");
-  const inPluginArea = areaSegments.every((segment, index) => segments[index] === segment);
-  const techRoot = inPluginArea ? segments.slice(0, areaSegments.length + 1).join("/") : segments[0];
+  const matchedArea = PLUGIN_AREAS.find((area) => {
+    const areaSegments = area.split("/");
+    return areaSegments.every((segment, index) => segments[index] === segment);
+  });
+  const techRoot = matchedArea ? segments.slice(0, matchedArea.split("/").length + 1).join("/") : segments[0];
   const slugIds = (examplesRoot: string): string[] => {
     if (!existsSync(examplesRoot)) return [];
     return listDirs(examplesRoot)
@@ -352,46 +314,18 @@ function parsePlaygroundsForCrate(manifestPath: string, pluginId: string, crateP
   return entries;
 }
 
-//#region 🧹️PlaygroundDedupe
-/** @emoji 🧹️ In-flight migration dedupe (see `PLUGINS_AREA_STATE`): when a plugin's legacy bundle
- * crate and its new-contract taxonomy crate are BOTH on disk at once, they typically carry identical
- * `[[package.metadata.semio.playground]]` rows — same variant id, same aliases, same ports — which
- * would otherwise trip `validatePlaygroundRegistry`'s duplicate checks for the entire workspace on
- * every in-flight migration. Groups raw entries by variant id; a group where every entry shares one
- * `pluginId` AND at least one (but not all) entries come from a new-contract crate is the expected
- * transient migration shape, so only the new-contract entry/entries survive. A variant collision
- * across DIFFERENT plugin ids is left untouched — that is a genuine naming collision for
- * `validatePlaygroundRegistry` to catch. `contractCratePaths` is the repo-relative package-dir set from
- * `discoverComponentPackages`, so "is this the new shape?" is answered by the shared discovery walk
- * rather than by a second copy of a path regex. */
-function dedupeInFlightPlaygroundEntries(playgrounds: readonly PlaygroundEntry[], contractCratePaths: ReadonlySet<string>): PlaygroundEntry[] {
-  const byVariant = new Map<string, PlaygroundEntry[]>();
-  for (const entry of playgrounds) byVariant.set(entry.variant, [...(byVariant.get(entry.variant) ?? []), entry]);
-  const dropped = new Set<PlaygroundEntry>();
-  for (const group of byVariant.values()) {
-    if (group.length <= 1) continue;
-    if (new Set(group.map((entry) => entry.pluginId)).size > 1) continue;
-    const newContract = group.filter((entry) => contractCratePaths.has(entry.cratePath));
-    if (newContract.length === 0 || newContract.length === group.length) continue;
-    for (const entry of group) if (!newContract.includes(entry)) dropped.add(entry);
-  }
-  return dropped.size === 0 ? [...playgrounds] : playgrounds.filter((entry) => !dropped.has(entry));
-}
-//#endregion 🧹️PlaygroundDedupe
-
 /** @emoji 🕹️ Scans every plugin/module crate for `[[package.metadata.semio.playground]]` rows and flattens them into one repo-wide catalog. */
 export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): PlaygroundEntry[] {
   const entries = generatePluginRegistry(repoRoot, options);
-  const rawPlaygrounds: PlaygroundEntry[] = [];
+  const playgrounds: PlaygroundEntry[] = [];
   for (const entry of entries) {
     const manifestPath = join(repoRoot, entry.cratePath, "Cargo.toml");
     const crateAssets = parseAssetsForCrate(manifestPath);
     for (const playground of parsePlaygroundsForCrate(manifestPath, entry.pluginId, entry.cratePath)) {
       const assets = crateAssets.filter((asset) => asset.app === undefined || asset.app === playground.app);
-      rawPlaygrounds.push({ ...playground, examples: discoverExamplesForPlayground(repoRoot, entry.cratePath, entry.pluginId, playground.variant), assets });
+      playgrounds.push({ ...playground, examples: discoverExamplesForPlayground(repoRoot, entry.cratePath, entry.pluginId, playground.variant), assets });
     }
   }
-  const playgrounds = dedupeInFlightPlaygroundEntries(rawPlaygrounds, new Set(discoverComponentPackages(repoRoot).map((pkg) => pkg.packageRel)));
   for (let i = 0; i < playgrounds.length; i++) {
     const row = playgrounds[i];
     if (!row.brand || row.examples.length > 0) continue;
@@ -433,7 +367,7 @@ function pluginEntryHasHost(pluginId: string, repoRoot: string): boolean {
 }
 
 /** @emoji 🏠️ True when the filter resolves to a plugin crate that declares `[package.metadata.semio].host`. */
-export function isStudioPluginFilter(pluginFilter?: string, repoRoot = getWorkspaceRoot()): boolean {
+export function isHostPluginFilter(pluginFilter?: string, repoRoot = getWorkspaceRoot()): boolean {
   if (!pluginFilter) return true;
   return pluginEntryHasHost(resolveRegistryPluginIdForFilter(pluginFilter, repoRoot), repoRoot);
 }
@@ -480,7 +414,7 @@ function tryParsePluginCargo(manifestPath: string, repoRoot: string): PluginRegi
 
 export function generatePluginRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): PluginRegistryEntry[] {
   const filterPlaygroundPlugin = options.filterPlaygroundPlugin;
-  const filterIds = filterPlaygroundPlugin && !isStudioPluginFilter(filterPlaygroundPlugin) ? resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin) : undefined;
+  const filterIds = filterPlaygroundPlugin && !isHostPluginFilter(filterPlaygroundPlugin) ? resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin) : undefined;
   const manifestPaths = filterIds ? findPluginCargoPathsForIds(repoRoot, filterIds) : findPluginCargoFiles(repoRoot);
   const entries: PluginRegistryEntry[] = [];
   for (const path of manifestPaths) {
@@ -489,6 +423,22 @@ export function generatePluginRegistry(repoRoot = getWorkspaceRoot(), options: G
   }
   entries.sort((a, b) => a.pluginId.localeCompare(b.pluginId));
   return entries;
+}
+
+/** @emoji 🏠️ Resolves the one playground variant that boots as the host/shell session: the data-driven
+ * replacement for the previous hardcoded `"s"` literal. Exactly one plugin crate in the catalog may
+ * declare `[package.metadata.semio].host` (see `parsePluginCargo`'s `host`/`shell` parse) — this scans
+ * for that crate and returns its own `[[package.metadata.semio.playground]]` variant id, throwing a
+ * clear error if zero or more than one plugin crate declares the host table. */
+export function resolveDefaultHostVariant(repoRoot = getWorkspaceRoot()): string {
+  const hostEntries = generatePluginRegistry(repoRoot).filter((entry) => entry.host !== undefined);
+  if (hostEntries.length !== 1) {
+    throw new Error(`📇️registry: expected exactly one plugin crate to declare [package.metadata.semio].host, found ${hostEntries.length}${hostEntries.length > 0 ? ` (${hostEntries.map((entry) => entry.pluginId).join(", ")})` : ""}`);
+  }
+  const hostPluginId = hostEntries[0].pluginId;
+  const hostPlayground = generatePlaygroundRegistry(repoRoot).find((entry) => entry.pluginId === hostPluginId);
+  if (!hostPlayground) throw new Error(`📇️registry: host plugin "${hostPluginId}" declares no [[package.metadata.semio.playground]] variant`);
+  return hostPlayground.variant;
 }
 
 function emitTypeScript(entries: PluginRegistryEntry[]): string {
@@ -563,7 +513,7 @@ function emitAssetSpecTypeScript(asset: AssetSpecRow): string {
   return `{ ${fields.join(", ")} }`;
 }
 
-function emitPlaygroundsTypeScript(playgrounds: PlaygroundEntry[]): string {
+function emitPlaygroundsTypeScript(playgrounds: PlaygroundEntry[], defaultHostVariant: string): string {
   const rows = playgrounds
     .map((entry) => {
       const app = entry.app !== undefined ? `, app: ${JSON.stringify(entry.app)}` : "";
@@ -594,6 +544,10 @@ export type PlaygroundBuildTarget = {
 export const PLAYGROUND_BUILD_TARGETS: readonly PlaygroundBuildTarget[] = [
 ${rows}
 ];
+
+/** @emoji 🏠️ The playground variant that boots as the host/shell session — see
+ * \`resolveDefaultHostVariant\`. Replaces every hardcoded \`"s"\` default-variant literal downstream. */
+export const DEFAULT_HOST_VARIANT = ${JSON.stringify(defaultHostVariant)};
 `;
 }
 
@@ -668,24 +622,24 @@ export type PlaygroundSession = {
   readonly variant: string;
   readonly registryPluginId: string;
   readonly defaultAppId?: string;
-  readonly studioMode: boolean;
+  readonly hostMode: boolean;
   readonly host?: PluginHostMetadata;
   readonly plugins: readonly PlaygroundSessionPlugin[];
 };
 
 /** @emoji 🎮️ Builds the pre-expanded plugin list and host metadata for one playground launch. */
 export function buildPlaygroundSession(variant: string, repoRoot = getWorkspaceRoot()): PlaygroundSession {
-  const studioMode = isStudioPluginFilter(variant, repoRoot);
+  const hostMode = isHostPluginFilter(variant, repoRoot);
   const registryPluginId = resolveRegistryPluginIdForFilter(variant, repoRoot);
   const playgrounds = generatePlaygroundRegistry(repoRoot);
   const playground = playgrounds.find((entry) => entry.variant === variant || entry.aliases.includes(variant));
-  const entries = generatePluginRegistry(repoRoot, studioMode ? {} : { filterPlaygroundPlugin: registryPluginId });
+  const entries = generatePluginRegistry(repoRoot, hostMode ? {} : { filterPlaygroundPlugin: registryPluginId });
   const host = entries.find((entry) => entry.pluginId === registryPluginId)?.host;
   return {
     variant,
     registryPluginId,
     defaultAppId: playground?.app,
-    studioMode,
+    hostMode,
     ...(host ? { host } : {}),
     plugins: entries.map((entry) => ({
       pluginId: entry.pluginId,
@@ -714,7 +668,7 @@ export type PlaygroundSession = {
 \treadonly variant: string;
 \treadonly registryPluginId: string;
 \treadonly defaultAppId?: string;
-\treadonly studioMode: boolean;
+\treadonly hostMode: boolean;
 \treadonly host?: { readonly landingAppId: string; readonly hostAppId: string };
 \treadonly plugins: readonly PlaygroundSessionPlugin[];
 };
@@ -723,7 +677,7 @@ export const PLAYGROUND_SESSION: PlaygroundSession = {
 \tvariant: ${JSON.stringify(session.variant)},
 \tregistryPluginId: ${JSON.stringify(session.registryPluginId)},
 \tdefaultAppId: ${defaultAppId},
-\tstudioMode: ${session.studioMode},
+\thostMode: ${session.hostMode},
 \thost: ${host},
 \tplugins: [
 ${pluginRows}
@@ -732,7 +686,7 @@ ${pluginRows}
 `;
 }
 
-function emitRustHosts(entries: PluginRegistryEntry[], playgrounds: PlaygroundEntry[]): string {
+function emitRustHosts(entries: PluginRegistryEntry[], playgrounds: PlaygroundEntry[], defaultHostVariant: string): string {
   const hostRows = entries
     .filter((entry) => entry.host)
     .map((entry) => `    PluginHostConfig { plugin_id: ${JSON.stringify(entry.pluginId)}, landing_app_id: ${JSON.stringify(entry.host!.landingAppId)}, host_app_id: ${JSON.stringify(entry.host!.hostAppId)} },`)
@@ -748,6 +702,10 @@ pub struct PluginHostConfig {
     pub landing_app_id: &'static str,
     pub host_app_id: &'static str,
 }
+
+/// 🏠️ The playground variant that boots as the host/shell session — see \`resolveDefaultHostVariant\`
+/// in \`framework/plugin/registry/script.ts\`. Replaces every hardcoded \`"s"\` default-variant literal.
+pub const DEFAULT_HOST_VARIANT: &str = ${JSON.stringify(defaultHostVariant)};
 
 pub const PLUGIN_HOST_CONFIGS: &[PluginHostConfig] = &[
 ${hostRows}
@@ -862,62 +820,6 @@ function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[], repoRoot: st
   return errors;
 }
 
-//#region 🏛️ConstitutionalCrateGate
-/** @emoji 🏛️ The eight mandatory constitutional-crate slots every `s/plugin/<p>/app/<a>/` must carry
- * (see `.🦑️repo/🎫️tickets/26/07/29/MOVE-APPS-INTO-S-PRODUCT-TREE-WITH-CONSTITUTIONAL-CRATES/w31-constitutional-split-recipe.md`).
- * `rs` sits directly at `<appDir>/rs`; every other slot sits at `<appDir>/<slot>/rs`. */
-const CONSTITUTIONAL_SLOTS = ["engine", "dsl", "op", "pack", "protocol", "ui", "mutations"] as const;
-/** @emoji 🔤️ Slot word -> its emoji+name directory segment (matches the repo's emoji+name naming scheme). */
-const CONSTITUTIONAL_SLOT_DIRNAME: Record<(typeof CONSTITUTIONAL_SLOTS)[number], string> = {
-  engine: "⚙️engine",
-  dsl: "🗣️dsl",
-  op: "🔧️op",
-  pack: "🎒️pack",
-  protocol: "📡️protocol",
-  ui: "🖱️ui",
-  mutations: "🧬️mutations",
-};
-
-/** @emoji 🚦️ Gate 1 (build-time): every `s/plugin/<p>/app/…` directory — whether a single flattened
- * app (`app/rs/Cargo.toml` sits directly under `app/`) or a multi-app plugin (`app/<a>/rs/Cargo.toml`
- * per subdirectory) — must carry all seven constitutional-crate slot manifests. Hard-fails `check` so
- * a future split can never silently regress to a partial 4-of-8 or 5-of-8 crate set. Plugins that
- * haven't reached `s/plugin/` yet (nothing under `app/`) are out of scope, not a violation — this gate
- * only enforces completeness for plugins that have already started the split. Goes silent entirely
- * once the plugin area is declared `clean`: the legacy constitution has no meaning without legacy
- * crates. */
-function validateConstitutionalCrates(repoRoot: string, migratedPluginIds: ReadonlySet<string> = new Set()): string[] {
-  const errors: string[] = [];
-  if (!areaAdmitsLegacyShape(PLUGINS_AREA_STATE)) return errors;
-  const pluginRoot = join(repoRoot, ...PLUGINS_AREA.split("/"));
-  if (!existsSync(pluginRoot)) return errors;
-  for (const pluginName of readdirSync(pluginRoot).sort()) {
-    // 🚦️ A plugin already discovered under the new one-crate-per-plugin taxonomy contract
-    // (`findNewContractPluginRoots`) is validated by `validateTaxonomyTree` instead — it has
-    // deliberately shed the seven legacy per-app crate slots, that is not a regression.
-    if (migratedPluginIds.has(pluginName)) continue;
-    const appRoot = join(pluginRoot, pluginName, APPS_DIRNAME);
-    if (!existsSync(appRoot) || !statSync(appRoot).isDirectory()) continue;
-    const isFlatSingleApp = legacyRustManifestIn(appRoot) !== undefined;
-    const appDirs = isFlatSingleApp ? [{ label: pluginName, dir: appRoot }] : readdirSync(appRoot)
-      .filter((name) => statSync(join(appRoot, name)).isDirectory())
-      .filter((name) => name !== "🤝️shared")
-      .map((name) => ({ label: `${pluginName}/${name}`, dir: join(appRoot, name) }));
-    for (const { label, dir } of appDirs) {
-      const missing: string[] = [];
-      if (legacyRustManifestIn(dir) === undefined) missing.push("rs");
-      for (const slot of CONSTITUTIONAL_SLOTS) {
-        if (legacyRustManifestIn(join(dir, "🔨️modules", CONSTITUTIONAL_SLOT_DIRNAME[slot])) === undefined) missing.push(slot);
-      }
-      if (missing.length > 0) {
-        errors.push(`${PLUGINS_AREA}/${label} is missing constitutional crate slot(s): ${missing.join(", ")} (expected 8: rs, ${CONSTITUTIONAL_SLOTS.join(", ")})`);
-      }
-    }
-  }
-  return errors;
-}
-//#endregion 🏛️ConstitutionalCrateGate
-
 //#region 🗿️TaxonomyValidator
 /** @emoji 🗿️ Every artifact node must carry the completeness taxonomy component slots (incl. `🧬️mutations` + `⚙️engine`) — sourced from
  * `🔣️taxonomy.json` (single vocabulary source of truth, see master ticket
@@ -954,12 +856,10 @@ const RUST_ENTRY_FILENAME = TAXONOMY.entryFilenames[RUST_LANG];
 const RUST_ENTRY_DIR_FROM_OWNER = TAXONOMY.rustEntryPathRules.entryDirFromOwner.split("/");
 
 /** @emoji 🧭️ Plugin roots discovered via the shared package contract (`role = "plugin"`, rust, owner
- * sitting directly under the plugin area) — distinct from `findPluginCargoFiles`, which additionally
- * matches the legacy sandwich shape. Drives both the taxonomy tree audit and the constitutional gate's
- * migrated-plugin exemption, so the two can never disagree about which plugins have moved. */
+ * sitting directly under one of `taxonomy.pluginAreas`). Drives the taxonomy tree audit below. */
 function findNewContractPluginRoots(repoRoot: string): { pluginId: string; pluginRoot: string }[] {
   return discoverPackages(repoRoot, TAXONOMY)
-    .filter((pkg) => pkg.role === "plugin" && pkg.lang === RUST_LANG && dirname(pkg.ownerRel) === PLUGINS_AREA)
+    .filter((pkg) => pkg.role === "plugin" && pkg.lang === RUST_LANG && PLUGIN_AREAS.includes(dirname(pkg.ownerRel)))
     .map((pkg) => ({ pluginId: basename(pkg.ownerRel), pluginRoot: join(repoRoot, pkg.ownerRel) }))
     .sort((a, b) => a.pluginId.localeCompare(b.pluginId));
 }
@@ -971,8 +871,7 @@ function listDirs(dir: string): string[] {
 
 /** @emoji 🚦️ Structural audit of one migrated plugin's taxonomy tree, entirely against
  * `🔣️taxonomy.json`'s vocabulary. Severity is decided by the caller from the plugin area's declared
- * maturity: warn while it is `legacy`/`mixed`, hard failure once it is `clean` (at which point it
- * fully replaces `validateConstitutionalCrates`). */
+ * maturity: warn while it is `legacy`/`mixed`, hard failure once it is `clean`. */
 function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   const findings: string[] = [];
 
@@ -1401,7 +1300,15 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
 function validatePlaygroundSessions(repoRoot: string): string[] {
   const errors: string[] = [];
 
-  const standaloneVariant = "playbook";
+  // 🎯️ "standalone variant = the lowest-sorted playground whose plugin does NOT declare
+  // [package.metadata.semio].host" — the data-driven replacement for the previous hardcoded
+  // `"playbook"` literal, mirroring `resolveDefaultHostVariant`'s host-side resolution below.
+  const hostPluginIds = new Set(generatePluginRegistry(repoRoot).filter((entry) => entry.host !== undefined).map((entry) => entry.pluginId));
+  const standaloneVariant = generatePlaygroundRegistry(repoRoot)
+    .filter((entry) => !hostPluginIds.has(entry.pluginId))
+    .map((entry) => entry.variant)
+    .sort()[0];
+  if (!standaloneVariant) throw new Error(`📇️registry: no playground variant found whose plugin does not declare [package.metadata.semio].host`);
   const standalone = buildPlaygroundSession(standaloneVariant, repoRoot);
   const standalonePluginIds = standalone.plugins.map((entry) => entry.pluginId).sort();
   // 🎯️ "standalone session = target plugin plus every plugin whose `contributes` intersects the
@@ -1409,22 +1316,22 @@ function validatePlaygroundSessions(repoRoot: string): string[] {
   // expectation instead of asserting a hardcoded id list.
   const expectedStandaloneIds = [...resolveRegistryPluginIdsForFilter(standaloneVariant)].sort();
   const expectedRegistryPluginId = resolveRegistryPluginIdForFilter(standaloneVariant, repoRoot);
-  if (standalone.registryPluginId !== expectedRegistryPluginId || standalone.studioMode || standalonePluginIds.join(",") !== expectedStandaloneIds.join(",")) {
-    errors.push(`standalone session "${standaloneVariant}" resolved unexpectedly (${JSON.stringify({ registryPluginId: standalone.registryPluginId, expectedRegistryPluginId, studioMode: standalone.studioMode, pluginIds: standalonePluginIds, expectedPluginIds: expectedStandaloneIds })})`);
+  if (standalone.registryPluginId !== expectedRegistryPluginId || standalone.hostMode || standalonePluginIds.join(",") !== expectedStandaloneIds.join(",")) {
+    errors.push(`standalone session "${standaloneVariant}" resolved unexpectedly (${JSON.stringify({ registryPluginId: standalone.registryPluginId, expectedRegistryPluginId, hostMode: standalone.hostMode, pluginIds: standalonePluginIds, expectedPluginIds: expectedStandaloneIds })})`);
   }
 
-  const studioVariant = "s";
+  const studioVariant = resolveDefaultHostVariant(repoRoot);
   const studio = buildPlaygroundSession(studioVariant, repoRoot);
   // 🎯️ "studio/host session has landingAppId==='home', hostAppId==='studio', and includes every
   // registry plugin" — `buildPlaygroundSession` expands studio sessions with no filter, so the exact
   // registry plugin count is the structural expectation, not a magic threshold.
   const totalRegistryPlugins = generatePluginRegistry(repoRoot).length;
-  if (!studio.studioMode || studio.host?.landingAppId !== "home" || studio.host.hostAppId !== "studio" || studio.plugins.length !== totalRegistryPlugins) {
-    errors.push(`studio session "${studioVariant}" resolved unexpectedly (${JSON.stringify({ studioMode: studio.studioMode, host: studio.host, pluginCount: studio.plugins.length, totalRegistryPlugins })})`);
+  if (!studio.hostMode || studio.host?.landingAppId !== "home" || studio.host.hostAppId !== "studio" || studio.plugins.length !== totalRegistryPlugins) {
+    errors.push(`studio session "${studioVariant}" resolved unexpectedly (${JSON.stringify({ hostMode: studio.hostMode, host: studio.host, pluginCount: studio.plugins.length, totalRegistryPlugins })})`);
   }
 
-  if (!isStudioPluginFilter(studioVariant, repoRoot) || isStudioPluginFilter(standaloneVariant, repoRoot)) {
-    errors.push("studio filter metadata does not distinguish host and standalone playgrounds");
+  if (!isHostPluginFilter(studioVariant, repoRoot) || isHostPluginFilter(standaloneVariant, repoRoot)) {
+    errors.push("host filter metadata does not distinguish host and standalone playgrounds");
   }
   return errors;
 }
@@ -1436,6 +1343,7 @@ function renderCatalogFiles(repoRoot: string): { files: Record<string, string>; 
   const entries = generatePluginRegistry(repoRoot);
   const playgrounds = generatePlaygroundRegistry(repoRoot);
   const frameworkPackages = generateFrameworkPackageRegistry(repoRoot);
+  const defaultHostVariant = resolveDefaultHostVariant(repoRoot);
   return {
     entries,
     playgrounds,
@@ -1444,10 +1352,10 @@ function renderCatalogFiles(repoRoot: string): { files: Record<string, string>; 
       "🔣️plugins.json": `${JSON.stringify(entries, null, 2)}\n`,
       "🟦️plugins.ts": emitTypeScript(entries),
       "🔣️playgrounds.json": `${JSON.stringify(playgrounds, null, 2)}\n`,
-      "🟦️playgrounds.ts": emitPlaygroundsTypeScript(playgrounds),
+      "🟦️playgrounds.ts": emitPlaygroundsTypeScript(playgrounds, defaultHostVariant),
       "🔣️framework.json": `${JSON.stringify(frameworkPackages, null, 2)}\n`,
       "🟦️framework.ts": emitFrameworkPackagesTypeScript(frameworkPackages),
-      "🦀️hosts.rs": emitRustHosts(entries, playgrounds),
+      "🦀️hosts.rs": emitRustHosts(entries, playgrounds, defaultHostVariant),
       "🦀️artifacts.rs": emitRustArtifacts(entries),
     },
   };
@@ -1498,24 +1406,24 @@ class CheckScript extends BundleScript {
       process.exit(1);
     }
     const newContractPluginRoots = findNewContractPluginRoots(repoRoot);
-    const migratedPluginIds = new Set(newContractPluginRoots.map(({ pluginId }) => pluginId));
-    const violations = [...launchViolations, ...validatePlaygroundRegistry(playgrounds, repoRoot), ...validatePlaygroundSessions(repoRoot), ...validateConstitutionalCrates(repoRoot, migratedPluginIds)];
+    const violations = [...launchViolations, ...validatePlaygroundRegistry(playgrounds, repoRoot), ...validatePlaygroundSessions(repoRoot)];
     if (violations.length > 0) {
       console.error("plugin registry catalog has playground validation errors:");
       for (const violation of violations) console.error(`  - ${violation}`);
       process.exit(1);
     }
     // 🗿️ Taxonomy tree audit for plugins discovered via the shared package contract. Its severity is
-    // the plugin area's declared maturity, not a hand-flipped flag: warn while the area is
-    // `legacy`/`mixed` (plugins still mid-migration), hard failure once it is declared `clean` — the
-    // finalization flip is then a one-word edit in `🔣️taxonomy.json`.
+    // the plugin areas' declared maturity, not a hand-flipped flag: warn while any area is
+    // `legacy`/`mixed` (plugins still mid-migration), hard failure once every area is declared `clean`
+    // — the finalization flip is then a one-word edit in `🔣️taxonomy.json`.
     const taxonomyFindings = newContractPluginRoots.flatMap(({ pluginId, pluginRoot }) => validateTaxonomyTree(pluginRoot, pluginId));
     if (taxonomyFindings.length > 0) {
-      if (areaAdmitsLegacyShape(PLUGINS_AREA_STATE)) {
-        console.warn(`plugin taxonomy tree findings (area "${PLUGINS_AREA}" is "${PLUGINS_AREA_STATE}" — not failing the gate yet):`);
+      const areaLabel = PLUGIN_AREAS.join(", ");
+      if (PLUGIN_AREAS_STATE === "legacy" || PLUGIN_AREAS_STATE === "mixed") {
+        console.warn(`plugin taxonomy tree findings (area(s) "${areaLabel}" is "${PLUGIN_AREAS_STATE}" — not failing the gate yet):`);
         for (const finding of taxonomyFindings) console.warn(`  - ${finding}`);
       } else {
-        console.error(`plugin taxonomy tree violations (area "${PLUGINS_AREA}" is "${PLUGINS_AREA_STATE}"):`);
+        console.error(`plugin taxonomy tree violations (area(s) "${areaLabel}" is "${PLUGIN_AREAS_STATE}"):`);
         for (const finding of taxonomyFindings) console.error(`  - ${finding}`);
         process.exit(1);
       }

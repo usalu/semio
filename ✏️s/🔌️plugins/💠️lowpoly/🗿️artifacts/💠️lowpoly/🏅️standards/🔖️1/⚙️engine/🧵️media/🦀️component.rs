@@ -41,7 +41,7 @@ pub fn lowpoly_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
 
 /// 🔺️ Rebuilds a fresh single-object lowpoly projection from a DWG-imported mesh.
 pub fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
-    let halfedge = semio_s_3d::mesh::HalfedgeMesh::from_indexed_triangles(&mesh.positions, &mesh.indices).map_err(|err| format!("{err:?}"))?;
+    let halfedge = semio_framework_3d::mesh::HalfedgeMesh::from_indexed_triangles(&mesh.positions, &mesh.indices).map_err(|err| format!("{err:?}"))?;
     let mesh_json = halfedge.to_json().map_err(|err| format!("{err:?}"))?;
     let snapshot = crate::artifacts::lowpoly::snapshot_from_mesh_json(&mesh_json, "obj-1", "Imported Mesh");
     serde_json::to_value(snapshot).map_err(|err| err.to_string())
@@ -62,9 +62,9 @@ pub fn mesh_from_mesh_document(doc: &Value) -> Result<MeshData, String> {
 #[cfg(all(test, feature = "cad-fixtures"))]
 mod export_concrete_forest_mesh_tests {
     use cad_plugin::artifacts::cad::engine::geometry_import::{objects_from_fixture_model, parse_geometry};
-    use semio_s_3d::brep::kernel::Brep;
-    use semio_s_3d::brep::engine::GeometryHandle;
-    use semio_s_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
+    use semio_framework_3d::brep::kernel::Brep;
+    use semio_framework_3d::brep::engine::GeometryHandle;
+    use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
     use serde_json::Value;
     use std::collections::HashMap;
 

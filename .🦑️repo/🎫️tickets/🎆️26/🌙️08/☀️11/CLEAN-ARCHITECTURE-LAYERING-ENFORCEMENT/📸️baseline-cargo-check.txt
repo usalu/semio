@@ -1,0 +1,200 @@
+warning: unnecessary qualification
+     --> compose/client/lib/rs/lib.rs:19108:38
+      |
+19108 |                     let input_json = crate::external_adapters::serde_json::to_string(&operation.input).expect("input json");
+      |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19108 -                     let input_json = crate::external_adapters::serde_json::to_string(&operation.input).expect("input json");
+19108 +                     let input_json = serde_json::to_string(&operation.input).expect("input json");
+      |
+
+warning: unnecessary qualification
+     --> compose/client/lib/rs/lib.rs:19111:157
+      |
+19111 | ...n, operation.kit_diff.as_ref().map(|v| crate::external_adapters::serde_json::to_string(v).expect("kit diff json"))],
+      |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19111 -                         rusqlite::params![operation.workspace_id, operation.transaction_id, operation.kind, input_json, operation.kit_diff.as_ref().map(|v| crate::external_adapters::serde_json::to_string(v).expect("kit diff json"))],
+19111 +                         rusqlite::params![operation.workspace_id, operation.transaction_id, operation.kind, input_json, operation.kit_diff.as_ref().map(|v| serde_json::to_string(v).expect("kit diff json"))],
+      |
+
+warning: unnecessary qualification
+     --> compose/client/lib/rs/lib.rs:19124:66
+      |
+19124 |     async fn kit_store_run_comprehensive_fixture_steps(fixture: &crate::external_adapters::serde_json::Value, rt: &std::sync::Arc...
+      |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19124 -     async fn kit_store_run_comprehensive_fixture_steps(fixture: &crate::external_adapters::serde_json::Value, rt: &std::sync::Arc<crate::worker::ParentStore>, schema: &AppSchema) {
+19124 +     async fn kit_store_run_comprehensive_fixture_steps(fixture: &serde_json::Value, rt: &std::sync::Arc<crate::worker::ParentStore>, schema: &AppSchema) {
+      |
+
+warning: unnecessary qualification
+     --> compose/client/lib/rs/lib.rs:19127:23
+      |
+19127 | ...   let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_t...
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19127 -         let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read golden operations")).expect("parse golden operations");
+19127 +         let ops_json: serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read golden operations")).expect("parse golden operations");
+      |
+
+warning: unnecessary qualification
+     --> compose/client/lib/rs/lib.rs:19127:69
+      |
+19127 | ...   let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_t...
+      |                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19127 -         let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read golden operations")).expect("parse golden operations");
+19127 +         let ops_json: crate::external_adapters::serde_json::Value = serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read golden operations")).expect("parse golden operations");
+      |
+
+warning: unnecessary qualification
+     --> compose/client/lib/rs/lib.rs:19128:18
+      |
+19128 | ...   let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_str...
+      |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19128 -         let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read golden expected")).expect("parse golden expected");
+19128 +         let exp: serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read golden expected")).expect("parse golden expected");
+      |
+
+warning: unnecessary qualification
+     --> compose/client/lib/rs/lib.rs:19128:64
+      |
+19128 | ...   let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_str...
+      |                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19128 -         let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read golden expected")).expect("parse golden expected");
+19128 +         let exp: crate::external_adapters::serde_json::Value = serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read golden expected")).expect("parse golden expected");
+      |
+
+warning: unnecessary qualification
+     --> compose/client/lib/rs/lib.rs:19166:43
+      |
+19166 |     pub async fn run_in_process(fixture: &crate::external_adapters::serde_json::Value) {
+      |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19166 -     pub async fn run_in_process(fixture: &crate::external_adapters::serde_json::Value) {
+19166 +     pub async fn run_in_process(fixture: &serde_json::Value) {
+      |
+
+warning: unnecessary qualification
+     --> compose/client/lib/rs/lib.rs:19174:51
+      |
+19174 |     pub async fn run_all_replay_engines(fixture: &crate::external_adapters::serde_json::Value) {
+      |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19174 -     pub async fn run_all_replay_engines(fixture: &crate::external_adapters::serde_json::Value) {
+19174 +     pub async fn run_all_replay_engines(fixture: &serde_json::Value) {
+      |
+
+warning: unnecessary qualification
+     --> compose/client/lib/rs/lib.rs:19177:23
+      |
+19177 | ...   let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_t...
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19177 -         let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read operations")).expect("parse operations");
+19177 +         let ops_json: serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read operations")).expect("parse operations");
+      |
+
+warning: unnecessary qualification
+     --> compose/client/lib/rs/lib.rs:19177:69
+      |
+19177 | ...   let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_t...
+      |                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19177 -         let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read operations")).expect("parse operations");
+19177 +         let ops_json: crate::external_adapters::serde_json::Value = serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read operations")).expect("parse operations");
+      |
+
+warning: unnecessary qualification
+     --> compose/client/lib/rs/lib.rs:19178:18
+      |
+19178 | ...   let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_str...
+      |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19178 -         let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read expected")).expect("parse expected");
+19178 +         let exp: serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read expected")).expect("parse expected");
+      |
+
+warning: unnecessary qualification
+     --> compose/client/lib/rs/lib.rs:19178:64
+      |
+19178 | ...   let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_str...
+      |                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19178 -         let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read expected")).expect("parse expected");
+19178 +         let exp: crate::external_adapters::serde_json::Value = serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read expected")).expect("parse expected");
+      |
+
+error[E0433]: cannot find module or crate `dsl` in this scope
+   --> compose/client/lib/rs/lib.rs:716:10
+    |
+716 |     impl dsl::DslField for Id {
+    |          ^^^ use of unresolved module or unlinked crate `dsl`
+    |
+    = help: if you wanted to use a crate named `dsl`, use `cargo add dsl` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `dsl` in this scope
+   --> compose/client/lib/rs/lib.rs:717:23
+    |
+717 |         fn shape() -> dsl::Shape {
+    |                       ^^^ use of unresolved module or unlinked crate `dsl`
+    |
+    = help: if you wanted to use a crate named `dsl`, use `cargo add dsl` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `dsl` in this scope
+   --> compose/client/lib/rs/lib.rs:720:31
+    |
+720 |         fn to_value(&self) -> dsl::FieldValue {
+    |                               ^^^ use of unresolved module or unlinked crate `dsl`
+    |
+    = help: if you wanted to use a crate named `dsl`, use `cargo add dsl` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `dsl` in this scope
+   --> compose/client/lib/rs/lib.rs:723:31
+    |
+723 |         fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    |                               ^^^ use of unresolved module or unlinked crate `dsl`
+    |
+    = help: if you wanted to use a crate named `dsl`, use `cargo add dsl` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `vcs` in this scope
+    --> compose/client/lib/rs/lib.rs:7919:116
+     |
+7919 |         pub fn materialize_kit_snapshot(envelope: &KitSnapshotEnvelope, applied: &[String]) -> Result<KitSnapshot, vcs::VcsError> {
+     |                                                                                                                    ^^^ use of unresolved module or unlinked crate `vcs`
+     |
+     = help: if you wanted to use a crate named `vcs`, use `cargo add vcs` to add it to your `Cargo.toml`
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+warning: `semio-compose-rs` (lib) generated 823 warnings
+error: could not compile `semio-compose-rs` (lib) due to 22 previous errors; 823 warnings emitted

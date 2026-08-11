@@ -10,11 +10,22 @@ use crate::artifacts::gltf::schema::diff::{
     GltfModified, GltfNodeDiff, GltfNodesDiff, GltfSceneDiff, GltfScenesDiff, ItemDiff as _,
 };
 use crate::artifacts::gltf::schema::diff::GltfAnimationsDiff;
+/// 🧪️ F6: hand-rolled `OpText`/`OpBinary` grammar primitives + value codecs, reused verbatim from
+/// `🔺️diff/component.rs`'s `HandcraftedDiffCodec` region (`enc_gltf_snapshot`/`dec_gltf_snapshot`
+/// needs every one of these; SvgMutation reuses SvgDiff's the same way) — see that region's doc
+/// comment for the full derive-rejection citation shared by both sides of this artifact.
+use crate::artifacts::gltf::schema::diff::{
+    dec_accessor, dec_animation, dec_asset, dec_buffer, dec_bytes, dec_gltf_snapshot, dec_material, dec_mesh,
+    dec_node, dec_scene, enc_accessor, enc_animation, enc_asset, enc_buffer, enc_bytes, enc_gltf_snapshot,
+    enc_material, enc_mesh, enc_node, enc_scene,
+};
 use crate::artifacts::gltf::schema::snapshot::{
     GltfAccessor, GltfAnimation, GltfAsset, GltfBuffer, GltfMaterial, GltfMesh, GltfNode, GltfScene,
 };
 use crate::artifacts::gltf::GltfSnapshot;
-use protocol::Mutation;
+use protocol::{Mutation, OpText};
+#[cfg(test)]
+use protocol::OpBinary;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -268,31 +279,125 @@ impl Mutation<GltfSnapshot> for GltfMutation {
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-impl protocol::OpText for GltfMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
-    }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+/// 🧪️ F6: **hand-rolled** `OpText`/`OpBinary` for `GltfMutation` — CONFIRMED by a real
+/// `cargo check -p semio-s-plugin-stdio --lib` failure with `#[derive(dsl::DslOps)]` temporarily
+/// added to this enum (33 `E0277` errors, captured in `f6-gltf-mutation-derive-check1.txt` in the
+/// ticket folder, then reverted): `SetSnapshot{snapshot: GltfSnapshot}` recursively requires
+/// `DslField` on `GltfAsset`/`GltfScene`/`GltfNode`/`GltfMesh`/`GltfAccessor`/`GltfMaterial`/
+/// `GltfBuffer`/`GltfAnimation`/`GltfSnapshot` itself, none of which are `DslRecord`-derived, and
+/// even fully deriving all of them would still fail once the walk reaches `GltfJson`/
+/// `GltfCameraProjection` (real data-carrying enums, no `DslField` impl possible — see
+/// `🔺️diff/component.rs`'s `HandcraftedDiffCodec` doc comment for the full citation). Reuses the
+/// diff module's `pub(crate)` grammar primitives and value codecs (`hex_encode`/`enc_asset`/
+/// `enc_scene`/.../`enc_gltf_snapshot`/...) rather than duplicating them a second time in this
+/// file — same intra-artifact reuse `SvgMutation` uses off `SvgDiff`. Grammar: `keyword arg=value
+/// ...` (space-separated), one match arm per variant, matching the derive's own handcrafted-wrapper
+/// convention (`f6-recon-report.md` §2) in shape even though nothing here actually derives
+/// `DslVariants`.
+fn print_gltf_mutation(m: &GltfMutation) -> String {
+    match m {
+        GltfMutation::NoMutation => "no-mutation".to_string(),
+        GltfMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_gltf_snapshot(snapshot)),
+        GltfMutation::SetAsset { asset } => format!("set-asset asset={}", enc_asset(asset)),
+
+        GltfMutation::InsertScene { index, scene } => format!("insert-scene index={index} scene={}", enc_scene(scene)),
+        GltfMutation::RemoveScene { index } => format!("remove-scene index={index}"),
+        GltfMutation::SetScene { index, scene } => format!("set-scene index={index} scene={}", enc_scene(scene)),
+
+        GltfMutation::InsertNode { index, node } => format!("insert-node index={index} node={}", enc_node(node)),
+        GltfMutation::RemoveNode { index } => format!("remove-node index={index}"),
+        GltfMutation::SetNode { index, node } => format!("set-node index={index} node={}", enc_node(node)),
+
+        GltfMutation::InsertMesh { index, mesh } => format!("insert-mesh index={index} mesh={}", enc_mesh(mesh)),
+        GltfMutation::RemoveMesh { index } => format!("remove-mesh index={index}"),
+        GltfMutation::SetMesh { index, mesh } => format!("set-mesh index={index} mesh={}", enc_mesh(mesh)),
+
+        GltfMutation::InsertAccessor { index, accessor } => format!("insert-accessor index={index} accessor={}", enc_accessor(accessor)),
+        GltfMutation::RemoveAccessor { index } => format!("remove-accessor index={index}"),
+        GltfMutation::SetAccessor { index, accessor } => format!("set-accessor index={index} accessor={}", enc_accessor(accessor)),
+
+        GltfMutation::InsertMaterial { index, material } => format!("insert-material index={index} material={}", enc_material(material)),
+        GltfMutation::RemoveMaterial { index } => format!("remove-material index={index}"),
+        GltfMutation::SetMaterial { index, material } => format!("set-material index={index} material={}", enc_material(material)),
+
+        GltfMutation::InsertBuffer { index, buffer, bytes } => format!("insert-buffer index={index} buffer={} bytes={}", enc_buffer(buffer), enc_bytes(bytes)),
+        GltfMutation::RemoveBuffer { index } => format!("remove-buffer index={index}"),
+        GltfMutation::SetBuffer { index, buffer, bytes } => format!("set-buffer index={index} buffer={} bytes={}", enc_buffer(buffer), enc_bytes(bytes)),
+
+        GltfMutation::InsertAnimation { index, animation } => format!("insert-animation index={index} animation={}", enc_animation(animation)),
+        GltfMutation::RemoveAnimation { index } => format!("remove-animation index={index}"),
+        GltfMutation::SetAnimation { index, animation } => format!("set-animation index={index} animation={}", enc_animation(animation)),
     }
 }
 
+fn parse_gltf_mutation(line: &str) -> Result<GltfMutation, String> {
+    if line == "no-mutation" {
+        return Ok(GltfMutation::NoMutation);
+    }
+    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    let args: std::collections::BTreeMap<&str, &str> = rest
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|tok| tok.split_once('=').ok_or_else(|| format!("gltf mutation: bad arg token {tok:?}")))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .collect();
+    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("gltf mutation: missing arg '{k}' for '{keyword}'"));
+    let idx = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
+    match keyword {
+        "set-snapshot" => Ok(GltfMutation::SetSnapshot { snapshot: dec_gltf_snapshot(arg("snapshot")?)? }),
+        "set-asset" => Ok(GltfMutation::SetAsset { asset: dec_asset(arg("asset")?)? }),
+
+        "insert-scene" => Ok(GltfMutation::InsertScene { index: idx("index")?, scene: dec_scene(arg("scene")?)? }),
+        "remove-scene" => Ok(GltfMutation::RemoveScene { index: idx("index")? }),
+        "set-scene" => Ok(GltfMutation::SetScene { index: idx("index")?, scene: dec_scene(arg("scene")?)? }),
+
+        "insert-node" => Ok(GltfMutation::InsertNode { index: idx("index")?, node: dec_node(arg("node")?)? }),
+        "remove-node" => Ok(GltfMutation::RemoveNode { index: idx("index")? }),
+        "set-node" => Ok(GltfMutation::SetNode { index: idx("index")?, node: dec_node(arg("node")?)? }),
+
+        "insert-mesh" => Ok(GltfMutation::InsertMesh { index: idx("index")?, mesh: dec_mesh(arg("mesh")?)? }),
+        "remove-mesh" => Ok(GltfMutation::RemoveMesh { index: idx("index")? }),
+        "set-mesh" => Ok(GltfMutation::SetMesh { index: idx("index")?, mesh: dec_mesh(arg("mesh")?)? }),
+
+        "insert-accessor" => Ok(GltfMutation::InsertAccessor { index: idx("index")?, accessor: dec_accessor(arg("accessor")?)? }),
+        "remove-accessor" => Ok(GltfMutation::RemoveAccessor { index: idx("index")? }),
+        "set-accessor" => Ok(GltfMutation::SetAccessor { index: idx("index")?, accessor: dec_accessor(arg("accessor")?)? }),
+
+        "insert-material" => Ok(GltfMutation::InsertMaterial { index: idx("index")?, material: dec_material(arg("material")?)? }),
+        "remove-material" => Ok(GltfMutation::RemoveMaterial { index: idx("index")? }),
+        "set-material" => Ok(GltfMutation::SetMaterial { index: idx("index")?, material: dec_material(arg("material")?)? }),
+
+        "insert-buffer" => Ok(GltfMutation::InsertBuffer { index: idx("index")?, buffer: dec_buffer(arg("buffer")?)?, bytes: dec_bytes(arg("bytes")?)? }),
+        "remove-buffer" => Ok(GltfMutation::RemoveBuffer { index: idx("index")? }),
+        "set-buffer" => Ok(GltfMutation::SetBuffer { index: idx("index")?, buffer: dec_buffer(arg("buffer")?)?, bytes: dec_bytes(arg("bytes")?)? }),
+
+        "insert-animation" => Ok(GltfMutation::InsertAnimation { index: idx("index")?, animation: dec_animation(arg("animation")?)? }),
+        "remove-animation" => Ok(GltfMutation::RemoveAnimation { index: idx("index")? }),
+        "set-animation" => Ok(GltfMutation::SetAnimation { index: idx("index")?, animation: dec_animation(arg("animation")?)? }),
+
+        other => Err(format!("gltf mutation: unknown keyword {other:?}")),
+    }
+}
+
+impl protocol::OpText for GltfMutation {
+    fn print_op(&self) -> String {
+        print_gltf_mutation(self)
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_gltf_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+}
+
+/// ⚡️ Binary = the text bytes verbatim, same simplification `GltfDiff`'s hand-rolled `DiffCodec`
+/// uses.
 impl protocol::OpBinary for GltfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        Ok(self.print_op().into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
@@ -404,5 +509,98 @@ mod tests {
             assert_eq!(back, base, "inverse of {m:?} did not restore base");
         }
     }
+
+    //#region 🔖️HandcraftedOpCodecTests
+    /// 🎯️ A snapshot with `bufferViews`/`textures`/`images`/`samplers`/`skins`/`cameras` populated
+    /// (`base_snapshot()` above has none of these -- they're WEAK collections only reachable via
+    /// `SetSnapshot` per F4's variant vocabulary, so `SetSnapshot`'s `OpText`/`OpBinary` needs a
+    /// dedicated fixture to actually exercise `enc_buffer_view`/`enc_texture`/`enc_image`/
+    /// `enc_sampler`/`enc_skin`/`enc_camera` — including `GltfCameraProjection::Orthographic`, the
+    /// variant `field_sweep`'s `sweep_b` (🔺️diff/component.rs) does not use).
+    fn full_snapshot() -> GltfSnapshot {
+        let mut s = base_snapshot();
+        s.document.buffer_views = vec![crate::artifacts::gltf::schema::snapshot::GltfBufferView {
+            buffer: 0, byte_offset: 0, byte_length: 4, byte_stride: None, target: Some(34962), name: None, extensions: None, extras: None,
+        }];
+        s.document.textures = vec![crate::artifacts::gltf::schema::snapshot::GltfTexture { sampler: Some(0), source: Some(0), name: None, extensions: None, extras: None }];
+        s.document.images = vec![crate::artifacts::gltf::schema::snapshot::GltfImage { uri: Some("tex.png".into()), ..Default::default() }];
+        s.document.samplers = vec![crate::artifacts::gltf::schema::snapshot::GltfSampler::default()];
+        s.document.skins = vec![crate::artifacts::gltf::schema::snapshot::GltfSkin { joints: vec![0, 1], ..Default::default() }];
+        s.document.cameras = vec![crate::artifacts::gltf::schema::snapshot::GltfCamera {
+            projection: crate::artifacts::gltf::schema::snapshot::GltfCameraProjection::Orthographic(
+                crate::artifacts::gltf::schema::snapshot::GltfOrthographic { xmag: 1.0, ymag: 1.0, zfar: 10.0, znear: 0.1, extensions: None, extras: None },
+            ),
+            name: Some("cam0".into()),
+            extensions: None,
+            extras: Some(crate::artifacts::gltf::schema::snapshot::GltfJson::Object(vec![("k".into(), crate::artifacts::gltf::schema::snapshot::GltfJson::Number(1.0))])),
+        }];
+        s.document.extensions = Some(crate::artifacts::gltf::schema::snapshot::GltfJson::Array(vec![
+            crate::artifacts::gltf::schema::snapshot::GltfJson::Null,
+            crate::artifacts::gltf::schema::snapshot::GltfJson::Bool(false),
+        ]));
+        s
+    }
+
+    /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `GltfMutation` grammar --
+    /// every variant, incl. `SetSnapshot` against `full_snapshot()` (exercises every WEAK
+    /// collection's item codec plus `GltfCameraProjection::Orthographic` and 4 of the 6 `GltfJson`
+    /// variants at once) and a representative Insert/Remove/Set per STRONG-entity array (the same
+    /// entities `diff_codec_text_binary_roundtrip_law`'s `sweep_a`/`sweep_b`/`tristate_snapshot_*`
+    /// fixtures cover on the diff side, per `🔺️diff/component.rs`).
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        let base = base_snapshot();
+        let mutations = vec![
+            GltfMutation::NoMutation,
+            GltfMutation::SetSnapshot { snapshot: full_snapshot() },
+            GltfMutation::SetAsset { asset: GltfAsset { version: "2.1".into(), generator: None, copyright: Some("(c)".into()), min_version: None, extensions: None, extras: None } },
+
+            GltfMutation::InsertScene { index: 1, scene: GltfScene { nodes: vec![1], name: Some("s".into()), ..GltfScene::default() } },
+            GltfMutation::RemoveScene { index: 0 },
+            GltfMutation::SetScene { index: 0, scene: GltfScene { nodes: vec![9], name: None, ..GltfScene::default() } },
+
+            GltfMutation::InsertNode { index: 1, node: GltfNode { mesh: Some(1), matrix: Some([0.0; 16]), ..GltfNode::default() } },
+            GltfMutation::RemoveNode { index: 0 },
+            GltfMutation::SetNode { index: 0, node: GltfNode { mesh: None, camera: Some(2), name: Some("n".into()), ..GltfNode::default() } },
+
+            GltfMutation::InsertMesh { index: 0, mesh: GltfMesh { name: Some("m".into()), ..GltfMesh::default() } },
+            GltfMutation::RemoveMesh { index: 0 },
+            GltfMutation::SetMesh { index: 0, mesh: GltfMesh { name: Some("renamed-mesh".into()), ..GltfMesh::default() } },
+
+            GltfMutation::InsertAccessor {
+                index: 0,
+                accessor: GltfAccessor { buffer_view: None, byte_offset: 0, component_type: crate::artifacts::gltf::engine::GltfComponentType::UnsignedByte, normalized: false, count: 1, kind: crate::artifacts::gltf::engine::GltfAccessorType::Scalar, max: None, min: None, sparse: None, name: None, extensions: None, extras: None },
+            },
+            GltfMutation::RemoveAccessor { index: 0 },
+            GltfMutation::SetAccessor {
+                index: 0,
+                accessor: GltfAccessor { buffer_view: Some(0), byte_offset: 4, component_type: crate::artifacts::gltf::engine::GltfComponentType::Float, normalized: true, count: 9, kind: crate::artifacts::gltf::engine::GltfAccessorType::Vec3, max: Some(vec![1.0]), min: Some(vec![-1.0]), sparse: None, name: None, extensions: None, extras: None },
+            },
+
+            GltfMutation::InsertMaterial { index: 0, material: GltfMaterial { name: Some("mat".into()), double_sided: true, ..GltfMaterial::default() } },
+            GltfMutation::RemoveMaterial { index: 0 },
+            GltfMutation::SetMaterial { index: 0, material: GltfMaterial { double_sided: true, ..GltfMaterial::default() } },
+
+            GltfMutation::InsertBuffer { index: 0, buffer: GltfBuffer { byte_length: 2, uri: Some("data:...".into()), name: None, extensions: None, extras: None }, bytes: vec![7, 8] },
+            GltfMutation::RemoveBuffer { index: 0 },
+            GltfMutation::SetBuffer { index: 0, buffer: GltfBuffer { byte_length: 8, uri: None, name: None, extensions: None, extras: None }, bytes: vec![1, 2, 3, 4, 5, 6, 7, 8] },
+
+            GltfMutation::InsertAnimation { index: 0, animation: GltfAnimation { name: Some("a".into()), ..GltfAnimation::default() } },
+            GltfMutation::RemoveAnimation { index: 0 },
+            GltfMutation::SetAnimation { index: 0, animation: GltfAnimation { name: Some("renamed-anim".into()), ..GltfAnimation::default() } },
+        ];
+        let _ = &base;
+        for mutation in mutations {
+            let printed = mutation.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = GltfMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
+
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = GltfMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+        }
+    }
+    //#endregion 🔖️HandcraftedOpCodecTests
 }
 //#endregion 🧪️Tests

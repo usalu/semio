@@ -19,6 +19,45 @@ const TAXONOMY = JSON.parse(
   fs.readFileSync(path.join(__dirname, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"),
 );
 
+/** ⚙️ Escapes a literal string for embedding inside a `RegExp` alternation. */
+function escapeRegex(literal) {
+  return literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** 📦️ Recursively scans a directory for `package.json` files, skipping the same build-artifact/vendor
+ * directories `options.doNotFollow` below already excludes (plus `pkg/`, a wasm-pack output dir that
+ * duplicates its owning Rust package's name — see `noCorePathRule`'s `pathNot` for the same exclusion).
+ * Self-deriving, like `PLUGINS` above, so the name-based layering rules below never hardcode a package
+ * list that can drift from the real tree. Returns `{ dir, name }` pairs where `dir` is the package.json's
+ * containing directory as a repo-relative POSIX path. */
+function scanPackageJsonFiles(rootAbsDir) {
+  const SKIP_DIRS = new Set(["node_modules", "dist", "target", "pkg", "storybook-static", ".git", ".nx", "🦑️repo", "repo"]);
+  const results = [];
+  if (!fs.existsSync(rootAbsDir)) return results;
+  const stack = [rootAbsDir];
+  while (stack.length) {
+    const dir = stack.pop();
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        if (SKIP_DIRS.has(entry.name)) continue;
+        stack.push(path.join(dir, entry.name));
+        continue;
+      }
+      if (entry.name !== "package.json") continue;
+      const pkg = JSON.parse(fs.readFileSync(path.join(dir, entry.name), "utf8"));
+      if (!pkg.name) continue;
+      results.push({ dir: path.relative(__dirname, dir).split(path.sep).join("/"), name: pkg.name });
+    }
+  }
+  return results;
+}
+
+/** ✏️ Every `package.json` found anywhere under `✏️s`, used to derive the `@semio-tech/*` package-name
+ * equivalents for the path-based layering rules below (`framework-no-s`, `s-modules-no-plugins`,
+ * `no-plugin-to-extension`) — a relative import and an npm-name import of the same code must both trip
+ * the rule, so each rule's `to` combines a path pattern with these derived name patterns. */
+const S_PACKAGES = scanPackageJsonFiles(path.join(__dirname, "✏️s"));
+
 function crossTechnologyRules() {
   const rules = [];
   for (const from of TECHNOLOGIES) {
@@ -128,6 +167,61 @@ function crossPackageRelativeRule() {
   };
 }
 
+/** 🧱️ `framework-no-s` (W1 of `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`): `🧰️framework` must not
+ * import `✏️s` app/plugin/module code — framework is the substrate `✏️s` builds on, never the reverse.
+ * WARN, not error: real violations of this direction exist elsewhere in the codebase and are this
+ * initiative's job to clear in a later wave, not this ticket's; promote to error once they're gone. */
+function frameworkNoSRule() {
+  return {
+    name: "framework-no-s",
+    severity: "warn",
+    comment: "🧰️framework must not import ✏️s app/plugin/module code — apps consume framework, never the reverse — WARN until pre-existing violations are cleared",
+    from: { path: "^🧰️framework/" },
+    to: {
+      path: ["^✏️s/"].concat(S_PACKAGES.map((p) => `^${escapeRegex(p.name)}$`)),
+    },
+  };
+}
+
+/** 🧱️ `s-modules-no-plugins` (W1 of `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`): `✏️s/🔨️modules`
+ * are shared building blocks and must not depend on `✏️s/🔌️plugins`, the app layer built from them — the
+ * audit for this ticket found zero real violations of this direction, so it's safe to enforce as ERROR
+ * immediately rather than staging it through `warn`. */
+function sModulesNoPluginsRule() {
+  const pluginPackageNames = S_PACKAGES.filter((p) => p.dir.startsWith("✏️s/🔌️plugins/")).map((p) => `^${escapeRegex(p.name)}$`);
+  return {
+    name: "s-modules-no-plugins",
+    severity: "error",
+    comment: "✏️s/🔨️modules must not import ✏️s/🔌️plugins — modules are shared substrate for plugins, not the reverse",
+    from: { path: "^✏️s/🔨️modules/" },
+    to: {
+      path: ["^✏️s/🔌️plugins/"].concat(pluginPackageNames),
+    },
+  };
+}
+
+/** 🧱️ `no-plugin-to-extension` (W1 of `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`): a plugin's core
+ * code (i.e. everything under `✏️s/🔌️plugins/{p}/` outside its own `🧩️extensions/`) must not depend on
+ * ANY plugin's `🧩️extensions/` tree — extensions are optional add-ons layered on top of a plugin's core,
+ * so the dependency must run extension → core, never core → extension. `from` excludes `{p}/🧩️extensions/`
+ * itself so extension-to-extension imports (including within the same plugin) are exempt. WARN, not
+ * error: real violations of this direction exist elsewhere and are a later wave's job to clear. */
+function noPluginToExtensionRules() {
+  const extensionPackageNamePatterns = S_PACKAGES.filter((p) => /(^|\/)🧩️extensions\//.test(p.dir)).map((p) => `^${escapeRegex(p.name)}$`);
+  return PLUGINS.map((p) => ({
+    name: `no-plugin-to-extension-${p}`,
+    severity: "warn",
+    comment: "a plugin's core must not depend on any plugin's extensions tree — extensions depend on core, not the reverse — WARN until pre-existing violations are cleared",
+    from: {
+      path: `^✏️s/🔌️plugins/${p}/`,
+      pathNot: `^✏️s/🔌️plugins/${p}/🧩️extensions/`,
+    },
+    to: {
+      path: ["^✏️s/🔌️plugins/[^/]+/🧩️extensions/"].concat(extensionPackageNamePatterns),
+    },
+  }));
+}
+
 module.exports = {
   forbidden: [
     {
@@ -211,8 +305,8 @@ module.exports = {
       name: "no-generated-edits-upstream",
       severity: "error",
       comment: "only the plugin registry itself may import its generated plugin catalog directly — other consumers must go through generated/🟦️plugins.ts",
-      from: { pathNot: "^🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/" },
-      to: { path: "^🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🔣️plugins\\.json$" },
+      from: { pathNot: "^🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/" },
+      to: { path: "^🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🔣️plugins\\.json$" },
     },
     {
       name: "no-state-outside-os",
@@ -233,6 +327,9 @@ module.exports = {
     noImplSegmentRule(),
     noCorePathRule(),
     crossPackageRelativeRule(),
+    frameworkNoSRule(),
+    sModulesNoPluginsRule(),
+    ...noPluginToExtensionRules(),
   ],
   options: {
     doNotFollow: {

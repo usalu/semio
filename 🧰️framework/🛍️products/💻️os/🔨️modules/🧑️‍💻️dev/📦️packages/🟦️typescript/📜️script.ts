@@ -36,7 +36,8 @@ import {
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes } from "@semio-tech/framework-os";
 import type { PluginSourceEvent } from "@semio-tech/framework";
-import { generatePluginRegistry, isStudioPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts";
+import { generatePluginRegistry, isHostPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts";
+import { DEFAULT_HOST_VARIANT } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 import {
   ensurePreview2ShimVendorAt,
   hostShimSource,
@@ -98,7 +99,7 @@ function resolvePlaygroundFilter(filterPlugin: string): ResolvedPlaygroundFilter
 
 /** @emoji 🎯️ Resolves a raw filter to the crate pluginId `generatePluginRegistry`'s `filterPlaygroundPlugin` option expects, or `undefined` for the unfiltered/studio case. */
 function resolveCatalogFilterPluginId(filterPlugin?: string): string | undefined {
-  return filterPlugin && !isStudioPluginFilter(filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
+  return filterPlugin && !isHostPluginFilter(filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
 }
 //#endregion 🔖️PlaygroundVariantResolution
 
@@ -807,7 +808,7 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
 export async function ensurePluginRegistry(filterPlugin?: string): Promise<void> {
   const registryScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts");
   if (runCmdStatus("bun", [registryScript, "generate"], { cwd: repoRoot }) !== 0) throw new Error("plugin registry generation failed");
-  const variant = filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
+  const variant = filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
   writePlaygroundSession(variant, playgroundSessionPath, repoRoot);
 }
 
@@ -822,7 +823,7 @@ function resolvePluginBuildTargets(entries: readonly PluginRegistryEntry[], filt
     }
     return matched;
   }
-  if (!filterPlugin || isStudioPluginFilter(filterPlugin)) return entries;
+  if (!filterPlugin || isHostPluginFilter(filterPlugin)) return entries;
   if (entries.length === 0) {
     throw new Error(`no program build targets for filter ${JSON.stringify(filterPlugin)}`);
   }
@@ -849,7 +850,7 @@ async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonl
   }
   const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin);
   syncBuiltExtensionsToInstallRoot(targets);
-  if (filterPlugin && !isStudioPluginFilter(filterPlugin)) {
+  if (filterPlugin && !isHostPluginFilter(filterPlugin)) {
     console.log(`[DEBUG] program build scope: ${targets.map((target) => target.pluginId).join(", ")}`);
   } else {
     console.log(`[DEBUG] program build scope: all (${targets.length} plugin crates)`);
@@ -877,7 +878,7 @@ export async function buildPlugins(filterPlugin?: string): Promise<void> {
  * the shared `target/` lock) but a single broken crate no longer aborts the rest of the catalog. */
 export async function buildPluginsStreaming(filterPlugin?: string): Promise<void> {
   const targets = await preparePluginBuildTargets(filterPlugin);
-  const hostPluginId = resolvePlaygroundFilter(filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s").pluginId;
+  const hostPluginId = resolvePlaygroundFilter(filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT).pluginId;
   const ordered = [...targets].sort((a, b) => (a.pluginId === hostPluginId ? -1 : b.pluginId === hostPluginId ? 1 : 0));
   for (const target of ordered) {
     try {
@@ -1253,7 +1254,7 @@ class DevScript extends BundleScript {
     }
     const variantSegment = segments[0] && !segments[0].startsWith("-") ? segments[0] : undefined;
     const viteSegments = variantSegment ? segments.slice(1) : segments;
-    const filterPlugin = variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
+    const filterPlugin = variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
     const renderer = process.env.SEMIO_RENDERER ?? "react";
     const plugin = filterPlugin;
     // 🌊️ React serves over Vite, which only needs the fast (no-`cargo`) registry + playground session
@@ -1346,7 +1347,7 @@ class BuildScript extends BundleScript {
     process.env.SEMIO_BUILD_MODE = "ship";
     const variantSegment = segments[0] && !segments[0].startsWith("-") ? segments[0] : undefined;
     const viteSegments = variantSegment ? segments.slice(1) : segments;
-    const plugin = variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
+    const plugin = variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
     await new PluginBuildScript(this.root).run([plugin]);
     const renderer = process.env.SEMIO_RENDERER ?? "react";
     if (renderer === "wgpu" && process.env.SKIP_WGPU_BUILD !== "1") {
@@ -1374,7 +1375,7 @@ class BuildScript extends BundleScript {
   }
 }
 
-const PLUGIN_HOST_MODE_SYMBOLS = ["SEMIO_PLUGIN", "PLAYGROUND_APP_KIND", "studioMode", "pluginFilter"] as const;
+const PLUGIN_HOST_MODE_SYMBOLS = ["SEMIO_PLUGIN", "PLAYGROUND_APP_KIND", "hostMode", "pluginFilter"] as const;
 
 function walkRustSources(dir: string, out: string[]): void {
   for (const ent of readdirSync(dir, { withFileTypes: true })) {
@@ -2374,7 +2375,7 @@ async function verifyParityVariant(variant: string, ports: { readonly react: num
 
 class ParitySmokeScript extends BundleScript {
   async run(): Promise<void> {
-    const variant = process.env.SEMIO_PLUGIN || "s";
+    const variant = process.env.SEMIO_PLUGIN || DEFAULT_HOST_VARIANT;
     const report = await verifyParityVariant(variant, findFreeParityPortPair());
     console.log(JSON.stringify(report, null, 2));
     if (report.boot.react !== "PASS" || report.boot.wgpu !== "PASS") {
@@ -2386,7 +2387,7 @@ class ParitySmokeScript extends BundleScript {
 
 class ParityTriageScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const variant = segments[0] || process.env.SEMIO_PLUGIN || "s";
+    const variant = segments[0] || process.env.SEMIO_PLUGIN || DEFAULT_HOST_VARIANT;
     const ports = findFreeParityPortPair();
     const { chromium } = await import("playwright");
     const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
@@ -2413,7 +2414,7 @@ class ParityTriageScript extends BundleScript {
  * itself without re-running the (slower) full `verify`. */
 class ParityProbeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const variant = segments[0] || process.env.SEMIO_PLUGIN || "s";
+    const variant = segments[0] || process.env.SEMIO_PLUGIN || DEFAULT_HOST_VARIANT;
     const suiteName = segments[1] || "shell";
     const suite = PARITY_PROBE_CATALOG[suiteName];
     if (!suite) throw new Error(`unknown probe suite: ${suiteName} (known: ${Object.keys(PARITY_PROBE_CATALOG).join(", ")})`);

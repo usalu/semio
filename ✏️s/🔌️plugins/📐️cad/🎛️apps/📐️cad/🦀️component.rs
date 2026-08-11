@@ -32,7 +32,7 @@ use crate::artifacts::cad::engine::{
 use crate::artifacts::cad::op::{CadObjectPatch, CadMutation};
 use crate::artifacts::cad::{artifact_kind, cad_all_objects, cad_find_object_pane, cad_pane_from_model_definition_id, cad_pane_objects, CadCamera, CadObject, CadPaneId, CadSnapshot, CAD_DOCUMENT_SCHEMA};
 use base64::Engine as _;
-use semio_s_3d::brep::engine::{BrepKernel, GeometryHandle};
+use semio_framework_3d::brep::engine::{BrepKernel, GeometryHandle};
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView,

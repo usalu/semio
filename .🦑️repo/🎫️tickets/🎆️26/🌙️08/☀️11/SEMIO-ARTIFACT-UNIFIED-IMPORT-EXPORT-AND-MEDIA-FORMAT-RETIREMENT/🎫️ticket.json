@@ -1,0 +1,13 @@
+{
+  "title": "Semio Artifact, Unified Import Export and MediaFormat Retirement",
+  "emoji": "🧿️",
+  "status": "open",
+  "description": "At the heart of semio are artifacts: apps interoperate by importing/exporting common artifacts. Add the inbuilt semio semantic artifact to the stdio plugin — ONE artifact `semio`, standard `v1`, whose subsets are the semantic types (brep, mesh, model, object, document, cad, drawing, image, video, audio, animation, presentation, workflow), each subset carrying its own full schema (snapshot/diff/mutations, 8 test laws). Add 7 new format artifacts (mp4, avi, mp3, wav, epw, tsv, html). Build the full semio↔format import/export lattice as real ArtifactSerializer/ArtifactDeserializer trait impls, hub-and-spoke for domain plugins. Extract ~15k LOC of ad-hoc codecs from ~15 plugins (remodel's hand-rolled MP4/AVI/H.264 + PNG/JPEG, cad's two extra STEP implementations, animate's FFmpeg/Typst/HTML, energy's EPW parser, architect's CSV/TSV, the 7x svg/dwg pattern plugins, fem/puzzle/norm's degenerate JSON-under-format-name io leaves) into stdio and rewire every plugin through dialect-based io_dispatch. Delete the deprecated framework MediaFormat/ArtifactCodec layer entirely (55 files, 152+ call sites), including fixing semio-framework-os-run's compile breakage (mount the unmounted workflow module) and verifying the cross-plugin IoRouter end-to-end natively with real wasm components. Full plan with wave DAG, per-plugin extraction map, and verification recipes is at /Users/ueli/.claude/plans/at-the-heart-of-gentle-riddle.md — copy it into the ticket folder as the master plan.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2544"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪dea2d80aa9a44111b950c12dc3d13710"
+  ]
+}

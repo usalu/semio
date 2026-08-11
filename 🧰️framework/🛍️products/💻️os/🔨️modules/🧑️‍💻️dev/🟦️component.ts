@@ -9,11 +9,12 @@ export { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PROGRAM_TARGETS, pluginModuleU
 export { PLAYGROUND_SESSION } from "./🤖️generated/🟦️session.ts";
 
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
+import { PLUGIN_CATALOG } from "../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🟦️catalog.ts";
 import { PLAYGROUND_SESSION } from "./🤖️generated/🟦️session.ts";
 import { resolveShellBrandById } from "./🏷️brand/📦️index.ts";
 
 const renderer = import.meta.env.VITE_SEMIO_RENDERER ?? import.meta.env.SEMIO_RENDERER ?? "react";
-const boot = resolvePlaygroundBoot(import.meta.env.VITE_SEMIO_PLUGIN || PLAYGROUND_SESSION.variant, PLAYGROUND_SESSION);
+const boot = resolvePlaygroundBoot(PLUGIN_CATALOG, import.meta.env.VITE_SEMIO_PLUGIN || PLAYGROUND_SESSION.variant, PLAYGROUND_SESSION);
 const pluginFilter = boot.variant;
 const appId = import.meta.env.VITE_SEMIO_APP_ID ?? boot.defaultAppId;
 

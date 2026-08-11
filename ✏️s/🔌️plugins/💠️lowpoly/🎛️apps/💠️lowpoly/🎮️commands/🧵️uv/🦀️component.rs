@@ -4,7 +4,7 @@ use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::{map_kernel_err, mesh_edit, LowpolyScratch};
 use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolySnapshot;
-use semio_s_3d::mesh::EdgeId;
+use semio_framework_3d::mesh::EdgeId;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

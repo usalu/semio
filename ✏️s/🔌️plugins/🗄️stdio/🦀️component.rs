@@ -4,6 +4,7 @@ use semio_framework_plugin::Plugin;
 
 /// 🔌️ Builds the stdio library plugin (no document apps).
 pub fn plugin() -> Plugin {
+    crate::manifest::register_stdio_format_descriptors();
     crate::artifacts::binary::engine::register();
     crate::artifacts::txt::engine::register();
     crate::artifacts::json::engine::register();

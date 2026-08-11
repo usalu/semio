@@ -495,7 +495,7 @@ mod tests {
     use crate::artifacts::bcf::schema::diff::BcfDiff;
     use crate::artifacts::bcf::schema::mutations::apply_bcf_mutation;
     use protocol::command::DiffAlgebra;
-    use protocol::{Mutation, MutationDiff};
+    use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
 
     //#region Fixtures
     fn perspective_camera() -> BcfCamera {
@@ -953,6 +953,86 @@ mod tests {
         assert!(!parts_diff.added.is_empty(), "parts.added not swept");
         let kept_part_diff = &parts_diff.modified.iter().find(|m| m.key == "part-keep.txt").expect("part-keep modified").diff;
         assert!(kept_part_diff.data.is_some(), "part.data not swept");
+    }
+    //#endregion
+
+    //#region 🧪️Law7_OpTextBinaryRoundtripLaw
+    /// ⚖️ Law 7 — `op_text_binary_roundtrip_law` (F6): `OpText`/`OpBinary` round-trip laws for the
+    /// hand-rolled `BcfMutation` grammar (`f6-bcf-report.md`) — exercises every variant incl.
+    /// `SetViewpointCamera`'s `BcfCamera` enum payload (both `Perspective`/`Orthogonal`, plus
+    /// `None`) and `SetComment`'s tri-state `viewpoint_ref` (both `Some(None)` and
+    /// `Some(Some(_))`).
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        let mutations = vec![
+            BcfMutation::NoMutation,
+            BcfMutation::SetSnapshot { snapshot: sample_snapshot() },
+            BcfMutation::SetVersion { version: "2.2".into() },
+            BcfMutation::InsertTopic { topic: sample_topic("t2") },
+            BcfMutation::RemoveTopic { guid: "t1".into() },
+            BcfMutation::SetTopicMarkup {
+                guid: "t1".into(),
+                title: Some("Renamed".into()),
+                description: None,
+                status: Some("Closed".into()),
+                priority: None,
+                labels: Some(vec!["Renamed".into(), "Second".into()]),
+                creation_date: None,
+                creation_author: None,
+            },
+            BcfMutation::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", Some("vp1")) },
+            BcfMutation::RemoveComment { topic_guid: "t1".into(), guid: "c1".into() },
+            BcfMutation::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: None, author: None, text: Some("Updated".into()), viewpoint_ref: Some(None) },
+            BcfMutation::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: Some("2025-01-01T00:00:00+00:00".into()), author: Some("a@example.com".into()), text: None, viewpoint_ref: Some(Some("vp2".into())) },
+            BcfMutation::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2") },
+            BcfMutation::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() },
+            BcfMutation::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(perspective_camera()) },
+            BcfMutation::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) },
+            BcfMutation::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: None },
+            BcfMutation::SetViewpointComponents { topic_guid: "t1".into(), guid: "vp1".into(), components: Some(sample_components()) },
+            BcfMutation::SetViewpointComponents { topic_guid: "t1".into(), guid: "vp1".into(), components: None },
+            BcfMutation::SetViewpointSnapshot { topic_guid: "t1".into(), guid: "vp1".into(), snapshot: Some(vec![1, 2, 3]) },
+            BcfMutation::SetViewpointSnapshot { topic_guid: "t1".into(), guid: "vp1".into(), snapshot: None },
+        ];
+        for m in mutations {
+            let printed = m.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = BcfMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
+
+            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = BcfMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
+        }
+    }
+    //#endregion
+
+    //#region 🧪️Law8_DiffCodecTextBinaryRoundtripLaw
+    /// ⚖️ Law 8 — `diff_codec_text_binary_roundtrip_law` (F6): `DiffCodec` round-trip laws for the
+    /// hand-rolled `BcfDiff` grammar — exercises every collection triple (`topics`/`comments`/
+    /// `viewpoints`/`parts`, all guid/name-keyed) plus every tri-state field's `Some(None)`
+    /// transition, via `sweep_a`/`sweep_b`'s `between()` result (the same fixtures `field_sweep`
+    /// uses, incl. `BcfCamera`'s `Perspective`->`Orthogonal` transition inside `vp-keep`'s diff).
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
+        let a = sweep_a();
+        let b = sweep_b();
+        let cases = vec![
+            BcfDiff::default(),
+            BcfDiff::between(&a, &b),
+            BcfDiff::between(&b, &a),
+            BcfDiff::between(&a, &a),
+        ];
+        for d in cases {
+            let printed = d.print_diff();
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = BcfDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
+
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = BcfDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
+        }
     }
     //#endregion
 }

@@ -7,6 +7,7 @@
 import "./🎨️globals.css";
 
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
+import { PLUGIN_CATALOG } from "../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🟦️catalog.ts";
 import { FrameworkOsShell } from "@semio-tech/framework-renderer-react";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
@@ -24,7 +25,7 @@ type MultiHarnessPane = (typeof MULTI_HARNESS_PANES)[number];
 
 function MultiShellHarnessPane({ pane }: { readonly pane: MultiHarnessPane }): React.ReactElement {
   const [mounted, setMounted] = React.useState(true);
-  const boot = React.useMemo(() => resolvePlaygroundBoot(pane.variant), [pane.variant]);
+  const boot = React.useMemo(() => resolvePlaygroundBoot(PLUGIN_CATALOG, pane.variant), [pane.variant]);
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: "1 1 0", minWidth: 0 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 8px", background: "#111827", color: "#e5e7eb", fontFamily: "monospace", fontSize: 12 }}>

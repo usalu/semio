@@ -5,9 +5,17 @@ use crate::artifacts::pptx::schema::diff::{
     diff_insert_shape, diff_insert_slide, diff_move_slide, diff_remove_shape, diff_remove_slide,
     diff_set_shape_position, diff_set_shape_text, diff_set_snapshot, PptxDiff,
 };
-use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide, PptxTransform};
+use crate::artifacts::pptx::schema::diff::{
+    dec_ct_entry, dec_list, dec_owner_rels, dec_paragraph, dec_part, dec_shape, dec_slide, dec_str, dec_transform,
+    enc_ct_entry, enc_list, enc_owner_rels, enc_paragraph, enc_part, enc_shape, enc_slide, enc_str, enc_transform,
+    split_top_level, strip_brackets,
+};
+use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSlide, PptxTransform};
 use crate::artifacts::pptx::PptxSnapshot;
-use protocol::Mutation;
+use crate::artifacts::zip::opc::OpcPackage;
+use protocol::{Mutation, OpText};
+#[cfg(test)]
+use protocol::OpBinary;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -16,6 +24,15 @@ use serde::{Deserialize, Serialize};
 /// `(slide_index, shape_index)` -- a flat two-level address is sufficient since PresentationML
 /// slides don't nest arbitrarily (grouped shapes fall back to `PptxShape::Other`, see the
 /// snapshot module's doc comment).
+/// 🧪️ F6 CONFIRMED: `#[derive(dsl::DslOps)]` on this enum fails to compile — real `cargo check`
+/// error: `the trait bound PptxSnapshot: DslField is not satisfied` at `SetSnapshot{snapshot}`
+/// (`PptxSnapshot` embeds `PptxShape`, a data-carrying enum, and the generic `IndexedTripleDiff`/
+/// `NamedTripleDiff` collection engine `PptxPresentation`/`OpcPackage` route through — see the diff
+/// file's `HandcraftedDiffCodec` doc comment for the full three-reason citation), plus a SECOND,
+/// independent hit at `InsertShape{shape: PptxShape}`/`InsertSlide{slide: PptxSlide}` (`PptxShape`/
+/// `PptxSlide` carry the same enum-shaped payload DIRECTLY as a variant field, mirroring
+/// `SvgMutation::InsertElement`'s `node: XmlNode` blocker). `OpText`/`OpBinary` hand-rolled below,
+/// reusing `PptxDiff`'s `pub(crate)` grammar primitives.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum PptxMutation {
@@ -156,31 +173,124 @@ impl Mutation<PptxSnapshot> for PptxMutation {
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-impl protocol::OpText for PptxMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
+/// 🧪️ F6: **hand-rolled** `OpText`/`OpBinary` for `PptxMutation` (`#[derive(dsl::DslOps)]`
+/// confirmed rejected above) — reuses `PptxDiff`'s `pub(crate)` grammar primitives
+/// (`enc_shape`/`enc_slide`/`enc_transform`/`split_top_level`/`encode_option`/...) rather than
+/// duplicating them a second time in this file (same intra-artifact reuse `SvgMutation` established
+/// for `SvgDiff`'s primitives). Grammar: `keyword arg=value ...` (space-separated, same shape the
+/// derive's own handcrafted-wrapper convention uses), one match arm per variant.
+//#region 🔖️SnapshotCodec
+/// 🌳 Full `OpcPackage` (used only by `SetSnapshot`'s `snapshot` payload, never by `PptxDiff` --
+/// diffs only ever carry the sparse `PptxOpcDiff`): `[parts,defaults,overrides,relationships]`.
+/// `relationships` (a `HashMap`) is sorted by owner key first for deterministic `encode_op` output
+/// (`OpBinary`'s own LAW: "encoding is deterministic -- byte-identical output for equal operations").
+fn enc_opc_package(p: &OpcPackage) -> String {
+    let mut owners: Vec<&String> = p.relationships.keys().collect();
+    owners.sort();
+    let rels = owners.iter().map(|owner| enc_owner_rels(&(owner.to_string(), p.relationships[*owner].clone()))).collect::<Vec<_>>();
+    format!(
+        "[{},{},{},{}]",
+        enc_list(&p.parts, enc_part),
+        enc_list(&p.content_types.defaults, enc_ct_entry),
+        enc_list(&p.content_types.overrides, enc_ct_entry),
+        format!("[{}]", rels.join(",")),
+    )
+}
+fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
+    let parts_top = split_top_level(strip_brackets(s)?, ',');
+    let [parts, defaults, overrides, rels] = parts_top.as_slice() else { return Err(format!("opc package: expected 4 fields, got {}", parts_top.len())) };
+    let mut package = OpcPackage::empty();
+    package.parts = dec_list(parts, dec_part)?;
+    package.content_types.defaults = dec_list(defaults, dec_ct_entry)?;
+    package.content_types.overrides = dec_list(overrides, dec_ct_entry)?;
+    for (owner, list) in dec_list(rels, dec_owner_rels)? {
+        package.relationships.insert(owner, list);
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+    Ok(package)
+}
+/// 🌳 Full `PptxSnapshot`: `[schema,opc,slides]` -- `presentation` collapses to its own single
+/// field (`slides: Vec<PptxSlide>`), same convention `enc_slide`/`enc_paragraph` use.
+fn enc_snapshot(s: &PptxSnapshot) -> String {
+    format!("[{},{},{}]", enc_str(&s.schema), enc_opc_package(&s.opc), enc_list(&s.presentation.slides, enc_slide))
+}
+fn dec_snapshot(s: &str) -> Result<PptxSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [schema, opc, slides] = parts.as_slice() else { return Err(format!("snapshot: expected 3 fields, got {}", parts.len())) };
+    Ok(PptxSnapshot {
+        schema: dec_str(schema)?,
+        opc: dec_opc_package(opc)?,
+        presentation: PptxPresentation { slides: dec_list(slides, dec_slide)? },
+    })
+}
+//#endregion 🔖️SnapshotCodec
+
+fn print_pptx_mutation(m: &PptxMutation) -> String {
+    match m {
+        PptxMutation::NoMutation => "no-mutation".to_string(),
+        PptxMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
+        PptxMutation::InsertSlide { index, slide } => format!("insert-slide index={index} slide={}", enc_slide(slide)),
+        PptxMutation::RemoveSlide { index } => format!("remove-slide index={index}"),
+        PptxMutation::MoveSlide { from, to } => format!("move-slide from={from} to={to}"),
+        PptxMutation::InsertShape { slide_index, shape_index, shape } => {
+            format!("insert-shape slide-index={slide_index} shape-index={shape_index} shape={}", enc_shape(shape))
+        }
+        PptxMutation::RemoveShape { slide_index, shape_index } => format!("remove-shape slide-index={slide_index} shape-index={shape_index}"),
+        PptxMutation::SetShapeText { slide_index, shape_index, text_frame } => {
+            format!("set-shape-text slide-index={slide_index} shape-index={shape_index} text-frame={}", enc_list(text_frame, enc_paragraph))
+        }
+        PptxMutation::SetShapePosition { slide_index, shape_index, position } => {
+            format!("set-shape-position slide-index={slide_index} shape-index={shape_index} position={}", enc_transform(position))
+        }
+    }
+}
+fn parse_pptx_mutation(line: &str) -> Result<PptxMutation, String> {
+    if line == "no-mutation" {
+        return Ok(PptxMutation::NoMutation);
+    }
+    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    let args: std::collections::BTreeMap<&str, &str> = rest
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|tok| tok.split_once('=').ok_or_else(|| format!("pptx mutation: bad arg token {tok:?}")))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .collect();
+    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("pptx mutation: missing arg '{k}' for '{keyword}'"));
+    let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
+    match keyword {
+        "set-snapshot" => Ok(PptxMutation::SetSnapshot { snapshot: dec_snapshot(arg("snapshot")?)? }),
+        "insert-slide" => Ok(PptxMutation::InsertSlide { index: usize_arg("index")?, slide: dec_slide(arg("slide")?)? }),
+        "remove-slide" => Ok(PptxMutation::RemoveSlide { index: usize_arg("index")? }),
+        "move-slide" => Ok(PptxMutation::MoveSlide { from: usize_arg("from")?, to: usize_arg("to")? }),
+        "insert-shape" => Ok(PptxMutation::InsertShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, shape: dec_shape(arg("shape")?)? }),
+        "remove-shape" => Ok(PptxMutation::RemoveShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")? }),
+        "set-shape-text" => Ok(PptxMutation::SetShapeText {
+            slide_index: usize_arg("slide-index")?,
+            shape_index: usize_arg("shape-index")?,
+            text_frame: dec_list(arg("text-frame")?, dec_paragraph)?,
+        }),
+        "set-shape-position" => Ok(PptxMutation::SetShapePosition { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, position: dec_transform(arg("position")?)? }),
+        other => Err(format!("pptx mutation: unknown keyword {other:?}")),
     }
 }
 
+impl protocol::OpText for PptxMutation {
+    fn print_op(&self) -> String {
+        print_pptx_mutation(self)
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_pptx_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+}
+
+/// ⚡️ Binary = the text bytes verbatim, same simplification `PptxDiff`'s hand-rolled codec uses.
 impl protocol::OpBinary for PptxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        Ok(self.print_op().into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
@@ -710,5 +820,40 @@ mod tests {
         assert_eq!(run_diff_ba.font_size, Some(Some(10)), "run font_size tri-state Some(Some(_)) not exercised");
     }
     //#endregion 🔖️FieldSweep
+
+    //#region 🔖️OpTextBinaryRoundtripLaw
+    /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `PptxMutation` grammar --
+    /// exercises every variant incl. `SetSnapshot`'s full `PptxSnapshot` (OPC package + typed
+    /// slides), `InsertShape`'s bare `PptxShape` enum payload (every `TextBox`/`Picture`/
+    /// `Placeholder`/`Other` variant), and `SetShapeText`'s `Vec<PptxParagraph>`.
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        let base = fixture();
+        let mutations = vec![
+            PptxMutation::NoMutation,
+            PptxMutation::SetSnapshot { snapshot: base.clone() },
+            PptxMutation::InsertSlide { index: 1, slide: PptxSlide { shapes: vec![PptxShape::Other { xml: "<p:graphicFrame/>".into() }] } },
+            PptxMutation::RemoveSlide { index: 0 },
+            PptxMutation::MoveSlide { from: 0, to: 1 },
+            PptxMutation::InsertShape { slide_index: 0, shape_index: 1, shape: PptxShape::TextBox { text_frame: vec![PptxParagraph::text("x")], position: PptxTransform { x: 1, y: 2, cx: 3, cy: 4 } } },
+            PptxMutation::InsertShape { slide_index: 0, shape_index: 1, shape: PptxShape::Picture { blip_rel_id: "rId7".into(), position: PptxTransform::default() } },
+            PptxMutation::InsertShape { slide_index: 0, shape_index: 1, shape: PptxShape::Placeholder { kind: "body".into(), text_frame: vec![PptxParagraph::text("ph")], position: PptxTransform::default() } },
+            PptxMutation::InsertShape { slide_index: 0, shape_index: 1, shape: PptxShape::Other { xml: "<p:cxnSp/>".into() } },
+            PptxMutation::RemoveShape { slide_index: 0, shape_index: 0 },
+            PptxMutation::SetShapeText { slide_index: 0, shape_index: 0, text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "bold".into(), bold: true, italic: false, font_size: Some(24) }] }, PptxParagraph::text("second")] },
+            PptxMutation::SetShapePosition { slide_index: 0, shape_index: 0, position: PptxTransform { x: 5, y: 6, cx: 7, cy: 8 } },
+        ];
+        for mutation in mutations {
+            let printed = mutation.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = PptxMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
+
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = PptxMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+        }
+    }
+    //#endregion 🔖️OpTextBinaryRoundtripLaw
 }
 //#endregion 🧪️Tests

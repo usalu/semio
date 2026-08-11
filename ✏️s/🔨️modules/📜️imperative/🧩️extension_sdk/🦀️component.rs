@@ -1,7 +1,7 @@
 //! 🔌️ Shared manifest + evaluate helpers for imperative path extensions.
 
 use neural_engine::{inject_channel_defaults, Dictionary, OperatorInfo, Registry};
-use semio_framework::{Contribution, ProgramContributionEntry};
+use semio_framework::{Contribution, ProgramContributionEntry, TopicContribution};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Manifest
@@ -106,3 +106,34 @@ pub fn imperative_module_contribution(
     }
 }
 // #endregion 🔖️Constants
+
+// #region 🔖️TopicContribution
+/// 🗺️ Open-registry twin of [`imperative_module_contribution`] — builds the same data under the
+/// `"imperative.module"` topic (reuses this crate's own `contributes = ["imperative.module"]` Cargo
+/// metadata vocabulary) instead of the closed `Contribution::ImperativeModule` variant. Additive: the
+/// closed-enum producer above is unchanged and still the one wired into `ProgramContributionEntry`;
+/// this sibling exists for open-registry consumers to adopt going forward — see
+/// `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs::TopicContribution`.
+pub fn imperative_module_topic_contribution(
+    module_id: &str,
+    label: &str,
+    icon_id: &str,
+    manifest_id: &str,
+    manifest_name: &str,
+    version: &str,
+    registry: &Registry,
+    catalogue_json: Option<&str>,
+) -> TopicContribution {
+    let manifest_json = build_manifest_json(manifest_id, manifest_name, version, registry, catalogue_json);
+    TopicContribution::new(
+        "imperative.module",
+        serde_json::json!({
+            "appId": IMPERATIVE_PLAY_APP_ID,
+            "moduleId": module_id,
+            "label": label,
+            "iconId": icon_id,
+            "manifestJson": manifest_json,
+        }),
+    )
+}
+// #endregion 🔖️TopicContribution

@@ -395,6 +395,7 @@ import {
 } from "../ChromePanels/🟦️component.tsx";
 import { type PluginWasmHandle } from "../PluginRuntime/🟦️component.tsx";
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
+import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🟦️catalog.ts";
 
 
 import { SyncAttachCard } from "../ShellSync/🟦️component.tsx";
@@ -683,8 +684,8 @@ function FrameworkOsShellInner({
   // 🏠️🧳️ `hostConfig` is the sole piece of per-plugin identity knowledge the shell needs (which app id is
   // "landing", which is "host") — every controller id / default panel tab derives from the *loaded*
   // manifest's own `controllerId`/`panelTabs` on those apps below, never from a separate literal.
-  const hostConfig = pluginFilter ? resolvePluginHostConfig(pluginFilter) : undefined;
-  const studioMode = hostConfig !== undefined;
+  const hostConfig = pluginFilter ? resolvePluginHostConfig(PLUGIN_CATALOG, pluginFilter) : undefined;
+  const hostMode = hostConfig !== undefined;
   const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const locks = locksProp ?? EMPTY_SHELL_LOCKS;
   const defaults = defaultsProp ?? EMPTY_SHELL_DEFAULTS;
@@ -827,7 +828,7 @@ function FrameworkOsShellInner({
 
   // 🐚️ Only a page-owning studio shell syncs to the real browser URL bar/history — an embedded shell
   // sharing the page with others must not fight them over `window.history`.
-  const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", studioMode && scope.ownsPage);
+  const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", hostMode && scope.ownsPage);
   const shellRoute = useMemo(() => parseShellRoute(shellUri.split("?")[0] ?? "/"), [shellUri]);
 
   // 🐚️ `scope.storage` (not a separately-resolved ephemeral/browser port here) — two shells sharing a
@@ -838,16 +839,16 @@ function FrameworkOsShellInner({
   const dockUiStateStore = useMemo(() => new DockUiStateStore(shellStorage, session?.app.id), [session?.app.id, shellStorage]);
 
   const registry = useMemo(() => {
-    const expanded = expandPluginRegistry(plugins, pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined, studioMode);
-    if (studioMode) return expanded;
+    const expanded = expandPluginRegistry(plugins, pluginFilter ? resolvePluginRegistryId(PLUGIN_CATALOG, pluginFilter) : undefined, hostMode);
+    if (hostMode) return expanded;
     return pluginFilter ? expanded : plugins;
-  }, [pluginFilter, plugins, studioMode]);
+  }, [pluginFilter, plugins, hostMode]);
 
   //#region 🔌️PluginRuntime
   /** 🔌️ The one registry entry the shell must have loaded before it can create a session — the studio
    * host plugin (`hostConfig.pluginId`) in studio mode, otherwise the resolved single-app variant.
    * Every other registry entry streams in independently and is never fatal to boot. */
-  const primaryPluginId = useMemo(() => hostConfig?.pluginId ?? (pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined) ?? registry[0]?.pluginId, [hostConfig, pluginFilter, registry]);
+  const primaryPluginId = useMemo(() => hostConfig?.pluginId ?? (pluginFilter ? resolvePluginRegistryId(PLUGIN_CATALOG, pluginFilter) : undefined) ?? registry[0]?.pluginId, [hostConfig, pluginFilter, registry]);
   const shellPluginCanvasStatus = useMemo((): UiStatus | undefined => {
     if (!session) return "loading";
     if (!primaryPluginId) return undefined;
@@ -857,7 +858,7 @@ function FrameworkOsShellInner({
   }, [session, primaryPluginId, pluginStatusById]);
   /** 🔌️ Dev `/plugin-modules` catalog plus extension-store `/extensions` installs share one
    * {@link PluginSource} so the incremental runtime can load from either tree. */
-  const pluginSource: PluginSource = useMemo(() => multiplexPluginSources(createDevPluginSource(registry), createExtensionSource()), [registry]);
+  const pluginSource: PluginSource = useMemo(() => multiplexPluginSources(createDevPluginSource(registry), createExtensionSource(PLUGIN_CATALOG)), [registry]);
 
   /** 🔌️ Recreates the primary session instance for `handle` — the exact `hostConfig`/non-studio
    * app-resolution logic the boot effect used to run once inline, now shared with `reloadPlugin` so a
@@ -894,7 +895,7 @@ function FrameworkOsShellInner({
             return found;
           })()
         : (() => {
-            const defaultAppId = pluginFilter ? resolvePlaygroundDefaultAppId(pluginFilter) : undefined;
+            const defaultAppId = pluginFilter ? resolvePlaygroundDefaultAppId(PLUGIN_CATALOG, pluginFilter) : undefined;
             return (defaultAppId ? manifest.apps.find((app) => app.id === defaultAppId) : undefined) ?? manifest.apps[0];
           })();
       if (!primaryApp) return;
@@ -1010,7 +1011,7 @@ function FrameworkOsShellInner({
           await current.handle.destroyApp(contributorInstanceId).catch(() => {});
           contributorInstancesRef.current.delete(pluginId);
         }
-        if (studioMode && activeSession) {
+        if (hostMode && activeSession) {
           const currentPanel = parsePanelState(activeSession.viewState);
           const dropped = currentPanel?.spawnedApps.filter((entry) => entry.pluginId === pluginId) ?? [];
           if (currentPanel && dropped.length > 0) {
@@ -1046,7 +1047,7 @@ function FrameworkOsShellInner({
         pluginOpInFlightRef.current.delete(pluginId);
       }
     },
-    [installPlugin, establishPrimarySession, studioMode, pluginSource],
+    [installPlugin, establishPrimarySession, hostMode, pluginSource],
   );
 
   /** 🔌️ Removes an already-loaded plugin: refuses the host/primary plugin and whichever plugin owns the
@@ -1077,7 +1078,7 @@ function FrameworkOsShellInner({
           await current.handle.destroyApp(contributorInstanceId).catch(() => {});
           contributorInstancesRef.current.delete(pluginId);
         }
-        if (studioMode && sessionRef.current) {
+        if (hostMode && sessionRef.current) {
           const activeSession = sessionRef.current;
           const currentPanel = parsePanelState(activeSession.viewState);
           const dropped = currentPanel?.spawnedApps.filter((entry) => entry.pluginId === pluginId) ?? [];
@@ -1101,7 +1102,7 @@ function FrameworkOsShellInner({
         pluginOpInFlightRef.current.delete(pluginId);
       }
     },
-    [primaryPluginId, studioMode],
+    [primaryPluginId, hostMode],
   );
   /** 🧩️ Durable-in-session extension ledger mirror — space document ops are dispatched
    * best-effort when a space/studio session can accept them; this state keeps Settings + contribution
@@ -1552,7 +1553,7 @@ function FrameworkOsShellInner({
   useEffect(() => {
     dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
     dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
-  }, [panel?.activeSpawnedId, session, studioMode]);
+  }, [panel?.activeSpawnedId, session, hostMode]);
 
   /** 🐚️ The relay a document's `registerPluginBackboneRoute` entry uses — forwards a plugin's outbound
    * backbone bytes into THIS shell's own backbone worker. Registered per open document (in
@@ -1954,7 +1955,7 @@ function FrameworkOsShellInner({
   }, [loadedPlugins, refreshUi, sessionIdentityKey]);
 
   useEffect(() => {
-    if (!studioMode || !session) {
+    if (!hostMode || !session) {
       dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null });
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
@@ -1971,7 +1972,7 @@ function FrameworkOsShellInner({
       console.error("[DEBUG] spawned render failed", renderError);
       dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null });
     });
-  }, [loadedPlugins, panel, refreshSpawnedUi, session, studioMode]);
+  }, [loadedPlugins, panel, refreshSpawnedUi, session, hostMode]);
 
   const updateSpacePanel = useCallback((panelState: SpacePanelState) => {
     dispatch({
@@ -2320,7 +2321,7 @@ function FrameworkOsShellInner({
         }
       }
       const nextSession = { ...baseSession, viewState: nextViewState };
-      const isSpawnedPluginSession = studioMode && session && baseSession.pluginId !== session.pluginId;
+      const isSpawnedPluginSession = hostMode && session && baseSession.pluginId !== session.pluginId;
       dispatch({
         type: "SET_SESSION",
         value: (current) => {
@@ -2341,7 +2342,7 @@ function FrameworkOsShellInner({
         await refreshUi(nextSession, uiScope);
       }
     },
-    [clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, session, setActiveUtilityForWindow, studioMode],
+    [clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, session, setActiveUtilityForWindow, hostMode],
   );
 
   const applyShellUri = useCallback(
@@ -2393,15 +2394,15 @@ function FrameworkOsShellInner({
   );
 
   useEffect(() => {
-    if (!studioMode || loadedPlugins.length === 0) return;
+    if (!hostMode || loadedPlugins.length === 0) return;
     void applyShellUri(shellUri).catch((uriError) => {
       console.error("[DEBUG] shell uri apply failed", uriError);
     });
-  }, [applyShellUri, loadedPlugins.length, shellUri, studioMode]);
+  }, [applyShellUri, loadedPlugins.length, shellUri, hostMode]);
 
   const resolveSyncTargetSession = useCallback((): ActiveSession | null => {
     if (!session) return null;
-    if (studioMode && panel?.activeSpawnedId) {
+    if (hostMode && panel?.activeSpawnedId) {
       const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
       if (spawned) {
         const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
@@ -2409,7 +2410,7 @@ function FrameworkOsShellInner({
       }
     }
     return session;
-  }, [loadedPlugins, panel, session, studioMode]);
+  }, [loadedPlugins, panel, session, hostMode]);
 
   /**
    * 🧵️ `openDocument(ref, bindings)` — replaces `attachSyncBackbone`'s URI-string mirror. Spins up (or
@@ -2470,7 +2471,7 @@ function FrameworkOsShellInner({
     async (uri: string) => {
       const targetSession = resolveSyncTargetSession();
       if (!targetSession) return;
-      const documentId = syncDocumentId(targetSession, panel, studioMode);
+      const documentId = syncDocumentId(targetSession, panel, hostMode);
       const bindings: PersistenceBinding[] = uri.startsWith("remote://")
         ? (() => {
             const rest = uri.slice("remote://".length);
@@ -2486,7 +2487,7 @@ function FrameworkOsShellInner({
             : [];
       await openDocument({ documentId, schema: targetSession.app.breadcrumb.join(".") }, bindings);
     },
-    [openDocument, panel, resolveSyncTargetSession, studioMode],
+    [openDocument, panel, resolveSyncTargetSession, hostMode],
   );
 
   const detachSyncBackbone = useCallback(() => {
@@ -2680,7 +2681,7 @@ function FrameworkOsShellInner({
               ? String((action.args as { kind?: string }).kind) === "remote"
                 ? (() => {
                     const [hostPort, ...rest] = path.split("/");
-                    const [spaceId, documentId] = rest.length >= 2 ? [rest[0], rest.slice(1).join("/")] : ["default", rest[0] || syncDocumentId(session, panel, studioMode)];
+                    const [spaceId, documentId] = rest.length >= 2 ? [rest[0], rest.slice(1).join("/")] : ["default", rest[0] || syncDocumentId(session, panel, hostMode)];
                     return buildRemoteBackboneUri(hostPort ?? "127.0.0.1:8787", spaceId, documentId);
                   })()
                 : String((action.args as { kind?: string }).kind) === "folder"
@@ -2697,12 +2698,12 @@ function FrameworkOsShellInner({
         return;
       }
 
-      if (studioMode && action.controllerId === landingControllerId && action.action === "importSpace") {
+      if (hostMode && action.controllerId === landingControllerId && action.action === "importSpace") {
         importSpaceInputRef.current?.click();
         return;
       }
 
-      if (studioMode && action.action === "spawnApp" && action.controllerId !== hostControllerId) {
+      if (hostMode && action.action === "spawnApp" && action.controllerId !== hostControllerId) {
         const pluginId = typeof action.args === "object" && action.args != null && "pluginId" in action.args ? String((action.args as { pluginId?: string }).pluginId ?? "") : "";
         const currentPanel = parsePanelState(session.viewState);
         const program = currentPanel?.programs.find((entry) => entry.pluginId === pluginId);
@@ -2710,7 +2711,7 @@ function FrameworkOsShellInner({
         return;
       }
 
-      if (studioMode && action.controllerId === hostControllerId && action.action === "setActivePanelTab") {
+      if (hostMode && action.controllerId === hostControllerId && action.action === "setActivePanelTab") {
         const tabId = typeof action.args === "object" && action.args != null && "tabId" in action.args ? String((action.args as { tabId?: string }).tabId ?? hostCatalogueTabId ?? "") : (hostCatalogueTabId ?? "");
         const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], []);
         updateSpacePanel(buildSpacePanelState(currentPanel.programs, currentPanel.spawnedApps, tabId, currentPanel.activeSpawnedId));
@@ -2722,7 +2723,7 @@ function FrameworkOsShellInner({
       if (!plugin) return;
 
       const targetSession =
-        studioMode && action.controllerId !== session.app.controllerId
+        hostMode && action.controllerId !== session.app.controllerId
           ? (() => {
               const spawned = panel?.spawnedApps.find((entry) => {
                 const app = loadedPlugins.find((p) => p.handle.pluginId === entry.pluginId)?.manifest.apps.find((a) => a.id === entry.appId);
@@ -2783,7 +2784,7 @@ function FrameworkOsShellInner({
       session,
       setActiveUtilityForWindow,
       spawnProgram,
-      studioMode,
+      hostMode,
       syncBackboneUri,
       syncDraftPath,
       updateSpacePanel,
@@ -3155,12 +3156,12 @@ function FrameworkOsShellInner({
   );
   //#endregion 🎥️TutorialOrchestration
 
-  const studioSessionActive = studioMode && session?.app.id === hostAppId;
-  // 🏠️🧳️ Once `studioSessionActive` is true, `session.app` *is* the host app, so its own self-declared
+  const hostSessionActive = hostMode && session?.app.id === hostAppId;
+  // 🏠️🧳️ Once `hostSessionActive` is true, `session.app` *is* the host app, so its own self-declared
   // `controllerId` is the right value — no separate app-identity lookup needed.
-  const studioSessionControllerId = studioSessionActive ? session?.app.controllerId : undefined;
+  const studioSessionControllerId = hostSessionActive ? session?.app.controllerId : undefined;
   useEffect(() => {
-    if (!studioSessionActive || !studioSessionControllerId || typeof window === "undefined") return;
+    if (!hostSessionActive || !studioSessionControllerId || typeof window === "undefined") return;
     const identity = presenceClientIdentity(ephemeral);
     const beat = () => onActionRef.current({ controllerId: studioSessionControllerId, action: "presenceHeartbeat", args: identity });
     const initial = window.setTimeout(beat, 1000);
@@ -3169,7 +3170,7 @@ function FrameworkOsShellInner({
       window.clearTimeout(initial);
       window.clearInterval(timer);
     };
-  }, [studioSessionActive, studioSessionControllerId, ephemeral]);
+  }, [hostSessionActive, studioSessionControllerId, ephemeral]);
 
   usePanelChromeHotkeys({
     // 📱️ All eight anchor hotkeys collapse onto the single mobile panel toggle on mobile. Same `shell.panelToggle`
@@ -3871,7 +3872,7 @@ function FrameworkOsShellInner({
   const workbenchLeftTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
     const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale));
-    if (studioMode && session.app.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
+    if (hostMode && session.app.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
     const hasPluginArtifactTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
     if (hasPluginArtifactTab) return pluginLeftTabs;
     const artifactTab = singleTreeLeaf({
@@ -3884,13 +3885,13 @@ function FrameworkOsShellInner({
           {
             id: "artifact.root",
             label: shellLabel("ui.panel.artifact"),
-            items: [{ id: "artifact.empty", label: studioMode ? `${panel?.spawnedApps.length ?? 0} ${shellLabel("ui.panel.spawnedAppsSuffix")}` : shellLabel("ui.panel.artifactEmpty") }],
+            items: [{ id: "artifact.empty", label: hostMode ? `${panel?.spawnedApps.length ?? 0} ${shellLabel("ui.panel.spawnedAppsSuffix")}` : shellLabel("ui.panel.artifactEmpty") }],
           },
         ],
       }),
     });
     return [artifactTab, ...pluginLeftTabs];
-  }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, studioMode, uiLocale, uiTerminology, hostAppId]);
+  }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, hostMode, uiLocale, uiTerminology, hostAppId]);
 
   const detailsRightTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
@@ -3984,7 +3985,7 @@ function FrameworkOsShellInner({
 
   /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
   const exampleSelectElement = useMemo(() => {
-    if (!session || exampleOptions.length === 0 || locks.exampleId || (studioMode && session.app.id === landingAppId)) return null;
+    if (!session || exampleOptions.length === 0 || locks.exampleId || (hostMode && session.app.id === landingAppId)) return null;
     return (
       <NavbarExampleSelect
         key="fixture"
@@ -3997,7 +3998,7 @@ function FrameworkOsShellInner({
         }}
       />
     );
-  }, [session, exampleOptions, locks.exampleId, studioMode, landingAppId, activeExampleId, dispatchActiveExample]);
+  }, [session, exampleOptions, locks.exampleId, hostMode, landingAppId, activeExampleId, dispatchActiveExample]);
 
   /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
   const modeSwitcherElement = useMemo(() => {
@@ -4227,8 +4228,8 @@ function FrameworkOsShellInner({
     [dock, defaultDock, noteShellCommand],
   );
 
-  const studioOverrideTabId = studioMode && session?.app.id === hostAppId ? (panel?.activePanelTab ?? hostCatalogueTabId) : undefined;
-  const studioOverrideAnchor = studioOverrideTabId ? findPanelTabInDock(dock, studioOverrideTabId)?.anchor : undefined;
+  const hostOverrideTabId = hostMode && session?.app.id === hostAppId ? (panel?.activePanelTab ?? hostCatalogueTabId) : undefined;
+  const studioOverrideAnchor = hostOverrideTabId ? findPanelTabInDock(dock, hostOverrideTabId)?.anchor : undefined;
   const detailsOverrideTabId = panel?.activePanelTab;
   const detailsOverrideAnchor = detailsOverrideTabId ? findPanelTabInDock(dock, detailsOverrideTabId)?.anchor : undefined;
 
@@ -4434,22 +4435,22 @@ function FrameworkOsShellInner({
    **/
   const lastStudioOverrideTabIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (!studioOverrideTabId || !studioOverrideAnchor) {
+    if (!hostOverrideTabId || !studioOverrideAnchor) {
       lastStudioOverrideTabIdRef.current = undefined;
       return;
     }
-    if (lastStudioOverrideTabIdRef.current === studioOverrideTabId) return;
-    lastStudioOverrideTabIdRef.current = studioOverrideTabId;
+    if (lastStudioOverrideTabIdRef.current === hostOverrideTabId) return;
+    lastStudioOverrideTabIdRef.current = hostOverrideTabId;
     if (mobile) {
       if (mobilePanelPath[0] === FRAMEWORK_CATEGORY_DISPLAY_ID) return;
-      const resolved = findPanelTabPath(mobilePanelTabs, studioOverrideTabId);
+      const resolved = findPanelTabPath(mobilePanelTabs, hostOverrideTabId);
       if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
       return;
     }
     if (panels[studioOverrideAnchor].path[0] === FRAMEWORK_CATEGORY_DISPLAY_ID) return;
-    const resolved = findPanelTabPath(dock.anchors[studioOverrideAnchor], studioOverrideTabId);
+    const resolved = findPanelTabPath(dock.anchors[studioOverrideAnchor], hostOverrideTabId);
     if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: studioOverrideAnchor, value: resolved });
-  }, [studioOverrideTabId, studioOverrideAnchor, dock, panels, mobile, mobilePanelTabs, mobilePanelPath]);
+  }, [hostOverrideTabId, studioOverrideAnchor, dock, panels, mobile, mobilePanelTabs, mobilePanelPath]);
 
   const lastDetailsOverrideTabIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -4483,7 +4484,7 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });
         const tabId = path[path.length - 1];
         // 🌱️ Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
-        if (tabId && studioMode && session?.app.id === hostAppId && findPanelTabNode(mobilePanelTabs, path)?.kind === "leaf") {
+        if (tabId && hostMode && session?.app.id === hostAppId && findPanelTabNode(mobilePanelTabs, path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
       },
@@ -4494,7 +4495,7 @@ function FrameworkOsShellInner({
       // ♻️ Lazy tool/command trees read measures + active tool from refs — revision forces re-resolve.
       treeContentRevision: { activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey },
     };
-  }, [mobilePanelVisible, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates, hostAppId, activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey]);
+  }, [mobilePanelVisible, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, hostMode, treeOpenStates, hostAppId, activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey]);
 
   useEffect(() => {
     if (exampleOptions.length === 0) return;
@@ -4507,7 +4508,7 @@ function FrameworkOsShellInner({
   // Studio-mode routes load documents via `applyShellUri`/`openSpace`; never boot-override those.
   useEffect(() => {
     if (exampleOptions.length === 0 || !session) return;
-    if (studioMode) {
+    if (hostMode) {
       noExampleResetInstanceIdRef.current = session.instanceId;
       return;
     }
@@ -4518,7 +4519,7 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
     }
     dispatchActiveExample(exampleId);
-  }, [activeExampleId, defaults.exampleId, dispatchActiveExample, exampleOptions, session, studioMode]);
+  }, [activeExampleId, defaults.exampleId, dispatchActiveExample, exampleOptions, session, hostMode]);
 
   //#region 🎛️PanelTabBarHosting — `buildPanelSelectionProps` is the single source of an anchor's tab
   // selection state, shared by the chrome-hosted `PanelChromeTabBar` (below, for anchors in
@@ -4554,7 +4555,7 @@ function FrameworkOsShellInner({
           }
         }
         // 🌱️ Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
-        if (tabId && studioMode && session?.app.id === hostAppId && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
+        if (tabId && hostMode && session?.app.id === hostAppId && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
         if (pathChanged && tabId) noteShellCommand("shell.panelTab", shellLabel("ui.shellCommand.panelTab"), { anchor, tabId });
@@ -4562,7 +4563,7 @@ function FrameworkOsShellInner({
       pathMemory: panelPathMemory,
       onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
     }),
-    [dock, onAction, panelActivePaths, panelPathMemory, panels, session, studioMode, hostAppId, noteShellCommand],
+    [dock, onAction, panelActivePaths, panelPathMemory, panels, session, hostMode, hostAppId, noteShellCommand],
   );
   //#endregion 🎛️PanelTabBarHosting
 
@@ -4576,7 +4577,7 @@ function FrameworkOsShellInner({
         </span>
       </div>
     );
-    const showExampleSelect = exampleOptions.length > 0 && !locks.exampleId && (!studioMode || session.app.id !== landingAppId);
+    const showExampleSelect = exampleOptions.length > 0 && !locks.exampleId && (!hostMode || session.app.id !== landingAppId);
     // 📱️ Mobile has no room for tab bars, example selector, or mode switcher in the navbar — just the
     // logo/title and the single toggle for the merged mobile panel (the two dropped controls resurface as
     // the panel's synthetic "App" tab, see `mobilePanelTabs`).
@@ -4610,7 +4611,7 @@ function FrameworkOsShellInner({
         ),
       },
     ];
-  }, [brand, buildPanelSelectionProps, exampleOptions, exampleSelectElement, locks.exampleId, mobile, mobilePanelVisible, modeSwitcherElement, session, uiTerminology, studioMode, landingAppId]);
+  }, [brand, buildPanelSelectionProps, exampleOptions, exampleSelectElement, locks.exampleId, mobile, mobilePanelVisible, modeSwitcherElement, session, uiTerminology, hostMode, landingAppId]);
 
   const searchItems = useMemo(() => {
     if (!session) return [];
@@ -4712,7 +4713,7 @@ function FrameworkOsShellInner({
         },
       });
     }
-    if (studioMode && panel) {
+    if (hostMode && panel) {
       for (const program of panel.programs) {
         items.push({
           id: `spawn.${program.pluginId}`,
@@ -4745,7 +4746,7 @@ function FrameworkOsShellInner({
       );
     }
     return items;
-  }, [activeWindowId, appLabelsOverlay, loadedPlugins, mobile, onAction, onCommand, panel, resolvedCommands, session, studioMode, uiLocale, uiTerminology, hostControllerId]);
+  }, [activeWindowId, appLabelsOverlay, loadedPlugins, mobile, onAction, onCommand, panel, resolvedCommands, session, hostMode, uiLocale, uiTerminology, hostControllerId]);
 
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
@@ -4766,7 +4767,7 @@ function FrameworkOsShellInner({
       const cursor = utilityId ? (app.utilities ?? []).find((utility) => utility.id === utilityId)?.cursor : undefined;
       return cursor ? { cursor } : undefined;
     };
-    if (studioMode && spawnedWindowUi && panel?.activeSpawnedId) {
+    if (hostMode && spawnedWindowUi && panel?.activeSpawnedId) {
       const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
       if (spawned) {
         const spawnedApp = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
@@ -4896,7 +4897,7 @@ function FrameworkOsShellInner({
     spawnedWindowEngagements,
     spawnedWindowMeasures,
     spawnedWindowUi,
-    studioMode,
+    hostMode,
     uiLocale,
     uiTerminology,
     windowEngagementsByWindowId,
@@ -4956,7 +4957,7 @@ function FrameworkOsShellInner({
   );
 
   const canvas = useMemo(() => {
-    if (studioMode && shellRoute.kind === "notFound") {
+    if (hostMode && shellRoute.kind === "notFound") {
       return <ShellRouteNotFoundPage path={shellRoute.path} onHome={() => navigateHistory("/")} />;
     }
     const supervisorPluginId = primaryPluginId;
@@ -4986,7 +4987,7 @@ function FrameworkOsShellInner({
     if (!session) return <CanvasSkeleton label={shellLabel("ui.common.loadingPlugins")} className={cn(loadingBorderClass, "h-full w-full")} />;
     const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology)) }];
     const studioHomeBar =
-      studioMode && session.app.id === hostAppId && !panel?.activeSpawnedId ? (
+      hostMode && session.app.id === hostAppId && !panel?.activeSpawnedId ? (
         <button
           type="button"
           className={cn(borderNormalBottomClass, "px-single py-single text-left text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground")}
@@ -5056,7 +5057,7 @@ function FrameworkOsShellInner({
               onTemplateDrop={mobile ? undefined : handleTemplateDrop}
               onWindowClose={(windowId) => {
                 noteShellCommand("shell.windowClose", shellLabel("ui.shellCommand.windowClose"), { windowId });
-                if (studioMode && panel?.spawnedApps.some((entry) => entry.id === windowId)) {
+                if (hostMode && panel?.spawnedApps.some((entry) => entry.id === windowId)) {
                   const closedSpawned = panel.spawnedApps.find((entry) => entry.id === windowId);
                   const nextSpawned = panel.spawnedApps.filter((entry) => entry.id !== windowId);
                   updateSpacePanel(buildSpacePanelState(panel.programs, nextSpawned, panel.activePanelTab, nextSpawned[0]?.id));
@@ -5088,7 +5089,7 @@ function FrameworkOsShellInner({
         </div>
       </div>
     );
-  }, [activeWindowId, effectiveModeLayout, error, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateHistory, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, reloadPlugin, session, shellRoute, studioMode, uiLocale, uiTerminology, updateSpacePanel, dispatch, uninstallPlugin]);
+  }, [activeWindowId, effectiveModeLayout, error, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateHistory, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, reloadPlugin, session, shellRoute, hostMode, uiLocale, uiTerminology, updateSpacePanel, dispatch, uninstallPlugin]);
 
   const footerItems = useMemo((): NavbarItem[] => {
     // 🏛️ Mit Bestand Aggregator partner credits: left "Ein Projekt von LUH und UdK", right "Gefördert durch Zukunft Bau".
@@ -5135,7 +5136,7 @@ function FrameworkOsShellInner({
   useEffect(() => {
     const root = document.documentElement;
     const beaconId = pluginFilter ?? "unknown";
-    const notFound = studioMode && shellRoute.kind === "notFound";
+    const notFound = hostMode && shellRoute.kind === "notFound";
     if (notFound) {
       root.dataset.semioOsNotFound = beaconId;
       delete root.dataset.semioOsReady;
@@ -5154,7 +5155,7 @@ function FrameworkOsShellInner({
       delete root.dataset.semioOsError;
       delete root.dataset.semioOsNotFound;
     };
-  }, [session, error, pluginFilter, shellRoute.kind, studioMode]);
+  }, [session, error, pluginFilter, shellRoute.kind, hostMode]);
   // #endregion 🔖️ReadinessBeacon
 
   //#region 🖱️ShellContextMenu

@@ -22,6 +22,7 @@ pub fn register() {
     crate::artifacts::playbook::composer::register();
 
     register_artifact_schema();
+    crate::apps::playbook::config::schema::register_app_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::playbook::PlaybookPlayApp>(PLAYBOOK_DOCUMENT_SCHEMA);
 }

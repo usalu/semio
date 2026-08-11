@@ -4,18 +4,35 @@
 //! `SetLayer`/`SetStyle`/`SetLinetype`/`SetEntity`/`SetBlock` each set a WHOLE item (not a
 //! single sub-field) — their `diff()` still constructs a sparse per-field patch by comparing
 //! against `base`'s current value, never a full-item replace.
+//!
+//! 🧪️ F6: `OpText`/`OpBinary` for `DxfMutation` are **hand-rolled** — `#[derive(dsl::DslOps)]`
+//! confirmed rejected by a real `cargo check` (independent of `DxfDiff`'s own rejection above):
+//! `SetSnapshot{snapshot:DxfSnapshot}` recursively contains `DxfEntity` (no `DslField`), and
+//! `InsertEntity`/`SetEntity`'s `entity: DxfEntity` / `InsertBlock`/`SetBlock`'s `block: DxfBlock`
+//! (which itself contains `Vec<DxfEntity>`) carry the same data-carrying-enum payload DIRECTLY as
+//! a variant field — `error[E0277]: the trait bound 'DxfEntity: DslField' is not satisfied` at
+//! `InsertEntity{entity:DxfEntity}`/`SetEntity{entity:DxfEntity}` (recon report §3a, mutation-side
+//! twin of the diff-side blocker: the derive requires `DslField` on every reachable type whether
+//! it arrives via a Diff struct field or a Mutation variant field). Grammar: `keyword arg=value
+//! ...` (space-separated, same shape the derive's own handcrafted-wrapper convention uses),
+//! reusing `🔺️diff`'s `pub(crate)` grammar primitives rather than duplicating them a second time.
 
 use crate::artifacts::dxf::schema::diff::{
-    block_diff_between, diff_insert_block, diff_insert_entity, diff_insert_layer,
+    block_diff_between, dec_block, dec_dxf_entity, dec_dxf_snapshot, dec_header_var, dec_layer,
+    dec_linetype, dec_str, dec_style, diff_insert_block, diff_insert_entity, diff_insert_layer,
     diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity,
     diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style,
     diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype,
-    diff_set_snapshot, diff_set_style, entity_diff_between_pub, header_var_diff_between,
-    layer_diff_between, linetype_diff_between, style_diff_between, DxfDiff,
+    diff_set_snapshot, diff_set_style, enc_block, enc_dxf_entity, enc_dxf_snapshot,
+    enc_header_var, enc_layer, enc_linetype, enc_str, enc_style, entity_diff_between_pub,
+    header_var_diff_between, layer_diff_between, linetype_diff_between, style_diff_between,
+    DxfDiff,
 };
 use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle};
 use crate::artifacts::dxf::DxfSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{Mutation, MutationDiff, OpText};
+#[cfg(test)]
+use protocol::OpBinary;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -204,31 +221,101 @@ impl Mutation<DxfSnapshot> for DxfMutation {
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-impl protocol::OpText for DxfMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
+/// 🎙️ Handcrafted `print_op`/`parse_op` — one match arm per variant (no `DslVariants` scaffolding
+/// available since nothing here derives it, see module doc). Every arg value is either hex
+/// (strings), decimal (indices), or a `🔺️diff` positional/tagged payload — never a literal
+/// space or `=`, so top-level tokenizing is a trivial `line.split(' ')` / `tok.split_once('=')`.
+fn print_dxf_mutation(m: &DxfMutation) -> String {
+    match m {
+        DxfMutation::NoMutation => "no-mutation".to_string(),
+        DxfMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_dxf_snapshot(snapshot)),
+
+        DxfMutation::SetHeaderVar { name, header_var } => format!("set-header-var name={} header-var={}", enc_str(name), enc_header_var(header_var)),
+        DxfMutation::RemoveHeaderVar { name } => format!("remove-header-var name={}", enc_str(name)),
+
+        DxfMutation::InsertLayer { index, layer } => format!("insert-layer index={index} layer={}", enc_layer(layer)),
+        DxfMutation::RemoveLayer { name } => format!("remove-layer name={}", enc_str(name)),
+        DxfMutation::SetLayer { name, layer } => format!("set-layer name={} layer={}", enc_str(name), enc_layer(layer)),
+
+        DxfMutation::InsertStyle { index, style } => format!("insert-style index={index} style={}", enc_style(style)),
+        DxfMutation::RemoveStyle { name } => format!("remove-style name={}", enc_str(name)),
+        DxfMutation::SetStyle { name, style } => format!("set-style name={} style={}", enc_str(name), enc_style(style)),
+
+        DxfMutation::InsertLinetype { index, linetype } => format!("insert-linetype index={index} linetype={}", enc_linetype(linetype)),
+        DxfMutation::RemoveLinetype { name } => format!("remove-linetype name={}", enc_str(name)),
+        DxfMutation::SetLinetype { name, linetype } => format!("set-linetype name={} linetype={}", enc_str(name), enc_linetype(linetype)),
+
+        DxfMutation::InsertEntity { index, entity } => format!("insert-entity index={index} entity={}", enc_dxf_entity(entity)),
+        DxfMutation::RemoveEntity { index } => format!("remove-entity index={index}"),
+        DxfMutation::SetEntity { index, entity } => format!("set-entity index={index} entity={}", enc_dxf_entity(entity)),
+
+        DxfMutation::InsertBlock { index, block } => format!("insert-block index={index} block={}", enc_block(block)),
+        DxfMutation::RemoveBlock { index } => format!("remove-block index={index}"),
+        DxfMutation::SetBlock { index, block } => format!("set-block index={index} block={}", enc_block(block)),
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+}
+fn parse_dxf_mutation(line: &str) -> Result<DxfMutation, String> {
+    if line == "no-mutation" {
+        return Ok(DxfMutation::NoMutation);
+    }
+    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    let args: std::collections::BTreeMap<&str, &str> = rest
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|tok| tok.split_once('=').ok_or_else(|| format!("dxf mutation: bad arg token {tok:?}")))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .collect();
+    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("dxf mutation: missing arg '{k}' for '{keyword}'"));
+    let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
+    match keyword {
+        "set-snapshot" => Ok(DxfMutation::SetSnapshot { snapshot: dec_dxf_snapshot(arg("snapshot")?)? }),
+
+        "set-header-var" => Ok(DxfMutation::SetHeaderVar { name: dec_str(arg("name")?)?, header_var: dec_header_var(arg("header-var")?)? }),
+        "remove-header-var" => Ok(DxfMutation::RemoveHeaderVar { name: dec_str(arg("name")?)? }),
+
+        "insert-layer" => Ok(DxfMutation::InsertLayer { index: usize_arg("index")?, layer: dec_layer(arg("layer")?)? }),
+        "remove-layer" => Ok(DxfMutation::RemoveLayer { name: dec_str(arg("name")?)? }),
+        "set-layer" => Ok(DxfMutation::SetLayer { name: dec_str(arg("name")?)?, layer: dec_layer(arg("layer")?)? }),
+
+        "insert-style" => Ok(DxfMutation::InsertStyle { index: usize_arg("index")?, style: dec_style(arg("style")?)? }),
+        "remove-style" => Ok(DxfMutation::RemoveStyle { name: dec_str(arg("name")?)? }),
+        "set-style" => Ok(DxfMutation::SetStyle { name: dec_str(arg("name")?)?, style: dec_style(arg("style")?)? }),
+
+        "insert-linetype" => Ok(DxfMutation::InsertLinetype { index: usize_arg("index")?, linetype: dec_linetype(arg("linetype")?)? }),
+        "remove-linetype" => Ok(DxfMutation::RemoveLinetype { name: dec_str(arg("name")?)? }),
+        "set-linetype" => Ok(DxfMutation::SetLinetype { name: dec_str(arg("name")?)?, linetype: dec_linetype(arg("linetype")?)? }),
+
+        "insert-entity" => Ok(DxfMutation::InsertEntity { index: usize_arg("index")?, entity: dec_dxf_entity(arg("entity")?)? }),
+        "remove-entity" => Ok(DxfMutation::RemoveEntity { index: usize_arg("index")? }),
+        "set-entity" => Ok(DxfMutation::SetEntity { index: usize_arg("index")?, entity: dec_dxf_entity(arg("entity")?)? }),
+
+        "insert-block" => Ok(DxfMutation::InsertBlock { index: usize_arg("index")?, block: dec_block(arg("block")?)? }),
+        "remove-block" => Ok(DxfMutation::RemoveBlock { index: usize_arg("index")? }),
+        "set-block" => Ok(DxfMutation::SetBlock { index: usize_arg("index")?, block: dec_block(arg("block")?)? }),
+
+        other => Err(format!("dxf mutation: unknown keyword {other:?}")),
     }
 }
 
+impl protocol::OpText for DxfMutation {
+    fn print_op(&self) -> String {
+        print_dxf_mutation(self)
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_dxf_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+}
+
+/// ⚡️ Binary = the text bytes verbatim, same simplification `🔺️diff`'s hand-rolled `DiffCodec`
+/// uses (and `GifDiff`/`SvgDiff`/`WriterDiff` before it).
 impl protocol::OpBinary for DxfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        Ok(self.print_op().into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
@@ -562,5 +649,28 @@ mod tests {
         assert_ne!(v1, v2);
     }
     //#endregion 🔖️VertexUnknownGroupCodesRetained
+
+    //#region 🔖️OpTextBinaryRoundtripLaw
+    /// 🧪️ `OpText`/`OpBinary` round-trip laws over the hand-rolled `DxfMutation` grammar — every
+    /// variant from the existing `variants()` fixture, including `SetSnapshot` (exercises the
+    /// whole-snapshot grammar, incl. `other_tables` raw retention and a nested block's own
+    /// entities) and every typed-entity/table Insert/Set/Remove keyword.
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        for m in variants() {
+            let printed = m.print_op();
+            assert!(!printed.contains('\n'), "print_op must never contain a newline, for {m:?}");
+            let parsed = DxfMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e:?}, for {m:?}"));
+            assert_eq!(parsed, m, "parse_op(print_op(m)) == m");
+
+            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op failed: {e:?}, for {m:?}"));
+            let decoded = DxfMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e:?}, for {m:?}"));
+            assert_eq!(decoded, m, "decode_op(encode_op(m)) == m");
+
+            let printed2 = m.print_op();
+            assert_eq!(printed, printed2, "print_op must be deterministic, for {m:?}");
+        }
+    }
+    //#endregion 🔖️OpTextBinaryRoundtripLaw
 }
 //#endregion 🧪️Tests

@@ -25,6 +25,7 @@ import {
   useMediaQuery,
 } from "@semio-tech/ui-react";
 import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/framework";
+import { PLUGIN_CATALOG } from "@semio-tech/plugin-registry/catalog";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛️footer.tsx";
 import { DEMONSTRATOR_LOCALE, DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG, type DemonstratorPaneSpec } from "./🟦️brand.ts";
@@ -404,7 +405,7 @@ function DemonstratorPane({
   // currently unblockable to rebuild (puzzle/gis compile errors) and its stale Aug-4 binary rejects
   // mutations with `unknown fault`. Other panes stay on the demonstrator bundle.
   const bootVariant = pane.variant === "generator" ? "procedural3d" : pane.variant;
-  const boot = useMemo(() => resolvePlaygroundBoot(bootVariant), [bootVariant]);
+  const boot = useMemo(() => resolvePlaygroundBoot(PLUGIN_CATALOG, bootVariant), [bootVariant]);
   const locks = useMemo(() => resolveShellLocks(pane.brand.locks), [pane.brand]);
   const defaults = useMemo(() => resolveShellDefaults(pane.brand, undefined), [pane.brand]);
   const live = booted && !suspended;

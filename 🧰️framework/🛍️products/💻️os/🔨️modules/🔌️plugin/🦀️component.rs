@@ -1,5 +1,10 @@
 //! 🔌️ Declarative app plugin SDK — build fully declarative Rust apps bundled into hot-swappable WASM plugins.
 
+/// 🚧️ A wasm32-wasip2 component exports either `plugin-world` or `extension-world`, never both —
+/// `component-guest` and `component-extension-guest` are mutually exclusive for that target.
+#[cfg(all(feature = "component-guest", feature = "component-extension-guest", target_arch = "wasm32", target_env = "p2"))]
+compile_error!("`component-guest` and `component-extension-guest` are mutually exclusive for wasm32-wasip2 targets");
+
 #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
 pub mod component {
     //! 🧩️ WASI P2 component exports for the plugin world contract.
@@ -117,6 +122,55 @@ pub use component::component_export_anchor;
 
 #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
 pub fn component_export_anchor() {}
+
+#[cfg(all(feature = "component-extension-guest", target_arch = "wasm32", target_env = "p2"))]
+pub mod extension_component {
+    //! 🧩️ WASI P2 component exports for the `extension-world` contract — a standalone wasm
+    //! component surface for runtime-installable extensions, instantiated on their own instead of
+    //! only ever piggybacking on a `plugin-world` component (the previous workaround).
+    #![allow(unsafe_op_in_unsafe_fn)]
+
+    use crate::plugin_runtime::{extension_activate, extension_deactivate, extension_invoke, extension_manifest};
+    use wit_bindgen::generate;
+
+    generate!({
+        world: "extension-world",
+        path: "📜️wit",
+    });
+
+    use exports::semio::framework::extension::Guest;
+    use semio::framework::types::PluginError;
+
+    pub struct ExtensionComponentGuest;
+
+    impl Guest for ExtensionComponentGuest {
+        fn manifest() -> Vec<u8> {
+            store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&extension_manifest()).unwrap_or(dsl::DslValue::Null))
+        }
+
+        fn activate() -> Result<(), PluginError> {
+            extension_activate().map_err(|fault| PluginError::Fault(dsl::encode_fault_bytes(&fault)))
+        }
+
+        fn deactivate() {
+            extension_deactivate();
+        }
+
+        fn invoke(capability: String, request: Vec<u8>) -> Result<Vec<u8>, PluginError> {
+            extension_invoke(&capability, &request).map_err(|fault| PluginError::Fault(dsl::encode_fault_bytes(&fault)))
+        }
+    }
+
+    export!(ExtensionComponentGuest);
+
+    pub fn extension_component_export_anchor() {}
+}
+
+#[cfg(all(feature = "component-extension-guest", target_arch = "wasm32", target_env = "p2"))]
+pub use extension_component::extension_component_export_anchor;
+
+#[cfg(not(all(feature = "component-extension-guest", target_arch = "wasm32", target_env = "p2")))]
+pub fn extension_component_export_anchor() {}
 
 #[path = "🏗️builder/🦀️component.rs"]
 mod builder;
@@ -5827,7 +5881,7 @@ pub mod app {
     impl Plugin {
         pub fn new(plugin_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
             Self {
-                manifest: PluginManifest { plugin_id: plugin_id.into(), label: label.into(), version: version.into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new() },
+                manifest: PluginManifest { plugin_id: plugin_id.into(), label: label.into(), version: version.into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), contributions: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new() },
                 apps: HashMap::new(),
             }
         }
@@ -6071,6 +6125,7 @@ pub mod plugin_runtime {
                 examples: vec![],
                 capabilities: vec![],
                 contributions: vec![],
+                topic_contributions: vec![],
                 commands: vec![],
              artifact_kinds: vec![] })
         })
@@ -7018,28 +7073,9 @@ pub mod plugin_runtime {
 
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
             #[used]
-            static _SEMIO_EXTENSION_COMPONENT_LINK: fn() = $crate::extension_guest_export_anchor;
+            static _SEMIO_EXTENSION_COMPONENT_LINK: fn() = $crate::extension_component_export_anchor;
         };
     }
-
-    //#region 🧩️ExtensionGuest
-    /// 🔌️ WIT `extension-world` guest wiring lives behind `feature = "component-guest"` + wasm32/p2.
-    /// Dual-world `wit-bindgen` is not generated alongside `plugin-world` yet — these anchors + the
-    /// public `extension_*` APIs are the guest call surface hosts/tests use until a separate bindgen
-    /// invocation lands.
-    #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
-    pub fn extension_guest_export_anchor() {
-        let _ = (
-            extension_manifest as fn() -> ExtensionManifest,
-            extension_activate as fn() -> Result<(), Fault>,
-            extension_deactivate as fn(),
-            extension_invoke as fn(&str, &[u8]) -> Result<Vec<u8>, Fault>,
-        );
-    }
-
-    #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
-    pub fn extension_guest_export_anchor() {}
-    //#endregion 🧩️ExtensionGuest
     //#endregion 🧩️Extension
 
 
@@ -9260,9 +9296,9 @@ pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, select
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 pub use host_port::{host_backbone_poll, host_backbone_send, host_backbone_status, host_now_ms, host_read_asset, register_host_backbone_channel, HostBackboneChannel};
 pub use plugin_runtime::{
-    extension_activate, extension_deactivate, extension_guest_export_anchor, extension_invoke, extension_manifest, install_extension_bundle,
-    install_plugin_bundle, plugin_attach_backbone, plugin_detach_backbone, plugin_document_pack, plugin_ingest_operations, plugin_load_document_pack,
-    ExtensionBundle, ExtensionManifest,
+    extension_activate, extension_deactivate, extension_invoke, extension_manifest, install_extension_bundle, install_plugin_bundle,
+    plugin_attach_backbone, plugin_detach_backbone, plugin_document_pack, plugin_ingest_operations, plugin_load_document_pack, ExtensionBundle,
+    ExtensionManifest,
 };
 pub use semio_framework::*;
 pub use semio_framework::{MediaForm, MediaPortDirection, MediaPortSpec};

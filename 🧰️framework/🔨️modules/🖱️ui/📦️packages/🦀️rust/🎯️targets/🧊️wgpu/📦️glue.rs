@@ -219,7 +219,7 @@ pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, 
 #[cfg(feature = "wgpu-engine")]
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../../../../✏️s/🔨️modules/🧊️3d/🎬️scene/🦀️component.rs"]
+#[path = "../../../../../🧊️3d/🎬️scene/🦀️component.rs"]
 pub mod kernel_3d_scene;
 
 #[cfg(feature = "wgpu-engine")]

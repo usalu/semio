@@ -652,7 +652,7 @@ export class LintScript extends Script {
       return;
     }
     runCmd("bun", ["nx", "run-many", "-t", "lint", "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    runCmd("bunx", ["dependency-cruiser@16", "compose", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    runCmd("bunx", ["dependency-cruiser", "compose", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
   }
 }
 //#endregion 🔖️LintScript
@@ -672,7 +672,7 @@ export class VerifyScript extends Script {
     // and framework-renderer-wgpu:lint has known pending color-literal violations (see spawn_task follow-ups) —
     // this gate must stay a meaningful, currently-green signal for refactor sessions, not inherit that noise.
     console.log("[verify] dependency-cruiser boundaries…");
-    runCmd("bunx", ["dependency-cruiser@16", "compose", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    runCmd("bunx", ["dependency-cruiser", "compose", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
     console.log("[verify] generated catalog freshness…");
     // nx orchestrators: exempt — leaves individually budgeted.
     runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
@@ -6795,10 +6795,8 @@ export function policyAppSchemaBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧️PolicyRuleAppSchemas
 
 //#region 🔧️PolicyRuleArtifactIo
-/** 🎫 Normative owner table for stdio roster, DAG, and curated IO matrix — SSOT moved out of the closed ticket folder into the io module's own registry (V0/D1); the ticket-folder path is kept as a one-wave read fallback until every writer/reader of the old path is repointed. */
-const POLICY_STDIO_OWNER_TABLE_REL = "🧰️framework/🔨️modules/🚪️io/📇️registry/📇️catalog.json";
-const POLICY_STDIO_OWNER_TABLE_LEGACY_REL =
-  ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/STDIO-ARTIFACTS-AND-IO/🧪owner-table.json";
+/** 🎫 Normative owner table for stdio roster, DAG, and curated IO matrix — SSOT lives under the 🗄️stdio plugin's own registry, since this is product-shaped data about ✏️s plugins, not generic framework data. */
+const POLICY_STDIO_OWNER_TABLE_REL = "✏️s/🔌️plugins/🗄️stdio/📇️registry/📇️catalog.json";
 const POLICY_STDIO_PLUGIN_REL = "✏️s/🔌️plugins/🗄️stdio";
 const POLICY_STDIO_ARTIFACTS_REL = `${POLICY_STDIO_PLUGIN_REL}/🗿️artifacts`;
 const POLICY_STDIO_FACET_BUILDER = "🏗️builder";
@@ -6848,8 +6846,6 @@ type PolicyStdioOwnerTable = {
 function policyLoadStdioOwnerTable(repoRoot: string): PolicyStdioOwnerTable | null {
   const abs = join(repoRoot, POLICY_STDIO_OWNER_TABLE_REL);
   if (existsSync(abs)) return JSON.parse(readFileSync(abs, "utf8")) as PolicyStdioOwnerTable;
-  const legacyAbs = join(repoRoot, POLICY_STDIO_OWNER_TABLE_LEGACY_REL);
-  if (existsSync(legacyAbs)) return JSON.parse(readFileSync(legacyAbs, "utf8")) as PolicyStdioOwnerTable;
   return null;
 }
 

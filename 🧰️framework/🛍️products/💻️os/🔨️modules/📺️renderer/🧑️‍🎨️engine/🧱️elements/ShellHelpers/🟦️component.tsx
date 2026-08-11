@@ -57,6 +57,7 @@ import {
   partitionWindowMeasures,
   pendingPanelUiNode,
   type PluginAppLabelsOverlay,
+  type PluginCatalog,
   type PluginUiRefreshRequest,
   type PluginUiRefreshResponse,
   type PluginUiRefreshSectionResponse,
@@ -186,8 +187,8 @@ import { loadPluginModule, type PluginWasmHandle } from "../PluginRuntime/🟦�
 // #endregion 🔌️Adapters
 
 //#region ShellHelpers
-export function syncDocumentId(session: ActiveSession, panel: SpacePanelState | null, studioMode: boolean): string {
-  if (studioMode && panel?.activeSpawnedId) {
+export function syncDocumentId(session: ActiveSession, panel: SpacePanelState | null, hostMode: boolean): string {
+  if (hostMode && panel?.activeSpawnedId) {
     const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
     if (spawned) return `${spawned.pluginId}-${spawned.instanceId}`;
   }
@@ -914,8 +915,8 @@ export async function runRequestMediaFrames(
 }
 //#endregion RequestMediaFrames
 
-function isStudioMode(pluginFilter?: string): boolean {
-  return pluginFilter !== undefined && resolvePluginHostConfig(pluginFilter) !== undefined;
+function isStudioMode(catalog: PluginCatalog, pluginFilter?: string): boolean {
+  return pluginFilter !== undefined && resolvePluginHostConfig(catalog, pluginFilter) !== undefined;
 }
 
 export interface SpaceShellPath {

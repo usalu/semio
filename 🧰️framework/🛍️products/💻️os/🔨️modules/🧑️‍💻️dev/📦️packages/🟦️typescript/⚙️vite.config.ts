@@ -5,8 +5,8 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin, semioAssetsVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
-import { PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
-import { isStudioPluginFilter } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts";
+import { DEFAULT_HOST_VARIANT, PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
+import { isHostPluginFilter } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts";
 import { resolveShellBrandById } from "../../🏷️brand/📦️index.ts";
 import { semioBackboneVitePlugin, semioBlobVitePlugin, semioPluginHotSwapVitePlugin } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts";
 import { defaultExtensionInstallRoot, semioExtensionStoreVitePlugin } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🏪️store/📜️store.ts";
@@ -18,7 +18,7 @@ const pluginModulesDir = path.join(playDir, "🔌️plugin-modules");
 const installedExtensionsDir = defaultExtensionInstallRoot(repoRoot);
 const rendererModulesDir = path.join(playDir, "📺️renderer-modules");
 const renderer = process.env.SEMIO_RENDERER ?? "react";
-const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
+const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
 const brandId = process.env.SEMIO_BRAND ?? PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.brand;
 const brand = resolveShellBrandById(brandId);
 
@@ -52,7 +52,7 @@ const nodeOnlyOptimizeDepsExclude = ["playwright", "playwright-core", "chromium-
 /** @emoji 🗂️ The active playground's declared asset needs — every playground's assets when unfiltered
  * (the "s" studio hub can open any app, so it needs every app's dev-time asset routes available), else
  * just the resolved variant's own `assets` row. */
-const resolvedPlaygroundAssets = isStudioPluginFilter(plugin) ? PLAYGROUND_BUILD_TARGETS.flatMap((target) => target.assets) : (PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin)?.assets ?? []);
+const resolvedPlaygroundAssets = isHostPluginFilter(plugin) ? PLAYGROUND_BUILD_TARGETS.flatMap((target) => target.assets) : (PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin)?.assets ?? []);
 
 /** @emoji 🔌️ The wasm plugin crate(s) a production build's `dist/plugin-modules/` needs to actually ship
  * — the "s" studio hub can open any app so it needs every built plugin crate; a single-variant build
@@ -60,7 +60,7 @@ const resolvedPlaygroundAssets = isStudioPluginFilter(plugin) ? PLAYGROUND_BUILD
  * deps every plugin's `🟨️host-shim.js` imports. Falls back to "every crate" for an unresolved/unknown
  * filter rather than shipping nothing. */
 const resolvedPluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.pluginId;
-const pluginModuleDirNames = isStudioPluginFilter(plugin) || !resolvedPluginId ? undefined : ["_vendor", resolvedPluginId];
+const pluginModuleDirNames = isHostPluginFilter(plugin) || !resolvedPluginId ? undefined : ["_vendor", resolvedPluginId];
 //#endregion 🔖️RegistryDrivenAssetsAndEngines
 
 export default defineConfig({
@@ -141,7 +141,7 @@ export default defineConfig({
     exclude: [...nodeOnlyOptimizeDepsExclude, ...(renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : []), ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE, ...registryEngineOptimizeDepsExclude],
   },
   define: {
-    "import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? "s"),
+    "import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? DEFAULT_HOST_VARIANT),
     "import.meta.env.VITE_SEMIO_RENDERER": JSON.stringify(renderer),
     "import.meta.env.VITE_SEMIO_BRAND": JSON.stringify(brand?.id ?? ""),
   },

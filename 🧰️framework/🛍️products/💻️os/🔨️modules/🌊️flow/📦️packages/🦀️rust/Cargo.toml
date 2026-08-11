@@ -25,8 +25,8 @@ neural_engine = { path = "../../../🧠️neural/⚙️engine/📦️packages/�
 math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
-semio-s-3d = { path = "../../../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
-semio-s-2d = { path = "../../../../../../../✏️s/🔨️modules/◻2d/📦️packages/🦀️rust" }
+semio-framework-3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
+semio-framework-2d = { path = "../../../../../../🔨️modules/◻2d/📦️packages/🦀️rust" }
 base64 = "0.22"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

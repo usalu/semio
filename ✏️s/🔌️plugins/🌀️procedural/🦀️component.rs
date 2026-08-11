@@ -6,6 +6,8 @@ fn register_exports() {
     crate::artifacts::procedural2d::engine::register();
     crate::artifacts::procedural3d::engine::register();
     crate::artifacts::procedural3d::engine::ensure_linked_flow_extensions();
+    crate::apps::procedural2d::config::schema::register_app_schema();
+    crate::apps::procedural3d::config::schema::register_app_schema();
 }
 
 

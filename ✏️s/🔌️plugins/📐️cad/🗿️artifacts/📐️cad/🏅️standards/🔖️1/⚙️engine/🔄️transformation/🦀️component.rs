@@ -2,7 +2,7 @@
 
 use crate::artifacts::cad::{CadObject, CadPrimitiveSlot};
 
-use semio_s_3d::brep::engine::{BrepKernel, GeometryHandle, Vec3};
+use semio_framework_3d::brep::engine::{BrepKernel, GeometryHandle, Vec3};
 use std::collections::HashMap;
 
 //#region 🔖️ClassifyRules
@@ -44,7 +44,7 @@ const ENERGY_TYPOLOGIES: &[&str] = &["energy.energy.hull", "energy.energy.basepl
 
 //#region 🔖️FaceAnalytics
 fn face_mesh_analytics(kernel: &dyn BrepKernel, face: &GeometryHandle) -> Option<(Vec3, Vec3)> {
-    let mesh = semio_s_3d::brep::engine::block_on(kernel.tessellate(face, 0.1)).ok()?;
+    let mesh = semio_framework_3d::brep::engine::block_on(kernel.tessellate(face, 0.1)).ok()?;
     let mut area_sum = 0.0;
     let mut centroid = [0.0, 0.0, 0.0];
     let mut normal = [0.0, 0.0, 0.0];
@@ -185,14 +185,14 @@ fn classify_rule_matches(rule: &ClassifyRule, normal: Vec3, centroid_z: f64, z_m
 /// @emoji 📦️ Builds or reuses a kernel solid for a CAD object.
 pub fn solid_for_object(kernel: &mut dyn BrepKernel, object: &CadObject) -> Option<GeometryHandle> {
     if let Some(handle) = object.solid_handle.as_ref() {
-        if semio_s_3d::brep::engine::block_on(kernel.kind(&GeometryHandle(handle.clone()))).is_ok() {
+        if semio_framework_3d::brep::engine::block_on(kernel.kind(&GeometryHandle(handle.clone()))).is_ok() {
             return Some(GeometryHandle(handle.clone()));
         }
     }
     let [ex, ey, ez] = object.extent.unwrap_or([1.0, 1.0, 1.0]);
     let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
     let is_cylindrical = object.typology.contains("column");
-    let handle = if is_cylindrical { semio_s_3d::brep::engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok() } else { semio_s_3d::brep::engine::block_on(kernel.box_prim(width, depth, height)).ok() }?;
+    let handle = if is_cylindrical { semio_framework_3d::brep::engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok() } else { semio_framework_3d::brep::engine::block_on(kernel.box_prim(width, depth, height)).ok() }?;
     Some(handle)
 }
 
@@ -201,9 +201,9 @@ pub fn build_solid_for_typology(kernel: &mut dyn BrepKernel, typology: &str, ext
     let [ex, ey, ez] = extent;
     let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
     if typology.contains("column") {
-        semio_s_3d::brep::engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok()
+        semio_framework_3d::brep::engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok()
     } else {
-        semio_s_3d::brep::engine::block_on(kernel.box_prim(width, depth, height)).ok()
+        semio_framework_3d::brep::engine::block_on(kernel.box_prim(width, depth, height)).ok()
     }
 }
 
@@ -213,7 +213,7 @@ fn fuse_solids(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle]) -> Option
     }
     let mut current = solids[0].clone();
     for solid in solids.iter().skip(1) {
-        current = semio_s_3d::brep::engine::block_on(kernel.fuse(&current, solid)).ok()?;
+        current = semio_framework_3d::brep::engine::block_on(kernel.fuse(&current, solid)).ok()?;
     }
     Some(current)
 }
@@ -240,7 +240,7 @@ pub fn run_derive_from_geometry(kernel: &mut dyn BrepKernel, source_objects: &[C
         Some(hull) => hull,
         None => return Vec::new(),
     };
-    let topology = match semio_s_3d::brep::engine::block_on(kernel.deconstruct(&hull)) {
+    let topology = match semio_framework_3d::brep::engine::block_on(kernel.deconstruct(&hull)) {
         Ok(topology) => topology,
         Err(_) => return Vec::new(),
     };
@@ -406,12 +406,12 @@ pub fn energy_typologies() -> &'static [&'static str] {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_s_3d::brep::kernel::Brep;
+    use semio_framework_3d::brep::kernel::Brep;
 
     #[test]
     fn derive_from_geometry_classifies_box() {
         let mut kernel = Brep::new();
-        let solid = semio_s_3d::brep::engine::block_on(kernel.box_prim(2.0, 2.0, 3.0)).expect("box");
+        let solid = semio_framework_3d::brep::engine::block_on(kernel.box_prim(2.0, 2.0, 3.0)).expect("box");
         let source = vec![CadObject {
             id: "object-box".into(),
             label: "Box".into(),

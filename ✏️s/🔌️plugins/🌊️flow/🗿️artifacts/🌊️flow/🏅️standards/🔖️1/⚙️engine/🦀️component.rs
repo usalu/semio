@@ -38,7 +38,8 @@ pub fn register() {
 
     register_artifact_schema();
     register_pilot_languages();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::flow::FlowPlayApp>(crate::artifacts::flow::FLOW_DOCUMENT_SCHEMA);
+    crate::apps::flow::config::schema::register_app_schema();
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::flow::FlowPlayApp>(crate::apps::flow::FLOW_DOCUMENT_SCHEMA);
 }
 
 /// 🧬️ Registers this artifact's fifteen schema leaves with the framework table.

@@ -1,0 +1,36 @@
+cargo test -p semio-s-plugin-stdio --lib "artifacts::obj" -- results:
+
+test artifacts::obj::examples::demo::component::tests::demo_source_nonempty ... ok
+test artifacts::obj::standards::v3_0::engine::tests::empty_snapshot_matches_schema ... ok
+test artifacts::obj::standards::v3_0::engine::tests::mtllib_last_occurrence_wins ... ok
+test artifacts::obj::standards::v3_0::engine::tests::face_index_forms_all_supported ... ok
+test artifacts::obj::standards::v3_0::engine::tests::codec_round_trip ... ok
+test artifacts::obj::standards::v3_0::engine::tests::optional_w_components_retained ... ok
+test artifacts::obj::standards::v3_0::engine::tests::multi_group_multi_material_negative_index_round_trip ... ok
+test artifacts::obj::standards::v3_0::engine::tests::negative_indices_resolve_correctly ... ok
+test artifacts::obj::standards::v3_0::engine::tests::codec_retention_law ... ok
+test artifacts::obj::standards::v3_0::engine::tests::out_of_range_negative_index_is_error ... ok
+test artifacts::obj::standards::v3_0::subsets::any::analyzer::tests::sniff_real_obj_text_is_high ... ok
+test artifacts::obj::standards::v3_0::subsets::any::analyzer::tests::sniff_unrelated_text_is_low ... ok
+test artifacts::obj::standards::v3_0::subsets::any::schema::mutations::component::tests::absorb_law ... ok
+test artifacts::obj::standards::v3_0::subsets::any::schema::mutations::component::tests::between_roundtrip_law ... ok
+test artifacts::obj::standards::v3_0::subsets::any::schema::mutations::component::tests::field_sweep_every_mutable_field_changes ... ok
+test artifacts::obj::standards::v3_0::subsets::any::schema::diff::component::tests::diff_codec_text_binary_roundtrip_law ... ok
+test artifacts::obj::standards::v3_0::subsets::any::schema::mutations::component::tests::inverse_law ... ok
+test artifacts::obj::standards::v3_0::subsets::any::schema::mutations::component::tests::mutation_diff_law ... ok
+test artifacts::obj::standards::v3_0::subsets::any::schema::mutations::component::tests::op_text_binary_roundtrip_law ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 1040 filtered out; finished in 0.00s
+
+Whole-crate run (same session, after obj changes landed):
+cargo test -p semio-s-plugin-stdio --lib
+test result: ok. 1059 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.11s
+
+Note: multiple `cargo check`/`cargo test` attempts during this session transiently failed to
+compile due to OTHER F6 sub-waves' in-progress edits in the same shared crate (confirmed via
+`git status` showing unrelated artifacts staged-modified): png (📷️png, S1-F6b/F6 in progress),
+pptx (🎞️pptx), bcf (💬️bcf), gltf (🧊️gltf). Each time, `cargo check --message-format=short`
+output was grepped for `error[` lines under `🗿️artifacts/🧊️obj/` specifically — zero, every
+time, across every attempt. This confirms obj's own code was correct throughout; the failures
+were the well-known "concurrent cargo workspace churn" pattern (see session memory), resolved by
+polling rather than editing anyone else's files.

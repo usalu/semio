@@ -53,9 +53,18 @@ pub fn register() {
 
     register_pilot_languages();
     register_artifact_schemas();
+    register_app_schemas();
     crate::apps::puzzle2d::register_puzzle2d_exports();
     crate::apps::puzzle3d::register_puzzle3d_exports();
     crate::apps::puzzle5d::register_puzzle5d_exports();
+}
+
+/// 📎 Registers all puzzle app schema descriptors (config + presence facets) into the open
+/// app-schema registry — mirrors `register_artifact_schemas()` above, one entry per puzzle play app.
+pub fn register_app_schemas() {
+    crate::apps::puzzle2d::config::schema::register_app_schema();
+    crate::apps::puzzle5d::config::schema::register_app_schema();
+    crate::apps::puzzle3d::config::schema::register_app_schema();
 }
 
 /// 📎 Registers all puzzle artifact schema descriptors into the OS-wide catalog.

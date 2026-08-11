@@ -1,0 +1,19 @@
+3116 |  */
+3117 | function policyPackCompletenessBreaches(repoRoot: string): BreachRecord[] {
+3118 |   const breaches: BreachRecord[] = [];
+3119 |   for (const relPath of policyAllRustFiles(repoRoot)) {
+3120 |     if (POLICY_PACK_COMPLETENESS_ALLOWLIST.has(policyNormalizeRelPath(relPath))) continue;
+3121 |     const content = readFileSync(join(repoRoot, relPath), "utf8");
+                           ^
+ENOENT: no such file or directory, open '/Users/ueli/Documents/semio/✏️s/🔨️modules/◻2d/⚙️engine/🦀️component.rs'
+    path: "/Users/ueli/Documents/semio/✏️s/🔨️modules/◻2d/⚙️engine/🦀️component.rs",
+ syscall: "open",
+   errno: -2,
+    code: "ENOENT"
+
+      at policyPackCompletenessBreaches (/Users/ueli/Documents/semio/📜️script.ts:3121:21)
+      at <anonymous> (/Users/ueli/Documents/semio/📜️script.ts:9286:20)
+      at runPolicyScript (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:698:23)
+      at async runPolicyExit (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:736:40)
+      at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:757:13)
+

@@ -515,5 +515,100 @@ pub fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Result<V
     }
 }
 //#endregion 🔖️Wire
+
+//#region 🔖️FormatCatalog
+/// 🗄️ One string-keyed format's metadata — kind id, mime, extension, folder slug. Generic
+/// successor to the closed, `🔺️mesh`-local `StdioFormatEntry`/`STDIO_FORMAT_CATALOG` (ticket
+/// 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT wave 2): where `mesh`'s catalog is a single
+/// hardcoded `const` slice only `stdio` can ever contribute to, this registry is additive and
+/// string-keyed like `IO_REGISTRY` above it, so ANY plugin that owns formats (not just `stdio`)
+/// can call `register_format_descriptors` from its own init. `mesh`'s catalog itself is untouched
+/// here -- evicting it onto this registry is a LATER wave's job, once every producer/consumer of
+/// `StdioFormatEntry` has migrated to `FormatDescriptor`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FormatDescriptor {
+    pub kind_id: String,
+    pub short_id: String,
+    pub aliases: Vec<String>,
+    pub mime: String,
+    pub extension: String,
+    pub name: String,
+    pub full_name: String,
+    pub neutral: bool,
+    pub dir_name: String,
+    pub is_binary: bool,
+}
+
+static FORMAT_CATALOG: std::sync::OnceLock<RwLock<HashMap<String, FormatDescriptor>>> = std::sync::OnceLock::new();
+
+fn format_catalog() -> &'static RwLock<HashMap<String, FormatDescriptor>> {
+    FORMAT_CATALOG.get_or_init(|| RwLock::new(HashMap::new()))
+}
+
+/// 📌️ Register format descriptor rows, keyed by `kind_id`, `short_id`, and every alias so
+/// `format_descriptor` resolves any of the three forms in O(1). Callable multiple times -- once
+/// per plugin that owns formats -- mirroring `register_composer_entries`'s own additive
+/// convention (never assume a single caller). A later registration overwriting a key already
+/// present is logged, not panicking, the same "boot ordering across concurrent plugin loads
+/// shouldn't crash the process" policy `register_subset_validator` documents above.
+pub fn register_format_descriptors(rows: Vec<FormatDescriptor>) {
+    let mut reg = format_catalog().write().expect("format catalog poisoned");
+    for row in rows {
+        for key in std::iter::once(row.kind_id.clone()).chain(std::iter::once(row.short_id.clone())).chain(row.aliases.iter().cloned()) {
+            if reg.insert(key.clone(), row.clone()).is_some() {
+                eprintln!("[DEBUG] io::register_format_descriptors overwrote an existing entry for key {key:?}");
+            }
+        }
+    }
+}
+
+/// 🔎️ Resolve a format by its `kind_id`, `short_id`, or any registered alias.
+pub fn format_descriptor(kind_or_short_or_alias: &str) -> Option<FormatDescriptor> {
+    format_catalog().read().expect("format catalog poisoned").get(kind_or_short_or_alias).cloned()
+}
+
+/// 🏷️ Normalize any recognized form (kind id, short id, alias) to the canonical `kind_id`.
+pub fn normalize_format_kind(input: &str) -> Option<String> {
+    format_descriptor(input).map(|d| d.kind_id)
+}
+
+/// 🗂️ File-picker `accept` filter (comma-joined extensions) for a list of kind/short/alias
+/// strings -- the generic successor to `mesh::stdio_accept_filter`.
+pub fn format_accept_filter(kind_ids: &[&str]) -> String {
+    kind_ids.iter().filter_map(|k| format_descriptor(k)).map(|d| d.extension).collect::<Vec<_>>().join(",")
+}
+
+/// 📋️ Serialize every distinct registered format as a `mimes.csv`-shaped body (header + one row
+/// per distinct `kind_id`, sorted for determinism) -- the generic successor to
+/// `mesh::stdio_mimes_csv`.
+pub fn formats_csv() -> String {
+    let reg = format_catalog().read().expect("format catalog poisoned");
+    let mut seen: HashMap<&str, &FormatDescriptor> = HashMap::new();
+    for row in reg.values() {
+        seen.insert(row.kind_id.as_str(), row);
+    }
+    let mut rows: Vec<&FormatDescriptor> = seen.into_values().collect();
+    rows.sort_by(|a, b| a.kind_id.cmp(&b.kind_id));
+    let mut out = String::from("MIME,Extension,Name,FullName,Neutral,Dir,Kind\n");
+    for row in rows {
+        out.push_str(&row.mime);
+        out.push(',');
+        out.push_str(&row.extension);
+        out.push(',');
+        out.push_str(&row.name);
+        out.push(',');
+        out.push_str(&row.full_name);
+        out.push(',');
+        out.push_str(if row.neutral { "true" } else { "false" });
+        out.push(',');
+        out.push_str(&row.dir_name);
+        out.push(',');
+        out.push_str(&row.kind_id);
+        out.push('\n');
+    }
+    out
+}
+//#endregion 🔖️FormatCatalog
 //#endregion 🔖️ErasedRegistry
 // #endregion io

@@ -25,7 +25,7 @@ default = ["component-guest"]
 component-guest = ["dep:semio-framework-plugin", "dep:semio-framework"]
 
 [dependencies]
-semio-s-3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
+semio-framework-3d = { path = "../../../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 base64 = "0.22"
 thiserror = "2"
 flow_extension_sdk = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }

@@ -6580,6 +6580,42 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-2d"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "blake3",
+ "futures",
+ "geo",
+ "pollster",
+ "rayon",
+ "semio-framework",
+ "semio-framework-os-kernel",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-framework-3d"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64 0.22.1",
+ "blake3",
+ "criterion",
+ "futures",
+ "pollster",
+ "rayon",
+ "semio-framework",
+ "semio-framework-math",
+ "semio-framework-os-kernel",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "semio-framework-compiler"
 version = "0.1.0"
 dependencies = [
@@ -6634,10 +6670,10 @@ dependencies = [
  "resvg",
  "rusqlite",
  "semio-framework",
+ "semio-framework-3d",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-ui",
- "semio-s-3d",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -6657,14 +6693,14 @@ dependencies = [
  "base64 0.22.1",
  "js-sys",
  "semio-framework",
+ "semio-framework-2d",
+ "semio-framework-3d",
  "semio-framework-math",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-ui",
  "semio-framework-ui-styling",
- "semio-s-2d",
- "semio-s-3d",
  "semio-s-plugin-flow-extension-brep",
  "semio-s-plugin-flow-extension-dictionary",
  "semio-s-plugin-flow-extension-list",
@@ -6690,12 +6726,12 @@ dependencies = [
  "image",
  "js-sys",
  "semio-framework",
+ "semio-framework-3d",
  "semio-framework-compiler",
  "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-ui",
  "semio-framework-ui-styling",
- "semio-s-3d",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -6780,6 +6816,7 @@ dependencies = [
  "resvg",
  "rfd",
  "semio-framework",
+ "semio-framework-3d",
  "semio-framework-editor",
  "semio-framework-os-flow",
  "semio-framework-os-infinite",
@@ -6788,7 +6825,6 @@ dependencies = [
  "semio-framework-plugin-host",
  "semio-framework-surface",
  "semio-framework-ui",
- "semio-s-3d",
  "semio-s-plugin-puzzle",
  "serde",
  "serde_json",
@@ -6958,42 +6994,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-2d"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "blake3",
- "futures",
- "geo",
- "pollster",
- "rayon",
- "semio-framework",
- "semio-framework-os-kernel",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-s-3d"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "base64 0.22.1",
- "blake3",
- "criterion",
- "futures",
- "pollster",
- "rayon",
- "semio-framework",
- "semio-framework-math",
- "semio-framework-os-kernel",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
 name = "semio-s-imperative"
 version = "0.1.0"
 dependencies = [
@@ -7089,13 +7089,13 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "semio-framework",
+ "semio-framework-3d",
  "semio-framework-math",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui",
- "semio-s-3d",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
@@ -7166,11 +7166,11 @@ dependencies = [
 name = "semio-s-plugin-demonstrator"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-3d",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
- "semio-s-3d",
  "semio-s-plugin-cad",
  "semio-s-plugin-gis",
  "semio-s-plugin-procedural",
@@ -7189,11 +7189,11 @@ dependencies = [
  "base64 0.22.1",
  "image",
  "semio-framework",
+ "semio-framework-2d",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
- "semio-s-2d",
  "semio-s-plugin-draw-fsm",
  "semio-s-plugin-stdio",
  "serde",
@@ -7291,10 +7291,10 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "semio-framework",
+ "semio-framework-3d",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
- "semio-s-3d",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -7317,10 +7317,10 @@ name = "semio-s-plugin-flow-extension-draw"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-2d",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
- "semio-s-2d",
  "serde",
  "serde_json",
 ]
@@ -7529,11 +7529,11 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "png 0.17.16",
+ "semio-framework-3d",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
- "semio-s-3d",
  "semio-s-plugin-cad",
  "semio-s-plugin-stdio",
  "serde",
@@ -7618,6 +7618,7 @@ name = "semio-s-plugin-procedural"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-3d",
  "semio-framework-os",
  "semio-framework-os-flow",
  "semio-framework-os-infinite",
@@ -7626,7 +7627,6 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-ui",
  "semio-framework-ui-styling",
- "semio-s-3d",
  "semio-s-plugin-flow-extension-brep",
  "semio-s-plugin-flow-extension-dictionary",
  "semio-s-plugin-flow-extension-list",
@@ -7647,11 +7647,11 @@ dependencies = [
  "base64 0.22.1",
  "blake3",
  "semio-framework",
+ "semio-framework-3d",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
- "semio-s-3d",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",

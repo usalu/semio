@@ -1,0 +1,400 @@
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-compatibility-rule/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-compatibility-rule/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-grip/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-grip/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-grip/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-grip-kind/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-grip-kind/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-grip-kind/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-representation/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-representation/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-representation/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-attribute/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-attribute/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-attribute/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-authors/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-authors/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-authors/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-camera2d/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-camera2d/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-camera2d/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-camera3d/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-camera3d/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-camera3d/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-compatibility-rule/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-compatibility-rule/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-compatibility-rule/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-grip/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-grip/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-grip/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-grip-kind/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-grip-kind/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-grip-kind/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-part-kind/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-part-kind/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-part-kind/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-part2d/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-part2d/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-part2d/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-part3d/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-part3d/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-part3d/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-representation/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-representation/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-representation/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷set-meta/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷set-meta/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷set-meta/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🟪️stl/🔖️ascii/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🟪️stl/🔖️ascii/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🏗️builder/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🧐️analyzer/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/🎹️composer/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🏗️builder/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🧐️analyzer/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🎹️composer/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-attribute/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-attribute/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-attribute/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-compatibility-rule/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-compatibility-rule/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-compatibility-rule/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-representation/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-representation/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-representation/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-vortex/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-vortex/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-vortex/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-vortex-kind/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-vortex-kind/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-vortex-kind/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-attribute/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-attribute/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-attribute/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-authors/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-authors/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-authors/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-camera3d/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-camera3d/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-camera3d/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-compatibility-rule/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-compatibility-rule/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-compatibility-rule/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-object-kind/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-object-kind/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-object-kind/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-representation/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-representation/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-representation/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-vortex/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-vortex/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-vortex/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-vortex-kind/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-vortex-kind/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-vortex-kind/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷set-meta/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷set-meta/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷set-meta/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🟪️stl/🔖️ascii/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🟪️stl/🔖️ascii/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🏗️builder/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🧐️analyzer/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/🎹️composer/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/🎚️config/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/🎚️config/🧬️schema/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/👥️presence/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/👥️presence/🧬️schema/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/🗣️terminology/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/🎮️commands/🏷️kind/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/🎮️commands/🔘️handle-kind/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/🎮️commands/🌱️handle/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/🎮️commands/🔗️compatibility/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/📋️board/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/📌️panels/📄️document/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/📌️panels/🔍️inspection/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎚️config/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎚️config/🧬️schema/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/👥️presence/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/👥️presence/🧬️schema/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🌍️world/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🗣️terminology/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎮️commands/🏷️kind/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️representation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎮️commands/🔘️vortex-kind/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎮️commands/🌀️vortex/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎨️example/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️window/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎮️commands/🖌️brush/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎥️camera/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🌐️world/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/🧱️representations/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/🔀️quick-representation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/↔️arrangement/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/📏️spacing/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🌐️world/🎚️options/🖌️brush/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/📌️panels/📄️document/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/🎚️config/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/🎚️config/🧬️schema/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/👥️presence/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/👥️presence/🧬️schema/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/🗣️terminology/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/🎮️commands/🏷️kind/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/🎮️commands/🔘️grip-kind/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/🎮️commands/🌱️grip/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/🎮️commands/🎨️example/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/🎮️commands/🗂️selection/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/📋️board/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/🌐️world/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/📌️panels/📄️document/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/📌️panels/🔍️inspection/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/◻2d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/◻2d/📚️examples/🎬️hexagonal-cut-concrete-forest-right/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🎬️nakagin-capsule/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🎬️nakagin-capsule/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🖐️5d/📚️examples/🎬️demo-session/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🧱️block: 📦️glue.rs declares #[path = "../../🎛️apps/🧊️3d/📚️examples/🎬️demo-session/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: artifact "🏠️home" is missing 🧬️schema/[0m
+[0m[31m  - 🪐️space: artifact "🏠️home" is missing ⚙️engine/🦀️component.rs[0m
+[0m[31m  - 🪐️space: artifact "🏠️home" is missing ⚙️engine/🟦️component.ts[0m
+[0m[31m  - 🪐️space: artifact "🏠️home" is missing 🚪️io/[0m
+[0m[31m  - 🪐️space: artifact "🏠️home" is missing ⚙️engine/[0m
+[0m[31m  - 🪐️space: 🎛️apps/🏠️home/🗣️terminology/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🏠️home/🎚️config/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🏠️home/🎚️config/🧬️schema/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🏠️home/📚️examples/🎬️demo-session/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🏠️home/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🏠️home/👥️presence/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🏠️home/👥️presence/🧬️schema/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🏠️home/🎭️modes/🔎️explore/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🏠️home/🎭️modes/🔎️explore/🪟️windows/🏠️main/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🏠️home/🎮️commands/🗂️vfs/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🏠️home/🎮️commands/⚙️settings/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🗣️terminology/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎚️config/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎚️config/🧬️schema/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/📚️examples/🎬️demo-session/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/📌️panels/🔢️parameters/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/📌️panels/🔍️inspection/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/📌️panels/🛍️catalogue/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/👥️presence/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/👥️presence/🧬️schema/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎭️modes/🌐️main/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️compiled-dag/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🗂️media-vfs/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️workflow/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️workflow/🎚️options/🎯️active-instance/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎮️commands/✏️graph-edit/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎮️commands/🖱️viewport/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎮️commands/🗂️selection/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎮️commands/🖼️media/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎮️commands/🔢️parameters/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎮️commands/🔗️connections/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎮️commands/🧭️navigation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎮️commands/👥️presence/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎮️commands/💬️engagement/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/🎮️commands/🔍️instance-nav/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🪐️space/⚙️engine/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🗿️artifacts/🏠️home/🧐️analyzer/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🗿️artifacts/🏠️home/📚️examples/🎬️demo/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🗿️artifacts/🏠️home/🏗️builder/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🗿️artifacts/🏠️home/🎹️composer/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🗿️artifacts/🏠️home/🏗️builder/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🗿️artifacts/🏠️home/🧐️analyzer/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🗿️artifacts/🏠️home/🎹️composer/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🗿️artifacts/🏠️home/📚️examples/🎬️demo/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🏠️home/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🏠️home/🎚️config/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🏠️home/🎚️config/🧬️schema/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🏠️home/👥️presence/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🏠️home/👥️presence/🧬️schema/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🏠️home/🗣️terminology/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🏠️home/🎮️commands/🗂️vfs/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🏠️home/🎮️commands/⚙️settings/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🏠️home/🎭️modes/🔎️explore/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🏠️home/🎭️modes/🔎️explore/🪟️windows/🏠️main/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎚️config/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎚️config/🧬️schema/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/👥️presence/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/👥️presence/🧬️schema/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🗣️terminology/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/⚙️engine/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎮️commands/🔢️parameters/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎮️commands/🔗️connections/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎮️commands/🗂️selection/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎮️commands/🖱️viewport/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎮️commands/💬️engagement/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎮️commands/✏️graph-edit/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎮️commands/👥️presence/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎮️commands/🖼️media/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎮️commands/🔍️instance-nav/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎮️commands/🧭️navigation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎭️modes/🌐️main/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️workflow/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️workflow/🎚️options/🎯️active-instance/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🗂️media-vfs/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️compiled-dag/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/📌️panels/🛍️catalogue/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/📌️panels/🔢️parameters/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/📌️panels/🔍️inspection/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🗿️artifacts/🏠️home/📚️examples/🎬️demo/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🏠️home/📚️examples/🎬️demo-session/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪐️space: 📦️glue.rs declares #[path = "../../🎛️apps/🪐️space/📚️examples/🎬️demo-session/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: artifact "🗂️curate" is missing 🧬️schema/[0m
+[0m[31m  - 🪵️sourcing: artifact "🗂️curate" is missing ⚙️engine/🦀️component.rs[0m
+[0m[31m  - 🪵️sourcing: artifact "🗂️curate" is missing ⚙️engine/🟦️component.ts[0m
+[0m[31m  - 🪵️sourcing: artifact "🗂️curate" is missing 🚪️io/[0m
+[0m[31m  - 🪵️sourcing: artifact "🗂️curate" is missing ⚙️engine/[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🗣️terminology/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🎚️config/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🎚️config/🧬️schema/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/📚️examples/🎬️demo-session/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/👥️presence/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/👥️presence/🧬️schema/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🎭️modes/🗂️curate/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/🧺️curated/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/👁️preview/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/🏊️pool/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/🔢️grid/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🎮️commands/📄️artifact/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🎮️commands/🗂️selection/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🎮️commands/🔍️filter/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🎮️commands/🗣️locale/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🎮️commands/🧩️contribution/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🗂️curate/🎮️commands/🧺️curation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎛️apps/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🗿️artifacts/🗂️curate/🧐️analyzer/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🗿️artifacts/🗂️curate/📚️examples/🎬️demo/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🗿️artifacts/🗂️curate/🏗️builder/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🗿️artifacts/🗂️curate/🎹️composer/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🧩️extensions/🪵️beams/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🧩️extensions/🧱️slabs/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 🧩️extensions/🪟️windows/🦀️component.rs is not declared by any #[path] in 📦️glue.rs[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🗿️artifacts/🗂️curate/🏗️builder/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🗿️artifacts/🗂️curate/🧐️analyzer/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🗿️artifacts/🗂️curate/🎹️composer/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🗿️artifacts/🗂️curate/📚️examples/🎬️demo/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🎚️config/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🎚️config/🧬️schema/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/👥️presence/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/👥️presence/🧬️schema/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🗣️terminology/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🎮️commands/📄️document/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧺️curation/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🎮️commands/🔍️filter/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🎮️commands/🗂️selection/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🎮️commands/🗣️locale/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧩️contribution/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🎭️modes/🗂️curate/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/🏊️pool/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/🧺️curated/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/👁️preview/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/🔢️grid/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🗿️artifacts/🗂️curate/📚️examples/🎬️demo/🦀️component.rs"] but the file does not exist on disk[0m
+[0m[31m  - 🪵️sourcing: 📦️glue.rs declares #[path = "../../🎛️apps/🗂️curate/📚️examples/🎬️demo-session/🦀️component.rs"] but the file does not exist on disk[0m
+Warning: command "bun ./📜️script.ts check" exited with non-zero status code
+
+
+ NX   Running target check for project @semio-tech/plugin-registry failed
+
+Failed tasks:
+
+- @semio-tech/plugin-registry:check
+
+Hint: run the command with --verbose for more details.
+
+1385 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1386 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1387 |  */
+1388 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1389 |   const status = runCmdInternal(cmd, args, opts);
+1390 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: bun nx run @semio-tech/plugin-registry:check exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1390:31)
+      at runGate (/Users/ueli/Documents/semio/📜️script.ts:678:5)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:664:16)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:829:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:864:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:9314:11
+
+Bun v1.3.14 (macOS arm64)

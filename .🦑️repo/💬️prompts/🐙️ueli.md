@@ -366,6 +366,63 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+At the heart of everything are artifacts. The make different apps interoperable and integratable into existing projects because due to import and export to common artifacts.
+
+The most important artifacts are the inbuilt semio artifacts because they are all designed to work with each other and import and export smoothly.
+
+Extract all adhoc artifacts from all s plugins and include them in stdio plugin. Implement the the fullblown import/export architecture for all artifacts.
+
+e.g.
+brep <-> step, etc
+mesh <-> gltf, stl, etc
+model <-> ifc, etc
+drawing <-> dwg, svg, pdf, etc
+image <-> png, jpg, gif, etc
+video <-> mp4, avi, etc
+audio <-> mp3, wav, etc
+…
+
+```
+s
+  plugins
+    stdio
+      artifacts
+        semio
+          standards
+            v1
+              subsets
+                <subset> # e.g. brep, mesh, model, object, document, cad, drawing, image, video, audio, animation, presentation, workflow, etc.
+                  engine
+                    component.rs
+                    component.ts
+                    …
+                  schema
+                    snapshot
+                      …
+                    diff
+                      …
+                    mutations
+                      …
+                  io
+                    importers
+                      artifacts
+                        <artifact>
+                          standards
+                            <standard>
+                              subsets
+                                <subset>
+                                deserializers
+                                  <deserializer> # e.g. text, binary, json, xml, etc
+                                    component.rs
+                                    component.ts
+                                    …
+                                  component.rs
+                                  component.ts
+                                  …
+```
+
+---
+
 Complete all artifact implementations for all artifacts and standards and subsets.
 Make sure that all artifacts implement all serializers and deserializers and all importers and exporters to all possible other artifacts.
 

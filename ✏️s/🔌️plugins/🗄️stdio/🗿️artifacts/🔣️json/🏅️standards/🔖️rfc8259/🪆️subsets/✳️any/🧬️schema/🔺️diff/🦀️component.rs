@@ -79,6 +79,16 @@ pub struct JsonObjectAdded {
 /// 🔺️ Recursive diff mirroring [`JsonValue`]'s shape. `Replace` is the fallback used whenever the
 /// node's KIND changes between base and next (e.g. a member goes from `Number` to `String`); the
 /// other variants are direct/structural diffs used whenever the kind is stable.
+/// 🧪️ F6: `#[derive(dsl::DslDiff)]` is unusable here for the same structural reason confirmed live
+/// by the F6 recon pilot on `SvgDiff`/`GifDiff` (`f6-recon-report.md` §3a): `JsonValueDiff` is a
+/// genuine data-carrying enum (`Replace`/`Bool`/`Number`/`String`/`Array`/`Object`, each with
+/// fields), and `DslField` — the trait every struct field's type must implement for the derive to
+/// bind it — has no impl for any data-carrying enum (only `DslRecord`-derived structs and
+/// `DslScalar`-derived UNIT-only enums implement it; `f6-recon-report.md` §3a cites the identical
+/// compiler error, `the trait bound ...: DslField is not satisfied`, for `SvgNodeDiff`). Zero
+/// tri-state (`Option<Option<_>>`) fields anywhere in this artifact (§3b does not apply — this is
+/// the recipe's "enum-only" hand-roll case, same family as `dxf`). `DiffCodec` is hand-rolled
+/// below (§🔖️HandcraftedDiffCodec), grammar template copied from `SvgDiff`'s.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum JsonValueDiff {
@@ -510,6 +520,219 @@ fn absorb_object_diff(d1: JsonObjectDiff, d2: JsonObjectDiff) -> JsonObjectDiff 
 }
 //#endregion 🔖️Absorb
 
+//#region 🔖️HandcraftedDiffCodec
+/// 🧪️ F6: hand-rolled `protocol::DiffCodec` for `JsonDiff` — template copied verbatim from
+/// `SvgDiff`'s (`f6-recon-report.md` §5), self-contained (own copies of the small primitive set,
+/// no shared "hand-roll helpers" module exists yet — same rationale `SvgDiff`'s file documents).
+//#region 🔖️Primitives
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+    if s.is_empty() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    let mut depth = 0i32;
+    let mut start = 0usize;
+    for (i, c) in s.char_indices() {
+        match c {
+            '[' => depth += 1,
+            ']' => depth -= 1,
+            c if c == sep && depth == 0 => {
+                out.push(&s[start..i]);
+                start = i + c.len_utf8();
+            }
+            _ => {}
+        }
+    }
+    out.push(&s[start..]);
+    out
+}
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+    s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
+}
+//#endregion 🔖️Primitives
+
+//#region 🔖️JsonValueCodecs
+/// 🌳 Tag-prefixed like `SvgDiff`'s `enc_xml_node`: `Z` (null, no payload, no brackets) / `B[0|1]`
+/// / `N[hex(lexeme)]` / `S[hex(value)]` / `A[v1,v2,...]` / `O[hexkey1:v1,hexkey2:v2,...]` — member
+/// insertion order preserved by construction (a list, never re-sorted).
+pub(crate) fn enc_json_value(v: &JsonValue) -> String {
+    match v {
+        JsonValue::Null => "Z".to_string(),
+        JsonValue::Bool { value } => format!("B[{}]", if *value { "1" } else { "0" }),
+        JsonValue::Number { lexeme } => format!("N[{}]", enc_str(lexeme)),
+        JsonValue::String { value } => format!("S[{}]", enc_str(value)),
+        JsonValue::Array { items } => format!("A[{}]", items.iter().map(enc_json_value).collect::<Vec<_>>().join(",")),
+        JsonValue::Object { members } => format!(
+            "O[{}]",
+            members.iter().map(|m| format!("{}:{}", enc_str(&m.key), enc_json_value(&m.value))).collect::<Vec<_>>().join(",")
+        ),
+    }
+}
+pub(crate) fn dec_json_value(s: &str) -> Result<JsonValue, String> {
+    if s == "Z" {
+        return Ok(JsonValue::Null);
+    }
+    let (tag, rest) = s.split_at(1);
+    let inner = strip_brackets(rest)?;
+    match tag {
+        "B" => Ok(JsonValue::Bool { value: inner == "1" }),
+        "N" => Ok(JsonValue::Number { lexeme: dec_str(inner)? }),
+        "S" => Ok(JsonValue::String { value: dec_str(inner)? }),
+        "A" => Ok(JsonValue::Array {
+            items: split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_json_value).collect::<Result<Vec<_>, String>>()?,
+        }),
+        "O" => {
+            let members = split_top_level(inner, ',')
+                .into_iter()
+                .filter(|s| !s.is_empty())
+                .map(|entry| {
+                    let (key, value) = entry.split_once(':').ok_or_else(|| format!("object member: bad entry {entry:?}"))?;
+                    Ok(JsonMember { key: dec_str(key)?, value: dec_json_value(value)? })
+                })
+                .collect::<Result<Vec<_>, String>>()?;
+            Ok(JsonValue::Object { members })
+        }
+        other => Err(format!("json value: unknown tag {other:?}")),
+    }
+}
+//#endregion 🔖️JsonValueCodecs
+
+//#region 🔖️DiffValueCodecs
+/// 🌳 `JsonValueDiff` itself needs a tag (`R`=Replace, `B`=Bool, `N`=Number, `S`=String, `A`=Array,
+/// `O`=Object) since, unlike a plain [`JsonValue`], it appears standalone (not always inside a
+/// bracketed container) at the top-level `value=` token position.
+pub(crate) fn enc_value_diff(d: &JsonValueDiff) -> String {
+    match d {
+        JsonValueDiff::Replace { value } => format!("R[{}]", enc_json_value(value)),
+        JsonValueDiff::Bool { value } => format!("B[{}]", if *value { "1" } else { "0" }),
+        JsonValueDiff::Number { lexeme } => format!("N[{}]", enc_str(lexeme)),
+        JsonValueDiff::String { value } => format!("S[{}]", enc_str(value)),
+        JsonValueDiff::Array { diff } => format!("A[{}]", enc_array_diff(diff)),
+        JsonValueDiff::Object { diff } => format!("O[{}]", enc_object_diff(diff)),
+    }
+}
+pub(crate) fn dec_value_diff(s: &str) -> Result<JsonValueDiff, String> {
+    let (tag, rest) = s.split_at(1);
+    let inner = strip_brackets(rest)?;
+    match tag {
+        "R" => Ok(JsonValueDiff::Replace { value: dec_json_value(inner)? }),
+        "B" => Ok(JsonValueDiff::Bool { value: inner == "1" }),
+        "N" => Ok(JsonValueDiff::Number { lexeme: dec_str(inner)? }),
+        "S" => Ok(JsonValueDiff::String { value: dec_str(inner)? }),
+        "A" => Ok(JsonValueDiff::Array { diff: dec_array_diff(inner)? }),
+        "O" => Ok(JsonValueDiff::Object { diff: dec_object_diff(inner)? }),
+        other => Err(format!("json value diff: unknown tag {other:?}")),
+    }
+}
+
+fn enc_array_diff(d: &JsonArrayDiff) -> String {
+    let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
+    let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_value_diff(&m.diff))).collect::<Vec<_>>().join(",");
+    let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_json_value(&a.item))).collect::<Vec<_>>().join(",");
+    format!("[{removed}];[{modified}];[{added}]")
+}
+fn dec_array_diff(body: &str) -> Result<JsonArrayDiff, String> {
+    let three = split_top_level(body, ';');
+    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("array diff: expected 3 sections, got {}", three.len())) };
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("array modified: bad entry {entry:?}"))?;
+        Ok(JsonArrayModified { index: parse_usize(idx)?, diff: dec_value_diff(rest)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("array added: bad entry {entry:?}"))?;
+        Ok(JsonArrayAdded { index: parse_usize(idx)?, item: dec_json_value(rest)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    Ok(JsonArrayDiff { removed, modified, added })
+}
+
+fn enc_object_diff(d: &JsonObjectDiff) -> String {
+    let removed = d.removed.iter().map(|k| enc_str(k)).collect::<Vec<_>>().join(",");
+    let modified = d.modified.iter().map(|m| format!("{}:{}", enc_str(&m.key), enc_value_diff(&m.diff))).collect::<Vec<_>>().join(",");
+    let added = d.added.iter().map(|a| format!("{}:{}:{}", a.index, enc_str(&a.key), enc_json_value(&a.item))).collect::<Vec<_>>().join(",");
+    format!("[{removed}];[{modified}];[{added}]")
+}
+fn dec_object_diff(body: &str) -> Result<JsonObjectDiff, String> {
+    let three = split_top_level(body, ';');
+    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("object diff: expected 3 sections, got {}", three.len())) };
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (key, rest) = entry.split_once(':').ok_or_else(|| format!("object modified: bad entry {entry:?}"))?;
+        Ok(JsonObjectModified { key: dec_str(key)?, diff: dec_value_diff(rest)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("object added: bad entry {entry:?}"))?;
+        let (key, item) = rest.split_once(':').ok_or_else(|| format!("object added: bad entry {entry:?}"))?;
+        Ok(JsonObjectAdded { index: parse_usize(idx)?, key: dec_str(key)?, item: dec_json_value(item)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    Ok(JsonObjectDiff { removed, modified, added })
+}
+//#endregion 🔖️DiffValueCodecs
+
+//#region 🔖️TopLevel
+/// 🧭️ Single-field top level (`value=<enc>`, absent = unchanged) — `JsonDiff` has exactly one
+/// diffable field (`schema` is identity-only, never diffed), so there is only ever zero or one
+/// space-separated token, unlike `SvgDiff`'s multi-field line.
+fn print_json_diff(d: &JsonDiff) -> String {
+    match &d.value {
+        Some(v) => format!("value={}", enc_value_diff(v)),
+        None => String::new(),
+    }
+}
+fn parse_json_diff(line: &str) -> Result<JsonDiff, String> {
+    let mut d = JsonDiff::default();
+    if line.is_empty() {
+        return Ok(d);
+    }
+    for token in line.split(' ') {
+        if let Some(rest) = token.strip_prefix("value=") {
+            d.value = Some(dec_value_diff(rest)?);
+        } else {
+            return Err(format!("json diff: unknown token {token:?}"));
+        }
+    }
+    Ok(d)
+}
+
+impl protocol::DiffCodec for JsonDiff {
+    fn print_diff(&self) -> String {
+        print_json_diff(self)
+    }
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+        parse_json_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+    /// ⚡️ Binary = the text bytes verbatim, same simplification `SvgDiff`/`GifDiff` (and the
+    /// repo's only other hand-rolled `DiffCodec`, `WriterDiff`) use — satisfies every `DiffCodec`
+    /// law without inventing a second wire format.
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(self.print_diff().into_bytes())
+    }
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+    }
+}
+//#endregion 🔖️TopLevel
+//#endregion 🔖️HandcraftedDiffCodec
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -895,5 +1118,47 @@ mod tests {
         }
     }
     //#endregion field_sweep
+
+    //#region 🔖️HandcraftedDiffCodecTests
+    /// 🧪️ F6: `DiffCodec` round-trip laws over the hand-rolled `JsonDiff` grammar — exercises
+    /// every `JsonValueDiff` variant (incl. the `Replace` kind-change fallback), nested
+    /// array/object collection triples, and the empty (`None`) diff.
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
+        use protocol::DiffCodec;
+
+        let a = sweep_a();
+        let b = sweep_b();
+        let nested = objv(vec![
+            ("tags", arr(vec![str_("x"), str_("y"), str_("z")])),
+            ("meta", objv(vec![("a", num("1")), ("b", JsonValue::Null)])),
+        ]);
+        let nested2 = objv(vec![
+            ("tags", arr(vec![str_("x"), str_("w")])),
+            ("meta", objv(vec![("a", num("9")), ("c", str_("new"))])),
+            ("extra", JsonValue::Bool { value: true }),
+        ]);
+
+        let cases = vec![
+            JsonDiff::default(),
+            JsonDiff::between(&a, &b),
+            JsonDiff::between(&b, &a),
+            JsonDiff::between(&snap(nested.clone()), &snap(nested2.clone())),
+            JsonDiff::between(&snap(nested2), &snap(nested)),
+            JsonDiff::between(&snap(num("1")), &snap(str_("1"))),
+            JsonDiff::between(&snap(JsonValue::Null), &snap(arr(vec![num("1"), num("2")]))),
+        ];
+        for d in cases {
+            let printed = d.print_diff();
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = JsonDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
+
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = JsonDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
+        }
+    }
+    //#endregion 🔖️HandcraftedDiffCodecTests
 }
 //#endregion 🧪️Tests

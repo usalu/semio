@@ -1,0 +1,400 @@
+
+error[E0277]: the trait bound `v_jfif_1_01::subsets::any::schema::snapshot::component::JfifDensityUnits: DslField` is not satisfied
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:37:24
+   |
+37 |         density_units: JfifDensityUnits,
+   |                        ^^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `DslField` is not implemented for `v_jfif_1_01::subsets::any::schema::snapshot::component::JfifDensityUnits`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:19:1
+   |
+19 | pub enum JfifDensityUnits {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: the following other types implement trait `DslField`:
+             BTreeMap<std::string::String, T>
+             DslValue
+             DwgSectionAdded
+             DwgSectionDiff
+             DwgSectionModified
+             DwgSectionsDiff
+             Vec<T>
+             [T; N]
+           and 64 others
+   = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-2b79bb9ae1ae0730.long-type-385054292408444571.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `v_jfif_1_01::subsets::any::schema::snapshot::component::JfifThumbnail: DslField` is not satisfied
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:40:27
+   |
+40 |         thumbnail: Option<JfifThumbnail>,
+   |                           ^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `DslField` is not implemented for `v_jfif_1_01::subsets::any::schema::snapshot::component::JfifThumbnail`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:48:1
+   |
+48 | pub struct JfifThumbnail {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: the following other types implement trait `DslField`:
+             BTreeMap<std::string::String, T>
+             DslValue
+             DwgSectionAdded
+             DwgSectionDiff
+             DwgSectionModified
+             DwgSectionsDiff
+             Vec<T>
+             [T; N]
+           and 64 others
+   = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-2b79bb9ae1ae0730.long-type-385054292408444571.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `v_jfif_1_01::subsets::any::schema::snapshot::component::JpgQuantTable: DslField` is not satisfied
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:44:16
+   |
+44 |         table: JpgQuantTable,
+   |                ^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `DslField` is not implemented for `v_jfif_1_01::subsets::any::schema::snapshot::component::JpgQuantTable`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:96:1
+   |
+96 | pub struct JpgQuantTable {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: the following other types implement trait `DslField`:
+             BTreeMap<std::string::String, T>
+             DslValue
+             DwgSectionAdded
+             DwgSectionDiff
+             DwgSectionModified
+             DwgSectionsDiff
+             Vec<T>
+             [T; N]
+           and 64 others
+   = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-2b79bb9ae1ae0730.long-type-385054292408444571.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `v_jfif_1_01::subsets::any::schema::snapshot::component::JpgHuffmanTable: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:53:16
+    |
+ 53 |         table: JpgHuffmanTable,
+    |                ^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `DslField` is not implemented for `v_jfif_1_01::subsets::any::schema::snapshot::component::JpgHuffmanTable`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:149:1
+    |
+149 | pub struct JpgHuffmanTable {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `DslField`:
+              BTreeMap<std::string::String, T>
+              DslValue
+              DwgSectionAdded
+              DwgSectionDiff
+              DwgSectionModified
+              DwgSectionsDiff
+              Vec<T>
+              [T; N]
+            and 64 others
+    = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-2b79bb9ae1ae0730.long-type-385054292408444571.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `v_jfif_1_01::subsets::any::schema::diff::component::JpgHuffmanTableKey: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:57:14
+    |
+ 57 |         key: JpgHuffmanTableKey,
+    |              ^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `DslField` is not implemented for `v_jfif_1_01::subsets::any::schema::diff::component::JpgHuffmanTableKey`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:185:1
+    |
+185 | pub struct JpgHuffmanTableKey {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `DslField`:
+              BTreeMap<std::string::String, T>
+              DslValue
+              DwgSectionAdded
+              DwgSectionDiff
+              DwgSectionModified
+              DwgSectionsDiff
+              Vec<T>
+              [T; N]
+            and 64 others
+    = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-2b79bb9ae1ae0730.long-type-385054292408444571.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `v_jfif_1_01::subsets::any::schema::snapshot::component::JpgSegment: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:67:18
+    |
+ 67 |         segment: JpgSegment,
+    |                  ^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `DslField` is not implemented for `v_jfif_1_01::subsets::any::schema::snapshot::component::JpgSegment`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:165:1
+    |
+165 | pub struct JpgSegment {
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `DslField`:
+              BTreeMap<std::string::String, T>
+              DslValue
+              DwgSectionAdded
+              DwgSectionDiff
+              DwgSectionModified
+              DwgSectionsDiff
+              Vec<T>
+              [T; N]
+            and 64 others
+    = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-2b79bb9ae1ae0730.long-type-385054292408444571.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `v_jfif_1_01::subsets::any::schema::snapshot::component::JpgSnapshot: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:32:9
+    |
+ 26 | #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+    |                                                                    ----------- required by a bound introduced by this call
+...
+ 32 |         snapshot: JpgSnapshot,
+    |         ^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `DslField` is not implemented for `v_jfif_1_01::subsets::any::schema::snapshot::component::JpgSnapshot`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:182:1
+    |
+182 | pub struct JpgSnapshot {
+    | ^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `DslField`:
+              BTreeMap<std::string::String, T>
+              DslValue
+              DwgSectionAdded
+              DwgSectionDiff
+              DwgSectionModified
+              DwgSectionsDiff
+              Vec<T>
+              [T; N]
+            and 64 others
+    = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-2b79bb9ae1ae0730.long-type-385054292408444571.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `(u8, u8): DslField` is not satisfied
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:36:9
+   |
+26 | #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+   |                                                                    ----------- required by a bound introduced by this call
+...
+36 |         version: (u8, u8),
+   |         ^^^^^^^ the trait `DslField` is not implemented for `(u8, u8)`
+   |
+   = help: the following other types implement trait `DslField`:
+             BTreeMap<std::string::String, T>
+             DslValue
+             DwgSectionAdded
+             DwgSectionDiff
+             DwgSectionModified
+             DwgSectionsDiff
+             Vec<T>
+             [T; N]
+           and 64 others
+   = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-2b79bb9ae1ae0730.long-type-385054292408444571.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `v_jfif_1_01::subsets::any::schema::snapshot::component::JfifDensityUnits: DslField` is not satisfied
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:37:9
+   |
+26 | #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+   |                                                                    ----------- required by a bound introduced by this call
+...
+37 |         density_units: JfifDensityUnits,
+   |         ^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `DslField` is not implemented for `v_jfif_1_01::subsets::any::schema::snapshot::component::JfifDensityUnits`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:19:1
+   |
+19 | pub enum JfifDensityUnits {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: the following other types implement trait `DslField`:
+             BTreeMap<std::string::String, T>
+             DslValue
+             DwgSectionAdded
+             DwgSectionDiff
+             DwgSectionModified
+             DwgSectionsDiff
+             Vec<T>
+             [T; N]
+           and 64 others
+   = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-2b79bb9ae1ae0730.long-type-385054292408444571.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `v_jfif_1_01::subsets::any::schema::snapshot::component::JfifThumbnail: DslField` is not satisfied
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:26:68
+   |
+26 | #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+   |                                                                    ^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `DslField` is not implemented for `v_jfif_1_01::subsets::any::schema::snapshot::component::JfifThumbnail`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:48:1
+   |
+48 | pub struct JfifThumbnail {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: the following other types implement trait `DslField`:
+             BTreeMap<std::string::String, T>
+             DslValue
+             DwgSectionAdded
+             DwgSectionDiff
+             DwgSectionModified
+             DwgSectionsDiff
+             Vec<T>
+             [T; N]
+           and 64 others
+   = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-2b79bb9ae1ae0730.long-type-385054292408444571.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+   = note: this error originates in the derive macro `dsl::DslOps` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `v_jfif_1_01::subsets::any::schema::snapshot::component::JpgQuantTable: DslField` is not satisfied
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:44:9
+   |
+26 | #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+   |                                                                    ----------- required by a bound introduced by this call
+...
+44 |         table: JpgQuantTable,
+   |         ^^^^^ unsatisfied trait bound
+   |
+help: the trait `DslField` is not implemented for `v_jfif_1_01::subsets::any::schema::snapshot::component::JpgQuantTable`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:96:1
+   |
+96 | pub struct JpgQuantTable {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: the following other types implement trait `DslField`:
+             BTreeMap<std::string::String, T>
+             DslValue
+             DwgSectionAdded
+             DwgSectionDiff
+             DwgSectionModified
+             DwgSectionsDiff
+             Vec<T>
+             [T; N]
+           and 64 others
+   = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-2b79bb9ae1ae0730.long-type-385054292408444571.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `v_jfif_1_01::subsets::any::schema::snapshot::component::JpgHuffmanTable: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:53:9
+    |
+ 26 | #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+    |                                                                    ----------- required by a bound introduced by this call
+...
+ 53 |         table: JpgHuffmanTable,
+    |         ^^^^^ unsatisfied trait bound
+    |
+help: the trait `DslField` is not implemented for `v_jfif_1_01::subsets::any::schema::snapshot::component::JpgHuffmanTable`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:149:1
+    |
+149 | pub struct JpgHuffmanTable {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `DslField`:
+              BTreeMap<std::string::String, T>
+              DslValue
+              DwgSectionAdded
+              DwgSectionDiff
+              DwgSectionModified
+              DwgSectionsDiff
+              Vec<T>
+              [T; N]
+            and 64 others
+    = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-2b79bb9ae1ae0730.long-type-385054292408444571.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `v_jfif_1_01::subsets::any::schema::diff::component::JpgHuffmanTableKey: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:57:9
+    |
+ 26 | #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+    |                                                                    ----------- required by a bound introduced by this call
+...
+ 57 |         key: JpgHuffmanTableKey,
+    |         ^^^ unsatisfied trait bound
+    |
+help: the trait `DslField` is not implemented for `v_jfif_1_01::subsets::any::schema::diff::component::JpgHuffmanTableKey`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:185:1
+    |
+185 | pub struct JpgHuffmanTableKey {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `DslField`:
+              BTreeMap<std::string::String, T>
+              DslValue
+              DwgSectionAdded
+              DwgSectionDiff
+              DwgSectionModified
+              DwgSectionsDiff
+              Vec<T>
+              [T; N]
+            and 64 others
+    = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-2b79bb9ae1ae0730.long-type-385054292408444571.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `v_jfif_1_01::subsets::any::schema::snapshot::component::JpgSegment: DslField` is not satisfied
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:67:9
+    |
+ 26 | #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+    |                                                                    ----------- required by a bound introduced by this call
+...
+ 67 |         segment: JpgSegment,
+    |         ^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `DslField` is not implemented for `v_jfif_1_01::subsets::any::schema::snapshot::component::JpgSegment`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:165:1
+    |
+165 | pub struct JpgSegment {
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `DslField`:
+              BTreeMap<std::string::String, T>
+              DslValue
+              DwgSectionAdded
+              DwgSectionDiff
+              DwgSectionModified
+              DwgSectionsDiff
+              Vec<T>
+              [T; N]
+            and 64 others
+    = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_stdio-2b79bb9ae1ae0730.long-type-385054292408444571.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+Some errors have detailed explanations: E0277, E0599.
+For more information about an error, try `rustc --explain E0277`.
+warning: `semio-s-plugin-stdio` (lib) generated 193 warnings
+error: could not compile `semio-s-plugin-stdio` (lib) due to 26 previous errors; 193 warnings emitted
+error[E0433]: cannot find module or crate `dsl` in this scope
+   --> compose/client/lib/rs/lib.rs:716:10
+    |
+716 |     impl dsl::DslField for Id {
+    |          ^^^ use of unresolved module or unlinked crate `dsl`
+    |
+    = help: if you wanted to use a crate named `dsl`, use `cargo add dsl` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `dsl` in this scope
+   --> compose/client/lib/rs/lib.rs:717:23
+    |
+717 |         fn shape() -> dsl::Shape {
+    |                       ^^^ use of unresolved module or unlinked crate `dsl`
+    |
+    = help: if you wanted to use a crate named `dsl`, use `cargo add dsl` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `dsl` in this scope
+   --> compose/client/lib/rs/lib.rs:720:31
+    |
+720 |         fn to_value(&self) -> dsl::FieldValue {
+    |                               ^^^ use of unresolved module or unlinked crate `dsl`
+    |
+    = help: if you wanted to use a crate named `dsl`, use `cargo add dsl` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `dsl` in this scope
+   --> compose/client/lib/rs/lib.rs:723:31
+    |
+723 |         fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    |                               ^^^ use of unresolved module or unlinked crate `dsl`
+    |
+    = help: if you wanted to use a crate named `dsl`, use `cargo add dsl` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `vcs` in this scope
+    --> compose/client/lib/rs/lib.rs:7919:116
+     |
+7919 |         pub fn materialize_kit_snapshot(envelope: &KitSnapshotEnvelope, applied: &[String]) -> Result<KitSnapshot, vcs::VcsError> {
+     |                                                                                                                    ^^^ use of unresolved module or unlinked crate `vcs`
+     |
+     = help: if you wanted to use a crate named `vcs`, use `cargo add vcs` to add it to your `Cargo.toml`
+
+warning: `semio-compose-rs` (lib) generated 823 warnings
+error: could not compile `semio-compose-rs` (lib) due to 22 previous errors; 823 warnings emitted

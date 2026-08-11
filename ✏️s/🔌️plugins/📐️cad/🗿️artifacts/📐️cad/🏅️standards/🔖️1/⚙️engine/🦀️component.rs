@@ -12,8 +12,8 @@
 use base64::Engine as _;
 use crate::artifacts::cad::{cad_all_objects, cad_pane_from_model_definition_id, cad_pane_geometry, CadCamera, CadGeometry, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CadProjectionDsl, CadReference, CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
 use crate::artifacts::cad::engine::geometry_import::{cad_object_from_mesh, cad_object_from_solid_handle, centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture};
-use semio_s_3d::brep::kernel::{mesh_data_from_mesh_transfer, Brep};
-use semio_s_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle, MeshTransfer};
+use semio_framework_3d::brep::kernel::{mesh_data_from_mesh_transfer, Brep};
+use semio_framework_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle, MeshTransfer};
 use semio_framework::{parse_contributions, Contribution, MeshImporter};
 use std::sync::{Mutex, OnceLock};
 use semio_framework_plugin::{mesh_from_kind, MeshData, MediaFormat, WorldProjectionConfig};
@@ -720,6 +720,7 @@ pub fn register() {
     crate::artifacts::cad::composer::register();
 
     register_artifact_schema();
+    crate::apps::cad::config::schema::register_app_schema();
     register_pilot_languages();
     // 📦️ pack binary codec for `CadSnapshot` (`CadPlayApp::document_schema()` == `CAD_DOCUMENT_SCHEMA`).
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::cad::CadPlayApp>(crate::artifacts::cad::CAD_DOCUMENT_SCHEMA);

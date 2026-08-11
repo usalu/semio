@@ -346,6 +346,16 @@ fn absorb_ifds_opt(base: &mut Option<TiffIfdsDiff>, other: Option<TiffIfdsDiff>)
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.tiff`. No `snapshot: Option<TiffSnapshot>` full-replace slot — even
 /// `SetSnapshot`'s diff is `TiffDiff::between(base, next)`.
+/// 🧪️ F6 CONFIRMED (real `cargo check`, ticket
+/// 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION): adding
+/// `#[derive(dsl::DslDiff)]` here fails — `TiffValues` (12 non-unit variants: `Byte(Vec<u8>)`,
+/// `Ascii(String)`, `Short(Vec<u16>)`, … `Double(Vec<f64>)`) is a genuine data-carrying enum
+/// reachable through `ifds: Option<TiffIfdsDiff>` -> `TiffIfdModified.diff.modified[].values` /
+/// `.added[].values`, and `DslField` has no impl for it (only `DslRecord`-derived structs and
+/// `DslScalar`-derived UNIT-only enums implement `DslField` — recon report §3a): `error[E0277]:
+/// the trait bound v6_0::…::TiffValues: DslField is not satisfied`. Same root cause independently
+/// blocks the Mutation side (`TiffMutation::SetTag.values`/`SetSnapshot.snapshot` recursively
+/// reach the same `TiffValues`). `DiffCodec` hand-rolled below (see `HandcraftedDiffCodec`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tiff.diff")]
@@ -485,3 +495,331 @@ pub fn diff_set_pixels(base: &TiffSnapshot, pixels: Vec<u8>) -> TiffDiff {
     TiffDiff { pixels: (base.pixels != pixels).then_some(pixels), ..Default::default() }
 }
 //#endregion 🔖️MutationDiffBuilders
+
+//#region 🔖️HandcraftedDiffCodec
+/// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `TiffDiff` — `TiffValues` (a genuine
+/// data-carrying enum, real compile error captured on the `TiffDiff` doc comment above) rules out
+/// `#[derive(dsl::DslDiff)]`. Same grammar style `GifDiff`/`SvgDiff`'s hand-rolled codecs use
+/// (bracket-depth-aware split, hex for strings/bytes, single-letter tag prefix for enums,
+/// `[removed];[modified];[added]` for collection triples) — see `f6-recon-report.md` §5 for the
+/// primitive rationale; this file re-derives its own copies of the small helper functions (no
+/// shared "hand-roll helpers" module exists yet). No `Option<T>`/tri-state wrapping is needed
+/// here — every `TiffDiff`/`TiffMutation` field is a required value, so `encode_option`/
+/// `decode_option` (present in `GifDiff`/`SvgDiff`) are deliberately omitted as dead code.
+//#region 🔖️Primitives
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+/// 🔢️ Generic numeric-token parser (`u8`/`u16`/`u32`/`i8`/`i16`/`i32`/`f32`/`f64`/`usize`, every
+/// scalar this grammar carries) — `f32`/`f64`'s `Display`/`FromStr` round-trip exactly for every
+/// finite value this codec ever produces (same assumption `svg`'s `ViewBox` float fields make).
+pub(crate) fn parse_num<T: std::str::FromStr>(s: &str) -> Result<T, String>
+where
+    T::Err: std::fmt::Display,
+{
+    s.parse::<T>().map_err(|e| e.to_string())
+}
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+    if s.is_empty() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    let mut depth = 0i32;
+    let mut start = 0usize;
+    for (i, c) in s.char_indices() {
+        match c {
+            '[' => depth += 1,
+            ']' => depth -= 1,
+            c if c == sep && depth == 0 => {
+                out.push(&s[start..i]);
+                start = i + c.len_utf8();
+            }
+            _ => {}
+        }
+    }
+    out.push(&s[start..]);
+    out
+}
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+    s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
+}
+/// 📃️ Generic bracketed comma list (`[e1,e2,...]`) — every `Vec<T>` in this grammar (IFD entries,
+/// an IFD list, a numeric value list) uses this same shape.
+pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+    format!("[{}]", items.iter().map(|x| enc(x)).collect::<Vec<_>>().join(","))
+}
+pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
+}
+//#endregion 🔖️Primitives
+
+//#region 🔖️ValueCodecs
+pub(crate) fn enc_byte_order(b: TiffByteOrder) -> String {
+    match b {
+        TiffByteOrder::LittleEndian => "0".to_string(),
+        TiffByteOrder::BigEndian => "1".to_string(),
+    }
+}
+pub(crate) fn dec_byte_order(s: &str) -> Result<TiffByteOrder, String> {
+    match s {
+        "0" => Ok(TiffByteOrder::LittleEndian),
+        "1" => Ok(TiffByteOrder::BigEndian),
+        other => Err(format!("byte order: unknown code {other:?}")),
+    }
+}
+pub(crate) fn enc_field_type(k: TiffFieldType) -> String {
+    k.to_u16().to_string()
+}
+pub(crate) fn dec_field_type(s: &str) -> Result<TiffFieldType, String> {
+    TiffFieldType::from_u16(parse_num::<u16>(s)?)
+}
+/// 📦️ `TiffValues` — single-uppercase-letter tag prefix immediately followed by the bracketed
+/// positional payload (same convention `svg`'s `enc_xml_node`/gif's enum codecs use): `B`=Byte,
+/// `A`=Ascii, `S`=Short, `L`=Long, `R`=Rational, `E`=SByte, `U`=Undefined, `H`=SShort, `G`=SLong,
+/// `Q`=SRational, `F`=Float, `D`=Double. `Byte`/`Undefined` (raw octets) and `Ascii` (text) are hex;
+/// every numeric list is decimal comma-separated; `Rational`/`SRational` pairs nest as `[n,d]`.
+pub(crate) fn enc_values(v: &TiffValues) -> String {
+    match v {
+        TiffValues::Byte(b) => format!("B[{}]", hex_encode(b)),
+        TiffValues::Ascii(s) => format!("A[{}]", enc_str(s)),
+        TiffValues::Short(v) => format!("S{}", enc_list(v, |x| x.to_string())),
+        TiffValues::Long(v) => format!("L{}", enc_list(v, |x| x.to_string())),
+        TiffValues::Rational(v) => format!("R{}", enc_list(v, |(n, d)| format!("[{n},{d}]"))),
+        TiffValues::SByte(v) => format!("E{}", enc_list(v, |x| x.to_string())),
+        TiffValues::Undefined(b) => format!("U[{}]", hex_encode(b)),
+        TiffValues::SShort(v) => format!("H{}", enc_list(v, |x| x.to_string())),
+        TiffValues::SLong(v) => format!("G{}", enc_list(v, |x| x.to_string())),
+        TiffValues::SRational(v) => format!("Q{}", enc_list(v, |(n, d)| format!("[{n},{d}]"))),
+        TiffValues::Float(v) => format!("F{}", enc_list(v, |x| x.to_string())),
+        TiffValues::Double(v) => format!("D{}", enc_list(v, |x| x.to_string())),
+    }
+}
+pub(crate) fn dec_values(s: &str) -> Result<TiffValues, String> {
+    let (tag, rest) = s.split_at(1);
+    let pair = |s: &str| -> Result<(u32, u32), String> {
+        let parts = split_top_level(strip_brackets(s)?, ',');
+        let [n, d] = parts.as_slice() else { return Err(format!("rational: expected 2 fields, got {}", parts.len())) };
+        Ok((parse_num::<u32>(n)?, parse_num::<u32>(d)?))
+    };
+    let spair = |s: &str| -> Result<(i32, i32), String> {
+        let parts = split_top_level(strip_brackets(s)?, ',');
+        let [n, d] = parts.as_slice() else { return Err(format!("srational: expected 2 fields, got {}", parts.len())) };
+        Ok((parse_num::<i32>(n)?, parse_num::<i32>(d)?))
+    };
+    match tag {
+        "B" => Ok(TiffValues::Byte(hex_decode(strip_brackets(rest)?)?)),
+        "A" => Ok(TiffValues::Ascii(dec_str(strip_brackets(rest)?)?)),
+        "S" => Ok(TiffValues::Short(dec_list(rest, parse_num::<u16>)?)),
+        "L" => Ok(TiffValues::Long(dec_list(rest, parse_num::<u32>)?)),
+        "R" => Ok(TiffValues::Rational(dec_list(rest, pair)?)),
+        "E" => Ok(TiffValues::SByte(dec_list(rest, parse_num::<i8>)?)),
+        "U" => Ok(TiffValues::Undefined(hex_decode(strip_brackets(rest)?)?)),
+        "H" => Ok(TiffValues::SShort(dec_list(rest, parse_num::<i16>)?)),
+        "G" => Ok(TiffValues::SLong(dec_list(rest, parse_num::<i32>)?)),
+        "Q" => Ok(TiffValues::SRational(dec_list(rest, spair)?)),
+        "F" => Ok(TiffValues::Float(dec_list(rest, parse_num::<f32>)?)),
+        "D" => Ok(TiffValues::Double(dec_list(rest, parse_num::<f64>)?)),
+        other => Err(format!("tiff values: unknown tag {other:?}")),
+    }
+}
+/// 🏷️ One IFD entry: `[tag,kind,values]` positional triple.
+pub(crate) fn enc_tag(t: &TiffTag) -> String {
+    format!("[{},{},{}]", t.tag, enc_field_type(t.kind), enc_values(&t.values))
+}
+pub(crate) fn dec_tag(s: &str) -> Result<TiffTag, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [tag, kind, values] = parts.as_slice() else { return Err(format!("tag: expected 3 fields, got {}", parts.len())) };
+    Ok(TiffTag { tag: parse_num::<u16>(tag)?, kind: dec_field_type(kind)?, values: dec_values(values)? })
+}
+/// 🗂️ One IFD: bracketed list of `enc_tag` entries.
+pub(crate) fn enc_ifd(ifd: &TiffIfd) -> String {
+    enc_list(&ifd.entries, enc_tag)
+}
+pub(crate) fn dec_ifd(s: &str) -> Result<TiffIfd, String> {
+    Ok(TiffIfd { entries: dec_list(s, dec_tag)? })
+}
+//#endregion 🔖️ValueCodecs
+
+//#region 🔖️DiffValueCodecs
+/// 🔺️ Tag-id-keyed `entries` triple: `[removed];[modified];[added]`, `modified`/`added` entries
+/// are `tag:kind:values` (colon-separated — safe since `kind` is bare decimal and `values` never
+/// contains a literal `:`).
+fn enc_tags_diff(d: &TiffTagsDiff) -> String {
+    let removed = d.removed.iter().map(|t| t.to_string()).collect::<Vec<_>>().join(",");
+    let modified = d.modified.iter().map(|m| format!("{}:{}:{}", m.tag, enc_field_type(m.kind), enc_values(&m.values))).collect::<Vec<_>>().join(",");
+    let added = d.added.iter().map(|a| format!("{}:{}:{}", a.tag, enc_field_type(a.kind), enc_values(&a.values))).collect::<Vec<_>>().join(",");
+    format!("[{removed}];[{modified}];[{added}]")
+}
+fn dec_tags_diff(body: &str) -> Result<TiffTagsDiff, String> {
+    let three = split_top_level(body, ';');
+    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("tags diff: expected 3 sections, got {}", three.len())) };
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_num::<u16>).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (tag_s, rest) = entry.split_once(':').ok_or_else(|| format!("tag modified: bad entry {entry:?}"))?;
+        let (kind_s, values_s) = rest.split_once(':').ok_or_else(|| format!("tag modified: bad entry {entry:?}"))?;
+        Ok(TiffTagModified { tag: parse_num::<u16>(tag_s)?, kind: dec_field_type(kind_s)?, values: dec_values(values_s)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (tag_s, rest) = entry.split_once(':').ok_or_else(|| format!("tag added: bad entry {entry:?}"))?;
+        let (kind_s, values_s) = rest.split_once(':').ok_or_else(|| format!("tag added: bad entry {entry:?}"))?;
+        Ok(TiffTagAdded { tag: parse_num::<u16>(tag_s)?, kind: dec_field_type(kind_s)?, values: dec_values(values_s)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    Ok(TiffTagsDiff { removed, modified, added })
+}
+
+/// 🗂️ Index-keyed `ifds` triple: `[removed];[modified];[added]`, `modified` entries are
+/// `index:<tags-triple>` (recursive), `added` entries are `index:<ifd>`.
+pub(crate) fn enc_ifds_diff(d: &TiffIfdsDiff) -> String {
+    let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
+    let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_tags_diff(&m.diff))).collect::<Vec<_>>().join(",");
+    let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_ifd(&a.ifd))).collect::<Vec<_>>().join(",");
+    format!("[{removed}];[{modified}];[{added}]")
+}
+pub(crate) fn dec_ifds_diff(body: &str) -> Result<TiffIfdsDiff, String> {
+    let three = split_top_level(body, ';');
+    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("ifds diff: expected 3 sections, got {}", three.len())) };
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_num::<usize>).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("ifd modified: bad entry {entry:?}"))?;
+        Ok(TiffIfdModified { index: parse_num::<usize>(idx)?, diff: dec_tags_diff(rest)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("ifd added: bad entry {entry:?}"))?;
+        Ok(TiffIfdAdded { index: parse_num::<usize>(idx)?, ifd: dec_ifd(rest)? })
+    }).collect::<Result<Vec<_>, String>>()?;
+    Ok(TiffIfdsDiff { removed, modified, added })
+}
+//#endregion 🔖️DiffValueCodecs
+
+//#region 🔖️TopLevel
+fn print_tiff_diff(d: &TiffDiff) -> String {
+    let mut tokens: Vec<String> = Vec::new();
+    if let Some(v) = d.byte_order {
+        tokens.push(format!("byte-order={}", enc_byte_order(v)));
+    }
+    if let Some(v) = &d.ifds {
+        tokens.push(format!("ifds={}", enc_ifds_diff(v)));
+    }
+    if let Some(v) = &d.pixels {
+        tokens.push(format!("pixels={}", hex_encode(v)));
+    }
+    tokens.join(" ")
+}
+fn parse_tiff_diff(line: &str) -> Result<TiffDiff, String> {
+    let mut d = TiffDiff::default();
+    if line.is_empty() {
+        return Ok(d);
+    }
+    for token in line.split(' ') {
+        if let Some(rest) = token.strip_prefix("byte-order=") {
+            d.byte_order = Some(dec_byte_order(rest)?);
+        } else if let Some(rest) = token.strip_prefix("ifds=") {
+            d.ifds = Some(dec_ifds_diff(rest)?);
+        } else if let Some(rest) = token.strip_prefix("pixels=") {
+            d.pixels = Some(hex_decode(rest)?);
+        } else {
+            return Err(format!("tiff diff: unknown token {token:?}"));
+        }
+    }
+    Ok(d)
+}
+
+impl protocol::DiffCodec for TiffDiff {
+    fn print_diff(&self) -> String {
+        print_tiff_diff(self)
+    }
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+        parse_tiff_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`'s hand-rolled
+    /// codecs use — satisfies every `DiffCodec` law without inventing a second wire format.
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(self.print_diff().into_bytes())
+    }
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+    }
+}
+//#endregion 🔖️TopLevel
+//#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod handcrafted_diff_codec_tests {
+    use super::*;
+    use protocol::DiffCodec;
+
+    fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {
+        TiffTag { tag: id, kind, values }
+    }
+
+    /// 🧪️ `DiffCodec` round-trip laws over the hand-rolled `TiffDiff` grammar — exercises every
+    /// `TiffValues` variant (incl. `Rational`/`SRational` pair lists and `Ascii`/`Byte` hex),
+    /// both IFD-level (index-keyed) and tag-level (id-keyed) removed/modified/added, and the
+    /// scalar `byte_order`/`pixels` tokens.
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
+        let a = TiffSnapshot {
+            schema: "stdio.tiff".into(),
+            byte_order: TiffByteOrder::LittleEndian,
+            ifds: vec![
+                TiffIfd {
+                    entries: vec![
+                        tag(256, TiffFieldType::Long, TiffValues::Long(vec![4])),
+                        tag(258, TiffFieldType::Short, TiffValues::Short(vec![8, 8, 8])),
+                        tag(315, TiffFieldType::Ascii, TiffValues::Ascii("An Author".into())),
+                        tag(282, TiffFieldType::Rational, TiffValues::Rational(vec![(72, 1)])),
+                        tag(700, TiffFieldType::Undefined, TiffValues::Undefined(vec![0xde, 0xad])),
+                    ],
+                },
+                TiffIfd { entries: vec![tag(1, TiffFieldType::Byte, TiffValues::Byte(vec![1, 2, 3]))] },
+            ],
+            pixels: vec![0u8; 16],
+        };
+        let mut b = a.clone();
+        b.byte_order = TiffByteOrder::BigEndian;
+        b.ifds[0].entries.retain(|t| t.tag != 258); // remove
+        b.ifds[0].entries.iter_mut().find(|t| t.tag == 315).unwrap().values = TiffValues::Ascii("New Author".into()); // modify
+        b.ifds[0].entries.push(tag(37380, TiffFieldType::SRational, TiffValues::SRational(vec![(-3, 10), (0, 1)]))); // add
+        b.ifds[0].entries.push(tag(50000, TiffFieldType::SByte, TiffValues::SByte(vec![-1, -2])));
+        b.ifds[0].entries.push(tag(50001, TiffFieldType::SShort, TiffValues::SShort(vec![-100])));
+        b.ifds[0].entries.push(tag(50002, TiffFieldType::SLong, TiffValues::SLong(vec![-100000])));
+        b.ifds[0].entries.push(tag(50003, TiffFieldType::Float, TiffValues::Float(vec![1.5, -2.25])));
+        b.ifds[0].entries.push(tag(50004, TiffFieldType::Double, TiffValues::Double(vec![3.14159265358979])));
+        b.ifds.push(TiffIfd { entries: vec![tag(2, TiffFieldType::Long, TiffValues::Long(vec![9]))] }); // whole IFD added
+        b.pixels = vec![9u8; 16];
+        let c = TiffSnapshot { schema: "stdio.tiff".into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![], pixels: vec![] };
+
+        let cases = vec![
+            TiffDiff::default(),
+            TiffDiff::between(&a, &b),
+            TiffDiff::between(&b, &a),
+            TiffDiff::between(&a, &c),
+            TiffDiff::between(&c, &a),
+        ];
+        for d in cases {
+            let printed = d.print_diff();
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = TiffDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
+
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = TiffDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
+        }
+    }
+}
+//#endregion 🧪️Tests

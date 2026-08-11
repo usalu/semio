@@ -14,7 +14,7 @@ package = "semio:s"
 [package.metadata.semio]
 role = "plugin"
 capabilities = ["localBackboneStorage"]
-host = { landing = "home", studio = "studio" }
+host = { landing = "home", shell = "studio" }
 
 [[package.metadata.semio.playground]]
 variant = "s"

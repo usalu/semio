@@ -30,6 +30,7 @@ import {
   acquirePluginModule,
   evictPluginModule,
   createLeasePool,
+  type PluginCatalog,
 } from "../../🔨️modules/🎠️kernel/🟦️component.ts";
 
 //#region 🧪️Tests
@@ -257,26 +258,43 @@ if (import.meta.vitest) {
     });
   });
 
+  // 🧪️ Framework-level tests must not know about real product plugin ids (`"puzzle3d"`, `"s"`, …) — a
+  // small synthetic catalog stands in for the OS product's generated `PLUGIN_CATALOG` here.
+  const SYNTHETIC_PLUGIN_CATALOG: PluginCatalog = {
+    plugins: [
+      { pluginId: "alpha", wasmOut: "alpha.wasm", role: "plugin", contributes: [], consumes: [] },
+      { pluginId: "beta", wasmOut: "beta.wasm", role: "plugin", contributes: [], consumes: [] },
+    ],
+    extensions: [{ pluginId: "beta-extension-gamma", wasmOut: "beta_gamma.wasm", role: "extension", contributes: ["beta.module"], consumes: [] }],
+    hosts: [{ pluginId: "alpha", landingAppId: "home", hostAppId: "studio" }],
+    playgrounds: [
+      { variant: "alpha", pluginId: "alpha", aliases: [] },
+      { variant: "beta-play", pluginId: "beta", app: "beta-play-app", aliases: ["b", "beta play"] },
+    ],
+    moduleUrl: (pluginId, wasmOut) => `/plugin-modules/${pluginId}/${wasmOut.replace(/\.wasm$/, ".js")}`,
+    extensionModuleUrl: (pluginId, wasmOut) => `/extensions/${pluginId}/${wasmOut.replace(/\.wasm$/, ".js")}`,
+  };
+
   describe("PlaygroundResolution", () => {
-    it("resolves host config from generated program metadata", () => {
-      expect(resolvePluginHostConfig("s")).toEqual({ pluginId: "s", landingAppId: "home", hostAppId: "studio" });
-      expect(resolvePluginHostConfig("puzzle3d")).toBeUndefined();
+    it("resolves host config from the injected catalog", () => {
+      expect(resolvePluginHostConfig(SYNTHETIC_PLUGIN_CATALOG, "alpha")).toEqual({ pluginId: "alpha", landingAppId: "home", hostAppId: "studio" });
+      expect(resolvePluginHostConfig(SYNTHETIC_PLUGIN_CATALOG, "beta-play")).toBeUndefined();
     });
 
     it("resolves playground aliases to registry plugin ids", () => {
-      expect(resolvePluginRegistryId("aggregator")).toBe("puzzle");
-      expect(resolvePluginRegistryId("3d")).toBe("puzzle");
+      expect(resolvePluginRegistryId(SYNTHETIC_PLUGIN_CATALOG, "b")).toBe("beta");
+      expect(resolvePluginRegistryId(SYNTHETIC_PLUGIN_CATALOG, "beta play")).toBe("beta");
     });
 
     it("rebuilds program rows when the generated session variant is stale", () => {
-      const boot = resolvePlaygroundBoot("aggregator", {
-        variant: "sourcing",
-        defaultAppId: "sourcing-curate",
-        plugins: [{ pluginId: "sourcing", moduleUrl: "/plugin-modules/sourcing/sourcing_plugin.js" }],
+      const boot = resolvePlaygroundBoot(SYNTHETIC_PLUGIN_CATALOG, "beta-play", {
+        variant: "alpha",
+        defaultAppId: "alpha-app",
+        plugins: [{ pluginId: "alpha", moduleUrl: "/plugin-modules/alpha/alpha_plugin.js" }],
       });
-      expect(boot.variant).toBe("aggregator");
-      expect(boot.defaultAppId).toBe("puzzle3d-play");
-      expect(boot.plugins).toEqual([{ pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/🟨️puzzle_plugin.js", contributes: [], consumes: [] }]);
+      expect(boot.variant).toBe("beta-play");
+      expect(boot.defaultAppId).toBe("beta-play-app");
+      expect(boot.plugins).toEqual([{ pluginId: "beta", moduleUrl: "/plugin-modules/beta/beta.js", contributes: [], consumes: [] }]);
     });
   });
 
@@ -384,12 +402,20 @@ if (import.meta.vitest) {
     });
 
     it("multiplexPluginSources() merges list() and resolves moduleUrl from the matching child", async () => {
+      const catalog: PluginCatalog = {
+        plugins: [],
+        extensions: [{ pluginId: "gamma-extension", wasmOut: "gamma.wasm", role: "extension", contributes: [], consumes: [] }],
+        hosts: [],
+        playgrounds: [],
+        moduleUrl: (pluginId, wasmOut) => `/plugin-modules/${pluginId}/${wasmOut.replace(/\.wasm$/, ".js")}`,
+        extensionModuleUrl: (pluginId, wasmOut) => `/extensions/${pluginId}/${wasmOut.replace(/\.wasm$/, ".js")}`,
+      };
       const dev = createDevPluginSource(registry);
-      const extensions = createExtensionSource();
+      const extensions = createExtensionSource(catalog);
       const multiplexed = multiplexPluginSources(dev, extensions);
       expect(multiplexed.id).toBe("dev+extensions");
       const listed = await multiplexed.list();
-      expect(listed.map((entry) => entry.pluginId).sort()).toEqual([...registry.map((entry) => entry.pluginId), ...EXTENSION_TARGETS.map((entry) => entry.pluginId)].sort());
+      expect(listed.map((entry) => entry.pluginId).sort()).toEqual([...registry.map((entry) => entry.pluginId), ...catalog.extensions.map((entry) => entry.pluginId)].sort());
       expect(multiplexed.moduleUrl("note")).toBe("/plugin-modules/note/note_plugin.js");
       expect(() => multiplexed.moduleUrl("missing")).toThrow(/missing/);
     });

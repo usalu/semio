@@ -797,3 +797,286 @@ Full report: `f6b-closer-report.md` in this ticket folder. Per-artifact reports:
 `f6-dwg-ac1018-report.md`, `f6-dwg-ac1024-report.md`, `f6-bmp-report.md`, `f6-stl-report.md`,
 `f6-las-report.md`, `f6-gif-87a-report.md`, `f6-zip-report.md`. Verify report:
 `f6b-verify-report.md`. Recon (spec for all of F6): `f6-recon-report.md`.
+
+## F6c (op-codec fan-out sub-wave, bcf/png/deflate/obj/gltf/pptx/pdf1.7) — closed 2026-08-11 — third op-codec sub-wave of F6
+
+**Roster**: `💬️bcf` 2.1, `📷️png` 1.2, `🗜️deflate` rfc1950, `🧊️obj` 3.0, `🧊️gltf` 2.0, `🎞️pptx`
+ecma-376, `📄️pdf` 1.7 — 7 fan-out agents (1 per artifact/standard), 1 verify agent
+(`f6c-verify-report.md`), this C6c closer. Same scope definition as F6a/F6b: wire-codec layer
+(`protocol::DiffCodec` + `protocol::OpText`/`protocol::OpBinary`) on top of the snapshot/diff/mutation
+type triad F1-F5 already built, replacing the placeholder `serde_json`-based stubs.
+
+**Per-artifact classification** (STEP 1 independently re-verified for real by every fan-out agent,
+never trusted from the recon's own §8 heuristic table):
+
+| Artifact | Standard | Diff path | Mutation path | Real blocker (if hand-roll) |
+|---|---|---|---|---|
+| 💬️bcf | 2.1 | hand-roll | hand-roll | Both 3a (`BcfCamera` genuine enum, reachable both sides) AND 3b (tri-state) — recon's row 19 guessed tri-state-only ("enum-free"), corrected for real. |
+| 📷️png | 1.2 | hand-roll | hand-roll | Both 3a (`PngTransparency`/`PngBackground`/`PngChunkMarker` enums) AND 3b (8 tri-states, real count, not the recon's guessed 12). |
+| 🗜️deflate | rfc1950 | hand-roll | **derive**+wrapper | Diff: pure 3b, single tri-state `dict_id: Option<Option<u32>>` — matches recon's row 21 exactly. Mutation: derived clean, zero enum in `DeflateSnapshot`'s tree. |
+| 🧊️obj | 3.0 | hand-roll | **derive**+wrapper | Diff: pure 3b, 3 tri-states — matches recon's row 22. Mutation: derived clean, zero enum anywhere in `ObjSnapshot`'s tree. |
+| 🧊️gltf | 2.0 | hand-roll | hand-roll | Worse than recon's row 23 guess: a THIRD blocker beyond 3a/3b — every one of the 14 top-level collections routes through the generic `GltfCollectionDiff<T,D>` wrapper (derive has zero generics support). Plus 3a: `GltfJson` AND `GltfCameraProjection` (2nd enum, invisible to the recon's file-level grep). Plus 3b: 42 tri-states, the largest surface in the whole F6 program. |
+| 🎞️pptx | ecma-376 | hand-roll | hand-roll | Matches recon's row 24 (3a `PptxShapeDiff` enum, 3b `font_size` tri-state) PLUS a THIRD blocker shared with docx: the generic `IndexedTripleDiff<D,T>`/`NamedTripleDiff<K,D,T>` engine cannot be derived at all (`E0107`, malformed codegen). |
+| 📄️pdf | 1.7 | hand-roll | hand-roll | Matches recon's row 25 (3a `PdfObject` object-graph enum, 3b `Stream::raw_filter` tri-state) PLUS a Mutation-side-only finding: `PdfPathSegment` (2nd enum, reached via `SetDictEntry`/`RemoveDictEntry`'s `path` argument, invisible to the recon's diff-file-only grep). |
+
+5 of 7 hand-rolled on both sides (bcf, png, gltf, pptx, pdf1.7); 2 of 7 split (deflate, obj — diff
+hand-rolled, mutation cleanly derived). Zero full-derive-both-sides landings this wave (unlike
+dwg/bmp in F6b) — this sub-wave's roster was structurally harder on average, consistent with the
+recon's own sizing note flagging gltf/pptx/pdf1.7 as the most expensive remaining hand-rolls in the
+28-standard backlog. Two more genuinely new derive-blocker classes surfaced, beyond §3a/3b and beyond
+F6b's own two new findings (nested fixed-arity arrays, bare tuples): **generic collection-diff engines
+have no `DslField` bridge** (gltf's `GltfCollectionDiff<T,D>`, pptx/docx's
+`IndexedTripleDiff<D,T>`/`NamedTripleDiff<K,D,T>` — zero generics support in the derive macro at all,
+confirmed by literal malformed codegen, not just a missing-impl error) and, independently, **bcf's
+`NamedTripleDiff<K,D,T>` has no `DslField` impl** (same root family). Neither fixed this wave (shared
+framework findings, out of every F6 agent's ownership boundary); both documented via doc-comment
+citation at the point of use.
+
+**Full-crate gate — this closer's own fresh run**: `cargo test -p semio-s-plugin-stdio --lib` (no
+filter) → **1061 passed, 0 failed, 0 ignored, 0 measured, 0 filtered out**, finished in ~7.7s. Matches
+the independent F6c verify agent's own number exactly (`f6c-verify-report.md`, which re-ran every one
+of the 7 scoped test suites itself AND the whole-crate suite, from its own uninvolved session, and
+grepped every diff/mutations file directly rather than trusting the self-reports). Per-artifact scoped
+counts (cross-checked against the verify report): bcf 18/18, png 24/24, deflate 19/19, obj 19/19,
+gltf 37/37, pptx 50/50, pdf 1.7 diff-scope 19/19 (whole v1_7 standard 105/105, `bachelor_thesis`
+fixture 6/6) — every one includes both mandatory law tests
+(`diff_codec_text_binary_roundtrip_law`, `op_text_binary_roundtrip_law`), zero failures anywhere,
+zero `serde_json` stub remnants in any of the 14 diff/mutations files (independently re-confirmed by
+the verify agent via direct file inspection, not just report-trusting). No failures needed
+investigating inside any of the 7 artifacts — the gate was clean on this closer's first run.
+
+**Policy shrink (`bun run ./📜️script.ts policy`, `dsl-migration/diff-completeness` rule,
+stdio-scoped)**: this closer's own fresh run — **8 stdio breaches remain** (down from F6b's
+closer-confirmed 15). Verified precisely: grepped the full breach listing for every one of this
+wave's 7 artifact/standard paths — **zero matches for any of the 7**, confirming every one's new
+`DiffCodec` impl (hand-rolled or derived-with-wrapper) satisfies the check's literal-text grep. The
+drop from 15 → 8 is exactly this wave's 7 artifacts, no more, no less (15 − 7 = 8).
+`POLICY_DIFF_COMPLETENESS_ALLOWLIST` (`📜️script.ts:2304`) confirmed untouched by any of the 7
+fan-out agents or this closer — grepped the allowlist's full contents for `stdio`: zero matches, same
+"zero stdio entries, for real" outcome as F6a/F6b. Remaining 8 stdio breaches (7 official-scope + the
+1 `🏗️ifc/2x3` extra, tracked separately, never part of the 31): `🏗️ifc 2x3`, `📜️docx`, `📝️md`,
+`📰xml`, `📷️jpg`, `🔣️json`, `🖊️dxf`, `🖼️tiff`.
+
+**`glue_followup: []`** — none of the 7 fan-out reports flagged a need for a new `glue.rs` mount (same
+pattern as F6a/F6b — op-codec work lands entirely inside already-mounted
+`🧬️schema/{🔺️diff,🧬️mutations}/🦀️component.rs` files, plus bcf's pre-existing `⚙️engine/component.rs`
+test module). `glue.rs` shows zero diff against its tracked baseline as of this closer's session
+(whatever "MM" state was visible in `git status` at session start had already resolved by the time
+this closer ran — another concurrent session's edit, not touched by this closer). `script.ts` has a
+small pending diff (2 insertions, 6 deletions) — inspected directly: a `POLICY_STDIO_OWNER_TABLE_REL`
+path-migration edit unrelated to any of this wave's 7 artifacts and unrelated to
+`POLICY_DIFF_COMPLETENESS_ALLOWLIST` (grepped for all 7 artifact names and `ALLOWLIST`: zero matches)
+— same concurrent sibling-ticket-automation pattern every closer since F2 has documented and correctly
+left alone. Not touched by this closer.
+
+**Ownership-ledger update for F6c's 7 rows**: bcf/2.1, png/1.2, deflate/rfc1950, obj/3.0, gltf/2.0,
+pptx/ecma-376, and pdf/1.7 are now **op-codec-complete** (real `protocol::DiffCodec` +
+`protocol::OpText`/`protocol::OpBinary`, no `serde_json` stub remaining anywhere in any of the 14
+files), real `cargo test`-confirmed green (1061/0 whole-crate), policy-clean for
+`dsl-migration/diff-completeness` (0 of the 7 present in the breach list). **8 standards remain**
+for future op-codec sub-waves (15 F6b baseline − F6c's 7 = 8; 7 official-scope +
+`🏗️ifc/2x3` the extra, separately tracked, never part of the 31) — 8 total stdio breaches remaining,
+matching the policy count above exactly. This is the last op-codec fan-out sub-wave assigned as of
+this closer's session; the remaining 8 (docx, md, xml, jpg, json, dxf, tiff, ifc/2x3) have not yet
+been rostered into a sub-wave.
+
+Full report: `f6c-closer-report.md` in this ticket folder. Per-artifact reports: `f6-bcf-report.md`,
+`f6-png-report.md`, `f6-deflate-report.md`, `f6-obj-report.md`, `f6-gltf-report.md`,
+`f6-pptx-report.md`, `f6-pdf-1.7-report.md`. Verify report: `f6c-verify-report.md`. Recon (spec for
+all of F6): `f6-recon-report.md`.
+
+## F6d (op-codec fan-out sub-wave, docx/md/xml/jpg/json/dxf/tiff) — closed 2026-08-11 — FOURTH and LAST op-codec fan-out sub-wave of F6
+
+**Roster**: `📜️docx` ecma-376, `📝️md` commonmark, `📰xml` 1.0, `📷️jpg` jfif-1.01, `🔣️json` rfc8259,
+`🖊️dxf` r12, `🖼️tiff` 6.0 — 7 fan-out agents (1 per artifact/standard), 1 verify agent
+(`f6d-verify-report.md`), this C6d closer. Same scope definition as F6a/F6b/F6c: wire-codec layer
+(`protocol::DiffCodec` + `protocol::OpText`/`protocol::OpBinary`) on top of the snapshot/diff/mutation
+type triad F1-F5 already built, replacing the placeholder `serde_json`-based stubs. **This is the last
+of the 4 op-codec sub-waves — the remaining 21 official standards (7×3) plus this wave's 7 exhausts
+the full 28-standard backlog the recon report identified after its own 3-artifact pilot.**
+
+**Per-artifact classification** (STEP 1 independently re-verified for real by every fan-out agent —
+6 of 7 via an actual add-derive-capture-error-revert `cargo check` probe, `json` via static type
+inspection with an explicit deviation note, all cross-checked against the recon's §8 heuristic table):
+
+| Artifact | Standard | Diff path | Mutation path | Real blocker (if hand-roll) |
+|---|---|---|---|---|
+| 📜️docx | ecma-376 | hand-roll | hand-roll | 3a (`DocxBlockDiff`/`DocxBlock` enums) AND 3b (`style`/`based_on` tri-states) — matches recon's row 26 exactly. Reused its own prior-wave generic `IndexedTripleDiff`/`NamedTripleDiff` collection-triple types across 7 collection instantiations with ONE generic `enc_indexed_triple`/`enc_named_triple` pair rather than 7 bespoke ones. |
+| 📝️md | commonmark | hand-roll | hand-roll | 3a (`MdBlocksDiff`→`MdBlockDiff`/`MdBlock`/`MdInline`, 3 data-carrying enum kinds reachable, the most of any F6 artifact) AND 3b (`List.start`/`CodeBlock.info` tri-states) — matches recon's row 27 ("LARGEST enum count") exactly. One new structural device: a bare `MdBlocksDiff` triple nested directly inside `MdListItemsDiff` (not wrapped by `encode_option` or a tagged enum the way svg's grammar always is) needed an extra bracket-wrap on encode / strip on decode to avoid corrupting the outer triple's `;`-split. |
+| 📰xml | 1.0 | hand-roll | hand-roll | 3a (`XmlNodeDiff` enum) AND 3b (`declaration`/`doctype` tri-states) — matches recon's row 28 exactly; built directly off svg's already-landed `enc_xml_node`/`dec_xml_node` template per the recon's explicit "do this WITH or RIGHT AFTER svg" instruction — verified byte-identical tag mapping (`T`/`D`/`M`/`P`/`R`) by this wave's verify agent, confirming direct reuse not reinvention. |
+| 📷️jpg | jfif-1.01 | hand-roll | hand-roll | 3a (`JpgFrameChange` enum) AND 3b (3 tri-states: `re_encode_quality`/`jfif_thumbnail`/`restart_interval`) — matches recon's row 29. PLUS a Mutation-side finding beyond recon's own sweep: `dsl` has **no `DslField` impl for tuples of any arity** — `SetJfifHeader.version: (u8,u8)` is a decisive, independently-fatal blocker even if every cascading struct type were given `DslRecord`/`DslScalar` derives, since no tuple-arity impl exists anywhere in the `dsl` crate. Same root-cause family F6b's `las` report already surfaced (bare tuples have no blanket impl) — jpg is a second, independent confirmation. |
+| 🔣️json | rfc8259 | hand-roll | hand-roll | 3a only (`JsonValueDiff`/`JsonValue`/`JsonPathSegment` enums), **zero tri-state anywhere** — matches recon's row 30 exactly. Classification done via static type inspection rather than a live derive-then-revert probe (self-flagged deviation, rationale: structurally identical to two already-verbatim-quoted precedents in the same program, and the shared compile budget was contended by concurrent sibling sessions at the time) — independently re-confirmed by this wave's verify agent, who agrees the structural claim holds. |
+| 🖊️dxf | r12 | hand-roll | hand-roll | 3a only (`DxfEntityDiff`/`DxfEntity`/`DxfValue` enums), zero tri-state — matches recon's row 31 exactly. Added 2 new generic collection-triple cores (`enc_name_triple`/`enc_index_triple`, mirroring this file's own pre-existing `DxfNamedElem`/`DxfIndexElem` structural-diff cores) reused across all 6 of dxf's collections. |
+| 🖼️tiff | 6.0 | hand-roll | hand-roll | 3a only (`TiffValues`, a 12-variant data-carrying enum — the recon table (row 15) had flagged tiff `DERIVE (probable)` with an explicit `CHECK-ENUM-ELSEWHERE` caveat; verified for real via derive-then-revert, the caveat was correct, tiff is HAND-ROLL not DERIVE), zero tri-state. `OpText` impl uses the unqualified `impl OpText for TiffMutation` syntax rather than the fully-qualified `impl protocol::OpText` the other 6 use — still real (verified by reading the body), just a naming-pattern variance worth flagging for future greps. |
+
+All 7 hand-rolled on both sides — the highest hand-roll density of any F6 sub-wave (F6a: 0/7 fully
+hand-rolled both sides with most derive-clean; F6b: 2/7 both-hand-roll; F6c: 5/7; F6d: 7/7) — consistent
+with the recon's own sizing note that the tail of the 28-standard backlog skewed toward the more
+enum/tri-state-heavy standards. One genuinely new derive-blocker finding this wave (**dsl has no
+`DslField` impl for tuples of any arity**, jpg's `(u8,u8)` field) — not new in kind (same missing-
+blanket-impl family F6b's `las` report already flagged) but a second independent confirmation of a
+real, un-fixed `dsl`-crate gap, still out of every F6 agent's ownership boundary (fixing it would mean
+either a framework-level `dsl` crate change or a Mutation-shape change, both forbidden by this ticket's
+scope).
+
+**Full-crate gate — this closer's own fresh run**: `cargo test -p semio-s-plugin-stdio --lib` (no
+filter) → **1075 passed, 0 failed, 0 ignored, 0 measured, 0 filtered out**, finished in ~7.8s.
+Matches the independent F6d verify agent's own number exactly (`f6d-verify-report.md`, which re-ran
+every one of the 7 scoped test suites itself AND the whole-crate suite, from its own uninvolved
+session, and grepped every diff/mutations file directly for `impl protocol::DiffCodec`/
+`impl protocol::OpText`/`impl protocol::OpBinary` plus the absence of any live `#[derive(dsl::DslDiff)]`/
+`#[derive(dsl::DslOps)]` and any remaining `serde_json::to_string/to_vec/from_str/from_slice` stub
+call, rather than trusting the self-reports). Per-artifact scoped counts (cross-checked against the
+verify report): docx 47/47, md 26/26, xml 24/24, jpg 31/31, json 60/60, dxf 15/15, tiff 31/31 — sum
+234 — every one includes both mandatory law tests (`diff_codec_text_binary_roundtrip_law`,
+`op_text_binary_roundtrip_law`), zero failures anywhere, zero `serde_json` stub remnants in any of the
+14 diff/mutations files. Saved to `f6d-closer-full-crate-test.txt` in this ticket folder. No failures
+needed investigating inside any of the 7 artifacts — every one of this closer's own polls landed clean;
+all 7 fan-out reports separately documented (and this closer's cross-read confirms) transient
+concurrent-session churn mid-session (a docx tri-state test-coverage gap self-caught and self-fixed by
+docx's own fan-out agent before this closer ever ran; a stale `3d`-module manifest glitch; brief `md`/
+`docx` compile windows from sibling sessions mid-edit) — none attributable to, or touched by, any of
+this wave's own 7 artifacts.
+
+**Policy shrink (`bun run ./📜️script.ts policy`, `dsl-migration/diff-completeness` rule,
+stdio-scoped)**: this closer's own fresh run — **1 stdio breach remains** (down from F6c's
+closer-confirmed 8). Verified precisely: grepped the full breach listing for every one of this wave's
+7 artifact/standard paths — **zero matches for any of the 7**, confirming every one's new `DiffCodec`
+impl satisfies the check's literal-text grep. The drop from 8 → 1 is exactly this wave's 7 artifacts
+(8 − 7 = 1). The 1 remaining breach is **`🏗️ifc/2x3`** — the pre-existing 32nd standard the recon
+report's own §8 row 5 flagged as out of scope for the entire F6 program from the start ("not one of
+the official 31 ... confirm scope before spending an agent on it"), added by the unrelated sibling
+ticket `ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES`, and never rostered into any of F6a/b/c/d.
+**Every one of the official 31 stdio standards now has a real, hand-rolled-or-derived
+`protocol::DiffCodec` + `protocol::OpText`/`protocol::OpBinary` implementation — the F6 program's own
+stated goal ("the goal is for the live policy check to stop flagging your file ... zero stdio entries")
+is achieved for the full official scope.** `POLICY_DIFF_COMPLETENESS_ALLOWLIST` (`📜️script.ts:2304`)
+confirmed untouched by any of the 7 fan-out agents or this closer — grepped the allowlist's full
+contents: zero `stdio` entries, same "zero stdio entries, for real" outcome as every prior F6 sub-wave.
+Full raw policy output saved (ticket-folder scratch, `.txt`): `f6d-closer-policy-run.txt` (21591
+lines). No policy-checker quirk found — the breach mechanism worked exactly as documented at every
+step; the 1 remaining breach is real (ifc/2x3 genuinely has no `DiffCodec` impl) and correctly
+out-of-scope, not a false positive.
+
+**`glue_followup: []`** — none of the 7 fan-out reports flagged a need for a new `glue.rs` mount (same
+pattern as F6a/F6b/F6c — op-codec work lands entirely inside already-mounted
+`🧬️schema/{🔺️diff,🧬️mutations}/🦀️component.rs` files). `📦️glue.rs`
+(`✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs`) shows **zero diff** against its tracked baseline
+as of this closer's session — the "MM" state visible in `git status` at session start (per the task
+brief) had already resolved by the time this closer ran, another concurrent session's edit, not
+touched by this closer. `📜️script.ts` has a small pending diff (2 insertions, 6 deletions) —
+inspected directly: a `POLICY_STDIO_OWNER_TABLE_REL`/`POLICY_STDIO_OWNER_TABLE_LEGACY_REL`
+path-migration edit (moving the stdio owner-table SSOT path, dropping a one-wave legacy-path
+fallback) unrelated to any of this wave's 7 artifacts and unrelated to
+`POLICY_DIFF_COMPLETENESS_ALLOWLIST` (grepped for all 7 artifact names and `ALLOWLIST`: zero matches)
+— same concurrent sibling-ticket-automation pattern every closer since F2 has documented and correctly
+left alone. Not touched by this closer. No other shared file (`dsl`/`protocol`/`schema` framework
+crates, `🏪️store`) was touched by this closer or any of the 8 F6d agents (7 fan-out + verify).
+
+**Ownership-ledger update for F6d's 7 rows**: docx/ecma-376, md/commonmark, xml/1.0, jpg/jfif-1.01,
+json/rfc8259, dxf/r12, and tiff/6.0 are now **op-codec-complete** (real `protocol::DiffCodec` +
+`protocol::OpText`/`protocol::OpBinary`, no `serde_json` stub remaining anywhere in any of the 14
+files), real `cargo test`-confirmed green (1075/0 whole-crate), policy-clean for
+`dsl-migration/diff-completeness` (0 of the 7 present in the breach list). **This closes out the F6
+op-codec program: 0 official standards remain unassigned** (8 F6c baseline − F6d's 7 = 1, and that 1
+is `🏗️ifc/2x3`, the extra, never part of the 31, correctly left untouched). All 31 official stdio
+standards are op-codec-complete across the recon pilot (binary, gif89a, svg — 3) + F6a (7) + F6b (7) +
+F6c (7) + F6d (7) = 3 + 28 = **31/31**.
+
+Full report: `f6d-closer-report.md` in this ticket folder. Per-artifact reports:
+`f6-docx-ecma-376-report.md`, `f6-md-report.md`, `f6-xml-report.md`, `f6-jpg-report.md`,
+`f6-json-rfc8259-report.md`, `f6-dxf-r12-report.md`, `f6-tiff-report.md`. Verify report:
+`f6d-verify-report.md`. Recon (spec for all of F6): `f6-recon-report.md`. Program-wide consolidation:
+`f6-final-summary.md`.
+
+## F6 program — CLOSED 2026-08-11 — all 4 op-codec sub-waves + recon pilot complete
+
+**31/31 official stdio standards are op-codec-complete.** `dsl-migration/diff-completeness` stdio
+breach count: **1** (`🏗️ifc/2x3` only — the pre-existing, explicitly out-of-scope 32nd standard, never
+part of the official 31, never rostered into any sub-wave). Full crate: **1075 passed, 0 failed**.
+`POLICY_DIFF_COMPLETENESS_ALLOWLIST`: 0 stdio entries, unchanged from before F6 started — every
+breach resolved by a real implementation, none by allowlisting. See `f6-final-summary.md` for the
+full program-wide consolidation (derive-vs-hand-roll breakdown for all 31 standards, every real bug
+found across the program, and the state handoff for the final gate (G) wave).
+
+## G (final gate) — CLOSED 2026-08-11 — every checklist item run fresh from disk, program verdict issued
+
+Ran all 7 items of the plan's "Verification (end-to-end definition of done)" checklist for real, from
+a fresh session, trusting nothing cached. Full detail, raw command excerpts, the 31-row law-test
+table, and the precise grammar-leaf/facet-mirror gap counts: `g-final-gate-report.md`. Raw command
+outputs: `g-full-crate-test.txt`, `g-framework-check.txt`, `g-policy-run.txt`, `g-nonstdio-check.txt`.
+
+**1. Full crate**: `cargo test -p semio-s-plugin-stdio --lib` (fresh, no filter) → **1075 passed, 0
+failed, 0 ignored** — exact match to F6d's number, zero regression since F6 closed. All 31 official
+standards confirmed to have all 8 law-kinds (`field_sweep`, `mutation_diff_law`, `inverse_law`,
+`absorb_law`, `between_roundtrip_law`, `codec_retention_law`, `op_text_binary_roundtrip_law`,
+`diff_codec_text_binary_roundtrip_law`) present, several via judgment-verified equivalently-named
+tests rather than the literal string (documented per-artifact in the gate report).
+
+**2. `cargo check -p semio-framework`**: clean, 0 errors, 46s. Non-stdio `impl ArtifactBuilder`
+spot-check on the 4 largest outside-stdio implementors (`norm`, `block`, `puzzle`, `trinity`) found:
+(a) `norm`/`block`/`puzzle` fail on a dangling `#[path]` to a nonexistent `📄️document/🦀️component.rs`
+— confirmed via `git log` to be **pre-existing, unrelated breakage from 2026-06** (two months before
+this ticket), entirely outside `🗄️stdio` — not fixed, flagged for those plugins' owners; (b) `trinity`
+had **14 real compile errors genuinely caused by this program**: its `🔌️jack`/`♻️rewrite` artifacts'
+cross-plugin io bridges (outside every F-wave's `🗿️artifacts/<own>/**` ownership boundary, so never
+seen) hand-built `JsonSnapshot`/`MdSnapshot`/`CsvSnapshot` by field name against the OLD placeholder
+shapes F1/F3 replaced. **Fixed this gate wave** (judged in-scope: pure reuse of each artifact's own
+already-existing codec functions, no new business logic, no stdio-side edit) — 8 files under
+`✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/{🔌️jack,♻️rewrite}/.../🚪️io/{📤️export,📥️import}/.../🦀️component.rs`
+rewired onto `json::schema::snapshot::{parse_json_text,write_json_text,write_json_pretty}`,
+`md::engine::{parse_markdown_blocks,render_markdown_blocks}`, and typed `CsvRecord`/`CsvField`
+construction. Re-verified: `cargo check -p semio-s-plugin-trinity` → 0 errors.
+
+**3. `bun run ./📜️script.ts policy`**: all 5 S-8/S-7 stdio rules confirmed at their real, live-verified
+state: `diff-algebra` and `field-sweep-presence` are **fully real, 0/0 allowlist** (seeded 31/31 at
+S2, shrunk to 0 through F1-F6, no shortcuts); `vcs-machinery-ban` stayed empty throughout;
+`dsl-migration/diff-completeness` stdio breach count **1** (`ifc/2x3` only, matching F6's number
+exactly), allowlist 0 stdio entries. `grammar-honesty` and `facet-mirror-drift` show 0 LIVE breaches
+only because their shrink-only allowlists still carry the real gap (see items 4/6).
+
+**4. Grep gates**: `serde_json::Value` in snapshot/diff/mutations public types — 0 real hits (3 raw
+hits are doc comments stating its absence). `snapshot: Option<XSnapshot>` full-replace slot in diff
+files — 0 real hits (1 raw hit is bcf's legitimate `Option<Option<Vec<u8>>>` per-viewpoint PNG byte
+field, unrelated to the banned pattern). Apply-and-capture pattern — 0 instances across all 64
+mutations files (not just a 5-artifact sample), every `apply_x_mutation(...)` call site inspected is
+inside a test body. **Grammar-leaf honesty — real, quantified, unfixed gap**: 353 of 651 stdio
+grammar leaves (54%) are still the S2-placeholder skeleton (down from 645/651 at S2 — real progress,
+but nowhere near done). 5/31 standards fully handcrafted (binary, md, png, tiff, txt), 9/31 standards
+have ZERO grammar-leaf work done at all (bcf, docx, dwg×2, gif×2, pdf/1.4, pptx, xlsx), 17/31
+partial. Full per-standard table in the gate report. **Against the user's explicit "handcraft ALL
+formats" decision — not satisfied, correctly not attempted this wave (unbounded scope).**
+
+**5. Fixture suites**: `dancing` (4 tests), `bachelor_thesis` (6), `architectural` (4), `metabolism`
+(5) — all green, all confirmed present in the full test output (not just a truncated tail view).
+
+**6. Facet-mirror drift — real, quantified, ZERO-progress gap**: `POLICY_FACET_MIRROR_DRIFT_ALLOWLIST`
+= 93 stdio entries = 31 standards × 3 facets EXACTLY — **100% of stdio facet mirrors are stale**,
+unchanged from S2's own seed. No F-wave touched a single TS/GraphQL/JSON-schema/proto mirror.
+Correctly not attempted this wave.
+
+**7. Cross-cutting cleanup items**: OPC-diff-type duplication (docx/xlsx/pptx, F5's finding) —
+re-confirmed live and unfixed (bcf does NOT independently duplicate one, correcting a slight
+over-statement in F5's own "×4" phrasing). The 4 `dsl`-crate framework gaps from F6 — re-confirmed
+still accurately documented in `f6-final-summary.md` §4, still unfixed, still correctly out of every
+wave's ownership boundary.
+
+**Final verdict**: the program's core mandate — every snapshot complete, every diff handcrafted with
+zero full-replace slots, every mutation returns a handcrafted diff via zero apply-and-capture, generic
+op-slot/stub code replaced with format-specific typed code including the F6 wire-codec layer — **is
+satisfied for all 31 official standards**, verified fresh from disk, not from trusting prior reports.
+Grammar-leaf handcrafting (54% remaining) and facet-mirror parity (100% remaining) are explicitly
+user-mandated items that are **NOT satisfied** and should not be mistaken for done; both are precisely
+quantified above and sized for dedicated follow-up ticket(s), not a quick pass. Follow-up backlog for
+the next ticket: grammar-leaf authoring (353 leaves), facet-mirror rewrite (93 facets), OPC-diff-type
+hoist (docx/xlsx/pptx), the 4 `dsl`-crate gaps (prioritize the generics gap — 5 artifacts hit it — and
+the tuple-impl gap — 2 independent confirmations), `ifc/2x3` if literal zero is ever wanted, and the
+unrelated `norm`/`block`/`puzzle` dangling-path breakage for those plugins' owners.
+
+Files touched this wave: `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/{📝️md/🔖️commonmark,📊️csv/🔖️rfc4180,🔣️json/🔖️rfc8259}/✳️any/🦀️component.rs`,
+`✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/{📝️md/🔖️commonmark,🔣️json/🔖️rfc8259}/✳️any/🦀️component.rs`,
+`✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/{📝️md/🔖️commonmark,🔣️json/🔖️rfc8259}/✳️any/🦀️component.rs`,
+`✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/{📝️md/🔖️commonmark,🔣️json/🔖️rfc8259}/✳️any/🦀️component.rs`
+(9 files, 8 real fixes + 1 confirmed-already-safe stub), plus this STATUS.md append and
+`g-final-gate-report.md` (new). No `stdio`, `framework`, or `script.ts` file touched. Full report:
+`g-final-gate-report.md`. Ticket left open for the orchestrator to close.

@@ -5,8 +5,8 @@ use base64::Engine;
 use crate::artifacts::process3d::{
     Capability, MachineCatalog, MeasureKind, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, SolidSpec, Stock, StockQuantity, Workshop, WorkshopMachine,
 };
-use semio_s_3d::brep::kernel::{Brep, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
-use semio_s_3d::brep::engine::{BrepEngineHost, BrepKernel, GeometryHandle};
+use semio_framework_3d::brep::kernel::{Brep, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
+use semio_framework_3d::brep::engine::{BrepEngineHost, BrepKernel, GeometryHandle};
 use semio_framework_plugin::{MeshData, MeshExporter, MeshImporter};
 use serde::Serialize;
 use serde_json::Value;
@@ -29,6 +29,7 @@ pub fn register() {
     crate::artifacts::process3d::composer::register();
 
     register_artifact_schema();
+    crate::apps::process3d::config::schema::register_app_schema();
     register_pilot_languages();
     fn process3d_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
         let snapshot: Process3dSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
@@ -412,21 +413,21 @@ fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
 /// 📦️ Builds a posed kernel solid for a spec via `*_prim_sync` → `rotate_sync` → `translate_sync`.
 fn solid_for_spec(kernel: &mut dyn BrepKernel, spec: &SolidSpec, pose: &Pose) -> Option<GeometryHandle> {
     let base = match spec {
-        SolidSpec::Box { width, depth, height } => semio_s_3d::brep::engine::block_on(kernel.box_prim(*width, *depth, *height)).ok()?,
-        SolidSpec::Cylinder { radius, height } => semio_s_3d::brep::engine::block_on(kernel.cylinder_prim(*radius, *height)).ok()?,
-        SolidSpec::Sphere { radius } => semio_s_3d::brep::engine::block_on(kernel.sphere_prim(*radius)).ok()?,
+        SolidSpec::Box { width, depth, height } => semio_framework_3d::brep::engine::block_on(kernel.box_prim(*width, *depth, *height)).ok()?,
+        SolidSpec::Cylinder { radius, height } => semio_framework_3d::brep::engine::block_on(kernel.cylinder_prim(*radius, *height)).ok()?,
+        SolidSpec::Sphere { radius } => semio_framework_3d::brep::engine::block_on(kernel.sphere_prim(*radius)).ok()?,
         SolidSpec::ImportedSolid { solid_handle } => {
             let handle = GeometryHandle(solid_handle.clone());
-            semio_s_3d::brep::engine::block_on(kernel.kind(&handle)).ok()?;
+            semio_framework_3d::brep::engine::block_on(kernel.kind(&handle)).ok()?;
             handle
         }
         // 🖼️ A GLB-imported reference mesh has no real B-Rep topology in the kernel, so it cannot
         // serve as a CSG operand (stock or tool); the stock-level fallback handles display instead.
         SolidSpec::ImportedMesh { .. } => return None,
     };
-    let rotated = if pose.angle != 0.0 { semio_s_3d::brep::engine::block_on(kernel.rotate(&base, pose.axis, pose.angle)).ok()? } else { base };
+    let rotated = if pose.angle != 0.0 { semio_framework_3d::brep::engine::block_on(kernel.rotate(&base, pose.axis, pose.angle)).ok()? } else { base };
     if pose.position != [0.0, 0.0, 0.0] {
-        semio_s_3d::brep::engine::block_on(kernel.translate(&rotated, pose.position)).ok()
+        semio_framework_3d::brep::engine::block_on(kernel.translate(&rotated, pose.position)).ok()
     } else {
         Some(rotated)
     }
@@ -494,8 +495,8 @@ fn replay_process(session: &mut ProcessKernelReplay, doc: &Process3dSnapshot) ->
             let mut kernel = session.kernel().lock().ok()?;
             let tool = tool_solid_for_measure(&mut *kernel, &step.measure)?;
             match step.measure {
-                ProcessMeasure::Attach { .. } => semio_s_3d::brep::engine::block_on(kernel.fuse(&handle, &tool)).ok()?,
-                _ => semio_s_3d::brep::engine::block_on(kernel.cut(&handle, &tool)).ok()?,
+                ProcessMeasure::Attach { .. } => semio_framework_3d::brep::engine::block_on(kernel.fuse(&handle, &tool)).ok()?,
+                _ => semio_framework_3d::brep::engine::block_on(kernel.cut(&handle, &tool)).ok()?,
             }
         };
         handle = next;
@@ -514,7 +515,7 @@ pub fn processed_mesh(doc: &Process3dSnapshot) -> Option<MeshData> {
     let handle = replay_process(&mut session, doc)?;
     let mesh = {
         let kernel = session.kernel().lock().ok()?;
-        semio_s_3d::brep::engine::block_on(kernel.tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE))
+        semio_framework_3d::brep::engine::block_on(kernel.tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE))
     }
     .ok()?;
     let face_groups: Vec<(u32, u32, u32)> = mesh.face_groups.iter().map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count)).collect();
@@ -526,7 +527,7 @@ pub fn processed_volume(doc: &Process3dSnapshot) -> Option<f64> {
     let handle = replay_process(&mut session, doc)?;
     let volume = {
         let kernel = session.kernel().lock().ok()?;
-        semio_s_3d::brep::engine::block_on(kernel.volume(&handle))
+        semio_framework_3d::brep::engine::block_on(kernel.volume(&handle))
     };
     volume.ok()
 }
@@ -646,7 +647,7 @@ mod tests {
 
     fn session_volume(session: &mut ProcessKernelReplay, fixture: &Process3dSnapshot) -> f64 {
         let handle = replay_process(session, fixture).expect("replayed handle");
-        semio_s_3d::brep::engine::block_on(session.kernel().lock().expect("kernel lock").volume(&handle)).expect("replayed volume")
+        semio_framework_3d::brep::engine::block_on(session.kernel().lock().expect("kernel lock").volume(&handle)).expect("replayed volume")
     }
 
     //#region 🔖️ConfigCoverage
@@ -773,8 +774,8 @@ mod tests {
     #[test]
     fn box_primitive_spans_from_local_origin_corner() {
         let mut kernel = Brep::new();
-        let handle = semio_s_3d::brep::engine::block_on(kernel.box_prim(2.0, 3.0, 4.0)).expect("box prim");
-        let mesh = semio_s_3d::brep::engine::block_on(kernel.tessellate(&handle, 0.1)).expect("tessellate");
+        let handle = semio_framework_3d::brep::engine::block_on(kernel.box_prim(2.0, 3.0, 4.0)).expect("box prim");
+        let mesh = semio_framework_3d::brep::engine::block_on(kernel.tessellate(&handle, 0.1)).expect("tessellate");
         let axis_bounds = |offset: usize| -> (f32, f32) {
             let values: Vec<f32> = mesh.position.iter().skip(offset).step_by(3).copied().collect();
             (values.iter().copied().fold(f32::INFINITY, f32::min), values.iter().copied().fold(f32::NEG_INFINITY, f32::max))

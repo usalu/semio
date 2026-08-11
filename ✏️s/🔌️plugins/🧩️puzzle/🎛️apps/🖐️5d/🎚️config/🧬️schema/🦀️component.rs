@@ -68,3 +68,29 @@ pub struct Puzzle5dConfig {
     #[state(local_ui)] pub locale: String,
 }
 
+//region 📎 App-schema self-registration
+/// 📎 Registers the `s.puzzle.puzzle5d` app-schema descriptor (config + presence facets) into the
+/// open [`artifact_schema::AppSchemaRegistry`], mirroring the transplanted-from-framework
+/// closed-catalog entry — see
+/// `🧰️framework/🔨️modules/🧬️schema/🦀️component.rs::register_all_app_schema_descriptors()`.
+pub fn register_app_schema() {
+    artifact_schema::register_app_schema_descriptor(artifact_schema::AppSchemaDescriptor {
+        id: "s.puzzle.puzzle5d",
+        config: artifact_schema::FacetLeaves {
+            rust: include_str!("🦀️component.rs"),
+            typescript: include_str!("🟦️component.ts"),
+            graphql: include_str!("🔗️component.graphql"),
+            json_schema: include_str!("🔣️component.json"),
+            proto: include_str!("🛰️component.proto"),
+        },
+        presence: artifact_schema::FacetLeaves {
+            rust: include_str!("../../👥️presence/🧬️schema/🦀️component.rs"),
+            typescript: include_str!("../../👥️presence/🧬️schema/🟦️component.ts"),
+            graphql: include_str!("../../👥️presence/🧬️schema/🔗️component.graphql"),
+            json_schema: include_str!("../../👥️presence/🧬️schema/🔣️component.json"),
+            proto: include_str!("../../👥️presence/🧬️schema/🛰️component.proto"),
+        },
+    });
+}
+//endregion 📎 App-schema self-registration
+

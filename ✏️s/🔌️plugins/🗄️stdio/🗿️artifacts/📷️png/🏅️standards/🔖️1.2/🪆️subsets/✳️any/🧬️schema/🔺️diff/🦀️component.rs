@@ -1118,3 +1118,546 @@ pub fn diff_remove_unknown_chunk(base: &PngSnapshot, index: usize) -> PngDiff {
     }
 }
 //#endregion 🔖️MutationDiffBuilders
+
+//#region 🔖️HandcraftedDiffCodec
+/// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `PngDiff` (see the file-header doc comment
+/// for the two confirmed real compile-error reasons the derive is unavailable). **Grammar**
+/// (real, not `serde_json`): one space-separated `name=value` token per changed top-level
+/// scalar/tri-state field (a field absent from the line = unchanged); the three non-tri-state
+/// collection triples (`text_chunks`/`chunk_order`/`unknown_chunks`) print as
+/// `name{[removed];[modified];[added]}` (no `=`); `plte`'s OUTER tri-state wraps the SAME
+/// triple-body shape bare inside `encode_option`'s uniform `[0]`=None/`[1,<T>]`=Some(T) tag —
+/// nested brackets disambiguate cleanly since `split_top_level` only tracks `[`/`]` depth, never
+/// confusing the body's internal `;`/`,` with the tag's own. Bytes/strings are lowercase hex (no
+/// external base64 dep, matches gif89a/svg's own hand-rolled codecs). Structs are positional
+/// `[f1,f2,...]` tuples; data-carrying enums (`PngTransparency`/`PngBackground`) use a
+/// single-uppercase-letter tag prefix immediately followed by the bracketed payload; unit-only
+/// enums (`PngColorType`/`PngSrgbIntent`/`PngTextKind`) print as a bare decimal ordinal (reusing
+/// `PngColorType::to_u8`/`from_u8` and `PngSrgbIntent::to_u8`/`from_u8` where they already exist
+/// on the type); `PngChunkMarker` (mixed unit + data variants) uses its own literal chunk-name
+/// tag (`IHDR`/`PLTE`/.../`TEXT[idx]`/`UNKN[idx]`) since it needs to stay self-documenting inside
+/// `chunk_order` triples. `encode_diff` = the text bytes verbatim, same simplification
+/// `GifDiff`/`SvgDiff`/`WriterDiff` use. Every primitive and value codec below is `pub(crate)` so
+/// `PngMutation`'s own hand-rolled `OpText`/`OpBinary` (`🧬️mutations/🦀️component.rs`) reuses them
+/// instead of duplicating (same intra-artifact reuse pattern svg's diff/mutations pair uses).
+//#region 🔖️Primitives
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+pub(crate) fn parse_u8(s: &str) -> Result<u8, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+pub(crate) fn parse_u16(s: &str) -> Result<u16, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+pub(crate) fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+
+/// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only) — the whole grammar's parsing primitive.
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+    if s.is_empty() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    let mut depth = 0i32;
+    let mut start = 0usize;
+    for (i, c) in s.char_indices() {
+        match c {
+            '[' => depth += 1,
+            ']' => depth -= 1,
+            c if c == sep && depth == 0 => {
+                out.push(&s[start..i]);
+                start = i + c.len_utf8();
+            }
+            _ => {}
+        }
+    }
+    out.push(&s[start..]);
+    out
+}
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+    s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
+}
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+    match opt {
+        None => "[0]".to_string(),
+        Some(v) => format!("[1,{}]", enc(v)),
+    }
+}
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
+        ["0"] => Ok(None),
+        [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
+        other => Err(format!("option decode: bad shape {other:?}")),
+    }
+}
+pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+    format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
+}
+pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
+}
+//#endregion 🔖️Primitives
+
+//#region 🔖️ValueCodecs
+pub(crate) fn enc_color_type(c: PngColorType) -> String {
+    c.to_u8().to_string()
+}
+pub(crate) fn dec_color_type(s: &str) -> Result<PngColorType, String> {
+    PngColorType::from_u8(parse_u8(s)?)
+}
+pub(crate) fn enc_rgb(c: &PngRgb) -> String {
+    format!("[{},{},{}]", c.r, c.g, c.b)
+}
+pub(crate) fn dec_rgb(s: &str) -> Result<PngRgb, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [r, g, b] = parts.as_slice() else { return Err(format!("rgb: expected 3 fields, got {}", parts.len())) };
+    Ok(PngRgb { r: parse_u8(r)?, g: parse_u8(g)?, b: parse_u8(b)? })
+}
+/// 👁️ `I[<hex alpha bytes>]` (Indexed) / `G[<gray>]` (Grayscale) / `R[<r>,<g>,<b>]` (Rgb).
+pub(crate) fn enc_transparency(t: &PngTransparency) -> String {
+    match t {
+        PngTransparency::Indexed { alpha } => format!("I[{}]", hex_encode(alpha)),
+        PngTransparency::Grayscale { gray } => format!("G[{gray}]"),
+        PngTransparency::Rgb { r, g, b } => format!("R[{r},{g},{b}]"),
+    }
+}
+pub(crate) fn dec_transparency(s: &str) -> Result<PngTransparency, String> {
+    let (tag, rest) = s.split_at(1);
+    let inner = strip_brackets(rest)?;
+    match tag {
+        "I" => Ok(PngTransparency::Indexed { alpha: hex_decode(inner)? }),
+        "G" => Ok(PngTransparency::Grayscale { gray: parse_u16(inner)? }),
+        "R" => {
+            let parts = split_top_level(inner, ',');
+            let [r, g, b] = parts.as_slice() else { return Err(format!("transparency rgb: expected 3 fields, got {}", parts.len())) };
+            Ok(PngTransparency::Rgb { r: parse_u16(r)?, g: parse_u16(g)?, b: parse_u16(b)? })
+        }
+        other => Err(format!("transparency: unknown tag {other:?}")),
+    }
+}
+pub(crate) fn enc_chromaticities(c: &PngChromaticities) -> String {
+    format!("[{},{},{},{},{},{},{},{}]", c.white_x, c.white_y, c.red_x, c.red_y, c.green_x, c.green_y, c.blue_x, c.blue_y)
+}
+pub(crate) fn dec_chromaticities(s: &str) -> Result<PngChromaticities, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [wx, wy, rx, ry, gx, gy, bx, by] = parts.as_slice() else { return Err(format!("chromaticities: expected 8 fields, got {}", parts.len())) };
+    Ok(PngChromaticities {
+        white_x: parse_u32(wx)?, white_y: parse_u32(wy)?, red_x: parse_u32(rx)?, red_y: parse_u32(ry)?,
+        green_x: parse_u32(gx)?, green_y: parse_u32(gy)?, blue_x: parse_u32(bx)?, blue_y: parse_u32(by)?,
+    })
+}
+pub(crate) fn enc_srgb_intent(s: PngSrgbIntent) -> String {
+    s.to_u8().to_string()
+}
+pub(crate) fn dec_srgb_intent(s: &str) -> Result<PngSrgbIntent, String> {
+    PngSrgbIntent::from_u8(parse_u8(s)?)
+}
+pub(crate) fn enc_physical_dims(p: &PngPhysicalDims) -> String {
+    format!("[{},{},{}]", p.ppu_x, p.ppu_y, if p.unit_is_meter { 1 } else { 0 })
+}
+pub(crate) fn dec_physical_dims(s: &str) -> Result<PngPhysicalDims, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [ppu_x, ppu_y, unit] = parts.as_slice() else { return Err(format!("physical dims: expected 3 fields, got {}", parts.len())) };
+    Ok(PngPhysicalDims { ppu_x: parse_u32(ppu_x)?, ppu_y: parse_u32(ppu_y)?, unit_is_meter: *unit == "1" })
+}
+pub(crate) fn enc_timestamp(t: &PngTimestamp) -> String {
+    format!("[{},{},{},{},{},{}]", t.year, t.month, t.day, t.hour, t.minute, t.second)
+}
+pub(crate) fn dec_timestamp(s: &str) -> Result<PngTimestamp, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [year, month, day, hour, minute, second] = parts.as_slice() else { return Err(format!("timestamp: expected 6 fields, got {}", parts.len())) };
+    Ok(PngTimestamp {
+        year: parse_u16(year)?, month: parse_u8(month)?, day: parse_u8(day)?,
+        hour: parse_u8(hour)?, minute: parse_u8(minute)?, second: parse_u8(second)?,
+    })
+}
+/// 🖼️ `G[<gray>]` (Grayscale) / `R[<r>,<g>,<b>]` (Rgb) / `I[<index>]` (Indexed).
+pub(crate) fn enc_background(b: &PngBackground) -> String {
+    match b {
+        PngBackground::Grayscale { gray } => format!("G[{gray}]"),
+        PngBackground::Rgb { r, g, b } => format!("R[{r},{g},{b}]"),
+        PngBackground::Indexed { index } => format!("I[{index}]"),
+    }
+}
+pub(crate) fn dec_background(s: &str) -> Result<PngBackground, String> {
+    let (tag, rest) = s.split_at(1);
+    let inner = strip_brackets(rest)?;
+    match tag {
+        "G" => Ok(PngBackground::Grayscale { gray: parse_u16(inner)? }),
+        "R" => {
+            let parts = split_top_level(inner, ',');
+            let [r, g, b] = parts.as_slice() else { return Err(format!("background rgb: expected 3 fields, got {}", parts.len())) };
+            Ok(PngBackground::Rgb { r: parse_u16(r)?, g: parse_u16(g)?, b: parse_u16(b)? })
+        }
+        "I" => Ok(PngBackground::Indexed { index: parse_u8(inner)? }),
+        other => Err(format!("background: unknown tag {other:?}")),
+    }
+}
+pub(crate) fn enc_text_kind(k: PngTextKind) -> String {
+    match k {
+        PngTextKind::Text => "0".to_string(),
+        PngTextKind::ZText => "1".to_string(),
+        PngTextKind::IText => "2".to_string(),
+    }
+}
+pub(crate) fn dec_text_kind(s: &str) -> Result<PngTextKind, String> {
+    match s {
+        "0" => Ok(PngTextKind::Text),
+        "1" => Ok(PngTextKind::ZText),
+        "2" => Ok(PngTextKind::IText),
+        other => Err(format!("text kind: unknown tag {other:?}")),
+    }
+}
+pub(crate) fn enc_text_chunk(c: &PngTextChunk) -> String {
+    format!(
+        "[{},{},{},{},{},{}]",
+        enc_str(&c.keyword), enc_str(&c.value), if c.compressed { 1 } else { 0 }, enc_text_kind(c.kind), enc_str(&c.language_tag), enc_str(&c.translated_keyword),
+    )
+}
+pub(crate) fn dec_text_chunk(s: &str) -> Result<PngTextChunk, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [keyword, value, compressed, kind, language_tag, translated_keyword] = parts.as_slice() else {
+        return Err(format!("text chunk: expected 6 fields, got {}", parts.len()));
+    };
+    Ok(PngTextChunk {
+        keyword: dec_str(keyword)?, value: dec_str(value)?, compressed: *compressed == "1",
+        kind: dec_text_kind(kind)?, language_tag: dec_str(language_tag)?, translated_keyword: dec_str(translated_keyword)?,
+    })
+}
+pub(crate) fn enc_chunk(c: &PngChunk) -> String {
+    format!("[{},{}]", hex_encode(&c.kind), hex_encode(&c.data))
+}
+pub(crate) fn dec_chunk(s: &str) -> Result<PngChunk, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [kind, data] = parts.as_slice() else { return Err(format!("chunk: expected 2 fields, got {}", parts.len())) };
+    let kind_bytes = hex_decode(kind)?;
+    let kind: [u8; 4] = kind_bytes.as_slice().try_into().map_err(|_| format!("chunk kind: expected 4 bytes, got {}", kind_bytes.len()))?;
+    Ok(PngChunk { kind, data: hex_decode(data)? })
+}
+/// 🧭️ Unit markers print as their bare literal chunk-name tag; `Text`/`Unknown` as `TAG[index]`.
+pub(crate) fn enc_chunk_marker(m: &PngChunkMarker) -> String {
+    match m {
+        PngChunkMarker::Ihdr => "IHDR".to_string(),
+        PngChunkMarker::Plte => "PLTE".to_string(),
+        PngChunkMarker::Trns => "TRNS".to_string(),
+        PngChunkMarker::Gama => "GAMA".to_string(),
+        PngChunkMarker::Chrm => "CHRM".to_string(),
+        PngChunkMarker::Srgb => "SRGB".to_string(),
+        PngChunkMarker::Phys => "PHYS".to_string(),
+        PngChunkMarker::Time => "TIME".to_string(),
+        PngChunkMarker::Bkgd => "BKGD".to_string(),
+        PngChunkMarker::Idat => "IDAT".to_string(),
+        PngChunkMarker::Iend => "IEND".to_string(),
+        PngChunkMarker::Text { index } => format!("TEXT[{index}]"),
+        PngChunkMarker::Unknown { index } => format!("UNKN[{index}]"),
+    }
+}
+pub(crate) fn dec_chunk_marker(s: &str) -> Result<PngChunkMarker, String> {
+    match s {
+        "IHDR" => Ok(PngChunkMarker::Ihdr),
+        "PLTE" => Ok(PngChunkMarker::Plte),
+        "TRNS" => Ok(PngChunkMarker::Trns),
+        "GAMA" => Ok(PngChunkMarker::Gama),
+        "CHRM" => Ok(PngChunkMarker::Chrm),
+        "SRGB" => Ok(PngChunkMarker::Srgb),
+        "PHYS" => Ok(PngChunkMarker::Phys),
+        "TIME" => Ok(PngChunkMarker::Time),
+        "BKGD" => Ok(PngChunkMarker::Bkgd),
+        "IDAT" => Ok(PngChunkMarker::Idat),
+        "IEND" => Ok(PngChunkMarker::Iend),
+        other => {
+            if let Some(rest) = other.strip_prefix("TEXT[") {
+                let inner = rest.strip_suffix(']').ok_or_else(|| format!("chunk marker: bad TEXT shape {other:?}"))?;
+                Ok(PngChunkMarker::Text { index: parse_usize(inner)? })
+            } else if let Some(rest) = other.strip_prefix("UNKN[") {
+                let inner = rest.strip_suffix(']').ok_or_else(|| format!("chunk marker: bad UNKN shape {other:?}"))?;
+                Ok(PngChunkMarker::Unknown { index: parse_usize(inner)? })
+            } else {
+                Err(format!("chunk marker: unknown tag {other:?}"))
+            }
+        }
+    }
+}
+//#endregion 🔖️ValueCodecs
+
+//#region 🔖️DiffValueCodecs
+fn enc_triple_body(removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
+    let removed = removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
+    let modified = modified.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
+    let added = added.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
+    format!("[{removed}];[{modified}];[{added}]")
+}
+fn dec_triple_body(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
+    let three = split_top_level(body, ';');
+    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("triple: expected 3 sections, got {}", three.len())) };
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let parse_entries = |s: &str| -> Result<Vec<(usize, String)>, String> {
+        split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("triple entry: bad entry {entry:?}"))?;
+            Ok((parse_usize(idx)?, rest.to_string()))
+        }).collect()
+    };
+    Ok((removed, parse_entries(modified_s)?, parse_entries(added_s)?))
+}
+
+fn enc_plte_body(d: &PngPlteDiff) -> String {
+    enc_triple_body(
+        &d.removed,
+        &d.modified.iter().map(|m| (m.index, enc_rgb(&m.rgb))).collect::<Vec<_>>(),
+        &d.added.iter().map(|a| (a.index, enc_rgb(&a.rgb))).collect::<Vec<_>>(),
+    )
+}
+fn dec_plte_body(body: &str) -> Result<PngPlteDiff, String> {
+    let (removed, modified, added) = dec_triple_body(body)?;
+    Ok(PngPlteDiff {
+        removed,
+        modified: modified.into_iter().map(|(index, v)| Ok(PngPlteEntryModified { index, rgb: dec_rgb(&v)? })).collect::<Result<Vec<_>, String>>()?,
+        added: added.into_iter().map(|(index, v)| Ok(PngPlteEntryAdded { index, rgb: dec_rgb(&v)? })).collect::<Result<Vec<_>, String>>()?,
+    })
+}
+
+fn enc_text_chunk_diff(d: &PngTextChunkDiff) -> String {
+    format!(
+        "[{},{},{},{},{},{}]",
+        encode_option(&d.keyword, |v| enc_str(v)),
+        encode_option(&d.value, |v| enc_str(v)),
+        encode_option(&d.compressed, |v| if *v { "1".to_string() } else { "0".to_string() }),
+        encode_option(&d.kind, |v| enc_text_kind(*v)),
+        encode_option(&d.language_tag, |v| enc_str(v)),
+        encode_option(&d.translated_keyword, |v| enc_str(v)),
+    )
+}
+fn dec_text_chunk_diff(s: &str) -> Result<PngTextChunkDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [keyword, value, compressed, kind, language_tag, translated_keyword] = parts.as_slice() else {
+        return Err(format!("text chunk diff: expected 6 fields, got {}", parts.len()));
+    };
+    Ok(PngTextChunkDiff {
+        keyword: decode_option(keyword, dec_str)?,
+        value: decode_option(value, dec_str)?,
+        compressed: decode_option(compressed, |v| Ok(v == "1"))?,
+        kind: decode_option(kind, dec_text_kind)?,
+        language_tag: decode_option(language_tag, dec_str)?,
+        translated_keyword: decode_option(translated_keyword, dec_str)?,
+    })
+}
+fn enc_text_chunks_diff(d: &PngTextChunksDiff) -> String {
+    format!(
+        "text-chunks{{{}}}",
+        enc_triple_body(
+            &d.removed,
+            &d.modified.iter().map(|m| (m.index, enc_text_chunk_diff(&m.diff))).collect::<Vec<_>>(),
+            &d.added.iter().map(|a| (a.index, enc_text_chunk(&a.chunk))).collect::<Vec<_>>(),
+        )
+    )
+}
+fn dec_text_chunks_diff(body: &str) -> Result<PngTextChunksDiff, String> {
+    let (removed, modified, added) = dec_triple_body(body)?;
+    Ok(PngTextChunksDiff {
+        removed,
+        modified: modified.into_iter().map(|(index, v)| Ok(PngTextChunkModified { index, diff: dec_text_chunk_diff(&v)? })).collect::<Result<Vec<_>, String>>()?,
+        added: added.into_iter().map(|(index, v)| Ok(PngTextChunkAdded { index, chunk: dec_text_chunk(&v)? })).collect::<Result<Vec<_>, String>>()?,
+    })
+}
+
+fn enc_chunk_order_diff(d: &PngChunkOrderDiff) -> String {
+    format!(
+        "chunk-order{{{}}}",
+        enc_triple_body(
+            &d.removed,
+            &d.modified.iter().map(|m| (m.index, enc_chunk_marker(&m.marker))).collect::<Vec<_>>(),
+            &d.added.iter().map(|a| (a.index, enc_chunk_marker(&a.marker))).collect::<Vec<_>>(),
+        )
+    )
+}
+fn dec_chunk_order_diff(body: &str) -> Result<PngChunkOrderDiff, String> {
+    let (removed, modified, added) = dec_triple_body(body)?;
+    Ok(PngChunkOrderDiff {
+        removed,
+        modified: modified.into_iter().map(|(index, v)| Ok(PngChunkOrderModified { index, marker: dec_chunk_marker(&v)? })).collect::<Result<Vec<_>, String>>()?,
+        added: added.into_iter().map(|(index, v)| Ok(PngChunkOrderAdded { index, marker: dec_chunk_marker(&v)? })).collect::<Result<Vec<_>, String>>()?,
+    })
+}
+
+fn enc_unknown_chunks_diff(d: &PngUnknownChunksDiff) -> String {
+    format!(
+        "unknown-chunks{{{}}}",
+        enc_triple_body(
+            &d.removed,
+            &d.modified.iter().map(|m| (m.index, enc_chunk(&m.chunk))).collect::<Vec<_>>(),
+            &d.added.iter().map(|a| (a.index, enc_chunk(&a.chunk))).collect::<Vec<_>>(),
+        )
+    )
+}
+fn dec_unknown_chunks_diff(body: &str) -> Result<PngUnknownChunksDiff, String> {
+    let (removed, modified, added) = dec_triple_body(body)?;
+    Ok(PngUnknownChunksDiff {
+        removed,
+        modified: modified.into_iter().map(|(index, v)| Ok(PngUnknownChunkModified { index, chunk: dec_chunk(&v)? })).collect::<Result<Vec<_>, String>>()?,
+        added: added.into_iter().map(|(index, v)| Ok(PngUnknownChunkAdded { index, chunk: dec_chunk(&v)? })).collect::<Result<Vec<_>, String>>()?,
+    })
+}
+//#endregion 🔖️DiffValueCodecs
+
+//#region 🔖️TopLevel
+fn print_png_diff(d: &PngDiff) -> String {
+    let mut tokens: Vec<String> = Vec::new();
+    if let Some(v) = d.width { tokens.push(format!("width={v}")); }
+    if let Some(v) = d.height { tokens.push(format!("height={v}")); }
+    if let Some(v) = d.bit_depth { tokens.push(format!("bit-depth={v}")); }
+    if let Some(v) = d.color_type { tokens.push(format!("color-type={}", enc_color_type(v))); }
+    if let Some(v) = d.interlace { tokens.push(format!("interlace={}", if v { 1 } else { 0 })); }
+    if let Some(v) = &d.plte { tokens.push(format!("plte={}", encode_option(v, enc_plte_body))); }
+    if let Some(v) = &d.trns { tokens.push(format!("trns={}", encode_option(v, enc_transparency))); }
+    if let Some(v) = &d.gama { tokens.push(format!("gama={}", encode_option(v, |x: &u32| x.to_string()))); }
+    if let Some(v) = &d.chrm { tokens.push(format!("chrm={}", encode_option(v, enc_chromaticities))); }
+    if let Some(v) = &d.srgb { tokens.push(format!("srgb={}", encode_option(v, |s: &PngSrgbIntent| enc_srgb_intent(*s)))); }
+    if let Some(v) = &d.phys { tokens.push(format!("phys={}", encode_option(v, enc_physical_dims))); }
+    if let Some(v) = &d.time { tokens.push(format!("time={}", encode_option(v, enc_timestamp))); }
+    if let Some(v) = &d.bkgd { tokens.push(format!("bkgd={}", encode_option(v, enc_background))); }
+    if let Some(v) = &d.text_chunks { tokens.push(enc_text_chunks_diff(v)); }
+    if let Some(v) = &d.pixels { tokens.push(format!("pixels={}", hex_encode(v))); }
+    if let Some(v) = &d.chunk_order { tokens.push(enc_chunk_order_diff(v)); }
+    if let Some(v) = &d.unknown_chunks { tokens.push(enc_unknown_chunks_diff(v)); }
+    tokens.join(" ")
+}
+fn parse_png_diff(line: &str) -> Result<PngDiff, String> {
+    let mut d = PngDiff::default();
+    if line.is_empty() {
+        return Ok(d);
+    }
+    for token in line.split(' ') {
+        if let Some(rest) = token.strip_prefix("width=") { d.width = Some(parse_u32(rest)?); }
+        else if let Some(rest) = token.strip_prefix("height=") { d.height = Some(parse_u32(rest)?); }
+        else if let Some(rest) = token.strip_prefix("bit-depth=") { d.bit_depth = Some(parse_u8(rest)?); }
+        else if let Some(rest) = token.strip_prefix("color-type=") { d.color_type = Some(dec_color_type(rest)?); }
+        else if let Some(rest) = token.strip_prefix("interlace=") { d.interlace = Some(rest == "1"); }
+        else if let Some(rest) = token.strip_prefix("plte=") { d.plte = Some(decode_option(rest, dec_plte_body)?); }
+        else if let Some(rest) = token.strip_prefix("trns=") { d.trns = Some(decode_option(rest, dec_transparency)?); }
+        else if let Some(rest) = token.strip_prefix("gama=") { d.gama = Some(decode_option(rest, parse_u32)?); }
+        else if let Some(rest) = token.strip_prefix("chrm=") { d.chrm = Some(decode_option(rest, dec_chromaticities)?); }
+        else if let Some(rest) = token.strip_prefix("srgb=") { d.srgb = Some(decode_option(rest, dec_srgb_intent)?); }
+        else if let Some(rest) = token.strip_prefix("phys=") { d.phys = Some(decode_option(rest, dec_physical_dims)?); }
+        else if let Some(rest) = token.strip_prefix("time=") { d.time = Some(decode_option(rest, dec_timestamp)?); }
+        else if let Some(rest) = token.strip_prefix("bkgd=") { d.bkgd = Some(decode_option(rest, dec_background)?); }
+        else if let Some(rest) = token.strip_prefix("text-chunks{") { d.text_chunks = Some(dec_text_chunks_diff(rest.strip_suffix('}').ok_or_else(|| "text-chunks: missing closing brace".to_string())?)?); }
+        else if let Some(rest) = token.strip_prefix("pixels=") { d.pixels = Some(hex_decode(rest)?); }
+        else if let Some(rest) = token.strip_prefix("chunk-order{") { d.chunk_order = Some(dec_chunk_order_diff(rest.strip_suffix('}').ok_or_else(|| "chunk-order: missing closing brace".to_string())?)?); }
+        else if let Some(rest) = token.strip_prefix("unknown-chunks{") { d.unknown_chunks = Some(dec_unknown_chunks_diff(rest.strip_suffix('}').ok_or_else(|| "unknown-chunks: missing closing brace".to_string())?)?); }
+        else { return Err(format!("png diff: unknown token {token:?}")); }
+    }
+    Ok(d)
+}
+
+impl protocol::DiffCodec for PngDiff {
+    fn print_diff(&self) -> String {
+        print_png_diff(self)
+    }
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+        parse_png_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`/`WriterDiff`
+    /// use — satisfies every `DiffCodec` law without inventing a second wire format.
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(self.print_diff().into_bytes())
+    }
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+    }
+}
+//#endregion 🔖️TopLevel
+//#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod handcrafted_diff_codec_tests {
+    use super::*;
+    use crate::artifacts::png::schema::snapshot::PngTextKind;
+    use protocol::DiffCodec;
+
+    fn text_chunk(keyword: &str, value: &str) -> PngTextChunk {
+        PngTextChunk { keyword: keyword.into(), value: value.into(), compressed: false, kind: PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() }
+    }
+
+    /// 🌱 `snap_a`/`snap_b` differ in every mutable field (mirrors `🧬️mutations`' own
+    /// `sweep_a`/`sweep_b` fixtures) so `PngDiff::between` in both directions, plus a diff
+    /// against an all-defaults snapshot, exercises every scalar, every tri-state (both `Some ->
+    /// None` and `None -> Some`), and every collection triple's removed/modified/added arms.
+    fn snap_a() -> PngSnapshot {
+        PngSnapshot {
+            schema: "stdio.png".into(),
+            width: 10, height: 20, bit_depth: 8, color_type: PngColorType::Rgba, interlace: false,
+            plte: Some(vec![PngRgb { r: 1, g: 1, b: 1 }, PngRgb { r: 2, g: 2, b: 2 }]),
+            trns: Some(PngTransparency::Grayscale { gray: 5 }),
+            gama: Some(45455),
+            chrm: Some(PngChromaticities { white_x: 1, white_y: 2, red_x: 3, red_y: 4, green_x: 5, green_y: 6, blue_x: 7, blue_y: 8 }),
+            srgb: Some(PngSrgbIntent::Perceptual),
+            phys: Some(PngPhysicalDims { ppu_x: 100, ppu_y: 100, unit_is_meter: true }),
+            time: Some(PngTimestamp { year: 2020, month: 1, day: 1, hour: 0, minute: 0, second: 0 }),
+            bkgd: Some(PngBackground::Grayscale { gray: 255 }),
+            text_chunks: vec![text_chunk("Author", "orig"), text_chunk("Trash", "gone")],
+            pixels: vec![0u8, 0, 0, 255, 255, 255, 255, 255],
+            chunk_order: vec![PngChunkMarker::Gama, PngChunkMarker::Chrm, PngChunkMarker::Text { index: 0 }],
+            unknown_chunks: vec![PngChunk { kind: *b"prIV", data: vec![1, 2, 3] }, PngChunk { kind: *b"gone", data: vec![9, 9] }],
+        }
+    }
+
+    fn snap_b() -> PngSnapshot {
+        PngSnapshot {
+            schema: "stdio.png".into(),
+            width: 11, height: 21, bit_depth: 16, color_type: PngColorType::Palette, interlace: true,
+            plte: Some(vec![PngRgb { r: 9, g: 9, b: 9 }]),
+            trns: None, gama: None, chrm: None,
+            srgb: Some(PngSrgbIntent::AbsoluteColorimetric),
+            phys: None, time: None, bkgd: None,
+            text_chunks: vec![PngTextChunk { keyword: "Creator".into(), value: "changed".into(), compressed: true, kind: PngTextKind::IText, language_tag: "en".into(), translated_keyword: "Auteur".into() }],
+            pixels: vec![1u8, 1, 1, 255],
+            chunk_order: vec![PngChunkMarker::Srgb, PngChunkMarker::Unknown { index: 0 }],
+            unknown_chunks: vec![PngChunk { kind: *b"prIV", data: vec![4, 5, 6] }],
+        }
+    }
+
+    fn empty_snap() -> PngSnapshot {
+        PngSnapshot { schema: "stdio.png".into(), ..Default::default() }
+    }
+
+    /// 🧪️ `DiffCodec` round-trip laws over the hand-rolled `PngDiff` grammar — exercises every
+    /// scalar field, every tri-state `Some(None)`/`Some(Some(_))` transition (incl. `plte`'s
+    /// tri-state-wrapping-a-triple shape), and every collection triple's removed/modified/added
+    /// arms (both directions, plus transitions to/from an all-defaults snapshot).
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
+        let a = snap_a();
+        let b = snap_b();
+        let c = empty_snap();
+        let cases = vec![
+            PngDiff::default(),
+            PngDiff::between(&a, &b),
+            PngDiff::between(&b, &a),
+            PngDiff::between(&a, &c),
+            PngDiff::between(&c, &a),
+        ];
+        for d in cases {
+            let printed = d.print_diff();
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = PngDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
+
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = PngDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
+        }
+    }
+}
+//#endregion 🧪️Tests

@@ -3,11 +3,26 @@
 //! capture is banned); `inverse()` is handcrafted per variant, index/tag-aware, reading the
 //! pre-state it needs from `base`. `apply_tiff_mutation` follows csv/png's proven
 //! single-source-of-truth shape: `let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d`.
+//!
+//! 🧪️ F6 CONFIRMED (real `cargo check`, ticket
+//! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION): adding
+//! `#[derive(dsl::DslOps)]` to `TiffMutation` fails — `SetTag.values: TiffValues` carries the
+//! data-carrying `TiffValues` enum DIRECTLY as a variant field, and `SetSnapshot.snapshot:
+//! TiffSnapshot`/`InsertIfd.ifd: TiffIfd` both recursively reach the same `TiffValues` through
+//! `ifds`/`entries` (`error[E0277]: the trait bound …::TiffValues: DslField is not satisfied`,
+//! same root cause as `TiffDiff`'s `DiffCodec` blocker — see that file's doc comment). `OpText`/
+//! `OpBinary` hand-rolled below, reusing `TiffDiff`'s `pub(crate)` grammar primitives
+//! (`hex_encode`/`enc_values`/`split_top_level`/…) rather than duplicating them a second time.
 
-use crate::artifacts::tiff::schema::diff::{self, TiffDiff};
+use crate::artifacts::tiff::schema::diff::{
+    self, dec_byte_order, dec_field_type, dec_ifd, dec_list, dec_str, dec_values, enc_byte_order, enc_field_type, enc_ifd, enc_list,
+    enc_str, enc_values, hex_decode, hex_encode, parse_num, split_top_level, strip_brackets, TiffDiff,
+};
 use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffValues};
 use crate::artifacts::tiff::TiffSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{Mutation, MutationDiff, OpText};
+#[cfg(test)]
+use protocol::OpBinary;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -110,31 +125,84 @@ impl Mutation<TiffSnapshot> for TiffMutation {
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-impl protocol::OpText for TiffMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
+/// 🧪️ F6: **hand-rolled** `OpText`/`OpBinary` for `TiffMutation` (`#[derive(dsl::DslOps)]`
+/// confirmed rejected above) — reuses `TiffDiff`'s `pub(crate)` grammar primitives
+/// (`hex_encode`/`enc_values`/`split_top_level`/`enc_list`/…) rather than duplicating them a
+/// second time in this file. Grammar: `keyword arg=value ...` (space-separated, same shape the
+/// derive's own handcrafted-wrapper convention uses), one match arm per variant (no `DslVariants`
+/// scaffolding available since nothing here derives it).
+fn enc_snapshot(s: &TiffSnapshot) -> String {
+    format!("[{},{},{},{}]", enc_str(&s.schema), enc_byte_order(s.byte_order), enc_list(&s.ifds, enc_ifd), hex_encode(&s.pixels))
+}
+fn dec_snapshot(s: &str) -> Result<TiffSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [schema, byte_order, ifds, pixels] = parts.as_slice() else { return Err(format!("tiff snapshot: expected 4 fields, got {}", parts.len())) };
+    Ok(TiffSnapshot { schema: dec_str(schema)?, byte_order: dec_byte_order(byte_order)?, ifds: dec_list(ifds, dec_ifd)?, pixels: hex_decode(pixels)? })
+}
+
+fn print_tiff_mutation(m: &TiffMutation) -> String {
+    match m {
+        TiffMutation::NoMutation => "no-mutation".to_string(),
+        TiffMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
+        TiffMutation::SetByteOrder { byte_order } => format!("set-byte-order byte-order={}", enc_byte_order(*byte_order)),
+        TiffMutation::InsertIfd { index, ifd } => format!("insert-ifd index={index} ifd={}", enc_ifd(ifd)),
+        TiffMutation::RemoveIfd { index } => format!("remove-ifd index={index}"),
+        TiffMutation::SetTag { ifd_index, tag, kind, values } => {
+            format!("set-tag ifd-index={ifd_index} tag={tag} kind={} values={}", enc_field_type(*kind), enc_values(values))
+        }
+        TiffMutation::RemoveTag { ifd_index, tag } => format!("remove-tag ifd-index={ifd_index} tag={tag}"),
+        TiffMutation::SetPixels { pixels } => format!("set-pixels pixels={}", hex_encode(pixels)),
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+}
+fn parse_tiff_mutation(line: &str) -> Result<TiffMutation, String> {
+    if line == "no-mutation" {
+        return Ok(TiffMutation::NoMutation);
+    }
+    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    let args: std::collections::BTreeMap<&str, &str> = rest
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|tok| tok.split_once('=').ok_or_else(|| format!("tiff mutation: bad arg token {tok:?}")))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .collect();
+    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("tiff mutation: missing arg '{k}' for '{keyword}'"));
+    let usize_arg = |k: &str| -> Result<usize, String> { parse_num::<usize>(arg(k)?) };
+    let u16_arg = |k: &str| -> Result<u16, String> { parse_num::<u16>(arg(k)?) };
+    match keyword {
+        "set-snapshot" => Ok(TiffMutation::SetSnapshot { snapshot: dec_snapshot(arg("snapshot")?)? }),
+        "set-byte-order" => Ok(TiffMutation::SetByteOrder { byte_order: dec_byte_order(arg("byte-order")?)? }),
+        "insert-ifd" => Ok(TiffMutation::InsertIfd { index: usize_arg("index")?, ifd: dec_ifd(arg("ifd")?)? }),
+        "remove-ifd" => Ok(TiffMutation::RemoveIfd { index: usize_arg("index")? }),
+        "set-tag" => Ok(TiffMutation::SetTag {
+            ifd_index: usize_arg("ifd-index")?,
+            tag: u16_arg("tag")?,
+            kind: dec_field_type(arg("kind")?)?,
+            values: dec_values(arg("values")?)?,
+        }),
+        "remove-tag" => Ok(TiffMutation::RemoveTag { ifd_index: usize_arg("ifd-index")?, tag: u16_arg("tag")? }),
+        "set-pixels" => Ok(TiffMutation::SetPixels { pixels: hex_decode(arg("pixels")?)? }),
+        other => Err(format!("tiff mutation: unknown keyword {other:?}")),
     }
 }
 
+impl OpText for TiffMutation {
+    fn print_op(&self) -> String {
+        print_tiff_mutation(self)
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_tiff_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+}
+
+/// ⚡️ Binary = the text bytes verbatim, same simplification `TiffDiff`'s hand-rolled codec uses.
 impl protocol::OpBinary for TiffMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        Ok(self.print_op().into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
@@ -430,5 +498,50 @@ mod tests {
         apply_tiff_mutation(&mut snap, &TiffMutation::SetTag { ifd_index: 42, tag: 1, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![1]) });
         assert_eq!(snap, base);
     }
+
+    //#region 🔖️op_text_binary_roundtrip_law
+    /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `TiffMutation` grammar —
+    /// exercises every variant incl. `SetTag`/`SetSnapshot`'s bare `TiffValues` payload across
+    /// every one of the 12 field-type variants (`Rational`/`SRational` pair lists, `Ascii`/`Byte`/
+    /// `Undefined` hex, signed and unsigned numeric lists, `Float`/`Double`).
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        let base = base_snapshot();
+        let mutations = vec![
+            TiffMutation::NoMutation,
+            TiffMutation::SetSnapshot { snapshot: base.clone() },
+            TiffMutation::SetByteOrder { byte_order: TiffByteOrder::BigEndian },
+            TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { entries: vec![short_tag(270, 1)] } },
+            TiffMutation::RemoveIfd { index: 0 },
+            TiffMutation::SetTag { ifd_index: 0, tag: 256, kind: TiffFieldType::Long, values: TiffValues::Long(vec![4]) },
+            TiffMutation::SetTag { ifd_index: 0, tag: 258, kind: TiffFieldType::Short, values: TiffValues::Short(vec![8, 8, 8]) },
+            TiffMutation::SetTag { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("An Author".into()) },
+            TiffMutation::SetTag { ifd_index: 0, tag: 282, kind: TiffFieldType::Rational, values: TiffValues::Rational(vec![(72, 1), (0, 1)]) },
+            TiffMutation::SetTag { ifd_index: 0, tag: 700, kind: TiffFieldType::Undefined, values: TiffValues::Undefined(vec![0xde, 0xad, 0xbe, 0xef]) },
+            TiffMutation::SetTag { ifd_index: 0, tag: 1, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![1, 2, 3]) },
+            TiffMutation::SetTag { ifd_index: 0, tag: 2, kind: TiffFieldType::SByte, values: TiffValues::SByte(vec![-1, -2, 3]) },
+            TiffMutation::SetTag { ifd_index: 0, tag: 3, kind: TiffFieldType::SShort, values: TiffValues::SShort(vec![-100, 200]) },
+            TiffMutation::SetTag { ifd_index: 0, tag: 4, kind: TiffFieldType::SLong, values: TiffValues::SLong(vec![-100000]) },
+            TiffMutation::SetTag { ifd_index: 0, tag: 5, kind: TiffFieldType::SRational, values: TiffValues::SRational(vec![(-3, 10)]) },
+            TiffMutation::SetTag { ifd_index: 0, tag: 6, kind: TiffFieldType::Float, values: TiffValues::Float(vec![1.5, -2.25]) },
+            TiffMutation::SetTag { ifd_index: 0, tag: 7, kind: TiffFieldType::Double, values: TiffValues::Double(vec![3.14159265358979]) },
+            TiffMutation::RemoveTag { ifd_index: 0, tag: 296 },
+            TiffMutation::SetPixels { pixels: vec![9u8; base.pixels.len()] },
+            // Out-of-range targets: still valid grammar, no special-casing needed.
+            TiffMutation::RemoveIfd { index: 99 },
+            TiffMutation::RemoveTag { ifd_index: 99, tag: 1 },
+        ];
+        for mutation in mutations {
+            let printed = mutation.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = TiffMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
+
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = TiffMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+        }
+    }
+    //#endregion 🔖️op_text_binary_roundtrip_law
 }
 //#endregion Tests

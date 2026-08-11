@@ -1,8 +1,6 @@
 // #region 🛂️Manifest
 /// <reference types="vitest/importMeta" />
 /** @emoji 🛂️ `@semio-tech/framework` — AppDefinition, PluginManifest, contributions, and declarative UI contract. */
-import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
-import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, EXTENSION_TARGETS, pluginModuleUrl, extensionModuleUrl } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
 import type { IconName } from "@semio-tech/assets";
 export type { IconName };
 import { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology, type ShellLocale, type ShellTerminology, type LocalizedLabel } from "./🤖️generated/🟦️ui-axes.ts";
@@ -883,6 +881,16 @@ export type ProgramContributionEntry = {
   readonly contribution: PluginContribution;
 };
 
+/** 🗂️ Open replacement for `PluginContribution`'s closed `kind` union — see Rust `TopicContribution`
+ * (`🦀️component.rs`) for the full rationale. `topic` reuses the same dot-namespaced vocabulary as a
+ * crate's existing `contributes`/`consumes` metadata (e.g. `"flow.extension"`, `"playbook.blockKind"`,
+ * `"cad.computer"`); this type does not enumerate topics, each future producer/consumer wave picks its
+ * own. Coexists with `PluginContribution`/`contributions` during the migration. */
+export type TopicContribution = {
+  readonly topic: string;
+  readonly payload: unknown;
+};
+
 export type PluginManifest = {
   readonly pluginId: string;
   readonly label: string;
@@ -897,6 +905,9 @@ export type PluginManifest = {
   }[];
   readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
   readonly contributions?: readonly PluginContribution[];
+  /** 🗂️ Open counterpart of `contributions` — see `TopicContribution`. Additive: coexists with the
+   * closed `contributions` field until every producer/consumer has migrated. */
+  readonly topicContributions?: readonly TopicContribution[];
   /** 🎛️ Plugin-scope commands this plugin exposes — apply whenever any of its apps is focused. */
   readonly commands?: readonly CommandDefinition[];
 };

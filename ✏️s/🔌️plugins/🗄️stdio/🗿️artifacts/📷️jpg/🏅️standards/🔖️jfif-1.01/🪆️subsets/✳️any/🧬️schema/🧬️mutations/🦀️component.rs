@@ -7,11 +7,38 @@
 use crate::artifacts::jpg::schema::diff::{self, JpgDiff, JpgHuffmanTableKey};
 use crate::artifacts::jpg::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgHuffmanTable, JpgQuantTable, JpgSegment};
 use crate::artifacts::jpg::JpgSnapshot;
-use protocol::{Mutation, MutationDiff};
+#[cfg(test)]
+use protocol::OpBinary;
+use protocol::{Mutation, MutationDiff, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.jpg`.
+/// 🧪️ F6 CONFIRMED HAND-ROLL: `#[derive(dsl::DslOps)]` on this enum fails to compile (captured
+/// verbatim by actually adding the derive this session, real `cargo check` output, see
+/// `f6-jpg-report.md`) — `SetSnapshot{snapshot: JpgSnapshot}` and every other struct-payload
+/// variant (`SetQuantTable{table: JpgQuantTable}`, `SetHuffmanTable{table: JpgHuffmanTable}`,
+/// `RemoveHuffmanTable{key: JpgHuffmanTableKey}`, `InsertOtherSegment{segment: JpgSegment}`) reject
+/// immediately with e.g.:
+/// ```text
+/// error[E0277]: the trait bound `JpgSnapshot: DslField` is not satisfied
+///   --> .../🧬️mutations/🦀️component.rs:32:19   (snapshot: JpgSnapshot)
+/// error[E0277]: the trait bound `JpgQuantTable: DslField` is not satisfied
+///   --> .../🧬️mutations/🦀️component.rs:44:16   (table: JpgQuantTable)
+/// ```
+/// — none of `JpgSnapshot`/`JpgFrameHeader`/`JpgFrameComponent`/`JpgQuantTable`/`JpgHuffmanTable`/
+/// `JpgSegment`/`JfifThumbnail`/`JpgHuffmanTableKey` carry `#[derive(dsl::DslRecord)]` (nor
+/// `JfifDensityUnits`/`JpgHuffmanClass` carry `#[derive(dsl::DslScalar)]`), so nothing in the
+/// reachable tree implements `DslField` yet — the STEP 2a cascading requirement. Even fully
+/// cascaded, `SetJfifHeader.version: (u8, u8)` is a SEPARATE, decisive blocker: `dsl` has no
+/// `DslField` impl for tuples of any arity (confirmed by direct grep of every `impl DslField`/
+/// `impl<T: DslField, ...> DslField` in `🧰️framework/…/🗣️dsl/🦀️component.rs` — only `bool`/`f32`/
+/// `f64`/`String`/`Wire`/`DslValue`/`Vec<T>`/`BTreeMap<String,T>`/`[T;N]` have impls, no tuple
+/// arm). Fixing it needs either a framework-level `dsl` crate change (shared file, outside this
+/// artifact's ownership boundary) or replacing the tuple with e.g. `[u8;2]` (a Mutation-shape
+/// change this ticket's scope forbids — "do not touch snapshot/diff/mutation SHAPE"). `OpText`/
+/// `OpBinary` hand-rolled below, reusing `schema::diff`'s `pub(crate)` grammar primitives
+/// (`hex_encode`/`enc_frame_header`/`split_top_level`/...).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum JpgMutation {
@@ -151,31 +178,146 @@ impl Mutation<JpgSnapshot> for JpgMutation {
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-impl protocol::OpText for JpgMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
+/// 🧪️ F6: hand-rolled `OpText`/`OpBinary` for `JpgMutation` (`#[derive(dsl::DslOps)]` confirmed
+/// rejected above) — reuses `schema::diff`'s `pub(crate)` grammar primitives (`hex_encode`/
+/// `enc_frame_header`/`enc_quant_table`/`enc_huffman_table`/`enc_segment`/`enc_thumbnail`/
+/// `enc_version`/`enc_density_units`/`enc_huffman_key`/`split_top_level`/`encode_option`/...)
+/// rather than duplicating them a third time in this file. Grammar: `keyword arg=value ...`
+/// (space-separated, same shape the derive's own handcrafted-wrapper convention uses per
+/// `f6-recon-report.md` §2), one match arm per variant (no `DslVariants` scaffolding available
+/// since nothing here derives it).
+fn enc_str_hex(s: &str) -> String { diff::hex_encode(s.as_bytes()) }
+fn dec_str_hex(s: &str) -> Result<String, String> { String::from_utf8(diff::hex_decode(s)?).map_err(|e| e.to_string()) }
+
+/// 🧬️ Positional `[schema,width,height,pixels,re-encode-quality,jfif-version,jfif-density-units,
+/// jfif-x-density,jfif-y-density,jfif-thumbnail,frame,sof-marker,arithmetic,quant-tables,
+/// huffman-tables,restart-interval,other-segments]` tuple — declaration order, both sides agree.
+fn enc_jpg_snapshot(s: &JpgSnapshot) -> String {
+    let quant = s.quant_tables.iter().map(diff::enc_quant_table).collect::<Vec<_>>().join(",");
+    let huff = s.huffman_tables.iter().map(diff::enc_huffman_table).collect::<Vec<_>>().join(",");
+    let segs = s.other_segments.iter().map(diff::enc_segment).collect::<Vec<_>>().join(",");
+    format!(
+        "[{},{},{},{},{},{},{},{},{},{},{},{},{},[{}],[{}],{},[{}]]",
+        enc_str_hex(&s.schema),
+        s.width,
+        s.height,
+        diff::hex_encode(&s.pixels),
+        diff::encode_option(&s.re_encode_quality, |v| v.to_string()),
+        diff::enc_version(&s.jfif_version),
+        diff::enc_density_units(&s.jfif_density_units),
+        s.jfif_x_density,
+        s.jfif_y_density,
+        diff::encode_option(&s.jfif_thumbnail, diff::enc_thumbnail),
+        diff::encode_option(&s.frame, diff::enc_frame_header),
+        s.sof_marker,
+        if s.arithmetic { 1 } else { 0 },
+        quant,
+        huff,
+        diff::encode_option(&s.restart_interval, |v| v.to_string()),
+        segs,
+    )
+}
+fn dec_jpg_snapshot(s: &str) -> Result<JpgSnapshot, String> {
+    let parts = diff::split_top_level(diff::strip_brackets(s)?, ',');
+    let [schema, width, height, pixels, re_encode_quality, jfif_version, jfif_density_units, jfif_x_density, jfif_y_density, jfif_thumbnail, frame, sof_marker, arithmetic, quant_tables, huffman_tables, restart_interval, other_segments] =
+        parts.as_slice()
+    else {
+        return Err(format!("jpg snapshot: expected 17 fields, got {}", parts.len()));
+    };
+    Ok(JpgSnapshot {
+        schema: dec_str_hex(schema)?,
+        width: diff::parse_u32(width)?,
+        height: diff::parse_u32(height)?,
+        pixels: diff::hex_decode(pixels)?,
+        re_encode_quality: diff::decode_option(re_encode_quality, diff::parse_u8)?,
+        jfif_version: diff::dec_version(jfif_version)?,
+        jfif_density_units: diff::dec_density_units(jfif_density_units)?,
+        jfif_x_density: diff::parse_u16(jfif_x_density)?,
+        jfif_y_density: diff::parse_u16(jfif_y_density)?,
+        jfif_thumbnail: diff::decode_option(jfif_thumbnail, diff::dec_thumbnail)?,
+        frame: diff::decode_option(frame, diff::dec_frame_header)?,
+        sof_marker: diff::parse_u8(sof_marker)?,
+        arithmetic: diff::parse_bool(arithmetic)?,
+        quant_tables: diff::split_top_level(diff::strip_brackets(quant_tables)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_quant_table).collect::<Result<Vec<_>, String>>()?,
+        huffman_tables: diff::split_top_level(diff::strip_brackets(huffman_tables)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_huffman_table).collect::<Result<Vec<_>, String>>()?,
+        restart_interval: diff::decode_option(restart_interval, diff::parse_u16)?,
+        other_segments: diff::split_top_level(diff::strip_brackets(other_segments)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_segment).collect::<Result<Vec<_>, String>>()?,
+    })
+}
+
+fn print_jpg_mutation(m: &JpgMutation) -> String {
+    match m {
+        JpgMutation::NoMutation => "no-mutation".to_string(),
+        JpgMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_jpg_snapshot(snapshot)),
+        JpgMutation::SetJfifHeader { version, density_units, x_density, y_density, thumbnail } => format!(
+            "set-jfif-header version={} density-units={} x-density={x_density} y-density={y_density} thumbnail={}",
+            diff::enc_version(version),
+            diff::enc_density_units(density_units),
+            diff::encode_option(thumbnail, diff::enc_thumbnail),
+        ),
+        JpgMutation::SetQuantTable { table } => format!("set-quant-table table={}", diff::enc_quant_table(table)),
+        JpgMutation::RemoveQuantTable { id } => format!("remove-quant-table id={id}"),
+        JpgMutation::SetHuffmanTable { table } => format!("set-huffman-table table={}", diff::enc_huffman_table(table)),
+        JpgMutation::RemoveHuffmanTable { key } => format!("remove-huffman-table key={}", diff::enc_huffman_key(key)),
+        JpgMutation::SetRestartInterval { restart_interval } => format!("set-restart-interval restart-interval={}", diff::encode_option(restart_interval, |v| v.to_string())),
+        JpgMutation::InsertOtherSegment { index, segment } => format!("insert-other-segment index={index} segment={}", diff::enc_segment(segment)),
+        JpgMutation::RemoveOtherSegment { index } => format!("remove-other-segment index={index}"),
+        JpgMutation::SetPixels { pixels } => format!("set-pixels pixels={}", diff::hex_encode(pixels)),
+        JpgMutation::SetReEncodeQuality { quality } => format!("set-re-encode-quality quality={}", diff::encode_option(quality, |v| v.to_string())),
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+}
+fn parse_jpg_mutation(line: &str) -> Result<JpgMutation, String> {
+    if line == "no-mutation" {
+        return Ok(JpgMutation::NoMutation);
+    }
+    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    let args: std::collections::BTreeMap<&str, &str> = rest
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|tok| tok.split_once('=').ok_or_else(|| format!("jpg mutation: bad arg token {tok:?}")))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .collect();
+    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("jpg mutation: missing arg '{k}' for '{keyword}'"));
+    match keyword {
+        "set-snapshot" => Ok(JpgMutation::SetSnapshot { snapshot: dec_jpg_snapshot(arg("snapshot")?)? }),
+        "set-jfif-header" => Ok(JpgMutation::SetJfifHeader {
+            version: diff::dec_version(arg("version")?)?,
+            density_units: diff::dec_density_units(arg("density-units")?)?,
+            x_density: diff::parse_u16(arg("x-density")?)?,
+            y_density: diff::parse_u16(arg("y-density")?)?,
+            thumbnail: diff::decode_option(arg("thumbnail")?, diff::dec_thumbnail)?,
+        }),
+        "set-quant-table" => Ok(JpgMutation::SetQuantTable { table: diff::dec_quant_table(arg("table")?)? }),
+        "remove-quant-table" => Ok(JpgMutation::RemoveQuantTable { id: diff::parse_u8(arg("id")?)? }),
+        "set-huffman-table" => Ok(JpgMutation::SetHuffmanTable { table: diff::dec_huffman_table(arg("table")?)? }),
+        "remove-huffman-table" => Ok(JpgMutation::RemoveHuffmanTable { key: diff::dec_huffman_key(arg("key")?)? }),
+        "set-restart-interval" => Ok(JpgMutation::SetRestartInterval { restart_interval: diff::decode_option(arg("restart-interval")?, diff::parse_u16)? }),
+        "insert-other-segment" => Ok(JpgMutation::InsertOtherSegment { index: diff::parse_usize(arg("index")?)?, segment: diff::dec_segment(arg("segment")?)? }),
+        "remove-other-segment" => Ok(JpgMutation::RemoveOtherSegment { index: diff::parse_usize(arg("index")?)? }),
+        "set-pixels" => Ok(JpgMutation::SetPixels { pixels: diff::hex_decode(arg("pixels")?)? }),
+        "set-re-encode-quality" => Ok(JpgMutation::SetReEncodeQuality { quality: diff::decode_option(arg("quality")?, diff::parse_u8)? }),
+        other => Err(format!("jpg mutation: unknown keyword {other:?}")),
     }
 }
 
+impl protocol::OpText for JpgMutation {
+    fn print_op(&self) -> String {
+        print_jpg_mutation(self)
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_jpg_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+}
+
+/// ⚡️ Binary = the text bytes verbatim, same simplification `JpgDiff`'s hand-rolled codec uses.
 impl protocol::OpBinary for JpgMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        Ok(self.print_op().into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
@@ -578,5 +720,44 @@ mod tests {
         apply_jpg_mutation(&mut snap, &JpgMutation::RemoveOtherSegment { index: 99 });
         assert_eq!(snap, base);
     }
+
+    //#region 🔖️op_text_binary_roundtrip_law
+    /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `JpgMutation` grammar —
+    /// exercises every variant incl. `SetSnapshot`'s full nested `JpgFrameHeader`/`JpgFrameComponent`
+    /// tree and every collection-item struct (`JpgQuantTable`/`JpgHuffmanTable`/`JpgSegment`), plus
+    /// both `Some`/`None` legs of every `Option<T>`-shaped mutation argument.
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        let base = base_snapshot();
+        let mutations = vec![
+            JpgMutation::NoMutation,
+            JpgMutation::SetSnapshot { snapshot: base.clone() },
+            JpgMutation::SetSnapshot { snapshot: { let mut s = base.clone(); s.frame = None; s.jfif_thumbnail = None; s } },
+            JpgMutation::SetJfifHeader { version: (1, 2), density_units: JfifDensityUnits::PixelsPerCm, x_density: 300, y_density: 300, thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }) },
+            JpgMutation::SetJfifHeader { version: (1, 1), density_units: JfifDensityUnits::Aspect, x_density: 1, y_density: 1, thumbnail: None },
+            JpgMutation::SetQuantTable { table: quant(0, 77) },
+            JpgMutation::RemoveQuantTable { id: 3 },
+            JpgMutation::SetHuffmanTable { table: huffman(JpgHuffmanClass::Ac, 2, 5) },
+            JpgMutation::RemoveHuffmanTable { key: HKey { class: JpgHuffmanClass::Dc, id: 0 } },
+            JpgMutation::SetRestartInterval { restart_interval: Some(16) },
+            JpgMutation::SetRestartInterval { restart_interval: None },
+            JpgMutation::InsertOtherSegment { index: 1, segment: segment(0xE2, vec![7, 8]) },
+            JpgMutation::RemoveOtherSegment { index: 0 },
+            JpgMutation::SetPixels { pixels: vec![9u8; base.pixels.len()] },
+            JpgMutation::SetReEncodeQuality { quality: Some(50) },
+            JpgMutation::SetReEncodeQuality { quality: None },
+        ];
+        for mutation in mutations {
+            let printed = mutation.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = JpgMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
+
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = JpgMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+        }
+    }
+    //#endregion 🔖️op_text_binary_roundtrip_law
 }
 //#endregion Tests

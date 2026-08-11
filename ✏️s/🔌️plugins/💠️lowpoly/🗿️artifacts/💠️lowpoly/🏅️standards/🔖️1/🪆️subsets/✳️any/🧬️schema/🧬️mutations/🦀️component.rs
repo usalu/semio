@@ -378,7 +378,7 @@ mod tests {
     //#endregion 🔖️MutationsCoverage
 
     fn tiny_mesh_json() -> String {
-        semio_s_3d::mesh::HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json")
+        semio_framework_3d::mesh::HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json")
     }
 }
 //#endregion 🧪️Tests

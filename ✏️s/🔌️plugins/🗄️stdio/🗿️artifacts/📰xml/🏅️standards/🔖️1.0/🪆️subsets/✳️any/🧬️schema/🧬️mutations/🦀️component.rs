@@ -5,9 +5,15 @@ use crate::artifacts::xml::schema::diff::{
     diff_set_snapshot, XmlAttrAdded, XmlAttrModified, XmlAttributesDiff, XmlChildAdded, XmlChildrenDiff, XmlDiff,
     XmlElementDiff, XmlNodeDiff,
 };
+use crate::artifacts::xml::schema::diff::{
+    decode_option, dec_declaration, dec_str, dec_xml_node, encode_option, enc_declaration, enc_str, enc_xml_node,
+    split_top_level, strip_brackets,
+};
 use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlNode};
 use crate::artifacts::xml::XmlSnapshot;
-use protocol::Mutation;
+use protocol::{Mutation, OpText};
+#[cfg(test)]
+use protocol::OpBinary;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️NodePath
@@ -41,6 +47,17 @@ impl XmlNodePath {
 /// 📐️ Typed content mutation for `stdio.xml`. `InsertElement`/`RemoveElement`'s `path` addresses
 /// the PARENT element (`index` is the position among the parent's children); every other
 /// path-carrying variant's `path` addresses the target node itself.
+/// 🧪️ F6 CONFIRMED (real `cargo check -p semio-s-plugin-stdio --lib`, not guessed): adding
+/// `#[derive(dsl::DslOps)]` to this enum fails with `error[E0277]: the trait bound ...: DslField is
+/// not satisfied` for FOUR distinct field types simultaneously -- `SetSnapshot{snapshot:
+/// XmlSnapshot}` (recursively contains `XmlNode`), `SetDeclaration{declaration: Option<XmlDeclaration>}`,
+/// every `path: XmlNodePath` field (a plain newtype wrapper, not even an enum -- `DslField` simply
+/// has no impl for it either), and `InsertElement`'s `node: XmlNode` directly. Same structural
+/// reason `SvgMutation` fails (`f6-recon-report.md` §3a). `OpText`/`OpBinary` hand-rolled below,
+/// reusing `XmlDiff`'s `pub(crate)` grammar primitives (`hex_encode`/`enc_xml_node`/
+/// `split_top_level`/...) rather than the previous `serde_json` placeholder (which satisfied the
+/// trait's LAWS but was not a genuine handcrafted grammar, per the recon report's explicit warning
+/// against copying `WriterDiff`'s shortcut).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum XmlMutation {
@@ -206,31 +223,154 @@ fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-impl protocol::OpText for XmlMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
+/// 🧪️ F6: **hand-rolled** `OpText`/`OpBinary` for `XmlMutation` (`#[derive(dsl::DslOps)]` confirmed
+/// rejected above) — reuses `XmlDiff`'s `pub(crate)` grammar primitives
+/// (`hex_encode`/`enc_xml_node`/`split_top_level`/`encode_option`/...) rather than duplicating them
+/// a second time in this file, same intra-artifact reuse pattern `SvgMutation` uses off `SvgDiff`.
+/// Grammar: `keyword arg=value ...` (space-separated, same shape the derive's own
+/// handcrafted-wrapper convention uses — see `f6-recon-report.md` §2), one match arm per variant
+/// (no `DslVariants` scaffolding available since nothing here derives it). Replaces the previous
+/// `serde_json`-based placeholder, which satisfied the trait's LAWS but was not a genuine
+/// handcrafted grammar (the recon report explicitly warns against copying `WriterDiff`'s shortcut).
+fn enc_node_path(p: &XmlNodePath) -> String {
+    format!("[{}]", p.0.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(","))
+}
+fn dec_node_path(s: &str) -> Result<XmlNodePath, String> {
+    split_top_level(strip_brackets(s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|s| s.parse().map_err(|e: std::num::ParseIntError| e.to_string()))
+        .collect::<Result<Vec<usize>, String>>()
+        .map(XmlNodePath)
+}
+fn enc_xml_snapshot(s: &XmlSnapshot) -> String {
+    format!(
+        "[{},{},{},{}]",
+        enc_str(&s.schema),
+        encode_option(&s.doc.root, enc_xml_node),
+        encode_option(&s.doc.doctype, |v| enc_str(v)),
+        encode_option(&s.doc.declaration, enc_declaration),
+    )
+}
+fn dec_xml_snapshot(s: &str) -> Result<XmlSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [schema, root, doctype, declaration] = parts.as_slice() else { return Err(format!("xml snapshot: expected 4 fields, got {}", parts.len())) };
+    Ok(XmlSnapshot {
+        schema: dec_str(schema)?,
+        doc: crate::artifacts::xml::schema::snapshot::XmlDocument {
+            root: decode_option(root, dec_xml_node)?,
+            doctype: decode_option(doctype, dec_str)?,
+            declaration: decode_option(declaration, dec_declaration)?,
+        },
+    })
+}
+
+fn print_xml_mutation(m: &XmlMutation) -> String {
+    match m {
+        XmlMutation::NoMutation => "no-mutation".to_string(),
+        XmlMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_xml_snapshot(snapshot)),
+        XmlMutation::SetDeclaration { declaration } => format!("set-declaration declaration={}", encode_option(declaration, enc_declaration)),
+        XmlMutation::SetDoctype { doctype } => format!("set-doctype doctype={}", encode_option(doctype, |v| enc_str(v))),
+        XmlMutation::InsertElement { path, index, node } => format!("insert-element path={} index={index} node={}", enc_node_path(path), enc_xml_node(node)),
+        XmlMutation::RemoveElement { path, index } => format!("remove-element path={} index={index}", enc_node_path(path)),
+        XmlMutation::SetAttribute { path, name, value } => format!("set-attribute path={} name={} value={}", enc_node_path(path), enc_str(name), encode_option(value, |v| enc_str(v))),
+        XmlMutation::SetText { path, text } => format!("set-text path={} text={}", enc_node_path(path), enc_str(text)),
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+}
+fn parse_xml_mutation(line: &str) -> Result<XmlMutation, String> {
+    if line == "no-mutation" {
+        return Ok(XmlMutation::NoMutation);
+    }
+    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    let args: std::collections::BTreeMap<&str, &str> = rest
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|tok| tok.split_once('=').ok_or_else(|| format!("xml mutation: bad arg token {tok:?}")))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .collect();
+    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("xml mutation: missing arg '{k}' for '{keyword}'"));
+    let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
+    match keyword {
+        "set-snapshot" => Ok(XmlMutation::SetSnapshot { snapshot: dec_xml_snapshot(arg("snapshot")?)? }),
+        "set-declaration" => Ok(XmlMutation::SetDeclaration { declaration: decode_option(arg("declaration")?, dec_declaration)? }),
+        "set-doctype" => Ok(XmlMutation::SetDoctype { doctype: decode_option(arg("doctype")?, dec_str)? }),
+        "insert-element" => Ok(XmlMutation::InsertElement { path: dec_node_path(arg("path")?)?, index: usize_arg("index")?, node: dec_xml_node(arg("node")?)? }),
+        "remove-element" => Ok(XmlMutation::RemoveElement { path: dec_node_path(arg("path")?)?, index: usize_arg("index")? }),
+        "set-attribute" => Ok(XmlMutation::SetAttribute { path: dec_node_path(arg("path")?)?, name: dec_str(arg("name")?)?, value: decode_option(arg("value")?, dec_str)? }),
+        "set-text" => Ok(XmlMutation::SetText { path: dec_node_path(arg("path")?)?, text: dec_str(arg("text")?)? }),
+        other => Err(format!("xml mutation: unknown keyword {other:?}")),
     }
 }
 
+impl protocol::OpText for XmlMutation {
+    fn print_op(&self) -> String {
+        print_xml_mutation(self)
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_xml_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+}
+
+/// ⚡️ Binary = the text bytes verbatim, same simplification as `XmlDiff`'s hand-rolled codec.
 impl protocol::OpBinary for XmlMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        Ok(self.print_op().into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod op_codec_tests {
+    use super::*;
+    use crate::artifacts::xml::schema::snapshot::XmlAttr;
+    use protocol::OpBinary;
+
+    fn fixture() -> XmlSnapshot {
+        <XmlSnapshot as store::ArtifactDsl>::parse_dsl(
+            r#"<root a="1"><child x="0"/></root>"#,
+        )
+        .unwrap()
+    }
+
+    /// 🧪️ `OpText`/`OpBinary` round-trip laws for the hand-rolled `XmlMutation` grammar —
+    /// exercises every variant incl. `InsertElement`'s bare `XmlNode` payload and `SetSnapshot`'s
+    /// full nested-document payload (declaration + doctype + recursive node tree).
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        let base = fixture();
+        let mutations = vec![
+            XmlMutation::NoMutation,
+            XmlMutation::SetSnapshot { snapshot: base.clone() },
+            XmlMutation::SetDeclaration { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }) },
+            XmlMutation::SetDeclaration { declaration: None },
+            XmlMutation::SetDoctype { doctype: Some("<!DOCTYPE root>".into()) },
+            XmlMutation::SetDoctype { doctype: None },
+            XmlMutation::InsertElement {
+                path: XmlNodePath(vec![]),
+                index: 1,
+                node: XmlNode::Element { name: "grandchild".into(), attrs: vec![XmlAttr { name: "r".into(), value: "1".into() }], children: vec![] },
+            },
+            XmlMutation::RemoveElement { path: XmlNodePath(vec![]), index: 0 },
+            XmlMutation::SetAttribute { path: XmlNodePath(vec![0]), name: "width".into(), value: Some("99".into()) },
+            XmlMutation::SetAttribute { path: XmlNodePath(vec![0]), name: "width".into(), value: None },
+            XmlMutation::SetText { path: XmlNodePath(vec![0]), text: "hello world".into() },
+        ];
+        for mutation in mutations {
+            let printed = mutation.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = XmlMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
+
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = XmlMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+        }
+    }
+}
+//#endregion 🧪️Tests

@@ -7,9 +7,10 @@
 use crate::artifacts::json::schema::diff::{
     diff_set_snapshot, JsonArrayAdded, JsonArrayDiff, JsonArrayModified, JsonDiff, JsonObjectAdded, JsonObjectDiff, JsonObjectModified, JsonValueDiff,
 };
+use crate::artifacts::json::schema::diff::{dec_json_value, dec_str, enc_json_value, enc_str, parse_usize, split_top_level, strip_brackets};
 use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
 use crate::artifacts::json::JsonSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{Mutation, MutationDiff, OpText};
 #[cfg(test)]
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
 // trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
@@ -47,6 +48,14 @@ fn resolve<'a>(root: &'a JsonValue, path: &[JsonPathSegment]) -> Option<&'a Json
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.json`.
+/// 🧪️ F6: `#[derive(dsl::DslOps)]` is unusable here for the same structural reason as `JsonDiff`
+/// (see that file's doc comment, `f6-recon-report.md` §3a) — `SetSnapshot{snapshot: JsonSnapshot}`
+/// recursively contains `JsonValue` (a data-carrying enum, no `DslField` impl exists or can exist
+/// for it), and every other path-carrying variant carries a `JsonValue` directly AND a `JsonPath`
+/// (`Vec<JsonPathSegment>`, itself a data-carrying enum: `Key(String)`/`Index(usize)`) — two
+/// independent enum-shaped payloads per variant, not just one. `OpText`/`OpBinary` hand-rolled
+/// below (§OpCodecs), grammar template copied from `SvgMutation`'s, reusing `JsonDiff`'s
+/// `pub(crate)` grammar primitives (`hex_encode`/`enc_json_value`/`split_top_level`/...).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum JsonMutation {
@@ -234,31 +243,101 @@ impl Mutation<JsonSnapshot> for JsonMutation {
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-impl protocol::OpText for JsonMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
+/// 🧪️ F6: **hand-rolled** `OpText`/`OpBinary` for `JsonMutation` (`#[derive(dsl::DslOps)]`
+/// blocked, see the enum doc comment above) — reuses `JsonDiff`'s `pub(crate)` grammar primitives
+/// (`hex_encode`/`enc_json_value`/`split_top_level`/...) rather than duplicating them a second
+/// time in this file. Grammar: `keyword arg=value ...` (space-separated, same shape the derive's
+/// own handcrafted-wrapper convention uses, `f6-recon-report.md` §2), one match arm per variant.
+fn enc_json_path_segment(seg: &JsonPathSegment) -> String {
+    match seg {
+        JsonPathSegment::Key(key) => format!("K[{}]", enc_str(key)),
+        JsonPathSegment::Index(index) => format!("I[{index}]"),
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+}
+fn dec_json_path_segment(s: &str) -> Result<JsonPathSegment, String> {
+    let (tag, rest) = s.split_at(1);
+    match tag {
+        "K" => Ok(JsonPathSegment::Key(dec_str(strip_brackets(rest)?)?)),
+        "I" => Ok(JsonPathSegment::Index(parse_usize(strip_brackets(rest)?)?)),
+        other => Err(format!("json path segment: unknown tag {other:?}")),
+    }
+}
+fn enc_json_path(p: &JsonPath) -> String {
+    format!("[{}]", p.iter().map(enc_json_path_segment).collect::<Vec<_>>().join(","))
+}
+fn dec_json_path(s: &str) -> Result<JsonPath, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_json_path_segment).collect()
+}
+fn enc_json_snapshot(s: &JsonSnapshot) -> String {
+    format!("[{},{}]", enc_str(&s.schema), enc_json_value(&s.value))
+}
+fn dec_json_snapshot(s: &str) -> Result<JsonSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [schema, value] = parts.as_slice() else { return Err(format!("json snapshot: expected 2 fields, got {}", parts.len())) };
+    Ok(JsonSnapshot { schema: dec_str(schema)?, value: dec_json_value(value)? })
+}
+
+fn print_json_mutation(m: &JsonMutation) -> String {
+    match m {
+        JsonMutation::NoMutation => "no-mutation".to_string(),
+        JsonMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_json_snapshot(snapshot)),
+        JsonMutation::SetMember { path, key, value } => {
+            format!("set-member path={} key={} value={}", enc_json_path(path), enc_str(key), enc_json_value(value))
+        }
+        JsonMutation::RemoveMember { path, key } => format!("remove-member path={} key={}", enc_json_path(path), enc_str(key)),
+        JsonMutation::InsertArrayElement { path, index, value } => {
+            format!("insert-array-element path={} index={index} value={}", enc_json_path(path), enc_json_value(value))
+        }
+        JsonMutation::RemoveArrayElement { path, index } => format!("remove-array-element path={} index={index}", enc_json_path(path)),
+        JsonMutation::SetScalar { path, value } => format!("set-scalar path={} value={}", enc_json_path(path), enc_json_value(value)),
+    }
+}
+fn parse_json_mutation(line: &str) -> Result<JsonMutation, String> {
+    if line == "no-mutation" {
+        return Ok(JsonMutation::NoMutation);
+    }
+    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    let args: std::collections::BTreeMap<&str, &str> = rest
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|tok| tok.split_once('=').ok_or_else(|| format!("json mutation: bad arg token {tok:?}")))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .collect();
+    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("json mutation: missing arg '{k}' for '{keyword}'"));
+    let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
+    match keyword {
+        "set-snapshot" => Ok(JsonMutation::SetSnapshot { snapshot: dec_json_snapshot(arg("snapshot")?)? }),
+        "set-member" => Ok(JsonMutation::SetMember { path: dec_json_path(arg("path")?)?, key: dec_str(arg("key")?)?, value: dec_json_value(arg("value")?)? }),
+        "remove-member" => Ok(JsonMutation::RemoveMember { path: dec_json_path(arg("path")?)?, key: dec_str(arg("key")?)? }),
+        "insert-array-element" => Ok(JsonMutation::InsertArrayElement {
+            path: dec_json_path(arg("path")?)?,
+            index: usize_arg("index")?,
+            value: dec_json_value(arg("value")?)?,
+        }),
+        "remove-array-element" => Ok(JsonMutation::RemoveArrayElement { path: dec_json_path(arg("path")?)?, index: usize_arg("index")? }),
+        "set-scalar" => Ok(JsonMutation::SetScalar { path: dec_json_path(arg("path")?)?, value: dec_json_value(arg("value")?)? }),
+        other => Err(format!("json mutation: unknown keyword {other:?}")),
     }
 }
 
+impl protocol::OpText for JsonMutation {
+    fn print_op(&self) -> String {
+        print_json_mutation(self)
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_json_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+}
+
+/// ⚡️ Binary = the text bytes verbatim, same simplification `JsonDiff`'s hand-rolled codec uses.
 impl protocol::OpBinary for JsonMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        Ok(self.print_op().into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
@@ -373,5 +452,37 @@ mod tests {
         assert_eq!(inv.apply(&mid), base);
     }
     //#endregion inverse_law
+
+    //#region 🔖️OpCodecTests
+    /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws over the hand-rolled `JsonMutation` grammar —
+    /// exercises every variant, incl. nested/array/object payload values and a multi-segment
+    /// `JsonPath` (mixing both `Key`/`Index` segment kinds).
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        use protocol::{OpBinary, OpText};
+
+        let mixed_path = vec![JsonPathSegment::Key("outer".into()), JsonPathSegment::Index(2), JsonPathSegment::Key("inner".into())];
+        let cases = vec![
+            JsonMutation::NoMutation,
+            JsonMutation::SetSnapshot { snapshot: snap(objv(vec![("a", num("1")), ("b", arr(vec![str_("x"), JsonValue::Null, JsonValue::Bool { value: true }]))])) },
+            JsonMutation::SetMember { path: vec![], key: "a".into(), value: num("2.5e10") },
+            JsonMutation::SetMember { path: mixed_path.clone(), key: "k".into(), value: objv(vec![("nested", str_("v"))]) },
+            JsonMutation::RemoveMember { path: vec![JsonPathSegment::Key("outer".into())], key: "gone".into() },
+            JsonMutation::InsertArrayElement { path: vec![JsonPathSegment::Key("list".into())], index: 1, value: arr(vec![num("1"), num("2")]) },
+            JsonMutation::RemoveArrayElement { path: vec![JsonPathSegment::Index(0)], index: 3 },
+            JsonMutation::SetScalar { path: mixed_path, value: JsonValue::Null },
+        ];
+        for m in cases {
+            let printed = m.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = <JsonMutation as OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch (printed {printed:?})");
+
+            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op failed: {e}"));
+            let decoded = <JsonMutation as OpBinary>::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch");
+        }
+    }
+    //#endregion 🔖️OpCodecTests
 }
 //#endregion 🧪️Tests

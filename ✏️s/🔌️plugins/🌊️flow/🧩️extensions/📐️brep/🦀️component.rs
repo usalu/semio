@@ -3,8 +3,8 @@
 use flow_extension_sdk::brep_geometry::*;
 use flow_extension_sdk::{build_manifest_json, evaluate_json};
 use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
-use semio_s_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
-use semio_s_3d::brep::kernel::Brep;
+use semio_framework_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
+use semio_framework_3d::brep::kernel::Brep;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock, RwLock};
 

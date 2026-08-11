@@ -2795,6 +2795,36 @@ pub fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
     serde_json::from_str(json).unwrap_or_default()
 }
 
+//#region 🔖️TopicContribution
+/// 🗂️ Open replacement for `Contribution`'s closed, plugin-specific `kind` union: a plugin declares a
+/// `topic` string instead of a hardcoded enum variant, so the generic framework never has to know
+/// s-plugin-specific names (`PlaybookBlockKind`, `SourcingModule`, …). `topic` reuses the same
+/// dot-namespaced vocabulary as a crate's existing `contributes`/`consumes` metadata (e.g.
+/// `"flow.extension"`, `"playbook.blockKind"`, `"cad.computer"`) — each future producer/consumer wave
+/// picks its own topic string; this type does not enumerate them. Coexists with `Contribution`/
+/// `contributions` during the migration — see `component.ts`'s `TopicContribution` for the mirror and
+/// the ticket's `w2-open-contribution.md` for which producers/consumers still read the closed shape.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TopicContribution {
+    pub topic: String,
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub payload: serde_json::Value,
+}
+
+impl TopicContribution {
+    pub fn new(topic: impl Into<String>, payload: serde_json::Value) -> Self {
+        Self { topic: topic.into(), payload }
+    }
+
+    /// 📕️ Decodes `payload` into a caller-chosen typed shape.
+    pub fn decode<T: serde::de::DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
+        serde_json::from_value(self.payload.clone())
+    }
+}
+//#endregion 🔖️TopicContribution
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -2808,6 +2838,10 @@ pub struct PluginManifest {
     pub capabilities: Vec<kernel::CapabilityRequirement>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub contributions: Vec<Contribution>,
+    /// 🗂️ Open counterpart of `contributions` — see `TopicContribution`. Additive: coexists with the
+    /// closed `contributions` field until every producer/consumer has migrated.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub topic_contributions: Vec<TopicContribution>,
     /// 🎛️ Plugin-scope commands this program exposes — apply whenever any of its apps is focused.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub commands: Vec<CommandDefinition>,

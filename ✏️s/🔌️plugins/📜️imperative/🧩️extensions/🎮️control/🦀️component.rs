@@ -59,6 +59,14 @@ pub fn imperative_module_contribution() -> semio_framework::ProgramContributionE
     imperative_extension_sdk::imperative_module_contribution(EXTENSION_ID, "control", "Control", "git-branch", "control", "Control", MODULE_VERSION, &registry, Some(&catalogue))
 }
 
+/// 🗺️ Open-registry twin of [`imperative_module_contribution`] — see
+/// `imperative_extension_sdk::imperative_module_topic_contribution`.
+pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribution {
+    let registry = module_registry();
+    let catalogue = catalogue_json();
+    imperative_extension_sdk::imperative_module_topic_contribution("control", "Control", "git-branch", "control", "Control", MODULE_VERSION, &registry, Some(&catalogue))
+}
+
 fn bundle() -> semio_framework_plugin::ExtensionBundle {
     let entry = imperative_module_contribution();
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Control", MODULE_VERSION)

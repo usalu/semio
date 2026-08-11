@@ -2,7 +2,7 @@
 
 use semio_framework::{
     kernel::{ArtifactKind, CapabilityRequirement, Rights, Scope},
-    PluginManifest, ViewModel,
+    Contribution, PluginManifest, ViewModel,
 };
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -813,7 +813,7 @@ impl WasmPluginRuntime {
     }
 
     fn read_manifest(engine: &Engine, component: &Component, linker: &Linker<HostState>) -> Result<PluginManifest, PluginHostError> {
-        let manifest = PluginManifest { plugin_id: "unknown".into(), label: "Unknown".into(), version: "0.0.0".into(), apps: vec![], examples: vec![], capabilities: vec![], contributions: vec![], commands: vec![], artifact_kinds: vec![] };
+        let manifest = PluginManifest { plugin_id: "unknown".into(), label: "Unknown".into(), version: "0.0.0".into(), apps: vec![], examples: vec![], capabilities: vec![], contributions: vec![], topic_contributions: vec![], commands: vec![], artifact_kinds: vec![] };
         let mut store = Store::new(engine, Self::host_state("bootstrap", &manifest));
         let (bindings, _instance) = PluginWorld::instantiate(&mut store, component, linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let wire_bytes = bindings.semio_framework_plugin().call_manifest(&mut store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
@@ -829,6 +829,245 @@ impl WasmPluginRuntime {
 }
 //#endregion 🔖️WasmPluginRuntime
 
+//#region 🔖️ExtensionRuntime
+/// 🧩️ `extension-world` bindings, isolated in their own submodule so the generated `semio::framework::*`
+/// tree doesn't collide with the `plugin-world` bindings' identically-named tree above — wasmtime's
+/// `bindgen!` cannot be invoked twice at the same module scope.
+mod extension_bindings {
+    wasmtime::component::bindgen!({
+        world: "extension-world",
+        path: "../../../📦️packages/🦀️rust/📜️wit",
+        async: false,
+    });
+}
+
+/// 📦️ Host-side mirror of the guest `ExtensionManifest` (defined in the plugin guest SDK crate,
+/// which this host crate does not depend on) — decoded from the same `extension.manifest` wire bytes.
+#[derive(Clone, Debug, Default, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExtensionManifest {
+    pub extension_id: String,
+    pub label: String,
+    pub version: String,
+    pub extends: String,
+    #[serde(default)]
+    pub capabilities: Vec<CapabilityRequirement>,
+    #[serde(default)]
+    pub contributions: Vec<Contribution>,
+}
+
+struct ExtensionHostState {
+    wasi: WasiCtx,
+    table: ResourceTable,
+    extension_id: String,
+}
+
+impl WasiView for ExtensionHostState {
+    fn ctx(&mut self) -> &mut WasiCtx {
+        &mut self.wasi
+    }
+
+    fn table(&mut self) -> &mut ResourceTable {
+        &mut self.table
+    }
+}
+
+/// 🕳️ Every capability this host doesn't yet back for extensions faults as not-implemented — this
+/// runtime is purely additive infra (not wired into any boot sequence yet), so there is no
+/// `EngineCache`/`IoRouter`/backbone registry to route these through until a later wave wires one in.
+impl extension_bindings::semio::framework::host::Host for ExtensionHostState {
+    fn log(&mut self, level: String, message: String) {
+        eprintln!("[extension:{}:{level}] {message}", self.extension_id);
+    }
+
+    fn now_ms(&mut self) -> i64 {
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis() as i64).unwrap_or(0)
+    }
+
+    fn read_artifact(&mut self, _handle: u64) -> Result<Vec<u8>, Vec<u8>> {
+        Err(host_fault_bytes("os.host.read-artifact", "read-artifact not implemented for extension host"))
+    }
+
+    fn write_artifact(&mut self, _handle: u64, _payload: Vec<u8>) -> Result<(), Vec<u8>> {
+        Err(host_fault_bytes("os.host.write-artifact", "write-artifact not implemented for extension host"))
+    }
+
+    fn open_window(&mut self, _kind: String, _params: Vec<u8>) -> Result<u64, Vec<u8>> {
+        Err(host_fault_bytes("os.host.open-window", "open-window not implemented for extension host"))
+    }
+
+    fn invoke_action(&mut self, _target: String, _invocation: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+        Err(host_fault_bytes("os.host.invoke-action", "invoke-action not implemented for extension host"))
+    }
+
+    fn read_asset(&mut self, handle: u64) -> Result<Vec<u8>, Vec<u8>> {
+        Err(host_fault_bytes("os.host.read-asset", format!("read-asset: unknown handle {handle}")))
+    }
+
+    fn network_fetch(&mut self, _origin: String, _path: String) -> Result<Vec<u8>, Vec<u8>> {
+        Err(host_fault_bytes("os.host.network-fetch", "network-fetch not implemented for extension host"))
+    }
+
+    fn write_blob(&mut self, _data: Vec<u8>, _media_type: String) -> Result<String, Vec<u8>> {
+        Err(host_fault_bytes("os.host.write-blob", "write-blob not implemented for extension host"))
+    }
+
+    fn read_blob(&mut self, hash: String) -> Result<Vec<u8>, Vec<u8>> {
+        Err(host_fault_bytes("os.host.read-blob", format!("blob not found: {hash}")))
+    }
+
+    fn backbone_send(&mut self, uri: String, _message: Vec<u8>) -> Result<(), Vec<u8>> {
+        Err(host_fault_bytes("os.host.backbone-send", format!("backbone unavailable: {uri}")))
+    }
+
+    fn backbone_poll(&mut self, uri: String) -> Result<Vec<Vec<u8>>, Vec<u8>> {
+        Err(host_fault_bytes("os.host.backbone-poll", format!("backbone unavailable: {uri}")))
+    }
+
+    fn backbone_status(&mut self, _uri: String) -> Result<String, Vec<u8>> {
+        Ok("detached".into())
+    }
+
+    fn engine_derive(&mut self, _engine_id: String, _input: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+        Err(host_fault_bytes("os.host.engine-derive", "engine-derive not implemented for extension host"))
+    }
+
+    fn io_dialects(&mut self, _artifact_kind: String, _direction: String) -> Result<Vec<u8>, Vec<u8>> {
+        Err(host_fault_bytes("os.host.io-dialects", "io-dialects not implemented for extension host"))
+    }
+
+    fn io_compose(&mut self, _key: Vec<u8>, _sources: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+        Err(host_fault_bytes("os.host.io-compose", "io-compose not implemented for extension host"))
+    }
+
+    fn engine_read(&mut self, _engine_id: String, _key: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+        Err(host_fault_bytes("os.host.engine-read", "engine-read not implemented for extension host"))
+    }
+}
+
+/// 🧩️ One instantiated `extension-world` component: its wasmtime store/bindings plus decoded manifest.
+struct LoadedExtension {
+    store: Mutex<Store<ExtensionHostState>>,
+    bindings: extension_bindings::ExtensionWorld,
+    manifest: ExtensionManifest,
+}
+
+/// 🧩️ Native wasmtime host for `extension-world` components — mirrors `WasmPluginRuntime`'s
+/// load/instantiate pattern but keyed by extension id in an instance table, since a process loads
+/// many small extensions rather than one big plugin. Purely additive: nothing in the boot sequence
+/// instantiates this yet (a later wave wires it in once producers migrate off the
+/// `plugin-world`-as-extension workaround).
+pub struct ExtensionRuntime {
+    engine: Engine,
+    linker: Linker<ExtensionHostState>,
+    instances: Mutex<HashMap<String, Arc<LoadedExtension>>>,
+}
+
+impl ExtensionRuntime {
+    fn build_engine() -> Result<Engine, PluginHostError> {
+        let mut config = Config::new();
+        config.consume_fuel(true);
+        config.epoch_interruption(true);
+        config.wasm_component_model(true);
+        Engine::new(&config).map_err(|error| PluginHostError::Wasmtime(error.to_string()))
+    }
+
+    fn build_linker(engine: &Engine) -> Result<Linker<ExtensionHostState>, PluginHostError> {
+        let mut linker = Linker::new(engine);
+        extension_bindings::semio::framework::host::add_to_linker(&mut linker, |state| state).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        wasmtime_wasi::add_to_linker_sync(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Ok(linker)
+    }
+
+    /// 🏗️ Fresh runtime with its own wasmtime `Engine` + capability `Linker`; no extensions loaded yet.
+    pub fn new() -> Result<Self, PluginHostError> {
+        let engine = Self::build_engine()?;
+        let linker = Self::build_linker(&engine)?;
+        Ok(Self { engine, linker, instances: Mutex::new(HashMap::new()) })
+    }
+
+    fn host_state(extension_id: &str) -> ExtensionHostState {
+        ExtensionHostState { wasi: WasiCtxBuilder::new().build(), table: ResourceTable::new(), extension_id: extension_id.to_string() }
+    }
+
+    fn extension_result<T>(result: Result<T, extension_bindings::semio::framework::types::PluginError>) -> Result<T, PluginHostError> {
+        result.map_err(|error| match error {
+            extension_bindings::semio::framework::types::PluginError::Fault(bytes) => PluginHostError::Plugin(dsl::decode_fault_bytes(&bytes).message),
+        })
+    }
+
+    fn decode_manifest(store: &mut Store<ExtensionHostState>, bindings: &extension_bindings::ExtensionWorld) -> Result<ExtensionManifest, PluginHostError> {
+        let wire_bytes = bindings.semio_framework_extension().call_manifest(&mut *store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let value = store::pack_rt::decode_wire_value(&wire_bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+        let value = store::pack_rt::renormalize_whole_number_floats(value);
+        dsl::from_dsl_value(value).map_err(PluginHostError::Plugin)
+    }
+
+    /// 📦️ Instantiates `wasm_bytes` as an `extension-world` component, calls its `manifest()` +
+    /// `activate()`, and keys it in this runtime's instance table by the manifest's own
+    /// `extension_id` (the caller doesn't pick the id — it's authoritative from the guest). Returns
+    /// that id.
+    pub fn load_bytes(&self, wasm_bytes: &[u8]) -> Result<String, PluginHostError> {
+        let component = Component::from_binary(&self.engine, wasm_bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let mut store = Store::new(&self.engine, Self::host_state("bootstrap"));
+        let (bindings, _instance) =
+            extension_bindings::ExtensionWorld::instantiate(&mut store, &component, &self.linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let manifest = Self::decode_manifest(&mut store, &bindings)?;
+        store.data_mut().extension_id = manifest.extension_id.clone();
+        let activation = bindings.semio_framework_extension().call_activate(&mut store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::extension_result(activation)?;
+        let extension_id = manifest.extension_id.clone();
+        let loaded = LoadedExtension { store: Mutex::new(store), bindings, manifest };
+        self.instances.lock().map_err(|_| PluginHostError::LockPoisoned("extension instances"))?.insert(extension_id.clone(), Arc::new(loaded));
+        Ok(extension_id)
+    }
+
+    /// 📁 Reads `path` off disk and loads it the same way `load_bytes` does.
+    pub fn load(&self, path: impl AsRef<Path>) -> Result<String, PluginHostError> {
+        let wasm_bytes = std::fs::read(path)?;
+        self.load_bytes(&wasm_bytes)
+    }
+
+    /// ✂️ Calls `deactivate()` and drops the loaded instance from the table.
+    pub fn unload(&self, extension_id: &str) -> Result<(), PluginHostError> {
+        let loaded = self.instances.lock().map_err(|_| PluginHostError::LockPoisoned("extension instances"))?.remove(extension_id);
+        if let Some(loaded) = loaded {
+            let mut store = loaded.store.lock().map_err(|_| PluginHostError::LockPoisoned("extension store"))?;
+            loaded.bindings.semio_framework_extension().call_deactivate(&mut *store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        }
+        Ok(())
+    }
+
+    /// 👁️ The decoded manifest of a loaded extension, if one is registered under `extension_id`.
+    pub fn manifest(&self, extension_id: &str) -> Option<ExtensionManifest> {
+        self.instances.lock().ok()?.get(extension_id).map(|loaded| loaded.manifest.clone())
+    }
+
+    /// 🔀️ Routes `capability`/`request` to the loaded extension's `invoke` export. Unlike
+    /// `WasmPluginRuntime`'s methods (which surface `PluginHostError`), this matches the WIT ABI's
+    /// own fault channel one level higher and returns `Fault` directly.
+    pub fn extension_invoke(&self, extension_id: &str, capability: &str, request: &[u8]) -> Result<Vec<u8>, dsl::Fault> {
+        let loaded = {
+            let instances = self.instances.lock().map_err(|_| dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("extension.lock-poisoned"), "extension instances lock poisoned"))?;
+            instances
+                .get(extension_id)
+                .cloned()
+                .ok_or_else(|| dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("extension.unknown"), format!("no extension loaded with id `{extension_id}`")))?
+        };
+        let mut store = loaded.store.lock().map_err(|_| dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("extension.lock-poisoned"), "extension store lock poisoned"))?;
+        store.set_fuel(PLUGIN_FUEL_BUDGET).ok();
+        let result = loaded
+            .bindings
+            .semio_framework_extension()
+            .call_invoke(&mut *store, capability, request)
+            .map_err(|error| dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("extension.wasmtime"), error.to_string()))?;
+        result.map_err(|error| match error {
+            extension_bindings::semio::framework::types::PluginError::Fault(bytes) => dsl::decode_fault_bytes(&bytes),
+        })
+    }
+}
+//#endregion 🔖️ExtensionRuntime
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -836,5 +1075,13 @@ mod tests {
     #[test]
     fn wasm_plugin_runtime_api_exists() {
         let _ = std::mem::size_of::<WasmPluginRuntime>();
+    }
+
+    #[test]
+    fn extension_runtime_constructs_engine_and_linker() {
+        let runtime = ExtensionRuntime::new().expect("extension runtime engine/linker build");
+        assert!(runtime.manifest("nonexistent").is_none());
+        let error = runtime.extension_invoke("nonexistent", "noop", &[]).expect_err("unknown extension id must fault");
+        assert_eq!(error.code.0, "extension.unknown");
     }
 }

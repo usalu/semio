@@ -1,8 +1,6 @@
 // #region 🎠️Kernel
 /// <reference types="vitest/importMeta" />
 /** @emoji 🎠️ `@semio-tech/framework` — plugin runtime, leases, invocation responses, and playground boot. */
-import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
-import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, EXTENSION_TARGETS, pluginModuleUrl, extensionModuleUrl } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
 import type { IconName } from "@semio-tech/assets";
 import type { ShellLocale, ShellTerminology, LocalizedLabel } from "../🛂️manifest/🤖️generated/🟦️ui-axes.ts";
 
@@ -104,11 +102,12 @@ export function resolveLayoutForMode(
 /**
  * 🧩️ Expands a plugin registry for a primary plugin: `primaryPluginId` is matched directly
  * against entry `pluginId` (no registry-id indirection), then every other entry whose
- * `contributes` intersects the primary entry's `consumes` is appended. Studio mode, or the
- * absence of a primary id, passes the full registry through unchanged.
+ * `contributes` intersects the primary entry's `consumes` is appended. Host mode (a launch that
+ * hosts every plugin at once, e.g. a shell/studio session), or the absence of a primary id, passes
+ * the full registry through unchanged.
  */
-export function expandPluginRegistry(plugins: readonly PluginRegistryEntry[], primaryPluginId?: string, studioMode = false): readonly PluginRegistryEntry[] {
-  if (studioMode || !primaryPluginId) return plugins;
+export function expandPluginRegistry(plugins: readonly PluginRegistryEntry[], primaryPluginId?: string, hostMode = false): readonly PluginRegistryEntry[] {
+  if (hostMode || !primaryPluginId) return plugins;
   const primaryEntries = plugins.filter((entry) => entry.pluginId === primaryPluginId);
   const consumes = new Set(primaryEntries.flatMap((entry) => entry.consumes ?? []));
   const contributorEntries = plugins.filter((entry) => entry.pluginId !== primaryPluginId && (entry.contributes ?? []).some((tag) => consumes.has(tag)));
@@ -168,6 +167,44 @@ export type PluginRegistryEntry = {
   readonly contributes?: readonly string[];
   readonly consumes?: readonly string[];
 };
+
+//#region 🗂️PluginCatalog
+/** 🗂️ Framework-owned mirror of the OS product's generated `PluginBuildTarget` row — kept
+ * shape-compatible so `🛍️products/💻️os/…/🟦️catalog.ts` can build one straight off the generated array
+ * without a mapping layer drifting out of sync. */
+export type PluginCatalogTarget = {
+  readonly pluginId: string;
+  readonly wasmOut: string;
+  readonly role: "plugin" | "extension";
+  readonly contributes: readonly string[];
+  readonly consumes: readonly string[];
+};
+
+/** 🗂️ Framework-owned mirror of the OS product's generated `PlaygroundBuildTarget` row — only the
+ * columns the kernel's playground resolvers actually read. */
+export type PlaygroundCatalogTarget = {
+  readonly variant: string;
+  readonly pluginId: string;
+  readonly app?: string;
+  readonly aliases: readonly string[];
+};
+
+/**
+ * 🗂️ Everything the kernel's plugin/playground resolvers need, injected by the caller instead of
+ * imported from a specific product's generated build output — inverts the upward dependency a generic
+ * framework module must never have on a product's build artifacts. The OS product's
+ * `🔌️plugin/📦️packages/🟦️typescript/🟦️catalog.ts` is the one place allowed to import the generated
+ * registry and build this shape; every other product wanting kernel resolvers builds its own.
+ */
+export interface PluginCatalog {
+  readonly plugins: readonly PluginCatalogTarget[];
+  readonly extensions: readonly PluginCatalogTarget[];
+  readonly hosts: readonly PluginHostConfig[];
+  readonly playgrounds: readonly PlaygroundCatalogTarget[];
+  moduleUrl(pluginId: string, wasmOut: string): string;
+  extensionModuleUrl(pluginId: string, wasmOut: string): string;
+}
+//#endregion 🗂️PluginCatalog
 
 //#region InvocationResponse
 /** @emoji 🕰️ Hybrid logical clock stamp carried by every kernel operation. */
@@ -1008,12 +1045,12 @@ export function createDevPluginSource(registry: readonly PluginRegistryEntry[]):
 export const EXTENSION_SOURCE_WATCH_PATH = "/extensions/watch";
 
 /** @emoji 🧩️ `PluginSource` backed by the extension store's `/extensions` HTTP tree and its watch SSE
- * stream. Catalog rows come from generated {@link EXTENSION_TARGETS}; runtime installs add artifacts
- * under each extension id without changing this list. */
-export function createExtensionSource(): PluginSource {
-  const registry: readonly PluginRegistryEntry[] = EXTENSION_TARGETS.map((target) => ({
+ * stream. Catalog rows come from the injected {@link PluginCatalog}'s `extensions`; runtime installs
+ * add artifacts under each extension id without changing this list. */
+export function createExtensionSource(catalog: PluginCatalog): PluginSource {
+  const registry: readonly PluginRegistryEntry[] = catalog.extensions.map((target) => ({
     pluginId: target.pluginId,
-    moduleUrl: extensionModuleUrl(target.pluginId, target.wasmOut),
+    moduleUrl: catalog.extensionModuleUrl(target.pluginId, target.wasmOut),
     contributes: target.contributes,
     consumes: target.consumes,
   }));
@@ -1078,19 +1115,19 @@ export function multiplexPluginSources(...sources: readonly PluginSource[]): Plu
 //#endregion 🔌️PluginSource
 
 // #region 🎮️PlaygroundResolution
-/** @emoji 🎮️ Finds the generated playground catalog row for a variant id or one of its aliases. */
-function findPlaygroundVariant(playgroundPluginId: string): PlaygroundBuildTarget | undefined {
-  return PLAYGROUND_BUILD_TARGETS.find((entry) => entry.variant === playgroundPluginId || entry.aliases.includes(playgroundPluginId));
+/** @emoji 🎮️ Finds the injected catalog's playground row for a variant id or one of its aliases. */
+function findPlaygroundVariant(catalog: PluginCatalog, playgroundPluginId: string): PlaygroundCatalogTarget | undefined {
+  return catalog.playgrounds.find((entry) => entry.variant === playgroundPluginId || entry.aliases.includes(playgroundPluginId));
 }
 
 /** @emoji 🎯️ Resolves a playground filter/alias (e.g. "3d", "sourcing") to its underlying wasm component registry id. */
-export function resolvePluginRegistryId(playgroundPluginId: string): string {
-  return findPlaygroundVariant(playgroundPluginId)?.pluginId ?? playgroundPluginId;
+export function resolvePluginRegistryId(catalog: PluginCatalog, playgroundPluginId: string): string {
+  return findPlaygroundVariant(catalog, playgroundPluginId)?.pluginId ?? playgroundPluginId;
 }
 
 /** @emoji 🎯️ Resolves a playground filter/alias to the app id that should be instantiated by default within its plugin's manifest. */
-export function resolvePlaygroundDefaultAppId(playgroundPluginId: string): string | undefined {
-  return findPlaygroundVariant(playgroundPluginId)?.app;
+export function resolvePlaygroundDefaultAppId(catalog: PluginCatalog, playgroundPluginId: string): string | undefined {
+  return findPlaygroundVariant(catalog, playgroundPluginId)?.app;
 }
 
 export type PlaygroundBootSession = {
@@ -1106,25 +1143,25 @@ export type PlaygroundBoot = {
 };
 
 /** @emoji 🎮️ Resolves the wasm plugin list and default app for one playground variant; when the on-disk
- * `generated/🟦️session.ts` was overwritten by another concurrent dev variant, rebuilds from the generated
- * program catalog instead of trusting the stale program rows. */
-export function resolvePlaygroundBoot(variant: string, session?: PlaygroundBootSession): PlaygroundBoot {
-  const defaultAppId = resolvePlaygroundDefaultAppId(variant);
+ * `generated/🟦️session.ts` was overwritten by another concurrent dev variant, rebuilds from the injected
+ * {@link PluginCatalog} instead of trusting the stale program rows. */
+export function resolvePlaygroundBoot(catalog: PluginCatalog, variant: string, session?: PlaygroundBootSession): PlaygroundBoot {
+  const defaultAppId = resolvePlaygroundDefaultAppId(catalog, variant);
   if (session?.variant === variant) {
     return { variant, defaultAppId: session.defaultAppId ?? defaultAppId, plugins: session.plugins };
   }
-  const registryPluginId = resolvePluginRegistryId(variant);
-  const studioMode = resolvePluginHostConfig(variant) !== undefined;
-  const catalogPlugins: PluginRegistryEntry[] = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map((target) => ({
+  const registryPluginId = resolvePluginRegistryId(catalog, variant);
+  const hostMode = resolvePluginHostConfig(catalog, variant) !== undefined;
+  const catalogPlugins: PluginRegistryEntry[] = [...catalog.plugins, ...catalog.extensions].map((target) => ({
     pluginId: target.pluginId,
-    moduleUrl: target.role === "extension" ? extensionModuleUrl(target.pluginId, target.wasmOut) : pluginModuleUrl(target.pluginId, target.wasmOut),
+    moduleUrl: target.role === "extension" ? catalog.extensionModuleUrl(target.pluginId, target.wasmOut) : catalog.moduleUrl(target.pluginId, target.wasmOut),
     contributes: target.contributes,
     consumes: target.consumes,
   }));
   return {
     variant,
     defaultAppId,
-    plugins: expandPluginRegistry(catalogPlugins, studioMode ? undefined : registryPluginId, studioMode),
+    plugins: expandPluginRegistry(catalogPlugins, hostMode ? undefined : registryPluginId, hostMode),
   };
 }
 
@@ -1144,9 +1181,9 @@ export type PluginHostConfig = {
 };
 
 /** 🎯️ Resolves a playground filter/alias to its plugin's host config, or `undefined` when that program doesn't offer a host-style multi-app experience. */
-export function resolvePluginHostConfig(playgroundPluginId: string): PluginHostConfig | undefined {
-  const registryId = resolvePluginRegistryId(playgroundPluginId);
-  return PLUGIN_HOST_CONFIGS.find((entry) => entry.pluginId === registryId);
+export function resolvePluginHostConfig(catalog: PluginCatalog, playgroundPluginId: string): PluginHostConfig | undefined {
+  const registryId = resolvePluginRegistryId(catalog, playgroundPluginId);
+  return catalog.hosts.find((entry) => entry.pluginId === registryId);
 }
 //#endregion 🏠️🧳️PluginHostConfig
 // #endregion 🎮️PlaygroundResolution

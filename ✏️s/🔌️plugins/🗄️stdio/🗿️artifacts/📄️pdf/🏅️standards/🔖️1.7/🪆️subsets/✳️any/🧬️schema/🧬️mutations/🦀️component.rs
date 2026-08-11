@@ -6,9 +6,16 @@
 //! variant's `diff()` is handcrafted directly against `base` (never apply-and-capture) and every
 //! `inverse()` is handcrafted per variant.
 
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{self, PdfDiff, PdfPathSegment};
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
-use protocol::Mutation;
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{
+    self, PdfDiff, PdfPathSegment,
+    decode_option, dec_box, dec_dict_entry, dec_objref, dec_pdf_info, dec_pdf_object, dec_pdf_page, dec_str,
+    encode_option, enc_box, enc_dict_entry, enc_objref, enc_pdf_info, enc_pdf_object, enc_pdf_page, enc_str,
+    split_top_level, strip_brackets,
+};
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
+use protocol::{Mutation, OpText};
+#[cfg(test)]
+use protocol::OpBinary;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -291,31 +298,139 @@ fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], 
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-impl protocol::OpText for PdfMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
+/// 🧪️ F6: `#[derive(dsl::DslOps)]` on `PdfMutation` was tried for real and confirmed rejected —
+/// `cargo check -p semio-s-plugin-stdio --lib` fails with `the trait bound
+/// v1_7::...::PdfObject: DslField is not satisfied` (blocker 3a — every variant carrying a raw
+/// object-graph value, incl. `SetSnapshot`'s whole `PdfSnapshot`, reaches `PdfObject` and `ObjRef`
+/// directly) and `v1_7::...::PdfPathSegment: DslField is not satisfied` (`SetDictEntry`/
+/// `RemoveDictEntry`'s own `path` arg is itself a data-carrying enum). `OpText`/`OpBinary` are
+/// hand-rolled below, reusing `PdfDiff`'s `pub(crate)` grammar primitives (`hex_encode`/
+/// `enc_pdf_object`/`split_top_level`/`encode_option`/...) rather than duplicating them a second
+/// time in this file — same intra-artifact reuse `SvgMutation` uses over `SvgDiff`'s primitives.
+fn enc_path_segment(seg: &PdfPathSegment) -> String {
+    match seg {
+        PdfPathSegment::ArrayIndex { index } => format!("I[{index}]"),
+        PdfPathSegment::DictKey { key } => format!("K[{}]", enc_str(key)),
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+}
+fn dec_path_segment(s: &str) -> Result<PdfPathSegment, String> {
+    let (tag, rest) = s.split_at(1);
+    let inner = strip_brackets(rest)?;
+    match tag {
+        "I" => Ok(PdfPathSegment::ArrayIndex { index: inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }),
+        "K" => Ok(PdfPathSegment::DictKey { key: dec_str(inner)? }),
+        other => Err(format!("path segment: unknown tag {other:?}")),
+    }
+}
+fn enc_path(path: &[PdfPathSegment]) -> String {
+    format!("[{}]", path.iter().map(enc_path_segment).collect::<Vec<_>>().join(","))
+}
+fn dec_path(s: &str) -> Result<Vec<PdfPathSegment>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_segment).collect()
+}
+fn enc_indirect_object(o: &PdfIndirectObject) -> String {
+    format!("[{},{}]", enc_objref(&o.id), enc_pdf_object(&o.value))
+}
+fn dec_indirect_object(s: &str) -> Result<PdfIndirectObject, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [id, value] = parts.as_slice() else { return Err(format!("indirect object: expected 2 fields, got {}", parts.len())) };
+    Ok(PdfIndirectObject { id: dec_objref(id)?, value: dec_pdf_object(value)? })
+}
+fn enc_pdf_snapshot(s: &PdfSnapshot) -> String {
+    format!(
+        "[{},{},[{}],{},[{}],[{}]]",
+        enc_str(&s.schema),
+        enc_str(&s.declared_version),
+        s.pages.iter().map(enc_pdf_page).collect::<Vec<_>>().join(","),
+        enc_pdf_info(&s.info),
+        s.objects.iter().map(enc_indirect_object).collect::<Vec<_>>().join(","),
+        s.trailer.iter().map(enc_dict_entry).collect::<Vec<_>>().join(","),
+    )
+}
+fn dec_pdf_snapshot(s: &str) -> Result<PdfSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [schema, declared_version, pages, info, objects, trailer] = parts.as_slice() else {
+        return Err(format!("snapshot: expected 6 fields, got {}", parts.len()));
+    };
+    Ok(PdfSnapshot {
+        schema: dec_str(schema)?,
+        declared_version: dec_str(declared_version)?,
+        pages: split_top_level(strip_brackets(pages)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_pdf_page).collect::<Result<Vec<_>, String>>()?,
+        info: dec_pdf_info(info)?,
+        objects: split_top_level(strip_brackets(objects)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_indirect_object).collect::<Result<Vec<_>, String>>()?,
+        trailer: split_top_level(strip_brackets(trailer)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_dict_entry).collect::<Result<Vec<_>, String>>()?,
+    })
+}
+
+fn print_pdf_mutation(m: &PdfMutation) -> String {
+    match m {
+        PdfMutation::NoMutation => "no-mutation".to_string(),
+        PdfMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_pdf_snapshot(snapshot)),
+        PdfMutation::InsertPage { index, page } => format!("insert-page index={index} page={}", enc_pdf_page(page)),
+        PdfMutation::RemovePage { index } => format!("remove-page index={index}"),
+        PdfMutation::SetPageMediaBox { index, media_box } => format!("set-page-media-box index={index} media-box={}", enc_box(media_box)),
+        PdfMutation::SetPageCropBox { index, crop_box } => format!("set-page-crop-box index={index} crop-box={}", encode_option(crop_box, enc_box)),
+        PdfMutation::AppendPageContent { index, text } => format!("append-page-content index={index} text={}", enc_str(text)),
+        PdfMutation::SetInfo { info } => format!("set-info info={}", enc_pdf_info(info)),
+        PdfMutation::InsertObject { id, value } => format!("insert-object id={} value={}", enc_objref(id), enc_pdf_object(value)),
+        PdfMutation::RemoveObject { id } => format!("remove-object id={}", enc_objref(id)),
+        PdfMutation::SetObjectValue { id, value } => format!("set-object-value id={} value={}", enc_objref(id), enc_pdf_object(value)),
+        PdfMutation::SetDictEntry { id, path, key, value } => format!("set-dict-entry id={} path={} key={} value={}", enc_objref(id), enc_path(path), enc_str(key), enc_pdf_object(value)),
+        PdfMutation::RemoveDictEntry { id, path, key } => format!("remove-dict-entry id={} path={} key={}", enc_objref(id), enc_path(path), enc_str(key)),
+        PdfMutation::SetTrailerEntry { key, value } => format!("set-trailer-entry key={} value={}", enc_str(key), enc_pdf_object(value)),
+        PdfMutation::RemoveTrailerEntry { key } => format!("remove-trailer-entry key={}", enc_str(key)),
+    }
+}
+fn parse_pdf_mutation(line: &str) -> Result<PdfMutation, String> {
+    if line == "no-mutation" {
+        return Ok(PdfMutation::NoMutation);
+    }
+    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    let args: std::collections::BTreeMap<&str, &str> = rest
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|tok| tok.split_once('=').ok_or_else(|| format!("pdf mutation: bad arg token {tok:?}")))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .collect();
+    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("pdf mutation: missing arg '{k}' for '{keyword}'"));
+    let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
+    match keyword {
+        "set-snapshot" => Ok(PdfMutation::SetSnapshot { snapshot: dec_pdf_snapshot(arg("snapshot")?)? }),
+        "insert-page" => Ok(PdfMutation::InsertPage { index: usize_arg("index")?, page: dec_pdf_page(arg("page")?)? }),
+        "remove-page" => Ok(PdfMutation::RemovePage { index: usize_arg("index")? }),
+        "set-page-media-box" => Ok(PdfMutation::SetPageMediaBox { index: usize_arg("index")?, media_box: dec_box(arg("media-box")?)? }),
+        "set-page-crop-box" => Ok(PdfMutation::SetPageCropBox { index: usize_arg("index")?, crop_box: decode_option(arg("crop-box")?, dec_box)? }),
+        "append-page-content" => Ok(PdfMutation::AppendPageContent { index: usize_arg("index")?, text: dec_str(arg("text")?)? }),
+        "set-info" => Ok(PdfMutation::SetInfo { info: dec_pdf_info(arg("info")?)? }),
+        "insert-object" => Ok(PdfMutation::InsertObject { id: dec_objref(arg("id")?)?, value: dec_pdf_object(arg("value")?)? }),
+        "remove-object" => Ok(PdfMutation::RemoveObject { id: dec_objref(arg("id")?)? }),
+        "set-object-value" => Ok(PdfMutation::SetObjectValue { id: dec_objref(arg("id")?)?, value: dec_pdf_object(arg("value")?)? }),
+        "set-dict-entry" => Ok(PdfMutation::SetDictEntry { id: dec_objref(arg("id")?)?, path: dec_path(arg("path")?)?, key: dec_str(arg("key")?)?, value: dec_pdf_object(arg("value")?)? }),
+        "remove-dict-entry" => Ok(PdfMutation::RemoveDictEntry { id: dec_objref(arg("id")?)?, path: dec_path(arg("path")?)?, key: dec_str(arg("key")?)? }),
+        "set-trailer-entry" => Ok(PdfMutation::SetTrailerEntry { key: dec_str(arg("key")?)?, value: dec_pdf_object(arg("value")?)? }),
+        "remove-trailer-entry" => Ok(PdfMutation::RemoveTrailerEntry { key: dec_str(arg("key")?)? }),
+        other => Err(format!("pdf mutation: unknown keyword {other:?}")),
     }
 }
 
+impl protocol::OpText for PdfMutation {
+    fn print_op(&self) -> String {
+        print_pdf_mutation(self)
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_pdf_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+}
+
+/// ⚡️ Binary = the text bytes verbatim, same simplification `PdfDiff`'s hand-rolled codec uses.
 impl protocol::OpBinary for PdfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        Ok(self.print_op().into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
@@ -326,7 +441,6 @@ mod tests {
     use super::*;
     use protocol::MutationDiff;
     use protocol::command::DiffAlgebra;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfIndirectObject;
 
     fn sample_page(seed: u8) -> PdfPage {
         PdfPage { media_box: [0.0, 0.0, 612.0, 792.0], crop_box: None, rotate: 0, text: format!("page-{seed}") }
@@ -470,5 +584,48 @@ mod tests {
         assert!(d5.declared_version.is_some());
     }
     //#endregion field_sweep
+
+    //#region op_codec_roundtrip_law
+    /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `PdfMutation` grammar —
+    /// exercises every variant, incl. `SetSnapshot`'s full object-graph payload (`PdfObject::
+    /// Array`/`Dict`/`Stream`/`Ref` recursion), `SetPageCropBox`'s tri-state-like `Option<[f64;4]>`
+    /// arg, and `SetDictEntry`/`RemoveDictEntry`'s `path: Vec<PdfPathSegment>` (both segment kinds).
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        let base = base_snapshot();
+        let mutations = vec![
+            PdfMutation::NoMutation,
+            PdfMutation::SetSnapshot { snapshot: base.clone() },
+            PdfMutation::InsertPage { index: 1, page: sample_page(9) },
+            PdfMutation::RemovePage { index: 1 },
+            PdfMutation::SetPageMediaBox { index: 0, media_box: [0.0, 0.0, 200.0, 300.0] },
+            PdfMutation::SetPageCropBox { index: 0, crop_box: Some([1.0, 1.0, 100.0, 100.0]) },
+            PdfMutation::SetPageCropBox { index: 0, crop_box: None },
+            PdfMutation::AppendPageContent { index: 0, text: "more text\nsecond line".into() },
+            PdfMutation::SetInfo { info: PdfInfo { author: Some("Ueli".into()), producer: Some("semio".into()), ..Default::default() } },
+            PdfMutation::InsertObject { id: oref(3, 0), value: PdfObject::Int(42) },
+            PdfMutation::InsertObject { id: oref(4, 0), value: PdfObject::Array(vec![PdfObject::Real(1.5), PdfObject::Str(vec![0, 255, 128]), PdfObject::Ref(oref(1, 0))]) },
+            PdfMutation::RemoveObject { id: oref(2, 0) },
+            PdfMutation::SetObjectValue { id: oref(1, 0), value: PdfObject::Name("Pages".into()) },
+            PdfMutation::SetObjectValue { id: oref(2, 0), value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "Length".into(), value: PdfObject::Int(2) }], data: vec![1, 2], raw_filter: Some("FlateDecode".into()) } },
+            PdfMutation::SetObjectValue { id: oref(2, 0), value: PdfObject::Null },
+            PdfMutation::SetDictEntry { id: oref(1, 0), path: vec![], key: "Count".into(), value: PdfObject::Int(5) },
+            PdfMutation::SetDictEntry { id: oref(1, 0), path: vec![PdfPathSegment::DictKey { key: "Kids".into() }, PdfPathSegment::ArrayIndex { index: 2 }], key: "Rotate".into(), value: PdfObject::Int(90) },
+            PdfMutation::RemoveDictEntry { id: oref(1, 0), path: vec![], key: "Type".into() },
+            PdfMutation::SetTrailerEntry { key: "Prev".into(), value: PdfObject::Int(100) },
+            PdfMutation::RemoveTrailerEntry { key: "Size".into() },
+        ];
+        for mutation in mutations {
+            let printed = mutation.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = PdfMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
+
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = PdfMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+        }
+    }
+    //#endregion op_codec_roundtrip_law
 }
 //#endregion Tests

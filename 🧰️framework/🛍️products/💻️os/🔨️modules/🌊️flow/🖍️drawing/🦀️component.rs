@@ -32,7 +32,7 @@ use crate::brep_geometry::{dispose_geometry, export_solid_json, import_solid_jso
 // #region 🖍️DrawingKernel
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::wasm_bindgen;
-use semio_s_2d::{block_on as drawing_block_on, DrawingHandle, DrawingKernel, DrawingStore};
+use semio_framework_2d::{block_on as drawing_block_on, DrawingHandle, DrawingKernel, DrawingStore};
 
 static DRAWING_KERNEL: LazyLock<Mutex<DrawingStore>> = LazyLock::new(|| Mutex::new(DrawingStore::new()));
 
@@ -154,7 +154,7 @@ pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, s
         .and_then(|mut store| match drawing_block_on(store.trace_bitmap(width, height, mask, threshold, simplify_epsilon)) {
             Ok(handle) => match drawing_block_on(store.flatten_scene(&handle)) {
                 Ok(scene) => {
-                    let segments = scene.nodes.into_iter().find_map(|node| if let semio_s_2d::DrawingNode::Path { segments } = node.node { Some(segments) } else { None });
+                    let segments = scene.nodes.into_iter().find_map(|node| if let semio_framework_2d::DrawingNode::Path { segments } = node.node { Some(segments) } else { None });
                     segments.map(|segs| serde_json::json!({ "segments": segs }).to_string())
                 }
                 Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
@@ -166,7 +166,7 @@ pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, s
 
 /// 🔀️ Boolean-combines two path segment arrays.
 pub fn boolean_segments_json(a_json: &str, b_json: &str, operation: &str) -> String {
-    let parse = |json: &str| -> Result<Vec<semio_s_2d::PathSegment>, DrawingKernelError> {
+    let parse = |json: &str| -> Result<Vec<semio_framework_2d::PathSegment>, DrawingKernelError> {
         let parsed: serde_json::Value = serde_json::from_str(json)?;
         if let Some(error) = parsed.get("error").and_then(|v| v.as_str()) {
             return Err(DrawingKernelError::Invalid(error.to_string()));

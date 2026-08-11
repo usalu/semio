@@ -1,0 +1,4 @@
+poll 1 exit=101 errors=3
+poll 2 exit=0 errors=0
+COMPILES-CLEAN at poll 2
+DONE-POLLING

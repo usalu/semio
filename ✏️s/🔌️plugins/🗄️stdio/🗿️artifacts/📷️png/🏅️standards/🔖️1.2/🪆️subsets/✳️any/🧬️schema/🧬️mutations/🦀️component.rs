@@ -4,17 +4,33 @@
 //! needs from `base`. `apply_png_mutation` follows csv's proven single-source-of-truth shape:
 //! `let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d`.
 
-use crate::artifacts::png::schema::diff::{self, PngDiff};
+use crate::artifacts::png::schema::diff::{
+    self, dec_background, dec_chromaticities, dec_chunk, dec_chunk_marker, dec_color_type,
+    dec_list, dec_physical_dims, dec_rgb, dec_srgb_intent, dec_str, dec_text_chunk, dec_timestamp,
+    dec_transparency, decode_option, enc_background, enc_chromaticities, enc_chunk,
+    enc_chunk_marker, enc_color_type, enc_list, enc_physical_dims, enc_rgb, enc_srgb_intent,
+    enc_str, enc_text_chunk, enc_timestamp, enc_transparency, encode_option, hex_decode,
+    hex_encode, parse_u32, parse_u8, split_top_level, strip_brackets, PngDiff,
+};
 use crate::artifacts::png::schema::snapshot::{
     PngBackground, PngChromaticities, PngChunk, PngColorType, PngPhysicalDims, PngRgb,
     PngSrgbIntent, PngTextChunk, PngTimestamp, PngTransparency,
 };
 use crate::artifacts::png::PngSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{Mutation, MutationDiff, OpText};
+#[cfg(test)]
+use protocol::OpBinary;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.png`.
+/// 🧪️ F6 CONFIRMED (real `cargo check -p semio-s-plugin-stdio --lib` run, `f6-png-mutation-derive-check.txt`
+/// in the ticket folder): `#[derive(dsl::DslOps)]` fails with 42 `DslField`-not-satisfied errors —
+/// `SetTransparency{trns: Option<PngTransparency>}`/`SetBackground{bkgd: Option<PngBackground>}`
+/// carry the data-carrying enums directly, and `SetSnapshot{snapshot: PngSnapshot}` carries them
+/// transitively (`PngSnapshot.trns`/`.bkgd`). Same root cause as `PngDiff`'s hand-rolled
+/// `DiffCodec` (see `🔺️diff/🦀️component.rs`'s file-header doc comment) — `OpText`/`OpBinary`
+/// hand-rolled below, reusing `PngDiff`'s `pub(crate)` grammar primitives instead of duplicating.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum PngMutation {
@@ -171,31 +187,148 @@ impl Mutation<PngSnapshot> for PngMutation {
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-impl protocol::OpText for PngMutation {
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".into())
+/// 🧪️ F6: **hand-rolled** `OpText`/`OpBinary` for `PngMutation` (`#[derive(dsl::DslOps)]`
+/// confirmed rejected above) — reuses `PngDiff`'s `pub(crate)` grammar primitives
+/// (`hex_encode`/`enc_rgb`/`enc_transparency`/`split_top_level`/`encode_option`/...) rather than
+/// duplicating them a second time in this file (same intra-artifact reuse svg's mutations file
+/// uses off its own diff file). Grammar: `keyword arg=value ...` (space-separated, matches the
+/// derive's own handcrafted-wrapper convention, `f6-recon-report.md` §2), one match arm per
+/// variant (no `DslVariants` scaffolding available since nothing here derives it). `SetSnapshot`'s
+/// whole-snapshot payload is a single positional `[schema,width,height,...]` tuple reusing every
+/// per-field value codec already written for the diff side.
+fn enc_png_snapshot(s: &PngSnapshot) -> String {
+    format!(
+        "[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]",
+        enc_str(&s.schema),
+        s.width,
+        s.height,
+        s.bit_depth,
+        enc_color_type(s.color_type),
+        if s.interlace { 1 } else { 0 },
+        encode_option(&s.plte, |v: &Vec<PngRgb>| enc_list(v, enc_rgb)),
+        encode_option(&s.trns, enc_transparency),
+        encode_option(&s.gama, |x: &u32| x.to_string()),
+        encode_option(&s.chrm, enc_chromaticities),
+        encode_option(&s.srgb, |v: &PngSrgbIntent| enc_srgb_intent(*v)),
+        encode_option(&s.phys, enc_physical_dims),
+        encode_option(&s.time, enc_timestamp),
+        encode_option(&s.bkgd, enc_background),
+        enc_list(&s.text_chunks, enc_text_chunk),
+        hex_encode(&s.pixels),
+        enc_list(&s.chunk_order, enc_chunk_marker),
+        enc_list(&s.unknown_chunks, enc_chunk),
+    )
+}
+fn dec_png_snapshot(s: &str) -> Result<PngSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [schema, width, height, bit_depth, color_type, interlace, plte, trns, gama, chrm, srgb, phys, time, bkgd, text_chunks, pixels, chunk_order, unknown_chunks] = parts.as_slice() else {
+        return Err(format!("png snapshot: expected 18 fields, got {}", parts.len()));
+    };
+    Ok(PngSnapshot {
+        schema: dec_str(schema)?,
+        width: parse_u32(width)?,
+        height: parse_u32(height)?,
+        bit_depth: parse_u8(bit_depth)?,
+        color_type: dec_color_type(color_type)?,
+        interlace: *interlace == "1",
+        plte: decode_option(plte, |s| dec_list(s, dec_rgb))?,
+        trns: decode_option(trns, dec_transparency)?,
+        gama: decode_option(gama, parse_u32)?,
+        chrm: decode_option(chrm, dec_chromaticities)?,
+        srgb: decode_option(srgb, dec_srgb_intent)?,
+        phys: decode_option(phys, dec_physical_dims)?,
+        time: decode_option(time, dec_timestamp)?,
+        bkgd: decode_option(bkgd, dec_background)?,
+        text_chunks: dec_list(text_chunks, dec_text_chunk)?,
+        pixels: hex_decode(pixels)?,
+        chunk_order: dec_list(chunk_order, dec_chunk_marker)?,
+        unknown_chunks: dec_list(unknown_chunks, dec_chunk)?,
+    })
+}
+
+fn print_png_mutation(m: &PngMutation) -> String {
+    match m {
+        PngMutation::NoMutation => "no-mutation".to_string(),
+        PngMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_png_snapshot(snapshot)),
+        PngMutation::SetHeader { width, height, bit_depth, color_type, interlace } => format!(
+            "set-header width={width} height={height} bit-depth={bit_depth} color-type={} interlace={}",
+            enc_color_type(*color_type),
+            if *interlace { 1 } else { 0 },
+        ),
+        PngMutation::SetPalette { plte } => format!("set-palette plte={}", encode_option(plte, |v: &Vec<PngRgb>| enc_list(v, enc_rgb))),
+        PngMutation::SetTransparency { trns } => format!("set-transparency trns={}", encode_option(trns, enc_transparency)),
+        PngMutation::SetGamma { gama } => format!("set-gamma gama={}", encode_option(gama, |x: &u32| x.to_string())),
+        PngMutation::SetChromaticities { chrm } => format!("set-chromaticities chrm={}", encode_option(chrm, enc_chromaticities)),
+        PngMutation::SetSrgbIntent { srgb } => format!("set-srgb-intent srgb={}", encode_option(srgb, |v: &PngSrgbIntent| enc_srgb_intent(*v))),
+        PngMutation::SetPhysicalDims { phys } => format!("set-physical-dims phys={}", encode_option(phys, enc_physical_dims)),
+        PngMutation::SetTimestamp { time } => format!("set-timestamp time={}", encode_option(time, enc_timestamp)),
+        PngMutation::SetBackground { bkgd } => format!("set-background bkgd={}", encode_option(bkgd, enc_background)),
+        PngMutation::InsertTextChunk { index, chunk } => format!("insert-text-chunk index={index} chunk={}", enc_text_chunk(chunk)),
+        PngMutation::RemoveTextChunk { index } => format!("remove-text-chunk index={index}"),
+        PngMutation::SetTextChunk { index, chunk } => format!("set-text-chunk index={index} chunk={}", enc_text_chunk(chunk)),
+        PngMutation::SetPixels { pixels } => format!("set-pixels pixels={}", hex_encode(pixels)),
+        PngMutation::InsertUnknownChunk { index, chunk } => format!("insert-unknown-chunk index={index} chunk={}", enc_chunk(chunk)),
+        PngMutation::RemoveUnknownChunk { index } => format!("remove-unknown-chunk index={index}"),
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| {
-            store::TextError::new(format!("op parse: {e}"), dsl::TextSpan::at(1, 1))
-        })
+}
+fn parse_png_mutation(line: &str) -> Result<PngMutation, String> {
+    if line == "no-mutation" {
+        return Ok(PngMutation::NoMutation);
+    }
+    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    let args: std::collections::BTreeMap<&str, &str> = rest
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|tok| tok.split_once('=').ok_or_else(|| format!("png mutation: bad arg token {tok:?}")))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .collect();
+    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("png mutation: missing arg '{k}' for '{keyword}'"));
+    let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
+    match keyword {
+        "set-snapshot" => Ok(PngMutation::SetSnapshot { snapshot: dec_png_snapshot(arg("snapshot")?)? }),
+        "set-header" => Ok(PngMutation::SetHeader {
+            width: parse_u32(arg("width")?)?,
+            height: parse_u32(arg("height")?)?,
+            bit_depth: parse_u8(arg("bit-depth")?)?,
+            color_type: dec_color_type(arg("color-type")?)?,
+            interlace: arg("interlace")? == "1",
+        }),
+        "set-palette" => Ok(PngMutation::SetPalette { plte: decode_option(arg("plte")?, |s| dec_list(s, dec_rgb))? }),
+        "set-transparency" => Ok(PngMutation::SetTransparency { trns: decode_option(arg("trns")?, dec_transparency)? }),
+        "set-gamma" => Ok(PngMutation::SetGamma { gama: decode_option(arg("gama")?, parse_u32)? }),
+        "set-chromaticities" => Ok(PngMutation::SetChromaticities { chrm: decode_option(arg("chrm")?, dec_chromaticities)? }),
+        "set-srgb-intent" => Ok(PngMutation::SetSrgbIntent { srgb: decode_option(arg("srgb")?, dec_srgb_intent)? }),
+        "set-physical-dims" => Ok(PngMutation::SetPhysicalDims { phys: decode_option(arg("phys")?, dec_physical_dims)? }),
+        "set-timestamp" => Ok(PngMutation::SetTimestamp { time: decode_option(arg("time")?, dec_timestamp)? }),
+        "set-background" => Ok(PngMutation::SetBackground { bkgd: decode_option(arg("bkgd")?, dec_background)? }),
+        "insert-text-chunk" => Ok(PngMutation::InsertTextChunk { index: usize_arg("index")?, chunk: dec_text_chunk(arg("chunk")?)? }),
+        "remove-text-chunk" => Ok(PngMutation::RemoveTextChunk { index: usize_arg("index")? }),
+        "set-text-chunk" => Ok(PngMutation::SetTextChunk { index: usize_arg("index")?, chunk: dec_text_chunk(arg("chunk")?)? }),
+        "set-pixels" => Ok(PngMutation::SetPixels { pixels: hex_decode(arg("pixels")?)? }),
+        "insert-unknown-chunk" => Ok(PngMutation::InsertUnknownChunk { index: usize_arg("index")?, chunk: dec_chunk(arg("chunk")?)? }),
+        "remove-unknown-chunk" => Ok(PngMutation::RemoveUnknownChunk { index: usize_arg("index")? }),
+        other => Err(format!("png mutation: unknown keyword {other:?}")),
     }
 }
 
+impl protocol::OpText for PngMutation {
+    fn print_op(&self) -> String {
+        print_png_mutation(self)
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_png_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+}
+
+/// ⚡️ Binary = the text bytes verbatim, same simplification `PngDiff`'s hand-rolled codec uses.
 impl protocol::OpBinary for PngMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op encode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        Ok(self.print_op().into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed {
-            what: "op decode",
-            offset: 0,
-            detail: e.to_string(),
-        })
+        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
@@ -593,5 +726,30 @@ mod tests {
         apply_png_mutation(&mut snap, &PngMutation::SetTextChunk { index: 42, chunk: text_chunk("x", "y") });
         assert_eq!(snap, base);
     }
+
+    //#region 🔖️op_text_binary_roundtrip_law
+    /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `PngMutation` grammar —
+    /// exercises every variant via `all_variants` (incl. every ancillary Setter's `Some(_)`
+    /// payload) plus two extra `SetSnapshot` cases (`sweep_a`/`sweep_b`) so the whole-snapshot
+    /// positional codec's `Some` AND `None` branches for every one of its 8 optional fields, plus
+    /// its `text_chunks`/`chunk_order`/`unknown_chunks` lists, both get covered.
+    #[test]
+    fn op_text_binary_roundtrip_law() {
+        let base = base_snapshot();
+        let mut mutations = all_variants(&base);
+        mutations.push(PngMutation::SetSnapshot { snapshot: sweep_a() });
+        mutations.push(PngMutation::SetSnapshot { snapshot: sweep_b() });
+        for mutation in mutations {
+            let printed = mutation.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = PngMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
+
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = PngMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+        }
+    }
+    //#endregion 🔖️op_text_binary_roundtrip_law
 }
 //#endregion Tests

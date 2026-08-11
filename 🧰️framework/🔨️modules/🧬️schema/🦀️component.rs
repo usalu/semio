@@ -341,7 +341,14 @@ fn app_descriptor_from_kernel(kernel: &KernelAppSchemaDescriptor) -> AppSchemaDe
     }
 }
 
-/// 📎 Registers one app owner's handcrafted descriptor into the OS-wide catalog (kernel descriptors + normative JSON + GraphQL SDL).
+/// 🔌 Open app-schema registry API for plugin crates — call these from your own `🔧️setup`/init code to register your app's config + presence schema facets. This is the contract the next wave's per-plugin fan-out (the parked `catalog-integration` call sites below) follows.
+///
+/// - 📎 [`register_app_schema_descriptor`] registers one app owner's handcrafted descriptor into the OS-wide catalog.
+/// - 🔎 [`app_schema_descriptor_registered`] checks whether an owner id is already registered.
+/// - 📚 [`with_app_schema_registry`] snapshots the OS-wide [`AppSchemaRegistry`] for lookup/iteration.
+/// - 🔣 [`with_app_json_schema_catalog`] snapshots normative config/presence JSON leaves as a [`SchemaCatalog`].
+/// - 🔗 [`app_schema_graphql_sdl`] resolves composed GraphQL SDL for an owner or `{id}.presence` key.
+/// - ✅ [`validate_registered_app_descriptor`] validates a descriptor's JSON Schema leaves and `x-semio-state` tagging before registering.
 pub fn register_app_schema_descriptor(descriptor: AppSchemaDescriptor) {
     register_kernel_app_schema_descriptor(app_descriptor_to_kernel(descriptor));
 }
@@ -1062,6 +1069,41 @@ pub fn app_schema_graphql_sdl(key: &str) -> Option<String> {
         None
     })
 }
+
+/// ✅ Validates a descriptor's JSON Schema leaves: each non-empty facet must be an object schema whose properties all carry a valid `x-semio-state` matching the facet's expected [`StateClass`] (`local-ui` for config, `shared-ui` for presence). Panics with a descriptor-id-prefixed message on the first violation — call this from a plugin's own tests before [`register_app_schema_descriptor`].
+pub fn validate_registered_app_descriptor(descriptor: &AppSchemaDescriptor) {
+    for (facet, leaves) in [("config", &descriptor.config), ("presence", &descriptor.presence)] {
+        if leaves.json_schema.trim().is_empty() {
+            continue;
+        }
+        let schema: Value = serde_json::from_str(leaves.json_schema)
+            .unwrap_or_else(|error| panic!("{}: {facet} json_schema parse: {error}", descriptor.id));
+        assert_eq!(
+            schema.get("type").and_then(Value::as_str),
+            Some("object"),
+            "{}: {facet} must be an object schema",
+            descriptor.id
+        );
+        let properties = schema
+            .get("properties")
+            .and_then(Value::as_object)
+            .unwrap_or_else(|| panic!("{}: {facet} properties object required", descriptor.id));
+        for (name, prop) in properties {
+            let raw = prop
+                .get("x-semio-state")
+                .and_then(Value::as_str)
+                .unwrap_or_else(|| panic!("{}: {facet} property `{name}` missing x-semio-state", descriptor.id));
+            let class = parse_state_class_kebab(raw)
+                .unwrap_or_else(|| panic!("{}: {facet} property `{name}` has invalid x-semio-state `{raw}`", descriptor.id));
+            let expected = if facet == "config" { StateClass::LocalUi } else { StateClass::SharedUi };
+            assert_eq!(
+                class, expected,
+                "{}: {facet} field `{name}` must be {:?}",
+                descriptor.id, expected
+            );
+        }
+    }
+}
 //#endregion 🔖️GlobalAppSchemaCatalog
 
 //#region 🔖️StateClassKebab
@@ -1502,42 +1544,6 @@ semio_s_plugin_writer::apps::writer::config::schema::register_app_schema();
             proto: "",
         }
     }
-
-    fn validate_registered_app_descriptor(descriptor: &AppSchemaDescriptor) {
-        for (facet, leaves) in [("config", &descriptor.config), ("presence", &descriptor.presence)] {
-            if leaves.json_schema.trim().is_empty() {
-                continue;
-            }
-            let schema: Value = serde_json::from_str(leaves.json_schema)
-                .unwrap_or_else(|error| panic!("{}: {facet} json_schema parse: {error}", descriptor.id));
-            assert_eq!(
-                schema.get("type").and_then(Value::as_str),
-                Some("object"),
-                "{}: {facet} must be an object schema",
-                descriptor.id
-            );
-            let properties = schema
-                .get("properties")
-                .and_then(Value::as_object)
-                .unwrap_or_else(|| panic!("{}: {facet} properties object required", descriptor.id));
-            for (name, prop) in properties {
-                let raw = prop
-                    .get("x-semio-state")
-                    .and_then(Value::as_str)
-                    .unwrap_or_else(|| panic!("{}: {facet} property `{name}` missing x-semio-state", descriptor.id));
-                let class = parse_state_class_kebab(raw)
-                    .unwrap_or_else(|| panic!("{}: {facet} property `{name}` has invalid x-semio-state `{raw}`", descriptor.id));
-                let expected = if facet == "config" { StateClass::LocalUi } else { StateClass::SharedUi };
-                assert_eq!(
-                    class, expected,
-                    "{}: {facet} field `{name}` must be {:?}",
-                    descriptor.id, expected
-                );
-            }
-        }
-    }
-
-
 
     #[test]
     fn app_schema_registry_accepts_placeholder_owner_for_wave_structure() {

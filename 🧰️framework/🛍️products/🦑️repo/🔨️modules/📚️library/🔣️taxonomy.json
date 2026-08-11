@@ -443,6 +443,9 @@
     "mixed"
   ],
   "migratedMarker": "packages-dir-exists",
+  "pluginAreas": [
+    "✏️s/🔌️plugins"
+  ],
   "areas": {
     "✏️s/🔌️plugins": "clean",
     "✏️s/🔨️modules": "legacy",

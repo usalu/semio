@@ -1,6 +1,6 @@
-//! 🖊️ Flow draw module: 2D vector-graphics operators backed by [`semio_s_2d::DrawingStore`].
+//! 🖊️ Flow draw module: 2D vector-graphics operators backed by [`semio_framework_2d::DrawingStore`].
 
-use semio_s_2d::{block_on, DrawingError, DrawingHandle, DrawingKernel, DrawingStore, FillStyle, GradientStop, LineCap, LineJoin, StrokeStyle, Vec2};
+use semio_framework_2d::{block_on, DrawingError, DrawingHandle, DrawingKernel, DrawingStore, FillStyle, GradientStop, LineCap, LineJoin, StrokeStyle, Vec2};
 use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use flow_extension_sdk::with_drawing_kernel as with_kernel;
 
@@ -10,16 +10,16 @@ fn map_kernel_error(error: DrawingError) -> EvalError {
     EvalError::InvalidInput(error.to_string())
 }
 
-fn kind_label(kind: semio_s_2d::DrawingKind) -> &'static str {
+fn kind_label(kind: semio_framework_2d::DrawingKind) -> &'static str {
     match kind {
-        semio_s_2d::DrawingKind::Rect => "rect",
-        semio_s_2d::DrawingKind::Ellipse => "ellipse",
-        semio_s_2d::DrawingKind::Circle => "circle",
-        semio_s_2d::DrawingKind::Line => "line",
-        semio_s_2d::DrawingKind::Polygon => "polygon",
-        semio_s_2d::DrawingKind::Path => "path",
-        semio_s_2d::DrawingKind::Text => "text",
-        semio_s_2d::DrawingKind::Group => "group",
+        semio_framework_2d::DrawingKind::Rect => "rect",
+        semio_framework_2d::DrawingKind::Ellipse => "ellipse",
+        semio_framework_2d::DrawingKind::Circle => "circle",
+        semio_framework_2d::DrawingKind::Line => "line",
+        semio_framework_2d::DrawingKind::Polygon => "polygon",
+        semio_framework_2d::DrawingKind::Path => "path",
+        semio_framework_2d::DrawingKind::Text => "text",
+        semio_framework_2d::DrawingKind::Group => "group",
     }
 }
 

@@ -13,6 +13,11 @@ pub mod plugin;
 pub use plugin::plugin;
 //#endregion Plugin
 
+//#region Manifest
+#[path = "../../🛂️manifest/🦀️component.rs"]
+pub mod manifest;
+//#endregion Manifest
+
 //#region Artifacts
 // 🎫️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, S2 mutation-triad
 // mounting policy (load-bearing for F1-F6): `POLICY_MUTATION_TRIAD_DIRS`

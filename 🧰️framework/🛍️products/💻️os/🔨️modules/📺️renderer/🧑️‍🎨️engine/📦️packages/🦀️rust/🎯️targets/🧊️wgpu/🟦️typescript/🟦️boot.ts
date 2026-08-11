@@ -4,6 +4,7 @@
 
 import { parseInvocationResponse, type PluginRegistryEntry } from "@semio-tech/framework";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
+import { PLUGIN_CATALOG } from "../../../../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🟦️catalog.ts";
 import { PLAYGROUND_SESSION } from "../../../../../../../🧑️‍💻️dev/🤖️generated/🟦️session.ts";
 
 await new Promise<void>((resolve) => {
@@ -250,7 +251,7 @@ function pluginHandleForBridge(handle: PluginModuleHandle) {
   };
 }
 
-const boot = resolvePlaygroundBoot(PLAYGROUND_SESSION.variant, PLAYGROUND_SESSION);
+const boot = resolvePlaygroundBoot(PLUGIN_CATALOG, PLAYGROUND_SESSION.variant, PLAYGROUND_SESSION);
 const pluginTargets: PluginRegistryEntry[] = boot.plugins.map((entry) => ({
   pluginId: entry.pluginId,
   moduleUrl: entry.moduleUrl,
