@@ -1,0 +1,10 @@
+{
+  "title": "Regulatorische Rahmenbedingungen der Wiederverwendung",
+  "emoji": "⚖️",
+  "status": "open",
+  "description": "Primärquellenbasierter Multi-Agenten-Harvest (72 Agenten) der reuse-relevanten Bauregulierung in 10 Jurisdiktionen (DE, CH, AT, NL, BE, FR, UK, DK, SE, NO) plus EU/EEA-Ebene, für den Zwischenbericht „Entwerfen mit Bestand\" (Az. 10.08.18.7-25.06).\n\nZiel Phase A: verifizierter, mehrachsig klassifizierter Datensatz (7-Achsen-Taxonomie: Jurisdiktion/Ebene, Regelungsfeld 1–7, Materialfamilie, Rechtsform, Prozessphase, Wirkrichtung F1/F2, Nachweisanforderung) + Taxonomie + relationale Konflikttabelle + Diagrammdaten + Quellenregister + Lückenliste. Deutsch, report-fähig.\n\nAblauf: W0 Pilot DE (3) → W1 Taxonomie-Freeze + EU-Basis (7) → W2 Länderharvest inkl. DE (40, pipeline, 3 Stufen: Quellenaufschluss/Extraktion/adversarische Prüfung) → W3 Materialfamilien (8) → W3b Querschnitts-Recht (6) → W4 Synthese+Verifikation (8). Summe 72.\n\nQuellenregeln: Primärquelle Pflicht, Beleg-Quelle (B0–B4) und Zugänglichkeit getrennt; Bindungsketten-Regel für paywalled Normen; Amtssprache lesen; F1/F2/G-inferiert als E3 (Projektzuordnung) markiert. Sub-national: Vollerhebung BE/UK, Stichprobe-und-Deklaration CH/DE/AT.\n\nErgebnis zusätzlich in den Vault mit-bestand/recherche/recht/ nach Recherche_Workflow.md. Harter Review-Stopp nach Phase A; Phase B (Anlage anhang/regulierung.tex [RG] + TikZ-Diagramme) ist späterer Auftrag.\n\nAlle temporären Agentenartefakte in diesem Ticketordner. Konsolidierte Lieferung nach mit-bestand/bericht/zwischenbericht/temp/regulierung-*.md. Plan: C:/Users/Kinosh/.claude/plans/i-want-to-harvest-cosmic-flute.md",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪a65319ec2d7e4850bd35033abe48edda"
+  ]
+}
