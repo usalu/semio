@@ -1,6 +1,13 @@
 //! ⚙️ DwgEngine — owns a real `DwgArtifact`.
 
-use crate::artifacts::dwg::{DwgArtifact, DwgDiff, DwgMutation, DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA};
+use crate::artifacts::dwg::DwgArtifact;
+use crate::artifacts::dwg::DwgSnapshot as CanonicalDwgSnapshot;
+use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::{
+    diff::DwgDiff, mutations::DwgMutation, snapshot::DwgSnapshot,
+};
+
+/// 🏷️ Document schema / DSL envelope id for ac1018.
+pub const STDIO_DWG_AC1018_DOCUMENT_SCHEMA: &str = "stdio.dwg.ac1018";
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
@@ -28,7 +35,7 @@ pub fn register() {
     register_artifact_schema();
     register_pilot_languages();
     register_schema_specs();
-    store::register_document_codec(store::ArtifactCodec::of::<DwgSnapshot, DwgMutation>(STDIO_DWG_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<DwgSnapshot, DwgMutation>(STDIO_DWG_AC1018_DOCUMENT_SCHEMA));
 }
 
 /// 📌️ P2-P3-style 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr) for ac1018's
@@ -43,14 +50,14 @@ pub fn register() {
 pub fn register_pilot_languages() {
     use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema as ac1018_schema;
     dsl::register_language(dsl::LanguageSpec {
-        id: "stdio.dwg",
+        id: "stdio.dwg.ac1018",
         extension: Some("bin"),
         role: dsl::LanguageRole::Document,
         grammar: Some(ac1018_schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(ac1018_schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(ac1018_schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(ac1018_schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.dwg"),
+        hooks: dsl::passthrough_hooks("stdio.dwg.ac1018"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.dwg.op",
@@ -125,12 +132,12 @@ pub fn register_artifact_schema() {
 /// ⚙️ `stdio.dwg` artifact engine.
 pub struct DwgEngine {
     artifact_state: DwgArtifact,
-    snapshot_state: DwgSnapshot,
+    snapshot_state: CanonicalDwgSnapshot,
 }
 
 impl DwgEngine {
     /// 🏗️ Builds an engine from a persisted snapshot.
-    pub fn new(snapshot: DwgSnapshot) -> Self {
+    pub fn new(snapshot: CanonicalDwgSnapshot) -> Self {
         let artifact_state = DwgArtifact::from_snapshot(snapshot.clone());
         Self { artifact_state, snapshot_state: snapshot }
     }
@@ -145,13 +152,13 @@ mod tests {
     #[test]
     fn empty_snapshot_matches_schema() {
         let snapshot = empty_dwg_snapshot();
-        assert_eq!(snapshot.schema, STDIO_DWG_DOCUMENT_SCHEMA);
+        assert_eq!(snapshot.schema, STDIO_DWG_AC1018_DOCUMENT_SCHEMA);
     }
 
     #[test]
     fn codec_round_trip() {
         let stub = b"AC1018\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-        let snap = crate::artifacts::dwg::schema::snapshot::decode_dwg(stub).expect("decode stub");
+        let snap = crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::snapshot::decode_dwg(stub).expect("decode stub");
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <DwgSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed.version, "AC1018");
@@ -256,6 +263,15 @@ mod tests {
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
+        }
+
+        #[test]
+        #[ignore]
+        fn zzz_generate_p2p1_fixtures() {
+            let demo = demo_dwg_snapshot();
+            let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/📚️examples/🎬️demo/🖼️assets");
+            std::fs::write(dir.join("🗣️example.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).unwrap();
+            std::fs::write(dir.join("🎒️example.pack.semio"), store::ArtifactPack::encode_pack(&demo)).unwrap();
         }
 
         /// ✅️ `fixture_honesty_law`: the shipped ac1018-own `.dsl.semio`/`.pack.semio` fixtures

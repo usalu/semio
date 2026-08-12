@@ -1,8 +1,9 @@
-; abnf stdio.semio.brep snapshot (dsl/text payload)
-; the DSL text is a whitespace-tolerant ASCII hex dump of the REAL JSON-pack bytes of a
-; SemioBrepSnapshot (see ../🔣️component.json for that payload's own structure) -- the snapshot
-; has no textual syntax of its own; this restates the ../📖️component.grammar.semio production for
-; a self-contained ABNF reading.
-document = hex-byte *(WS hex-byte)
-hex-byte = HEXDIG HEXDIG
-WS = *(%x20 / %x09 / %x0D / %x0A)
+; ABNF-style descriptive mirror of `stdio.semio.brep`'s real `pack` binary frame (past the
+; `semio_format` envelope) -- see the authoritative `📡️component.protocol.semio` for the
+; conformance-tested version.
+document       = format schema-len schema-bytes payload
+format         = %x01                  ; PACK_BINARY_FORMAT
+schema-len     = 1*OCTET               ; LEB128 varint byte count
+schema-bytes   = *OCTET                ; UTF-8, schema-len bytes
+payload        = *OCTET                ; opaque tail: vertices/edges/loops/faces/shells/solids,
+                                        ; see component.rs's encode_brep_snapshot_binary

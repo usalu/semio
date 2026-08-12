@@ -13,9 +13,10 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::{
     enc_rgba, enc_str, enc_texture, enc_topology, enc_uv, encode_option, hex_decode, hex_encode, SemioMeshDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology};
-use protocol::{Mutation, OpText};
-#[cfg(test)]
-use protocol::OpBinary;
+/// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioMeshMutation` block below
+/// calls `self.print_op()` via method syntax, which needs `OpText` in scope in production code
+/// too, not merely under `#[cfg(test)]` (same fix `✳️workflow`'s own pilot documents).
+use protocol::{Mutation, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -374,16 +375,144 @@ impl OpText for SemioMeshMutation {
     }
 }
 
+/// 🧾️ Keyword table + variant ordinal, 0-indexed in enum declaration order — the binary frame's
+/// `tag` byte, `📖️grammar/component.grammar.semio`'s `op` alternatives, and this array must all
+/// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in
+/// `🎹️composer/🦀️component.rs`).
+const OP_KEYWORDS: [&str; 16] = [
+    "no-mutation",
+    "set-snapshot",
+    "add-mesh",
+    "remove-mesh",
+    "add-primitive",
+    "remove-primitive",
+    "set-primitive-topology",
+    "set-primitive-geometry",
+    "set-primitive-material",
+    "add-material",
+    "remove-material",
+    "set-material-base-color",
+    "set-material-pbr",
+    "add-texture",
+    "remove-texture",
+    "set-texture-bytes",
+];
+fn variant_ordinal(m: &SemioMeshMutation) -> u8 {
+    match m {
+        SemioMeshMutation::NoMutation => 0,
+        SemioMeshMutation::SetSnapshot { .. } => 1,
+        SemioMeshMutation::AddMesh { .. } => 2,
+        SemioMeshMutation::RemoveMesh { .. } => 3,
+        SemioMeshMutation::AddPrimitive { .. } => 4,
+        SemioMeshMutation::RemovePrimitive { .. } => 5,
+        SemioMeshMutation::SetPrimitiveTopology { .. } => 6,
+        SemioMeshMutation::SetPrimitiveGeometry { .. } => 7,
+        SemioMeshMutation::SetPrimitiveMaterial { .. } => 8,
+        SemioMeshMutation::AddMaterial { .. } => 9,
+        SemioMeshMutation::RemoveMaterial { .. } => 10,
+        SemioMeshMutation::SetMaterialBaseColor { .. } => 11,
+        SemioMeshMutation::SetMaterialPbr { .. } => 12,
+        SemioMeshMutation::AddTexture { .. } => 13,
+        SemioMeshMutation::RemoveTexture { .. } => 14,
+        SemioMeshMutation::SetTextureBytes { .. } => 15,
+    }
+}
+/// ✂️ Just the `key=value ...` argument tail of `print_semio_mesh_mutation` (empty for
+/// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text
+/// keyword itself is redundant in the binary payload.
+fn print_semio_mesh_mutation_args(m: &SemioMeshMutation) -> String {
+    match print_semio_mesh_mutation(m).split_once(' ') {
+        Some((_, rest)) => rest.to_string(),
+        None => String::new(),
+    }
+}
+
+/// ⚡️ Real binary op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut
+/// (per this wave's brief item 5). `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the
+/// variant ordinal, see [`OP_KEYWORDS`]) are two REAL fixed fields; the variant's own
+/// `key=value ...` argument payload follows as one opaque trailing `bytes` chain — reusing the
+/// already-real, already-tested `print_semio_mesh_mutation`/`parse_semio_mesh_mutation` text codec
+/// rather than re-deriving a second independent encoding.
 impl protocol::OpBinary for SemioMeshMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_semio_mesh_mutation_args(self).as_bytes());
+        Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        const OP_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
+        }
+        if bytes[0] != OP_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        let tag = bytes[1];
+        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
+        let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️Demo
+/// 🌱 Shared fixture helper + representative `SemioMeshMutation` cases (one per variant) — single
+/// source of truth for this facet's own tests AND `ops_grammar_conformance_law`/
+/// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+#[cfg(test)]
+fn demo_fixture() -> SemioMeshSnapshot {
+    SemioMeshSnapshot {
+        meshes: vec![SemioMesh {
+            id: "mesh-a".into(),
+            primitives: vec![SemioPrimitive {
+                id: "prim-a".into(),
+                topology: SemioTopology::Triangles,
+                positions: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }],
+                normals: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }; 3],
+                uvs: vec![SemioUv { u: 0.0, v: 0.0 }; 3],
+                colors: vec![],
+                indices: vec![0, 1, 2],
+                material_id: Some("mat-a".into()),
+            }],
+        }],
+        materials: vec![SemioMaterial { id: "mat-a".into(), base_color: SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }, metallic: 0.0, roughness: 0.5 }],
+        textures: vec![],
+        ..Default::default()
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<SemioMeshMutation> {
+    vec![
+        SemioMeshMutation::NoMutation,
+        SemioMeshMutation::SetSnapshot { snapshot: demo_fixture() },
+        SemioMeshMutation::AddMesh { mesh: SemioMesh { id: "mesh-b".into(), primitives: vec![] } },
+        SemioMeshMutation::RemoveMesh { id: "mesh-a".into() },
+        SemioMeshMutation::AddPrimitive { mesh_id: "mesh-a".into(), primitive: SemioPrimitive { id: "prim-b".into(), ..Default::default() } },
+        SemioMeshMutation::RemovePrimitive { mesh_id: "mesh-a".into(), primitive_id: "prim-a".into() },
+        SemioMeshMutation::SetPrimitiveTopology { mesh_id: "mesh-a".into(), primitive_id: "prim-a".into(), topology: SemioTopology::Lines },
+        SemioMeshMutation::SetPrimitiveGeometry {
+            mesh_id: "mesh-a".into(),
+            primitive_id: "prim-a".into(),
+            positions: vec![SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 }],
+            normals: vec![],
+            uvs: vec![],
+            colors: vec![],
+            indices: vec![],
+        },
+        SemioMeshMutation::SetPrimitiveMaterial { mesh_id: "mesh-a".into(), primitive_id: "prim-a".into(), material_id: None },
+        SemioMeshMutation::AddMaterial { material: SemioMaterial { id: "mat-b".into(), ..Default::default() } },
+        SemioMeshMutation::RemoveMaterial { id: "mat-a".into() },
+        SemioMeshMutation::SetMaterialBaseColor { id: "mat-a".into(), base_color: SemioRgba { r: 0.0, g: 0.0, b: 1.0, a: 1.0 } },
+        SemioMeshMutation::SetMaterialPbr { id: "mat-a".into(), metallic: 0.9, roughness: 0.1 },
+        SemioMeshMutation::AddTexture { texture: SemioTexture { id: "tex-a".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] } },
+        SemioMeshMutation::RemoveTexture { id: "tex-a".into() },
+        SemioMeshMutation::SetTextureBytes { id: "tex-a".into(), mime: "image/bmp".into(), bytes: vec![9] },
+    ]
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]
@@ -393,25 +522,10 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
+    /// 🌱 Reuses `demo_fixture()` (single source of truth, also feeds `demo_mutation_cases()` and
+    /// `🎹️composer/🦀️component.rs`'s conformance-law tests) rather than an independent copy.
     fn fixture() -> SemioMeshSnapshot {
-        SemioMeshSnapshot {
-            meshes: vec![SemioMesh {
-                id: "mesh-a".into(),
-                primitives: vec![SemioPrimitive {
-                    id: "prim-a".into(),
-                    topology: SemioTopology::Triangles,
-                    positions: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }],
-                    normals: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }; 3],
-                    uvs: vec![SemioUv { u: 0.0, v: 0.0 }; 3],
-                    colors: vec![],
-                    indices: vec![0, 1, 2],
-                    material_id: Some("mat-a".into()),
-                }],
-            }],
-            materials: vec![SemioMaterial { id: "mat-a".into(), base_color: SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }, metallic: 0.0, roughness: 0.5 }],
-            textures: vec![],
-            ..Default::default()
-        }
+        demo_fixture()
     }
 
     #[test]

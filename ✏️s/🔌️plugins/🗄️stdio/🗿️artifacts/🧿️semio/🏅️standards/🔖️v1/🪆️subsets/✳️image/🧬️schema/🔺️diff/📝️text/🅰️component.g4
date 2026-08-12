@@ -1,20 +1,38 @@
-// 🅰️ Real wire grammar for `SemioImageDiff`'s hand-rolled `DiffCodec::print_diff`/`parse_diff` —
-// see the `🦀️component.rs` sibling's `🔖️HandcraftedDiffCodec` region. One space-separated
-// `name=value` token per changed top-level field; `frames`/`metadata` print as
-// `name{[removed];[modified];[added]}` via the shared `engine::triples`
-// `enc_indexed_triple`/`enc_named_triple` codec.
-grammar Semio_image_diff_text;
+// 🅰️ ANTLR mirror (descriptive, not test-parsed — the real recognizer is
+// ../📖️component.grammar.semio, walked by dsl::Recognizer) for `SemioImageDiff::print_diff`/
+// `parse_diff` (../../🦀️component.rs's `print_image_diff`/`parse_image_diff`).
+grammar Stdio_semio_image_diff;
 
-line       : token (' ' token)* EOF | EOF ;
-token      : scalarToken | collectionToken ;
-scalarToken: ('width' | 'height' | 'bitDepth') '=' DIGIT+
-           | 'colorspace' '=' ('r'|'a'|'g'|'y'|'i')
-           | 'icc' '=' option ;
-option     : '[0]' | '[1,' HEXDIGIT* ']' ;
-collectionToken : ('frames' | 'metadata') '{' triple '}' ;
-triple     : '[' items ']' ';' '[' items ']' ';' '[' items ']' ;
-items      : (item (',' item)*)? ;
-item       : DIGIT+ ':' HEXDIGIT* ;
+document       : widthLine? heightLine? colorspaceLine? bitDepthLine? iccLine? framesLine? metadataLine? ;
+widthLine      : 'width' '=' INT ;
+heightLine     : 'height' '=' INT ;
+colorspaceLine : 'colorspace' '=' colorspace ;
+bitDepthLine   : 'bitDepth' '=' INT ;
+iccLine        : 'icc' '=' optionHex ;
 
-HEXDIGIT : [0-9a-f] ;
-DIGIT    : [0-9] ;
+framesLine        : 'frames' '{' framesTriple '}' ;
+framesTriple      : '[' removedIndexList? ']' ';' '[' frameModifiedList? ']' ';' '[' frameAddedList? ']' ;
+removedIndexList  : INT (',' INT)* ;
+frameModifiedList : frameModified (',' frameModified)* ;
+frameModified     : INT ':' frameDiff ;
+frameDiff         : '[' frameDiffEntryList? ']' ;
+frameDiffEntryList: frameDiffEntry (',' frameDiffEntry)* ;
+frameDiffEntry    : 'D' ':' INT | 'X' ':' HEX ;
+frameAddedList    : frameAdded (',' frameAdded)* ;
+frameAdded        : INT ':' frame ;
+frame             : '[' INT ',' HEX ']' ;
+
+metadataLine        : 'metadata' '{' metadataTriple '}' ;
+metadataTriple       : '[' removedKeyList? ']' ';' '[' metadataModifiedList? ']' ';' '[' metadataAddedList? ']' ;
+removedKeyList       : HEX (',' HEX)* ;
+metadataModifiedList : metadataModified (',' metadataModified)* ;
+metadataModified     : HEX ':' HEX ;
+metadataAddedList    : entry (',' entry)* ;
+entry                : '[' HEX ',' HEX ']' ;
+
+colorspace : 'r' | 'a' | 'g' | 'y' | 'i' ;
+optionHex  : '[' '0' ']' | '[' '1' ',' HEX ']' ;
+
+HEX : [0-9a-f]* ;
+INT : '-'? [0-9]+ ;
+WS  : [ \t\r\n]+ -> skip ;

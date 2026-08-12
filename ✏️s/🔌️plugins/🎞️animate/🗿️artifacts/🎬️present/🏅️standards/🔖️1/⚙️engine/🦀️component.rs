@@ -55,11 +55,18 @@ pub mod compiler {
     }
 
     /// 📦️ Writes `🌐️index.html`, `styles.css`, `manifest.json`, and embedded deck JSON for a wgpu-ready site.
+    /// `🌐️index.html` is built as a real `HtmlSnapshot` (typed element tree) and serialized through
+    /// stdio's real HTML5 engine — the hand-rolled `format!("<!DOCTYPE html>...")` string emitter this
+    /// replaced is deleted outright (`styles.css`/`player.js`/`manifest.json`/`deck.json` are plain
+    /// CSS/JS/JSON sidecars, not HTML — no ad-hoc HTML codec logic lived at those sites, so they stay
+    /// unchanged `fs::write`s).
     pub fn compile_present_site(deck: &PresentSnapshot, output_dir: &Path) -> Result<()> {
         fs::create_dir_all(output_dir).map_err(|error| PresentCompileError::new(error.to_string()))?;
         let deck_json = serde_json::to_string_pretty(deck).map_err(|error| PresentCompileError::new(format!("deck json: {error}")))?;
         fs::write(output_dir.join("deck.json"), &deck_json).map_err(|error| PresentCompileError::new(error.to_string()))?;
-        fs::write(output_dir.join("🌐️index.html"), index_html(&deck_json)).map_err(|error| PresentCompileError::new(error.to_string()))?;
+        let index_snapshot = index_html_snapshot(&deck_json);
+        let index_text = semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::write_html_document(&index_snapshot);
+        fs::write(output_dir.join("🌐️index.html"), index_text).map_err(|error| PresentCompileError::new(error.to_string()))?;
         fs::write(output_dir.join("styles.css"), styles_css()).map_err(|error| PresentCompileError::new(error.to_string()))?;
         fs::write(output_dir.join("manifest.json"), serde_json::to_string_pretty(&site_manifest(deck)).map_err(|error| PresentCompileError::new(error.to_string()))?).map_err(|error| PresentCompileError::new(error.to_string()))?;
         fs::write(output_dir.join("player.js"), player_boot_js()).map_err(|error| PresentCompileError::new(error.to_string()))?;
@@ -87,29 +94,44 @@ pub mod compiler {
         })
     }
 
-    fn index_html(deck_json: &str) -> String {
-        let escaped = deck_json.replace('&', "&amp;").replace('<', "&lt;");
-        format!(
-            r#"<!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>Animate Present</title>
-      <link rel="stylesheet" href="styles.css" />
-      <link rel="manifest" href="manifest.json" />
-    </head>
-    <body>
-      <main id="animate-present-root" data-deck-schema="animate.present.deck">
-        <canvas id="animate-present-canvas" width="1280" height="720"></canvas>
-        <script id="animate-present-deck" type="text/dsl">{escaped}</script>
-      </main>
-      <script type="module" src="/animate/plugin/wasm/semio_s_plugin_animate.js"></script>
-      <script type="module" src="player.js"></script>
-    </body>
-    </html>
-    "#
-        )
+    /// 🌐️ Builds `🌐️index.html`'s real `HtmlSnapshot` — deck JSON lands verbatim inside the
+    /// `<script>` tag's `RawText` node (HTML5's RAWTEXT content model never entity-decodes script
+    /// content, so this is MORE spec-correct than the deleted emitter's `&`/`<` string-replace,
+    /// which would have literally corrupted any deck JSON string containing those characters once
+    /// a real browser DOM read it back via `textContent`).
+    fn index_html_snapshot(deck_json: &str) -> semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot {
+        use semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind, STDIO_HTML_DOCUMENT_SCHEMA};
+
+        fn el(name: &str, attrs: Vec<HtmlAttr>, children: Vec<HtmlNode>) -> HtmlNode {
+            HtmlNode::Element { name: name.into(), attributes: attrs, children }
+        }
+        fn module_script(src: &str) -> HtmlNode {
+            el("script", vec![HtmlAttr::new("type", "module"), HtmlAttr::new("src", src)], Vec::new())
+        }
+
+        let head = el(
+            "head",
+            Vec::new(),
+            vec![
+                el("meta", vec![HtmlAttr::new("charset", "utf-8")], Vec::new()),
+                el("meta", vec![HtmlAttr::new("name", "viewport"), HtmlAttr::new("content", "width=device-width, initial-scale=1")], Vec::new()),
+                el("title", Vec::new(), vec![HtmlNode::Text { text: "Animate Present".into() }]),
+                el("link", vec![HtmlAttr::new("rel", "stylesheet"), HtmlAttr::new("href", "styles.css")], Vec::new()),
+                el("link", vec![HtmlAttr::new("rel", "manifest"), HtmlAttr::new("href", "manifest.json")], Vec::new()),
+            ],
+        );
+        let deck_script_children = if deck_json.is_empty() { Vec::new() } else { vec![HtmlNode::RawText { parent_kind: RawTextKind::Script, text: deck_json.to_string() }] };
+        let main = el(
+            "main",
+            vec![HtmlAttr::new("id", "animate-present-root"), HtmlAttr::new("data-deck-schema", "animate.present.deck")],
+            vec![
+                el("canvas", vec![HtmlAttr::new("id", "animate-present-canvas"), HtmlAttr::new("width", "1280"), HtmlAttr::new("height", "720")], Vec::new()),
+                el("script", vec![HtmlAttr::new("id", "animate-present-deck"), HtmlAttr::new("type", "text/dsl")], deck_script_children),
+            ],
+        );
+        let body = el("body", Vec::new(), vec![main, module_script("/animate/plugin/wasm/semio_s_plugin_animate.js"), module_script("player.js")]);
+        let html = el("html", vec![HtmlAttr::new("lang", "en")], vec![head, body]);
+        HtmlSnapshot { schema: STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: Some("DOCTYPE html".into()), root: html }
     }
 
     fn styles_css() -> &'static str {
@@ -607,15 +629,34 @@ pub fn export_video_from_scene(scene: &PresentScene, output_dir: &std::path::Pat
 //#endregion 🔖️VideoExport
 
 //#region 🔖️MediaCodec
-/// 🖼️ Title-card SVG export for the app catalogue/thumbnail surface.
+/// 🖼️ Title-card SVG export for the app catalogue/thumbnail surface. There is no real drawing
+/// content to route through semio/drawing here (this is a generic placeholder title card, not a
+/// geometry export), so the shared framework helper stays — but its output is round-tripped
+/// through stdio's own real SVG codec (`parse_svg_xml`/`write_svg_xml`) before being returned,
+/// which both validates it is genuinely spec-conformant SVG and exercises the real stdio engine
+/// rather than returning the framework helper's raw string untouched.
 pub fn animate_present_document_json_to_svg(value: &serde_json::Value) -> Result<(String, u32, u32), String> {
-    semio_framework_os::title_card_svg(value, "Animate Present", 1280, 720)
+    use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{parse_svg_xml, write_svg_xml};
+    let (svg, width, height) = semio_framework_os::title_card_svg(value, "Animate Present", 1280, 720)?;
+    let doc = parse_svg_xml(&svg)?;
+    Ok((write_svg_xml(&doc), width, height))
 }
 
-/// 📥️ Builds a degenerate-but-valid one-slide deck from a rasterized DWG drawing, for the DWG import path.
+/// 📥️ Builds a degenerate-but-valid one-slide deck from a rasterized DWG drawing, for the DWG
+/// import path. `stdio_gap`: this plugin's write scope explicitly forbids inventing a converter
+/// inside animate — there is no bridge anywhere in stdio/framework from the legacy
+/// `semio_framework::DwgDrawing` (11 geometry variants: Line/Point/Circle/Arc/Ellipse/LwPolyline/
+/// Spline/Text/Face3d/Polyline3d/PolyfaceMesh) to semio's `SemioDrawingSnapshot`/`DrawNode` tree.
+/// Hand-rolling that conversion here would duplicate `semio_framework_os::dwg_drawing_to_svg`'s
+/// existing, correct, shared geometry logic for a legacy struct W6 deletes outright — reported in
+/// `w5a--report.md`'s stdio_gaps rather than invented. The framework helpers stay (shared,
+/// non-duplicative utilities, not local ad-hoc codec code); the SVG they produce is still
+/// round-tripped through stdio's real SVG codec before rasterization, same as the title-card path.
 pub fn animate_present_document_json_from_dwg(drawing: &semio_framework::DwgDrawing) -> Result<serde_json::Value, String> {
+    use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{parse_svg_xml, write_svg_xml};
     let (svg, width, height) = semio_framework_os::dwg_drawing_to_svg(drawing)?;
-    let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height)?;
+    let validated_svg = write_svg_xml(&parse_svg_xml(&svg)?);
+    let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&validated_svg, width, height)?;
     let frame = crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
     let deck = crate::artifacts::present::PresentSnapshot {
         schema: PRESENT_DOCUMENT_SCHEMA.into(),

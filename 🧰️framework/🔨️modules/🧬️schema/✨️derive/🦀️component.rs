@@ -50,7 +50,7 @@ fn parse_state_class(field: &syn::Field) -> syn::Result<String> {
             continue;
         }
         let Meta::List(list) = &attr.meta else {
-            return Err(syn::Error::new_spanned(attr, "expected #[state(persistent|shared_ui|local_ui|preview|effect)]"));
+            return Err(syn::Error::new_spanned(attr, "expected #[state(persistent|shared_ui|local_ui|preview|effect|inferred)]"));
         };
         let tokens = list.tokens.to_string().replace(' ', "");
         let variant = match tokens.as_str() {
@@ -59,6 +59,7 @@ fn parse_state_class(field: &syn::Field) -> syn::Result<String> {
             "local_ui" => "LocalUi",
             "preview" => "Preview",
             "effect" => "Effect",
+            "inferred" => "Inferred",
             other => {
                 return Err(syn::Error::new_spanned(
                     attr,

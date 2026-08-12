@@ -1,0 +1,6 @@
+test artifacts::shooting::standards::v1::subsets::any::schema::mutations::binary::tests::shooting_document_text_round_trips_store_with_applied_operation ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::snapshot::text::tests::shooting_dsl_round_trips_base_icon_example ... ok
+test artifacts::shooting::standards::v1::engine::tests::shooting_photo_media_exports_a_raster_2d_image ... ok
+
+test result: ok. 92 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+

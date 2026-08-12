@@ -1,0 +1,30 @@
+test artifacts::gisterrain::standards::v1::engine::tests::default_terrain_document_seeds_the_fixture_exaggeration ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::snapshot::binary::tests::gis_map_document_pack_agrees_with_dsl_for_bundled_reuse_example ... ok
+test artifacts::gisterrain::standards::v1::engine::tests::terrain_fixture_text_recovers_bundled_scenery_data ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::diff::text::tests::a_whole_artifact_diff_wins_over_every_field_diff ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::binary::tests::gis3d_terrain_set_exaggeration_op_line_round_trips ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::binary::tests::operation_rows_keep_their_pre_migration_bytes ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::component::tests::gis_terrain_set_snapshot_backwards_restores_the_exact_prior_snapshot ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::binary::tests::gis3d_terrain_set_snapshot_op_line_round_trips ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::binary::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::component::tests::set_exaggeration_and_set_imported_features_invert_to_the_prior_field_value ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::binary::tests::gis3d_terrain_set_imported_features_op_line_round_trips ... ok
+test artifacts::gisterrain::standards::v1::engine::tests::gis3d_scene_media_exports_the_terrain_descriptor ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::binary::tests::gis3d_terrain_document_pack_agrees_with_dsl_for_arbitrary_exaggeration ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::text::tests::gis3d_terrain_document_dsl_round_trips_arbitrary_exaggeration ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::text::tests::gis3d_terrain_document_dsl_round_trips_imported_features_json ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::snapshot::text::tests::print_dsl_reproduces_the_bundled_example_text_verbatim ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::binary::tests::gis3d_terrain_document_pack_agrees_with_dsl_for_imported_features_json ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::snapshot::text::tests::gis_map_document_dsl_round_trips_bundled_reuse_example ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::text::tests::gis3d_terrain_document_dsl_round_trips_bundled_reuse_example ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::mutations::binary::tests::gis_map_set_snapshot_op_line_round_trips ... ok
+test modules::terrain::tests::terrain_position_data_omits_none_fields_when_serialized ... ok
+test modules::terrain::tests::build_terrain_scene_json_roundtrips_descriptor_fields ... ok
+test modules::terrain::tests::terrain_descriptor_json_defaults_exaggeration_and_positions_when_absent ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::text::tests::print_dsl_reparses_to_the_same_document ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::binary::tests::gis3d_terrain_document_text_round_trips_through_store ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::binary::tests::gis3d_terrain_document_pack_agrees_with_dsl_for_bundled_reuse_example ... ok
+
+test result: ok. 151 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+EXIT:0

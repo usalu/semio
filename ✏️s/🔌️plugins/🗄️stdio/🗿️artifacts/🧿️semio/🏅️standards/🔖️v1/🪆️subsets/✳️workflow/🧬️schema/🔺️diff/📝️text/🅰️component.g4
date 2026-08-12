@@ -1,18 +1,45 @@
-// ANTLR4 grammar for the `s.stdio.semio.workflow` diff text wire format (`SemioWorkflowDiff`'s
-// hand-rolled `protocol::DiffCodec::print_diff`/`parse_diff` — see 🔺️diff/🦀️component.rs).
-grammar Stdio_semio_workflow_diff;
+// ANTLR4 grammar for `stdio.semio.workflow`'s real diff text line — descriptive mirror of the
+// authoritative `📖️component.grammar.semio` (same production names).
+grammar Semio_workflow_diff;
 
-diffLine: (token (WS token)*)? EOF;
-token: 'nodes=' namedTriple | 'edges=' namedTriple;
+document: nodesLine? edgesLine? EOF;
 
-namedTriple: '[' keyList ']' ';' '[' modifiedList ']' ';' '[' addedList ']';
-keyList: (hexStr (',' hexStr)*)?;
-modifiedList: (modifiedEntry (',' modifiedEntry)*)?;
-modifiedEntry: hexStr ':' bracketed;
-addedList: (bracketed (',' bracketed)*)?;
+nodesLine: 'nodes' '=' nodesTriple;
+nodesTriple: '[' removedList? ']' ';' '[' nodeModifiedList? ']' ';' '[' nodeAddedList? ']';
+nodeModifiedList: nodeModified (',' nodeModified)*;
+nodeModified: HEX ':' nodeDiff;
+nodeAddedList: node (',' node)*;
 
-bracketed: '[' .*? ']';   // node/edge/nodeDiff/edgeDiff payload — see the Rust value codecs
-hexStr: HEXBYTE*;
+edgesLine: 'edges' '=' edgesTriple;
+edgesTriple: '[' removedList? ']' ';' '[' edgeModifiedList? ']' ';' '[' edgeAddedList? ']';
+edgeModifiedList: edgeModified (',' edgeModified)*;
+edgeModified: HEX ':' edgeDiff;
+edgeAddedList: edge (',' edge)*;
 
-HEXBYTE: [0-9a-f] [0-9a-f];
-WS: [ ]+;
+removedList: HEX (',' HEX)*;
+
+node: '[' HEX ',' HEX ',' HEX ',' '[' paramList? ']' ',' '[' number ',' number ']' ']';
+paramList: param (',' param)*;
+param: '[' HEX ',' HEX ']';
+edge: '[' HEX ',' port ',' port ',' HEX ']';
+port: '[' HEX ',' HEX ']';
+
+nodeDiff: '[' optionHex ',' optionHex ',' optionParamsDiff ',' optionPoint2 ']';
+optionHex: '[' '0' ']' | '[' '1' ',' HEX ']';
+optionParamsDiff: '[' '0' ']' | '[' '1' ',' paramsTriple ']';
+optionPoint2: '[' '0' ']' | '[' '1' ',' '[' number ',' number ']' ']';
+paramsTriple: '[' removedList? ']' ';' '[' paramModifiedList? ']' ';' '[' paramAddedList? ']';
+paramModifiedList: paramModified (',' paramModified)*;
+paramModified: HEX ':' paramDiff;
+paramAddedList: param (',' param)*;
+paramDiff: '[' optionHex ']';
+
+edgeDiff: '[' optionPort ',' optionPort ',' optionHex ']';
+optionPort: '[' '0' ']' | '[' '1' ',' port ']';
+
+number: INT | FLOAT;
+
+HEX: [0-9a-f]*;
+INT: '-'? [0-9]+;
+FLOAT: '-'? [0-9]+ '.' [0-9]+;
+WS: [ \t\r\n]+ -> skip;

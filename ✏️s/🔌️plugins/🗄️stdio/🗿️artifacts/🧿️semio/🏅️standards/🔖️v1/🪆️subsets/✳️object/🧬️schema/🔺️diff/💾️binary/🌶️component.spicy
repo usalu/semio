@@ -1,6 +1,11 @@
-module Stdio_semio_object_diff;
+module Semio_object_diff;
 
-# `encode_diff`/`decode_diff` payload: `print_diff`'s UTF-8 text bytes verbatim.
+# REAL binary diff frame (upgraded from the old print_diff-bytes-verbatim shortcut): `format u8` +
+# `presence u8` (bit0=root, bit1=objects) fixed header, then 0-2 recursive LEB128-varint payloads
+# back-to-back as one opaque `payload` tail (real Rust-side recursion, see
+# ../📝️text/📖️component.grammar.semio for the equivalent tag-prefixed text shape).
 type Document = unit {
-    payload: bytes &eod &convert=$$.decode("utf-8");
+    format: uint8;
+    presence: uint8;
+    payload: bytes &eod;
 };

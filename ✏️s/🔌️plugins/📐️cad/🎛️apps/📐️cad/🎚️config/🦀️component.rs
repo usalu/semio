@@ -307,8 +307,10 @@ store::impl_whole_record_config!(CadConfig);
 /// operation enum. Unlike `CadMutation` (many narrow document-mutating variants), this is a single
 /// whole-record `Snapshot`: `cad_ui`'s pure `handle()` converts its (former `RefCell`-backed)
 /// `CadPlayRuntime` scratch struct into the next `CadConfig` once per dispatch and diffs it against the
-/// pre-command config, exactly like `CadMutation::SetSnapshot`'s existing "whole-document replace"
-/// pattern — session state (selection/hover/camera/engagement/…) mutates in tight clusters (e.g.
+/// pre-command config, the same "whole-record replace" shape `reset_document_effect` now uses for
+/// a whole-DOCUMENT replace (SEMANTIC-MUTATIONS-OVERHAUL retired `CadMutation::SetSnapshot`
+/// entirely; document-level whole-content replace is no longer an in-history mutation at all) —
+/// session state (selection/hover/camera/engagement/…) mutates in tight clusters (e.g.
 /// `worldSelect` touches 5+ fields together), so per-field variants would just be wide-argument
 /// snapshots in miniature with none of a real granular diff's benefit. `backwards()` restores the
 /// exact pre-command `CadConfig`, giving real, exact undo without any per-field reverse-patch

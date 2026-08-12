@@ -1,0 +1,6 @@
+test artifacts::raster::standards::v1::subsets::any::schema::snapshot::text::tests::semio_example_dsl_round_trips ... ok
+test apps::raster::component::tests::raster_io_declares_image_in_out_and_export_media_covers_all_ports ... ok
+test artifacts::raster::standards::v1::engine::tests::raster_composite_media_exports_structured_2d_image_payload ... ok
+
+test result: ok. 55 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.85s
+

@@ -1,10 +1,16 @@
 //! ⚙️ Architect program artifact engine — the `exchange` topic.
 
-//! 📤️ Data exchange — JSON and CSV import/export for program_registers.
+//! 📤️ Data exchange — JSON, CSV and TSV import/export for program_registers. Delimited-text
+//! codecs are stdio's real `s.stdio.csv`/`s.stdio.tsv` engines — this file owns only the
+//! Program-model row mapping and `MergeStrategy` upsert semantics.
 
 use crate::artifacts::program::kernel::{EntityHeader, EntityId, PluginError, TextField};
 use crate::artifacts::program::{ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
 use crate::artifacts::program::registers::*;
+use semio_s_plugin_stdio::artifacts::csv as stdio_csv;
+use semio_s_plugin_stdio::artifacts::tsv as stdio_tsv;
+use semio_s_plugin_stdio::artifacts::tsv::standards::iana::engine as stdio_tsv_engine;
+use semio_s_plugin_stdio::artifacts::tsv::standards::iana::subsets::any::schema::snapshot as stdio_tsv_line_ending;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
@@ -36,7 +42,16 @@ pub fn import_json(json: &str) -> Result<ProgramSnapshot, PluginError> {
 // #endregion
 
 // #region 🔖️CsvExchange
-/// @emoji 📊️ One CSV row representing a register entity for spreadsheet round-trip.
+// 📊️🔗 Delimited-text (CSV/TSV) exchange — flattens/merges register rows through stdio's real
+// `s.stdio.csv` (https://www.rfc-editor.org/rfc/rfc4180) and `s.stdio.tsv`
+// (https://www.iana.org/assignments/media-types/text/tab-separated-values) codecs. This plugin
+// no longer hand-rolls delimited-text tokenizing/escaping — only the register-row domain
+// mapping (`collect_rows`/`header_row`) and `MergeStrategy` upsert semantics are ours.
+
+/// @emoji 🏷️ Fixed 7-column header shared by the CSV and TSV register exchange shape.
+const REGISTER_ROW_COLUMNS: [&str; 7] = ["register", "id", "name", "status", "priority", "tags", "source"];
+
+/// @emoji 📊️ One CSV/TSV row representing a register entity for spreadsheet round-trip.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RegisterCsvRow {
@@ -49,34 +64,110 @@ pub struct RegisterCsvRow {
     pub source: String,
 }
 
-/// @emoji 📤️ Flattens all registers into CSV rows.
-pub fn export_registers_csv(program: &ProgramSnapshot) -> Result<String, PluginError> {
-    Ok(write_delimited(&collect_rows(program), ','))
-}
-
-/// @emoji 📥️ Merges CSV rows into matching register collections.
-pub fn import_registers_csv(program: &mut ProgramSnapshot, csv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
-    import_delimited(program, csv, ',', strategy)
-}
-
-/// @emoji 📤️ Flattens all registers into TSV rows.
-pub fn export_registers_tsv(program: &ProgramSnapshot) -> Result<String, PluginError> {
-    Ok(write_delimited(&collect_rows(program), '\t'))
-}
-
-/// @emoji 📥️ Merges TSV rows into matching register collections.
-pub fn import_registers_tsv(program: &mut ProgramSnapshot, tsv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
-    import_delimited(program, tsv, '\t', strategy)
-}
-
-/// @emoji ↔ Exports relationships as CSV rows preserving endpoints.
-pub fn export_relationships_csv(program: &ProgramSnapshot) -> Result<String, PluginError> {
-    let mut out = String::from("id,source_id,target_id,kind,name\n");
-    for rel in &program.relationships {
-        out.push_str(&format!("{},{},{},{:?},{}\n", escape_field(&rel.header.id.to_string(), ','), escape_field(&rel.source_id.to_string(), ','), escape_field(&rel.target_id.to_string(), ','), rel.kind, escape_field(&rel.header.name, ','),));
+impl RegisterCsvRow {
+    /// @emoji 🧵️ This row's 7 columns in `REGISTER_ROW_COLUMNS` order.
+    fn columns(&self) -> [String; 7] {
+        [self.register.clone(), self.id.to_string(), self.name.clone(), self.status.clone(), self.priority.clone(), self.tags.clone(), self.source.clone()]
     }
-    Ok(out)
+
+    /// @emoji 🧵️ Rebuilds a row from 7 ordered column values (inverse of `columns`).
+    fn from_columns(fields: &[String]) -> Result<Self, PluginError> {
+        if fields.len() < 7 {
+            return Err(PluginError::Csv(format!("malformed row: expected 7 columns, got {}", fields.len())));
+        }
+        Ok(Self { register: fields[0].clone(), id: EntityId(fields[1].clone()), name: fields[2].clone(), status: fields[3].clone(), priority: fields[4].clone(), tags: fields[5].clone(), source: fields[6].clone() })
+    }
 }
+
+//#region 🔖️Csv
+/// @emoji 📤️ Flattens all registers into a `CsvSnapshot`, encoded by stdio's real RFC 4180 codec.
+pub fn export_registers_csv(program: &ProgramSnapshot) -> Result<String, PluginError> {
+    Ok(stdio_csv::engine::encode_csv(&rows_to_csv_snapshot(&collect_rows(program))))
+}
+
+/// @emoji 📥️ Decodes CSV via stdio's real RFC 4180 codec, then merges rows into matching
+/// register collections via `MergeStrategy`.
+pub fn import_registers_csv(program: &mut ProgramSnapshot, csv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
+    let snapshot = stdio_csv::engine::decode_csv_with(csv, true);
+    import_rows(program, csv_snapshot_to_rows(&snapshot)?, strategy)
+}
+
+/// @emoji ↔ Exports relationships as a CSV table preserving endpoints, encoded by stdio's real
+/// RFC 4180 codec.
+pub fn export_relationships_csv(program: &ProgramSnapshot) -> Result<String, PluginError> {
+    let mut records = vec![csv_record(&["id", "source_id", "target_id", "kind", "name"])];
+    for rel in &program.relationships {
+        records.push(csv_record(&[&rel.header.id.to_string(), &rel.source_id.to_string(), &rel.target_id.to_string(), &format!("{:?}", rel.kind), &rel.header.name]));
+    }
+    let snapshot = stdio_csv::CsvSnapshot { schema: stdio_csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records };
+    Ok(stdio_csv::engine::encode_csv(&snapshot))
+}
+
+fn csv_record(values: &[&str]) -> stdio_csv::schema::snapshot::CsvRecord {
+    stdio_csv::schema::snapshot::CsvRecord { fields: values.iter().map(|v| stdio_csv::schema::snapshot::CsvField { value: (*v).to_string(), quoted: false }).collect() }
+}
+
+fn rows_to_csv_snapshot(rows: &[RegisterCsvRow]) -> stdio_csv::CsvSnapshot {
+    let mut records = vec![csv_record(&REGISTER_ROW_COLUMNS)];
+    records.extend(rows.iter().map(|row| { let cols = row.columns(); csv_record(&[&cols[0], &cols[1], &cols[2], &cols[3], &cols[4], &cols[5], &cols[6]]) }));
+    stdio_csv::CsvSnapshot { schema: stdio_csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records }
+}
+
+fn csv_snapshot_to_rows(snapshot: &stdio_csv::CsvSnapshot) -> Result<Vec<RegisterCsvRow>, PluginError> {
+    let mut records = snapshot.records.iter();
+    let header = records.next().ok_or_else(|| PluginError::Csv("empty delimited file".into()))?;
+    let header_values: Vec<&str> = header.fields.iter().map(|f| f.value.as_str()).collect();
+    if header_values != REGISTER_ROW_COLUMNS {
+        return Err(PluginError::Csv(format!("unexpected header: {}", header_values.join(","))));
+    }
+    let mut rows = Vec::new();
+    for record in records {
+        if record.fields.len() == 1 && record.fields[0].value.trim().is_empty() {
+            continue;
+        }
+        let values: Vec<String> = record.fields.iter().map(|f| f.value.clone()).collect();
+        rows.push(RegisterCsvRow::from_columns(&values)?);
+    }
+    Ok(rows)
+}
+//#endregion 🔖️Csv
+
+//#region 🔖️Tsv
+/// @emoji 📤️ Flattens all registers into a `TsvSnapshot`, encoded by stdio's real IANA TSV codec.
+pub fn export_registers_tsv(program: &ProgramSnapshot) -> Result<String, PluginError> {
+    Ok(stdio_tsv_engine::encode_tsv(&rows_to_tsv_snapshot(&collect_rows(program))))
+}
+
+/// @emoji 📥️ Decodes TSV via stdio's real IANA TSV codec, then merges rows into matching
+/// register collections via `MergeStrategy`.
+pub fn import_registers_tsv(program: &mut ProgramSnapshot, tsv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
+    let snapshot = stdio_tsv_engine::decode_tsv(tsv);
+    import_rows(program, tsv_snapshot_to_rows(&snapshot)?, strategy)
+}
+
+fn rows_to_tsv_snapshot(rows: &[RegisterCsvRow]) -> stdio_tsv::TsvSnapshot {
+    let mut records: Vec<Vec<String>> = vec![REGISTER_ROW_COLUMNS.iter().map(|c| c.to_string()).collect()];
+    records.extend(rows.iter().map(|row| row.columns().to_vec()));
+    stdio_tsv::TsvSnapshot { schema: stdio_tsv::STDIO_TSV_DOCUMENT_SCHEMA.into(), records, trailing_newline: true, line_ending: stdio_tsv_line_ending::LineEnding::Lf }
+}
+
+fn tsv_snapshot_to_rows(snapshot: &stdio_tsv::TsvSnapshot) -> Result<Vec<RegisterCsvRow>, PluginError> {
+    let mut records = snapshot.records.iter();
+    let header = records.next().ok_or_else(|| PluginError::Csv("empty delimited file".into()))?;
+    let header_values: Vec<&str> = header.iter().map(|s| s.as_str()).collect();
+    if header_values != REGISTER_ROW_COLUMNS {
+        return Err(PluginError::Csv(format!("unexpected header: {}", header.join("\t"))));
+    }
+    let mut rows = Vec::new();
+    for record in records {
+        if record.len() == 1 && record[0].trim().is_empty() {
+            continue;
+        }
+        rows.push(RegisterCsvRow::from_columns(record)?);
+    }
+    Ok(rows)
+}
+//#endregion 🔖️Tsv
 
 fn collect_rows(program: &ProgramSnapshot) -> Vec<RegisterCsvRow> {
     let mut rows = Vec::new();
@@ -133,7 +224,7 @@ fn collect_rows(program: &ProgramSnapshot) -> Vec<RegisterCsvRow> {
     push_rows!("validations", &program.validations);
     push_rows!("performance", &program.performance);
     push_rows!("quality", &program.quality);
-    push_rows!("documents", &program.documents);
+    push_rows!("documents", &program.artifacts);
     push_rows!("changes", &program.changes);
     push_rows!("collaboration", &program.collaboration);
     push_rows!("analyses", &program.analyses);
@@ -162,88 +253,9 @@ fn header_row(register: &str, header: &EntityHeader, source: Option<String>) -> 
     }
 }
 
-fn write_delimited(rows: &[RegisterCsvRow], delimiter: char) -> String {
-    let header = format!("register{}id{}name{}status{}priority{}tags{}source\n", delimiter, delimiter, delimiter, delimiter, delimiter, delimiter);
-    let mut out = header;
-    for row in rows {
-        out.push_str(&format!(
-            "{}{}{}{}{}{}{}{}{}{}{}{}{}\n",
-            escape_field(&row.register, delimiter),
-            delimiter,
-            escape_field(&row.id.to_string(), delimiter),
-            delimiter,
-            escape_field(&row.name, delimiter),
-            delimiter,
-            escape_field(&row.status, delimiter),
-            delimiter,
-            escape_field(&row.priority, delimiter),
-            delimiter,
-            escape_field(&row.tags, delimiter),
-            delimiter,
-            escape_field(&row.source, delimiter),
-        ));
-    }
-    out
-}
-
-fn escape_field(value: &str, delimiter: char) -> String {
-    if value.contains(delimiter) || value.contains('"') || value.contains('\n') {
-        format!("\"{}\"", value.replace('"', "\"\""))
-    } else {
-        value.to_string()
-    }
-}
-
-fn parse_delimited(input: &str, delimiter: char) -> Result<Vec<RegisterCsvRow>, PluginError> {
-    let mut lines = input.lines();
-    let header = lines.next().ok_or_else(|| PluginError::Csv("empty delimited file".into()))?;
-    let expected = format!("register{}id{}name{}status{}priority{}tags{}source", delimiter, delimiter, delimiter, delimiter, delimiter, delimiter);
-    if header != expected {
-        return Err(PluginError::Csv(format!("unexpected header: {header}")));
-    }
-    let mut rows = Vec::new();
-    for line in lines {
-        if line.trim().is_empty() {
-            continue;
-        }
-        let fields = parse_record(line, delimiter);
-        if fields.len() < 7 {
-            return Err(PluginError::Csv(format!("malformed row: {line}")));
-        }
-        rows.push(RegisterCsvRow { register: fields[0].clone(), id: EntityId(fields[1].clone()), name: fields[2].clone(), status: fields[3].clone(), priority: fields[4].clone(), tags: fields[5].clone(), source: fields[6].clone() });
-    }
-    Ok(rows)
-}
-
-fn parse_record(line: &str, delimiter: char) -> Vec<String> {
-    let mut fields = Vec::new();
-    let mut current = String::new();
-    let mut in_quotes = false;
-    let mut chars = line.chars().peekable();
-    while let Some(ch) = chars.next() {
-        match ch {
-            '"' if in_quotes => {
-                if chars.peek() == Some(&'"') {
-                    chars.next();
-                    current.push('"');
-                } else {
-                    in_quotes = false;
-                }
-            }
-            '"' => in_quotes = true,
-            c if c == delimiter && !in_quotes => {
-                fields.push(current.clone());
-                current.clear();
-            }
-            c => current.push(c),
-        }
-    }
-    fields.push(current);
-    fields
-}
-
-fn import_delimited(program: &mut ProgramSnapshot, input: &str, delimiter: char, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
-    let rows = parse_delimited(input, delimiter)?;
+/// @emoji 🔀️ Applies `MergeStrategy` upsert semantics to already-decoded rows — shared by the
+/// CSV and TSV import paths, the decode step itself lives entirely in stdio's real codecs.
+fn import_rows(program: &mut ProgramSnapshot, rows: Vec<RegisterCsvRow>, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
     let mut touched = Vec::new();
     let mut seen: HashSet<(String, EntityId)> = HashSet::new();
     for row in rows {
@@ -494,7 +506,8 @@ mod tests {
     #[test]
     fn quoted_csv_parses_commas_in_name() {
         let csv = "register,id,name,status,priority,tags,source\nelements,e1,\"Room, A\",Draft,Preferred,,src\n";
-        let rows = parse_delimited(csv, ',').expect("parse");
+        let snapshot = stdio_csv::engine::decode_csv_with(csv, true);
+        let rows = csv_snapshot_to_rows(&snapshot).expect("parse");
         assert_eq!(rows[0].name, "Room, A");
         assert_eq!(rows[0].source, "src");
     }
@@ -504,5 +517,22 @@ mod tests {
         let csv = "register,id,name,status,priority,tags,source\nelements,e1,A,Draft,Preferred,,\nelements,e1,B,Draft,Preferred,,\n";
         let mut program = crate::artifacts::program::empty_plugin();
         assert!(import_registers_csv(&mut program, csv, MergeStrategy::Upsert).is_err());
+    }
+
+    #[test]
+    fn tsv_round_trip_preserves_element_names() {
+        let program = sample_plugin();
+        let tsv = export_registers_tsv(&program).expect("tsv export");
+        let mut reloaded = crate::artifacts::program::empty_plugin();
+        import_registers_tsv(&mut reloaded, &tsv, MergeStrategy::Upsert).expect("tsv import");
+        assert_eq!(reloaded.elements.len(), program.elements.len());
+    }
+
+    #[test]
+    fn relationships_csv_round_trips_via_stdio_codec() {
+        let program = sample_plugin();
+        let csv = export_relationships_csv(&program).expect("relationships csv export");
+        let snapshot = stdio_csv::engine::decode_csv_with(&csv, true);
+        assert_eq!(snapshot.records.len(), program.relationships.len() + 1, "header + one row per relationship");
     }
 }

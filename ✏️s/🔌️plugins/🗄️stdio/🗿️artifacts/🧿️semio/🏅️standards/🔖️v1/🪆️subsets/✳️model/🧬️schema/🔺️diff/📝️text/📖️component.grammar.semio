@@ -1,26 +1,82 @@
 dialect grammar
-grammar stdio.semio.model.diff
-extension diff
-start line
+grammar semio.model.diff
+extension semio
+start document
 
-; The real hand-rolled `SemioModelDiff::print_diff`/`parse_diff` grammar (🔺️diff/🦀️component.rs
-; §HandcraftedDiffCodec) -- a single line of space-separated `field=value` tokens, one token per
-; present (non-`None`) top-level diff field; an empty diff prints as the empty line. NOT
-; envelope-wrapped (unlike the snapshot facet): `encode_diff`/`decode_diff` are the
-; print_diff/parse_diff text bytes verbatim. Quoted strings below are literal wire characters;
-; unquoted `[...]`/`*(...)` are this grammar dialect's own optional/repetition meta-syntax.
-line = token *(SP token)
-token = ("spatial=" / "elements=" / "relations=") named-triple
+# P2 pilot (model): real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `🔺️diff/🦀️component.rs` (`print_semio_model_diff`/`parse_semio_model_diff`) —
+# token-per-nonempty-field, space-separated (space is lexer trivia, irrelevant at this dialect
+# level); each collection field encodes as the shared `engine::triples::enc_named_triple`/
+# `dec_named_triple` `[removed];[modified];[added]` bracket-depth-aware triple (recipe's own
+# collection-triple shape, §1.4). All three top-level fields are optional (an unchanged diff prints
+# as the empty string).
+document = spatial-line? elements-line? relations-line?
 
-; Shared `🧰️triples::enc_named_triple`/`dec_named_triple` wire shape -- bracket-depth-aware so a
-; nested "[...]" payload inside one entry never confuses the outer split (see
-; `⚙️engine/🧰️triples/🦀️component.rs`).
-named-triple = "[" removed-csv "]" ";" "[" modified-csv "]" ";" "[" added-csv "]"
-removed-csv = hex *("," hex)
-modified-csv = modified-entry *("," modified-entry)
-modified-entry = hex ":" diff-body
-added-csv = item *("," item)
-diff-body = "[" 1*OCTET "]"   ; per-collection diff-value codec, see 🔺️diff/🦀️component.rs §DiffValueCodecs
-item = "[" 1*OCTET "]"           ; full item payload, see 🔺️diff/🦀️component.rs §ValueCodecs
-hex = 1*(%x30-39 / %x61-66)      ; hex-encoded string field (id/key), see §Primitives hex_encode
-SP = %x20
+spatial-line = "spatial" "=" spatial-triple
+spatial-triple = "[" removed-list? "]" ";" "[" spatial-modified-list? "]" ";" "[" spatial-added-list? "]"
+spatial-modified-list = spatial-modified {"," spatial-modified}*
+spatial-modified = hex ":" spatial-node-diff
+spatial-added-list = spatial-node {"," spatial-node}*
+
+elements-line = "elements" "=" elements-triple
+elements-triple = "[" removed-list? "]" ";" "[" element-modified-list? "]" ";" "[" element-added-list? "]"
+element-modified-list = element-modified {"," element-modified}*
+element-modified = hex ":" element-diff
+element-added-list = element {"," element}*
+
+relations-line = "relations" "=" relations-triple
+relations-triple = "[" removed-list? "]" ";" "[" relation-modified-list? "]" ";" "[" relation-added-list? "]"
+relation-modified-list = relation-modified {"," relation-modified}*
+relation-modified = hex ":" relation-diff
+relation-added-list = relation {"," relation}*
+
+removed-list = hex {"," hex}*
+
+# `enc_spatial_node`/`enc_element`/`enc_relation` — the same full-VALUE codecs
+# `📸️snapshot/📝️text/📖️component.grammar.semio` declares (restated here so this leaf grammar is
+# self-contained, matching the repo's existing per-facet convention).
+spatial-node = "[" hex "," spatial-kind "," hex "," opt-str "," transform "]"
+spatial-kind = "S" | "B" | "T" | "P"
+element = "[" hex "," element-class "," transform "," geometry-ref "," opt-str "," "[" pset-list? "]" "]"
+element-class = "WA" | "SL" | "CO" | "BE" | "DO" | "WI" | "RO" | "ST" | "FU" | "OT" "[" hex "]"
+geometry-ref = "N" | "B" "[" hex "]" | "M" "[" hex "]"
+pset-list = property-set {"," property-set}*
+property-set = "[" hex "," "[" property-list? "]" "]"
+property-list = property {"," property}*
+property = "[" hex "," pset-value "]"
+pset-value = "T" "[" hex "]" | "N" "[" number "]" | "B" "[" bit "]"
+bit = "0" | "1"
+relation = "[" hex "," relation-kind "," hex "," hex "]"
+relation-kind = "AG" | "CI" | "CN" | "FV" | "VE" | "OT" "[" hex "]"
+opt-str = "[" "0" "]" | "[" "1" "," hex "]"
+transform = "[" point3 "," quat "," point3 "]"
+point3 = "[" number "," number "," number "]"
+quat = "[" number "," number "," number "," number "]"
+
+# `enc_spatial_node_diff`/`dec_spatial_node_diff` — `SpatialNodeDiff`'s 4 fields (`kind`/`name`/
+# `parent_id`/`placement`), each an `Option<T>` printed via the shared `[0]` (None) / `[1,<value>]`
+# (Some) tri-state tag (recipe §1.4's "tri-state" pattern) — `parent_id` is DOUBLY tri-state
+# (`Option<Option<String>>`: untouched / cleared-to-None / set-to-Some).
+spatial-node-diff = "[" option-spatial-kind "," option-hex "," option-option-hex "," option-transform "]"
+option-spatial-kind = "[" "0" "]" | "[" "1" "," spatial-kind "]"
+option-hex = "[" "0" "]" | "[" "1" "," hex "]"
+option-option-hex = "[" "0" "]" | "[" "1" "," option-hex "]"
+option-transform = "[" "0" "]" | "[" "1" "," transform "]"
+
+# `enc_element_diff`/`dec_element_diff` — `SemioModelElementDiff`'s 5 fields (`class`/`placement`/
+# `geometry`/`spatial_id`/`psets`); `spatial_id` is doubly tri-state, same shape as `parent_id`
+# above.
+element-diff = "[" option-element-class "," option-transform "," option-geometry-ref "," option-option-hex "," option-psets "]"
+option-element-class = "[" "0" "]" | "[" "1" "," element-class "]"
+option-geometry-ref = "[" "0" "]" | "[" "1" "," geometry-ref "]"
+option-psets = "[" "0" "]" | "[" "1" "," "[" pset-list? "]" "]"
+
+# `enc_relation_diff`/`dec_relation_diff` — `ModelRelationDiff`'s 3 fields (`kind`/`from`/`to`).
+relation-diff = "[" option-relation-kind "," option-hex "," option-hex "]"
+option-relation-kind = "[" "0" "]" | "[" "1" "," relation-kind "]"
+
+number = INT | FLOAT
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — see the sibling `📸️snapshot/📝️text/📖️component.grammar.semio`'s own `hex` doc
+# comment for why a hand-rolled `{INT|IDENT}*` production would be wrong here.

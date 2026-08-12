@@ -1,6 +1,3 @@
-//! 💾️ Binary representation marker for `stdio.semio.mesh.snapshot` — the real codec is
-//! `store::ArtifactPack for SemioMeshSnapshot` (`../../🦀️component.rs`): the shared
-//! `store::semio_format::wrap_binary` envelope (8-byte magic + u32 LE token length + token)
-//! wrapping the snapshot's own `serde_json::to_vec` bytes. See sibling `.ksy`/`.abnf`/
-//! `.protocol.semio` leaves for the byte-level layout this marker documents.
-pub const BINARY_MAGIC: &str = "stdio.semio.mesh.snapshot";
+//! 💾️ Binary representation codec surface for `s.stdio.semio.mesh` (snapshot) — protocol include.
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");

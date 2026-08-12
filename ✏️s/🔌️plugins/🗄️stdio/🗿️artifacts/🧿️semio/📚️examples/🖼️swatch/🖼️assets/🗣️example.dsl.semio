@@ -1,0 +1,9 @@
+semio s.stdio.semio.image.dsl v1
+schema=732e737464696f2e73656d696f2e696d616765
+width=2
+height=2
+colorspace=a
+bitDepth=8
+icc=[1,01020304]
+frames=[[100,ff0000ff00ff00ff0000ffffffffffff]]
+metadata=[[5469746c65,44656d6f]]

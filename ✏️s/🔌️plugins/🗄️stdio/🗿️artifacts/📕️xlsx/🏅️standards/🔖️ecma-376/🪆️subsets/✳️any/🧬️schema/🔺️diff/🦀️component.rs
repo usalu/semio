@@ -1171,6 +1171,419 @@ fn dec_opc_diff(s: &str) -> Result<XlsxOpcDiff, String> {
 }
 //#endregion 🔖️OpcCodec
 
+//#region 🔖️BinaryCodecs
+/// 🧪️ FG-wave: real recursive BINARY twins of every text-form codec above, backing the upgraded
+/// `DiffCodec::encode_diff`/`decode_diff` below (and, via re-export, `../🧬️mutations/🦀️component.rs`'s
+/// own upgraded `OpBinary`) — replaces F6's `print_diff().into_bytes()` text-as-binary shortcut.
+/// Real LEB128-varint-framed length-prefixed strings/bytes (`store::pack_rt::write_varint_u64` +
+/// `store::ByteReader`), 1-byte tri-state presence tags, and 1-byte enum-variant tags — genuinely
+/// structured binary, never hex-ASCII text reused as "binary". Same shape docx's own
+/// `🔺️diff/🦀️component.rs` `BinaryPrimitives`/`ValueBinaryCodecs`/`GenericTripleBinaryCodecs`/
+/// `DiffValueBinaryCodecs` regions establish (this wave's OPC pattern-setter); duplicated here
+/// (not imported) per this repo's per-artifact hand-roll convention (no shared "hand-roll
+/// helpers" module exists yet, see this file's own `HandcraftedDiffCodec` doc comment).
+//#region 🔖️BinaryPrimitives
+pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+//#endregion 🔖️BinaryPrimitives
+
+//#region 🔖️ValueBinaryCodecs
+/// 🌳️ Full-item (non-diff) binary codecs, mirrored one-for-one against `../🔖️CellValueCodec`/
+/// `../🔖️WorkbookCodec`/`../🔖️OpcCodec`'s text forms above. `pub(crate)` so
+/// `../🧬️mutations/🦀️component.rs` reuses these rather than re-deriving its own copies (same
+/// intra-artifact reuse pattern the text codecs already use).
+pub(crate) fn enc_target_mode_bin(m: &OpcTargetMode, out: &mut Vec<u8>) {
+    out.push(match m {
+        OpcTargetMode::Internal => 0,
+        OpcTargetMode::External => 1,
+    });
+}
+pub(crate) fn dec_target_mode_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcTargetMode, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(OpcTargetMode::Internal),
+        1 => Ok(OpcTargetMode::External),
+        other => Err(format!("target mode binary: bad value {other}")),
+    }
+}
+
+pub(crate) fn enc_opc_part_bin(p: &OpcPart, out: &mut Vec<u8>) {
+    write_str_lp(out, &p.path);
+    write_str_lp(out, &p.content_type);
+    write_bytes_lp(out, &p.bytes);
+}
+pub(crate) fn dec_opc_part_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPart, String> {
+    let path = read_str_lp(reader)?;
+    let content_type = read_str_lp(reader)?;
+    let bytes = read_bytes_lp(reader)?;
+    Ok(OpcPart { path, content_type, bytes })
+}
+
+pub(crate) fn enc_rel_bin(r: &OpcRelationship, out: &mut Vec<u8>) {
+    write_str_lp(out, &r.id);
+    write_str_lp(out, &r.rel_type);
+    write_str_lp(out, &r.target);
+    enc_target_mode_bin(&r.target_mode, out);
+}
+pub(crate) fn dec_rel_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcRelationship, String> {
+    let id = read_str_lp(reader)?;
+    let rel_type = read_str_lp(reader)?;
+    let target = read_str_lp(reader)?;
+    let target_mode = dec_target_mode_bin(reader)?;
+    Ok(OpcRelationship { id, rel_type, target, target_mode })
+}
+
+pub(crate) fn enc_ct_entry_bin(e: &(String, String), out: &mut Vec<u8>) {
+    write_str_lp(out, &e.0);
+    write_str_lp(out, &e.1);
+}
+pub(crate) fn dec_ct_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, String), String> {
+    let k = read_str_lp(reader)?;
+    let v = read_str_lp(reader)?;
+    Ok((k, v))
+}
+
+/// 🗺️ One `relationships` map entry (owner path -> that owner's relationship list).
+pub(crate) fn enc_owner_rels_bin(e: &(String, Vec<OpcRelationship>), out: &mut Vec<u8>) {
+    write_str_lp(out, &e.0);
+    store::pack_rt::write_varint_u64(out, e.1.len() as u64);
+    for r in &e.1 {
+        enc_rel_bin(r, out);
+    }
+}
+pub(crate) fn dec_owner_rels_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, Vec<OpcRelationship>), String> {
+    let owner = read_str_lp(reader)?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut list = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        list.push(dec_rel_bin(reader)?);
+    }
+    Ok((owner, list))
+}
+
+/// 🔢️ `XlsxCellValue` (data-carrying enum) -- 1-byte kind tag (`0`=Number/`1`=SharedString/
+/// `2`=InlineString/`3`=Boolean/`4`=Formula/`5`=Empty), matching `enc_cell_value`'s own
+/// `N`/`S`/`I`/`B`/`F`/`E` text-tag numbering.
+pub(crate) fn enc_cell_value_bin(v: &XlsxCellValue, out: &mut Vec<u8>) {
+    match v {
+        XlsxCellValue::Number(n) => {
+            out.push(0);
+            out.extend_from_slice(&n.to_le_bytes());
+        }
+        XlsxCellValue::SharedString(i) => {
+            out.push(1);
+            store::pack_rt::write_varint_u64(out, *i as u64);
+        }
+        XlsxCellValue::InlineString(s) => {
+            out.push(2);
+            write_str_lp(out, s);
+        }
+        XlsxCellValue::Boolean(b) => {
+            out.push(3);
+            out.push(*b as u8);
+        }
+        XlsxCellValue::Formula { expr, cached } => {
+            out.push(4);
+            write_str_lp(out, expr);
+            out.push(if cached.is_some() { 1 } else { 0 });
+            if let Some(c) = cached {
+                enc_cell_value_bin(c, out);
+            }
+        }
+        XlsxCellValue::Empty => out.push(5),
+    }
+}
+pub(crate) fn dec_cell_value_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellValue, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => {
+            let bytes = reader.read_bytes(8).map_err(|e| e.to_string())?;
+            let arr: [u8; 8] = bytes.try_into().map_err(|_| "cell value binary: short f64".to_string())?;
+            Ok(XlsxCellValue::Number(f64::from_le_bytes(arr)))
+        }
+        1 => Ok(XlsxCellValue::SharedString(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)),
+        2 => Ok(XlsxCellValue::InlineString(read_str_lp(reader)?)),
+        3 => Ok(XlsxCellValue::Boolean(reader.read_u8().map_err(|e| e.to_string())? != 0)),
+        4 => {
+            let expr = read_str_lp(reader)?;
+            let cached = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(Box::new(dec_cell_value_bin(reader)?)) } else { None };
+            Ok(XlsxCellValue::Formula { expr, cached })
+        }
+        5 => Ok(XlsxCellValue::Empty),
+        other => Err(format!("cell value binary: unknown tag {other}")),
+    }
+}
+
+pub(crate) fn enc_cell_bin(c: &XlsxCell, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, c.row as u64);
+    store::pack_rt::write_varint_u64(out, c.col as u64);
+    enc_cell_value_bin(&c.value, out);
+}
+pub(crate) fn dec_cell_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCell, String> {
+    let row = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let col = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let value = dec_cell_value_bin(reader)?;
+    Ok(XlsxCell { row, col, value })
+}
+
+pub(crate) fn enc_sheet_bin(s: &XlsxSheet, out: &mut Vec<u8>) {
+    write_str_lp(out, &s.name);
+    store::pack_rt::write_varint_u64(out, s.cells.len() as u64);
+    for c in &s.cells {
+        enc_cell_bin(c, out);
+    }
+}
+pub(crate) fn dec_sheet_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheet, String> {
+    let name = read_str_lp(reader)?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut cells = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        cells.push(dec_cell_bin(reader)?);
+    }
+    Ok(XlsxSheet { name, cells })
+}
+//#endregion 🔖️ValueBinaryCodecs
+
+//#region 🔖️GenericTripleBinaryCodecs
+/// 🏷️ Binary twin of `enc_triple`/`dec_triple` -- three varint-counted sections (removed keys /
+/// modified key+diff pairs / added whole items), generic over `K`/`D`/`T`. Xlsx has no
+/// INDEX-positional collection (unlike docx's `body`/`runs`/`rows`/`cells`) -- `shared_strings` is
+/// modeled as a NAME-keyed (here `usize`-keyed) `NamedTripleDiff` too, so only this one generic
+/// binary twin is needed (docx's sibling `IndexedTripleDiff` binary twin has no xlsx counterpart).
+fn enc_named_triple_bin<K, D, T>(
+    diff: &NamedTripleDiff<K, D, T>,
+    enc_k: impl Fn(&K, &mut Vec<u8>),
+    enc_d: impl Fn(&D, &mut Vec<u8>),
+    enc_t: impl Fn(&T, &mut Vec<u8>),
+    out: &mut Vec<u8>,
+) {
+    store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
+    for k in &diff.removed {
+        enc_k(k, out);
+    }
+    store::pack_rt::write_varint_u64(out, diff.modified.len() as u64);
+    for m in &diff.modified {
+        enc_k(&m.key, out);
+        enc_d(&m.diff, out);
+    }
+    store::pack_rt::write_varint_u64(out, diff.added.len() as u64);
+    for t in &diff.added {
+        enc_t(t, out);
+    }
+}
+fn dec_named_triple_bin<K, D, T>(
+    reader: &mut store::ByteReader<'_>,
+    dec_k: impl Fn(&mut store::ByteReader<'_>) -> Result<K, String>,
+    dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
+    dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
+) -> Result<NamedTripleDiff<K, D, T>, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(removed_count as usize);
+    for _ in 0..removed_count {
+        removed.push(dec_k(reader)?);
+    }
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(modified_count as usize);
+    for _ in 0..modified_count {
+        let key = dec_k(reader)?;
+        let diff = dec_d(reader)?;
+        modified.push(NamedModified { key, diff });
+    }
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(added_count as usize);
+    for _ in 0..added_count {
+        added.push(dec_t(reader)?);
+    }
+    Ok(NamedTripleDiff { removed, modified, added })
+}
+//#endregion 🔖️GenericTripleBinaryCodecs
+
+//#region 🔖️DiffValueBinaryCodecs
+fn enc_cell_key_bin(k: &(u32, u32), out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, k.0 as u64);
+    store::pack_rt::write_varint_u64(out, k.1 as u64);
+}
+fn dec_cell_key_bin(reader: &mut store::ByteReader<'_>) -> Result<(u32, u32), String> {
+    let row = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let col = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    Ok((row, col))
+}
+
+fn enc_cell_diff_bin(d: &XlsxCellDiff, out: &mut Vec<u8>) {
+    out.push(if d.value.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.value {
+        enc_cell_value_bin(v, out);
+    }
+}
+fn dec_cell_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellDiff, String> {
+    let value = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_cell_value_bin(reader)?) } else { None };
+    Ok(XlsxCellDiff { value })
+}
+
+fn enc_cells_diff_bin(d: &XlsxCellsDiff, out: &mut Vec<u8>) { enc_named_triple_bin(d, enc_cell_key_bin, enc_cell_diff_bin, enc_cell_bin, out) }
+fn dec_cells_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellsDiff, String> { dec_named_triple_bin(reader, dec_cell_key_bin, dec_cell_diff_bin, dec_cell_bin) }
+
+fn enc_sheet_diff_bin(d: &XlsxSheetDiff, out: &mut Vec<u8>) {
+    out.push(if d.cells.is_some() { 1 } else { 0 });
+    if let Some(c) = &d.cells {
+        enc_cells_diff_bin(c, out);
+    }
+}
+fn dec_sheet_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheetDiff, String> {
+    let cells = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_cells_diff_bin(reader)?) } else { None };
+    Ok(XlsxSheetDiff { cells })
+}
+
+fn enc_sheets_diff_bin(d: &XlsxSheetsDiff, out: &mut Vec<u8>) { enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_sheet_diff_bin, enc_sheet_bin, out) }
+fn dec_sheets_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheetsDiff, String> { dec_named_triple_bin(reader, |r| read_str_lp(r), dec_sheet_diff_bin, dec_sheet_bin) }
+
+fn enc_shared_string_item_bin(item: &(usize, String), out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, item.0 as u64);
+    write_str_lp(out, &item.1);
+}
+fn dec_shared_string_item_bin(reader: &mut store::ByteReader<'_>) -> Result<(usize, String), String> {
+    let idx = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let value = read_str_lp(reader)?;
+    Ok((idx, value))
+}
+
+fn enc_shared_strings_diff_bin(d: &XlsxSharedStringsDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| store::pack_rt::write_varint_u64(out, *k as u64), |v: &String, out| write_str_lp(out, v), enc_shared_string_item_bin, out)
+}
+fn dec_shared_strings_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSharedStringsDiff, String> {
+    dec_named_triple_bin(reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as usize), |r| read_str_lp(r), dec_shared_string_item_bin)
+}
+
+pub(crate) fn enc_workbook_diff_bin(d: &XlsxWorkbookDiff, out: &mut Vec<u8>) {
+    out.push(if d.sheets.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.sheets {
+        enc_sheets_diff_bin(v, out);
+    }
+    out.push(if d.shared_strings.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.shared_strings {
+        enc_shared_strings_diff_bin(v, out);
+    }
+}
+pub(crate) fn dec_workbook_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxWorkbookDiff, String> {
+    let sheets = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_sheets_diff_bin(reader)?) } else { None };
+    let shared_strings = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_shared_strings_diff_bin(reader)?) } else { None };
+    Ok(XlsxWorkbookDiff { sheets, shared_strings })
+}
+
+fn enc_ct_entries_diff_bin(d: &XlsxOpcCtEntriesDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), |v: &String, out| write_str_lp(out, v), enc_ct_entry_bin, out)
+}
+fn dec_ct_entries_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcCtEntriesDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), |r| read_str_lp(r), dec_ct_entry_bin)
+}
+
+fn enc_content_types_diff_bin(d: &XlsxOpcContentTypesDiff, out: &mut Vec<u8>) {
+    out.push(if d.defaults.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.defaults {
+        enc_ct_entries_diff_bin(v, out);
+    }
+    out.push(if d.overrides.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.overrides {
+        enc_ct_entries_diff_bin(v, out);
+    }
+}
+fn dec_content_types_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcContentTypesDiff, String> {
+    let defaults = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
+    let overrides = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
+    Ok(XlsxOpcContentTypesDiff { defaults, overrides })
+}
+
+fn enc_opc_part_diff_bin(d: &XlsxOpcPartDiff, out: &mut Vec<u8>) {
+    out.push(if d.content_type.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.content_type {
+        write_str_lp(out, v);
+    }
+    out.push(if d.bytes.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.bytes {
+        write_bytes_lp(out, v);
+    }
+}
+fn dec_opc_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcPartDiff, String> {
+    let content_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let bytes = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
+    Ok(XlsxOpcPartDiff { content_type, bytes })
+}
+
+fn enc_parts_diff_bin(d: &XlsxOpcPartsDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_opc_part_diff_bin, enc_opc_part_bin, out)
+}
+fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcPartsDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_opc_part_diff_bin, dec_opc_part_bin)
+}
+
+fn enc_rel_diff_bin(d: &XlsxOpcRelDiff, out: &mut Vec<u8>) {
+    out.push(if d.rel_type.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.rel_type {
+        write_str_lp(out, v);
+    }
+    out.push(if d.target.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.target {
+        write_str_lp(out, v);
+    }
+    out.push(if d.target_mode.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.target_mode {
+        enc_target_mode_bin(v, out);
+    }
+}
+fn dec_rel_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcRelDiff, String> {
+    let rel_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let target = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let target_mode = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_target_mode_bin(reader)?) } else { None };
+    Ok(XlsxOpcRelDiff { rel_type, target, target_mode })
+}
+
+fn enc_rel_list_diff_bin(d: &XlsxOpcRelListDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_diff_bin, enc_rel_bin, out)
+}
+fn dec_rel_list_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcRelListDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_diff_bin, dec_rel_bin)
+}
+
+fn enc_relationships_diff_bin(d: &XlsxOpcRelationshipsDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_list_diff_bin, enc_owner_rels_bin, out)
+}
+fn dec_relationships_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcRelationshipsDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_list_diff_bin, dec_owner_rels_bin)
+}
+
+pub(crate) fn enc_opc_diff_bin(d: &XlsxOpcDiff, out: &mut Vec<u8>) {
+    out.push(if d.content_types.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.content_types {
+        enc_content_types_diff_bin(v, out);
+    }
+    out.push(if d.parts.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.parts {
+        enc_parts_diff_bin(v, out);
+    }
+    out.push(if d.relationships.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.relationships {
+        enc_relationships_diff_bin(v, out);
+    }
+}
+pub(crate) fn dec_opc_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcDiff, String> {
+    let content_types = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_content_types_diff_bin(reader)?) } else { None };
+    let parts = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_parts_diff_bin(reader)?) } else { None };
+    let relationships = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_relationships_diff_bin(reader)?) } else { None };
+    Ok(XlsxOpcDiff { content_types, parts, relationships })
+}
+//#endregion 🔖️DiffValueBinaryCodecs
+//#endregion 🔖️BinaryCodecs
+
 //#region 🔖️TopLevel
 /// 🏷️ Space-separated `name=value` tokens, one per non-`None` top field — absent token = unchanged.
 /// No token/separator value ever contains a literal space (hex/decimal/`,`/`;`/`:`/`[`/`]` only),
@@ -1209,18 +1622,87 @@ impl protocol::DiffCodec for XlsxDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_xlsx_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`'s hand-rolled
-    /// codecs use (and the repo's only other hand-rolled `DiffCodec`, `WriterDiff`) — satisfies
-    /// every `DiffCodec` law without inventing a second wire format.
+    /// 🧪️ FG-wave: REAL binary frame (`format u8 | flags u8 | [opc][workbook]`), matching
+    /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape
+    /// — upgraded from F6's `print_diff().into_bytes()` text-as-binary shortcut (per this ticket's
+    /// own `📖️grammar-recipe.md` census, 100% of stdio's `DiffCodec` impls were still on that
+    /// shortcut before this pilot ladder; confirmed live by direct read of this file before this
+    /// wave, not assumed). `flags` bits 0/1 mark `opc`/`workbook` presence; each present field's
+    /// own recursive binary payload follows in that fixed order (see `🔖️BinaryCodecs` above).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let mut flags: u8 = 0;
+        if self.opc.is_some() { flags |= 0b01; }
+        if self.workbook.is_some() { flags |= 0b10; }
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
+        if let Some(opc) = &self.opc {
+            enc_opc_diff_bin(opc, &mut out);
+        }
+        if let Some(workbook) = &self.workbook {
+            enc_workbook_diff_bin(workbook, &mut out);
+        }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let opc = if flags & 0b01 != 0 { Some(dec_opc_diff_bin(&mut reader).map_err(|e| malformed("diff opc", reader.position(), e))?) } else { None };
+        let workbook = if flags & 0b10 != 0 { Some(dec_workbook_diff_bin(&mut reader).map_err(|e| malformed("diff workbook", reader.position(), e))?) } else { None };
+        Ok(XlsxDiff { opc, workbook })
     }
 }
 //#endregion 🔖️TopLevel
+
+//#region 🔖️DemoCases
+/// 🧪️ FG-wave: representative `XlsxSnapshot`/`XlsxDiff` values (both top-level fields, every
+/// `XlsxCellValue` variant incl. `Formula.cached`, the OPC layer's content-types/parts/
+/// relationships-by-owner triples incl. `OpcTargetMode::External`) — the single source of truth
+/// reused by `diff_codec_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
+/// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests, same shape docx's own
+/// `snapshot_a()`/`snapshot_b()`/`demo_diff_cases()` establish (this wave's OPC pattern-setter).
+/// Promoted from the former test-only `sample_a`/`sample_b` (renamed for the same convention).
+pub(crate) fn snapshot_a() -> XlsxSnapshot {
+    crate::artifacts::xlsx::engine::build_minimal_xlsx(XlsxWorkbook {
+        sheets: vec![
+            XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] },
+            XlsxSheet { name: "ToDrop".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::SharedString(0) }] },
+        ],
+        shared_strings: vec!["hello".into()],
+    })
+}
+
+pub(crate) fn snapshot_b() -> XlsxSnapshot {
+    let mut snap = crate::artifacts::xlsx::engine::build_minimal_xlsx(XlsxWorkbook {
+        sheets: vec![
+            XlsxSheet {
+                name: "Sheet1".into(),
+                cells: vec![
+                    XlsxCell { row: 1, col: 0, value: XlsxCellValue::Boolean(true) },
+                    XlsxCell { row: 2, col: 2, value: XlsxCellValue::Formula { expr: "SUM(A1:A2)".into(), cached: Some(Box::new(XlsxCellValue::Number(-3.5))) } },
+                    XlsxCell { row: 3, col: 0, value: XlsxCellValue::InlineString("brand new, with: odd [chars]".into()) },
+                    XlsxCell { row: 4, col: 0, value: XlsxCellValue::Empty },
+                ],
+            },
+            XlsxSheet { name: "Added".into(), cells: vec![] },
+        ],
+        shared_strings: vec!["hello".into(), "world".into()],
+    });
+    snap.opc.content_types.set_default("added", "application/octet-stream");
+    snap.opc.set_part("xl/added.xml", "application/xml", b"fresh".to_vec());
+    snap.opc.add_relationship("xl/added.xml", "rId9", "http://example/added", "media/added.png");
+    snap.opc.relationships.get_mut("xl/added.xml").unwrap()[0].target_mode = OpcTargetMode::External;
+    snap
+}
+
+/// 🧪️ The demo cases proper — `default()` (empty diff) plus every real `between()` shape (both
+/// directions, and the trivially-empty self-diff).
+pub(crate) fn demo_diff_cases() -> Vec<XlsxDiff> {
+    let a = snapshot_a();
+    let b = snapshot_b();
+    vec![XlsxDiff::default(), XlsxDiff::between(&a, &b), XlsxDiff::between(&b, &a), XlsxDiff::between(&a, &a)]
+}
+//#endregion 🔖️DemoCases
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🧪️Tests
@@ -1229,47 +1711,14 @@ mod handcrafted_diff_codec_tests {
     use super::*;
     use protocol::DiffCodec;
 
-    fn sample_a() -> XlsxSnapshot {
-        crate::artifacts::xlsx::engine::build_minimal_xlsx(XlsxWorkbook {
-            sheets: vec![
-                XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] },
-                XlsxSheet { name: "ToDrop".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::SharedString(0) }] },
-            ],
-            shared_strings: vec!["hello".into()],
-        })
-    }
-
-    fn sample_b() -> XlsxSnapshot {
-        let mut snap = crate::artifacts::xlsx::engine::build_minimal_xlsx(XlsxWorkbook {
-            sheets: vec![
-                XlsxSheet {
-                    name: "Sheet1".into(),
-                    cells: vec![
-                        XlsxCell { row: 1, col: 0, value: XlsxCellValue::Boolean(true) },
-                        XlsxCell { row: 2, col: 2, value: XlsxCellValue::Formula { expr: "SUM(A1:A2)".into(), cached: Some(Box::new(XlsxCellValue::Number(-3.5))) } },
-                        XlsxCell { row: 3, col: 0, value: XlsxCellValue::InlineString("brand new, with: odd [chars]".into()) },
-                        XlsxCell { row: 4, col: 0, value: XlsxCellValue::Empty },
-                    ],
-                },
-                XlsxSheet { name: "Added".into(), cells: vec![] },
-            ],
-            shared_strings: vec!["hello".into(), "world".into()],
-        });
-        snap.opc.content_types.set_default("added", "application/octet-stream");
-        snap.opc.set_part("xl/added.xml", "application/xml", b"fresh".to_vec());
-        snap.opc.add_relationship("xl/added.xml", "rId9", "http://example/added", "media/added.png");
-        snap.opc.relationships.get_mut("xl/added.xml").unwrap()[0].target_mode = OpcTargetMode::External;
-        snap
-    }
-
     /// 🧪️ `DiffCodec` round-trip laws over the hand-rolled `XlsxDiff` grammar — exercises every
     /// `XlsxCellValue` variant (incl. `Formula.cached` and a value containing raw `,`/`:`/`[`/`]`
     /// bytes-through-hex), the OPC content-types/parts/relationships triples (incl.
     /// `OpcTargetMode::External`), and both `opc`/`workbook` top-level tokens together and alone.
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {
-        let a = sample_a();
-        let b = sample_b();
+        let a = snapshot_a();
+        let b = snapshot_b();
         let empty = XlsxSnapshot::default();
 
         let cases = vec![

@@ -1,26 +1,18 @@
 //! Serialize cad to stdio.png.
-
+//!
+//! 🧹️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a: the
+//! binary `serialize()` this file used to carry packed the CAD document's own opaque
+//! `ArtifactPack` bytes into a fabricated 1-pixel-tall RGBA raster (a real correctness bug — the
+//! emitted "image" had nothing to do with any actual raster; it also no longer compiled against
+//! the real `PngSnapshot` shape, which has no `image` field) and had zero callers (`CadComposer`
+//! only ever calls `serialize_text` below) — deleted outright per the master plan's cad extraction
+//! row. A real cad→png export needs an actual 3D-to-raster renderer (camera projection,
+//! rasterization), which doesn't exist anywhere in this repo — reported as a `stdio_gaps` entry,
+//! not worked around here.
 use crate::artifacts::cad::CadSnapshot;
-use crate::artifacts::cad::io::cad_to_wire;
-use semio_s_plugin_stdio::artifacts::png::{PngSnapshot, STDIO_PNG_DOCUMENT_SCHEMA};
 
 //#region Serialize
 pub fn register() {}
-
-pub fn serialize(from: &CadSnapshot) -> Result<PngSnapshot, store::PackError> {
-    let mut raw = cad_to_wire(from);
-    let width = raw.len() as u32;
-    let pad = (4 - (raw.len() % 4)) % 4;
-    raw.extend(std::iter::repeat(0u8).take(pad));
-    Ok(PngSnapshot {
-        schema: STDIO_PNG_DOCUMENT_SCHEMA.into(),
-        image: semio_s_plugin_stdio::artifacts::png::schema::snapshot::RasterImage {
-            width,
-            height: 1,
-            rgba: raw,
-        },
-    })
-}
 
 pub fn serialize_text(from: &CadSnapshot) -> Result<String, store::PackError> {
     Ok(<CadSnapshot as store::ArtifactDsl>::print_dsl(from))

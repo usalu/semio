@@ -1,0 +1,11 @@
+{
+  "title": "Fix Missing Epoch Deadline In WasmPluginRuntime",
+  "emoji": "🔌",
+  "status": "closed",
+  "description": "Fix missing epoch deadline in WasmPluginRuntime prepare_call",
+  "summary": "Fixed missing epoch deadline in WasmPluginRuntime prepare_call and added prepare_call calls to read_manifest and instantiate",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪50e5809a51f84ea483f76f82174d5922"
+  ]
+}

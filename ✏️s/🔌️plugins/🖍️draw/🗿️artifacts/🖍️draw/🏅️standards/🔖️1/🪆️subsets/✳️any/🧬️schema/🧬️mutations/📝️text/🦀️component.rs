@@ -1,9 +1,7 @@
 //! 🔧️ Draw artifact — OpText/OpBinary codecs + grammar for serializing `DrawMutation`.
 //! Mutation apply/inverse live in `🧬️mutations`; this facet only handcrafts the op wire forms.
 
-pub use crate::artifacts::draw::mutations::{
-    apply_draw_edit_mutation, draw_op_for_layer_field, patch_layer_field, DrawMutation,
-};
+pub use crate::artifacts::draw::mutations::{draw_op_for_layer_field, patch_layer_field, DrawMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

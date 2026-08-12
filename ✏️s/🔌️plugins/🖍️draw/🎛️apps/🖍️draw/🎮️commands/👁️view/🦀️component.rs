@@ -29,7 +29,7 @@ pub mod engagement_submit {
         if value.is_empty() || config.selected_ids.len() != 1 {
             return Ok(Emit::default());
         }
-        Ok(Emit::mutations(vec![DrawMutation::SetLayerName { layer_id: config.selected_ids[0].clone(), name: value.into() }]))
+        Ok(Emit::mutations(vec![crate::artifacts::draw::mutations::rename_layer(config.selected_ids[0].clone(), value.into())]))
     }
 }
 //#endregion 🔖️EngagementSubmit

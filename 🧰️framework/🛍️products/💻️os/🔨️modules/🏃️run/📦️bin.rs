@@ -230,7 +230,13 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     })
     .map_err(|error| error.to_string())?;
 
-    match runner.run(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &prior_node_records, &mut cache, &mut sink) {
+    let run_result = runner.run(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &prior_node_records, &mut cache, &mut sink);
+    // 📊️ Dev-boot smoke line (W7): real `io_router_stats()` numbers, not hardcoded — a zero-plugin or
+    // zero-key router (the shared cross-plugin `IoRouter` silently doing nothing) is visible right
+    // here, regardless of whether the run itself succeeded or failed partway through.
+    let (io_router_plugins, io_router_keys) = runner.into_host().io_router_stats();
+    eprintln!("[os run] io-router: {io_router_plugins} plugins / {io_router_keys} keys");
+    match run_result {
         Ok(report) => {
             println!("recomputed: {:?}", report.recomputed);
             println!("clean:      {:?}", report.clean);

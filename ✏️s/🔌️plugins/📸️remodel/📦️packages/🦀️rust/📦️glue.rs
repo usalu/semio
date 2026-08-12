@@ -683,7 +683,7 @@ pub mod apps {
         pub mod panels {
             #[path = "../../🎛️apps/📸️remodel/📌️panels/🎯️calibration/🦀️component.rs"]
             pub mod calibration;
-            #[path = "../../🎛️apps/📸️remodel/📌️panels/📄️document/🦀️component.rs"]
+            #[path = "../../🎛️apps/📸️remodel/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
             #[path = "../../🎛️apps/📸️remodel/📌️panels/🗂️media/🦀️component.rs"]
             pub mod media;

@@ -1,6 +1,6 @@
 //! 🧬️ DwgSnapshot schema — persistent fields + real codecs.
 
-use crate::artifacts::dwg::STDIO_DWG_DOCUMENT_SCHEMA;
+use crate::artifacts::dwg::standards::v_ac1018::engine::STDIO_DWG_AC1018_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -47,7 +47,7 @@ pub struct DwgSnapshot {
 impl Default for DwgSnapshot {
     fn default() -> Self {
         Self {
-            schema: STDIO_DWG_DOCUMENT_SCHEMA.into(),
+            schema: STDIO_DWG_AC1018_DOCUMENT_SCHEMA.into(),
             version: String::new(),
             maintenance_version: 0,
             codepage: 0,
@@ -133,7 +133,7 @@ pub fn decode_dwg(bytes: &[u8]) -> Result<DwgSnapshot, String> {
     let (maintenance_version, codepage) = parse_version_header_fields(bytes);
     let section_names = parse_section_names(bytes);
     Ok(DwgSnapshot {
-        schema: STDIO_DWG_DOCUMENT_SCHEMA.into(),
+        schema: STDIO_DWG_AC1018_DOCUMENT_SCHEMA.into(),
         version,
         maintenance_version,
         codepage,
@@ -160,7 +160,7 @@ pub fn encode_dwg(snap: &DwgSnapshot) -> Result<Vec<u8>, String> {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for DwgSnapshot {
     const EXTENSION: &'static str = "dwg";
-    fn envelope_id() -> &'static str { "stdio.dwg" }
+    fn envelope_id() -> &'static str { STDIO_DWG_AC1018_DOCUMENT_SCHEMA }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {

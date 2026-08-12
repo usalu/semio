@@ -51,7 +51,7 @@ mod tests {
     use crate::apps::space::testkit::{apply_mutations, studio_emit};
     use crate::apps::space::SpaceCommand;
     use crate::demo_space_projection;
-    use semio_framework_os::{register_artifact_descriptor, ArtifactKindSpec, MediaClass, MediaForm, MediaPortDirection, MediaType, MediaWireFormat, MediaFormat};
+    use semio_framework_os::{register_artifact_descriptor, ArtifactKindSpec, MediaClass, MediaForm, MediaPortDirection, MediaType, MediaWireFormat};
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
@@ -70,8 +70,8 @@ mod tests {
             media_capability: semio_framework_os::OsMediaCapability::MeshOnly,
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
             schema: "test.contract.2d.schema".into(),
-            export_formats: vec![MediaFormat::Svg],
-            import_formats: vec![MediaFormat::Svg],
+            export_formats: vec!["svg".into()],
+            import_formats: vec!["svg".into()],
                 export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     });
@@ -84,8 +84,8 @@ mod tests {
             media_capability: semio_framework_os::OsMediaCapability::MeshOnly,
             media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
             schema: "test.contract.3d.schema".into(),
-            export_formats: vec![MediaFormat::Glb],
-            import_formats: vec![MediaFormat::Glb],
+            export_formats: vec!["glb".into()],
+            import_formats: vec!["glb".into()],
                 export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     });

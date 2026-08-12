@@ -1,13 +1,15 @@
 meta:
-  id: stdio_semio_model_mutation
+  id: stdio_semio_model_mutations
   endian: le
 doc: |
-  Binary form of a `stdio.semio.model` mutation op: NO envelope -- `encode_op` is exactly
-  `serde_json::to_vec` of the tagged `SemioModelMutation` enum (see
-  `../📝️text/📖️component.grammar.semio` for that JSON grammar). Genuinely the whole remaining
-  stream, not a lazy scaffold catch-all.
+  Real binary `SemioModelMutation` op frame: `format` (1 byte) + `tag` (1 byte, the variant
+  ordinal — see `🧬️mutations/🦀️component.rs`'s `OP_KEYWORDS`), then an opaque `payload` tail (the
+  variant's own `key=value ...` argument text, UTF-8) — see the sibling
+  `📡️component.protocol.semio`'s comment.
 seq:
-  - id: json
-    size-eos:  true
-    type: str
-    encoding: UTF-8
+  - id: format
+    type: u1
+  - id: tag
+    type: u1
+  - id: payload
+    size-eos: true

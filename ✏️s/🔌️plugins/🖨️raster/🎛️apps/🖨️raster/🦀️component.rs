@@ -15,7 +15,7 @@ use crate::artifacts::raster::op::RasterMutation;
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot as RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     App, ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
-    OsMediaCapability, MediaFormat, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
+    OsMediaCapability, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use store::EngineHandles;
 use serde_json::Value;
@@ -260,10 +260,10 @@ pub fn create_raster_app() -> App {
                 media_capability: OsMediaCapability::MeshOnly,
                 media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
                 schema: "2d.image".into(),
-                export_formats: vec![MediaFormat::Png],
-                import_formats: vec![MediaFormat::Png],
-                    export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+                export_formats: vec![],
+                import_formats: vec![],
+                    export_stdio_kinds: vec!["stdio.png"],
+        import_stdio_kinds: vec!["stdio.png"],
     })
             .icon_id("raster")
             .mode_def(edit::definition())

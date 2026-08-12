@@ -1,10 +1,11 @@
-module SemioDocumentSnapshot;
-# Pack binary form: store::semio_format envelope (magic + component tag + version + u32 length)
-# followed by exactly that many bytes of UTF-8 JSON (the snapshot re-encoded via serde).
+module Stdio_semio_document_snapshot;
+
+# `pack` payload, past the `semio_format` envelope: real `format` (1 byte) + varint-length-prefixed
+# `schema` UTF-8 string, then one opaque `payload` tail (styles/images/blocks — see the sibling
+# `📡️component.protocol.semio`'s comment on the `protocol-array-of-records` boundary).
 type Document = unit {
-    magic: bytes &size=4;
-    component_tag: uint8;
-    envelope_version: uint8;
-    body_len: uint32;
-    json_body: bytes &size=self.body_len;
+    format: uint8;
+    schema_len: bytes &until=$$ ; # varint (LEB128) — Spicy has no native varint primitive; see
+                                   # 📸️snapshot/🦀️component.rs's real `store::pack_rt` varint reader.
+    payload: bytes &eod;
 };

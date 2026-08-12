@@ -1,0 +1,30 @@
+
+error[E0308]: mismatched types
+  --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:18:76
+   |
+18 |     deserialize(&JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
+   |                                                                            ^^^^^ expected `JsonValue`, found `Value`
+
+warning: unused variable: `app`
+   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🦀️component.rs:855:13
+    |
+855 |         let app = Process3dPlayApp;
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🦀️component.rs:873:13
+    |
+873 |         let app = Process3dPlayApp;
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: unused variable: `app`
+   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🦀️component.rs:882:13
+    |
+882 |         let app = Process3dPlayApp;
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+For more information about this error, try `rustc --explain E0308`.
+warning: `semio-s-plugin-process` (lib test) generated 14 warnings
+error: could not compile `semio-s-plugin-process` (lib test) due to 3 previous errors; 14 warnings emitted

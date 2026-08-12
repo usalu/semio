@@ -1,8 +1,12 @@
-module SemioImageMutationBinary;
+module Stdio_semio_image_mutations;
 
-# Real binary layout for `SemioImageMutation::encode_op`/`decode_op` — a documented
-# simplification (matching gif's own hand-rolled op codec): `encode_op` is the 📝️text sibling's
-# `op` grammar UTF-8 bytes, verbatim, with no separate binary framing.
-public type OpBinary = unit {
-    op_utf8: bytes &eod;
+# Spicy mirror (descriptive, not test-parsed — the real byte-level walker is
+# ../📡️component.protocol.semio, walked by dsl::walk_protocol) for `SemioImageMutation`'s real
+# binary op frame. `format`/`tag` are real fixed fields; the variant's own argument payload is one
+# opaque trailing blob, same boundary the real protocol file uses.
+
+public type OpFrame = unit {
+    format: uint8;                                          # OP_BINARY_FORMAT, currently 1
+    tag: uint8;                                              # variant ordinal, see .ksy sibling
+    payload: bytes &eod;                                      # variant's own argument text
 };

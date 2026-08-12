@@ -1,10 +1,8 @@
-; abnf stdio.semio.model snapshot (pack/binary payload)
-; Real envelope framing -- see the sibling 📡️component.protocol.semio for the authoritative field
-; layout and rationale; restated here for a self-contained ABNF reading.
-document = magic token-len token payload-body
-magic = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A
-token-len = 4OCTET  ; little-endian u32, byte length of `token`
-token = 1*OCTET       ; utf8 "stdio.semio.model.pack v1", token-len bytes
-payload-body = 1*OCTET ; compact-JSON SemioModelSnapshot, genuinely to end of stream (no length
-                        ; prefix follows -- unlike `token`, nothing after `payload-body` in the
-                        ; wire format, so its extent is exactly "rest of the stream")
+; ABNF-style descriptive mirror of `stdio.semio.model`'s real `pack` binary frame (past the
+; `semio_format` envelope) -- see the authoritative `📡️component.protocol.semio` for the
+; conformance-tested version.
+document       = format schema-len schema-bytes payload
+format         = %x01                  ; PACK_BINARY_FORMAT
+schema-len     = 1*OCTET               ; LEB128 varint byte count
+schema-bytes   = *OCTET                ; UTF-8, schema-len bytes
+payload        = *OCTET                ; opaque tail: spatial/elements/relations, see component.rs

@@ -27,16 +27,26 @@ use crate::artifacts::cad::engine::interaction::{apply_event, can_commit, commit
 use crate::artifacts::cad::engine::transformation::{apply_from_building, apply_typology_fallback, run_derive_from_geometry, solid_for_object};
 use crate::artifacts::cad::engine::{
     cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, export_solids_as, forest_play_scene, interaction, next_cad_id, CadSolidExport, CAD_EXAMPLE_FOREST_LEFT, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY,
-    CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
+    CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC, CAD_SOLID_EXPORT_DIALECT_STEP,
 };
-use crate::artifacts::cad::op::{CadObjectPatch, CadMutation};
-use crate::artifacts::cad::{artifact_kind, cad_all_objects, cad_find_object_pane, cad_pane_from_model_definition_id, cad_pane_objects, CadCamera, CadObject, CadPaneId, CadSnapshot, CAD_DOCUMENT_SCHEMA};
+use crate::artifacts::cad::mutations::change_active_model_definition::mutation::ChangeActiveModelDefinition;
+use crate::artifacts::cad::mutations::change_object_locked::mutation::ChangeObjectLocked;
+use crate::artifacts::cad::mutations::change_object_typology::mutation::ChangeObjectTypology;
+use crate::artifacts::cad::mutations::change_object_visible::mutation::ChangeObjectVisible;
+use crate::artifacts::cad::mutations::create_object::mutation::CreateObject;
+use crate::artifacts::cad::mutations::move_object::mutation::MoveObject;
+use crate::artifacts::cad::mutations::rename_object::mutation::RenameObject;
+use crate::artifacts::cad::mutations::replace_pane_objects::mutation::ReplacePaneObjects;
+use crate::artifacts::cad::mutations::rotate_object::mutation::RotateObject;
+use crate::artifacts::cad::mutations::scale_object::mutation::ScaleObject;
+use crate::artifacts::cad::op::CadMutation;
+use crate::artifacts::cad::{artifact_kind, cad_all_objects, cad_pane_from_model_definition_id, cad_pane_objects, CadCamera, CadObject, CadPaneId, CadSnapshot, CAD_DOCUMENT_SCHEMA};
 use base64::Engine as _;
 use semio_framework_3d::brep::engine::{BrepKernel, GeometryHandle};
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView,
-    Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MediaFormat, SelectionSet, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
+    Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, SelectionSet, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
 };
 use store::EngineHandles;
 use serde::{Deserialize, Serialize};
@@ -390,7 +400,10 @@ pub fn apply_transformation_mutations(document: &CadSnapshot, qid: &str) -> Vec<
             TransformationMode::TypologyFallback => apply_typology_fallback(&prepared, &["building.building.slab", "building.building.column", "building.building.beam", "building.building.wall"], "derived-fallback"),
         }
     };
-    vec![CadMutation::SetPaneObjects { pane: target_pane, objects }, CadMutation::SetActiveModelDefinition { model_definition_id: spec.target_model_definition_id.into() }]
+    vec![
+        CadMutation::ReplacePaneObjects(ReplacePaneObjects { pane: target_pane, objects }),
+        CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: spec.target_model_definition_id.into() }),
+    ]
 }
 
 pub fn collect_pane_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlayView, pane: CadPaneId) -> Vec<GeometryHandle> {
@@ -407,7 +420,7 @@ pub fn collect_modelspace_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlay
     CadPaneId::all().into_iter().flat_map(|pane| collect_pane_solids(kernel, envelope, pane)).collect()
 }
 
-pub fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, format: MediaFormat) -> Option<CadSolidExport> {
+pub fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, format: &str) -> Option<CadSolidExport> {
     let Ok(mut kernel) = cad_brep_kernel() else {
         return None;
     };
@@ -419,7 +432,7 @@ pub fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, format: Me
     export_solids_as(&mut *kernel, &solids, format, &stem)
 }
 
-pub fn export_solid_modelspace(envelope: &CadPlayView, format: MediaFormat) -> Option<CadSolidExport> {
+pub fn export_solid_modelspace(envelope: &CadPlayView, format: &str) -> Option<CadSolidExport> {
     let Ok(mut kernel) = cad_brep_kernel() else {
         return None;
     };
@@ -577,12 +590,29 @@ pub fn apply_component_selection(runtime: &mut CadPlayRuntime, mode: &str, incom
 pub fn resolve_active_object_id(runtime: &CadPlayRuntime) -> Option<String> {
     runtime.active_object_id.clone().or_else(|| runtime.selected_object_ids.first().map(str::to_string))
 }
-pub fn object_patch_from_field(field: &str, value: Option<&Value>) -> Option<CadObjectPatch> {
+
+/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE history —
+/// the sanctioned non-mutation path for a whole-document replace (file import, load-example). Per
+/// `📓️taxonomy.md`, whole-document replace has NO mutation-enum representative (`SetSnapshot` is
+/// banned outright); every former "replace the whole document" gesture builds this effect instead
+/// of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log for `scene`'s own
+/// `schema`/`id` — a genesis envelope with no history to encode.
+pub fn reset_document_effect(scene: &CadSnapshot) -> HostEffect {
+    let pack = <CadSnapshot as store::ArtifactPack>::encode_pack(scene);
+    let envelope = store::create_document_envelope::<CadSnapshot, CadMutation>(&scene.schema, &scene.id, scene.clone(), None);
+    let spr = store::print_document_spr(&envelope).expect("cad document spr encode is infallible for a fresh, edit-free envelope");
+    HostEffect::LoadDocument { pack, spr }
+}
+
+/// 🎯️ Builds the whole-value-field semantic mutation for one object addressed by `pane`/`object_id`
+/// (label/typology/hidden/locked) — the counterpart of the axis-addressed spatial fields
+/// `patch_objects_mutations` below resolves separately.
+pub fn object_field_mutation(pane: CadPaneId, object_id: &str, field: &str, value: Option<&Value>) -> Option<CadMutation> {
     match field {
-        "label" | "name" => value.and_then(|entry| entry.as_str()).map(|label| CadObjectPatch { label: Some(label.into()), ..Default::default() }),
-        "typology" => value.and_then(|entry| entry.as_str()).map(|typology| CadObjectPatch { typology: Some(typology.into()), ..Default::default() }),
-        "hidden" => value.and_then(|entry| entry.as_bool()).map(|hidden| CadObjectPatch { visible: Some(!hidden), ..Default::default() }),
-        "locked" => value.and_then(|entry| entry.as_bool()).map(|locked| CadObjectPatch { locked: Some(locked), ..Default::default() }),
+        "label" | "name" => value.and_then(|entry| entry.as_str()).map(|label| CadMutation::RenameObject(RenameObject { pane, object_id: object_id.into(), new_label: label.into() })),
+        "typology" => value.and_then(|entry| entry.as_str()).map(|typology| CadMutation::ChangeObjectTypology(ChangeObjectTypology { pane, object_id: object_id.into(), new_typology: typology.into() })),
+        "hidden" => value.and_then(|entry| entry.as_bool()).map(|hidden| CadMutation::ChangeObjectVisible(ChangeObjectVisible { pane, object_id: object_id.into(), new_visible: !hidden })),
+        "locked" => value.and_then(|entry| entry.as_bool()).map(|locked| CadMutation::ChangeObjectLocked(ChangeObjectLocked { pane, object_id: object_id.into(), new_locked: locked })),
         _ => None,
     }
 }
@@ -621,38 +651,38 @@ pub fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
     [q[0] / len, q[1] / len, q[2] / len, q[3] / len]
 }
 
-/// @emoji 🩹️ Builds the `PatchObject` operations that apply `field`'s edit across `object_ids`: whole-value
-/// fields (label/typology/hidden/locked) use the same patch for every object; `origin.<axis>`/`scale.<axis>`/
-/// `orientation.<axis>` read each object's own current component so `value` (absolute) or `delta` (relative)
-/// applies per-object, preserving each object's other axes and any offset across a multi-select.
+/// @emoji 🎯️ Builds the semantic mutation(s) that apply `field`'s edit across `object_ids`:
+/// whole-value fields (label/typology/hidden/locked) build one `rename-object`/`change-object-*`
+/// per object; `origin.<axis>`/`scale.<axis>`/`orientation.<axis>` read each object's own current
+/// component so `value` (absolute) or `delta` (relative) applies per-object, preserving each
+/// object's other axes and any offset across a multi-select — `move-object`/`scale-object`/
+/// `rotate-object`, one per touched object.
 pub fn patch_objects_mutations(document: &CadSnapshot, object_ids: &[String], field: &str, value: Option<&Value>, delta: Option<&Value>) -> Vec<CadMutation> {
-    if let Some(patch) = object_patch_from_field(field, value) {
-        return object_ids.iter().filter_map(|object_id| cad_find_object_pane(document, object_id).map(|pane| CadMutation::PatchObject { pane, object_id: object_id.clone(), patch: patch.clone() })).collect();
-    }
     let mut operations = Vec::new();
     for object_id in object_ids {
         let Some((object, pane)) = cad_all_objects(document).find(|(object, _)| &object.id == object_id) else {
             continue;
         };
-        let patch = if let Some(axis) = axis3_index(field, "origin") {
+        if let Some(mutation) = object_field_mutation(pane, object_id, field, value) {
+            operations.push(mutation);
+            continue;
+        }
+        if let Some(axis) = axis3_index(field, "origin") {
             let mut origin = object.origin;
             let Some(updated) = resolve_number_edit(origin[axis], value, delta) else { continue };
             origin[axis] = updated;
-            CadObjectPatch { origin: Some(origin), ..Default::default() }
+            operations.push(CadMutation::MoveObject(MoveObject { pane, object_id: object_id.clone(), new_origin: origin }));
         } else if let Some(axis) = axis3_index(field, "scale") {
             let mut scale = object.scale.unwrap_or([1.0, 1.0, 1.0]);
             let Some(updated) = resolve_number_edit(scale[axis], value, delta) else { continue };
             scale[axis] = updated;
-            CadObjectPatch { scale: Some(scale), ..Default::default() }
+            operations.push(CadMutation::ScaleObject(ScaleObject { pane, object_id: object_id.clone(), new_scale: scale }));
         } else if let Some(axis) = axis4_index(field, "orientation") {
             let mut orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
             let Some(updated) = resolve_number_edit(orientation[axis], value, delta) else { continue };
             orientation[axis] = updated;
-            CadObjectPatch { orientation: Some(quat_normalize(orientation)), ..Default::default() }
-        } else {
-            continue;
-        };
-        operations.push(CadMutation::PatchObject { pane, object_id: object_id.clone(), patch });
+            operations.push(CadMutation::RotateObject(RotateObject { pane, object_id: object_id.clone(), new_orientation: quat_normalize(orientation) }));
+        }
     }
     operations
 }
@@ -710,7 +740,7 @@ pub fn try_commit_session_mutations(document: &CadSnapshot, runtime: &mut CadPla
     runtime.last_finalized_interaction_id = Some(interaction_id);
     runtime.engagement_session = None;
     runtime.engagement_step = "Idle".into();
-    vec![CadMutation::AddObject { pane, object }]
+    vec![CadMutation::CreateObject(CreateObject { pane, object })]
 }
 
 /// @emoji ⌨️ Advances the engagement REPL for the current `engagement_input`, mutating runtime
@@ -826,8 +856,12 @@ pub fn cad_io() -> semio_framework_plugin::AppIo {
                 multiplicity: semio_framework::PortMultiplicity::Many,
             },
         ],
-        export_formats: vec![MediaFormat::Step, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Glb],
-        import_formats: vec![MediaFormat::Step, MediaFormat::Obj, MediaFormat::Stl],
+        // 🌉️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6:
+        // `AppIo` carries no string-kind peer field (unlike `ArtifactKindSpec::export_stdio_kinds`
+        // below), so — matching the precedent already set by the raster/block plugins' own
+        // migrations — this stays empty; the real stdio kind ids live on `artifact_kind()`.
+        export_formats: vec![],
+        import_formats: vec![],
         artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.cad".into(), name: "3D CAD".into(), dimension: "3d".into(), component_kind: "cad".into() },
     }
 }
@@ -956,9 +990,10 @@ impl ArtifactApp for CadPlayApp {
         Some(cad_io())
     }
 
-    fn whole_document_operation(snapshot: CadSnapshot) -> Option<CadMutation> {
-        Some(CadMutation::SetSnapshot { snapshot: Box::new(snapshot) })
-    }
+    // 🌱️ `whole_document_operation` stays the trait default (`None`): per `📓️taxonomy.md`, whole-
+    // document replace has NO mutation-enum representative (`SetSnapshot` is banned outright) — the
+    // `document:in` branch below builds a `reset_document_effect` directly instead of delegating to
+    // this hook.
 
     /// 🎞️ `geometry:in` (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe): accepts incoming mesh/brep
     /// geometry from any upstream 3D producer and inserts it as a new `CadObject` in the Shape pane,
@@ -974,10 +1009,7 @@ impl ArtifactApp for CadPlayApp {
             };
             let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             let projection = <CadSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-            return match Self::whole_document_operation(projection) {
-                Some(operation) => Ok(Emit::mutations(vec![operation])),
-                None => Err(MediaError::NotImplemented),
-            };
+            return Ok(Emit { effects: vec![reset_document_effect(&projection)], ..Default::default() });
         }
         let name = match &media.media_type.form {
             MediaForm::Brep => "import.step",
@@ -988,7 +1020,7 @@ impl ArtifactApp for CadPlayApp {
             MediaPayload::Binary { .. } => return Err(MediaError::Payload(port.to_string(), "geometry:in only accepts a Structured payload today".into())),
         };
         match crate::artifacts::cad::engine::import_cad_object_by_extension(name, &payload) {
-            Some(object) => Ok(Emit::mutations(vec![CadMutation::AddObject { pane: CadPaneId::Shape, object }])),
+            Some(object) => Ok(Emit::mutations(vec![CadMutation::CreateObject(CreateObject { pane: CadPaneId::Shape, object })])),
             None => Err(MediaError::Payload(port.to_string(), "unrecognized geometry payload".into())),
         }
     }
@@ -1013,7 +1045,7 @@ impl ArtifactApp for CadPlayApp {
         if solids.is_empty() {
             return Err(MediaError::Payload(port.to_string(), "no solids to export".into()));
         }
-        let Some(export) = export_solids_as(&mut *kernel, &solids, MediaFormat::Step, "cad.modelspace") else {
+        let Some(export) = export_solids_as(&mut *kernel, &solids, CAD_SOLID_EXPORT_DIALECT_STEP, "cad.modelspace") else {
             return Err(MediaError::Payload(port.to_string(), "brep export failed".into()));
         };
         let text = match export.data {
@@ -2371,8 +2403,13 @@ mod tests {
         })
         .to_string();
         let emit = drive(&app, &scene, "importCadFile", Some(json!({ "payload": file_text, "name": "cad.spatial.json" })));
-        assert!(!emit.artifact_mutations.is_empty(), "importCadFile must emit a SetSnapshot operation for a spatial JSON string payload");
-        let next = apply_mutations(&scene, &emit.artifact_mutations);
+        // 🌱️ Whole-document replace is not an in-history mutation (SEMANTIC-MUTATIONS-OVERHAUL
+        // retired `SetSnapshot`) — a spatial JSON string payload now surfaces as a
+        // `HostEffect::LoadDocument` carrying the replacement document's pack bytes.
+        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("importCadFile must emit a LoadDocument effect for a spatial JSON string payload") else {
+            panic!("expected a LoadDocument effect");
+        };
+        let next = <CadSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
         assert_eq!(next.objects.len(), 1);
         assert_eq!(next.objects[0].id, "object-loaded");
     }

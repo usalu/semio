@@ -1,8 +1,14 @@
 grammar Stdio_semio_video_snapshot;
-// Envelope header + hex(JSON) body — see sibling 🔣️component.json for the JSON payload's real
-// (schema/streams[kind,codec,width,height,rate,samples]) structure.
-document: header NEWLINE body EOF;
-header: 'schema' ' ' 'stdio.semio.video';
-body: HEXBYTE*;
-HEXBYTE: [0-9a-f] [0-9a-f];
-NEWLINE: '\n';
+// Video wave: real structured DSL body — two lines, `schema=<hex>` then `streams=[<stream>,...]`
+// — mirroring 📖️component.grammar.semio's real dialect productions (descriptive, not test-parsed).
+document: ARTIFACT_MARK schemaLine streamsLine EOF;
+schemaLine: 'schema' '=' HEXSTR;
+streamsLine: 'streams' '=' '[' (stream (',' stream)*)? ']';
+stream: '[' KIND ',' HEXSTR ',' INDEX ',' INDEX ',' rational ',' '[' (sample (',' sample)*)? ']' ']';
+sample: '[' INDEX ',' BOOL ',' HEXSTR ']';
+rational: '[' INDEX ',' INDEX ']';
+ARTIFACT_MARK: 'stdio.semio.video';
+KIND: 'V' | 'A' | 'S';
+BOOL: '0' | '1';
+INDEX: [0-9]+;
+HEXSTR: [0-9a-f]*;

@@ -1,8 +1,24 @@
 dialect protocol
 protocol stdio.semio.brep.mutations
 version 1
-schema stdio.semio.brep.mutations
-start frame
-; payload bytes are the UTF-8 compact-JSON encoding of a SemioBrepMutation (serde_json::to_vec)
-; -- see ../🔣️component.json for the tagged variant/field enumeration.
-segment payload varint bytes
+schema stdio.semio.brep
+start body
+framing record
+
+# brep wave: REAL binary op frame, replacing the old `serde_json::to_vec`-of-the-whole-enum
+# shortcut (`🧬️mutations/🦀️component.rs`'s old `OpBinary::encode_op`). `SemioBrepMutation` is a
+# genuine data-carrying enum whose variants embed nested `BrepVertex`/`BrepEdge`/`BrepCurve`/
+# `BrepSurface`/`SemioBrepSnapshot` payloads — no `dsl::DslField` impl exists for the tagged
+# `BrepCurve`/`BrepSurface` enums (hand-rolled per this subset's own `🔺️diff`/`🧬️mutations`
+# convention), so the generic derive-based `format u8 | ordinal varint | record body` layout
+# doesn't apply. Handcrafted instead: `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the
+# `SemioBrepMutation` variant ordinal, `🧬️mutations/🦀️component.rs`'s `OP_KEYWORDS`/
+# `variant_ordinal`, same 0-22 ordering as `parse_brep_mutation`'s keyword match) as two REAL fixed
+# fields, then the variant's own `key=value ...` argument payload as one opaque trailing `bytes`
+# chain — the same honest boundary the sibling `../../🔺️diff/💾️binary/📡️component.protocol.semio`
+# uses (`protocol-array-of-records`/`protocol-prim-ref-recursion`, per the recipe's gap table).
+header fixed 2
+field format u8
+field tag u8
+
+chain payload bytes

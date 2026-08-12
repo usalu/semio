@@ -112,7 +112,7 @@ pub fn status_summary(program: &ProgramSnapshot) -> StatusSummary {
     collect("validations", program.validations.iter().map(|e| &e.header).collect());
     collect("performance", program.performance.iter().map(|e| &e.header).collect());
     collect("quality", program.quality.iter().map(|e| &e.header).collect());
-    collect("documents", program.documents.iter().map(|e| &e.header).collect());
+    collect("documents", program.artifacts.iter().map(|e| &e.header).collect());
     collect("changes", program.changes.iter().map(|e| &e.header).collect());
     collect("collaboration", program.collaboration.iter().map(|e| &e.header).collect());
     collect("analyses", program.analyses.iter().map(|e| &e.header).collect());

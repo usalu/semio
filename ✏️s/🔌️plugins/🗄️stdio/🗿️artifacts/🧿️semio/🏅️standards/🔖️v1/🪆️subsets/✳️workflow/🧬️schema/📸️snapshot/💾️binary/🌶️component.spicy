@@ -1,10 +1,11 @@
-module Semio_workflow_snapshot;
-# `s.stdio.semio.workflow` snapshot binary wire format — `store::semio_format` binary envelope
-# (envelope_id + component tag + version) wrapping a `serde_json::to_vec(SemioWorkflowSnapshot)`
-# payload verbatim. See the module doc comment on `📸️snapshot/💾️binary/🥋️component.ksy`.
+module Stdio_semio_workflow_snapshot;
+
+# `pack` payload, past the `semio_format` envelope: real `format` (1 byte) + varint-length-prefixed
+# `schema` UTF-8 string, then one opaque `payload` tail (nodes/edges — see the sibling
+# `📡️component.protocol.semio`'s comment on the `protocol-array-of-records` boundary).
 type Document = unit {
-    envelope_id: bytes &size=20;
-    component_tag: uint8;
-    version: uint8;
-    json_payload: bytes &eod;
+    format: uint8;
+    schema_len: bytes &until=$$ ; # varint (LEB128) — Spicy has no native varint primitive; see
+                                   # 📸️snapshot/🦀️component.rs's real `store::pack_rt` varint reader.
+    payload: bytes &eod;
 };

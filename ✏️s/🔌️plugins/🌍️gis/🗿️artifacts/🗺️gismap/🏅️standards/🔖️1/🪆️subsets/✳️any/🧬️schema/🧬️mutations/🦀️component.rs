@@ -5,52 +5,38 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::gismap::diff::{diff_set_snapshot, features_delta_from_collection_mutation, GisMapDiff};
-use crate::artifacts::gismap::{GisMapSnapshot, MapFeature, MapFeaturePatch};
-use protocol::{inverse_collection_mutation, CollectionMutation, Mutation};
+use crate::artifacts::gismap::diff::GisMapDiff;
+use crate::artifacts::gismap::mutations::{
+    create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data,
+    replace_route_data,
+};
+use crate::artifacts::gismap::GisMapSnapshot;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔹Operation
-/// 🗺️ Typed, invertible map operation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+/// 🗺️ Typed, invertible, semantic GIS map mutation vocabulary — every variant wraps exactly one
+/// `protocol::MutationKind` payload struct declared in its own `🧬️mutations/<kind>/🦠️mutation`
+/// triad leaf; `#[derive(dsl::Mutations)]` wires `Mutation`/`SemanticMutation` from those leaves.
+/// `positions`/`routes`/`regions` are id-keyed `MapFeature` collections, each getting the same
+/// four-verb vocabulary (`create`/`delete`/`replace-<noun>-data`/`reorder-<plural>`) per
+/// `derivation-rules.md`'s per-id-keyed-collection recipe.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+#[mutations(snapshot = GisMapSnapshot, diff = GisMapDiff, schema = "gis.gismap")]
 pub enum GisMapMutation {
-    Positions(CollectionMutation<String, MapFeature, MapFeaturePatch>),
-    Routes(CollectionMutation<String, MapFeature, MapFeaturePatch>),
-    Regions(CollectionMutation<String, MapFeature, MapFeaturePatch>),
-    SetSnapshot { snapshot: GisMapSnapshot },
-}
-
-impl Mutation<GisMapSnapshot> for GisMapMutation {
-    type Diff = GisMapDiff;
-
-    fn diff(&self, snapshot: &GisMapSnapshot) -> GisMapDiff {
-        match self {
-            GisMapMutation::Positions(operation) => GisMapDiff {
-                positions: Some(features_delta_from_collection_mutation(&snapshot.positions, operation)),
-                ..Default::default()
-            },
-            GisMapMutation::Routes(operation) => GisMapDiff {
-                routes: Some(features_delta_from_collection_mutation(&snapshot.routes, operation)),
-                ..Default::default()
-            },
-            GisMapMutation::Regions(operation) => GisMapDiff {
-                regions: Some(features_delta_from_collection_mutation(&snapshot.regions, operation)),
-                ..Default::default()
-            },
-            GisMapMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
-        }
-    }
-
-    fn inverse(&self, snapshot: &GisMapSnapshot) -> Vec<Self> {
-        match self {
-            GisMapMutation::Positions(operation) => vec![GisMapMutation::Positions(inverse_collection_mutation(&snapshot.positions, operation))],
-            GisMapMutation::Routes(operation) => vec![GisMapMutation::Routes(inverse_collection_mutation(&snapshot.routes, operation))],
-            GisMapMutation::Regions(operation) => vec![GisMapMutation::Regions(inverse_collection_mutation(&snapshot.regions, operation))],
-            GisMapMutation::SetSnapshot { .. } => vec![GisMapMutation::SetSnapshot { snapshot: snapshot.clone() }],
-        }
-    }
+    CreatePosition(create_position::mutation::CreatePosition),
+    DeletePosition(delete_position::mutation::DeletePosition),
+    ReplacePositionData(replace_position_data::mutation::ReplacePositionData),
+    ReorderPositions(reorder_positions::mutation::ReorderPositions),
+    CreateRoute(create_route::mutation::CreateRoute),
+    DeleteRoute(delete_route::mutation::DeleteRoute),
+    ReplaceRouteData(replace_route_data::mutation::ReplaceRouteData),
+    ReorderRoutes(reorder_routes::mutation::ReorderRoutes),
+    CreateRegion(create_region::mutation::CreateRegion),
+    DeleteRegion(delete_region::mutation::DeleteRegion),
+    ReplaceRegionData(replace_region_data::mutation::ReplaceRegionData),
+    ReorderRegions(reorder_regions::mutation::ReorderRegions),
 }
 
 pub type GisMapEnvelope = ArtifactEnvelope<GisMapSnapshot, GisMapMutation>;
@@ -81,19 +67,71 @@ mod tests {
         dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
     }
 
-    fn feature(id: &str) -> MapFeature {
-        MapFeature { id: id.into(), data: dsl_of(&json!({ "id": id, "lon": 1.0, "lat": 2.0 })) }
+    fn feature(id: &str) -> crate::artifacts::gismap::MapFeature {
+        crate::artifacts::gismap::MapFeature { id: id.into(), data: dsl_of(&json!({ "id": id, "lon": 1.0, "lat": 2.0 })) }
     }
 
     #[test]
-    fn positions_add_patch_remove_round_trip() {
+    fn positions_create_replace_delete_round_trip() {
         let document = GisMapSnapshot::default();
-        let added = round_trip(&document, &GisMapMutation::Positions(CollectionMutation::Add { index: 0, item: feature("p1") }));
+        let added = round_trip(&document, &GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: feature("p1") }));
         assert_eq!(added.positions.len(), 1);
-        let patched = round_trip(&added, &GisMapMutation::Positions(CollectionMutation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "id": "p1", "label": "Home" }))) } }));
-        assert_eq!(patched.positions[0].data.get("label").and_then(|value| value.as_str()), Some("Home"));
-        let removed = round_trip(&patched, &GisMapMutation::Positions(CollectionMutation::Remove { id: "p1".into() }));
+        let replaced = round_trip(
+            &added,
+            &GisMapMutation::ReplacePositionData(replace_position_data::mutation::ReplacePositionData { id: "p1".into(), new_data: dsl_of(&json!({ "id": "p1", "label": "Home" })) }),
+        );
+        assert_eq!(replaced.positions[0].data.get("label").and_then(|value| value.as_str()), Some("Home"));
+        let removed = round_trip(&replaced, &GisMapMutation::DeletePosition(delete_position::mutation::DeletePosition { id: "p1".into() }));
         assert!(removed.positions.is_empty());
+    }
+
+    #[test]
+    fn positions_reorder_round_trips() {
+        let document = GisMapSnapshot { positions: vec![feature("p1"), feature("p2"), feature("p3")], ..Default::default() };
+        let reordered = round_trip(&document, &GisMapMutation::ReorderPositions(reorder_positions::mutation::ReorderPositions { id: "p1".into(), to_index: 2 }));
+        assert_eq!(reordered.positions.iter().map(|f| f.id.clone()).collect::<Vec<_>>(), vec!["p2", "p3", "p1"]);
+    }
+
+    #[test]
+    fn delete_and_replace_of_a_missing_id_invert_to_nothing() {
+        let document = GisMapSnapshot::default();
+        assert!(GisMapMutation::DeletePosition(delete_position::mutation::DeletePosition { id: "gone".into() }).inverse(&document).is_empty());
+        assert!(GisMapMutation::ReplacePositionData(replace_position_data::mutation::ReplacePositionData { id: "gone".into(), new_data: dsl::DslValue::Null }).inverse(&document).is_empty());
+        assert!(GisMapMutation::ReorderPositions(reorder_positions::mutation::ReorderPositions { id: "gone".into(), to_index: 0 }).inverse(&document).is_empty());
+    }
+
+    #[test]
+    fn create_position_obeys_the_inverse_and_diff_absorb_laws() {
+        let base = GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() };
+        let mutation = GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 1, item: feature("p2") });
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        let d1 = mutation.diff(&base);
+        let d2 = GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 2, item: feature("p3") }).diff(&base);
+        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+
+    #[test]
+    fn delete_route_obeys_the_inverse_law() {
+        let base = GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() };
+        let mutation = GisMapMutation::DeleteRoute(delete_route::mutation::DeleteRoute { id: "r1".into() });
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+    }
+
+    #[test]
+    fn replace_region_data_obeys_the_inverse_and_diff_absorb_laws() {
+        let base = GisMapSnapshot { regions: vec![feature("g1")], ..Default::default() };
+        let mutation = GisMapMutation::ReplaceRegionData(replace_region_data::mutation::ReplaceRegionData { id: "g1".into(), new_data: dsl_of(&json!({ "kind": "boundary" })) });
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        let d1 = mutation.diff(&base);
+        let d2 = GisMapMutation::ReplaceRegionData(replace_region_data::mutation::ReplaceRegionData { id: "g1".into(), new_data: dsl_of(&json!({ "kind": "district" })) }).diff(&base);
+        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+
+    #[test]
+    fn reorder_routes_obeys_the_inverse_law() {
+        let base = GisMapSnapshot { routes: vec![feature("r1"), feature("r2")], ..Default::default() };
+        let mutation = GisMapMutation::ReorderRoutes(reorder_routes::mutation::ReorderRoutes { id: "r1".into(), to_index: 1 });
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[test]
@@ -109,7 +147,9 @@ mod tests {
     #[test]
     fn gis_map_document_vcs_replays_operations() {
         let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::Positions(CollectionMutation::Add { index: 0, item: feature("p1") })], description: None }).expect("apply");
+        store
+            .dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: feature("p1") })], description: None })
+            .expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").positions.len(), 1);
     }
 }

@@ -1,0 +1,20 @@
+   = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+   |
+28 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: fields `artifact` and `snapshot` are never read
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:992:5
+    |
+991 | pub struct NoteEngine {
+    |            ---------- fields in this struct
+992 |     artifact: crate::artifacts::note::schema::NoteArtifact,
+    |     ^^^^^^^^
+993 |     snapshot: NoteSnapshot,
+    |     ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-plugin-note` (lib) generated 5 warnings (run `cargo fix --lib -p semio-s-plugin-note` to apply 3 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 1m 08s

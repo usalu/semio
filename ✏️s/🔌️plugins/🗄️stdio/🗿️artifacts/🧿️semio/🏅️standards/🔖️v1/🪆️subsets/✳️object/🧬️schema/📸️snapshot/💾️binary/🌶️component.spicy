@@ -1,6 +1,7 @@
-module Stdio_semio_object_snapshot;
+module Semio_object_snapshot;
 
-# `pack` payload: UTF-8 compact-JSON `SemioObjectSnapshot`, same grammar as the sibling text facet.
+# `pack` payload: UTF-8 tag-prefixed SemioObjectSnapshot text (`[hex(schema),value,[node,...]]`),
+# same grammar as the sibling text facet -- text-native, NOT hex-of-JSON, NOT serde_json.
 type Document = unit {
     payload: bytes &eod &convert=$$.decode("utf-8");
 };

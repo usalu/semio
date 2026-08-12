@@ -42,12 +42,6 @@ fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::art
     Err(ComposeError { message: "Fem2dComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
 }
 
-const EXPORT_ZIP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
-fn compose_export_zip(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-    let snapshot = rebuild_native_snapshot(sources)?;
-    let bytes = crate::artifacts::fem2d::io::export::serializers::artifacts::zip::v2_0::any::export(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-    Ok(ComposedArtifact { dialect: EXPORT_ZIP_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-}
 const EXPORT_CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
 fn compose_export_csv(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
     let snapshot = rebuild_native_snapshot(sources)?;
@@ -60,18 +54,18 @@ fn compose_export_md(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact
     let bytes = crate::artifacts::fem2d::io::export::serializers::artifacts::md::v_commonmark::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
     Ok(ComposedArtifact { dialect: EXPORT_MD_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
 }
-const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-fn compose_export_png(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-    let snapshot = rebuild_native_snapshot(sources)?;
-    let bytes = crate::artifacts::fem2d::io::export::serializers::artifacts::png::v1_2::any::export(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-    Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-}
 const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 fn compose_export_json(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
     let snapshot = rebuild_native_snapshot(sources)?;
     let bytes = crate::artifacts::fem2d::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
     Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
 }
+/// 🌉️ `stl`/`obj` below are real geometry (bridged through the semio mesh subset — see
+/// `engine::meshing::build_semio_mesh_snapshot` — never hand-rolled bytes). `zip`/`png` export
+/// entries were REMOVED outright (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-
+/// MEDIA-FORMAT-RETIREMENT W5a): fem2d has no real archive-bundle or raster-visualization
+/// capability to honestly back a `.zip`/`.png` export — their old leaves wrote raw JSON bytes
+/// under a fabricated format name.
 const EXPORT_STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
 fn compose_export_stl(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
     let snapshot = rebuild_native_snapshot(sources)?;
@@ -90,10 +84,8 @@ fn compose_export_obj(sources: &[ErasedComposeSource]) -> Result<ComposedArtifac
 pub fn entries() -> &'static [ComposerEntry] {
     ENTRIES.get_or_init(|| vec![
         composer_entry_of::<Fem2dAnyComposer>(),
-        ComposerEntry { writes: EXPORT_ZIP_DIALECT, reads: &[FEM2D_DIALECT], compose: compose_export_zip },
         ComposerEntry { writes: EXPORT_CSV_DIALECT, reads: &[FEM2D_DIALECT], compose: compose_export_csv },
         ComposerEntry { writes: EXPORT_MD_DIALECT, reads: &[FEM2D_DIALECT], compose: compose_export_md },
-        ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[FEM2D_DIALECT], compose: compose_export_png },
         ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[FEM2D_DIALECT], compose: compose_export_json },
         ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[FEM2D_DIALECT], compose: compose_export_stl },
         ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[FEM2D_DIALECT], compose: compose_export_obj },

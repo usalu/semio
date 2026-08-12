@@ -1,3 +1,14 @@
-dialect protocol stdio.ifc.2x3.snapshot
-magic = %x00
-payload = *OCTET
+# 📡️ `Ifc2x3Snapshot::encode_pack_with` wraps a `SemioEnvelope` header (`wrap_binary`, envelope id
+# `stdio.ifc.2x3`, component `Pack`, version 1) around the UTF-8 bytes of
+# `write_part21(&snapshot.document)` — the SAME Part-21 text the DSL facet emits. No packed binary
+# layout of its own exists at this facet; text-native, same shape as `4`'s own snapshot protocol and
+# the sibling STEP artifact's (all three reuse the shared Part-21 tokenizer). The SEMIO envelope is
+# described ONCE, framework-side — this file describes ONLY the post-unwrap payload.
+dialect protocol
+protocol stdio.ifc.2x3.snapshot
+version 1
+schema stdio.ifc.2x3
+start body
+
+framing record
+chain payload utf8

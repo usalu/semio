@@ -61,7 +61,7 @@ pub struct ProgramArtifact {
     #[state(persistent)] pub validations: Vec<ValidationRecord>,
     #[state(persistent)] pub performance: Vec<PerformanceCriterion>,
     #[state(persistent)] pub quality: Vec<QualityRecord>,
-    #[state(persistent)] pub documents: Vec<ArtifactRecord>,
+    #[state(persistent)] pub artifacts: Vec<ArtifactRecord>,
     #[state(persistent)] pub assumptions: Vec<Assumption>,
     #[state(persistent)] pub constraints: Vec<ConstraintRecord>,
     #[state(persistent)] pub compliance_records: Vec<ComplianceRecord>,
@@ -108,7 +108,7 @@ impl ProgramArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::artifacts::program::ProgramSnapshot {
         crate::artifacts::program::ProgramSnapshot {
-            schema: self.schema.clone(), meta: self.meta.clone(), project: self.project.clone(), stakeholders: self.stakeholders.clone(), users: self.users.clone(), activities: self.activities.clone(), functions: self.functions.clone(), elements: self.elements.clone(), quantities: self.quantities.clone(), relationships: self.relationships.clone(), adjacencies: self.adjacencies.clone(), processes: self.processes.clone(), flows: self.flows.clone(), access_rules: self.access_rules.clone(), operations: self.operations.clone(), equipment: self.equipment.clone(), resources: self.resources.clone(), storage: self.storage.clone(), environmental: self.environmental.clone(), human_factors: self.human_factors.clone(), accessibility: self.accessibility.clone(), privacy: self.privacy.clone(), safety: self.safety.clone(), security: self.security.clone(), regulatory: self.regulatory.clone(), site_context: self.site_context.clone(), organizational: self.organizational.clone(), services: self.services.clone(), infrastructure: self.infrastructure.clone(), information: self.information.clone(), communication: self.communication.clone(), wayfinding: self.wayfinding.clone(), schedules: self.schedules.clone(), flexibility: self.flexibility.clone(), growth: self.growth.clone(), sustainability: self.sustainability.clone(), resilience: self.resilience.clone(), costs: self.costs.clone(), delivery: self.delivery.clone(), risks: self.risks.clone(), conflicts: self.conflicts.clone(), requirements: self.requirements.clone(), priorities: self.priorities.clone(), scenarios: self.scenarios.clone(), options: self.options.clone(), decisions: self.decisions.clone(), validations: self.validations.clone(), performance: self.performance.clone(), quality: self.quality.clone(), documents: self.documents.clone(), assumptions: self.assumptions.clone(), constraints: self.constraints.clone(), compliance_records: self.compliance_records.clone(), approvals: self.approvals.clone(), meetings: self.meetings.clone(), changes: self.changes.clone(), collaboration: self.collaboration.clone(), analyses: self.analyses.clone(), reports: self.reports.clone(), search_filters: self.search_filters.clone(), status_records: self.status_records.clone(), workshops: self.workshops.clone(), surveys: self.surveys.clone(), issues: self.issues.clone(), audit_events: self.audit_events.clone(), templates: self.templates.clone(), knowledge: self.knowledge.clone(), benchmarks: self.benchmarks.clone(), traces: self.traces.clone(), governance: self.governance.clone(),
+            schema: self.schema.clone(), meta: self.meta.clone(), project: self.project.clone(), stakeholders: self.stakeholders.clone(), users: self.users.clone(), activities: self.activities.clone(), functions: self.functions.clone(), elements: self.elements.clone(), quantities: self.quantities.clone(), relationships: self.relationships.clone(), adjacencies: self.adjacencies.clone(), processes: self.processes.clone(), flows: self.flows.clone(), access_rules: self.access_rules.clone(), operations: self.operations.clone(), equipment: self.equipment.clone(), resources: self.resources.clone(), storage: self.storage.clone(), environmental: self.environmental.clone(), human_factors: self.human_factors.clone(), accessibility: self.accessibility.clone(), privacy: self.privacy.clone(), safety: self.safety.clone(), security: self.security.clone(), regulatory: self.regulatory.clone(), site_context: self.site_context.clone(), organizational: self.organizational.clone(), services: self.services.clone(), infrastructure: self.infrastructure.clone(), information: self.information.clone(), communication: self.communication.clone(), wayfinding: self.wayfinding.clone(), schedules: self.schedules.clone(), flexibility: self.flexibility.clone(), growth: self.growth.clone(), sustainability: self.sustainability.clone(), resilience: self.resilience.clone(), costs: self.costs.clone(), delivery: self.delivery.clone(), risks: self.risks.clone(), conflicts: self.conflicts.clone(), requirements: self.requirements.clone(), priorities: self.priorities.clone(), scenarios: self.scenarios.clone(), options: self.options.clone(), decisions: self.decisions.clone(), validations: self.validations.clone(), performance: self.performance.clone(), quality: self.quality.clone(), artifacts: self.artifacts.clone(), assumptions: self.assumptions.clone(), constraints: self.constraints.clone(), compliance_records: self.compliance_records.clone(), approvals: self.approvals.clone(), meetings: self.meetings.clone(), changes: self.changes.clone(), collaboration: self.collaboration.clone(), analyses: self.analyses.clone(), reports: self.reports.clone(), search_filters: self.search_filters.clone(), status_records: self.status_records.clone(), workshops: self.workshops.clone(), surveys: self.surveys.clone(), issues: self.issues.clone(), audit_events: self.audit_events.clone(), templates: self.templates.clone(), knowledge: self.knowledge.clone(), benchmarks: self.benchmarks.clone(), traces: self.traces.clone(), governance: self.governance.clone(),
         }
     }
 
@@ -164,7 +164,7 @@ impl ProgramArtifact {
             validations: snapshot.validations,
             performance: snapshot.performance,
             quality: snapshot.quality,
-            documents: snapshot.documents,
+            artifacts: snapshot.artifacts,
             assumptions: snapshot.assumptions,
             constraints: snapshot.constraints,
             compliance_records: snapshot.compliance_records,
@@ -250,7 +250,7 @@ impl ProgramArtifact {
         self.validations = snapshot.validations;
         self.performance = snapshot.performance;
         self.quality = snapshot.quality;
-        self.documents = snapshot.documents;
+        self.artifacts = snapshot.artifacts;
         self.assumptions = snapshot.assumptions;
         self.constraints = snapshot.constraints;
         self.compliance_records = snapshot.compliance_records;

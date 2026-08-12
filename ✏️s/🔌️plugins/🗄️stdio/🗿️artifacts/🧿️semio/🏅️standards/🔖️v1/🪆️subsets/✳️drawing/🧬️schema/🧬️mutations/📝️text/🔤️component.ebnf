@@ -1,12 +1,64 @@
-(* ebnf stdio.semio.drawing mutation text -- real protocol::OpText grammar: one line of compact,
-   `mutation`-tagged JSON. See 🅰️component.g4 for the same shape in ANTLR form. *)
-document = json object ;
-json object = "{" , '"mutation"' , ":" , mutation tag , { "," , member } , "}" ;
-mutation tag = '"noMutation"' | '"setSnapshot"' | '"setCanvasSize"' | '"setCanvasBackground"'
-             | '"setStyle"' | '"removeStyle"' | '"insertLayer"' | '"removeLayer"'
-             | '"setLayerMeta"' | '"moveLayer"' | '"setGroupTransform"' | '"setPathSegments"'
-             | '"setNodeStyle"' | '"setText"' | '"setImage"' | '"insertNode"' | '"removeNode"'
-             | '"replaceNode"' ;
-member = json string , ":" , json value ;
-json value = json string | json number | json object | json array | "true" | "false" | "null" ;
-json array = "[" , [ json value , { "," , json value } ] , "]" ;
+(* ISO-14977-style EBNF for `stdio.semio.drawing`'s real one-line `OpText::print_op` shape —
+   descriptive mirror of the authoritative `📖️component.grammar.semio` (same production names). *)
+op = no mutation | set snapshot | set canvas size | set canvas background | set style | remove style
+   | insert layer | remove layer | set layer meta | move layer | set group transform
+   | set path segments | set node style | set text | set image | insert node | remove node
+   | replace node ;
+
+no mutation = 'no-mutation' ;
+set snapshot = 'set-snapshot', 'snapshot', '=', snapshot lit ;
+set canvas size = 'set-canvas-size', 'width', '=', number, 'height', '=', number ;
+set canvas background = 'set-canvas-background', 'background', '=', option rgba ;
+set style = 'set-style', 'name', '=', hex, 'fill', '=', option rgba, 'stroke', '=', option rgba, 'stroke-width', '=', option number, 'opacity', '=', option number ;
+remove style = 'remove-style', 'name', '=', hex ;
+insert layer = 'insert-layer', 'index', '=', number, 'layer', '=', layer ;
+remove layer = 'remove-layer', 'index', '=', number ;
+set layer meta = 'set-layer-meta', 'index', '=', number, 'id', '=', hex, 'name', '=', hex, 'visible', '=', bool ;
+move layer = 'move-layer', 'from', '=', number, 'to', '=', number ;
+set group transform = 'set-group-transform', 'path', '=', node path, 'transform', '=', transform ;
+set path segments = 'set-path-segments', 'path', '=', node path, 'segments', '=', segment list ;
+set node style = 'set-node-style', 'path', '=', node path, 'style', '=', option hex ;
+set text = 'set-text', 'path', '=', node path, 'value', '=', hex, 'at', '=', point2 ;
+set image = 'set-image', 'path', '=', node path, 'at', '=', point2, 'width', '=', number, 'height', '=', number, 'mime', '=', hex, 'bytes', '=', hex ;
+insert node = 'insert-node', 'path', '=', node path, 'index', '=', number, 'node', '=', node ;
+remove node = 'remove-node', 'path', '=', node path, 'index', '=', number ;
+replace node = 'replace-node', 'path', '=', node path, 'node', '=', node ;
+
+node path = '[', number, ',', '[', [ number, { ',', number } ], ']', ']' ;
+
+snapshot lit = '[', hex, ',', canvas, ',', '[', [ style, { ',', style } ], ']', ',', '[', [ layer, { ',', layer } ], ']', ']' ;
+
+canvas = '[', number, ',', number, ',', option rgba, ']' ;
+style = '[', hex, ',', option rgba, ',', option rgba, ',', option number, ',', option number, ']' ;
+layer = '[', hex, ',', hex, ',', bool, ',', node, ']' ;
+
+node = ( 'P', '[', segment list, ',', option hex, ']' )
+     | ( 'T', '[', hex, ',', point2, ',', option hex, ']' )
+     | ( 'G', '[', transform, ',', node list, ']' )
+     | ( 'I', '[', point2, ',', number, ',', number, ',', hex, ',', hex, ']' ) ;
+node list = '[', [ node, { ',', node } ], ']' ;
+
+segment = ( 'M', '[', point2, ']' )
+        | ( 'L', '[', point2, ']' )
+        | ( 'C', '[', point2, ',', point2, ',', point2, ']' )
+        | ( 'Q', '[', point2, ',', point2, ']' )
+        | ( 'A', '[', number, ',', number, ',', number, ',', bool, ',', bool, ',', point2, ']' )
+        | 'Z' ;
+segment list = '[', [ segment, { ',', segment } ], ']' ;
+
+transform = '[', point3, ',', quaternion, ',', point3, ']' ;
+point2 = '[', number, ',', number, ']' ;
+point3 = '[', number, ',', number, ',', number, ']' ;
+quaternion = '[', number, ',', number, ',', number, ',', number, ']' ;
+rgba = '[', number, ',', number, ',', number, ',', number, ']' ;
+bool = '0' | '1' ;
+
+number = int | float ;
+int = [ '-' ], digit, { digit } ;
+float = [ '-' ], digit, { digit }, '.', digit, { digit } ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;
+
+option rgba = ( '[', '0', ']' ) | ( '[', '1', ',', rgba, ']' ) ;
+option number = ( '[', '0', ']' ) | ( '[', '1', ',', number, ']' ) ;
+option hex = ( '[', '0', ']' ) | ( '[', '1', ',', hex, ']' ) ;

@@ -718,6 +718,8 @@ mod tests {
                     timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 1000),
                     undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly,
                     payload_hash: None,
+                    semantic_kind: None,
+                    label: None,
                 },
                 crate::os_spr::command::MutationMeta {
                     mutation_id: Some(crate::os_spr::ids::MutationId("op-b".into())),
@@ -727,6 +729,8 @@ mod tests {
                     timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 2000),
                     undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly,
                     payload_hash: None,
+                    semantic_kind: None,
+                    label: None,
                 },
             ],
             description: None,

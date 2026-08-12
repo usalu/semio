@@ -1,10 +1,16 @@
 meta:
-  id: semio_document_diff
-  endian: be
+  id: stdio_semio_document_diff
+  endian: le
 doc: |
-  Binary diff form = the text diff's UTF-8 bytes verbatim (protocol::DiffCodec::encode_diff wraps
-  print_diff() directly; no separate binary framing).
+  Real binary `SemioDocumentDiff` frame — a fixed `format` byte + `presence` bitmask
+  (bit0=styles, bit1=images, bit2=blocks), then one opaque `payload` tail holding 0-3
+  varint-length-prefixed collection blobs (see the sibling `📡️component.protocol.semio`'s own
+  comment on the `protocol-cond-cannot-chain` boundary). Not a JSON blob — see
+  `🔺️diff/🦀️component.rs`'s `DiffCodec::encode_diff` for the payload's real internal layout.
 seq:
-  - id: text_diff_utf8
+  - id: format
+    type: u1
+  - id: presence
+    type: u1
+  - id: payload
     size-eos: true
-    doc: The exact bytes of print_diff()'s space-separated key=value output, UTF-8 encoded.

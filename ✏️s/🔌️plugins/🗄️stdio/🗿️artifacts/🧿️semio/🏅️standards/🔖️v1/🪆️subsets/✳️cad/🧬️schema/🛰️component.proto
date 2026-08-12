@@ -1,7 +1,12 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// 🧬️ SemioCadArtifact schema — full artifact state, mirrors SemioCadSnapshot field for field.
 package semio.s_stdio_semio_cad.artifact;
+
+import "📸️snapshot/🛰️component.proto";
+
 message SemioCadArtifact {
   string schema = 1;
-  string entries_wire = 2;
+  repeated semio.s_stdio_semio_cad.snapshot.CadLayer layers = 2;
+  repeated semio.s_stdio_semio_cad.snapshot.CadBlock blocks = 3;
+  repeated semio.s_stdio_semio_cad.snapshot.CadEntityRecord entities = 4;
 }

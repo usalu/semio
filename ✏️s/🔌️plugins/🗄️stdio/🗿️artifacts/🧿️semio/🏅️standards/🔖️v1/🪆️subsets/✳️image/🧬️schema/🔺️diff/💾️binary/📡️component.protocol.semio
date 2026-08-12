@@ -1,9 +1,23 @@
 dialect protocol
-protocol s.stdio.semio.image.diff.binary
-start diff-binary
+protocol stdio.semio.image.diff
+version 1
+schema s.stdio.semio.image
+start body
+framing record
 
-diff-binary = *OCTET
+# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION image wave: REAL binary diff frame,
+# replacing the old `print_diff().into_bytes()` text-as-binary shortcut (`🔺️diff/🦀️component.rs`'s
+# old `DiffCodec::encode_diff`). `format u8` + `presence u8` (bit0=`width` bit1=`height`
+# bit2=`colorspace` bit3=`bitDepth` bit4=`icc` bit5=`frames` bit6=`metadata`) are two REAL fixed
+# fields; past that, 0-7 varint-length-prefixed opaque blobs follow (one per present field) —
+# modeled as one opaque trailing `payload` chain rather than per-segment `Cond`-guarded fields
+# because a SECOND `if`-guard on a field that was itself only conditionally decoded hard-errors
+# `eval_cond` (`protocol-cond-cannot-chain`, same gap `✳️workflow`'s/`✳️mesh`'s own diff protocols
+# document). The real Rust `encode_diff`/`decode_diff` stays genuinely, fully structured
+# (`write_str_lp`/`read_str_lp`, `store::pack_rt`'s real varint codec) — round-trip tested
+# independently.
+header fixed 2
+field format u8
+field presence u8
 
-; -- real: `encode_diff` is the 📝️text sibling's `line` grammar UTF-8 bytes, verbatim -- a
-; -- documented simplification matching gif's own hand-rolled `DiffCodec` (see the `🔺️diff`
-; -- `🦀️component.rs` sibling's `🔖️TopLevel` region doc comment).
+chain payload bytes

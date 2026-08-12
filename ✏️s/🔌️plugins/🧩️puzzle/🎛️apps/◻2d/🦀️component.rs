@@ -1169,10 +1169,181 @@ pub fn create_puzzle2d_app() -> App {
     .workflow("puzzle2d", "Puzzle 2D", "layout")
 }
 
+//#region 🔖️SvgBridge
+/// 🌉️ Builds a real `semio/drawing` (`SemioDrawingSnapshot`) scene graph straight out of this
+/// artifact's own `Puzzle2dSnapshot`: circle/rectangle nodes become closed paths (circles as two
+/// `ArcTo` semicircles), edges become straight lines between their real resolved handle rim
+/// positions (`handle_position_on_circle`/`handle_position_on_rectangle` — the SAME kernel math
+/// the interactive board itself hit-tests and snaps against, not reinvented geometry), and node
+/// `text` becomes a `Text` node. Bounding-box canvas with a fixed margin (the camera is
+/// session-only view state, never persisted, so it plays no part in the document export).
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn puzzle2d_snapshot_to_drawing(
+    snapshot: &Puzzle2dSnapshot,
+) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot {
+    use crate::artifacts::puzzle2d::engine::{handle_position_on_circle, handle_position_on_rectangle, Point};
+    use crate::artifacts::puzzle2d::Puzzle2dNode;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
+        DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
+    };
+
+    const NODE_STYLE: &str = "puzzle2d.node";
+    const EDGE_STYLE: &str = "puzzle2d.edge";
+    const DEFAULT_RADIUS: f64 = 24.0;
+    const DEFAULT_WIDTH: f64 = 48.0;
+    const DEFAULT_HEIGHT: f64 = 48.0;
+    const MARGIN: f64 = 40.0;
+
+    fn is_rectangle(node: &Puzzle2dNode) -> bool {
+        node.shape.as_deref() == Some("rectangle") || (node.shape.is_none() && node.width.is_some())
+    }
+    fn half_extents(node: &Puzzle2dNode) -> (f64, f64) {
+        if is_rectangle(node) {
+            (node.width.unwrap_or(DEFAULT_WIDTH) / 2.0, node.height.unwrap_or(DEFAULT_HEIGHT) / 2.0)
+        } else {
+            let r = node.radius.unwrap_or(DEFAULT_RADIUS);
+            (r, r)
+        }
+    }
+
+    let mut min_x = f64::INFINITY;
+    let mut min_y = f64::INFINITY;
+    let mut max_x = f64::NEG_INFINITY;
+    let mut max_y = f64::NEG_INFINITY;
+    for node in &snapshot.nodes {
+        let (hw, hh) = half_extents(node);
+        min_x = min_x.min(node.x - hw);
+        max_x = max_x.max(node.x + hw);
+        min_y = min_y.min(node.y - hh);
+        max_y = max_y.max(node.y + hh);
+    }
+    if !min_x.is_finite() {
+        min_x = 0.0;
+        min_y = 0.0;
+        max_x = BOARD_DEFAULT_WIDTH as f64;
+        max_y = BOARD_DEFAULT_HEIGHT as f64;
+    }
+    let origin_x = min_x - MARGIN;
+    let origin_y = min_y - MARGIN;
+    let canvas_width = (max_x - min_x) + 2.0 * MARGIN;
+    let canvas_height = (max_y - min_y) + 2.0 * MARGIN;
+
+    let mut handle_owner: HashMap<&str, usize> = HashMap::new();
+    for (index, node) in snapshot.nodes.iter().enumerate() {
+        for handle in &node.handles {
+            handle_owner.insert(handle.id.as_str(), index);
+        }
+    }
+    let resolve_handle = |handle_id: &str| -> Option<SemioPoint2> {
+        let &owner = handle_owner.get(handle_id)?;
+        let node = &snapshot.nodes[owner];
+        let handle = node.handles.iter().find(|h| h.id == handle_id)?;
+        let center = Point::new(node.x, node.y);
+        let world = if is_rectangle(node) {
+            handle_position_on_rectangle(center, node.width.unwrap_or(DEFAULT_WIDTH), node.height.unwrap_or(DEFAULT_HEIGHT), handle.angle)
+        } else {
+            handle_position_on_circle(center, node.radius.unwrap_or(DEFAULT_RADIUS), handle.angle)
+        };
+        Some(SemioPoint2 { x: world.x() - origin_x, y: world.y() - origin_y })
+    };
+
+    let mut children: Vec<DrawNode> = Vec::new();
+    for edge in &snapshot.edges {
+        if edge.visible == Some(false) {
+            continue;
+        }
+        if let (Some(from), Some(to)) = (resolve_handle(&edge.source), resolve_handle(&edge.target)) {
+            children.push(DrawNode::Path { segments: vec![PathSegment::MoveTo { to: from }, PathSegment::LineTo { to }], style: Some(EDGE_STYLE.into()) });
+        }
+    }
+    for node in &snapshot.nodes {
+        if node.visible == Some(false) {
+            continue;
+        }
+        let cx = node.x - origin_x;
+        let cy = node.y - origin_y;
+        let path = if is_rectangle(node) {
+            let (hw, hh) = half_extents(node);
+            DrawNode::Path {
+                segments: vec![
+                    PathSegment::MoveTo { to: SemioPoint2 { x: cx - hw, y: cy - hh } },
+                    PathSegment::LineTo { to: SemioPoint2 { x: cx + hw, y: cy - hh } },
+                    PathSegment::LineTo { to: SemioPoint2 { x: cx + hw, y: cy + hh } },
+                    PathSegment::LineTo { to: SemioPoint2 { x: cx - hw, y: cy + hh } },
+                    PathSegment::Close,
+                ],
+                style: Some(NODE_STYLE.into()),
+            }
+        } else {
+            let r = node.radius.unwrap_or(DEFAULT_RADIUS);
+            DrawNode::Path {
+                segments: vec![
+                    PathSegment::MoveTo { to: SemioPoint2 { x: cx - r, y: cy } },
+                    PathSegment::ArcTo { rx: r, ry: r, x_rotation: 0.0, large_arc: true, sweep: true, to: SemioPoint2 { x: cx + r, y: cy } },
+                    PathSegment::ArcTo { rx: r, ry: r, x_rotation: 0.0, large_arc: true, sweep: true, to: SemioPoint2 { x: cx - r, y: cy } },
+                    PathSegment::Close,
+                ],
+                style: Some(NODE_STYLE.into()),
+            }
+        };
+        children.push(path);
+        if let Some(text) = node.text.as_deref().filter(|t| !t.is_empty()) {
+            children.push(DrawNode::Text { value: text.to_string(), at: SemioPoint2 { x: cx, y: cy }, style: None });
+        }
+    }
+
+    SemioDrawingSnapshot {
+        schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
+        canvas: DrawCanvas { width: canvas_width.max(1.0), height: canvas_height.max(1.0), background: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) },
+        styles: vec![
+            DrawStyle { name: NODE_STYLE.into(), fill: Some(SemioRgba { r: 0.86, g: 0.91, b: 0.98, a: 1.0 }), stroke: Some(SemioRgba { r: 0.20, g: 0.32, b: 0.52, a: 1.0 }), stroke_width: Some(1.5), opacity: None },
+            DrawStyle { name: EDGE_STYLE.into(), fill: None, stroke: Some(SemioRgba { r: 0.35, g: 0.35, b: 0.38, a: 1.0 }), stroke_width: Some(1.0), opacity: None },
+        ],
+        layers: vec![DrawLayer { id: "0".into(), name: "puzzle2d".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children } }],
+    }
+}
+
+/// 🌉️ Real drawing export: `Puzzle2dSnapshot` → `SemioDrawingSnapshot` → (via stdio's real
+/// `semio/drawing`→`svg` bridge, called through `io_dispatch` — never hand-rolled SVG here) →
+/// SVG XML text. Replaces the previous generic `title_card_svg` placeholder.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn puzzle2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    semio_framework_os::title_card_svg(value, "Puzzle 2D", 1024, 768)
+    use semio_framework_plugin::{io_dispatch, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+    use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
+
+    let snapshot: Puzzle2dSnapshot = serde_json::from_value(value.clone()).map_err(|e| e.to_string())?;
+    let drawing = puzzle2d_snapshot_to_drawing(&snapshot);
+    let width = drawing.canvas.width.round().max(1.0) as u32;
+    let height = drawing.canvas.height.round().max(1.0) as u32;
+
+    const DRAWING_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
+    const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId::ANY };
+    let key = IoKey {
+        artifact_kind: DRAWING_DIALECT.artifact_kind.to_string(),
+        standard: DRAWING_DIALECT.standard.0.to_string(),
+        subset: DRAWING_DIALECT.subset.0.to_string(),
+        direction: IoDirection::Export,
+        format_kind: SVG_DIALECT.artifact_kind.to_string(),
+        format_standard: SVG_DIALECT.standard.0.to_string(),
+        format_subset: SVG_DIALECT.subset.0.to_string(),
+    };
+    let source = ErasedComposeSource {
+        dialect: DRAWING_DIALECT,
+        payload: IoPayload::Binary(<SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(&drawing)),
+    };
+    let composed = io_dispatch(&key, std::slice::from_ref(&source)).map_err(|e| e.message)?;
+    let svg_bytes = match composed.payload {
+        IoPayload::Binary(bytes) => bytes,
+        IoPayload::Text(text) => text.into_bytes(),
+    };
+    let svg = <SvgSnapshot as store::ArtifactPack>::decode_pack(&svg_bytes).map_err(|e| format!("puzzle2d svg decode: {e:?}"))?;
+    let printed = <SvgSnapshot as store::ArtifactDsl>::print_dsl(&svg);
+    let body = store::semio_format::split_text_preamble(&printed).map(|(_, rest)| rest.to_string()).unwrap_or(printed);
+    Ok((body, width, height))
 }
+//#endregion 🔖️SvgBridge
 
 /// 📥️ Tier C DWG import — the puzzle-2d fixture only supports circle/rectangle nodes (no polygonal
 /// outlines), so this always returns an empty board; never errors on a structurally valid DWG.

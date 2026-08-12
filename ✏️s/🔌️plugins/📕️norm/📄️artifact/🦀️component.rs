@@ -672,6 +672,100 @@ where
     }
 }
 
+//#region 🔖️SnapshotDslPackCodec
+/// 🧬️ P6: `dsl::DslRecord`/`dsl::DslArtifact` emit the inherent `__dsl_spec`/`__dsl_to_record`/
+/// `__dsl_from_record` trio only — never `store::ArtifactDsl`/`store::ArtifactPack` themselves (a
+/// permanent framework decision, see `🗣️dsl/✨️derive/🦀️component.rs`'s "P6" header comment and every
+/// other P6-migrated document kind, e.g. `🪐️space`, `🔁️workflow`, `📖️playbook`). Every one of norm's
+/// fifteen family snapshots therefore needs the identical envelope-wrap/unwrap glue around that
+/// trio; W5a (ticket 26/08/11/SEMIO-ARTIFACT-…) found it hand-duplicated verbatim in fifteen
+/// `📸️snapshot/🦀️component.rs` files' `HandcraftedArtifactCodecs` regions and consolidated it here —
+/// this trait plus the four functions below are norm's single copy. Each snapshot type now needs
+/// only a five-line `NormArtifactRecord` impl (its two identifying strings, delegating straight to
+/// its own derive-generated `__dsl_*` trio) plus two one-line-bodied `ArtifactDsl`/`ArtifactPack`
+/// impls that call through here — Rust has no blanket `impl<T> Trait for T` escape for a foreign
+/// trait for a foreign-per-crate reason (orphan rule) here, so the per-type impl shells stay, but
+/// every byte of actual encode/decode logic now lives exactly once.
+pub trait NormArtifactRecord: Sized {
+    /// 🏷️ File extension this family's DSL text uses (`ArtifactDsl::EXTENSION`).
+    const EXTENSION: &'static str;
+    /// 🆔️ Semio envelope id (`"norm.<family>"`) both the text and pack wire wrap themselves in.
+    const ENVELOPE_ID: &'static str;
+    fn dsl_spec() -> dsl::RecordSpec;
+    fn dsl_to_record(&self) -> dsl::RecordValue;
+    fn dsl_from_record(record: &dsl::RecordValue) -> Result<Self, TextError>;
+}
+
+/// 📖️ Shared `ArtifactDsl::parse_dsl` body: strip the optional semio-format text preamble, parse the
+/// remaining body against `T`'s record spec, then lower the parsed record back into `T`.
+pub fn norm_parse_dsl<T: NormArtifactRecord>(text: &str) -> Result<T, TextError> {
+    let body = match store::semio_format::split_text_preamble(text) {
+        Ok((_, rest)) => rest,
+        Err(_) => text,
+    };
+    let record = dsl::parse(body, &T::dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+    T::dsl_from_record(&record)
+}
+
+/// 🖨️ Shared `ArtifactDsl::print_dsl` body: print `T`'s record, then wrap it in its semio envelope.
+pub fn norm_print_dsl<T: NormArtifactRecord>(value: &T) -> String {
+    let body = dsl::print(&value.dsl_to_record(), &T::dsl_spec(), dsl::JoinMode::Document);
+    let envelope = store::semio_format::SemioEnvelope::from_envelope_id(T::ENVELOPE_ID, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+    store::semio_format::wrap_text(&envelope, &body)
+}
+
+/// 📦️ Shared `ArtifactPack::encode_pack_with` body: pack-encode `T`'s record, then envelope-wrap it.
+pub fn norm_encode_pack<T: NormArtifactRecord>(value: &T, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    let inner = store::pack_rt::encode_document(&T::dsl_spec(), &value.dsl_to_record(), options)?;
+    let envelope = store::semio_format::SemioEnvelope::from_envelope_id(T::ENVELOPE_ID, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    Ok(store::semio_format::wrap_binary(&envelope, &inner))
+}
+
+/// 📦️ Shared `ArtifactPack::decode_pack_with` body: unwrap the envelope (checking it matches `T`'s
+/// own), pack-decode the inner record, then lower it back into `T`.
+pub fn norm_decode_pack<T: NormArtifactRecord>(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<T, store::PackError> {
+    let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    if envelope.envelope_id() != T::ENVELOPE_ID {
+        return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", T::ENVELOPE_ID, envelope.envelope_id())));
+    }
+    let (record, _report) = store::pack_rt::decode_document(&inner, &T::dsl_spec(), options)?;
+    T::dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+}
+
+/// 🧩️ Implements `store::ArtifactDsl` + `store::ArtifactPack` for a norm family's snapshot type,
+/// entirely by delegating to the four shared functions above. `$extension`/`$envelope_id` are the
+/// two literals every one of the fifteen hand-written impls previously hardcoded independently.
+#[macro_export]
+macro_rules! impl_norm_artifact_record {
+    ($Snapshot:ty, extension = $extension:literal, envelope_id = $envelope_id:literal) => {
+        impl $crate::document::NormArtifactRecord for $Snapshot {
+            const EXTENSION: &'static str = $extension;
+            const ENVELOPE_ID: &'static str = $envelope_id;
+            fn dsl_spec() -> dsl::RecordSpec { Self::__dsl_spec() }
+            fn dsl_to_record(&self) -> dsl::RecordValue { self.__dsl_to_record() }
+            fn dsl_from_record(record: &dsl::RecordValue) -> Result<Self, store::TextError> { Self::__dsl_from_record(record) }
+        }
+        impl store::ArtifactDsl for $Snapshot {
+            const EXTENSION: &'static str = $extension;
+            fn envelope_id() -> &'static str { $envelope_id }
+            fn parse_dsl(text: &str) -> Result<Self, store::TextError> { $crate::document::norm_parse_dsl(text) }
+            fn print_dsl(&self) -> String { $crate::document::norm_print_dsl(self) }
+        }
+        impl store::ArtifactPack for $Snapshot {
+            fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+                $crate::document::norm_encode_pack(self, options)
+            }
+            fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+                $crate::document::norm_decode_pack(bytes, options)
+            }
+            fn record_spec() -> Option<dsl::RecordSpec> {
+                Some(<Self as $crate::document::NormArtifactRecord>::dsl_spec())
+            }
+        }
+    };
+}
+//#endregion 🔖️SnapshotDslPackCodec
+
 // #region 🔖️SetSnapshotOps
 /// ⚡️ Op-line keyword for whole-snapshot replace mutations across all norm families.
 pub const SET_SNAPSHOT_OP_KEYWORD: &str = "set-snapshot";
@@ -795,65 +889,12 @@ mod tests {
     }
 
 //#region 🔖️ArtifactCodec
-/// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::ArtifactDsl for DemoDocument {
-    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
-    }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::ArtifactPack for DemoDocument {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
-}
-
+// 🧬️ Was a fifth hand-written copy of the same ArtifactDsl/ArtifactPack envelope glue the real
+// fifteen norm families duplicated in their own `HandcraftedArtifactCodecs` regions (W5a,
+// 26/08/11/SEMIO-ARTIFACT-…) — now exercises `impl_norm_artifact_record!` instead, so this test
+// fixture doubles as this module's own round-trip proof for the shared codec (see the
+// `demo_document_*`/`document_text_round_trips_for_a_norm_family_document` tests below).
+impl_norm_artifact_record!(DemoDocument, extension = "demo-norm", envelope_id = "norm.demo");
 //#endregion 🔖️ArtifactCodec
 
 

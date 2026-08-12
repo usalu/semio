@@ -1,6 +1,116 @@
-dialect grammar stdio.xlsx.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.xlsx' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.xlsx.diff
+extension xlsx
+start document
+comment none
+
+# FG-wave: real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `../../🦀️component.rs` (`print_xlsx_diff`/`parse_xlsx_diff`, `🔖️TopLevel` region), replacing
+# the F6-era `*OCTET` hex-dump placeholder. Every keyword/token below is copied verbatim from the
+# real `format!(...)`/`enc_*`/`dec_*` call sites (`../🦀️component.rs`), not invented -- `opc`'s
+# own shape is IDENTICAL to docx's own `opc-diff` (both artifacts share the SAME
+# `crate::artifacts::zip::opc::{OpcContentTypes,OpcPart,OpcRelationship,OpcTargetMode}` types and
+# the SAME `NamedTripleDiff<K,D,T>` collection-triple engine, restated here per this file's own
+# facet-self-containment convention), while `workbook`'s own shape is xlsx-specific (name-keyed
+# `sheets`, each sheet's `(row,col)`-keyed `cells`, index-keyed `shared_strings`).
+#
+# `hex` (bare `hex`, referenced but deliberately NOT defined as a production) is the framework's
+# built-in `hex` MACRO -- `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2.
+#
+# `[0]`/`[1,x]` is `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4).
+document = opc-tok? workbook-tok?
+opc-tok = "opc" "=" opc-diff
+workbook-tok = "workbook" "=" workbook-diff
+
+# ── `XlsxOpcDiff` -- `[opt(content_types),opt(parts),opt(relationships)]` (IDENTICAL shape to
+# docx's own `opc-diff`, restated -- both artifacts' `enc_opc_diff` produce byte-identical wire
+# forms for byte-identical `OpcPackage` diffs) ─────────────────────────────────────────────────
+opc-diff = "[" opt-content-types-diff "," opt-parts-diff "," opt-relationships-diff "]"
+
+opt-content-types-diff = "[" "0" "]" | "[" "1" "," content-types-diff "]"
+content-types-diff = "[" opt-ct-entries-diff "," opt-ct-entries-diff "]"
+opt-ct-entries-diff = "[" "0" "]" | "[" "1" "," ct-entries-diff-body "]"
+ct-entries-diff-body = "[" ct-removed-list? "]" ";" "[" ct-modified-list? "]" ";" "[" ct-added-list? "]"
+ct-removed-list = hex {"," hex}*
+ct-modified-list = ct-modified-item {"," ct-modified-item}*
+ct-modified-item = hex ":" hex
+ct-added-list = ct-entry {"," ct-entry}*
+ct-entry = "[" hex "," hex "]"
+
+opt-parts-diff = "[" "0" "]" | "[" "1" "," parts-diff-body "]"
+parts-diff-body = "[" parts-removed-list? "]" ";" "[" parts-modified-list? "]" ";" "[" parts-added-list? "]"
+parts-removed-list = hex {"," hex}*
+parts-modified-list = parts-modified-item {"," parts-modified-item}*
+parts-modified-item = hex ":" opc-part-diff
+opc-part-diff = "[" opt-hex "," opt-hex "]"
+parts-added-list = opc-part {"," opc-part}*
+opc-part = "[" hex "," hex "," hex "]"
+
+opt-relationships-diff = "[" "0" "]" | "[" "1" "," relationships-diff-body "]"
+relationships-diff-body = "[" rel-owner-removed-list? "]" ";" "[" rel-owner-modified-list? "]" ";" "[" rel-owner-added-list? "]"
+rel-owner-removed-list = hex {"," hex}*
+rel-owner-modified-list = rel-owner-modified-item {"," rel-owner-modified-item}*
+rel-owner-modified-item = hex ":" rel-list-diff-body
+rel-owner-added-list = rel-owner-entry {"," rel-owner-entry}*
+rel-owner-entry = "[" hex "," "[" rel-list? "]" "]"
+rel-list = rel {"," rel}*
+rel = "[" hex "," hex "," hex "," target-mode "]"
+target-mode = "0" | "1"
+
+rel-list-diff-body = "[" rel-removed-list? "]" ";" "[" rel-modified-list? "]" ";" "[" rel-added-list? "]"
+rel-removed-list = hex {"," hex}*
+rel-modified-list = rel-modified-item {"," rel-modified-item}*
+rel-modified-item = hex ":" rel-diff
+rel-diff = "[" opt-hex "," opt-hex "," opt-target-mode "]"
+opt-target-mode = "[" "0" "]" | "[" "1" "," target-mode "]"
+rel-added-list = rel {"," rel}*
+
+opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
+
+# ── `XlsxWorkbookDiff` -- `[opt(sheets),opt(shared_strings)]` ─────────────────────────────────
+workbook-diff = "[" opt-sheets-diff "," opt-shared-strings-diff "]"
+
+opt-sheets-diff = "[" "0" "]" | "[" "1" "," sheets-diff-body "]"
+sheets-diff-body = "[" sheets-removed-list? "]" ";" "[" sheets-modified-list? "]" ";" "[" sheets-added-list? "]"
+sheets-removed-list = hex {"," hex}*
+sheets-modified-list = sheets-modified-item {"," sheets-modified-item}*
+sheets-modified-item = hex ":" sheet-diff
+sheets-added-list = sheet {"," sheet}*
+
+# `XlsxSheetDiff` -- bare `opt(cells)`, no extra wrapping bracket around the tri-state itself
+# (`enc_sheet_diff` is `encode_option(&d.cells, ...)` directly).
+sheet-diff = opt-cells-diff
+opt-cells-diff = "[" "0" "]" | "[" "1" "," cells-diff-body "]"
+cells-diff-body = "[" cells-removed-list? "]" ";" "[" cells-modified-list? "]" ";" "[" cells-added-list? "]"
+cells-removed-list = cell-key {"," cell-key}*
+cell-key = "[" INT "," INT "]"
+cells-modified-list = cells-modified-item {"," cells-modified-item}*
+cells-modified-item = cell-key ":" cell-diff
+# `XlsxCellDiff` -- bare `opt(value)`, same no-extra-wrapping convention as `sheet-diff`.
+cell-diff = opt-cell-value
+opt-cell-value = "[" "0" "]" | "[" "1" "," cell-value "]"
+cells-added-list = cell {"," cell}*
+cell = "[" INT "," INT "," cell-value "]"
+
+# `XlsxCellValue` (data-carrying enum, ECMA-376 §18.3.1.4's `t` union) -- single-uppercase-letter
+# tag prefix immediately followed by the bracketed positional payload, same convention
+# `📖️grammar-recipe.md` §5/docx's own diff grammar use for data-carrying enums.
+cell-value = "N" "[" number "]" | "S" "[" INT "]" | "I" "[" hex "]" | "B" "[" bool-lit "]" | "F" "[" hex "," opt-cell-value "]" | "E" "[" "]"
+bool-lit = "0" | "1"
+# `number` covers both plain digit runs and real decimal literals (Rust's own shortest-round-trip
+# `f64::to_string` omits a trailing `.0` for whole values) -- restated from ply's own identical
+# `number = INT | FLOAT` production; a leading `-` immediately followed by a digit already lexes
+# as PART of the same INT/FLOAT token (confirmed live against the shared lexer's own number-start
+# check, `🔍️lexer/🦀️component.rs`), so no separate sign handling is needed here.
+number = INT | FLOAT
+
+sheet = "[" hex "," "[" cell-list? "]" "]"
+cell-list = cell {"," cell}*
+
+opt-shared-strings-diff = "[" "0" "]" | "[" "1" "," shared-strings-diff-body "]"
+shared-strings-diff-body = "[" ss-removed-list? "]" ";" "[" ss-modified-list? "]" ";" "[" ss-added-list? "]"
+ss-removed-list = INT {"," INT}*
+ss-modified-list = ss-modified-item {"," ss-modified-item}*
+ss-modified-item = INT ":" hex
+ss-added-list = ss-added-item {"," ss-added-item}*
+ss-added-item = "[" INT "," hex "]"

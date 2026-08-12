@@ -1,0 +1,21 @@
+TOTAL repo-wide breaches (5 PC rules): 89
+  7  stdio-artifacts/fixture-honesty
+  33  stdio-artifacts/grammar-parseability
+  8  stdio-artifacts/json-transfer-ban
+  8  stdio-artifacts/language-registration
+  33  stdio-artifacts/protocol-parseability
+
+--- breaches touching FG4's 5 standards (docx/xlsx/pptx/bcf/ifc-2x3 ONLY, ifc/4 excluded) ---
+
+TOTAL touching FG4 artifacts (ifc/4 excluded): 0
+
+--- (diagnostic only) ifc/4 breaches, NOT part of FG4, must stay untouched ---
+  [stdio-artifacts/grammar-parseability] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio" is allowlisted in POLICY_GRAMMAR_PARSEABILITY_ALLOWLIST but already looks like the real dialect
+  [stdio-artifacts/grammar-parseability] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/📖️component.grammar.semio" is allowlisted in POLICY_GRAMMAR_PARSEABILITY_ALLOWLIST but already looks like the real dialect
+  [stdio-artifacts/grammar-parseability] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio" is allowlisted in POLICY_GRAMMAR_PARSEABILITY_ALLOWLIST but already looks like the real dialect
+  [stdio-artifacts/protocol-parseability] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️component.protocol.semio" is allowlisted in POLICY_PROTOCOL_PARSEABILITY_ALLOWLIST but already looks like the real dialect
+  [stdio-artifacts/protocol-parseability] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/📡️component.protocol.semio" is allowlisted in POLICY_PROTOCOL_PARSEABILITY_ALLOWLIST but already looks like the real dialect
+  [stdio-artifacts/protocol-parseability] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/📡️component.protocol.semio" is allowlisted in POLICY_PROTOCOL_PARSEABILITY_ALLOWLIST but already looks like the real dialect
+  [stdio-artifacts/fixture-honesty] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc" is allowlisted in POLICY_FIXTURE_HONESTY_ALLOWLIST but its fixtures are already genuine
+  [stdio-artifacts/language-registration] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/⚙️engine/🦀️component.rs" is allowlisted in POLICY_LANGUAGE_REGISTRATION_ALLOWLIST but already registers 5 >= 5 languages
+TOTAL ifc/4 (untouched): 8

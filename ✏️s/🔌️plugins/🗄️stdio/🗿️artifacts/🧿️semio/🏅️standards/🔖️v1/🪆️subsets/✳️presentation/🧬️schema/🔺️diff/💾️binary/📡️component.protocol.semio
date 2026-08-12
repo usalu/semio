@@ -1,3 +1,22 @@
-protocol stdio.semio.presentation.diff.binary
-binary = line:utf8
-; line is exactly the diff facet's own 📝️text grammar output
+dialect protocol
+protocol stdio.semio.presentation.diff
+version 1
+schema stdio.semio.presentation
+start body
+framing record
+
+# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION presentation wave: REAL binary diff
+# frame, replacing the old `print_diff().into_bytes()` text-as-binary shortcut
+# (`🔺️diff/🦀️component.rs`'s old `DiffCodec::encode_diff`). `format u8` + `presence u8`
+# (bit0=`masters`, bit1=`layouts`, bit2=`slides`) are two REAL fixed fields; past that, 0-3
+# varint-length-prefixed opaque blobs follow (one per present collection) — modeled as one opaque
+# trailing `payload` chain rather than per-segment `Cond`-guarded fields because a SECOND
+# `if`-guard on a field that was itself only conditionally decoded hard-errors `eval_cond`
+# (`protocol-cond-cannot-chain`, per the grammar recipe's own gap table). The real Rust
+# `encode_diff`/`decode_diff` stays genuinely, fully structured (`write_str_lp`/`read_str_lp`,
+# `store::pack_rt`'s real varint codec) — round-trip tested independently.
+header fixed 2
+field format u8
+field presence u8
+
+chain payload bytes

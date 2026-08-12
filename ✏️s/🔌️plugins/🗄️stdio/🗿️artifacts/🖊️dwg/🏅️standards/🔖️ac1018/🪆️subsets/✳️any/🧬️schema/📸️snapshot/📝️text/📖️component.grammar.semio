@@ -25,7 +25,7 @@ comment none
 # deliverable 3) and stripped down to the bare `SemioEnvelope::envelope_id()` (`"stdio.dwg"`)
 # before this grammar ever sees it.
 document = artifact-mark hex-body
-artifact-mark = "stdio.dwg"
+artifact-mark = "stdio.dwg.ac1018"
 
 # P2-P1-fix note (mandatory reading, `p2-p1-fix-report.md`): an open-ended hex run MUST be the
 # framework's built-in `hex` MACRO (bare `hex`, no matching production here — `Symbol::Ref` falls

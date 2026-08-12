@@ -488,6 +488,26 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 //#endregion 🔖️Primitives
 
+//#region 🔖️BinaryPrimitives
+/// 🧪️ P2 pilot: real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::
+/// write_varint_u64` / `store::ByteReader` — same helpers `stdio.json`'s upgraded `DiffCodec`
+/// reuses) backing the real `DiffCodec::encode_diff`/`decode_diff` below.
+pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+//#endregion 🔖️BinaryPrimitives
+
 //#region 🔖️ValueCodecs
 pub(crate) fn enc_point2(p: &SemioPoint2) -> String {
     format!("[{},{}]", enc_f64(p.x), enc_f64(p.y))
@@ -613,18 +633,97 @@ impl protocol::DiffCodec for SemioWorkflowDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_workflow_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim — same simplification `GifDiff`/`SvgDiff`/`DocxDiff`'s
-    /// hand-rolled codecs use, satisfying every `DiffCodec` law without inventing a second wire
-    /// format.
+    /// ⚡️ P2 pilot: real binary diff frame, replacing the old `print_diff().into_bytes()`
+    /// text-as-binary shortcut. `format u8` + `presence u8` (bit0 = `nodes` present, bit1 =
+    /// `edges` present) are two REAL fixed fields; each present collection then follows as its own
+    /// varint-length-prefixed opaque blob (the same `enc_nodes_diff`/`enc_edges_diff` bracket/hex
+    /// text this type's `print_diff` already produces) — two independently-delimited segments
+    /// rather than one bare trailing `bytes` because there can be 0, 1, or 2 of them (chaining a
+    /// `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a second `if`-guard on a field
+    /// that was itself only conditionally decoded hard-errors `eval_cond` — see this wave's report).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        let mut presence = 0u8;
+        if self.nodes.is_some() {
+            presence |= 0b01;
+        }
+        if self.edges.is_some() {
+            presence |= 0b10;
+        }
+        let mut out = vec![DIFF_BINARY_FORMAT, presence];
+        if let Some(v) = &self.nodes {
+            write_str_lp(&mut out, &enc_nodes_diff(v));
+        }
+        if let Some(v) = &self.edges {
+            write_str_lp(&mut out, &enc_edges_diff(v));
+        }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
+        }
+        if bytes[0] != DIFF_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
+        }
+        let presence = bytes[1];
+        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let nodes = if presence & 0b01 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff nodes blob", offset: 2, detail: e })?;
+            Some(dec_nodes_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff nodes text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        let edges = if presence & 0b10 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff edges blob", offset: 2, detail: e })?;
+            Some(dec_edges_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff edges text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        Ok(SemioWorkflowDiff { nodes, edges })
     }
 }
 //#endregion 🔖️TopLevel
+
+//#region 🔖️Demo
+/// 🌱 Representative `SemioWorkflowDiff` cases (empty/no-op, a full node+edge sweep both
+/// directions, a bare node insert, a bare edge insert) — single source of truth for
+/// `grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<SemioWorkflowDiff> {
+    fn node(id: &str, kind: &str, label: &str, params: Vec<(&str, &str)>, x: f64, y: f64) -> WorkflowNode {
+        WorkflowNode {
+            id: id.into(),
+            kind: kind.into(),
+            label: label.into(),
+            params: params.into_iter().map(|(k, v)| WorkflowParam { key: k.into(), value: v.into() }).collect(),
+            position: SemioPoint2 { x, y },
+        }
+    }
+    fn edge(id: &str, from_node: &str, from_port: &str, to_node: &str, to_port: &str, kind: &str) -> WorkflowEdge {
+        WorkflowEdge { id: id.into(), from: PortRef { node: from_node.into(), port: from_port.into() }, to: PortRef { node: to_node.into(), port: to_port.into() }, kind: kind.into() }
+    }
+    let schema = crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::STDIO_SEMIOWORKFLOW_DOCUMENT_SCHEMA;
+    let a = SemioWorkflowSnapshot {
+        schema: schema.into(),
+        nodes: vec![node("keep", "old", "Old", vec![("p", "1")], 0.0, 0.0), node("gone", "x", "Gone", vec![], 1.0, 1.0)],
+        edges: vec![edge("e1", "keep", "out", "gone", "in", "old")],
+    };
+    let b = SemioWorkflowSnapshot {
+        schema: schema.into(),
+        nodes: vec![node("keep", "new", "New", vec![("p", "2")], 5.0, 5.0), node("added", "y", "Added", vec![], 2.0, 2.0)],
+        edges: vec![edge("e1", "keep", "out2", "added", "in", "new")],
+    };
+    vec![
+        SemioWorkflowDiff::default(),
+        <SemioWorkflowDiff as DiffAlgebra<SemioWorkflowSnapshot>>::between(&a, &b),
+        <SemioWorkflowDiff as DiffAlgebra<SemioWorkflowSnapshot>>::between(&b, &a),
+        diff_insert_node(node("z", "k", "L", vec![("a", "b")], 1.5, 2.5)),
+        diff_insert_edge(edge("z", "a", "p", "b", "q", "k")),
+    ]
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]

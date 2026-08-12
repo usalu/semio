@@ -303,18 +303,6 @@ pub mod artifacts {
                                     #[path = "."]
                                     pub mod artifacts {
                                         #[path = "."]
-                                        pub mod zip {
-                                            #[path = "."]
-                                            pub mod v2_0 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
                                         pub mod txt {
                                             #[path = "."]
                                             pub mod v_utf_8 {
@@ -351,48 +339,12 @@ pub mod artifacts {
                                             }
                                         }
                                         #[path = "."]
-                                        pub mod png {
-                                            #[path = "."]
-                                            pub mod v1_2 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
                                         pub mod json {
                                             #[path = "."]
                                             pub mod v_rfc8259 {
                                                 #[path = "."]
                                                 pub mod any {
                                                     #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
-                                        pub mod stl {
-                                            #[path = "."]
-                                            pub mod v_ascii {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🟪️stl/🔖️ascii/✳️any/🦀️component.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
-                                        pub mod obj {
-                                            #[path = "."]
-                                            pub mod v3_0 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️component.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -407,18 +359,6 @@ pub mod artifacts {
                                 pub mod serializers {
                                     #[path = "."]
                                     pub mod artifacts {
-                                        #[path = "."]
-                                        pub mod zip {
-                                            #[path = "."]
-                                            pub mod v2_0 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
                                         #[path = "."]
                                         pub mod txt {
                                             #[path = "."]
@@ -450,18 +390,6 @@ pub mod artifacts {
                                                 #[path = "."]
                                                 pub mod any {
                                                     #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️component.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
-                                        pub mod png {
-                                            #[path = "."]
-                                            pub mod v1_2 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -798,18 +726,6 @@ pub mod artifacts {
                                     #[path = "."]
                                     pub mod artifacts {
                                         #[path = "."]
-                                        pub mod zip {
-                                            #[path = "."]
-                                            pub mod v2_0 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
                                         pub mod txt {
                                             #[path = "."]
                                             pub mod v_utf_8 {
@@ -846,48 +762,12 @@ pub mod artifacts {
                                             }
                                         }
                                         #[path = "."]
-                                        pub mod png {
-                                            #[path = "."]
-                                            pub mod v1_2 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
                                         pub mod json {
                                             #[path = "."]
                                             pub mod v_rfc8259 {
                                                 #[path = "."]
                                                 pub mod any {
                                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
-                                        pub mod stl {
-                                            #[path = "."]
-                                            pub mod v_ascii {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🟪️stl/🔖️ascii/✳️any/🦀️component.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
-                                        pub mod obj {
-                                            #[path = "."]
-                                            pub mod v3_0 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️component.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -902,18 +782,6 @@ pub mod artifacts {
                                 pub mod serializers {
                                     #[path = "."]
                                     pub mod artifacts {
-                                        #[path = "."]
-                                        pub mod zip {
-                                            #[path = "."]
-                                            pub mod v2_0 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️component.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
                                         #[path = "."]
                                         pub mod txt {
                                             #[path = "."]
@@ -945,18 +813,6 @@ pub mod artifacts {
                                                 #[path = "."]
                                                 pub mod any {
                                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️component.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
-                                        pub mod png {
-                                            #[path = "."]
-                                            pub mod v1_2 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }

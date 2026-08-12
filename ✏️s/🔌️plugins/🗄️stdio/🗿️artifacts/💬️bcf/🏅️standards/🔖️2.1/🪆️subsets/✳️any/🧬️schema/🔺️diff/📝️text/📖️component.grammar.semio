@@ -1,6 +1,113 @@
-dialect grammar stdio.bcf.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.bcf' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.bcf.diff
+extension bcf
+start document
+comment none
+
+# FG-wave: real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `../../🦀️component.rs` (`print_bcf_diff`/`parse_bcf_diff`), replacing the F6-era `*OCTET`
+# hex-dump placeholder. Every keyword/token below is copied verbatim from the real
+# `format!(...)`/`enc_*`/`dec_*` call sites, not invented -- `topics`/`comments`/`viewpoints`/
+# `parts` are ALL guid/name-keyed (`NamedTripleDiff<K,D,T>`, this artifact's own generic
+# name-keyed collection engine, `📖️grammar-recipe.md` §1.4's "name-keyed" shape), and
+# `comments`/`viewpoints` recurse one level inside a modified `topics` entry.
+#
+# `hex` (bare `hex`, referenced but deliberately NOT defined as a production) is the framework's
+# built-in `hex` MACRO -- `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2.
+#
+# `[0]`/`[1,x]` is `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4);
+# `BcfViewpointDiff`'s `camera`/`components`/`snapshot` fields are `Option<Option<T>>` (nests the
+# shape twice -- `opt-opt-camera`/`opt-opt-components`/`opt-opt-hex`); `BcfCommentDiff`'s
+# `viewpoint_ref` is the same `Option<Option<String>>` tri-state (`opt-opt-hex`, shared).
+document = version-tok? topics-tok? parts-tok?
+version-tok = "version" "=" hex
+topics-tok = "topics" "=" topics-diff-body
+parts-tok = "parts" "=" parts-diff-body
+
+# ── `topics` -- name/guid-keyed collection triple (`📖️grammar-recipe.md` §1.4) ───────────────────
+topics-diff-body = "[" topics-removed-list? "]" ";" "[" topics-modified-list? "]" ";" "[" topics-added-list? "]"
+topics-removed-list = hex {"," hex}*
+topics-modified-list = topics-modified-item {"," topics-modified-item}*
+topics-modified-item = hex ":" topic-diff
+topics-added-list = topic {"," topic}*
+
+# `BcfTopicDiff` -- `[title,description,status,priority,labels,creation-date,creation-author,comments,viewpoints]`.
+topic-diff = "[" opt-hex "," opt-hex "," opt-hex "," opt-hex "," opt-label-list "," opt-hex "," opt-hex "," opt-comments-diff "," opt-viewpoints-diff "]"
+opt-comments-diff = "[" "0" "]" | "[" "1" "," comments-diff-body "]"
+opt-viewpoints-diff = "[" "0" "]" | "[" "1" "," viewpoints-diff-body "]"
+
+comments-diff-body = "[" comments-removed-list? "]" ";" "[" comments-modified-list? "]" ";" "[" comments-added-list? "]"
+comments-removed-list = hex {"," hex}*
+comments-modified-list = comments-modified-item {"," comments-modified-item}*
+comments-modified-item = hex ":" comment-diff
+comments-added-list = bcf-comment {"," bcf-comment}*
+
+# `BcfCommentDiff` -- `[date,author,text,viewpoint-ref]`.
+comment-diff = "[" opt-hex "," opt-hex "," opt-hex "," opt-opt-hex "]"
+
+viewpoints-diff-body = "[" viewpoints-removed-list? "]" ";" "[" viewpoints-modified-list? "]" ";" "[" viewpoints-added-list? "]"
+viewpoints-removed-list = hex {"," hex}*
+viewpoints-modified-list = viewpoints-modified-item {"," viewpoints-modified-item}*
+viewpoints-modified-item = hex ":" viewpoint-diff
+viewpoints-added-list = viewpoint {"," viewpoint}*
+
+# `BcfViewpointDiff` -- `[camera,components,snapshot]`, all THREE genuinely tri-state
+# (`Option<Option<T>>` -- weak/whole-value-replaced fields, never sub-diffed, per this artifact's
+# own `BcfViewpointDiff` doc comment).
+viewpoint-diff = "[" opt-opt-camera "," opt-opt-components "," opt-opt-hex "]"
+opt-opt-camera = "[" "0" "]" | "[" "1" "," opt-camera "]"
+opt-opt-components = "[" "0" "]" | "[" "1" "," opt-components "]"
+
+# ── `parts` -- name-keyed collection triple, `BcfPartDiff` -- `[data]` (name IS the key, only
+# `data` can change) ────────────────────────────────────────────────────────────────────────────
+parts-diff-body = "[" parts-removed-list? "]" ";" "[" parts-modified-list? "]" ";" "[" parts-added-list? "]"
+parts-removed-list = hex {"," hex}*
+parts-modified-list = parts-modified-item {"," parts-modified-item}*
+parts-modified-item = hex ":" part-diff
+parts-added-list = part {"," part}*
+part-diff = "[" opt-hex "]"
+
+# ── Tri-state wrappers (`encode_option`, `📖️grammar-recipe.md` §1.4) ─────────────────────────────
+opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
+opt-opt-hex = "[" "0" "]" | "[" "1" "," opt-hex "]"
+opt-label-list = "[" "0" "]" | "[" "1" "," label-list "]"
+opt-camera = "[" "0" "]" | "[" "1" "," camera "]"
+opt-components = "[" "0" "]" | "[" "1" "," components "]"
+bool-lit = "0" | "1"
+# 🧭️ Raw (non-hex-encoded) numeric literal -- see this file's own `../🧬️mutations/📝️text/
+# 📖️component.grammar.semio` sibling's identical `bcf-float` doc comment for the whole-number
+# Display-formatting rationale.
+bcf-float = INT | FLOAT
+
+# ── Restated (not `use`d) whole-item value shapes -- the exact payload every `added`/modified-item
+# above carries, mirrored from this file's own `../🦀️component.rs` `enc_bcf_snapshot`/`enc_topic`/
+# `enc_comment`/`enc_viewpoint`/`enc_camera`/`enc_point3`/`enc_components`/`enc_visibility`/
+# `enc_coloring`/`enc_part` -- same per-facet self-containment convention docx's own diff grammar
+# documents (its own value shapes restated off its sibling mutations facet, mirrored here the
+# other direction since bcf's mutations facet is the one that documents "reused from diff"). ─────
+label-list = "[" label-item* "]"
+label-item = hex ","?
+
+topic = "[" hex "," hex "," hex "," hex "," hex "," label-list "," hex "," hex "," comments-list "," viewpoints-list "]"
+comments-list = "[" comment-item* "]"
+comment-item = bcf-comment ","?
+viewpoints-list = "[" viewpoint-item* "]"
+viewpoint-item = viewpoint ","?
+
+# Named `bcf-comment`, NOT the bare `comment` this value's own real name would suggest --
+# `comment` collides with the five RESERVED header-directive keywords
+# (`extension`/`use`/`start`/`comment`/`string`, `📖️grammar-recipe.md` §3 pitfall 3), same
+# collision xml's own grammar file's `xml-comment` rename documents.
+bcf-comment = "[" hex "," hex "," hex "," hex "," opt-hex "]"
+viewpoint = "[" hex "," opt-camera "," opt-components "," opt-hex "]"
+
+camera = "P" "[" point3 "," point3 "," point3 "," bcf-float "]" | "O" "[" point3 "," point3 "," point3 "," bcf-float "]"
+point3 = "[" bcf-float "," bcf-float "," bcf-float "]"
+
+components = "[" label-list "," visibility "," coloring-list "]"
+visibility = "[" bool-lit "," label-list "]"
+coloring-list = "[" coloring-item* "]"
+coloring-item = coloring ","?
+coloring = "[" hex "," label-list "]"
+
+part = "[" hex "," hex "]"

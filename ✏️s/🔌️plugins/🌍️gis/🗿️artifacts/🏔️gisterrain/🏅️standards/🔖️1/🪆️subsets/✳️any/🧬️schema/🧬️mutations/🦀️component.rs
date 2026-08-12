@@ -5,48 +5,22 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::gisterrain::diff::{diff_exaggeration, diff_imported_features_json, diff_set_snapshot, GisTerrainDiff};
+use crate::artifacts::gisterrain::diff::GisTerrainDiff;
+use crate::artifacts::gisterrain::schema::mutations::{change_exaggeration, change_imported_features};
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔹Operation
-/// 🗺️ Typed, invertible terrain operation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+/// 🗺️ Typed, invertible, semantic terrain mutation vocabulary — every variant wraps exactly one
+/// `protocol::MutationKind` payload struct declared in its own `🧬️mutations/<kind>/🦠️mutation`
+/// triad leaf; `#[derive(dsl::Mutations)]` wires `Mutation`/`SemanticMutation` from those leaves.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+#[mutations(snapshot = GisTerrainSnapshot, diff = GisTerrainDiff, schema = "gis.gisterrain")]
 pub enum GisTerrainMutation {
-    SetExaggeration {
-        exaggeration: f64,
-    },
-    SetImportedFeatures {
-        #[dsl(key = "features-json")]
-        features_json: String,
-    },
-    SetSnapshot {
-        #[dsl(block)]
-        snapshot: GisTerrainSnapshot,
-    },
-}
-
-impl Mutation<GisTerrainSnapshot> for GisTerrainMutation {
-    type Diff = GisTerrainDiff;
-
-    fn diff(&self, _snapshot: &GisTerrainSnapshot) -> GisTerrainDiff {
-        match self {
-            GisTerrainMutation::SetExaggeration { exaggeration } => diff_exaggeration(*exaggeration),
-            GisTerrainMutation::SetImportedFeatures { features_json } => diff_imported_features_json(features_json.clone()),
-            GisTerrainMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
-        }
-    }
-
-    fn inverse(&self, snapshot: &GisTerrainSnapshot) -> Vec<Self> {
-        match self {
-            GisTerrainMutation::SetExaggeration { .. } => vec![GisTerrainMutation::SetExaggeration { exaggeration: snapshot.exaggeration }],
-            GisTerrainMutation::SetImportedFeatures { .. } => vec![GisTerrainMutation::SetImportedFeatures { features_json: snapshot.imported_features_json.clone() }],
-            GisTerrainMutation::SetSnapshot { .. } => vec![GisTerrainMutation::SetSnapshot { snapshot: snapshot.clone() }],
-        }
-    }
+    ChangeExaggeration(change_exaggeration::mutation::ChangeExaggeration),
+    ChangeImportedFeatures(change_imported_features::mutation::ChangeImportedFeatures),
 }
 
 pub type GisTerrainEnvelope = ArtifactEnvelope<GisTerrainSnapshot, GisTerrainMutation>;
@@ -57,27 +31,38 @@ pub type GisTerrainStore = ArtifactStore<GisTerrainSnapshot, GisTerrainMutation>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use change_exaggeration::mutation::ChangeExaggeration;
+    use change_imported_features::mutation::ChangeImportedFeatures;
     use protocol::MutationDiff;
 
     #[test]
-    fn gis_terrain_set_snapshot_backwards_restores_the_exact_prior_snapshot() {
+    fn change_exaggeration_and_change_imported_features_invert_to_the_prior_field_value() {
         let snapshot = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: "null".into() };
-        let operation = GisTerrainMutation::SetSnapshot { snapshot: GisTerrainSnapshot { exaggeration: 4.0, imported_features_json: r#"{"positions":[]}"#.into() } };
-        let next = operation.diff(&snapshot).apply(&snapshot);
-        assert_eq!(next.exaggeration, 4.0);
-        let backwards = operation.inverse(&snapshot);
-        let restored = backwards[0].diff(&next).apply(&next);
-        assert_eq!(restored, snapshot);
+        assert_eq!(
+            GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 9.0 }).inverse(&snapshot),
+            vec![GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 1.5 })]
+        );
+        assert_eq!(
+            GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: "{}".into() }).inverse(&snapshot),
+            vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: "null".into() })]
+        );
     }
 
     #[test]
-    fn set_exaggeration_and_set_imported_features_invert_to_the_prior_field_value() {
-        let snapshot = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: "null".into() };
-        assert_eq!(GisTerrainMutation::SetExaggeration { exaggeration: 9.0 }.inverse(&snapshot), vec![GisTerrainMutation::SetExaggeration { exaggeration: 1.5 }]);
-        assert_eq!(
-            GisTerrainMutation::SetImportedFeatures { features_json: "{}".into() }.inverse(&snapshot),
-            vec![GisTerrainMutation::SetImportedFeatures { features_json: "null".into() }]
-        );
+    fn change_exaggeration_obeys_the_inverse_and_diff_absorb_laws() {
+        let base = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: "null".into() };
+        let mutation = GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 4.0 });
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        let d1 = mutation.diff(&base);
+        let d2 = GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 8.0 }).diff(&base);
+        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+
+    #[test]
+    fn change_imported_features_obeys_the_inverse_law() {
+        let base = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: "null".into() };
+        let mutation = GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: "{}".into() });
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
 }
 //#endregion 🔹Tests
@@ -89,4 +74,3 @@ pub fn apply_gis_terrain_mutation(snapshot: &mut GisTerrainSnapshot, mutation: &
 pub fn inverse_gis_terrain_mutation(snapshot: &GisTerrainSnapshot, mutation: &GisTerrainMutation) -> Vec<GisTerrainMutation> {
     mutation.inverse(snapshot)
 }
-

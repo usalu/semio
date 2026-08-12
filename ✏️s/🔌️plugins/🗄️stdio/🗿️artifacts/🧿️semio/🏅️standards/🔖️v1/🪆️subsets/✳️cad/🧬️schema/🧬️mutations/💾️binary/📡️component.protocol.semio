@@ -1,47 +1,24 @@
-dialect protocol stdio.semio.cad.mutations
-; protocol::OpText::print_op/parse_op wire grammar -- NO semio envelope: OpBinary is
-; print_op().into_bytes(), so this binary grammar is byte-identical to
-; ../📝️text/📖️component.grammar.semio, reproduced here verbatim.
-document = "no-mutation" / ( keyword SP args )
-args = arg *( SP arg )
-arg = key "=" value
+dialect protocol
+protocol stdio.semio.cad.mutations
+version 1
+schema stdio.semio.cad
+start body
+framing record
 
-keyword = "set-snapshot" / "add-layer" / "remove-layer" / "set-layer" / "add-block" / "remove-block"
-        / "set-block-base-point" / "add-entity" / "remove-entity" / "set-entity-layer"
-        / "set-entity-geometry" / "add-block-entity" / "remove-block-entity"
-        / "set-block-entity-layer" / "set-block-entity-geometry"
-key = "snapshot" / "layer" / "name" / "color-index" / "line-type" / "visible" / "block"
-    / "base-point" / "entity" / "handle" / "block-name"
-value = cad-snapshot / layer / block / entity-record / entity / point2 / hexstr
-      / option-i32 / option-str / option-bool
+# cad wave: REAL binary op frame, replacing the old `print_op().into_bytes()` text-as-binary
+# shortcut (`🧬️mutations/🦀️component.rs`'s old `OpBinary::encode_op`). `SemioCadMutation` is a
+# genuine data-carrying enum whose variants embed nested `CadLayer`/`CadBlock`/`CadEntityRecord`/
+# `CadEntity`/`SemioCadSnapshot` payloads — no `dsl::DslField` impl exists for the tagged
+# `CadEntity` enum (hand-rolled per this subset's own `🔺️diff`/`🧬️mutations` convention), so the
+# generic derive-based `format u8 | ordinal varint | record body` layout doesn't apply. Handcrafted
+# instead: `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the `SemioCadMutation` variant
+# ordinal, `🧬️mutations/🦀️component.rs`'s `OP_KEYWORDS`/`variant_ordinal`, same 0-15 ordering as
+# `parse_cad_mutation`'s keyword match) as two REAL fixed fields, then the variant's own
+# `key=value ...` argument payload as one opaque trailing `bytes` chain — the same honest boundary
+# the sibling `../../🔺️diff/💾️binary/📡️component.protocol.semio` uses
+# (`protocol-array-of-records`/`protocol-prim-ref-recursion`, per the recipe's gap table).
+header fixed 2
+field format u8
+field tag u8
 
-cad-snapshot = "[" hexstr "," layer-list "," block-list "," entity-record-list "]"
-layer-list = "[" [ layer *( "," layer ) ] "]"
-block-list = "[" [ block *( "," block ) ] "]"
-entity-record-list = "[" [ entity-record *( "," entity-record ) ] "]"
-
-option-i32 = "[0]" / ( "[1," i32 "]" )
-option-str = "[0]" / ( "[1," hexstr "]" )
-option-bool = "[0]" / ( "[1," bool01 "]" )
-
-layer = "[" hexstr "," i32 "," hexstr "," bool01 "]"
-entity-record = "[" hexstr "," hexstr "," entity "]"
-block = "[" hexstr "," point2 "," entity-record-list "]"
-
-entity = line / arc / circle / ellipse / polyline / text-entity / insert / solid / dimension
-line = "L[" point2 "," point2 "]"
-arc = "A[" point2 "," f64 "," f64 "," f64 "]"
-circle = "C[" point2 "," f64 "]"
-ellipse = "E[" point2 "," point2 "," f64 "," f64 "," f64 "]"
-polyline = "P[" point2-list "," bool01 "]"
-point2-list = "[" [ point2 *( "," point2 ) ] "]"
-text-entity = "T[" point2 "," f64 "," f64 "," hexstr "]"
-insert = "I[" hexstr "," point2 "," point2 "," f64 "]"
-solid = "S[" point2 "," point2 "," point2 "," point2 "]"
-dimension = "D[" point2 "," point2 "," f64 "," hexstr "]"
-
-point2 = "[" f64 "," f64 "]"
-hexstr = *HEXDIG
-i32 = ["-"] 1*DIGIT
-f64 = ["-"] 1*DIGIT ["." 1*DIGIT] [("e"/"E") ["+"/"-"] 1*DIGIT]
-bool01 = "0" / "1"
+chain payload bytes

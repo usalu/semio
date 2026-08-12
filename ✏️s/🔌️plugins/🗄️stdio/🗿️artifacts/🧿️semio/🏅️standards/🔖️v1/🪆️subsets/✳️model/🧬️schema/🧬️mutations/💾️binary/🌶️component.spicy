@@ -1,7 +1,9 @@
-module Stdio_semio_model_mutation;
+module Stdio_semio_model_mutations;
 
-# No envelope: the binary form is exactly serde_json::to_vec of the tagged SemioModelMutation
-# enum (same grammar as the sibling text facet).
+# `format` (1 byte) + `tag` (1 byte, variant ordinal), then an opaque `payload` tail (the variant's
+# own `key=value ...` argument text) — see the sibling `📡️component.protocol.semio`'s comment.
 type Document = unit {
-    json: bytes &eod &convert=$$.decode("utf-8");
+    format: uint8;
+    tag: uint8;
+    payload: bytes &eod;
 };

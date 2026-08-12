@@ -1,5 +1,7 @@
-; abnf stdio.semio.drawing diff binary -- no separate envelope, bytes ARE the UTF-8 text-facet
-; grammar verbatim (../📝️text/📖️component.grammar.semio's document production)
-document = *OCTET-UTF8
-OCTET-UTF8 = OCTET  ; UTF-8 byte of the text-facet document, see ../📝️text/📖️component.grammar.semio
-
+; ABNF-style descriptive mirror of `stdio.semio.drawing`'s real binary diff frame -- see the
+; authoritative `📡️component.protocol.semio` for the conformance-tested version.
+document       = format presence payload
+format         = %x01                  ; DIFF_BINARY_FORMAT
+presence       = OCTET                 ; bit0=canvas bit1=styles bit2=layers
+payload        = *OCTET                ; opaque tail: 0-3 varint-length-prefixed blobs, one per
+                                        ; present field, see component.rs's DiffCodec::encode_diff

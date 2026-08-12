@@ -28,7 +28,13 @@
 
 use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocListItem, DocRun, DocTableCell, DocTableRow, RunStyle};
+use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
+/// 🧱️ REUSE, don't reinvent — `document::DocBlock`'s own real, already-tested text codec
+/// (`ws-codec-document-report.md`), re-exported here so both this file's own leaf encoders AND
+/// the sibling `🧬️mutations`/`📸️snapshot` facets can import `{enc_block, dec_block}` from THIS
+/// module (matching the pre-existing convention where this file is the one place that owns every
+/// value codec presentation's other facets import from).
+pub(crate) use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::{dec_block, enc_block};
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{
     PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow,
 };
@@ -1041,94 +1047,22 @@ pub(crate) fn dec_placeholder_kind(s: &str) -> Result<PlaceholderKind, String> {
         other => Err(format!("placeholder kind: unknown tag {other:?}")),
     }
 }
-pub(crate) fn enc_run_style(s: &RunStyle) -> String {
-    format!(
-        "[{},{},{},{},{},{},{}]",
-        enc_bool(s.bold), enc_bool(s.italic), enc_bool(s.underline),
-        encode_option(&s.size, |v| enc_f64(*v)), encode_option(&s.font, |v| enc_str(v)), encode_option(&s.color, |v| enc_str(v)), encode_option(&s.link, |v| enc_str(v))
-    )
-}
-pub(crate) fn dec_run_style(s: &str) -> Result<RunStyle, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [bold, italic, underline, size, font, color, link] = parts.as_slice() else { return Err(format!("run style: expected 7 fields, got {}", parts.len())) };
-    Ok(RunStyle { bold: dec_bool(bold)?, italic: dec_bool(italic)?, underline: dec_bool(underline)?, size: decode_option(size, dec_f64)?, font: decode_option(font, dec_str)?, color: decode_option(color, dec_str)?, link: decode_option(link, dec_str)? })
-}
-pub(crate) fn enc_doc_run(r: &DocRun) -> String { format!("[{},{}]", enc_str(&r.text), enc_run_style(&r.style)) }
-pub(crate) fn dec_doc_run(s: &str) -> Result<DocRun, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [text, style] = parts.as_slice() else { return Err(format!("doc run: expected 2 fields, got {}", parts.len())) };
-    Ok(DocRun { text: dec_str(text)?, style: dec_run_style(style)? })
-}
-pub(crate) fn enc_doc_list_item(i: &DocListItem) -> String { enc_list(&i.blocks, enc_doc_block) }
-pub(crate) fn dec_doc_list_item(s: &str) -> Result<DocListItem, String> { Ok(DocListItem { blocks: dec_list(s, dec_doc_block)? }) }
-pub(crate) fn enc_doc_table_cell(c: &DocTableCell) -> String { enc_list(&c.blocks, enc_doc_block) }
-pub(crate) fn dec_doc_table_cell(s: &str) -> Result<DocTableCell, String> { Ok(DocTableCell { blocks: dec_list(s, dec_doc_block)? }) }
-pub(crate) fn enc_doc_table_row(r: &DocTableRow) -> String { enc_list(&r.cells, enc_doc_table_cell) }
-pub(crate) fn dec_doc_table_row(s: &str) -> Result<DocTableRow, String> { Ok(DocTableRow { cells: dec_list(s, dec_doc_table_cell)? }) }
-/// 🧱️ Codec for `document::DocBlock` (owned by another subset — see module doc comment for why
-/// this file writes its own encoder for a type it does not own the fields of, precedent: docx's
-/// own `enc_xml_node` for `xml::XmlNode`). Handles all 8 real block kinds honestly (no dropped
-/// variants) as of this write — Paragraph/Heading/List/Table/Code/Quote/Image/PageBreak.
-pub(crate) fn enc_doc_block(b: &DocBlock) -> String {
-    match b {
-        DocBlock::Paragraph { style_id, runs } => format!("P[{},{}]", encode_option(style_id, |v| enc_str(v)), enc_list(runs, enc_doc_run)),
-        DocBlock::Heading { level, style_id, runs } => format!("H[{},{},{}]", level, encode_option(style_id, |v| enc_str(v)), enc_list(runs, enc_doc_run)),
-        DocBlock::List { ordered, items } => format!("L[{},{}]", enc_bool(*ordered), enc_list(items, enc_doc_list_item)),
-        DocBlock::Table { rows } => format!("T[{}]", enc_list(rows, enc_doc_table_row)),
-        DocBlock::Code { language, text } => format!("C[{},{}]", encode_option(language, |v| enc_str(v)), enc_str(text)),
-        DocBlock::Quote { blocks } => format!("Q[{}]", enc_list(blocks, enc_doc_block)),
-        DocBlock::Image { image_id, alt, width, height } => format!("I[{},{},{},{}]", enc_str(image_id), enc_str(alt), encode_option(width, |v| enc_f64(*v)), encode_option(height, |v| enc_f64(*v))),
-        DocBlock::PageBreak => "B".to_string(),
-    }
-}
-pub(crate) fn dec_doc_block(s: &str) -> Result<DocBlock, String> {
-    if s == "B" {
-        return Ok(DocBlock::PageBreak);
-    }
-    let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
-    match tag {
-        "P" => {
-            let parts = split_top_level(inner, ',');
-            let [style_id, runs] = parts.as_slice() else { return Err(format!("paragraph: expected 2 fields, got {}", parts.len())) };
-            Ok(DocBlock::Paragraph { style_id: decode_option(style_id, dec_str)?, runs: dec_list(runs, dec_doc_run)? })
-        }
-        "H" => {
-            let parts = split_top_level(inner, ',');
-            let [level, style_id, runs] = parts.as_slice() else { return Err(format!("heading: expected 3 fields, got {}", parts.len())) };
-            Ok(DocBlock::Heading { level: level.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, style_id: decode_option(style_id, dec_str)?, runs: dec_list(runs, dec_doc_run)? })
-        }
-        "L" => {
-            let parts = split_top_level(inner, ',');
-            let [ordered, items] = parts.as_slice() else { return Err(format!("list: expected 2 fields, got {}", parts.len())) };
-            Ok(DocBlock::List { ordered: dec_bool(ordered)?, items: dec_list(items, dec_doc_list_item)? })
-        }
-        "T" => Ok(DocBlock::Table { rows: dec_list(inner, dec_doc_table_row)? }),
-        "C" => {
-            let parts = split_top_level(inner, ',');
-            let [language, text] = parts.as_slice() else { return Err(format!("code: expected 2 fields, got {}", parts.len())) };
-            Ok(DocBlock::Code { language: decode_option(language, dec_str)?, text: dec_str(text)? })
-        }
-        "Q" => Ok(DocBlock::Quote { blocks: dec_list(inner, dec_doc_block)? }),
-        "I" => {
-            let parts = split_top_level(inner, ',');
-            let [image_id, alt, width, height] = parts.as_slice() else { return Err(format!("image: expected 4 fields, got {}", parts.len())) };
-            Ok(DocBlock::Image { image_id: dec_str(image_id)?, alt: dec_str(alt)?, width: decode_option(width, dec_f64)?, height: decode_option(height, dec_f64)? })
-        }
-        other => Err(format!("doc block: unknown tag {other:?}")),
-    }
-}
-pub(crate) fn enc_table_cell(c: &SlideTableCell) -> String { enc_list(&c.blocks, enc_doc_block) }
-pub(crate) fn dec_table_cell(s: &str) -> Result<SlideTableCell, String> { Ok(SlideTableCell { blocks: dec_list(s, dec_doc_block)? }) }
+/// 🧱️ `DocRun`/`RunStyle`/`DocListItem`/`DocTableCell`/`DocTableRow`/`DocBlock` are all OWNED by
+/// `document` — no local codec for any of them lives here anymore. `enc_block`/`dec_block`
+/// (re-exported above from `document::schema::diff`, the same real, already-tested codec
+/// `ws-codec-document-report.md` landed) already handles every one of these leaf types internally
+/// (Paragraph/Heading's `runs: Vec<DocRun>`, List's `items: Vec<DocListItem>`, Table's
+/// `rows: Vec<DocTableRow>` -> `cells: Vec<DocTableCell>`, Quote's recursive `Vec<DocBlock>`) — a
+/// prior draft of this file duplicated all of these, a real policy violation this wave fixes.
+pub(crate) fn enc_table_cell(c: &SlideTableCell) -> String { enc_list(&c.blocks, enc_block) }
+pub(crate) fn dec_table_cell(s: &str) -> Result<SlideTableCell, String> { Ok(SlideTableCell { blocks: dec_list(s, dec_block)? }) }
 pub(crate) fn enc_table_row(r: &SlideTableRow) -> String { enc_list(&r.cells, enc_table_cell) }
 pub(crate) fn dec_table_row(s: &str) -> Result<SlideTableRow, String> { Ok(SlideTableRow { cells: dec_list(s, dec_table_cell)? }) }
 /// 🌳️ `X[frame,blocks]` TextBox / `P[frame,image]` Picture / `T[frame,rows]` Table /
 /// `H[frame,kind]` placeHolder.
 pub(crate) fn enc_shape(shape: &SlideShape) -> String {
     match shape {
-        SlideShape::TextBox { frame, blocks } => format!("X[{},{}]", enc_frame(frame), enc_list(blocks, enc_doc_block)),
+        SlideShape::TextBox { frame, blocks } => format!("X[{},{}]", enc_frame(frame), enc_list(blocks, enc_block)),
         SlideShape::Picture { frame, image } => format!("P[{},{}]", enc_frame(frame), enc_image(image)),
         SlideShape::Table { frame, rows } => format!("T[{},{}]", enc_frame(frame), enc_list(rows, enc_table_row)),
         SlideShape::Placeholder { frame, kind } => format!("H[{},{}]", enc_frame(frame), enc_placeholder_kind(kind)),
@@ -1141,7 +1075,7 @@ pub(crate) fn dec_shape(s: &str) -> Result<SlideShape, String> {
     match tag {
         "X" => {
             let [frame, blocks] = parts.as_slice() else { return Err(format!("textbox: expected 2 fields, got {}", parts.len())) };
-            Ok(SlideShape::TextBox { frame: dec_frame(frame)?, blocks: dec_list(blocks, dec_doc_block)? })
+            Ok(SlideShape::TextBox { frame: dec_frame(frame)?, blocks: dec_list(blocks, dec_block)? })
         }
         "P" => {
             let [frame, image] = parts.as_slice() else { return Err(format!("picture: expected 2 fields, got {}", parts.len())) };
@@ -1173,13 +1107,13 @@ pub(crate) fn dec_layout(s: &str) -> Result<SlideLayout, String> {
     Ok(SlideLayout { id: dec_str(id)?, master_id: dec_str(master_id)?, shapes: dec_list(shapes, dec_shape)? })
 }
 pub(crate) fn enc_slide(sl: &Slide) -> String {
-    format!("[{},{},{},{}]", enc_str(&sl.id), encode_option(&sl.layout_id, |v| enc_str(v)), enc_list(&sl.shapes, enc_shape), enc_list(&sl.notes, enc_doc_block))
+    format!("[{},{},{},{}]", enc_str(&sl.id), encode_option(&sl.layout_id, |v| enc_str(v)), enc_list(&sl.shapes, enc_shape), enc_list(&sl.notes, enc_block))
 }
 pub(crate) fn dec_slide(s: &str) -> Result<Slide, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [id, layout_id, shapes, notes] = parts.as_slice() else { return Err(format!("slide: expected 4 fields, got {}", parts.len())) };
-    Ok(Slide { id: dec_str(id)?, layout_id: decode_option(layout_id, dec_str)?, shapes: dec_list(shapes, dec_shape)?, notes: dec_list(notes, dec_doc_block)? })
+    Ok(Slide { id: dec_str(id)?, layout_id: decode_option(layout_id, dec_str)?, shapes: dec_list(shapes, dec_shape)?, notes: dec_list(notes, dec_block)? })
 }
 /// 🌱 Full (non-diff) snapshot codec — only `SetSnapshot`'s whole-payload op encoding needs this.
 pub(crate) fn enc_presentation_snapshot(s: &SemioPresentationSnapshot) -> String {
@@ -1255,8 +1189,8 @@ fn dec_image_diff(s: &str) -> Result<SlidePictureImageDiff, String> {
     let [asset_id, mime, bytes] = parts.as_slice() else { return Err(format!("image diff: expected 3 fields, got {}", parts.len())) };
     Ok(SlidePictureImageDiff { asset_id: decode_option(asset_id, dec_str)?, mime: decode_option(mime, dec_str)?, bytes: decode_option(bytes, hex_decode)? })
 }
-fn enc_doc_blocks_diff(d: &DocBlocksDiff) -> String { enc_indexed_triple(d, enc_doc_block, enc_doc_block) }
-fn dec_doc_blocks_diff(s: &str) -> Result<DocBlocksDiff, String> { dec_indexed_triple(s, dec_doc_block, dec_doc_block) }
+fn enc_doc_blocks_diff(d: &DocBlocksDiff) -> String { enc_indexed_triple(d, enc_block, enc_block) }
+fn dec_doc_blocks_diff(s: &str) -> Result<DocBlocksDiff, String> { dec_indexed_triple(s, dec_block, dec_block) }
 fn enc_table_cell_diff(d: &SlideTableCellDiff) -> String { format!("[{}]", encode_option(&d.blocks, enc_doc_blocks_diff)) }
 fn dec_table_cell_diff(s: &str) -> Result<SlideTableCellDiff, String> { Ok(SlideTableCellDiff { blocks: decode_option(strip_brackets(s)?, dec_doc_blocks_diff)? }) }
 fn enc_table_cells_diff(d: &SlideTableCellsDiff) -> String { enc_indexed_triple(d, enc_table_cell_diff, enc_table_cell) }
@@ -1359,6 +1293,26 @@ fn parse_presentation_diff(line: &str) -> Result<SemioPresentationDiff, String> 
     Ok(d)
 }
 
+//#region 🔖️BinaryPrimitives
+/// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
+/// `store::ByteReader`, same helpers every other semio wave's `DiffCodec` upgrade reuses) backing
+/// the real `DiffCodec::encode_diff`/`decode_diff` below.
+pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+//#endregion 🔖️BinaryPrimitives
+
 impl protocol::DiffCodec for SemioPresentationDiff {
     fn print_diff(&self) -> String {
         print_presentation_diff(self)
@@ -1366,25 +1320,79 @@ impl protocol::DiffCodec for SemioPresentationDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_presentation_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim (docx/gif/svg's own hand-rolled-`DiffCodec` convention)
-    /// — satisfies every `DiffCodec` law without inventing a second wire format.
+    /// ⚡️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION presentation wave: real
+    /// binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary shortcut.
+    /// `format u8` + `presence u8` (bit0=`masters`, bit1=`layouts`, bit2=`slides`) are two REAL
+    /// fixed fields; each present collection then follows as its own varint-length-prefixed opaque
+    /// blob (the same `enc_masters_diff`/`enc_layouts_diff`/`enc_slides_diff` bracket/hex text
+    /// `print_diff` already produces) — one opaque blob per present collection rather than a
+    /// per-segment `Cond` because a SECOND `if`-guard on a field that's itself only conditionally
+    /// decoded hard-errors `eval_cond` (`protocol-cond-cannot-chain`, per the grammar recipe's own
+    /// gap table; every prior semio wave's own diff binary upgrade hit the identical shape).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        let mut presence = 0u8;
+        if self.masters.is_some() {
+            presence |= 0b001;
+        }
+        if self.layouts.is_some() {
+            presence |= 0b010;
+        }
+        if self.slides.is_some() {
+            presence |= 0b100;
+        }
+        let mut out = vec![DIFF_BINARY_FORMAT, presence];
+        if let Some(v) = &self.masters {
+            write_str_lp(&mut out, &enc_masters_diff(v));
+        }
+        if let Some(v) = &self.layouts {
+            write_str_lp(&mut out, &enc_layouts_diff(v));
+        }
+        if let Some(v) = &self.slides {
+            write_str_lp(&mut out, &enc_slides_diff(v));
+        }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
+        }
+        if bytes[0] != DIFF_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
+        }
+        let presence = bytes[1];
+        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let masters = if presence & 0b001 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff masters blob", offset: 2, detail: e })?;
+            Some(dec_masters_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff masters text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        let layouts = if presence & 0b010 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff layouts blob", offset: 2, detail: e })?;
+            Some(dec_layouts_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff layouts text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        let slides = if presence & 0b100 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff slides blob", offset: 2, detail: e })?;
+            Some(dec_slides_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff slides text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        Ok(SemioPresentationDiff { masters, layouts, slides })
     }
 }
 //#endregion 🔖️TopLevel
 
-//#region 🧪️Tests
+//#region 🔖️Demo
+/// 🌱 Representative `SemioPresentationDiff` fixtures — promoted to module scope (from the old
+/// `mod handcrafted_diff_codec_tests`-local helpers) so `🎹️composer/🦀️component.rs`'s conformance
+/// laws AND `🧬️mutations/🦀️component.rs`'s own test fixtures can reuse them, same promotion model
+/// every prior semio wave uses.
 #[cfg(test)]
-mod handcrafted_diff_codec_tests {
-    use super::*;
-    use protocol::DiffCodec;
-
-    fn snapshot_a() -> SemioPresentationSnapshot {
+pub(crate) fn snapshot_a() -> SemioPresentationSnapshot {
         SemioPresentationSnapshot {
             schema: "s.stdio.semio.presentation".into(),
             masters: vec![
@@ -1407,28 +1415,51 @@ mod handcrafted_diff_codec_tests {
         }
     }
 
-    fn snapshot_b() -> SemioPresentationSnapshot {
-        SemioPresentationSnapshot {
-            schema: "s.stdio.semio.presentation".into(),
-            masters: vec![
-                SlideMaster { id: "keep".into(), shapes: Vec::new() },
-                SlideMaster { id: "added".into(), shapes: Vec::new() },
+#[cfg(test)]
+pub(crate) fn snapshot_b() -> SemioPresentationSnapshot {
+    SemioPresentationSnapshot {
+        schema: "s.stdio.semio.presentation".into(),
+        masters: vec![
+            SlideMaster { id: "keep".into(), shapes: Vec::new() },
+            SlideMaster { id: "added".into(), shapes: Vec::new() },
+        ],
+        layouts: vec![SlideLayout { id: "layout1".into(), master_id: "keep".into(), shapes: Vec::new() }],
+        slides: vec![Slide {
+            id: "s1".into(),
+            layout_id: Some("layout1".into()),
+            shapes: vec![
+                SlideShape::TextBox {
+                    frame: SlideFrame { origin: SemioPoint2 { x: 1.0, y: 1.0 }, width: 5.0, height: 5.0 },
+                    blocks: vec![DocBlock::paragraph("new")],
+                },
+                SlideShape::Picture { frame: SlideFrame { origin: SemioPoint2::default(), width: 1.0, height: 1.0 }, image: SlidePictureImage { asset_id: "a".into(), mime: "image/png".into(), bytes: vec![9] } },
             ],
-            layouts: vec![SlideLayout { id: "layout1".into(), master_id: "keep".into(), shapes: Vec::new() }],
-            slides: vec![Slide {
-                id: "s1".into(),
-                layout_id: Some("layout1".into()),
-                shapes: vec![
-                    SlideShape::TextBox {
-                        frame: SlideFrame { origin: SemioPoint2 { x: 1.0, y: 1.0 }, width: 5.0, height: 5.0 },
-                        blocks: vec![DocBlock::paragraph("new")],
-                    },
-                    SlideShape::Picture { frame: SlideFrame { origin: SemioPoint2::default(), width: 1.0, height: 1.0 }, image: SlidePictureImage { asset_id: "a".into(), mime: "image/png".into(), bytes: vec![9] } },
-                ],
-                notes: vec![DocBlock::paragraph("noted")],
-            }],
-        }
+            notes: vec![DocBlock::paragraph("noted")],
+        }],
     }
+}
+
+/// 🌱 Representative `SemioPresentationDiff` cases (empty/no-op, a full masters+layouts+slides
+/// sweep both directions, reusing `snapshot_a`/`snapshot_b`) — single source of truth for
+/// `grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<SemioPresentationDiff> {
+    let a = snapshot_a();
+    let b = snapshot_b();
+    vec![
+        SemioPresentationDiff::default(),
+        SemioPresentationDiff::between(&a, &b),
+        SemioPresentationDiff::between(&b, &a),
+        SemioPresentationDiff::between(&a, &a),
+    ]
+}
+//#endregion 🔖️Demo
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod handcrafted_diff_codec_tests {
+    use super::*;
+    use protocol::DiffCodec;
 
     /// 🧪️ `SlideShapeDiff::Replace` coverage: a shape-KIND change at the same slide/shape index
     /// (never reachable through any single mutation variant — only through a real structural

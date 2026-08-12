@@ -1,9 +1,9 @@
 //! 🔺️ Draw artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::draw::schema::diff::{
-    DrawAssetsDelta, DrawDiff, DrawLayerPatch, DrawLayerPatchEntry, DrawLayersDelta, DrawStringList,
+    DrawAssetsDelta, DrawDiff, DrawLayerAddition, DrawLayerPatch, DrawLayerPatchEntry, DrawLayersDelta, DrawStringList,
 };
-use crate::artifacts::draw::engine::{layer_base_mut, remove_layer_from_tree, update_layer_in_tree};
+use crate::artifacts::draw::engine::{insert_layer, layer_base_mut, remove_layer_from_tree, update_layer_in_tree};
 use crate::artifacts::draw::schema::DrawArtifact;
 use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot, FillStyle, StrokeStyle};
 use protocol::MutationDiff;
@@ -87,7 +87,7 @@ pub fn apply_layers_delta(layers: &[DrawLayerNode], delta: &DrawLayersDelta) -> 
         remove_layer_from_tree(&mut next, id);
     }
     for item in &delta.added {
-        next.push(item.clone());
+        insert_layer(&mut next, item.parent_id.as_deref(), item.index, item.layer.clone());
     }
     for entry in &delta.patched {
         apply_layer_patch_entry(&mut next, entry);
@@ -335,11 +335,23 @@ pub fn diff_set_trace_params(layer_id: &str, params: &crate::artifacts::draw::Dr
     )
 }
 
-/// ➕️ Root-level layer add (nested adds use whole-snapshot replacement).
-pub fn diff_add_layer(layer: DrawLayerNode) -> DrawDiff {
+/// 🌱️ Layer insertion at a real (parent, index) address — root when `parent_id` is `None`.
+pub fn diff_create_layer(parent_id: Option<&str>, index: usize, layer: DrawLayerNode) -> DrawDiff {
     DrawDiff {
         layers: Some(DrawLayersDelta {
-            added: vec![layer],
+            added: vec![DrawLayerAddition { parent_id: parent_id.map(str::to_string), index, layer }],
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
+}
+
+/// 🔃 Move an existing layer to a new (parent, index) address — remove-then-insert, both sparse.
+pub fn diff_reorder_layer(layer_id: &str, parent_id: Option<&str>, index: usize, layer: DrawLayerNode) -> DrawDiff {
+    DrawDiff {
+        layers: Some(DrawLayersDelta {
+            removed: vec![layer_id.to_string()],
+            added: vec![DrawLayerAddition { parent_id: parent_id.map(str::to_string), index, layer }],
             ..Default::default()
         }),
         ..Default::default()

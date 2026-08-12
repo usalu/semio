@@ -591,23 +591,129 @@ fn parse_cad_diff(line: &str) -> Result<SemioCadDiff, String> {
     Ok(d)
 }
 
+/// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
+/// `store::ByteReader`) backing the real `DiffCodec::encode_diff`/`decode_diff` below — replaces
+/// the old `print_diff().into_bytes()` text-as-binary shortcut.
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+
 impl protocol::DiffCodec for SemioCadDiff {
     fn print_diff(&self) -> String { print_cad_diff(self) }
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_cad_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`/`BcfDiff` all
-    /// use — satisfies every `DiffCodec` law without inventing a second wire format.
+    /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
+    /// shortcut. `format u8` + `presence u8` (bit0=`layers`, bit1=`blocks`, bit2=`entities`) are
+    /// two REAL fixed fields; each present collection then follows as its own varint-length-
+    /// prefixed opaque blob (the same `enc_named_triple` bracket/hex text this type's `print_diff`
+    /// already produces) — independently-delimited segments rather than one bare trailing `bytes`
+    /// because there can be 0-3 of them (chaining a `Cond` per-segment hits the
+    /// `protocol-cond-cannot-chain` gap: a second `if`-guard on a field that was itself only
+    /// conditionally decoded hard-errors `eval_cond`).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        let mut presence = 0u8;
+        if self.layers.is_some() { presence |= 0b0000_0001; }
+        if self.blocks.is_some() { presence |= 0b0000_0010; }
+        if self.entities.is_some() { presence |= 0b0000_0100; }
+        let mut out = vec![DIFF_BINARY_FORMAT, presence];
+        if let Some(v) = &self.layers { write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_layer_diff, enc_layer)); }
+        if let Some(v) = &self.blocks { write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_block_diff, enc_block)); }
+        if let Some(v) = &self.entities { write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_entity_record_diff, enc_entity_record)); }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
+        }
+        if bytes[0] != DIFF_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
+        }
+        let presence = bytes[1];
+        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let mut next_blob = |what: &'static str| -> Result<String, protocol::ProtocolError> {
+            read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what, offset: 2, detail: e })
+        };
+        let layers = if presence & 0b0000_0001 != 0 {
+            Some(dec_named_triple(&next_blob("diff layers blob")?, dec_str, dec_layer_diff, dec_layer).map_err(|e| protocol::ProtocolError::Malformed { what: "diff layers text", offset: 2, detail: e })?)
+        } else { None };
+        let blocks = if presence & 0b0000_0010 != 0 {
+            Some(dec_named_triple(&next_blob("diff blocks blob")?, dec_str, dec_block_diff, dec_block).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks text", offset: 2, detail: e })?)
+        } else { None };
+        let entities = if presence & 0b0000_0100 != 0 {
+            Some(dec_named_triple(&next_blob("diff entities blob")?, dec_str, dec_entity_record_diff, dec_entity_record).map_err(|e| protocol::ProtocolError::Malformed { what: "diff entities text", offset: 2, detail: e })?)
+        } else { None };
+        Ok(SemioCadDiff { layers, blocks, entities })
     }
 }
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🔖️Demo
+/// 🌱 Representative `SemioCadDiff` cases (empty/no-op, a full removed/modified/added sweep both
+/// directions across every collection incl. the nested `blocks[].entities`, exercising 7 of the 9
+/// `CadEntity` variants) — single source of truth for `diff_grammar_conformance_law`/
+/// `protocol_walk_law` in `🎹️composer/🦀️component.rs`. Self-contained (does not reach into
+/// `#[cfg(test)] mod tests`'s own private `sweep_a`/`sweep_b`, since a private item of a child
+/// module is not visible to its parent).
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<SemioCadDiff> {
+    let a = SemioCadSnapshot {
+        schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
+        layers: vec![
+            CadLayer { name: "keep".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true },
+            CadLayer { name: "layer-removed".into(), color_index: 2, line_type: "DASHED".into(), visible: false },
+        ],
+        blocks: vec![CadBlock {
+            name: "keep-block".into(),
+            base_point: SemioPoint2 { x: 0.0, y: 0.0 },
+            entities: vec![CadEntityRecord { handle: "be1".into(), layer: "keep".into(), entity: CadEntity::Line { a: SemioPoint2 { x: 0.0, y: 0.0 }, b: SemioPoint2 { x: 1.0, y: 1.0 } } }],
+        }],
+        entities: vec![
+            CadEntityRecord { handle: "e1".into(), layer: "keep".into(), entity: CadEntity::Circle { center: SemioPoint2 { x: 0.0, y: 0.0 }, radius: 1.0 } },
+            CadEntityRecord { handle: "e-removed".into(), layer: "keep".into(), entity: CadEntity::Polyline { vertices: vec![SemioPoint2 { x: 0.0, y: 0.0 }], closed: false } },
+        ],
+    };
+    let b = SemioCadSnapshot {
+        schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
+        layers: vec![
+            CadLayer { name: "keep".into(), color_index: 9, line_type: "DASHDOT".into(), visible: false },
+            CadLayer { name: "layer-added".into(), color_index: 4, line_type: "HIDDEN".into(), visible: true },
+        ],
+        blocks: vec![CadBlock {
+            name: "keep-block".into(),
+            base_point: SemioPoint2 { x: 5.0, y: 5.0 },
+            entities: vec![
+                CadEntityRecord { handle: "be1".into(), layer: "layer-added".into(), entity: CadEntity::Arc { center: SemioPoint2 { x: 0.0, y: 0.0 }, radius: 1.0, start_angle: 0.0, end_angle: 90.0 } },
+                CadEntityRecord { handle: "be-added".into(), layer: "keep".into(), entity: CadEntity::Dimension { def_point: SemioPoint2 { x: 0.0, y: 0.0 }, text_position: SemioPoint2 { x: 1.0, y: 1.0 }, measurement: 3.3, text: "3.3m".into() } },
+            ],
+        }],
+        entities: vec![
+            CadEntityRecord { handle: "e1".into(), layer: "layer-added".into(), entity: CadEntity::Ellipse { center: SemioPoint2 { x: 0.0, y: 0.0 }, major_axis_end: SemioPoint2 { x: 1.0, y: 0.0 }, ratio: 0.5, start_param: 0.0, end_param: 6.28 } },
+            CadEntityRecord { handle: "e-added".into(), layer: "keep".into(), entity: CadEntity::Insert { block_name: "keep-block".into(), insertion_point: SemioPoint2 { x: 0.0, y: 0.0 }, scale: SemioPoint2 { x: 1.0, y: 1.0 }, rotation: 0.0 } },
+        ],
+    };
+
+    vec![
+        SemioCadDiff::default(),
+        <SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::between(&a, &b),
+        <SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::between(&b, &a),
+    ]
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]

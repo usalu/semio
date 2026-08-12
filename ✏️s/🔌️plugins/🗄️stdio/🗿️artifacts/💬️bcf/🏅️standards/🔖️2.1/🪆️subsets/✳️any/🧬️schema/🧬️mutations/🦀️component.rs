@@ -17,6 +17,11 @@ use crate::artifacts::bcf::schema::diff::{
     decode_option, enc_bytes, enc_camera, enc_comment, enc_components, enc_list, enc_part, enc_str, enc_topic,
     enc_viewpoint, encode_option, split_top_level, strip_brackets,
 };
+use crate::artifacts::bcf::schema::diff::{
+    dec_bcf_snapshot_bin, dec_camera_bin, dec_comment_bin, dec_components_bin, dec_topic_bin, dec_viewpoint_bin,
+    enc_bcf_snapshot_bin, enc_camera_bin, enc_comment_bin, enc_components_bin, enc_topic_bin, enc_viewpoint_bin,
+    read_bytes_lp, read_str_lp, write_bytes_lp, write_str_lp,
+};
 use crate::artifacts::bcf::schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfTopic, BcfViewpoint};
 use crate::artifacts::bcf::BcfSnapshot;
 use protocol::{Mutation, OpText};
@@ -381,14 +386,255 @@ impl protocol::OpText for BcfMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification as `BcfDiff`'s hand-rolled codec.
+//#region 🔖️OpBinaryCodec
+/// 🧪️ FG-wave: real recursive BINARY primitives for `BcfMutation`'s own variant-specific fields
+/// (`Option<String>`/`Option<Option<String>>` tri-states, `Option<BcfCamera>`/
+/// `Option<BcfComponents>`/`Option<Vec<u8>>`) -- everything ELSE (whole `BcfSnapshot`/`BcfTopic`/
+/// `BcfComment`/`BcfViewpoint`/`BcfCamera`/`BcfComponents`) reuses `../🔺️diff/🦀️component.rs`'s
+/// own `pub(crate)` binary primitives directly (imported above), same intra-artifact reuse pattern
+/// this file's text-form `OpText` impl already established for the string-grammar codecs.
+fn write_opt_str_bin(out: &mut Vec<u8>, opt: &Option<String>) {
+    out.push(if opt.is_some() { 1 } else { 0 });
+    if let Some(v) = opt { write_str_lp(out, v); }
+}
+fn read_opt_str_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
+    Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None })
+}
+fn write_str_list_bin(out: &mut Vec<u8>, items: &[String]) {
+    store::pack_rt::write_varint_u64(out, items.len() as u64);
+    for s in items {
+        write_str_lp(out, s);
+    }
+}
+fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut out = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        out.push(read_str_lp(reader)?);
+    }
+    Ok(out)
+}
+//#endregion 🔖️OpBinaryCodec
+
+/// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
+/// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
+/// `BcfMutation` variant ordinal, in the same 0-13 declaration order `enum BcfMutation` above uses.
 impl protocol::OpBinary for BcfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let tag: u8 = match self {
+            BcfMutation::NoMutation => 0,
+            BcfMutation::SetSnapshot { .. } => 1,
+            BcfMutation::SetVersion { .. } => 2,
+            BcfMutation::InsertTopic { .. } => 3,
+            BcfMutation::RemoveTopic { .. } => 4,
+            BcfMutation::SetTopicMarkup { .. } => 5,
+            BcfMutation::InsertComment { .. } => 6,
+            BcfMutation::RemoveComment { .. } => 7,
+            BcfMutation::SetComment { .. } => 8,
+            BcfMutation::InsertViewpoint { .. } => 9,
+            BcfMutation::RemoveViewpoint { .. } => 10,
+            BcfMutation::SetViewpointCamera { .. } => 11,
+            BcfMutation::SetViewpointComponents { .. } => 12,
+            BcfMutation::SetViewpointSnapshot { .. } => 13,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            BcfMutation::NoMutation => {}
+            BcfMutation::SetSnapshot { snapshot } => enc_bcf_snapshot_bin(snapshot, &mut out),
+            BcfMutation::SetVersion { version } => write_str_lp(&mut out, version),
+            BcfMutation::InsertTopic { topic } => enc_topic_bin(topic, &mut out),
+            BcfMutation::RemoveTopic { guid } => write_str_lp(&mut out, guid),
+            BcfMutation::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author } => {
+                write_str_lp(&mut out, guid);
+                write_opt_str_bin(&mut out, title);
+                write_opt_str_bin(&mut out, description);
+                write_opt_str_bin(&mut out, status);
+                write_opt_str_bin(&mut out, priority);
+                out.push(if labels.is_some() { 1 } else { 0 });
+                if let Some(v) = labels { write_str_list_bin(&mut out, v); }
+                write_opt_str_bin(&mut out, creation_date);
+                write_opt_str_bin(&mut out, creation_author);
+            }
+            BcfMutation::InsertComment { topic_guid, comment } => {
+                write_str_lp(&mut out, topic_guid);
+                enc_comment_bin(comment, &mut out);
+            }
+            BcfMutation::RemoveComment { topic_guid, guid } => {
+                write_str_lp(&mut out, topic_guid);
+                write_str_lp(&mut out, guid);
+            }
+            BcfMutation::SetComment { topic_guid, guid, date, author, text, viewpoint_ref } => {
+                write_str_lp(&mut out, topic_guid);
+                write_str_lp(&mut out, guid);
+                write_opt_str_bin(&mut out, date);
+                write_opt_str_bin(&mut out, author);
+                write_opt_str_bin(&mut out, text);
+                out.push(if viewpoint_ref.is_some() { 1 } else { 0 });
+                if let Some(inner) = viewpoint_ref { write_opt_str_bin(&mut out, inner); }
+            }
+            BcfMutation::InsertViewpoint { topic_guid, viewpoint } => {
+                write_str_lp(&mut out, topic_guid);
+                enc_viewpoint_bin(viewpoint, &mut out);
+            }
+            BcfMutation::RemoveViewpoint { topic_guid, guid } => {
+                write_str_lp(&mut out, topic_guid);
+                write_str_lp(&mut out, guid);
+            }
+            BcfMutation::SetViewpointCamera { topic_guid, guid, camera } => {
+                write_str_lp(&mut out, topic_guid);
+                write_str_lp(&mut out, guid);
+                out.push(if camera.is_some() { 1 } else { 0 });
+                if let Some(c) = camera { enc_camera_bin(c, &mut out); }
+            }
+            BcfMutation::SetViewpointComponents { topic_guid, guid, components } => {
+                write_str_lp(&mut out, topic_guid);
+                write_str_lp(&mut out, guid);
+                out.push(if components.is_some() { 1 } else { 0 });
+                if let Some(c) = components { enc_components_bin(c, &mut out); }
+            }
+            BcfMutation::SetViewpointSnapshot { topic_guid, guid, snapshot } => {
+                write_str_lp(&mut out, topic_guid);
+                write_str_lp(&mut out, guid);
+                out.push(if snapshot.is_some() { 1 } else { 0 });
+                if let Some(b) = snapshot { write_bytes_lp(&mut out, b); }
+            }
+        }
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(BcfMutation::NoMutation),
+            1 => Ok(BcfMutation::SetSnapshot { snapshot: dec_bcf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? }),
+            2 => Ok(BcfMutation::SetVersion { version: read_str_lp(&mut reader).map_err(|e| malformed("op version", reader.position(), e))? }),
+            3 => Ok(BcfMutation::InsertTopic { topic: dec_topic_bin(&mut reader).map_err(|e| malformed("op topic", reader.position(), e))? }),
+            4 => Ok(BcfMutation::RemoveTopic { guid: read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))? }),
+            5 => {
+                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
+                let title = read_opt_str_bin(&mut reader).map_err(|e| malformed("op title", reader.position(), e))?;
+                let description = read_opt_str_bin(&mut reader).map_err(|e| malformed("op description", reader.position(), e))?;
+                let status = read_opt_str_bin(&mut reader).map_err(|e| malformed("op status", reader.position(), e))?;
+                let priority = read_opt_str_bin(&mut reader).map_err(|e| malformed("op priority", reader.position(), e))?;
+                let labels = if reader.read_u8().map_err(|e| malformed("op labels presence", reader.position(), e.to_string()))? != 0 {
+                    Some(read_str_list_bin(&mut reader).map_err(|e| malformed("op labels", reader.position(), e))?)
+                } else {
+                    None
+                };
+                let creation_date = read_opt_str_bin(&mut reader).map_err(|e| malformed("op creation_date", reader.position(), e))?;
+                let creation_author = read_opt_str_bin(&mut reader).map_err(|e| malformed("op creation_author", reader.position(), e))?;
+                Ok(BcfMutation::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author })
+            }
+            6 => {
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let comment = dec_comment_bin(&mut reader).map_err(|e| malformed("op comment", reader.position(), e))?;
+                Ok(BcfMutation::InsertComment { topic_guid, comment })
+            }
+            7 => {
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
+                Ok(BcfMutation::RemoveComment { topic_guid, guid })
+            }
+            8 => {
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
+                let date = read_opt_str_bin(&mut reader).map_err(|e| malformed("op date", reader.position(), e))?;
+                let author = read_opt_str_bin(&mut reader).map_err(|e| malformed("op author", reader.position(), e))?;
+                let text = read_opt_str_bin(&mut reader).map_err(|e| malformed("op text", reader.position(), e))?;
+                let viewpoint_ref = if reader.read_u8().map_err(|e| malformed("op viewpoint_ref presence", reader.position(), e.to_string()))? != 0 {
+                    Some(read_opt_str_bin(&mut reader).map_err(|e| malformed("op viewpoint_ref", reader.position(), e))?)
+                } else {
+                    None
+                };
+                Ok(BcfMutation::SetComment { topic_guid, guid, date, author, text, viewpoint_ref })
+            }
+            9 => {
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let viewpoint = dec_viewpoint_bin(&mut reader).map_err(|e| malformed("op viewpoint", reader.position(), e))?;
+                Ok(BcfMutation::InsertViewpoint { topic_guid, viewpoint })
+            }
+            10 => {
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
+                Ok(BcfMutation::RemoveViewpoint { topic_guid, guid })
+            }
+            11 => {
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
+                let camera = if reader.read_u8().map_err(|e| malformed("op camera presence", reader.position(), e.to_string()))? != 0 {
+                    Some(dec_camera_bin(&mut reader).map_err(|e| malformed("op camera", reader.position(), e))?)
+                } else {
+                    None
+                };
+                Ok(BcfMutation::SetViewpointCamera { topic_guid, guid, camera })
+            }
+            12 => {
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
+                let components = if reader.read_u8().map_err(|e| malformed("op components presence", reader.position(), e.to_string()))? != 0 {
+                    Some(dec_components_bin(&mut reader).map_err(|e| malformed("op components", reader.position(), e))?)
+                } else {
+                    None
+                };
+                Ok(BcfMutation::SetViewpointComponents { topic_guid, guid, components })
+            }
+            13 => {
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
+                let snapshot = if reader.read_u8().map_err(|e| malformed("op snapshot presence", reader.position(), e.to_string()))? != 0 {
+                    Some(read_bytes_lp(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?)
+                } else {
+                    None
+                };
+                Ok(BcfMutation::SetViewpointSnapshot { topic_guid, guid, snapshot })
+            }
+            other => Err(malformed("op tag", 1, format!("unknown BcfMutation tag {other}"))),
+        }
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🧪️ FG-wave: representative `BcfMutation` values -- one per variant -- the single source of
+/// truth reused by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
+/// conformance tests, same shape `📜️docx/…/🧬️mutations/🦀️component.rs`'s own
+/// `demo_mutation_cases()` establishes.
+pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
+    use crate::artifacts::bcf::schema::diff::{demo_snapshot_a, demo_snapshot_b};
+    let base = demo_snapshot_a();
+    let snapshot = demo_snapshot_b();
+    vec![
+        BcfMutation::NoMutation,
+        BcfMutation::SetSnapshot { snapshot },
+        BcfMutation::SetVersion { version: "2.2".into() },
+        BcfMutation::InsertTopic { topic: base.topics[0].clone() },
+        BcfMutation::RemoveTopic { guid: "keep".into() },
+        BcfMutation::SetTopicMarkup {
+            guid: "keep".into(),
+            title: Some("Renamed".into()),
+            description: None,
+            status: Some("Closed".into()),
+            priority: None,
+            labels: Some(vec!["Renamed".into(), "Second".into()]),
+            creation_date: None,
+            creation_author: None,
+        },
+        BcfMutation::InsertComment { topic_guid: "keep".into(), comment: base.topics[0].comments[0].clone() },
+        BcfMutation::RemoveComment { topic_guid: "keep".into(), guid: "c-keep".into() },
+        BcfMutation::SetComment { topic_guid: "keep".into(), guid: "c-keep".into(), date: None, author: None, text: Some("Updated".into()), viewpoint_ref: Some(None) },
+        BcfMutation::SetComment { topic_guid: "keep".into(), guid: "c-keep".into(), date: Some("2025-01-01T00:00:00+00:00".into()), author: Some("a@example.com".into()), text: None, viewpoint_ref: Some(Some("vp2".into())) },
+        BcfMutation::InsertViewpoint { topic_guid: "keep".into(), viewpoint: base.topics[0].viewpoints[0].clone() },
+        BcfMutation::RemoveViewpoint { topic_guid: "keep".into(), guid: "vp-keep".into() },
+        BcfMutation::SetViewpointCamera { topic_guid: "keep".into(), guid: "vp-keep".into(), camera: base.topics[0].viewpoints[0].camera.clone() },
+        BcfMutation::SetViewpointCamera { topic_guid: "keep".into(), guid: "vp-keep".into(), camera: None },
+        BcfMutation::SetViewpointComponents { topic_guid: "keep".into(), guid: "vp-keep".into(), components: base.topics[0].viewpoints[0].components.clone() },
+        BcfMutation::SetViewpointComponents { topic_guid: "keep".into(), guid: "vp-keep".into(), components: None },
+        BcfMutation::SetViewpointSnapshot { topic_guid: "keep".into(), guid: "vp-keep".into(), snapshot: Some(vec![1, 2, 3]) },
+        BcfMutation::SetViewpointSnapshot { topic_guid: "keep".into(), guid: "vp-keep".into(), snapshot: None },
+    ]
+}
+//#endregion 🔖️DemoCases

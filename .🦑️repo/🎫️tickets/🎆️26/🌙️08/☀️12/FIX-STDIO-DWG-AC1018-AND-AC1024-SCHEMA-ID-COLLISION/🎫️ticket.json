@@ -1,0 +1,10 @@
+{
+  "title": "Fix Stdio Dwg Ac1018 and Ac1024 Schema Id Collision",
+  "emoji": "🐛️",
+  "status": "open",
+  "description": "Fix dwg ac1018/ac1024 schema-id collision in stdio by giving ac1018 standard schema id stdio.dwg.ac1018",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪3a101e5b4d5e48c2a2f0e8516e3bde30"
+  ]
+}

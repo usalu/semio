@@ -273,67 +273,144 @@ impl OpText for SemioCadMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `SemioCadDiff`'s hand-rolled codec
-/// uses.
+/// 🏷️ Ordinal table, same declaration order as `SemioCadMutation`'s own enum variants and
+/// `parse_cad_mutation`'s keyword match — the real binary `tag` field's source of truth.
+const OP_KEYWORDS: [&str; 16] = [
+    "no-mutation",
+    "set-snapshot",
+    "add-layer",
+    "remove-layer",
+    "set-layer",
+    "add-block",
+    "remove-block",
+    "set-block-base-point",
+    "add-entity",
+    "remove-entity",
+    "set-entity-layer",
+    "set-entity-geometry",
+    "add-block-entity",
+    "remove-block-entity",
+    "set-block-entity-layer",
+    "set-block-entity-geometry",
+];
+fn variant_ordinal(m: &SemioCadMutation) -> u8 {
+    match m {
+        SemioCadMutation::NoMutation => 0,
+        SemioCadMutation::SetSnapshot { .. } => 1,
+        SemioCadMutation::AddLayer { .. } => 2,
+        SemioCadMutation::RemoveLayer { .. } => 3,
+        SemioCadMutation::SetLayer { .. } => 4,
+        SemioCadMutation::AddBlock { .. } => 5,
+        SemioCadMutation::RemoveBlock { .. } => 6,
+        SemioCadMutation::SetBlockBasePoint { .. } => 7,
+        SemioCadMutation::AddEntity { .. } => 8,
+        SemioCadMutation::RemoveEntity { .. } => 9,
+        SemioCadMutation::SetEntityLayer { .. } => 10,
+        SemioCadMutation::SetEntityGeometry { .. } => 11,
+        SemioCadMutation::AddBlockEntity { .. } => 12,
+        SemioCadMutation::RemoveBlockEntity { .. } => 13,
+        SemioCadMutation::SetBlockEntityLayer { .. } => 14,
+        SemioCadMutation::SetBlockEntityGeometry { .. } => 15,
+    }
+}
+/// ✂️ Just the `key=value ...` argument tail of `print_cad_mutation` (empty for `no-mutation`) —
+/// the binary frame's `tag` byte already carries the keyword, so the text keyword itself is
+/// redundant in the binary payload.
+fn print_cad_mutation_args(m: &SemioCadMutation) -> String {
+    match print_cad_mutation(m).split_once(' ') {
+        Some((_, rest)) => rest.to_string(),
+        None => String::new(),
+    }
+}
+
+/// ⚡️ Real binary op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut.
+/// `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see
+/// [`OP_KEYWORDS`]) are two REAL fixed fields; the variant's own `key=value ...` argument payload
+/// follows as one opaque trailing `bytes` chain — reusing the already-real, already-tested
+/// `print_cad_mutation`/`parse_cad_mutation` text codec rather than re-deriving a second
+/// independent encoding.
 impl protocol::OpBinary for SemioCadMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_cad_mutation_args(self).as_bytes());
+        Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        const OP_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
+        }
+        if bytes[0] != OP_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        let tag = bytes[1];
+        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
+        let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️Demo
+/// 🌱 Shared fixture + representative `SemioCadMutation` cases (one per variant, incl.
+/// `NoMutation`, plus extra `SetEntityGeometry`/`SetBlockEntityGeometry` cases exercising several
+/// of the 9 `CadEntity` kinds) — single source of truth for this facet's own tests AND
+/// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+#[cfg(test)]
+fn fixture() -> SemioCadSnapshot {
+    SemioCadSnapshot {
+        schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
+        layers: vec![
+            CadLayer { name: "0".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true },
+            CadLayer { name: "dim".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true },
+        ],
+        blocks: vec![CadBlock {
+            name: "door".into(),
+            base_point: SemioPoint2 { x: 0.0, y: 0.0 },
+            entities: vec![CadEntityRecord { handle: "be1".into(), layer: "0".into(), entity: CadEntity::Circle { center: SemioPoint2 { x: 1.0, y: 1.0 }, radius: 2.0 } }],
+        }],
+        entities: vec![CadEntityRecord { handle: "h1".into(), layer: "0".into(), entity: CadEntity::Circle { center: SemioPoint2 { x: 1.0, y: 1.0 }, radius: 2.0 } }],
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<SemioCadMutation> {
+    let base = fixture();
+    vec![
+        SemioCadMutation::NoMutation,
+        SemioCadMutation::SetSnapshot { snapshot: base.clone() },
+        SemioCadMutation::AddLayer { layer: CadLayer { name: "fresh".into(), color_index: 3, line_type: "CONTINUOUS".into(), visible: true } },
+        SemioCadMutation::RemoveLayer { name: "dim".into() },
+        SemioCadMutation::SetLayer { name: "0".into(), color_index: Some(3), line_type: None, visible: Some(false) },
+        SemioCadMutation::AddBlock { block: CadBlock { name: "window".into(), base_point: SemioPoint2 { x: 2.0, y: 2.0 }, entities: Vec::new() } },
+        SemioCadMutation::RemoveBlock { name: "door".into() },
+        SemioCadMutation::SetBlockBasePoint { name: "door".into(), base_point: SemioPoint2 { x: 5.0, y: 5.0 } },
+        SemioCadMutation::AddEntity { entity: CadEntityRecord { handle: "h2".into(), layer: "0".into(), entity: CadEntity::Circle { center: SemioPoint2 { x: 1.0, y: 1.0 }, radius: 2.0 } } },
+        SemioCadMutation::RemoveEntity { handle: "h1".into() },
+        SemioCadMutation::SetEntityLayer { handle: "h1".into(), layer: "dim".into() },
+        SemioCadMutation::SetEntityGeometry { handle: "h1".into(), entity: CadEntity::Ellipse { center: SemioPoint2 { x: 0.0, y: 0.0 }, major_axis_end: SemioPoint2 { x: 1.0, y: 0.0 }, ratio: 0.5, start_param: 0.0, end_param: 6.28 } },
+        SemioCadMutation::AddBlockEntity { block_name: "door".into(), entity: CadEntityRecord { handle: "be2".into(), layer: "0".into(), entity: CadEntity::Text { position: SemioPoint2 { x: 0.0, y: 0.0 }, height: 2.5, rotation: 0.0, content: "label".into() } } },
+        SemioCadMutation::RemoveBlockEntity { block_name: "door".into(), handle: "be1".into() },
+        SemioCadMutation::SetBlockEntityLayer { block_name: "door".into(), handle: "be1".into(), layer: "dim".into() },
+        SemioCadMutation::SetBlockEntityGeometry { block_name: "door".into(), handle: "be1".into(), entity: CadEntity::Arc { center: SemioPoint2 { x: 0.0, y: 0.0 }, radius: 1.0, start_angle: 0.0, end_angle: 90.0 } },
+    ]
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    //#region Fixtures
-    fn sample_layer(name: &str) -> CadLayer {
-        CadLayer { name: name.into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }
-    }
-    fn sample_block(name: &str) -> CadBlock {
-        CadBlock { name: name.into(), base_point: SemioPoint2 { x: 0.0, y: 0.0 }, entities: vec![sample_entity_record("be1", "0")] }
-    }
-    fn sample_entity_record(handle: &str, layer: &str) -> CadEntityRecord {
-        CadEntityRecord { handle: handle.into(), layer: layer.into(), entity: CadEntity::Circle { center: SemioPoint2 { x: 1.0, y: 1.0 }, radius: 2.0 } }
-    }
-    fn base_snapshot() -> SemioCadSnapshot {
-        SemioCadSnapshot {
-            schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
-            layers: vec![sample_layer("0"), sample_layer("dim")],
-            blocks: vec![sample_block("door")],
-            entities: vec![sample_entity_record("h1", "0")],
-        }
-    }
-    //#endregion Fixtures
-
     //#region 🧪️Law1_MutationDiffLaw
     /// ⚖️ Law 1 — `mutation_diff_law`: for every variant, `apply_semio_cad_mutation`'s returned
     /// diff equals `m.diff(base)`, and applying it matches `diff.apply(base)`.
     #[test]
     fn mutation_diff_law() {
-        let base = base_snapshot();
-        let mutations = vec![
-            SemioCadMutation::AddLayer { layer: sample_layer("fresh") },
-            SemioCadMutation::RemoveLayer { name: "dim".into() },
-            SemioCadMutation::SetLayer { name: "0".into(), color_index: Some(3), line_type: None, visible: Some(false) },
-            SemioCadMutation::AddBlock { block: sample_block("window") },
-            SemioCadMutation::RemoveBlock { name: "door".into() },
-            SemioCadMutation::SetBlockBasePoint { name: "door".into(), base_point: SemioPoint2 { x: 5.0, y: 5.0 } },
-            SemioCadMutation::AddEntity { entity: sample_entity_record("h2", "0") },
-            SemioCadMutation::RemoveEntity { handle: "h1".into() },
-            SemioCadMutation::SetEntityLayer { handle: "h1".into(), layer: "dim".into() },
-            SemioCadMutation::SetEntityGeometry { handle: "h1".into(), entity: CadEntity::Line { a: SemioPoint2 { x: 0.0, y: 0.0 }, b: SemioPoint2 { x: 9.0, y: 9.0 } } },
-            SemioCadMutation::AddBlockEntity { block_name: "door".into(), entity: sample_entity_record("be2", "0") },
-            SemioCadMutation::RemoveBlockEntity { block_name: "door".into(), handle: "be1".into() },
-            SemioCadMutation::SetBlockEntityLayer { block_name: "door".into(), handle: "be1".into(), layer: "dim".into() },
-            SemioCadMutation::SetBlockEntityGeometry { block_name: "door".into(), handle: "be1".into(), entity: CadEntity::Arc { center: SemioPoint2 { x: 0.0, y: 0.0 }, radius: 1.0, start_angle: 0.0, end_angle: 90.0 } },
-        ];
-        for m in mutations {
+        let base = fixture();
+        for m in demo_mutation_cases() {
             let mut snap = base.clone();
             let returned = apply_semio_cad_mutation(&mut snap, &m);
             let expected_diff = m.diff(&base);
@@ -349,24 +426,8 @@ mod tests {
     #[test]
     fn inverse_law() {
         use protocol::command::DiffAlgebra;
-        let base = base_snapshot();
-        let mutations = vec![
-            SemioCadMutation::AddLayer { layer: sample_layer("fresh") },
-            SemioCadMutation::RemoveLayer { name: "dim".into() },
-            SemioCadMutation::SetLayer { name: "0".into(), color_index: Some(3), line_type: Some("DASHED".into()), visible: None },
-            SemioCadMutation::AddBlock { block: sample_block("window") },
-            SemioCadMutation::RemoveBlock { name: "door".into() },
-            SemioCadMutation::SetBlockBasePoint { name: "door".into(), base_point: SemioPoint2 { x: 5.0, y: 5.0 } },
-            SemioCadMutation::AddEntity { entity: sample_entity_record("h2", "0") },
-            SemioCadMutation::RemoveEntity { handle: "h1".into() },
-            SemioCadMutation::SetEntityLayer { handle: "h1".into(), layer: "dim".into() },
-            SemioCadMutation::SetEntityGeometry { handle: "h1".into(), entity: CadEntity::Solid { p1: SemioPoint2 { x: 0.0, y: 0.0 }, p2: SemioPoint2 { x: 1.0, y: 0.0 }, p3: SemioPoint2 { x: 1.0, y: 1.0 }, p4: SemioPoint2 { x: 0.0, y: 1.0 } } },
-            SemioCadMutation::AddBlockEntity { block_name: "door".into(), entity: sample_entity_record("be2", "0") },
-            SemioCadMutation::RemoveBlockEntity { block_name: "door".into(), handle: "be1".into() },
-            SemioCadMutation::SetBlockEntityLayer { block_name: "door".into(), handle: "be1".into(), layer: "dim".into() },
-            SemioCadMutation::SetBlockEntityGeometry { block_name: "door".into(), handle: "be1".into(), entity: CadEntity::Dimension { def_point: SemioPoint2 { x: 0.0, y: 0.0 }, text_position: SemioPoint2 { x: 1.0, y: 1.0 }, measurement: 3.3, text: "3.3m".into() } },
-        ];
-        for m in mutations {
+        let base = fixture();
+        for m in demo_mutation_cases() {
             let mut snap = base.clone();
             apply_semio_cad_mutation(&mut snap, &m);
             for inv in m.inverse(&base) {
@@ -385,35 +446,11 @@ mod tests {
 
     //#region 🧪️Law7_OpTextBinaryRoundtripLaw
     /// ⚖️ Law 7 — `op_text_binary_roundtrip_law`: `OpText`/`OpBinary` round-trip for the
-    /// hand-rolled `SemioCadMutation` grammar, exercising every variant incl. `SetEntityGeometry`'s
-    /// `CadEntity` payload across several of the 9 variants and `SetLayer`'s multi-field tri-state
-    /// combinations.
+    /// hand-rolled `SemioCadMutation` grammar, covering every variant (incl. `NoMutation`) via
+    /// [`demo_mutation_cases`].
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = base_snapshot();
-        let mutations = vec![
-            SemioCadMutation::NoMutation,
-            SemioCadMutation::SetSnapshot { snapshot: base.clone() },
-            SemioCadMutation::AddLayer { layer: sample_layer("fresh") },
-            SemioCadMutation::RemoveLayer { name: "dim".into() },
-            SemioCadMutation::SetLayer { name: "0".into(), color_index: Some(3), line_type: None, visible: Some(false) },
-            SemioCadMutation::SetLayer { name: "0".into(), color_index: None, line_type: Some("HIDDEN".into()), visible: None },
-            SemioCadMutation::AddBlock { block: sample_block("window") },
-            SemioCadMutation::RemoveBlock { name: "door".into() },
-            SemioCadMutation::SetBlockBasePoint { name: "door".into(), base_point: SemioPoint2 { x: 5.0, y: 5.0 } },
-            SemioCadMutation::AddEntity { entity: sample_entity_record("h2", "0") },
-            SemioCadMutation::RemoveEntity { handle: "h1".into() },
-            SemioCadMutation::SetEntityLayer { handle: "h1".into(), layer: "dim".into() },
-            SemioCadMutation::SetEntityGeometry { handle: "h1".into(), entity: CadEntity::Ellipse { center: SemioPoint2 { x: 0.0, y: 0.0 }, major_axis_end: SemioPoint2 { x: 1.0, y: 0.0 }, ratio: 0.5, start_param: 0.0, end_param: 6.28 } },
-            SemioCadMutation::SetEntityGeometry { handle: "h1".into(), entity: CadEntity::Insert { block_name: "door".into(), insertion_point: SemioPoint2 { x: 2.0, y: 2.0 }, scale: SemioPoint2 { x: 1.0, y: 1.0 }, rotation: 45.0 } },
-            SemioCadMutation::SetEntityGeometry { handle: "h1".into(), entity: CadEntity::Text { position: SemioPoint2 { x: 0.0, y: 0.0 }, height: 2.5, rotation: 0.0, content: "label".into() } },
-            SemioCadMutation::SetEntityGeometry { handle: "h1".into(), entity: CadEntity::Polyline { vertices: vec![SemioPoint2 { x: 0.0, y: 0.0 }, SemioPoint2 { x: 1.0, y: 1.0 }, SemioPoint2 { x: 2.0, y: 0.0 }], closed: false } },
-            SemioCadMutation::AddBlockEntity { block_name: "door".into(), entity: sample_entity_record("be2", "0") },
-            SemioCadMutation::RemoveBlockEntity { block_name: "door".into(), handle: "be1".into() },
-            SemioCadMutation::SetBlockEntityLayer { block_name: "door".into(), handle: "be1".into(), layer: "dim".into() },
-            SemioCadMutation::SetBlockEntityGeometry { block_name: "door".into(), handle: "be1".into(), entity: CadEntity::Circle { center: SemioPoint2 { x: 3.0, y: 3.0 }, radius: 4.0 } },
-        ];
-        for m in mutations {
+        for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = SemioCadMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

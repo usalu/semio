@@ -197,13 +197,13 @@ pub fn diff_set_snapshot(base: &SemioSnapshot, snapshot: &SemioSnapshot) -> Semi
 /// 🎙️ Handcrafted `protocol::DiffCodec` — one `tag:payload` line, where `payload` for the 13
 /// same-kind variants is exactly that subset's OWN already-real, already-hand-rolled
 /// `print_diff()`/`parse_diff()` output (genuine reuse — this module never re-derives any of the
-/// 13 subsets' own bracket/triple grammars). `Replace`'s payload is hex(json(snapshot)) — the
-/// same "neutral semio type, JSON-pack honesty boundary" every subset's own inline
-/// whole-snapshot embedding (`SetSnapshot`) already uses, applied here for the one case where the
-/// payload genuinely is an arbitrary one-of-13 snapshot rather than a fixed shape.
+/// 13 subsets' own bracket/triple grammars). `Replace`'s payload is hex(`SemioSnapshot::print_dsl`)
+/// — real delegation to THIS envelope's own now-real `ArtifactDsl` (📸️snapshot/🦀️component.rs,
+/// itself a real delegating codec over the same 13 subsets), hex-flattened to keep `print_diff`'s
+/// mandatory one-physical-line contract despite `print_dsl`'s own embedded newlines.
 fn enc_replace_snapshot(snapshot: &SemioSnapshot) -> String {
-    let bytes = serde_json::to_vec(snapshot).unwrap_or_default();
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+    let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(snapshot);
+    text.as_bytes().iter().map(|b| format!("{b:02x}")).collect()
 }
 
 fn dec_replace_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
@@ -217,7 +217,31 @@ fn dec_replace_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
         bytes.push(byte);
         i += 2;
     }
-    serde_json::from_slice(&bytes).map_err(|e| format!("replace: json decode: {e}"))
+    let text = String::from_utf8(bytes).map_err(|e| format!("replace: utf8 decode: {e}"))?;
+    <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|e| format!("replace: dsl decode: {e}"))
+}
+
+/// 🏷️ Binary tag ordinal for [`SemioDiff`] — `0` = `NoChange`, `1..=13` = the 13 wrapped subset
+/// kinds (same enum declaration order as [`crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::subset_ordinal`],
+/// offset by one to make room for `NoChange`), `14` = `Replace`.
+fn diff_tag(d: &SemioDiff) -> u8 {
+    match d {
+        SemioDiff::NoChange => 0,
+        SemioDiff::Brep(_) => 1,
+        SemioDiff::Mesh(_) => 2,
+        SemioDiff::Model(_) => 3,
+        SemioDiff::Object(_) => 4,
+        SemioDiff::Document(_) => 5,
+        SemioDiff::Cad(_) => 6,
+        SemioDiff::Drawing(_) => 7,
+        SemioDiff::Image(_) => 8,
+        SemioDiff::Video(_) => 9,
+        SemioDiff::Audio(_) => 10,
+        SemioDiff::Animation(_) => 11,
+        SemioDiff::Presentation(_) => 12,
+        SemioDiff::Workflow(_) => 13,
+        SemioDiff::Replace(_) => 14,
+    }
 }
 
 fn print_semio_diff(d: &SemioDiff) -> String {
@@ -269,17 +293,101 @@ impl protocol::DiffCodec for SemioDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_semio_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim — same simplification every hand-rolled `DiffCodec` in
-    /// this program uses (gif/svg/bcf/brep/…), satisfies every law without a second wire format.
+
+    /// ⚡️ Real delegating binary: `format u8` + `tag u8` ([`diff_tag`]) as two genuine,
+    /// individually protocol-walkable fixed header fields, then ONE opaque trailing payload —
+    /// for the 13 same-kind variants, that payload is exactly the wrapped subset's OWN real
+    /// `DiffCodec::encode_diff()` bytes (genuine reuse, never re-derived here); for `Replace`, the
+    /// wrapped snapshot's own real `ArtifactPack::encode_pack()` bytes (📸️snapshot's real binary
+    /// delegation, applied one level deeper); `NoChange` carries no payload at all.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        let mut out = vec![DIFF_BINARY_FORMAT, diff_tag(self)];
+        let payload: Vec<u8> = match self {
+            SemioDiff::NoChange => Vec::new(),
+            SemioDiff::Replace(s) => <SemioSnapshot as store::ArtifactPack>::encode_pack(s),
+            SemioDiff::Brep(d) => d.encode_diff()?,
+            SemioDiff::Mesh(d) => d.encode_diff()?,
+            SemioDiff::Model(d) => d.encode_diff()?,
+            SemioDiff::Object(d) => d.encode_diff()?,
+            SemioDiff::Document(d) => d.encode_diff()?,
+            SemioDiff::Cad(d) => d.encode_diff()?,
+            SemioDiff::Drawing(d) => d.encode_diff()?,
+            SemioDiff::Image(d) => d.encode_diff()?,
+            SemioDiff::Video(d) => d.encode_diff()?,
+            SemioDiff::Audio(d) => d.encode_diff()?,
+            SemioDiff::Animation(d) => d.encode_diff()?,
+            SemioDiff::Presentation(d) => d.encode_diff()?,
+            SemioDiff::Workflow(d) => d.encode_diff()?,
+        };
+        out.extend_from_slice(&payload);
+        Ok(out)
     }
+
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated".to_string() });
+        }
+        let format = bytes[0];
+        if format != DIFF_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported format {format}") });
+        }
+        let tag = bytes[1];
+        let payload = &bytes[2..];
+        Ok(match tag {
+            0 => SemioDiff::NoChange,
+            1 => SemioDiff::Brep(SemioBrepDiff::decode_diff(payload)?),
+            2 => SemioDiff::Mesh(SemioMeshDiff::decode_diff(payload)?),
+            3 => SemioDiff::Model(SemioModelDiff::decode_diff(payload)?),
+            4 => SemioDiff::Object(SemioObjectDiff::decode_diff(payload)?),
+            5 => SemioDiff::Document(SemioDocumentDiff::decode_diff(payload)?),
+            6 => SemioDiff::Cad(SemioCadDiff::decode_diff(payload)?),
+            7 => SemioDiff::Drawing(SemioDrawingDiff::decode_diff(payload)?),
+            8 => SemioDiff::Image(SemioImageDiff::decode_diff(payload)?),
+            9 => SemioDiff::Video(SemioVideoDiff::decode_diff(payload)?),
+            10 => SemioDiff::Audio(SemioAudioDiff::decode_diff(payload)?),
+            11 => SemioDiff::Animation(SemioAnimationDiff::decode_diff(payload)?),
+            12 => SemioDiff::Presentation(SemioPresentationDiff::decode_diff(payload)?),
+            13 => SemioDiff::Workflow(SemioWorkflowDiff::decode_diff(payload)?),
+            14 => SemioDiff::Replace(Box::new(<SemioSnapshot as store::ArtifactPack>::decode_pack(payload)?)),
+            other => return Err(protocol::ProtocolError::Malformed { what: "diff tag", offset: 1, detail: format!("unknown tag {other}") }),
+        })
     }
 }
 //#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🔖️Demo
+/// 🌱 Representative `SemioDiff` cases for this facet's conformance-law tests: `NoChange`, all 13
+/// same-kind (empty-but-real-tagged) nested diffs, and one `Replace`. Single source of truth for
+/// both this file's own round-trip test and `🎹️composer/🦀️component.rs`'s `diff_grammar_
+/// conformance_law`/`protocol_walk_law`.
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<SemioDiff> {
+    let subsets: Vec<SemioSubsetSnapshot> = vec![
+        SemioSubsetSnapshot::Brep(Default::default()),
+        SemioSubsetSnapshot::Mesh(Default::default()),
+        SemioSubsetSnapshot::Model(Default::default()),
+        SemioSubsetSnapshot::Object(Default::default()),
+        SemioSubsetSnapshot::Document(Default::default()),
+        SemioSubsetSnapshot::Cad(Default::default()),
+        SemioSubsetSnapshot::Drawing(Default::default()),
+        SemioSubsetSnapshot::Image(Default::default()),
+        SemioSubsetSnapshot::Video(Default::default()),
+        SemioSubsetSnapshot::Audio(Default::default()),
+        SemioSubsetSnapshot::Animation(Default::default()),
+        SemioSubsetSnapshot::Presentation(Default::default()),
+        SemioSubsetSnapshot::Workflow(Default::default()),
+    ];
+    let mut cases = vec![SemioDiff::NoChange];
+    for subset in subsets {
+        let snap = SemioSnapshot { schema: "stdio.semio".into(), subset };
+        cases.push(<SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&snap, &snap));
+    }
+    cases.push(SemioDiff::Replace(Box::new(SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Workflow(Default::default()) })));
+    cases
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]

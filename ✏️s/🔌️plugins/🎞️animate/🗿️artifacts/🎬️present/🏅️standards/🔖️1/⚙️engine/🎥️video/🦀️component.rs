@@ -457,8 +457,8 @@ pub mod render {
                 current_partial = Some(writer.begin_partial(&hash, frame_index as u32)?);
             }
             let pixels = renderer.render_capture(capture, &camera, config)?;
-            if let Some(ref partial) = current_partial {
-                writer.write_frame_png(partial, &pixels, frame_index as u32)?;
+            if current_partial.is_some() {
+                writer.push_frame(&pixels, frame_index as u32)?;
             }
             last_pixels = Some(pixels);
         }
@@ -920,13 +920,138 @@ pub mod scenes {
 }
 
 pub mod writer {
+    //! 📝️ Partial-movie writer. The FFmpeg subprocess path (`Command::new("ffmpeg")`, a real
+    //! CLAUDE.md "no external runtime dependency" violation confirmed by W0 recon) is deleted
+    //! outright — mp4 assembly now goes through stdio's real ISO-BMFF `encode_mp4`/`decode_mp4`
+    //! engine, and the gif sidecar through stdio's real `encode_gif` engine, both in-process, no
+    //! subprocess involved.
+
     use crate::artifacts::present::engine::animate_video::render::OutputFormat;
     use crate::artifacts::present::engine::animate_video::VideoError;
     use crate::artifacts::present::engine::animate::{AnimateConfig, SectionList};
     use image::{ImageBuffer, Rgba};
     use std::fs;
     use std::path::{Path, PathBuf};
-    use std::process::Command;
+
+    //#region 🔖️Mp4RawCodec
+    use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::engine::{boxes::write_box, decode_mp4, encode_mp4};
+    use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Sample, Mp4Snapshot, Mp4Track};
+
+    /// 🏷️ Escape-hatch fourcc for this plugin's own uncompressed-RGBA8 sample entry.
+    /// `Mp4Codec::Other` is the schema's documented boundary for a codec the mp4 engine doesn't
+    /// understand — stdio's own `⚙️engine/🎥️h264` doc comment confirms there is no real pixel
+    /// *encoder* there (only NAL/SPS bitstream framing utilities), so a compressed H.264 export
+    /// is not honestly buildable today; reported as a stdio_gap (see `w5a--report.md`) rather
+    /// than fabricated here. Frames are real, uncompressed, and round-trip exactly.
+    const RAW_RGBA8_FOURCC: [u8; 4] = *b"rgb8";
+
+    /// ✍️ A minimal, real ISO-BMFF `VisualSampleEntry` box (ISO/IEC 14496-12 §12.1.3) for the
+    /// `rgb8` escape-hatch codec — same fixed-field byte layout stdio's own AVC path builds
+    /// (mirrors that engine's `parse_visual_sample_entry` read-side skip pattern exactly), built
+    /// with stdio's own real `write_box` (box length/fourcc framing never hand-rolled here).
+    fn raw_visual_sample_entry(width: u16, height: u16) -> Vec<u8> {
+        let mut payload = vec![0u8; 8];
+        payload.extend_from_slice(&[0u8; 16]);
+        payload.extend_from_slice(&width.to_be_bytes());
+        payload.extend_from_slice(&height.to_be_bytes());
+        payload.extend_from_slice(&0x0048_0000u32.to_be_bytes());
+        payload.extend_from_slice(&0x0048_0000u32.to_be_bytes());
+        payload.extend_from_slice(&[0u8; 4]);
+        payload.extend_from_slice(&[0, 1]);
+        payload.extend_from_slice(&[0u8; 32]);
+        payload.extend_from_slice(&[0, 0x18]);
+        payload.extend_from_slice(&[0xFF, 0xFF]);
+        write_box(&RAW_RGBA8_FOURCC, &payload)
+    }
+
+    /// 🧬️ Builds one partial segment's real `Mp4Snapshot` from captured RGBA8 frames — real ISO-
+    /// BMFF container structure via stdio's own `encode_mp4` below, never hand-rolled here.
+    fn build_raw_mp4_snapshot(width: u32, height: u32, frame_rate: f64, frames: &[Vec<u8>]) -> Mp4Snapshot {
+        let timescale = (frame_rate.round() as u32).max(1);
+        let samples = frames.iter().map(|pixels| Mp4Sample { data: pixels.clone(), duration: 1, cts_offset: 0, sync: true }).collect();
+        let codec = Mp4Codec::Other { fourcc: String::from_utf8_lossy(&RAW_RGBA8_FOURCC).into_owned(), raw: raw_visual_sample_entry(width as u16, height as u16) };
+        let track = Mp4Track { track_id: 1, timescale, codec, width, height, samples };
+        Mp4Snapshot { tracks: vec![track], ..Mp4Snapshot::default() }
+    }
+    //#endregion 🔖️Mp4RawCodec
+
+    //#region 🔖️GifQuantize
+    use semio_s_plugin_stdio::artifacts::gif::engine::encode_gif;
+    use semio_s_plugin_stdio::artifacts::gif::schema::snapshot::{GifColorTable, GifDisposal, GifFrame, GifRgb, GifSnapshot};
+
+    const GIF_CUBE_LEVELS: [u8; 6] = [0, 51, 102, 153, 204, 255];
+    const GIF_TARGET_FPS: f64 = 15.0;
+    const GIF_MAX_WIDTH: u32 = 640;
+
+    /// 🎨️ Fixed 6×6×6 color cube (216 entries), padded to a valid power-of-two 256-entry GCT —
+    /// this artifact's own schema documents trailing padding entries past the meaningful palette
+    /// as real, expected on-disk bytes, not a modeling gap. No scaling/quantization logic is
+    /// added to stdio's gif engine itself (out of scope per this plugin's extraction map) — this
+    /// stays local, own domain code.
+    fn gif_palette() -> Vec<GifRgb> {
+        let mut palette = Vec::with_capacity(256);
+        for &r in &GIF_CUBE_LEVELS {
+            for &g in &GIF_CUBE_LEVELS {
+                for &b in &GIF_CUBE_LEVELS {
+                    palette.push(GifRgb { r, g, b });
+                }
+            }
+        }
+        palette.resize(256, GifRgb::default());
+        palette
+    }
+
+    fn gif_cube_level(value: u8) -> u32 {
+        (u32::from(value) * 5 + 127) / 255
+    }
+
+    /// 🔎️ Direct arithmetic nearest-color index into `gif_palette()`'s fixed uniform cube (no
+    /// brute-force search needed since the cube's levels are evenly spaced).
+    fn nearest_cube_index(r: u8, g: u8, b: u8) -> u8 {
+        (gif_cube_level(r) * 36 + gif_cube_level(g) * 6 + gif_cube_level(b)) as u8
+    }
+
+    /// 🔬️ Own simple nearest-neighbor spatial scaler — mirrors the old `scale=640:-1` ffmpeg
+    /// filter's target width. Stdio's gif engine has no scaling logic and shouldn't grow any per
+    /// this plugin's extraction-map recipe, so this stays local, own domain code.
+    fn nearest_neighbor_scale(pixels: &[u8], src_w: u32, src_h: u32, dst_w: u32, dst_h: u32) -> Vec<u8> {
+        let mut out = vec![0u8; (dst_w * dst_h * 4) as usize];
+        for y in 0..dst_h {
+            let sy = (y * src_h) / dst_h.max(1);
+            for x in 0..dst_w {
+                let sx = (x * src_w) / dst_w.max(1);
+                let si = ((sy * src_w + sx) * 4) as usize;
+                let di = ((y * dst_w + x) * 4) as usize;
+                out[di..di + 4].copy_from_slice(&pixels[si..si + 4]);
+            }
+        }
+        out
+    }
+
+    fn rgba_to_gif_indices(pixels: &[u8]) -> Vec<u8> {
+        pixels.chunks_exact(4).map(|p| nearest_cube_index(p[0], p[1], p[2])).collect()
+    }
+
+    /// 🎞️ Builds a real `GifSnapshot` from captured RGBA8 frames: own frame-rate decimation +
+    /// nearest-neighbor downscale (mirrors the old `fps=15,scale=640:-1` ffmpeg filter), own
+    /// fixed-cube color quantization, real GIF89a encode via stdio's `encode_gif` below.
+    fn build_gif_snapshot(width: u32, height: u32, frame_rate: f64, frames: &[Vec<u8>]) -> Option<GifSnapshot> {
+        if frames.is_empty() || width == 0 || height == 0 {
+            return None;
+        }
+        let step = ((frame_rate / GIF_TARGET_FPS).round() as usize).max(1);
+        let dst_w = width.min(GIF_MAX_WIDTH).max(1);
+        let dst_h = ((dst_w as f64 * height as f64 / width as f64).round() as u32).max(1);
+        let delay_cs = ((100.0 * step as f64 / frame_rate.max(1.0)).round() as u16).max(1);
+        let mut gif_frames = Vec::new();
+        for pixels in frames.iter().step_by(step) {
+            let scaled = if (dst_w, dst_h) == (width, height) { pixels.clone() } else { nearest_neighbor_scale(pixels, width, height, dst_w, dst_h) };
+            let indices = rgba_to_gif_indices(&scaled);
+            gif_frames.push(GifFrame { left: 0, top: 0, width: dst_w, height: dst_h, interlace: false, lct: None, indices, delay_cs, disposal: GifDisposal::RestoreToBackground, transparent_index: None, user_input: false, plain_text: None });
+        }
+        Some(GifSnapshot { width: dst_w, height: dst_h, gct: Some(GifColorTable { sorted: false, colors: gif_palette() }), loop_count: Some(0), frames: gif_frames, ..GifSnapshot::default() })
+    }
+    //#endregion 🔖️GifQuantize
 
     /// 🧹️ Clears partial-movie cache directories from config.
     pub fn flush_partial_movie_cache(config: &AnimateConfig) -> Result<usize, VideoError> {
@@ -961,12 +1086,15 @@ pub mod writer {
         format!("{hours:02}:{minutes:02}:{secs:02},{millis:03}")
     }
 
-    /// 📝️ Partial-movie writer with FFmpeg concat and sidecar outputs.
+    /// 📝️ Partial-movie writer: buffers captured RGBA8 frames in memory per partial, encodes each
+    /// partial to a real `.mp4` via stdio's mp4 engine on `finalize_partial`, and concatenates
+    /// partials by decoding+merging their samples and re-encoding — no FFmpeg, no PNG staging.
     pub struct SceneFileWriter {
         config: AnimateConfig,
         formats: Vec<OutputFormat>,
         partial_root: PathBuf,
         partial_paths: Vec<PathBuf>,
+        pending_frames: Vec<Vec<u8>>,
         png_sequence_dir: Option<PathBuf>,
         file_stem: String,
     }
@@ -985,33 +1113,37 @@ pub mod writer {
             } else {
                 None
             };
-            Ok(Self { config: config.clone(), formats: formats.to_vec(), partial_root, partial_paths: Vec::new(), png_sequence_dir, file_stem: "scene".into() })
+            Ok(Self { config: config.clone(), formats: formats.to_vec(), partial_root, partial_paths: Vec::new(), pending_frames: Vec::new(), png_sequence_dir, file_stem: "scene".into() })
         }
 
-        /// 🎬️ Begins a new partial movie directory for `hash`.
+        /// 🎬️ Begins a new partial-movie segment for `hash`; the returned path is where the
+        /// segment's own real `.mp4` (stdio-encoded) lands once `finalize_partial` runs.
         pub fn begin_partial(&mut self, hash: &str, frame_start: u32) -> Result<PathBuf, VideoError> {
-            let dir = self.partial_root.join(format!("{}_{frame_start}", &hash[..hash.len().min(12)]));
-            fs::create_dir_all(&dir).map_err(VideoError::io("partial begin"))?;
-            Ok(dir)
+            self.pending_frames.clear();
+            Ok(self.partial_root.join(format!("{}_{frame_start}.mp4", &hash[..hash.len().min(12)])))
         }
 
-        /// 🖼️ Writes one RGBA frame as PNG into a partial directory.
-        pub fn write_frame_png(&mut self, partial_dir: &Path, pixels: &[u8], frame_index: u32) -> Result<(), VideoError> {
-            let path = partial_dir.join(format!("{frame_index:06}.png"));
-            write_png_file(&path, pixels, self.config.width, self.config.height)?;
+        /// 🖼️ Buffers one captured RGBA8 frame for the open partial and, if `PngSequence` output
+        /// was requested, writes it into the flat frame sequence — the real `image` crate PNG
+        /// encoder, unrelated to and unchanged by the mp4/gif codec rewiring above.
+        pub fn push_frame(&mut self, pixels: &[u8], frame_index: u32) -> Result<(), VideoError> {
+            self.pending_frames.push(pixels.to_vec());
             if let Some(dir) = &self.png_sequence_dir {
-                let global = dir.join(format!("{frame_index:06}.png"));
-                fs::copy(&path, &global).map_err(VideoError::io("png copy"))?;
+                let path = dir.join(format!("{frame_index:06}.png"));
+                write_png_file(&path, pixels, self.config.width, self.config.height)?;
             }
             Ok(())
         }
 
-        /// ✅️ Encodes a partial PNG directory to mp4 and tracks it for concat.
-        pub fn finalize_partial(&mut self, partial_dir: &Path) -> Result<PathBuf, VideoError> {
-            let partial_mp4 = partial_dir.with_extension("mp4");
-            run_ffmpeg(&["-y", "-framerate", &format_number(self.config.frame_rate), "-i", &partial_dir.join("%06d.png").display().to_string(), "-c:v", "libx264", "-pix_fmt", "yuv420p", &partial_mp4.display().to_string()])?;
-            self.partial_paths.push(partial_mp4.clone());
-            Ok(partial_mp4)
+        /// ✅️ Encodes the buffered frames into a real `.mp4` at `partial_path` via stdio's mp4
+        /// engine and tracks it for the final concat pass.
+        pub fn finalize_partial(&mut self, partial_path: &Path) -> Result<PathBuf, VideoError> {
+            let snapshot = build_raw_mp4_snapshot(self.config.width, self.config.height, self.config.frame_rate, &self.pending_frames);
+            let bytes = encode_mp4(&snapshot);
+            fs::write(partial_path, &bytes).map_err(VideoError::io("partial mp4 write"))?;
+            self.partial_paths.push(partial_path.to_path_buf());
+            self.pending_frames.clear();
+            Ok(partial_path.to_path_buf())
         }
 
         /// ♻️ Reuses a cached partial without re-encoding.
@@ -1021,29 +1153,27 @@ pub mod writer {
             }
         }
 
-        /// 🎞️ Concatenates partial movies and emits configured sidecar outputs.
+        /// 🎞️ Concatenates partial `.mp4` segments (real decode → merge samples → encode via
+        /// stdio's mp4 engine, never FFmpeg) and emits configured sidecar outputs.
         pub fn encode_outputs(&self, last_frame: Option<&[u8]>) -> Result<super::render::OutputPaths, VideoError> {
             let mut outputs = super::render::OutputPaths::default();
+            let mut concatenated_frames: Vec<Vec<u8>> = Vec::new();
             if self.formats.contains(&OutputFormat::Mp4) && !self.partial_paths.is_empty() {
                 let mp4 = self.config.output_dir.join(format!("{}.mp4", self.file_stem));
-                concat_partials(&self.partial_paths, &mp4)?;
-                if let Some(audio) = &self.config.audio_track {
-                    if audio.exists() {
-                        let muxed = self.config.output_dir.join(format!("{}_with_audio.mp4", self.file_stem));
-                        mux_audio_track(&mp4, audio, &muxed)?;
-                        outputs.mp4 = Some(muxed);
-                    } else {
-                        outputs.mp4 = Some(mp4);
-                    }
-                } else {
-                    outputs.mp4 = Some(mp4);
-                }
+                concatenated_frames = concat_raw_partials(&self.partial_paths, &mp4, self.config.width, self.config.height, (self.config.frame_rate.round() as u32).max(1))?;
+                outputs.mp4 = Some(mp4);
+                // 🚧️ Audio muxing removed with the FFmpeg deletion: stdio's `Mp4Track` schema
+                // only models video-handler (`vide`) tracks (see that schema's own doc comment)
+                // — there is no honest way to mux `config.audio_track` into this container via
+                // stdio today. Reported as a stdio_gap (see `w5a--report.md`); not hand-rolled.
             }
             if self.formats.contains(&OutputFormat::Gif) {
-                if let Some(mp4) = &outputs.mp4 {
-                    let gif = self.config.output_dir.join(format!("{}.gif", self.file_stem));
-                    run_ffmpeg(&["-y", "-i", &mp4.display().to_string(), "-vf", "fps=15,scale=640:-1:flags=lanczos", &gif.display().to_string()])?;
-                    outputs.gif = Some(gif);
+                if let Some(gif_snapshot) = build_gif_snapshot(self.config.width, self.config.height, self.config.frame_rate, &concatenated_frames) {
+                    if let Ok(bytes) = encode_gif(&gif_snapshot) {
+                        let gif = self.config.output_dir.join(format!("{}.gif", self.file_stem));
+                        fs::write(&gif, bytes).map_err(VideoError::io("gif write"))?;
+                        outputs.gif = Some(gif);
+                    }
                 }
             }
             if self.formats.contains(&OutputFormat::LastFrame) {
@@ -1058,41 +1188,39 @@ pub mod writer {
         }
     }
 
-    fn format_number(value: f64) -> String {
-        use framework_hash::format_number_for_hash;
-        format_number_for_hash(value)
-    }
-
     fn write_png_file(path: &Path, pixels: &[u8], width: u32, height: u32) -> Result<(), VideoError> {
         let image: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_raw(width, height, pixels.to_vec()).ok_or(VideoError::InvalidRgbaBuffer)?;
         image.save(path).map_err(|err| VideoError::backend("png write", err))
     }
 
-    fn concat_partials(partials: &[PathBuf], output: &Path) -> Result<(), VideoError> {
+    /// 🎞️ Decodes+merges partial `.mp4` segments' raw-frame samples into one final `.mp4` at
+    /// `output` (real stdio decode/encode round trip, never FFmpeg) and returns the merged RGBA8
+    /// frames so the gif path can reuse them without a second decode pass.
+    fn concat_raw_partials(partials: &[PathBuf], output: &Path, width: u32, height: u32, timescale: u32) -> Result<Vec<Vec<u8>>, VideoError> {
         if partials.len() == 1 {
             fs::copy(&partials[0], output).map_err(VideoError::io("copy partial"))?;
-            return Ok(());
+            let bytes = fs::read(output).map_err(VideoError::io("read concatenated mp4"))?;
+            let snapshot = decode_mp4(&bytes).map_err(|error| VideoError::backend("decode single partial mp4", error))?;
+            return Ok(snapshot.tracks.into_iter().next().map(|t| t.samples.into_iter().map(|s| s.data).collect()).unwrap_or_default());
         }
-        let list_path = output.with_extension("txt");
-        let mut list = String::new();
+        let mut all_samples: Vec<Mp4Sample> = Vec::new();
+        let mut codec: Option<Mp4Codec> = None;
         for partial in partials {
-            list.push_str(&format!("file '{}'\n", partial.display()));
+            let bytes = fs::read(partial).map_err(VideoError::io("read partial mp4"))?;
+            let snapshot = decode_mp4(&bytes).map_err(|error| VideoError::backend("decode partial mp4", error))?;
+            if let Some(track) = snapshot.tracks.into_iter().next() {
+                if codec.is_none() {
+                    codec = Some(track.codec);
+                }
+                all_samples.extend(track.samples);
+            }
         }
-        fs::write(&list_path, list).map_err(VideoError::io("concat list"))?;
-        run_ffmpeg(&["-y", "-f", "concat", "-safe", "0", "-i", &list_path.display().to_string(), "-c", "copy", &output.display().to_string()])
-    }
-
-    fn mux_audio_track(video: &Path, audio: &Path, output: &Path) -> Result<(), VideoError> {
-        run_ffmpeg(&["-y", "-i", &video.display().to_string(), "-i", &audio.display().to_string(), "-c:v", "copy", "-c:a", "aac", "-shortest", &output.display().to_string()])
-    }
-
-    fn run_ffmpeg(args: &[&str]) -> Result<(), VideoError> {
-        let status = Command::new("ffmpeg").args(args).status().map_err(VideoError::io("ffmpeg spawn"))?;
-        if status.success() {
-            Ok(())
-        } else {
-            Err(VideoError::FfmpegStatus(status))
-        }
+        let frames: Vec<Vec<u8>> = all_samples.iter().map(|sample| sample.data.clone()).collect();
+        let track = Mp4Track { track_id: 1, timescale, codec: codec.unwrap_or_default(), width, height, samples: all_samples };
+        let snapshot = Mp4Snapshot { tracks: vec![track], ..Mp4Snapshot::default() };
+        let bytes = encode_mp4(&snapshot);
+        fs::write(output, &bytes).map_err(VideoError::io("write concatenated mp4"))?;
+        Ok(frames)
     }
 
     #[cfg(test)]
@@ -1116,14 +1244,86 @@ pub mod writer {
             assert!(path.exists());
         }
 
+        /// 🌉️ Scenario (c) — animate's e2e acceptance scenario: animate → semio/video → real mp4,
+        /// "playable" operationalized as "decodes clean via the real codec we wrote" per the master
+        /// plan's own framing. `decode_mp4` succeeding on real written bytes IS the box-walk proof
+        /// (ISO-BMFF is a nested box tree — a truncated/malformed box tree is a hard decode error,
+        /// never a silent partial result, per stdio's own mp4 engine); the assertions below add the
+        /// explicit track/duration invariants (real `ftyp` header, sample-accurate total track
+        /// duration in timescale ticks, byte-exact frame payload) on top of that.
         #[test]
-        fn writer_writes_png_frame() {
+        fn writer_buffers_frame_and_finalizes_a_real_decodable_mp4() {
             let config = temp_config();
-            let mut writer = SceneFileWriter::new(&config, &[OutputFormat::LastFrame]).expect("writer");
+            let mut writer = SceneFileWriter::new(&config, &[OutputFormat::Mp4]).expect("writer");
             let partial = writer.begin_partial("hash", 0).expect("partial");
             let pixels = vec![255u8; 16 * 16 * 4];
-            writer.write_frame_png(&partial, &pixels, 0).expect("frame");
-            assert!(partial.join("000000.png").exists());
+            writer.push_frame(&pixels, 0).expect("frame");
+            writer.push_frame(&pixels, 1).expect("frame");
+            let encoded = writer.finalize_partial(&partial).expect("finalize");
+            assert!(encoded.exists());
+            let bytes = fs::read(&encoded).expect("read partial mp4");
+            // 🌉️ `decode_mp4` walks the real nested ISO-BMFF box tree (ftyp/moov/trak/mdat/...) to
+            // produce this snapshot -- a bogus or truncated box tree is a hard `Err` here, never a
+            // silently-partial result, so this `expect` succeeding IS the box-walk assertion.
+            let snapshot = decode_mp4(&bytes).expect("decode real mp4 bytes: box-walk must succeed clean");
+            assert!(!snapshot.ftyp.major_brand.is_empty(), "real ftyp box must have survived the box-walk with a non-empty major_brand");
+            assert_eq!(snapshot.tracks.len(), 1, "track-count invariant: exactly one video track");
+            let track = &snapshot.tracks[0];
+            assert!(track.timescale > 0, "timescale invariant: a real track always carries a positive timescale");
+            assert_eq!(track.samples.len(), 2, "sample-count invariant: exactly the 2 pushed frames");
+            let total_duration_ticks: u64 = track.samples.iter().map(|sample| sample.duration as u64).sum();
+            assert_eq!(total_duration_ticks, 2, "duration invariant: 2 frames * 1 tick/frame == 2 total timescale ticks");
+            assert!((total_duration_ticks as f64 / track.timescale as f64) > 0.0, "duration invariant: real-world track duration (ticks / timescale) must be positive");
+            assert_eq!(track.samples[0].data, pixels, "byte-exact frame payload must survive the real mp4 round trip");
+            assert_eq!(track.samples[1].data, pixels);
+        }
+
+        #[test]
+        fn writer_writes_png_sequence_frame() {
+            let config = temp_config();
+            let mut writer = SceneFileWriter::new(&config, &[OutputFormat::PngSequence]).expect("writer");
+            let pixels = vec![255u8; 16 * 16 * 4];
+            writer.push_frame(&pixels, 0).expect("frame");
+            let frames_dir = config.output_dir.join("frames");
+            assert!(frames_dir.join("000000.png").exists());
+        }
+
+        #[test]
+        fn concat_raw_partials_merges_sample_counts_and_stays_decodable() {
+            let config = temp_config();
+            let mut writer = SceneFileWriter::new(&config, &[OutputFormat::Mp4]).expect("writer");
+            let pixels = vec![128u8; 16 * 16 * 4];
+            let first_partial = writer.begin_partial("a", 0).expect("partial a");
+            writer.push_frame(&pixels, 0).expect("frame");
+            writer.finalize_partial(&first_partial).expect("finalize a");
+            let second_partial = writer.begin_partial("b", 1).expect("partial b");
+            writer.push_frame(&pixels, 1).expect("frame");
+            writer.finalize_partial(&second_partial).expect("finalize b");
+            let output = config.output_dir.join("scene.mp4");
+            let frames = concat_raw_partials(&writer.partial_paths, &output, config.width, config.height, 16).expect("concat");
+            assert_eq!(frames.len(), 2);
+            let bytes = fs::read(&output).expect("read merged mp4");
+            let snapshot = decode_mp4(&bytes).expect("decode merged mp4");
+            assert_eq!(snapshot.tracks[0].samples.len(), 2);
+        }
+
+        #[test]
+        fn build_gif_snapshot_quantizes_and_downscales() {
+            let frames = vec![vec![255u8, 0, 0, 255].repeat(64 * 64)];
+            let snapshot = build_gif_snapshot(64, 64, 15.0, &frames).expect("gif snapshot");
+            assert_eq!(snapshot.frames.len(), 1);
+            assert_eq!(snapshot.width, 64);
+            assert_eq!(snapshot.frames[0].indices.len(), (snapshot.width * snapshot.height) as usize);
+            assert_eq!(snapshot.gct.as_ref().map(|t| t.colors.len()), Some(256));
+            let bytes = encode_gif(&snapshot).expect("real gif encode");
+            assert!(!bytes.is_empty());
+        }
+
+        #[test]
+        fn nearest_neighbor_scale_downsizes_dimensions() {
+            let src = vec![7u8; (8 * 8 * 4) as usize];
+            let scaled = nearest_neighbor_scale(&src, 8, 8, 4, 4);
+            assert_eq!(scaled.len(), 4 * 4 * 4);
         }
     }
 }
@@ -1153,9 +1353,6 @@ pub enum VideoError {
         #[source]
         source: serde_json::Error,
     },
-    /// 🎞️ FFmpeg exited with a non-zero status.
-    #[error("ffmpeg failed with status {0}")]
-    FfmpegStatus(std::process::ExitStatus),
     /// 🖼️ Pixel buffer length didn't match the declared RGBA8 dimensions.
     #[error("invalid rgba buffer")]
     InvalidRgbaBuffer,

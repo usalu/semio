@@ -1,6 +1,6 @@
 //! 🧬️ Cad snapshot schema — persistent fields only.
 
-use crate::artifacts::cad::{CadGeometry, CadNode, CadObject, CadReferenceList, CAD_PLAY_DOCUMENT_SCHEMA};
+use crate::artifacts::cad::{CadGeometry, CadNode, CadObject, CadReferenceList};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -118,17 +118,4 @@ impl store::ArtifactPack for CadSnapshot {
     fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
-
-/// 🪆️ `Box<CadSnapshot>` DslField binding for `CadMutation::SetSnapshot`.
-impl dsl::DslField for Box<CadSnapshot> {
-    fn shape() -> dsl::Shape {
-        <CadSnapshot as dsl::DslField>::shape()
-    }
-    fn to_value(&self) -> dsl::FieldValue {
-        <CadSnapshot as dsl::DslField>::to_value(self)
-    }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        <CadSnapshot as dsl::DslField>::from_value(value).map(Box::new)
-    }
-}
 //#endregion 🔖️Snapshot

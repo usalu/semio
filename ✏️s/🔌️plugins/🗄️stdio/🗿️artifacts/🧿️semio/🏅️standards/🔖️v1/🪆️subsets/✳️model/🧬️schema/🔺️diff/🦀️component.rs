@@ -375,31 +375,31 @@ pub fn diff_set_snapshot(base: &SemioModelSnapshot, next: &SemioModelSnapshot) -
 /// artifact's own copy of the small hex/option/list primitive set (each artifact writes its own,
 /// per bcf's own module doc rationale -- cross-artifact imports would be architecturally wrong).
 //#region 🔖️Primitives
-fn hex_encode(bytes: &[u8]) -> String {
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-fn enc_str(s: &str) -> String {
+pub(crate) fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn parse_f64(s: &str) -> Result<f64, String> {
+pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -407,42 +407,60 @@ fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
-fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
-fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+}
+
+/// 🧪️ P2 pilot (model): real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::
+/// write_varint_u64` / `store::ByteReader`, same helpers `stdio.workflow`'s upgraded `DiffCodec`
+/// reuses) backing the real `DiffCodec::encode_diff`/`decode_diff` below.
+pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-fn enc_point3(p: &SemioPoint3) -> String { format!("[{},{},{}]", p.x, p.y, p.z) }
-fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
+pub(crate) fn enc_point3(p: &SemioPoint3) -> String { format!("[{},{},{}]", p.x, p.y, p.z) }
+pub(crate) fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z] = parts.as_slice() else { return Err(format!("point3: expected 3 fields, got {}", parts.len())) };
     Ok(SemioPoint3 { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)? })
 }
-fn enc_quat(q: &SemioQuaternion) -> String { format!("[{},{},{},{}]", q.x, q.y, q.z, q.w) }
-fn dec_quat(s: &str) -> Result<SemioQuaternion, String> {
+pub(crate) fn enc_quat(q: &SemioQuaternion) -> String { format!("[{},{},{},{}]", q.x, q.y, q.z, q.w) }
+pub(crate) fn dec_quat(s: &str) -> Result<SemioQuaternion, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z, w] = parts.as_slice() else { return Err(format!("quaternion: expected 4 fields, got {}", parts.len())) };
     Ok(SemioQuaternion { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)?, w: parse_f64(w)? })
 }
-fn enc_transform(t: &SemioTransform) -> String { format!("[{},{},{}]", enc_point3(&t.translation), enc_quat(&t.rotation), enc_point3(&t.scale)) }
-fn dec_transform(s: &str) -> Result<SemioTransform, String> {
+pub(crate) fn enc_transform(t: &SemioTransform) -> String { format!("[{},{},{}]", enc_point3(&t.translation), enc_quat(&t.rotation), enc_point3(&t.scale)) }
+pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [translation, rotation, scale] = parts.as_slice() else { return Err(format!("transform: expected 3 fields, got {}", parts.len())) };
     Ok(SemioTransform { translation: dec_point3(translation)?, rotation: dec_quat(rotation)?, scale: dec_point3(scale)? })
 }
 
-fn enc_spatial_kind(k: &SpatialKind) -> &'static str {
+pub(crate) fn enc_spatial_kind(k: &SpatialKind) -> &'static str {
     match k { SpatialKind::Site => "S", SpatialKind::Building => "B", SpatialKind::Storey => "T", SpatialKind::Space => "P" }
 }
-fn dec_spatial_kind(s: &str) -> Result<SpatialKind, String> {
+pub(crate) fn dec_spatial_kind(s: &str) -> Result<SpatialKind, String> {
     match s { "S" => Ok(SpatialKind::Site), "B" => Ok(SpatialKind::Building), "T" => Ok(SpatialKind::Storey), "P" => Ok(SpatialKind::Space), other => Err(format!("spatial kind: unknown tag {other:?}")) }
 }
 
-fn enc_element_class(c: &ElementClass) -> String {
+pub(crate) fn enc_element_class(c: &ElementClass) -> String {
     match c {
         ElementClass::Wall => "WA".to_string(),
         ElementClass::Slab => "SL".to_string(),
@@ -456,7 +474,7 @@ fn enc_element_class(c: &ElementClass) -> String {
         ElementClass::Other { name } => format!("OT[{}]", enc_str(name)),
     }
 }
-fn dec_element_class(s: &str) -> Result<ElementClass, String> {
+pub(crate) fn dec_element_class(s: &str) -> Result<ElementClass, String> {
     match s {
         "WA" => Ok(ElementClass::Wall), "SL" => Ok(ElementClass::Slab), "CO" => Ok(ElementClass::Column),
         "BE" => Ok(ElementClass::Beam), "DO" => Ok(ElementClass::Door), "WI" => Ok(ElementClass::Window),
@@ -466,14 +484,14 @@ fn dec_element_class(s: &str) -> Result<ElementClass, String> {
     }
 }
 
-fn enc_geometry_ref(g: &GeometryRef) -> String {
+pub(crate) fn enc_geometry_ref(g: &GeometryRef) -> String {
     match g {
         GeometryRef::None => "N".to_string(),
         GeometryRef::Brep { brep_id } => format!("B[{}]", enc_str(brep_id)),
         GeometryRef::Mesh { mesh_id } => format!("M[{}]", enc_str(mesh_id)),
     }
 }
-fn dec_geometry_ref(s: &str) -> Result<GeometryRef, String> {
+pub(crate) fn dec_geometry_ref(s: &str) -> Result<GeometryRef, String> {
     if s == "N" { return Ok(GeometryRef::None); }
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
@@ -484,14 +502,14 @@ fn dec_geometry_ref(s: &str) -> Result<GeometryRef, String> {
     }
 }
 
-fn enc_pset_value(v: &PsetValue) -> String {
+pub(crate) fn enc_pset_value(v: &PsetValue) -> String {
     match v {
         PsetValue::Text { value } => format!("T[{}]", enc_str(value)),
         PsetValue::Number { value } => format!("N[{value}]"),
         PsetValue::Boolean { value } => format!("B[{}]", if *value { "1" } else { "0" }),
     }
 }
-fn dec_pset_value(s: &str) -> Result<PsetValue, String> {
+pub(crate) fn dec_pset_value(s: &str) -> Result<PsetValue, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -502,37 +520,37 @@ fn dec_pset_value(s: &str) -> Result<PsetValue, String> {
     }
 }
 
-fn enc_property(p: &Property) -> String { format!("[{},{}]", enc_str(&p.key), enc_pset_value(&p.value)) }
-fn dec_property(s: &str) -> Result<Property, String> {
+pub(crate) fn enc_property(p: &Property) -> String { format!("[{},{}]", enc_str(&p.key), enc_pset_value(&p.value)) }
+pub(crate) fn dec_property(s: &str) -> Result<Property, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [key, value] = parts.as_slice() else { return Err(format!("property: expected 2 fields, got {}", parts.len())) };
     Ok(Property { key: dec_str(key)?, value: dec_pset_value(value)? })
 }
 
-fn enc_property_set(ps: &PropertySet) -> String { format!("[{},{}]", enc_str(&ps.name), enc_list(&ps.properties, enc_property)) }
-fn dec_property_set(s: &str) -> Result<PropertySet, String> {
+pub(crate) fn enc_property_set(ps: &PropertySet) -> String { format!("[{},{}]", enc_str(&ps.name), enc_list(&ps.properties, enc_property)) }
+pub(crate) fn dec_property_set(s: &str) -> Result<PropertySet, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, properties] = parts.as_slice() else { return Err(format!("property set: expected 2 fields, got {}", parts.len())) };
     Ok(PropertySet { name: dec_str(name)?, properties: dec_list(properties, dec_property)? })
 }
 
-fn enc_spatial_node(n: &SpatialNode) -> String {
+pub(crate) fn enc_spatial_node(n: &SpatialNode) -> String {
     format!("[{},{},{},{},{}]", enc_str(&n.id), enc_spatial_kind(&n.kind), enc_str(&n.name), encode_option(&n.parent_id, |v: &String| enc_str(v)), enc_transform(&n.placement))
 }
-fn dec_spatial_node(s: &str) -> Result<SpatialNode, String> {
+pub(crate) fn dec_spatial_node(s: &str) -> Result<SpatialNode, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, kind, name, parent_id, placement] = parts.as_slice() else { return Err(format!("spatial node: expected 5 fields, got {}", parts.len())) };
     Ok(SpatialNode { id: dec_str(id)?, kind: dec_spatial_kind(kind)?, name: dec_str(name)?, parent_id: decode_option(parent_id, dec_str)?, placement: dec_transform(placement)? })
 }
 
-fn enc_element(e: &SemioModelElement) -> String {
+pub(crate) fn enc_element(e: &SemioModelElement) -> String {
     format!(
         "[{},{},{},{},{},{}]",
         enc_str(&e.id), enc_element_class(&e.class), enc_transform(&e.placement), enc_geometry_ref(&e.geometry),
         encode_option(&e.spatial_id, |v: &String| enc_str(v)), enc_list(&e.psets, enc_property_set),
     )
 }
-fn dec_element(s: &str) -> Result<SemioModelElement, String> {
+pub(crate) fn dec_element(s: &str) -> Result<SemioModelElement, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, class, placement, geometry, spatial_id, psets] = parts.as_slice() else { return Err(format!("element: expected 6 fields, got {}", parts.len())) };
     Ok(SemioModelElement {
@@ -541,7 +559,7 @@ fn dec_element(s: &str) -> Result<SemioModelElement, String> {
     })
 }
 
-fn enc_relation_kind(k: &RelationKind) -> String {
+pub(crate) fn enc_relation_kind(k: &RelationKind) -> String {
     match k {
         RelationKind::Aggregates => "AG".to_string(),
         RelationKind::ContainedIn => "CI".to_string(),
@@ -551,7 +569,7 @@ fn enc_relation_kind(k: &RelationKind) -> String {
         RelationKind::Other { label } => format!("OT[{}]", enc_str(label)),
     }
 }
-fn dec_relation_kind(s: &str) -> Result<RelationKind, String> {
+pub(crate) fn dec_relation_kind(s: &str) -> Result<RelationKind, String> {
     match s {
         "AG" => Ok(RelationKind::Aggregates), "CI" => Ok(RelationKind::ContainedIn), "CN" => Ok(RelationKind::ConnectsTo),
         "FV" => Ok(RelationKind::FillsVoid), "VE" => Ok(RelationKind::VoidsElement),
@@ -560,8 +578,8 @@ fn dec_relation_kind(s: &str) -> Result<RelationKind, String> {
     }
 }
 
-fn enc_relation(r: &ModelRelation) -> String { format!("[{},{},{},{}]", enc_str(&r.id), enc_relation_kind(&r.kind), enc_str(&r.from), enc_str(&r.to)) }
-fn dec_relation(s: &str) -> Result<ModelRelation, String> {
+pub(crate) fn enc_relation(r: &ModelRelation) -> String { format!("[{},{},{},{}]", enc_str(&r.id), enc_relation_kind(&r.kind), enc_str(&r.from), enc_str(&r.to)) }
+pub(crate) fn dec_relation(s: &str) -> Result<ModelRelation, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, kind, from, to] = parts.as_slice() else { return Err(format!("relation: expected 4 fields, got {}", parts.len())) };
     Ok(ModelRelation { id: dec_str(id)?, kind: dec_relation_kind(kind)?, from: dec_str(from)?, to: dec_str(to)? })
@@ -622,11 +640,18 @@ fn dec_relation_diff(s: &str) -> Result<ModelRelationDiff, String> {
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
+pub(crate) fn enc_spatial_diff(d: &SpatialDiff) -> String { enc_named_triple(d, |k: &String| enc_str(k), enc_spatial_node_diff, enc_spatial_node) }
+pub(crate) fn dec_spatial_diff(s: &str) -> Result<SpatialDiff, String> { dec_named_triple(s, dec_str, dec_spatial_node_diff, dec_spatial_node) }
+pub(crate) fn enc_elements_diff(d: &ElementsDiff) -> String { enc_named_triple(d, |k: &String| enc_str(k), enc_element_diff, enc_element) }
+pub(crate) fn dec_elements_diff(s: &str) -> Result<ElementsDiff, String> { dec_named_triple(s, dec_str, dec_element_diff, dec_element) }
+pub(crate) fn enc_relations_diff(d: &RelationsDiff) -> String { enc_named_triple(d, |k: &String| enc_str(k), enc_relation_diff, enc_relation) }
+pub(crate) fn dec_relations_diff(s: &str) -> Result<RelationsDiff, String> { dec_named_triple(s, dec_str, dec_relation_diff, dec_relation) }
+
 fn print_semio_model_diff(d: &SemioModelDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.spatial { tokens.push(format!("spatial={}", enc_named_triple(v, |k: &String| enc_str(k), enc_spatial_node_diff, enc_spatial_node))); }
-    if let Some(v) = &d.elements { tokens.push(format!("elements={}", enc_named_triple(v, |k: &String| enc_str(k), enc_element_diff, enc_element))); }
-    if let Some(v) = &d.relations { tokens.push(format!("relations={}", enc_named_triple(v, |k: &String| enc_str(k), enc_relation_diff, enc_relation))); }
+    if let Some(v) = &d.spatial { tokens.push(format!("spatial={}", enc_spatial_diff(v))); }
+    if let Some(v) = &d.elements { tokens.push(format!("elements={}", enc_elements_diff(v))); }
+    if let Some(v) = &d.relations { tokens.push(format!("relations={}", enc_relations_diff(v))); }
     tokens.join(" ")
 }
 fn parse_semio_model_diff(line: &str) -> Result<SemioModelDiff, String> {
@@ -635,9 +660,9 @@ fn parse_semio_model_diff(line: &str) -> Result<SemioModelDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("spatial=") { d.spatial = Some(dec_named_triple(rest, dec_str, dec_spatial_node_diff, dec_spatial_node)?); }
-        else if let Some(rest) = token.strip_prefix("elements=") { d.elements = Some(dec_named_triple(rest, dec_str, dec_element_diff, dec_element)?); }
-        else if let Some(rest) = token.strip_prefix("relations=") { d.relations = Some(dec_named_triple(rest, dec_str, dec_relation_diff, dec_relation)?); }
+        if let Some(rest) = token.strip_prefix("spatial=") { d.spatial = Some(dec_spatial_diff(rest)?); }
+        else if let Some(rest) = token.strip_prefix("elements=") { d.elements = Some(dec_elements_diff(rest)?); }
+        else if let Some(rest) = token.strip_prefix("relations=") { d.relations = Some(dec_relations_diff(rest)?); }
         else { return Err(format!("semio model diff: unknown token {token:?}")); }
     }
     Ok(d)
@@ -646,72 +671,151 @@ fn parse_semio_model_diff(line: &str) -> Result<SemioModelDiff, String> {
 impl protocol::DiffCodec for SemioModelDiff {
     fn print_diff(&self) -> String { print_semio_model_diff(self) }
     fn parse_diff(line: &str) -> Result<Self, store::TextError> { parse_semio_model_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1))) }
-    /// ⚡️ Binary = the text bytes verbatim -- same simplification `GifDiff`/`SvgDiff`/`BcfDiff`
-    /// all use, satisfies every `DiffCodec` law without inventing a second wire format.
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(self.print_diff().into_bytes()) }
+    /// ⚡️ P2 pilot (model): real binary diff frame, replacing the old `print_diff().into_bytes()`
+    /// text-as-binary shortcut. `format u8` + `presence u8` (bit0=`spatial`, bit1=`elements`,
+    /// bit2=`relations`) are two REAL fixed fields; each present collection then follows as its own
+    /// varint-length-prefixed opaque blob (the same `enc_spatial_diff`/`enc_elements_diff`/
+    /// `enc_relations_diff` bracket/hex text this type's `print_diff` already produces) — three
+    /// independently-delimited segments rather than one bare trailing `bytes` because there can be
+    /// 0-3 of them (chaining a `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a
+    /// second `if`-guard on a field that was itself only conditionally decoded hard-errors
+    /// `eval_cond` — same gap `stdio.semio.workflow`'s own diff facet hit first).
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        let mut presence = 0u8;
+        if self.spatial.is_some() { presence |= 0b001; }
+        if self.elements.is_some() { presence |= 0b010; }
+        if self.relations.is_some() { presence |= 0b100; }
+        let mut out = vec![DIFF_BINARY_FORMAT, presence];
+        if let Some(v) = &self.spatial { write_str_lp(&mut out, &enc_spatial_diff(v)); }
+        if let Some(v) = &self.elements { write_str_lp(&mut out, &enc_elements_diff(v)); }
+        if let Some(v) = &self.relations { write_str_lp(&mut out, &enc_relations_diff(v)); }
+        Ok(out)
+    }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
+        }
+        if bytes[0] != DIFF_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
+        }
+        let presence = bytes[1];
+        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let spatial = if presence & 0b001 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff spatial blob", offset: 2, detail: e })?;
+            Some(dec_spatial_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff spatial text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        let elements = if presence & 0b010 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff elements blob", offset: 2, detail: e })?;
+            Some(dec_elements_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff elements text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        let relations = if presence & 0b100 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff relations blob", offset: 2, detail: e })?;
+            Some(dec_relations_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff relations text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        Ok(SemioModelDiff { spatial, elements, relations })
     }
 }
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
 
+//#region 🔖️Demo
+/// 🏗️ Sweep base -- one node/element/relation that survives (and gets modified in every field),
+/// one that gets removed. `keep-spatial`'s `parent_id` starts `Some(..)` so `sweep_b` can exercise
+/// the `Some(None)` tri-state transition; `keep-element`'s `spatial_id` starts `None` so `sweep_b`
+/// exercises the opposite transition (None -> Some). Module-scope (not nested in `mod tests`) so
+/// `demo_diff_cases` below and the composer's `conformance_laws` can both reuse it — single source
+/// of truth, same convention `stdio.semio.workflow`'s own diff facet demo cases use.
+#[cfg(test)]
+pub(crate) fn moved_transform(x: f64) -> SemioTransform {
+    SemioTransform { translation: SemioPoint3 { x, y: 0.0, z: 0.0 }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
+}
+#[cfg(test)]
+pub(crate) fn sweep_a() -> SemioModelSnapshot {
+    SemioModelSnapshot {
+        schema: SemioModelSnapshot::default().schema,
+        spatial: vec![
+            SpatialNode { id: "keep-spatial".into(), kind: SpatialKind::Site, name: "Alpha".into(), parent_id: Some("orphan-parent".into()), placement: SemioTransform::identity() },
+            SpatialNode { id: "gone-spatial".into(), kind: SpatialKind::Building, name: "ToRemove".into(), parent_id: None, placement: SemioTransform::identity() },
+        ],
+        elements: vec![
+            SemioModelElement {
+                id: "keep-element".into(), class: ElementClass::Wall, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None,
+                psets: vec![PropertySet { name: "Pset_A".into(), properties: vec![Property { key: "k".into(), value: PsetValue::Boolean { value: false } }] }],
+            },
+            SemioModelElement { id: "gone-element".into(), class: ElementClass::Door, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] },
+        ],
+        relations: vec![
+            ModelRelation { id: "keep-relation".into(), kind: RelationKind::Aggregates, from: "a".into(), to: "b".into() },
+            ModelRelation { id: "gone-relation".into(), kind: RelationKind::ConnectsTo, from: "x".into(), to: "y".into() },
+        ],
+    }
+}
+#[cfg(test)]
+pub(crate) fn sweep_b() -> SemioModelSnapshot {
+    SemioModelSnapshot {
+        schema: SemioModelSnapshot::default().schema,
+        spatial: vec![
+            SpatialNode { id: "keep-spatial".into(), kind: SpatialKind::Building, name: "Alpha Renamed".into(), parent_id: None, placement: moved_transform(9.0) },
+            SpatialNode { id: "new-spatial".into(), kind: SpatialKind::Storey, name: "Fresh".into(), parent_id: Some("keep-spatial".into()), placement: SemioTransform::identity() },
+        ],
+        elements: vec![
+            SemioModelElement {
+                id: "keep-element".into(), class: ElementClass::Slab, placement: moved_transform(4.0), geometry: GeometryRef::Brep { brep_id: "b1".into() }, spatial_id: Some("keep-spatial".into()),
+                psets: vec![PropertySet { name: "Pset_B".into(), properties: vec![Property { key: "k2".into(), value: PsetValue::Number { value: 3.5 } }] }],
+            },
+            SemioModelElement { id: "new-element".into(), class: ElementClass::Column, placement: SemioTransform::identity(), geometry: GeometryRef::Mesh { mesh_id: "m1".into() }, spatial_id: None, psets: vec![] },
+        ],
+        relations: vec![
+            ModelRelation { id: "keep-relation".into(), kind: RelationKind::ContainedIn, from: "c".into(), to: "d".into() },
+            ModelRelation { id: "new-relation".into(), kind: RelationKind::FillsVoid, from: "e".into(), to: "f".into() },
+        ],
+    }
+}
+
+/// 🌱 Representative `SemioModelDiff` cases (empty/no-op, a full spatial+element+relation sweep
+/// both directions, a bare spatial-node insert, a bare element insert, a bare relation insert) —
+/// single source of truth for `grammar_conformance_law`/`protocol_walk_law` in
+/// `🎹️composer/🦀️component.rs`.
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<SemioModelDiff> {
+    let a = sweep_a();
+    let b = sweep_b();
+    let mut cases = vec![
+        SemioModelDiff::default(),
+        <SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::between(&a, &b),
+        <SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::between(&b, &a),
+    ];
+    cases.push(SemioModelDiff {
+        spatial: Some(NamedTripleDiff { added: vec![SpatialNode { id: "demo-spatial".into(), kind: SpatialKind::Space, name: "Demo".into(), parent_id: None, placement: SemioTransform::identity() }], ..Default::default() }),
+        elements: None,
+        relations: None,
+    });
+    cases.push(SemioModelDiff {
+        spatial: None,
+        elements: Some(NamedTripleDiff { added: vec![SemioModelElement { id: "demo-element".into(), class: ElementClass::Beam, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] }], ..Default::default() }),
+        relations: None,
+    });
+    cases.push(SemioModelDiff {
+        spatial: None,
+        elements: None,
+        relations: Some(NamedTripleDiff { added: vec![ModelRelation { id: "demo-relation".into(), kind: RelationKind::ConnectsTo, from: "a".into(), to: "b".into() }], ..Default::default() }),
+    });
+    cases
+}
+//#endregion 🔖️Demo
+
 //#region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
-
-    fn moved_transform(x: f64) -> SemioTransform {
-        SemioTransform { translation: SemioPoint3 { x, y: 0.0, z: 0.0 }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
-    }
-
-    /// 🏗️ Sweep base -- one node/element/relation that survives (and gets modified in every
-    /// field), one that gets removed. `keep-spatial`'s `parent_id` starts `Some(..)` so `sweep_b`
-    /// can exercise the `Some(None)` tri-state transition; `keep-element`'s `spatial_id` starts
-    /// `None` so `sweep_b` exercises the opposite transition (None -> Some).
-    fn sweep_a() -> SemioModelSnapshot {
-        SemioModelSnapshot {
-            schema: SemioModelSnapshot::default().schema,
-            spatial: vec![
-                SpatialNode { id: "keep-spatial".into(), kind: SpatialKind::Site, name: "Alpha".into(), parent_id: Some("orphan-parent".into()), placement: SemioTransform::identity() },
-                SpatialNode { id: "gone-spatial".into(), kind: SpatialKind::Building, name: "ToRemove".into(), parent_id: None, placement: SemioTransform::identity() },
-            ],
-            elements: vec![
-                SemioModelElement {
-                    id: "keep-element".into(), class: ElementClass::Wall, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None,
-                    psets: vec![PropertySet { name: "Pset_A".into(), properties: vec![Property { key: "k".into(), value: PsetValue::Boolean { value: false } }] }],
-                },
-                SemioModelElement { id: "gone-element".into(), class: ElementClass::Door, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] },
-            ],
-            relations: vec![
-                ModelRelation { id: "keep-relation".into(), kind: RelationKind::Aggregates, from: "a".into(), to: "b".into() },
-                ModelRelation { id: "gone-relation".into(), kind: RelationKind::ConnectsTo, from: "x".into(), to: "y".into() },
-            ],
-        }
-    }
-
-    fn sweep_b() -> SemioModelSnapshot {
-        SemioModelSnapshot {
-            schema: SemioModelSnapshot::default().schema,
-            spatial: vec![
-                SpatialNode { id: "keep-spatial".into(), kind: SpatialKind::Building, name: "Alpha Renamed".into(), parent_id: None, placement: moved_transform(9.0) },
-                SpatialNode { id: "new-spatial".into(), kind: SpatialKind::Storey, name: "Fresh".into(), parent_id: Some("keep-spatial".into()), placement: SemioTransform::identity() },
-            ],
-            elements: vec![
-                SemioModelElement {
-                    id: "keep-element".into(), class: ElementClass::Slab, placement: moved_transform(4.0), geometry: GeometryRef::Brep { brep_id: "b1".into() }, spatial_id: Some("keep-spatial".into()),
-                    psets: vec![PropertySet { name: "Pset_B".into(), properties: vec![Property { key: "k2".into(), value: PsetValue::Number { value: 3.5 } }] }],
-                },
-                SemioModelElement { id: "new-element".into(), class: ElementClass::Column, placement: SemioTransform::identity(), geometry: GeometryRef::Mesh { mesh_id: "m1".into() }, spatial_id: None, psets: vec![] },
-            ],
-            relations: vec![
-                ModelRelation { id: "keep-relation".into(), kind: RelationKind::ContainedIn, from: "c".into(), to: "d".into() },
-                ModelRelation { id: "new-relation".into(), kind: RelationKind::FillsVoid, from: "e".into(), to: "f".into() },
-            ],
-        }
-    }
 
     /// 🧪️ field_sweep: `sweep_a`/`sweep_b` differ in EVERY mutable field across all three
     /// collections (one removed, one modified-in-every-field, one added each), and exercise the

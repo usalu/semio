@@ -42,12 +42,6 @@ fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::art
     Err(ComposeError { message: "Puzzle2dComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
 }
 
-const EXPORT_ZIP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
-fn compose_export_zip(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-    let snapshot = rebuild_native_snapshot(sources)?;
-    let bytes = crate::artifacts::puzzle2d::io::export::serializers::artifacts::zip::v2_0::any::export(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-    Ok(ComposedArtifact { dialect: EXPORT_ZIP_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-}
 const EXPORT_SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
 fn compose_export_svg(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
     let snapshot = rebuild_native_snapshot(sources)?;
@@ -84,32 +78,17 @@ fn compose_export_dxf(sources: &[ErasedComposeSource]) -> Result<ComposedArtifac
     let bytes = crate::artifacts::puzzle2d::io::export::serializers::artifacts::dxf::v_r12::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
     Ok(ComposedArtifact { dialect: EXPORT_DXF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
 }
-const EXPORT_STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-fn compose_export_stl(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-    let snapshot = rebuild_native_snapshot(sources)?;
-    let bytes = crate::artifacts::puzzle2d::io::export::serializers::artifacts::stl::v_ascii::any::export(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-    Ok(ComposedArtifact { dialect: EXPORT_STL_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-}
-const EXPORT_OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-fn compose_export_obj(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-    let snapshot = rebuild_native_snapshot(sources)?;
-    let bytes = crate::artifacts::puzzle2d::io::export::serializers::artifacts::obj::v3_0::any::export(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-    Ok(ComposedArtifact { dialect: EXPORT_OBJ_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-}
 //#endregion 🔖️ExportEntries
 
 
 pub fn entries() -> &'static [ComposerEntry] {
     ENTRIES.get_or_init(|| vec![
         composer_entry_of::<Puzzle2dAnyComposer>(),
-        ComposerEntry { writes: EXPORT_ZIP_DIALECT, reads: &[PUZZLE2D_DIALECT], compose: compose_export_zip },
         ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[PUZZLE2D_DIALECT], compose: compose_export_svg },
         ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[PUZZLE2D_DIALECT], compose: compose_export_pdf },
         ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[PUZZLE2D_DIALECT], compose: compose_export_png },
         ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[PUZZLE2D_DIALECT], compose: compose_export_json },
         ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[PUZZLE2D_DIALECT], compose: compose_export_dwg },
         ComposerEntry { writes: EXPORT_DXF_DIALECT, reads: &[PUZZLE2D_DIALECT], compose: compose_export_dxf },
-        ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[PUZZLE2D_DIALECT], compose: compose_export_stl },
-        ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[PUZZLE2D_DIALECT], compose: compose_export_obj },
     ]).as_slice()
 }

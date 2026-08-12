@@ -1,5 +1,11 @@
 module Stdio_semio_animation_snapshot;
+
+# `pack` payload, past the `semio_format` envelope: real `format` (1 byte) + varint-length-prefixed
+# `schema` UTF-8 string, then one opaque `payload` tail (timelines/channels/keyframes — see the
+# sibling `📡️component.protocol.semio`'s comment on the `protocol-array-of-records` boundary).
 type Document = unit {
-    magic: bytes &size=1;
-    body: bytes &eod &convert=$$.decode() # hex-encoded JSON envelope body
+    format: uint8;
+    schema_len: bytes &until=$$ ; # varint (LEB128) — Spicy has no native varint primitive; see
+                                   # 📸️snapshot/🦀️component.rs's real `store::pack_rt` varint reader.
+    payload: bytes &eod;
 };

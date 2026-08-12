@@ -522,7 +522,7 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/🗒️note/📌️panels/📄️document/🦀️component.rs"]
+            #[path = "../../🎛️apps/🗒️note/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
             #[path = "../../🎛️apps/🗒️note/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;

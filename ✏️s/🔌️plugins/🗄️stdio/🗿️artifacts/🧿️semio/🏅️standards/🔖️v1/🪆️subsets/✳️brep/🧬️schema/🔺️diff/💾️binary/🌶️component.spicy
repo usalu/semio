@@ -1,7 +1,10 @@
 module Stdio_semio_brep_diff;
 
-# Binary payload: UTF-8 diff-line text verbatim (protocol::DiffCodec::encode_diff is
-# print_diff().into_bytes()), same grammar as the sibling text facet.
+# Real binary frame: `format` (1 byte) + `presence` bitmask (1 byte, bit0=vertices..bit5=solids),
+# then 0-6 varint-length-prefixed opaque per-collection text blobs (protocol::DiffCodec's real
+# encode_diff/decode_diff, replacing the old "text bytes verbatim" shortcut).
 type Document = unit {
-    payload: bytes &eod &convert=$$.decode("utf-8");
+    format: uint8;
+    presence: uint8;
+    payload: bytes &eod;
 };

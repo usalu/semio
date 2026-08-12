@@ -1,6 +1,40 @@
-dialect grammar stdio.semio.audio.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.semio.audio' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.semio.audio.mutations
+extension semio
+start op
+
+# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION audio wave: real one-line
+# `OpText::print_op`/`parse_op` shape ALREADY emitted by `🧬️mutations/🦀️component.rs`
+# (`print_audio_mutation`/`parse_audio_mutation`) — `keyword payload...` (space-separated; space
+# is lexer trivia at this dialect level, matching how the real text splits on the FIRST space via
+# `split_once(' ')`). Every keyword token below is copied verbatim from the real `format!(...)`
+# call sites in that file's `print_audio_mutation`, not invented.
+op = no-mutation | set-snapshot | set-sample-rate | set-format | insert-channel | remove-channel | set-channel-samples | insert-tag | remove-tag | set-tag-value
+
+no-mutation = "no-mutation"
+set-snapshot = "set-snapshot" snapshot
+set-sample-rate = "set-sample-rate" INT
+set-format = "set-format" format
+insert-channel = "insert-channel" INT channel
+remove-channel = "remove-channel" INT
+set-channel-samples = "set-channel-samples" INT channel
+insert-tag = "insert-tag" INT tag
+remove-tag = "remove-tag" INT
+set-tag-value = "set-tag-value" INT hex
+
+# `snapshot` — the same full-VALUE codec `📸️snapshot/🦀️component.rs`'s own text DSL grammar
+# declares (restated here so this leaf grammar is self-contained, matching the repo's existing
+# per-facet convention): schema-hex, sampleRate, format, channels, tags.
+snapshot = "[" hex "," INT "," format "," "[" channel-list? "]" "," "[" tag-list? "]" "]"
+channel-list = channel {"," channel}*
+channel = "[" sample-list? "]"
+sample-list = hex {"," hex}*
+tag-list = tag {"," tag}*
+tag = "[" hex "," hex "]"
+format = "pcm8" | "pcm16" | "pcm24" | "pcm32" | "f32" | "f64"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — a run of lowercase hex digits, incl. the empty string. `Symbol::Ref` already falls
+# back from "no production of this name" to "macro of this name", so referencing `hex` with no
+# matching production routes here automatically (recipe pitfall #2 — a hand-rolled `{INT|IDENT}*`
+# production would silently swallow the next literal keyword token instead).

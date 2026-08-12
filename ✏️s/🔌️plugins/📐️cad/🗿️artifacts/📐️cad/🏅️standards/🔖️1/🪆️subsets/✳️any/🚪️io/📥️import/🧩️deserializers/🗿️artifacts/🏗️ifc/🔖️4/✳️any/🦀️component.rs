@@ -1,27 +1,13 @@
 //! Deserialize cad via stdio.ifc.
-
+//!
+//! 🧹️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a: the
+//! binary `deserialize()` this file used to carry reinterpreted `IFCCARTESIANPOINT` values as the
+//! CAD document's own opaque `ArtifactPack` bytes (fabricated, and had zero callers — `CadComposer`
+//! only ever calls `deserialize_text` below) — deleted outright, matching the mirror export leaf.
 use crate::artifacts::cad::CadSnapshot;
-use crate::artifacts::cad::io::{cad_from_wire, pack_err_as_text};
-use semio_s_plugin_stdio::artifacts::ifc::schema::snapshot::IfcValue;
-use semio_s_plugin_stdio::artifacts::ifc::{IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA};
 
 //#region Deserialize
 pub fn register() {}
-
-pub fn deserialize(from: &IfcSnapshot) -> Result<CadSnapshot, store::TextError> {
-    let _ = STDIO_IFC_DOCUMENT_SCHEMA;
-    let mut bytes = Vec::new();
-    for e in from.entities.iter().filter(|e| e.name.eq_ignore_ascii_case("IFCCARTESIANPOINT")) {
-        let Some(coords) = e.args.first().and_then(IfcValue::as_aggregate) else { continue };
-        let x = coords.first().and_then(IfcValue::as_real).unwrap_or(0.0);
-        let y = coords.get(1).and_then(IfcValue::as_real).unwrap_or(0.0);
-        let z = coords.get(2).and_then(IfcValue::as_real).unwrap_or(0.0);
-        bytes.extend_from_slice(&(x as f32).to_le_bytes());
-        bytes.extend_from_slice(&(y as f32).to_le_bytes());
-        bytes.extend_from_slice(&(z as f32).to_le_bytes());
-    }
-    cad_from_wire(&bytes).map_err(pack_err_as_text)
-}
 
 pub fn deserialize_text(text: &str) -> Result<CadSnapshot, store::TextError> {
     <CadSnapshot as store::ArtifactDsl>::parse_dsl(text)

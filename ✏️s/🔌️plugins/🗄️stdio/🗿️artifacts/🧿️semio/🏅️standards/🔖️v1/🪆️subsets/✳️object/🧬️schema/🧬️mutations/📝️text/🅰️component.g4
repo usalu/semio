@@ -1,6 +1,7 @@
-// ANTLR4 grammar for `stdio.semio.object`'s hand-rolled `OpText` wire text form -- see the
+// ANTLR4 grammar for `stdio.semio.object`'s hand-rolled `OpText` wire text form --
+// `keyword arg=value ...` (space-separated), tag-prefixed hex encoding, NOT JSON. See the
 // sibling 📖️component.grammar.semio for the authoritative production set.
-grammar Stdio_semio_object_mutations;
+grammar Semio_object_mutations;
 
 document
     : 'no-mutation'

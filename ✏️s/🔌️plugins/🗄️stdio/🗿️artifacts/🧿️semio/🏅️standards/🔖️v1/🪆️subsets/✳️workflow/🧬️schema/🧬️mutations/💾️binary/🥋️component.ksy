@@ -1,12 +1,15 @@
 meta:
-  id: semio_workflow_mutations
+  id: stdio_semio_workflow_mutations
   endian: le
 doc: |
-  `s.stdio.semio.workflow` mutation BINARY wire format — the UTF-8 bytes of the mutation TEXT wire
-  format verbatim (`SemioWorkflowMutation::encode_op`/`decode_op`, see 🧬️mutations/🦀️component.rs's
-  doc comment). See 🧬️mutations/📝️text/📖️component.grammar.semio for the real "keyword arg=value"
-  grammar.
+  Real binary `SemioWorkflowMutation` op frame: `format` (1 byte) + `tag` (1 byte, the variant
+  ordinal — see `🧬️mutations/🦀️component.rs`'s `OP_KEYWORDS`), then an opaque `payload` tail (the
+  variant's own `key=value ...` argument text, UTF-8) — see the sibling
+  `📡️component.protocol.semio`'s comment.
 seq:
-  - id: op_line_utf8
+  - id: format
+    type: u1
+  - id: tag
+    type: u1
+  - id: payload
     size-eos: true
-    doc: "UTF-8 bytes of the print_op() text line"

@@ -1,7 +1,61 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// 🧬️ SemioAnimationSnapshot schema — real mirror of `🦀️component.rs` (the source of truth).
+// timelines -> channels{target{node,property}, interpolation, keyframes{t, value}}, informed by
+// gltf's Animation/Channel/Sampler triad.
 package semio.s_stdio_semio_animation.snapshot;
+
+message SemioPoint3 { double x = 1; double y = 2; double z = 3; }
+message SemioQuaternion { double x = 1; double y = 2; double z = 3; double w = 4; }
+
+enum AnimInterpolation {
+  LINEAR = 0;
+  STEP = 1;
+  CUBIC_SPLINE = 2;
+}
+
+message AnimTargetProperty {
+  oneof kind {
+    bool translation = 1;
+    bool rotation = 2;
+    bool scale = 3;
+    bool weights = 4;
+    string custom = 5;
+  }
+}
+
+message AnimTarget {
+  string node = 1;
+  AnimTargetProperty property = 2;
+}
+
+message AnimValueWeights { repeated double values = 1; }
+
+message AnimValue {
+  oneof kind {
+    double scalar = 1;
+    SemioPoint3 vec3 = 2;
+    SemioQuaternion quat = 3;
+    AnimValueWeights weights = 4;
+  }
+}
+
+message AnimKeyframe {
+  double t = 1;
+  AnimValue value = 2;
+}
+
+message AnimChannel {
+  AnimTarget target = 1;
+  AnimInterpolation interpolation = 2;
+  repeated AnimKeyframe keyframes = 3;
+}
+
+message AnimTimeline {
+  optional string name = 1;
+  repeated AnimChannel channels = 2;
+}
+
 message SemioAnimationSnapshot {
   string schema = 1;
-  string entries_wire = 2;
+  repeated AnimTimeline timelines = 2;
 }

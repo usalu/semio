@@ -1,23 +1,22 @@
 meta:
-  id: semio_workflow_snapshot
+  id: stdio_semio_workflow_snapshot
   endian: le
 doc: |
-  `s.stdio.semio.workflow` snapshot binary wire format — a `store::semio_format` binary envelope
-  (magic + component + version header, see `SemioEnvelope`) wrapping `serde_json::to_vec` of
-  `SemioWorkflowSnapshot` verbatim (`ArtifactPack::encode_pack_with`/`decode_pack_with`). Honest
-  opaque-payload boundary: this subset's snapshot is a NEUTRAL semio type, not an on-disk file
-  format with its own byte layout.
+  `pack` (binary) form of a `stdio.semio.workflow` snapshot, past the `semio_format` envelope: a
+  real fixed `format` byte, a real varint-length-prefixed `schema` string, then one opaque `payload`
+  tail (the `nodes`/`edges` collections — a homogeneous-but-variable-length repeated-record shape
+  the protocol dialect's `repeat` block can't describe untagged, see the sibling
+  `📡️component.protocol.semio`'s own comment). Not a JSON blob — see
+  `📸️snapshot/🦀️component.rs`'s `encode_workflow_snapshot_binary` for the payload's real internal
+  varint/length-prefixed layout.
 seq:
-  - id: envelope_id
+  - id: format
+    type: u1
+  - id: schema_len
+    type: vlq_base128_le
+  - id: schema_bytes
+    size: schema_len.value
     type: str
-    size: 20
-    encoding: ASCII
-    doc: "stdio.semio.workflow"
-  - id: component_tag
-    type: u1
-    doc: "store::semio_format::Component::Pack"
-  - id: version
-    type: u1
-  - id: json_payload
+    encoding: UTF-8
+  - id: payload
     size-eos: true
-    doc: "serde_json::to_vec(SemioWorkflowSnapshot) — {schema, nodes, edges}"

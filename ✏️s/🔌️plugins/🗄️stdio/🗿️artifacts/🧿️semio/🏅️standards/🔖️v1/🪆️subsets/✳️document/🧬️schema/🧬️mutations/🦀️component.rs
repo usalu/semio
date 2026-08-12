@@ -627,18 +627,123 @@ impl protocol::OpText for SemioDocumentMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `SemioDocumentDiff`'s hand-rolled
-/// codec uses.
+/// 🏷️ Ordinal table, same declaration order as `SemioDocumentMutation`'s own enum variants and
+/// `parse_document_mutation`'s keyword match — the real binary `tag` field's source of truth.
+const OP_KEYWORDS: [&str; 18] = [
+    "no-mutation",
+    "set-snapshot",
+    "insert-block",
+    "remove-block",
+    "set-block-content",
+    "set-paragraph-style",
+    "set-heading-level",
+    "set-list-ordered",
+    "set-run-text",
+    "set-run-style",
+    "set-image-block",
+    "insert-style",
+    "remove-style",
+    "set-style-name",
+    "set-style-based-on",
+    "insert-image",
+    "remove-image",
+    "set-image-bytes",
+];
+fn variant_ordinal(m: &SemioDocumentMutation) -> u8 {
+    match m {
+        SemioDocumentMutation::NoMutation => 0,
+        SemioDocumentMutation::SetSnapshot { .. } => 1,
+        SemioDocumentMutation::InsertBlock { .. } => 2,
+        SemioDocumentMutation::RemoveBlock { .. } => 3,
+        SemioDocumentMutation::SetBlockContent { .. } => 4,
+        SemioDocumentMutation::SetParagraphStyle { .. } => 5,
+        SemioDocumentMutation::SetHeadingLevel { .. } => 6,
+        SemioDocumentMutation::SetListOrdered { .. } => 7,
+        SemioDocumentMutation::SetRunText { .. } => 8,
+        SemioDocumentMutation::SetRunStyle { .. } => 9,
+        SemioDocumentMutation::SetImageBlock { .. } => 10,
+        SemioDocumentMutation::InsertStyle { .. } => 11,
+        SemioDocumentMutation::RemoveStyle { .. } => 12,
+        SemioDocumentMutation::SetStyleName { .. } => 13,
+        SemioDocumentMutation::SetStyleBasedOn { .. } => 14,
+        SemioDocumentMutation::InsertImage { .. } => 15,
+        SemioDocumentMutation::RemoveImage { .. } => 16,
+        SemioDocumentMutation::SetImageBytes { .. } => 17,
+    }
+}
+/// ✂️ Just the `key=value ...` argument tail of `print_document_mutation` (empty for
+/// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text keyword
+/// itself is redundant in the binary payload.
+fn print_document_mutation_args(m: &SemioDocumentMutation) -> String {
+    match print_document_mutation(m).split_once(' ') {
+        Some((_, rest)) => rest.to_string(),
+        None => String::new(),
+    }
+}
+
+/// ⚡️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION document wave: real binary op
+/// frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut. `format u8`
+/// (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see [`OP_KEYWORDS`]) are two
+/// REAL fixed fields; the variant's own `key=value ...` argument payload follows as one opaque
+/// trailing `bytes` chain — reusing the already-real, already-tested
+/// `print_document_mutation`/`parse_document_mutation` text codec rather than re-deriving a second
+/// independent encoding.
 impl protocol::OpBinary for SemioDocumentMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_document_mutation_args(self).as_bytes());
+        Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        const OP_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
+        }
+        if bytes[0] != OP_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        let tag = bytes[1];
+        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
+        let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️Demo
+/// 🌱 Representative `SemioDocumentMutation` cases (one per variant) — single source of truth for
+/// this facet's own `op_text_binary_roundtrip_law` AND `ops_grammar_conformance_law`/
+/// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<SemioDocumentMutation> {
+    let table_block = DocBlock::Table { rows: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableRow {
+        cells: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableCell { blocks: vec![DocBlock::paragraph("cell")] }],
+    }] };
+    vec![
+        SemioDocumentMutation::NoMutation,
+        SemioDocumentMutation::SetSnapshot { snapshot: crate::artifacts::semio::standards::v1::subsets::document::schema::diff::snapshot_b() },
+        SemioDocumentMutation::InsertBlock { path: DocBlockPath::top(1), block: table_block.clone() },
+        SemioDocumentMutation::InsertBlock { path: DocBlockPath { segments: vec![DocPathSegment::TableCell { block_index: 0, row: 0, cell: 0 }], index: 0 }, block: DocBlock::paragraph("nested") },
+        SemioDocumentMutation::RemoveBlock { path: DocBlockPath::top(0) },
+        SemioDocumentMutation::SetBlockContent { path: DocBlockPath::top(0), block: table_block },
+        SemioDocumentMutation::SetParagraphStyle { path: DocBlockPath::top(0), style_id: None },
+        SemioDocumentMutation::SetHeadingLevel { path: DocBlockPath::top(0), level: 2 },
+        SemioDocumentMutation::SetListOrdered { path: DocBlockPath::top(0), ordered: true },
+        SemioDocumentMutation::SetRunText { path: DocBlockPath::top(0), run_index: 0, text: "hello world".into() },
+        SemioDocumentMutation::SetRunStyle { path: DocBlockPath::top(0), run_index: 0, style: RunStyle { bold: true, size: Some(12.0), font: Some("Arial".into()), ..Default::default() } },
+        SemioDocumentMutation::SetImageBlock { path: DocBlockPath::top(0), image_id: "img1".into(), alt: "alt".into(), width: Some(10.0), height: None },
+        SemioDocumentMutation::InsertStyle { style: DocStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) } },
+        SemioDocumentMutation::RemoveStyle { id: "Normal".into() },
+        SemioDocumentMutation::SetStyleName { id: "Normal".into(), name: "Body Text".into() },
+        SemioDocumentMutation::SetStyleBasedOn { id: "Normal".into(), based_on: Some("Other".into()) },
+        SemioDocumentMutation::InsertImage { image: DocImage { id: "img2".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] } },
+        SemioDocumentMutation::RemoveImage { id: "img2".into() },
+        SemioDocumentMutation::SetImageBytes { id: "img1".into(), mime: "image/gif".into(), bytes: vec![7] },
+    ]
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]

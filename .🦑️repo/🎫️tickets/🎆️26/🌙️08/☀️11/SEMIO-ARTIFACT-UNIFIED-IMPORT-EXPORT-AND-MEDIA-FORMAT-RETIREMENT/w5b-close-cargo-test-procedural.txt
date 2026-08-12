@@ -1,0 +1,6 @@
+test artifacts::procedural3d::standards::v1::engine::tests::procedural3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs ... ok
+test artifacts::procedural3d::standards::v1::engine::tests::rectangle_wire_preview_emits_edge_only_mesh ... ok
+test artifacts::procedural3d::standards::v1::engine::tests::wireframe_show_mode_strips_shaded_triangles ... ok
+
+test result: ok. 191 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.73s
+

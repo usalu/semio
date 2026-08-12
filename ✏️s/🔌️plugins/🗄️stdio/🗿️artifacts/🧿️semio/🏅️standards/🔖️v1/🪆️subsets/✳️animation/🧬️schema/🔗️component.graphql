@@ -1,9 +1,6 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioAnimationArtifactEntry {
-  key: String!
-  value: String!
-}
+# 🧬️ SemioAnimationArtifact schema — full artifact state, mirrors SemioAnimationSnapshot field for
+# field (see `📸️snapshot/🔗️component.graphql` for the nested `AnimTimeline` shape).
 type SemioAnimationArtifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioAnimationArtifactEntry!]! @state(class: PERSISTENT)
+  timelines: [AnimTimeline!]! @state(class: PERSISTENT)
 }

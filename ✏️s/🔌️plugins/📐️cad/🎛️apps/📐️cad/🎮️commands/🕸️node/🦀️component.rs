@@ -2,6 +2,8 @@
 
 use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
+use crate::artifacts::cad::mutations::create_node::mutation::CreateNode as CreateNodeMutation;
+use crate::artifacts::cad::mutations::rename_node::mutation::RenameNode as RenameNodeMutation;
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -28,7 +30,7 @@ pub mod add_node {
         let label = format!("Node {}", document.nodes.len() + 1);
         let node = CadNode { id: id.clone(), label, kind: payload.kind.clone() };
         runtime.selected_node_ids = vec![id];
-        let mut emit = Emit::mutations(vec![CadMutation::AddNode { node }]);
+        let mut emit = Emit::mutations(vec![CadMutation::CreateNode(CreateNodeMutation { node })]);
         emit.config_mutations = vec![snapshot_of(&runtime, cfg.snapshot)];
         Ok(emit)
     }
@@ -50,7 +52,7 @@ pub mod rename_node {
         if payload.node_id.is_empty() || payload.value.is_empty() {
             return Ok(Emit::default());
         }
-        Ok(Emit::mutations(vec![CadMutation::RenameNode { node_id: payload.node_id.clone(), label: payload.value.clone() }]))
+        Ok(Emit::mutations(vec![CadMutation::RenameNode(RenameNodeMutation { node_id: payload.node_id.clone(), new_label: payload.value.clone() })]))
     }
 }
 //#endregion 🔖️RenameNode

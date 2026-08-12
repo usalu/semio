@@ -1,9 +1,7 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioCadArtifactEntry {
-  key: String!
-  value: String!
-}
+# 🧬️ SemioCadArtifact schema — full artifact state, mirrors SemioCadSnapshot field for field.
 type SemioCadArtifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioCadArtifactEntry!]! @state(class: PERSISTENT)
+  layers: [CadLayer!]! @state(class: PERSISTENT)
+  blocks: [CadBlock!]! @state(class: PERSISTENT)
+  entities: [CadEntityRecord!]! @state(class: PERSISTENT)
 }

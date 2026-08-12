@@ -136,6 +136,8 @@ fn bench_crdt_merge(c: &mut Criterion) {
             timestamp: protocol::HybridLogicalTimestamp::new(actor, physical_ms),
             undo_policy: protocol::UndoPolicy::ExactBaseOnly,
             payload_hash: None,
+            semantic_kind: None,
+            label: None,
         }
     }
 

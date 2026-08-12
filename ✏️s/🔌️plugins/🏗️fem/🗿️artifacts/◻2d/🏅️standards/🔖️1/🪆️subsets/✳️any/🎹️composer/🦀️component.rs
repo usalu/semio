@@ -1,5 +1,7 @@
 //! 🎹️ Fem2dComposer (1/✳️any) — analyzer + builder glued. Reads native `s.fem2d` sources
-//! plus any of: stdio.csv, stdio.json, stdio.md, stdio.obj, stdio.png, stdio.stl, stdio.txt, stdio.zip. Writes one `s.fem2d` (1/✳️any) snapshot.
+//! plus any of: stdio.csv, stdio.json, stdio.md, stdio.txt (IMPORT direction only — `stdio.obj`/
+//! `stdio.stl` are EXPORT-only real geometry, see the standard-level composer's doc; `stdio.zip`/
+//! `stdio.png` were deleted outright, no honest mapping). Writes one `s.fem2d` (1/✳️any) snapshot.
 
 use semio_framework_plugin::{ArtifactComposer, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
 use crate::artifacts::fem2d::Fem2dSnapshot;

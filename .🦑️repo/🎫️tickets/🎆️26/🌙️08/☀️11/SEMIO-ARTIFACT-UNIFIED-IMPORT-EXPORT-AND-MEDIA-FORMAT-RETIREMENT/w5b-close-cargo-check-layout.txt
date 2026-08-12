@@ -1,0 +1,20 @@
+help: a field with a similar name exists
+   |
+11 |         pages: PageDoc { width: 612.0, height: 792.0, text: <LayoutSnapshot as store::ArtifactDsl>::print_dsl(from) },
+   |             +
+
+error[E0609]: no field `page` on type `&semio_s_plugin_stdio::artifacts::pdf::PdfSnapshot`
+ --> ✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️component.rs:9:61
+  |
+9 |     <LayoutSnapshot as store::ArtifactDsl>::parse_dsl(&from.page.text)
+  |                                                             ^^^^ unknown field
+  |
+help: a field with a similar name exists
+  |
+9 |     <LayoutSnapshot as store::ArtifactDsl>::parse_dsl(&from.pages.text)
+  |                                                                 +
+
+Some errors have detailed explanations: E0432, E0560, E0609.
+For more information about an error, try `rustc --explain E0432`.
+warning: `semio-s-plugin-layout` (lib) generated 18 warnings
+error: could not compile `semio-s-plugin-layout` (lib) due to 3 previous errors; 18 warnings emitted

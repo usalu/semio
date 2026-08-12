@@ -1,9 +1,30 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioAnimationMutationEntry {
-  key: String!
-  value: String!
-}
-type SemioAnimationMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioAnimationMutationEntry!]! @state(class: PERSISTENT)
-}
+# 🧬️ SemioAnimationMutation schema — real mirror of `🦀️component.rs` (the source of truth).
+# Discriminated union on the `mutation` tag (`#[serde(tag = "mutation", rename_all = "camelCase")]`).
+union SemioAnimationMutation =
+    NoMutation
+  | SetSnapshot
+  | InsertTimeline
+  | RemoveTimeline
+  | SetTimelineName
+  | InsertChannel
+  | RemoveChannel
+  | SetChannelTarget
+  | SetChannelInterpolation
+  | InsertKeyframe
+  | RemoveKeyframe
+  | SetKeyframeTime
+  | SetKeyframeValue
+
+type NoMutation { mutation: String! }
+type SetSnapshot { mutation: String! snapshot: SemioAnimationSnapshot! }
+type InsertTimeline { mutation: String! index: Int! timeline: AnimTimeline! }
+type RemoveTimeline { mutation: String! index: Int! }
+type SetTimelineName { mutation: String! index: Int! name: String }
+type InsertChannel { mutation: String! timelineIndex: Int! index: Int! channel: AnimChannel! }
+type RemoveChannel { mutation: String! timelineIndex: Int! index: Int! }
+type SetChannelTarget { mutation: String! timelineIndex: Int! index: Int! target: AnimTarget! }
+type SetChannelInterpolation { mutation: String! timelineIndex: Int! index: Int! interpolation: AnimInterpolation! }
+type InsertKeyframe { mutation: String! timelineIndex: Int! channelIndex: Int! index: Int! keyframe: AnimKeyframe! }
+type RemoveKeyframe { mutation: String! timelineIndex: Int! channelIndex: Int! index: Int! }
+type SetKeyframeTime { mutation: String! timelineIndex: Int! channelIndex: Int! index: Int! t: Float! }
+type SetKeyframeValue { mutation: String! timelineIndex: Int! channelIndex: Int! index: Int! value: AnimValue! }

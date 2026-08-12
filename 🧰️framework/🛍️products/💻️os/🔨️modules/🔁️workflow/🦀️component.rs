@@ -7,7 +7,7 @@
 //! its own in-file `OsWorkflow`/`OsAppInstance` pair (future work, not this ticket).
 // #endregion 🔖️InstanceIdentity
 
-use semio_framework::{AppDefinition, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat, MediaFormat, PortMultiplicity};
+use semio_framework::{AppDefinition, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat, PortMultiplicity};
 use semio_framework::{Locale, Terminology};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -60,7 +60,7 @@ pub fn placeholder_media_contract(kind_id: &str) -> MediaContract {
 /// `media_type`/`wire` point at plain-data types from `semio_framework` that this crate can't
 /// implement `dsl::DslField` for under the orphan rule (neither the trait nor the type is local
 /// here). Since `MediaContract` itself IS local, hand-writing its own impl sidesteps both problems
-/// at once: every foreign sub-value (`MediaClass`/`MediaForm`/`MediaFormat`) is bridged directly
+/// at once: every foreign sub-value (`MediaClass`/`MediaForm`/the wire's format kind id) is bridged directly
 /// to/from a scalar `dsl::FieldValue::Enum`/`Ident` right here, so none of them ever need their own
 /// `DslField` impl or a local-twin type. `media_contract_spec()`'s `keyword: None` makes
 /// `Shape::Record` splice these eight fields inline wherever `MediaContract` is used as a
@@ -184,9 +184,9 @@ fn media_contract_to_record(contract: &MediaContract) -> dsl::RecordValue {
     record.fields.insert(1, dsl::FieldValue::Enum(media_class_ordinal(contract.media_type.class)));
     record.fields.insert(2, dsl::FieldValue::Enum(media_form_ordinal(contract.media_type.form)));
     match &contract.wire {
-        MediaWireFormat::Binary { format } => {
+        MediaWireFormat::Binary { format_kind } => {
             record.fields.insert(3, dsl::FieldValue::Text("binary".to_string()));
-            record.fields.insert(4, dsl::FieldValue::Text(format.as_str().to_string()));
+            record.fields.insert(4, dsl::FieldValue::Text(format_kind.clone()));
             record.fields.insert(5, dsl::FieldValue::Absent);
         }
         MediaWireFormat::Document { schema } => {
@@ -231,8 +231,7 @@ fn media_contract_from_record(record: &dsl::RecordValue) -> Result<MediaContract
                 Some(dsl::FieldValue::Text(s)) => s.clone(),
                 other => return Err(dsl::__rt::field_error(format!("expected wire_format, found {other:?}"))),
             };
-            let format = MediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown wire format '{format_word}'")))?;
-            MediaWireFormat::Binary { format }
+            MediaWireFormat::Binary { format_kind: format_word }
         }
         "document" => {
             let schema = match record.get(5) {
@@ -1874,7 +1873,7 @@ pub struct RunLogLine {
 /// draft→asset later (`space::DraftCatalog`, W5 Lane B's territory) — this wave only carries the flag
 /// and the apply-rejection law, not the promotion wiring itself.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[dsl(extension = "run-document")]
+#[dsl(id = "os.run")]
 pub struct RunArtifact {
     pub schema: String,
     pub workflow_ref: String,
@@ -1915,6 +1914,69 @@ pub fn empty_run_document() -> RunArtifact {
     }
 }
 //#endregion 🔖️RunArtifactBody
+
+//#region 🔖️HandcraftedRunArtifactCodecs
+/// 🧬️ P6: mirrors `WorkflowSnapshot`'s handcrafted `ArtifactDsl`/`ArtifactPack` pair above (same
+/// file, `🔖️HandcraftedWorkflowSnapshotCodecs`) — `#[derive(dsl::DslArtifact)]` emits `__dsl_*`
+/// helpers + `__DSL_ENVELOPE_ID`/`__DSL_EXTENSION` only, never the trait impls themselves.
+impl store::ArtifactDsl for RunArtifact {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
+    }
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = dsl::parse(
+            body,
+            &Self::__dsl_spec(),
+            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
+        )?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::ArtifactDsl>::envelope_id(),
+            store::semio_format::Component::Dsl,
+            1,
+        )
+        .expect("valid envelope_id");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
+impl store::ArtifactPack for RunArtifact {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
+            <Self as store::ArtifactDsl>::envelope_id(),
+            store::semio_format::Component::Pack,
+            1,
+        )
+        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!(
+                "pack envelope mismatch: expected {}, got {}",
+                <Self as store::ArtifactDsl>::envelope_id(),
+                envelope.envelope_id()
+            )));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
+//#endregion 🔖️HandcraftedRunArtifactCodecs
 
 //#region 🔖️RunMutation
 /// ⚡️ One settled `RunArtifact` mutation — mirrors `WorkflowMutation`'s shape (this same crate).
@@ -2224,7 +2286,7 @@ mod tests {
         let contract = MediaContract {
             kind_id: "puzzle.2d.fixture".into(),
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-            wire: MediaWireFormat::Binary { format: MediaFormat::Svg },
+            wire: MediaWireFormat::Binary { format_kind: "svg".into() },
             conversion: Some((MediaForm::Brep, MediaForm::Mesh)),
         };
         let record = media_contract_to_record(&contract);
@@ -2358,30 +2420,30 @@ mod tests {
 
     #[test]
     fn workflow_snapshot_dsl_pack_round_trips() {
-        store::test_support::assert_dsl_pack_equivalence(&sample_workflow_snapshot());
-        store::test_support::assert_dsl_pack_equivalence(&empty_workflow_snapshot());
+        store::os_store::test_support::assert_dsl_pack_equivalence(&sample_workflow_snapshot());
+        store::os_store::test_support::assert_dsl_pack_equivalence(&empty_workflow_snapshot());
     }
 
     #[test]
     fn workflow_operation_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddNode { node: workflow_node("n1", Vec::new(), Vec::new()) });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveNode { node_id: "n1".into() });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", "in") });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::DisconnectEdge { edge_id: "e1".into() });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchNode { node_id: "n1".into(), label: "Renamed".into() });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddParameter { parameter: WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: None, max: None, step: None } });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveParameter { parameter_id: "p1".into() });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchParameter { parameter_id: "p1".into(), parameter: WorkflowParameter::Toggle { id: "p1".into(), name: "Flag".into(), value: false } });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::SyncNodePorts);
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::DeclareInput { input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::Many } });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveInput { input_id: "in-1".into() });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindInput { input_id: "in-1".into() });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "n1".into(), port_id: "n1:out:out".into(), path_template: "out/{node}".into() } });
-        store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddNode { node: workflow_node("n1", Vec::new(), Vec::new()) });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveNode { node_id: "n1".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", "in") });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::DisconnectEdge { edge_id: "e1".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchNode { node_id: "n1".into(), label: "Renamed".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddParameter { parameter: WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: None, max: None, step: None } });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveParameter { parameter_id: "p1".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchParameter { parameter_id: "p1".into(), parameter: WorkflowParameter::Toggle { id: "p1".into(), name: "Flag".into(), value: false } });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::SyncNodePorts);
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::DeclareInput { input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::Many } });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindInput { input_id: "in-1".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "n1".into(), port_id: "n1:out:out".into(), path_template: "out/{node}".into() } });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out".into() });
     }
 
     #[test]
@@ -2393,16 +2455,16 @@ mod tests {
         // ORDER even though every element is restored — a known, harmless limitation of list-append
         // state shared by every `Add*`/`Remove*` pair in this codebase (e.g. `space::SpaceMutation`'s
         // own `inverse` law tests avoid it the same way, by only exercising it on singleton lists).
-        store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddNode { node: workflow_node("c", Vec::new(), Vec::new()) });
-        store::test_support::assert_operation_round_trip(&document, WorkflowMutation::MoveNode { node_id: "a".into(), x: 99.0, y: -1.0 });
-        store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddParameter { parameter: WorkflowParameter::Toggle { id: "p9".into(), name: "New".into(), value: true } });
-        store::test_support::assert_operation_round_trip(
+        store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddNode { node: workflow_node("c", Vec::new(), Vec::new()) });
+        store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::MoveNode { node_id: "a".into(), x: 99.0, y: -1.0 });
+        store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddParameter { parameter: WorkflowParameter::Toggle { id: "p9".into(), name: "New".into(), value: true } });
+        store::os_store::test_support::assert_operation_round_trip(
             &document,
             WorkflowMutation::DeclareInput { input: WorkflowInput { id: "in-2".into(), kind_id: "kind.b".into(), selector: "**/*".into(), required: false, multiplicity: PortMultiplicity::One } },
         );
-        store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() } });
-        store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "a".into(), port_id: "a:out:out".into(), path_template: "renders/other.out".into() } });
-        store::test_support::assert_operation_round_trip(&document, WorkflowMutation::UnbindOutput { node_id: "a".into(), port_id: "a:out:out".into() });
+        store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() } });
+        store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "a".into(), port_id: "a:out:out".into(), path_template: "renders/other.out".into() } });
+        store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::UnbindOutput { node_id: "a".into(), port_id: "a:out:out".into() });
     }
 
     /// 🧵️ Removing the LAST element of each cascade-owning list keeps append-order stable, so this can
@@ -2413,16 +2475,16 @@ mod tests {
     fn remove_operations_backwards_restores_cascade_deleted_dependents() {
         let mut document = sample_workflow_snapshot();
         // `b` is the last node — removing it also cascade-drops edge `e1` (which targets it).
-        store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveNode { node_id: "b".into() });
+        store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveNode { node_id: "b".into() });
 
         // `p4` is the last parameter and has no bindings, so this only proves the simple case; add a
         // binding on it first so the cascade-restoration path is actually exercised.
         document.parameter_bindings.push(WorkflowParameterBinding { parameter_id: "p4".into(), node_id: "a".into(), field_path: "/label".into() });
         document.graph = sync_workflow_parameter_ports(&document.graph, &document.parameter_bindings);
-        store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveParameter { parameter_id: "p4".into() });
+        store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveParameter { parameter_id: "p4".into() });
 
         document.input_bindings.push(WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() });
-        store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+        store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveInput { input_id: "in-1".into() });
     }
 
     #[test]
@@ -2516,13 +2578,13 @@ mod tests {
 
     #[test]
     fn run_document_dsl_pack_round_trips() {
-        store::test_support::assert_dsl_pack_equivalence(&sample_run_document());
-        store::test_support::assert_dsl_pack_equivalence(&empty_run_document());
+        store::os_store::test_support::assert_dsl_pack_equivalence(&sample_run_document());
+        store::os_store::test_support::assert_dsl_pack_equivalence(&empty_run_document());
     }
 
     #[test]
     fn run_operation_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&RunMutation::Start {
+        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Start {
             workflow_ref: "space.space".into(),
             workflow_checkpoint_id: "ck-1".into(),
             input_collection_ref: "collections/in".into(),
@@ -2531,7 +2593,7 @@ mod tests {
             output_collection_ref: "collections/out".into(),
             trigger: RunTrigger::Manual { actor: "dev".into() },
         });
-        store::test_support::assert_op_line_round_trip(&RunMutation::Start {
+        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Start {
             workflow_ref: "space.space".into(),
             workflow_checkpoint_id: "ck-1".into(),
             input_collection_ref: "collections/in".into(),
@@ -2540,10 +2602,10 @@ mod tests {
             output_collection_ref: "collections/out".into(),
             trigger: RunTrigger::Automation { automation_ref: "os.automation/a1".into(), event_fingerprint: "evt-1".into() },
         });
-        store::test_support::assert_op_line_round_trip(&RunMutation::NodeStarted { node_id: "a".into() });
-        store::test_support::assert_op_line_round_trip(&RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit) });
-        store::test_support::assert_op_line_round_trip(&RunMutation::Log { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() });
-        store::test_support::assert_op_line_round_trip(&RunMutation::Seal { status: RunStatus::Succeeded });
+        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::NodeStarted { node_id: "a".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit) });
+        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Log { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Seal { status: RunStatus::Succeeded });
     }
 
     /// 🔒️ The load-bearing law this wave exists to prove: once `Seal` has been applied, every further
@@ -2577,7 +2639,7 @@ mod tests {
         let record = sample_run_node_record("a", RunNodeStatus::Failed);
         let mut document = empty_run_document();
         document.node_records.push(record);
-        store::test_support::assert_dsl_pack_equivalence(&document);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }
     //#endregion 🧪️RunArtifactLaws
 }

@@ -1,56 +1,7 @@
-; abnf stdio.semio.cad diff (binary) — protocol::DiffCodec::print_diff/parse_diff wire grammar.
-; NO semio envelope (unlike the snapshot facet): encode_diff is print_diff().into_bytes(), so
-; this binary grammar is byte-identical to ../📝️text/🔤️component.ebnf, reproduced here verbatim.
-document      = [ token *( SP token ) ]
-token         = ( "layers=" layers-triple ) / ( "blocks=" blocks-triple ) / ( "entities=" entities-triple )
-
-layers-triple = "[" removed-keys "]" ";" "[" layers-modified "]" ";" "[" layers-added "]"
-layers-modified = [ layer-mod *( "," layer-mod ) ]
-layer-mod     = hexstr ":" layer-diff
-layers-added  = [ layer *( "," layer ) ]
-
-blocks-triple = "[" removed-keys "]" ";" "[" blocks-modified "]" ";" "[" blocks-added "]"
-blocks-modified = [ block-mod *( "," block-mod ) ]
-block-mod     = hexstr ":" block-diff
-blocks-added  = [ block *( "," block ) ]
-
-entities-triple = "[" removed-keys "]" ";" "[" entities-modified "]" ";" "[" entities-added "]"
-entities-modified = [ entity-record-mod *( "," entity-record-mod ) ]
-entity-record-mod = hexstr ":" entity-record-diff
-entities-added = [ entity-record *( "," entity-record ) ]
-
-removed-keys  = [ hexstr *( "," hexstr ) ]
-
-option-i32    = "[0]" / ( "[1," i32 "]" )
-option-str    = "[0]" / ( "[1," hexstr "]" )
-option-bool   = "[0]" / ( "[1," bool01 "]" )
-option-point2 = "[0]" / ( "[1," point2 "]" )
-option-entity = "[0]" / ( "[1," entity "]" )
-option-entities-triple = "[0]" / ( "[1," entities-triple "]" )
-
-layer-diff    = "[" option-i32 "," option-str "," option-bool "]"
-entity-record-diff = "[" option-str "," option-entity "]"
-block-diff    = "[" option-point2 "," option-entities-triple "]"
-
-layer         = "[" hexstr "," i32 "," hexstr "," bool01 "]"
-entity-record = "[" hexstr "," hexstr "," entity "]"
-entity-record-list = "[" [ entity-record *( "," entity-record ) ] "]"
-block         = "[" hexstr "," point2 "," entity-record-list "]"
-
-entity        = line / arc / circle / ellipse / polyline / text-entity / insert / solid / dimension
-line          = "L[" point2 "," point2 "]"
-arc           = "A[" point2 "," f64 "," f64 "," f64 "]"
-circle        = "C[" point2 "," f64 "]"
-ellipse       = "E[" point2 "," point2 "," f64 "," f64 "," f64 "]"
-polyline      = "P[" point2-list "," bool01 "]"
-point2-list   = "[" [ point2 *( "," point2 ) ] "]"
-text-entity   = "T[" point2 "," f64 "," f64 "," hexstr "]"
-insert        = "I[" hexstr "," point2 "," point2 "," f64 "]"
-solid         = "S[" point2 "," point2 "," point2 "," point2 "]"
-dimension     = "D[" point2 "," point2 "," f64 "," hexstr "]"
-
-point2        = "[" f64 "," f64 "]"
-hexstr        = *HEXDIG
-i32           = ["-"] 1*DIGIT
-f64           = ["-"] 1*DIGIT ["." 1*DIGIT] [("e"/"E") ["+"/"-"] 1*DIGIT]
-bool01        = "0" / "1"
+; ABNF-style descriptive mirror of `stdio.semio.cad`'s real `DiffCodec` binary frame -- see the
+; authoritative `📡️component.protocol.semio` for the conformance-tested version.
+document       = format presence payload
+format         = %x01                  ; DIFF_BINARY_FORMAT
+presence       = OCTET                 ; bit0=layers bit1=blocks bit2=entities
+payload        = *OCTET                ; 0-3 varint-length-prefixed text blobs, one per present
+                                        ; collection; see component.rs's DiffCodec::encode_diff

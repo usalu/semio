@@ -1,0 +1,20 @@
+warning: function `image_with_diff_applied` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs:557:4
+    |
+557 | fn image_with_diff_applied(image: &SlidePictureImage, diff: &SlidePictureImageDiff) -> SlidePictureImage {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `enc_bool` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs:973:15
+    |
+973 | pub(crate) fn enc_bool(b: bool) -> String { if b { "1".to_string() } else { "0".to_string() } }
+    |               ^^^^^^^^
+
+warning: function `dec_bool` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs:974:15
+    |
+974 | pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
+    |               ^^^^^^^^
+
+warning: `semio-s-plugin-stdio` (lib) generated 493 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 181 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 1.38s

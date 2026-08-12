@@ -1,0 +1,25 @@
+test artifacts::shooting::standards::v1::engine::tests::dwg_import_stays_schema_valid_for_a_non_trivial_extent ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::mutations::component::tests::saved_cameras_add_round_trip ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::mutations::component::tests::set_active_shot_and_asset_round_trip ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::mutations::component::tests::set_shot_camera_is_a_no_op_when_shot_has_no_saved_camera ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::mutations::component::tests::set_shot_camera_patches_the_saved_camera_it_references ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::mutations::component::tests::set_snapshot_replaces_whole_document_and_restores ... ok
+test apps::shooting::panels::inspection::tests::inspector_falls_back_to_the_active_shot ... ok
+test artifacts::shooting::standards::v1::engine::tests::dwg_import_never_errors_on_empty_drawing ... ok
+test apps::shooting::panels::catalogue::tests::catalogue_lists_the_shot_presets_and_glb_asset ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::mutations::component::tests::shots_patch_round_trip ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::mutations::component::tests::translate_rotate_scale_assets_round_trip ... ok
+test artifacts::shooting::standards::v1::engine::tests::scene_svg_embeds_active_asset_name_and_shot_shape ... ok
+test artifacts::shooting::standards::v1::engine::tests::export_svg_uses_scene_render_not_title_card ... ok
+test artifacts::shooting::standards::v1::engine::tests::ellipse_shot_shape_renders_via_svg_arc_commands ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::snapshot::text::tests::shooting_dsl_round_trips_empty_fixture ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::snapshot::text::tests::shooting_dsl_angle_deg_field_round_trips_bit_exactly ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::mutations::component::tests::shooting_op_text_round_trips_collection_variants ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::snapshot::text::tests::shooting_dsl_round_trips_representative_fixture ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::snapshot::text::tests::shooting_dsl_round_trips_base_icon_example ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::mutations::component::tests::shooting_op_text_round_trips_every_other_variant ... ok
+test artifacts::shooting::standards::v1::subsets::any::schema::mutations::binary::tests::shooting_document_text_round_trips_store_with_applied_operation ... ok
+test artifacts::shooting::standards::v1::engine::tests::shooting_photo_media_exports_a_raster_2d_image ... ok
+
+test result: ok. 92 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+

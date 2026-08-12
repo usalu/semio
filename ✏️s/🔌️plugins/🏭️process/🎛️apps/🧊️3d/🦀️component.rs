@@ -24,7 +24,7 @@ use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability,
-    MediaFormat, UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
+    UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use store::EngineHandles;
 use serde_json::Value;
@@ -206,9 +206,9 @@ impl ArtifactApp for Process3dPlayApp {
                 if schema != crate::artifacts::process3d::PROCESS_3D_SCHEMA && schema != "3d.process" {
                     return Err(MediaError::Payload("geometry:in".into(), format!("unrecognized schema: {schema}")));
                 }
-                // 📦️ `export_process3d_model("step")` hands back raw (non-base64) STEP text — see
-                // `MediaFormat::Step::is_binary() == false` — so this re-encodes it as base64 to
-                // satisfy `import_process3d_model`'s `data:...,<base64>` expectation.
+                // 📦️ `export_process3d_model("step")` hands back raw (non-base64) STEP text — the
+                // "stdio.step" format is not binary — so this re-encodes it as base64 to satisfy
+                // `import_process3d_model`'s `data:...,<base64>` expectation.
                 use base64::Engine;
                 let data_url = format!("data:application/octet-stream;base64,{}", base64::engine::general_purpose::STANDARD.encode(json.as_bytes()));
                 match crate::artifacts::process3d::engine::import_process3d_model("geometry-in.step", &data_url) {
@@ -290,11 +290,11 @@ pub fn create_process3d_app() -> App {
                 media_capability: OsMediaCapability::Brep,
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
                 schema: "process.3d".into(),
-                export_formats: vec![MediaFormat::Step, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Glb],
-                import_formats: vec![MediaFormat::Step, MediaFormat::Obj, MediaFormat::Stl],
-                    export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    })
+                export_formats: vec![],
+                import_formats: vec![],
+                export_stdio_kinds: vec!["stdio.step", "stdio.obj", "stdio.stl", "stdio.gltf"],
+                import_stdio_kinds: vec!["stdio.step", "stdio.obj", "stdio.stl"],
+            })
             .icon_id("hammer")
             .mode_def(edit::definition())
             .default_mode_id(edit::PROCESS3D_MODE_EDIT)

@@ -1,5 +1,10 @@
-module Semio_semio_diff;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
+module Stdio_semio_diff;
+
+# `SemioDiff` real binary frame, past the `semio_format` envelope: real `format`/`tag` (1 byte
+# each), then one opaque `payload` tail (the wrapped subset's own real `encode_diff()` bytes, or
+# the wrapped snapshot's own real `encode_pack()` bytes for `replace`).
 type Document = unit {
-    magic: bytes &size=16;
+    format: uint8;
+    tag: uint8;
+    payload: bytes &eod;
 };

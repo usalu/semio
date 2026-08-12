@@ -53,10 +53,7 @@ pub use mesh::{
     dwg_drawing_to_mesh, dwg_drawing_to_paths, dwg_from_bytes, dwg_to_bytes, mesh_to_dwg_drawing, paths_to_dwg_drawing,
     DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgLayer, DwgPathSegment,
     MeshExporter, MeshImporter, ObjExporter, ObjImporter, GlbExporter, GlbImporter, StlExporter, StlImporter,
-    MediaFormat, StdioFormatEntry, STDIO_FORMAT_CATALOG, normalize_stdio_format_kind, stdio_format_entry, stdio_format_kind_id, stdio_accept_filter, stdio_mimes_csv,
-    IoError, ArtifactCodec, RasterImage, PageDoc, PageDocPage, TableDoc, TextDoc, Archive, ArchiveEntry,
-    TxtCodec, MdCodec, JsonCodec, CsvCodec, BmpCodec, PngCodec, JpgCodec, GifCodec, TiffCodec,
-    PdfCodec, DocxCodec, PptxCodec, XlsxCodec, ZipCodec, BcfCodec, PlyCodec, LasCodec, GltfCodec, DxfCodec, IfcCodec,
+    IoError,
 };
 // 🔀️ OsMediaCapability/ArtifactKindSpec/MediaClass/MediaForm/MediaType/MediaWireFormat/MediaPortDirection/
 // PortMultiplicity/MediaPortSpec/MediaCompat/media_types_compatible/Media/MediaPayload/MediaFingerprint/
@@ -73,6 +70,7 @@ pub use io::{
     io_keys_for, list_composer_entries, io_dispatch, set_io_fallback_dispatcher,
     WireComposeSource, WireComposedArtifact, wire_list_composer_entries, wire_artifact_compose, wire_decode_composed_artifact,
     SubsetValidator, SubsetValidatorEntry, subset_validator_entry_of, register_subset_validator,
+    FormatDescriptor, register_format_descriptors, format_descriptor, normalize_format_kind, format_accept_filter, formats_csv,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use workflow::*;

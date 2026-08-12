@@ -1,10 +1,10 @@
-; abnf stdio.semio.drawing snapshot binary -- real semio_format::wrap_binary envelope: 8-byte
-; magic, u32-LE token length, UTF-8 token, raw JSON(SemioDrawingSnapshot) bytes (full field
-; structure of the JSON payload: sibling 🔣️component.json)
-document = magic token-len token json-bytes
-magic = %x89 "SEM" %x0D %x0A %x1A %x0A
-token-len = 4OCTET  ; u32 little-endian
-token = *OCTET  ; UTF-8 "stdio.semio.drawing.pack v1", length = token-len
-json-bytes = *json-byte
-json-byte = OCTET
-
+; ABNF-style descriptive mirror of `stdio.semio.drawing`'s real `pack` binary frame (past the
+; `semio_format` envelope) -- see the authoritative `📡️component.protocol.semio` for the
+; conformance-tested version.
+document       = format schema-len schema-bytes payload
+format         = %x01                  ; PACK_BINARY_FORMAT
+schema-len     = 1*OCTET               ; LEB128 varint byte count
+schema-bytes   = *OCTET                ; UTF-8, schema-len bytes
+payload        = *OCTET                ; opaque tail: canvas/styles/layers (layers embeds a
+                                        ; recursive DrawNode tree), see component.rs's
+                                        ; encode_drawing_snapshot_binary

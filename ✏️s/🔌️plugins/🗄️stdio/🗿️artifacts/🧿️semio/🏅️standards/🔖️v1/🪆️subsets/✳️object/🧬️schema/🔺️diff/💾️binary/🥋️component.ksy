@@ -1,12 +1,21 @@
 meta:
-  id: stdio_semio_object_diff
+  id: semio_object_diff
   endian: le
 doc: |
-  `DiffCodec::encode_diff`/`decode_diff` (`🦀️component.rs`): the text `print_diff` bytes verbatim
-  (`self.print_diff().into_bytes()`) -- NOT a distinct binary encoding, same simplification
-  `SvgDiff`/`GifDiff`/`JsonDiff` all use. See the sibling `../📝️text/📖️component.grammar.semio` for
-  the payload's real structure.
+  REAL binary form of a `stdio.semio.object` diff, upgraded from the old `print_diff().into_bytes()`
+  text-as-binary shortcut: `format u8` + `presence u8` (bit0=`root` present, bit1=`objects`
+  present) fixed header, then 0-2 recursive LEB128-varint-encoded `SemioValueDiff`/objects-diff
+  payloads back-to-back as one opaque trailing `payload` chain -- real Rust-side recursion
+  (`enc_value_diff_bin`/`enc_objects_diff_bin`), opaque only at THIS description layer (`Prim::Ref`
+  self-recursion isn't describable at the protocol-dialect level, see the sibling
+  `📡️component.protocol.semio`'s own doc comment). See `../📝️text/📖️component.grammar.semio` for
+  the equivalent tag-prefixed text shape this payload encodes.
 seq:
+  - id: format
+    type: u1
+  - id: presence
+    type: u1
+    doc: "bit0 = root present, bit1 = objects present"
   - id: payload
     size-eos: true
-    doc: UTF-8 `root=<enc> objects=<enc>` line, see the text-facet grammar.
+    doc: 0-2 back-to-back LEB128-varint-framed SemioValueDiff/objects-diff payloads, per presence.

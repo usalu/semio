@@ -17,5 +17,11 @@ pub fn serialize(from: &LayoutSnapshot) -> Result<DwgSnapshot, store::PackError>
         // rather than fabricating a decode status.
         sections: Vec::new(),
         decode_status: DwgDecodeStatus::SentinelOnly,
+        // 🩹️ w5b-close fix: `maintenance_version`/`codepage` are real R2004+ header fields
+        // (stdio's own `DwgSnapshot::default()` also zeroes both) -- honest zero, consistent
+        // with this leaf's already-synthetic `bytes`/`sections`/`SentinelOnly` decode status
+        // above; no real DWG header exists here to read them from.
+        maintenance_version: 0,
+        codepage: 0,
     })
 }

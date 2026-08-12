@@ -1,10 +1,8 @@
-/** 🧬️ SemioArtifact schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioArtifact
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface SemioArtifactEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ SemioArtifact schema — full artifact state, mirrors `SemioSnapshot` field for field (see
+ * `📸️snapshot/🟦️component.ts` for the real `SemioSubsetSnapshot` union shape). */
+import type { SemioSubsetSnapshot } from "./📸️snapshot/🟦️component";
+
 export interface SemioArtifact {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioArtifactEntry[];
+  /** @state persistent */ subset: SemioSubsetSnapshot;
 }

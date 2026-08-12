@@ -1,10 +1,20 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.animation/mutations.json",
   "title": "SemioAnimationMutation",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
-  "type": "object",
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+  "description": "Discriminated union on the 'mutation' tag, mirrors SemioAnimationMutation.",
+  "oneOf": [
+    { "type": "object", "properties": { "mutation": { "const": "noMutation" } }, "required": ["mutation"] },
+    { "type": "object", "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } }, "required": ["mutation", "snapshot"] },
+    { "type": "object", "properties": { "mutation": { "const": "insertTimeline" }, "index": { "type": "integer" }, "timeline": { "type": "object" } }, "required": ["mutation", "index", "timeline"] },
+    { "type": "object", "properties": { "mutation": { "const": "removeTimeline" }, "index": { "type": "integer" } }, "required": ["mutation", "index"] },
+    { "type": "object", "properties": { "mutation": { "const": "setTimelineName" }, "index": { "type": "integer" }, "name": { "type": ["string", "null"] } }, "required": ["mutation", "index", "name"] },
+    { "type": "object", "properties": { "mutation": { "const": "insertChannel" }, "timelineIndex": { "type": "integer" }, "index": { "type": "integer" }, "channel": { "type": "object" } }, "required": ["mutation", "timelineIndex", "index", "channel"] },
+    { "type": "object", "properties": { "mutation": { "const": "removeChannel" }, "timelineIndex": { "type": "integer" }, "index": { "type": "integer" } }, "required": ["mutation", "timelineIndex", "index"] },
+    { "type": "object", "properties": { "mutation": { "const": "setChannelTarget" }, "timelineIndex": { "type": "integer" }, "index": { "type": "integer" }, "target": { "type": "object" } }, "required": ["mutation", "timelineIndex", "index", "target"] },
+    { "type": "object", "properties": { "mutation": { "const": "setChannelInterpolation" }, "timelineIndex": { "type": "integer" }, "index": { "type": "integer" }, "interpolation": { "type": "string" } }, "required": ["mutation", "timelineIndex", "index", "interpolation"] },
+    { "type": "object", "properties": { "mutation": { "const": "insertKeyframe" }, "timelineIndex": { "type": "integer" }, "channelIndex": { "type": "integer" }, "index": { "type": "integer" }, "keyframe": { "type": "object" } }, "required": ["mutation", "timelineIndex", "channelIndex", "index", "keyframe"] },
+    { "type": "object", "properties": { "mutation": { "const": "removeKeyframe" }, "timelineIndex": { "type": "integer" }, "channelIndex": { "type": "integer" }, "index": { "type": "integer" } }, "required": ["mutation", "timelineIndex", "channelIndex", "index"] },
+    { "type": "object", "properties": { "mutation": { "const": "setKeyframeTime" }, "timelineIndex": { "type": "integer" }, "channelIndex": { "type": "integer" }, "index": { "type": "integer" }, "t": { "type": "number" } }, "required": ["mutation", "timelineIndex", "channelIndex", "index", "t"] },
+    { "type": "object", "properties": { "mutation": { "const": "setKeyframeValue" }, "timelineIndex": { "type": "integer" }, "channelIndex": { "type": "integer" }, "index": { "type": "integer" }, "value": { "type": "object" } }, "required": ["mutation", "timelineIndex", "channelIndex", "index", "value"] }
+  ]
 }

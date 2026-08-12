@@ -106,7 +106,7 @@ pub fn search_plugin(program: &ProgramSnapshot, query: &SearchQuery, filter: Opt
     search_register!("validations", &program.validations);
     search_register!("performance", &program.performance);
     search_register!("quality", &program.quality);
-    search_register!("documents", &program.documents);
+    search_register!("documents", &program.artifacts);
     search_register!("changes", &program.changes);
     search_register!("collaboration", &program.collaboration);
     search_register!("analyses", &program.analyses);

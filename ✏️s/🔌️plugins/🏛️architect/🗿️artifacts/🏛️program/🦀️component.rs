@@ -140,7 +140,7 @@ pub fn empty_plugin() -> ProgramSnapshot {
         validations: Vec::new(),
         performance: Vec::new(),
         quality: Vec::new(),
-        documents: Vec::new(),
+        artifacts: Vec::new(),
         assumptions: Vec::new(),
         constraints: Vec::new(),
         compliance_records: Vec::new(),

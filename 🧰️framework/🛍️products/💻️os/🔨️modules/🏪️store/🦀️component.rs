@@ -1186,6 +1186,8 @@ fn mutation_meta_from_history_op_meta(meta: crate::os_spr::HistoryOpMeta) -> Mut
         timestamp: HybridLogicalTimestamp { actor, physical_ms: physical_ms as u64, logical },
         undo_policy: protocol_undo_policy_from_ordinal(meta.undo_policy),
         payload_hash: meta.payload_hash.map(crate::os_spr::PayloadHash),
+        semantic_kind: None,
+        label: None,
     }
 }
 
@@ -1326,6 +1328,8 @@ where
                     timestamp: operation.timestamp().unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
                     undo_policy: operation.undo_policy(),
                     payload_hash: None,
+                    semantic_kind: None,
+                    label: None,
                 });
             }
             (inverse, mutation_meta)
@@ -1469,6 +1473,8 @@ where
                 timestamp: operation.timestamp().unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
                 undo_policy: operation.undo_policy(),
                 payload_hash: None,
+                semantic_kind: None,
+                label: None,
             });
             *snapshot = apply_mutation(snapshot, operation);
         }
@@ -2642,9 +2648,10 @@ where
     }
 
     /// @emoji 🔂️ Replays `operations` over `pre_snapshot`, returning forwards, reversed-inverse,
-    /// per-operation metadata, and the resulting snapshot. Shared by `Apply` and `AmendLast`.
-    // TODO(OPERATIONS-TO-MUTATIONS Wave 1): prefer driving apply/inverse via
-    // `crate::os_engine::ArtifactEngine` once ArtifactStore owns an engine; currently still calls Mutation::diff/inverse directly.
+    /// per-operation metadata, and the resulting snapshot. Shared by `Apply` and `AmendLast`. This
+    /// IS the artifact engine — `crate::os_engine::ArtifactEngine` never existed as a live trait
+    /// (see `.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md`), so `Mutation::diff`/
+    /// `inverse` are called directly here on purpose, not as a placeholder for a future indirection.
     fn replay_mutations(pre_snapshot: &P, mutations: Vec<Mutation>) -> (Vec<Mutation>, Vec<Mutation>, Vec<MutationMeta>, P) {
         let mut snapshot = pre_snapshot.clone();
         let mut forwards = Vec::with_capacity(mutations.len());
@@ -2668,6 +2675,8 @@ where
                 // `OpBinary` encoding, not a JSON serialization — two ops that encode identically
                 // via `encode_op()` but differ in JSON shape (or vice versa) must hash identically.
                 payload_hash: Some(crate::os_spr::PayloadHash(*blake3::hash(&mutation.encode_op().unwrap_or_default()).as_bytes())),
+                semantic_kind: None,
+                label: None,
             });
             snapshot = apply_mutation(&snapshot, &mutation);
             forwards.push(mutation);
@@ -2999,6 +3008,8 @@ pub fn edit_from_operation_envelope<Mutation: OpBinary>(envelope: &crate::os_spr
             timestamp: envelope.timestamp,
             undo_policy: UndoPolicy::ExactBaseOnly,
             payload_hash: None,
+            semantic_kind: None,
+            label: None,
         }],
         description: None,
         coalesce_key: None,
@@ -4918,6 +4929,8 @@ impl OpBinary for DemoMutation {
                 timestamp: HybridLogicalTimestamp::new(1, 1000),
                 undo_policy: UndoPolicy::ExactBaseOnly,
                 payload_hash: None,
+                semantic_kind: None,
+                label: None,
             }],
             description: None,
             coalesce_key: None,

@@ -148,9 +148,12 @@ impl ArtifactApp for DrawPlayApp {
         }
     }
 
-    fn whole_document_operation(snapshot: DrawSnapshot) -> Option<DrawMutation> {
-        Some(DrawMutation::SetSnapshot { snapshot })
-    }
+    // 🖼️ No override: whole-document replacement has no `Mutation` vehicle any more (banned
+    // vocabulary — see `🧬️mutations/🦀️component.rs`'s module doc). The default `None` disables the
+    // generic `import_media("document:in")` port for draw; explicit whole-document load/replace
+    // stays reachable through the `set_snapshot`/`commit_document`/`set_fixture_json`/
+    // `set_active_example` commands, which now emit `HostEffect::LoadDocument` (the sanctioned
+    // non-history reset path) instead.
 
     /// 🏷️ `app_commands!`'s generated `command_id()`.
     fn command_id(command: &DrawCommand) -> &'static str {
@@ -375,7 +378,7 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::draw::engine::{create_draw_shape_layer_rect, default_draw_document, layer_id, semio_draw_example_json};
+    use crate::artifacts::draw::engine::{default_draw_document, layer_id, semio_draw_example_json};
     use crate::artifacts::draw::DrawLayerNode;
     use semio_framework_plugin::kernel::HostEffect;
     use semio_framework_plugin::{testkit as fw_testkit, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
@@ -558,31 +561,35 @@ mod tests {
 
     #[test]
     fn marquee_select_covers_contained_layer_only() {
+        // 🔖 Built through dispatched commands (`add-layer` + `patch-layer` transform fields), never
+        // a whole-document swap — `SetSnapshot` is banned vocabulary now (see
+        // `🧬️mutations/🦀️component.rs`'s module doc); this exercises the same real semantic
+        // `create-layer`/`update-layer-transform` mutations a live editor session would emit.
         let mut app = draw_app();
         set_utility(&mut app, "selectMarquee");
-        let mut document = default_draw_document("marquee-test", None);
-        document.layers.clear();
-        let mut rect_a = create_draw_shape_layer_rect("A");
-        if let DrawLayerNode::Shape(shape) = &mut rect_a {
-            shape.rect = Some(crate::artifacts::draw::DrawRect { x: 10.0, y: 10.0, width: 20.0, height: 20.0 });
+        let initial_id = layer_id(&app.snapshot().unwrap().layers[0]).to_string();
+        app.dispatch_typed(DrawCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &fw_testkit::meta("local")).expect("clear default layer");
+
+        app.dispatch_typed(DrawCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add rect");
+        let rect_a_id = layer_id(app.snapshot().unwrap().layers.last().unwrap()).to_string();
+        for (field, value) in [("transformX", "10"), ("transformY", "10"), ("transformScaleX", "0.15625"), ("transformScaleY", "0.208333")] {
+            app.dispatch_typed(DrawCommand::PatchLayer(patch_layer::PatchLayer { layer_id: rect_a_id.clone(), field: field.into(), value: value.into() }), &fw_testkit::meta("local")).expect("position rect a");
         }
-        let rect_a_id = layer_id(&rect_a).to_string();
-        let mut rect_b = create_draw_shape_layer_rect("B");
-        if let DrawLayerNode::Shape(shape) = &mut rect_b {
-            shape.rect = Some(crate::artifacts::draw::DrawRect { x: 200.0, y: 200.0, width: 20.0, height: 20.0 });
+
+        app.dispatch_typed(DrawCommand::AddLayer(add_layer::AddLayer { kind: "shape:ellipse".into() }), &fw_testkit::meta("local")).expect("add ellipse");
+        let ellipse_b_id = layer_id(app.snapshot().unwrap().layers.last().unwrap()).to_string();
+        for (field, value) in [("transformX", "200"), ("transformY", "200")] {
+            app.dispatch_typed(DrawCommand::PatchLayer(patch_layer::PatchLayer { layer_id: ellipse_b_id.clone(), field: field.into(), value: value.into() }), &fw_testkit::meta("local")).expect("position ellipse b");
         }
-        let rect_b_id = layer_id(&rect_b).to_string();
-        document.layers.push(rect_a);
-        document.layers.push(rect_b);
-        app.dispatch_typed(DrawCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: document.clone() }), &fw_testkit::meta("local")).expect("load");
+
         app.dispatch_typed(DrawCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::draw::DrawCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).expect("camera");
         app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("down");
         app.dispatch_typed(DrawCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0 }), &fw_testkit::meta("local")).expect("move");
         app.dispatch_typed(DrawCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("up");
         let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains(&format!("overlay:sel:{rect_a_id}")), "the contained rect A is selected");
-        assert!(!json.contains(&format!("overlay:sel:{rect_b_id}")), "the outside rect B is not selected");
+        assert!(json.contains(&format!("overlay:sel:{rect_a_id}")), "the contained rect is selected");
+        assert!(!json.contains(&format!("overlay:sel:{ellipse_b_id}")), "the outside ellipse is not selected");
     }
 
     #[test]

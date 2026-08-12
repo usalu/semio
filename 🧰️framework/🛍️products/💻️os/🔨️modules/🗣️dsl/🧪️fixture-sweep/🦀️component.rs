@@ -494,6 +494,11 @@ mod pilot_resolve {
 
     const EXAMPLES_DIR_NAME: &str = "📚️examples";
     const ASSETS_DIR_NAME: &str = "🖼️assets";
+    // 🎓️ P2-PW: local copy of `m5_auto_discovery::STANDARDS_DIR` — that constant is private to its
+    // own sibling module and this module intentionally stays free-standing (same reasoning as
+    // `EXAMPLES_DIR_NAME`/`ASSETS_DIR_NAME` above already being local copies rather than cross-module
+    // imports); both name the same literal `🏅️standards` directory segment by construction.
+    const STANDARDS_DIR: &str = "🏅️standards";
 
     /// 🏠️ Ascends from `CARGO_MANIFEST_DIR` looking for `nx.json`.
     pub fn repo_root() -> PathBuf {
@@ -536,16 +541,17 @@ mod pilot_resolve {
         path.file_name().and_then(|n| n.to_str()).map(|n| n.ends_with(kind_suffix)).unwrap_or(false)
     }
 
-    /// 🖼️ Finds one example `.semio` for `artifact_rel` (repo-relative artifact dir) matching `kind_suffix`
-    /// (e.g. `.dsl.semio`, `.pack.semio`, `.spr.semio`). Assets-dir hits win over legacy nested hits.
-    pub fn find_example_semio(artifact_rel: &str, kind_suffix: &str) -> Option<PathBuf> {
-        let examples = repo_root().join(artifact_rel).join(EXAMPLES_DIR_NAME);
+    /// 🖼️ Finds one example `.semio` under `examples_dir` (a `📚️examples` directory) matching
+    /// `kind_suffix` (e.g. `.dsl.semio`, `.pack.semio`, `.spr.semio`). Assets-dir hits win over
+    /// legacy nested hits. Extracted from the old single-slot `find_example_semio` so the
+    /// (artifact, standard)-aware wrapper below can try more than one `examples_dir` candidate.
+    fn find_example_semio_under(examples: &Path, kind_suffix: &str) -> Option<PathBuf> {
         if !examples.is_dir() {
             return None;
         }
         let mut preferred = Vec::new();
         let mut fallback = Vec::new();
-        let entries = match std::fs::read_dir(&examples) {
+        let entries = match std::fs::read_dir(examples) {
             Ok(entries) => entries,
             Err(_) => return None,
         };
@@ -577,15 +583,37 @@ mod pilot_resolve {
         preferred.into_iter().next().or_else(|| fallback.into_iter().next())
     }
 
+    /// 🖼️ Finds one example `.semio` for `artifact_rel` (repo-relative artifact dir) matching
+    /// `kind_suffix` (e.g. `.dsl.semio`, `.pack.semio`, `.spr.semio`).
+    ///
+    /// 🎓️ P2-PW m5 fixture-slot widening: when `standard` is `Some`, first tries the PER-STANDARD
+    /// fixture slot at `<artifact_rel>/🏅️standards/<standard>/📚️examples/...` — real and shipped for
+    /// any multi-standard artifact whose standards each landed their OWN fixtures there (gif 87a/89a,
+    /// pdf 1.4/1.7; see `p2-fg2-closer-report.md`/`p2-fg3-closer-report.md` for the exact citations
+    /// this widening fixes). Falls back to the original artifact-level slot
+    /// (`<artifact_rel>/📚️examples/...`) whenever the per-standard slot doesn't exist or has no
+    /// matching fixture, so every single-standard artifact (the overwhelming majority, and every
+    /// non-stdio caller which never has a `standard`) keeps resolving byte-for-byte as before —
+    /// additive/widening, never a narrowing of what used to resolve.
+    pub fn find_example_semio(artifact_rel: &str, standard: Option<&str>, kind_suffix: &str) -> Option<PathBuf> {
+        if let Some(standard) = standard {
+            let per_standard = repo_root().join(artifact_rel).join(STANDARDS_DIR).join(standard).join(EXAMPLES_DIR_NAME);
+            if let Some(found) = find_example_semio_under(&per_standard, kind_suffix) {
+                return Some(found);
+            }
+        }
+        find_example_semio_under(&repo_root().join(artifact_rel).join(EXAMPLES_DIR_NAME), kind_suffix)
+    }
+
     /// 📄️ Reads example fixture text; `None` soft-skips the pilot when missing mid-migration.
-    pub fn read_example_text(artifact_rel: &str, kind_suffix: &str) -> Option<String> {
-        let path = find_example_semio(artifact_rel, kind_suffix)?;
+    pub fn read_example_text(artifact_rel: &str, standard: Option<&str>, kind_suffix: &str) -> Option<String> {
+        let path = find_example_semio(artifact_rel, standard, kind_suffix)?;
         std::fs::read_to_string(&path).ok()
     }
 
     /// 🎒️ Reads example binary/text bytes; `None` soft-skips the pilot when missing mid-migration.
-    pub fn read_example_bytes(artifact_rel: &str, kind_suffix: &str) -> Option<Vec<u8>> {
-        let path = find_example_semio(artifact_rel, kind_suffix)?;
+    pub fn read_example_bytes(artifact_rel: &str, standard: Option<&str>, kind_suffix: &str) -> Option<Vec<u8>> {
+        let path = find_example_semio(artifact_rel, standard, kind_suffix)?;
         std::fs::read(&path).ok()
     }
 }
@@ -878,31 +906,34 @@ mod m5_auto_discovery {
         // optional/non-blocking per their own reports) — ProtocolSpr withheld for all 9, same
         // "no graduation theater" rule §835-843 above already states.
         //
-        // gif/89a is the one exception, NOT graduated here despite landing fully real per-standard
-        // grammar+protocol+fixtures+conformance-laws (all 6 pass in its own scope): `pilot_resolve`
-        // (this file's own `ExampleAssetDiscovery`/`PilotResolve` regions) resolves a facet's
+        // gif/89a: WAS the one exception left ungraduated here (see the P2-FG2 closer's original
+        // writeup, still worth keeping verbatim below for the root-cause record) — `pilot_resolve`
+        // (this file's own `ExampleAssetDiscovery`/`PilotResolve` regions) resolved a facet's
         // example fixture via `artifact_rel` alone (`✏️s/…/🗿️artifacts/<artifact>` — standard name
-        // dropped), so BOTH gif standards' Grammar/ProtocolPack facets share exactly ONE
+        // dropped), so BOTH gif standards' Grammar/ProtocolPack facets shared exactly ONE
         // artifact-level `📚️examples/🎬️demo/🖼️assets/` fixture slot. gif87a's grammar/protocol use
         // literal envelope-mark `"stdio.gif"` (== the artifact's own bare `STDIO_GIF_DOCUMENT_SCHEMA`
         // — the natural "canonical slot" choice); gif89a's own grammar instead requires the literal
-        // `"stdio.gif.89a"` mark. One shared fixture slot cannot satisfy both literal marks at once.
-        // The artifact-level slot (previously an 11-byte no-preamble stub, `68656c6c6f`/"hello", and
-        // no `.pack.semio` at all — neither FG2 fan-out sub-agent owned this shared top-level dir,
-        // each having scoped to its own `🏅️standards/🔖️8Xa/` subtree) was repointed by this closer
-        // to real gif87a `print_dsl()`/`encode_pack()` output (copied verbatim from gif87a's own
-        // already-real, already-tested `🏅️standards/🔖️87a/📚️examples/🎬️demo/🖼️assets/` fixtures —
-        // see `p2-fg2-closer-report.md` for the full repoint). Graduating gif89a's Grammar/ProtocolPack
-        // here too would therefore hard-fail `m5_handcrafted_grammar_conformance`/
-        // `m5_handcrafted_protocol_conformance` for real, against the now-mismatched shared fixture —
-        // not a gif89a shortfall, a `pilot_resolve` single-slot-per-artifact mechanism gap (needs a
-        // per-standard-aware fixture resolver to fix for real; out of this closer's append-only
-        // mandate for this file). gif89a's own `⚙️engine::tests::conformance_laws::*` (6/6, using its
-        // OWN correct per-standard fixture) remain its real, trustworthy, independent verification —
-        // per this file's own recipe-quoted guidance, "trust your own tests, they run every time
-        // regardless of graduation status." Leave gif89a on the stdio-wide exempt (soft) side.
+        // `"stdio.gif.89a"` mark. One shared fixture slot could not satisfy both literal marks at once.
+        //
+        // 🎓️ P2-PW: `pilot_resolve::find_example_semio` (now `find_example_semio`/
+        // `find_example_semio_under` in the `PilotResolve` region) was widened to resolve on
+        // `(artifact_rel, standard)` — trying `<artifact_rel>/🏅️standards/<standard>/📚️examples/…`
+        // FIRST when the facet carries a `standard`, only falling back to the old artifact-level slot
+        // when no per-standard slot exists (additive/widening, every single-standard artifact's
+        // resolution is byte-for-byte unchanged). gif89a's own real per-standard fixture already sat
+        // at `🏅️standards/🔖️89a/📚️examples/🎬️demo/🖼️assets/` (confirmed present on disk); with the
+        // resolver fix landed, `m5_handcrafted_grammar_conformance`/`m5_handcrafted_protocol_conformance`
+        // now resolve gif89a's OWN grammar against gif89a's OWN fixture and pass for real (confirmed:
+        // `cargo test -p semio-framework-os-kernel` green, gif89a no longer among the exempt-soft or
+        // hard-failure sets). gif89a's own `⚙️engine::tests::conformance_laws::*` (6/6, using its OWN
+        // correct per-standard fixture) were already real, trustworthy, independent verification —
+        // graduating here is purely a harness-resolution fix catching up to content that was already
+        // real, not new artifact work. Graduated.
         ("🎞️gif", "🔖️87a", ConformanceFacet::Grammar),
         ("🎞️gif", "🔖️87a", ConformanceFacet::ProtocolPack),
+        ("🎞️gif", "🔖️89a", ConformanceFacet::Grammar),
+        ("🎞️gif", "🔖️89a", ConformanceFacet::ProtocolPack),
         ("📷️jpg", "🔖️jfif-1.01", ConformanceFacet::Grammar),
         ("📷️jpg", "🔖️jfif-1.01", ConformanceFacet::ProtocolPack),
         ("🖼️bmp", "🔖️v3", ConformanceFacet::Grammar),
@@ -924,34 +955,126 @@ mod m5_auto_discovery {
         // a real `.spr.semio` mutations-protocol fixture this wave — ProtocolSpr withheld for all 5,
         // same "no graduation theater" rule as FG2's own entries above.
         //
-        // pdf/1.7 is the ONE exception, NOT graduated here — the SAME `pilot_resolve` single-
+        // pdf/1.7: WAS the one exception left ungraduated here — the SAME `pilot_resolve` single-
         // fixture-slot-per-artifact gap gif89a hit in FG2 (see that entry's own comment above),
         // independently re-confirmed live for pdf rather than assumed: `find_example_semio`
-        // resolves a facet's fixture via `artifact_rel` alone (`✏️s/…/🗿️artifacts/📄️pdf` — standard
-        // name dropped), so pdf/1.4 and pdf/1.7 share exactly ONE artifact-level
+        // resolved a facet's fixture via `artifact_rel` alone (`✏️s/…/🗿️artifacts/📄️pdf` — standard
+        // name dropped), so pdf/1.4 and pdf/1.7 shared exactly ONE artifact-level
         // `📚️examples/🎬️demo/🖼️assets/` fixture slot. pdf/1.4's grammar requires the literal
         // `artifact-mark = "stdio.pdf"`; pdf/1.7's grammar instead requires the literal
         // `artifact-mark = "stdio.pdf.1.7"` — two different literal marks, confirmed by direct read
-        // of both `📸️snapshot/📝️text/📖️component.grammar.semio` files. The shared artifact-level slot
-        // (`stdio.pdf.dsl v1` preamble, real 1.4-format PDF bytes) matches 1.4's mark, not 1.7's —
-        // 1.7's own real fixture instead sits at its per-standard
-        // `🏅️standards/🔖️1.7/📚️examples/🎬️demo/🖼️assets/` location, which this framework resolver
-        // never looks at. Graduating pdf/1.7's Grammar/ProtocolPack here would therefore hard-fail
-        // `m5_handcrafted_grammar_conformance`/`m5_handcrafted_protocol_conformance` for real against
-        // the mismatched shared fixture — not a pdf/1.7 content shortfall (its own
-        // `⚙️engine::tests::conformance_laws::*`, using ITS OWN correct per-standard fixture, pass for
-        // real, both per this closer's own crate-wide run and per `p2-fg3-verify-report.md`), but the
-        // identical `pilot_resolve` single-slot-per-artifact mechanism gap FG2 already documented and
-        // declined to fix (out of a closer's append-only mandate for this file). Leave pdf/1.7 on the
-        // stdio-wide exempt (soft) side.
+        // of both `📸️snapshot/📝️text/📖️component.grammar.semio` files.
+        //
+        // 🎓️ P2-PW: same `find_example_semio` widening described in gif89a's entry above — tries
+        // `<artifact_rel>/🏅️standards/<standard>/📚️examples/…` first when a `standard` is known, only
+        // falling back to the artifact-level slot otherwise. pdf/1.7's own real fixture already sat at
+        // its per-standard `🏅️standards/🔖️1.7/📚️examples/🎬️demo/🖼️assets/` location (confirmed present
+        // on disk); with the resolver fix landed, both handcrafted-conformance tests now resolve
+        // pdf/1.7's OWN grammar/protocol against pdf/1.7's OWN fixture and pass for real (confirmed:
+        // `cargo test -p semio-framework-os-kernel` green, pdf/1.7 no longer among the exempt-soft or
+        // hard-failure sets) — not new artifact work, pdf/1.7's own
+        // `⚙️engine::tests::conformance_laws::*` were already real and green per `p2-fg3-verify-report.md`.
+        // Graduated.
         ("🧊️gltf", "🔖️2.0", ConformanceFacet::Grammar),
         ("🧊️gltf", "🔖️2.0", ConformanceFacet::ProtocolPack),
         ("📄️pdf", "🔖️1.4", ConformanceFacet::Grammar),
         ("📄️pdf", "🔖️1.4", ConformanceFacet::ProtocolPack),
+        ("📄️pdf", "🔖️1.7", ConformanceFacet::Grammar),
+        ("📄️pdf", "🔖️1.7", ConformanceFacet::ProtocolPack),
         ("☁️ply", "🔖️1.0", ConformanceFacet::Grammar),
         ("☁️ply", "🔖️1.0", ConformanceFacet::ProtocolPack),
         ("🎨️svg", "🔖️1.1", ConformanceFacet::Grammar),
         ("🎨️svg", "🔖️1.1", ConformanceFacet::ProtocolPack),
+
+        // 🎓️ P2-FG4 (docx, xlsx, pptx, bcf, ifc/2x3 — the FINAL fan-out wave, completing all 32
+        // official stdio standards) closer graduation. docx/ecma-376, xlsx/ecma-376, pptx/ecma-376,
+        // and bcf/2.1 each land a real, dialect-conformant snapshot protocol + `.pack.semio` fixture
+        // (ProtocolPack) — graduated for all 4. Each is the ONLY standard under its own artifact dir
+        // (confirmed by listing disk: `📜️docx`, `📕️xlsx`, `🎞️pptx` each have exactly one
+        // `🏅️standards/🔖️ecma-376/` child; `💬️bcf` has exactly one `🏅️standards/🔖️2.1/` child) — none
+        // of them can hit the `pilot_resolve` shared-fixture-slot gap gif89a/pdf1.7 hit, since there
+        // is no sibling standard to collide with. No real `.spr.semio` mutations-protocol fixture
+        // shipped this wave — ProtocolSpr withheld for all 4, same "no graduation theater" rule as
+        // FG2's/FG3's own entries above.
+        //
+        // 🎓️ P2-PW: the 4 `ProtocolPack` tuples this comment describes were never actually appended to
+        // the array below — a real, verified oversight (the comment said "graduated for all 4" but
+        // `grep`-ing this whole file for `docx`/`xlsx`/`pptx`/`bcf` tuple literals found none). Fixed
+        // here: staged the 4 tuples, ran `m5_handcrafted_protocol_conformance` — 0 hard failures, all 4
+        // resolve their own `.pack.semio` fixture (no `pilot_resolve` collision, confirmed above) and
+        // walk cleanly — genuinely safe to graduate, completing what this comment already claimed.
+        //
+        // `Grammar` deliberately NOT graduated for any of these 4 — a mechanism gap, distinct from the
+        // `pilot_resolve` shared-slot gap, discovered live (staged the Grammar tuples, ran
+        // `m5_handcrafted_grammar_conformance`, got 4 real hard failures, then traced why rather than
+        // reverting blind — re-confirmed live again in P2-PW, same 4 hard failures, same root cause).
+        // All 4 are OPC/zip-based CONTAINER artifacts whose SNAPSHOT TEXT grammar correctly models the
+        // syntax of the individual XML/text PARTS a real package contains (`[Content_Types].xml`,
+        // `word/document.xml`, `xl/worksheets/sheetN.xml`, `markup.bcf`, …), never the whole outer
+        // OPC/zip BINARY package — confirmed by reading each standard's own `grammar_conformance_law`
+        // test (`⚙️engine/🦀️component.rs`, P2-PW read docx's and xlsx's in full, spot-checked pptx's and
+        // bcf's), every one of which decodes the real zip container via `zip::engine::decode_zip` (the
+        // REAL bytes `encode_docx`/`encode_xlsx`/`encode_pptx`/`encode_bcf` produce, not a hand-derived
+        // stand-in) and recognizes each individual PART's real decoded text against the grammar, with a
+        // `checked == <expected part count>` completeness assertion so a silently-missing part would
+        // itself fail the test. P2-PW's own judgment: this is a genuinely EQUIVALENT-OR-STRONGER
+        // conformance proof than the standard `print_dsl()`-fixture-vs-Recognizer pattern (it validates
+        // against bytes the real codec ACTUALLY emits on every run, not a fixture that can silently
+        // drift from the codec), not a deviation to paper over.
+        //
+        // The blocker is purely mechanical, not a content judgment: this file's own
+        // `m5_handcrafted_grammar_conformance` (`check_grammar_recognizes`, `M5HandcraftedGrammar`
+        // region) feeds the artifact's WHOLE top-level `🗣️example.dsl.semio` fixture body (a hex-dump
+        // of the entire OPC binary, matching the SNAPSHOT BINARY PROTOCOL facet, not the text grammar
+        // facet) directly to the grammar's `Recognizer` — a check that is structurally correct for
+        // every text-native artifact graduated so far (gltf/pdf/ply/svg/md/xml/…) but categorically
+        // cannot pass for an OPC-container artifact's grammar facet, by the artifact's own honest
+        // design (documented explicitly in each standard's own
+        // `📸️snapshot/📝️text/📖️component.grammar.semio` doc comment). This is NOT a content
+        // shortfall — each standard's own `grammar_conformance_law` (56/49/58/27 tests total, 0
+        // failed, per `p2-fg4-verify-report.md`) is the real, trustworthy, independent proof the
+        // grammar is correct — it is a harness-assumption gap (`check_grammar_recognizes` has no
+        // OPC/container-vs-part awareness) outside a closer's append-only mandate for this file to
+        // fix, and outside P2-PW's own narrow `pilot_resolve` resolution-key-widening mandate too
+        // (teaching `check_grammar_recognizes` to decode+part-recognize for container artifacts is a
+        // materially different, larger change than a fixture-resolution-key widening). Confirmed this
+        // is wave-wide (not one standard's fluke) by reading all 4 standards' own
+        // `grammar_conformance_law` bodies — same `decode_zip` + per-part-recognize shape in every
+        // one. `zip/2.0` itself (graduated since the P2-PC pilot wave) does NOT hit this, because
+        // zip's own snapshot grammar models zip's OWN text-recognizable content directly, not a
+        // nested container's parts. Leave docx/xlsx/pptx/bcf's `Grammar` facet on the stdio-wide
+        // exempt (soft) side; a real fix needs `check_grammar_recognizes` (or a new OPC-aware sibling
+        // check) taught to decode+part-recognize for container artifacts, same shape their own tests
+        // already use — a good candidate for a dedicated future wave, now that the proof shape itself
+        // is confirmed sound twice over (FG4, then independently re-confirmed by P2-PW).
+        ("📜️docx", "🔖️ecma-376", ConformanceFacet::ProtocolPack),
+        ("📕️xlsx", "🔖️ecma-376", ConformanceFacet::ProtocolPack),
+        ("🎞️pptx", "🔖️ecma-376", ConformanceFacet::ProtocolPack),
+        ("💬️bcf", "🔖️2.1", ConformanceFacet::ProtocolPack),
+
+        // `ifc/2x3` is STILL deliberately NOT graduated here, but the ROOT CAUSE below is now fixed
+        // (P2-PW) — this entry is left ungraduated as an explicit scope decision, not a remaining
+        // mechanism gap. Original root cause: ifc/4 (already graduated above, since P2-PC/FG1) and
+        // ifc/2x3 shared exactly ONE artifact-level `📚️examples/🎬️demo/🖼️assets/` fixture slot under
+        // the OLD `artifact_rel`-only `pilot_resolve::find_example_semio` — the shared slot held
+        // ifc/4's own real fixture (`semio stdio.ifc.dsl v1` + `FILE_SCHEMA(('IFC4'))`, matching ifc/4's
+        // grammar's `envelope-mark = "stdio.ifc"`), while ifc/2x3's OWN real fixture (`semio
+        // stdio.ifc.2x3.dsl v1` + `FILE_SCHEMA(('IFC2X3'))`, matching ifc/2x3's own `envelope-mark =
+        // "stdio.ifc.2x3"` requirement) sat unreachable at its per-standard
+        // `🏅️standards/🔖️2x3/📚️examples/🎬️demo/🖼️assets/` location — a THIRD real instance of the
+        // exact gif89a (FG2)/pdf1.7 (FG3) gap, independently re-confirmed live for ifc.
+        //
+        // P2-PW widened `find_example_semio` to resolve `(artifact_rel, standard)` (see gif89a's own
+        // entry above for the mechanism) and verified — by staging `("🏗️ifc", "🔖️2x3", …)` tuples
+        // locally and running `m5_handcrafted_grammar_conformance`/`m5_handcrafted_protocol_conformance`
+        // — that ifc/2x3 now resolves its OWN fixture and passes for real too, exactly like gif89a and
+        // pdf/1.7. Deliberately left OFF `STDIO_CONFORMANCE_GRADUATED` anyway: this PW wave's own brief
+        // named gif/89a and pdf/1.7 explicitly for graduation and did not name ifc/2x3, and ifc carries
+        // this program's own documented history of being the most copy-paste-defect-prone standard
+        // (W0 census) — graduating a THIRD standard beyond an explicit brief, on an artifact with that
+        // history, is a deliberate judgment call left to a dedicated follow-up pass rather than folded
+        // in silently here. See `p2-pw-report.md` for the verification detail; staging is a one-line
+        // addition to the tuple list above whenever that follow-up happens.
     ];
 
     /// @emoji 🛟️ Whether a stdio `(artifact, standard)` pair is still exempt (soft) for `facet`.
@@ -1075,7 +1198,7 @@ mod m5_handcrafted_grammar_conformance {
                 soft_skipped += 1;
                 continue;
             }
-            let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, ".dsl.semio") else {
+            let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, facet.standard.as_deref(), ".dsl.semio") else {
                 eprintln!("[DEBUG] soft-skip {}.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)", facet.label);
                 soft_skipped += 1;
                 continue;
@@ -1171,7 +1294,7 @@ mod m5_handcrafted_protocol_conformance {
                 ProtocolFacetKind::Pack => ".pack.semio",
                 ProtocolFacetKind::Spr => ".spr.semio",
             };
-            let Some(example_bytes) = pilot_resolve::read_example_bytes(&facet.artifact_rel, kind_suffix) else {
+            let Some(example_bytes) = pilot_resolve::read_example_bytes(&facet.artifact_rel, facet.standard.as_deref(), kind_suffix) else {
                 eprintln!("[DEBUG] soft-skip {}: no {kind_suffix} under 📚️examples (🖼️assets-first walk)", facet.label);
                 soft_skipped += 1;
                 continue;
@@ -1257,7 +1380,7 @@ mod m5_cross_artifact_rejection {
             if soft_skip_missing(&format!("{}.grammar", facet.label), &grammar_text) {
                 continue;
             }
-            let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, ".dsl.semio") else {
+            let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, facet.standard.as_deref(), ".dsl.semio") else {
                 eprintln!("[DEBUG] soft-skip {}.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)", facet.label);
                 continue;
             };
@@ -1341,7 +1464,7 @@ mod m5_production_coverage {
             if soft_skip_missing(&format!("{}.grammar", facet.label), &grammar_text) {
                 continue;
             }
-            let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, ".dsl.semio") else {
+            let Some(fixture_text) = pilot_resolve::read_example_text(&facet.artifact_rel, facet.standard.as_deref(), ".dsl.semio") else {
                 eprintln!("[DEBUG] soft-skip {}.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)", facet.label);
                 continue;
             };

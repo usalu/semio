@@ -15,7 +15,10 @@ use crate::artifacts::semio::standards::v1::engine::triples::{
     dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified,
     IndexedTripleDiff, NamedModified, NamedTripleDiff,
 };
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
+    dec_layer, dec_list, dec_node, dec_path_segment, dec_point2, dec_rgba, dec_style, dec_transform, enc_layer, enc_list, enc_node, enc_path_segment,
+    enc_point2, enc_rgba, enc_style, enc_transform, DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot,
+};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
@@ -755,11 +758,12 @@ pub fn node_at<'a>(snapshot: &'a SemioDrawingSnapshot, np: &NodePath) -> Option<
 /// 🧪️ Hand-rolled `protocol::DiffCodec` -- top-level `canvas=`/`styles=`/`layers=` space-separated
 /// tokens (svg `SvgDiff` template); collection substrings reuse `engine::triples`'
 /// `enc_indexed_triple`/`enc_named_triple`; leaf VALUES (`SemioRgba`/`SemioPoint2`/
-/// `SemioTransform`/`Vec<PathSegment>`/whole `DrawNode`/`DrawLayer`/`DrawStyle` payloads) are
-/// hex-encoded JSON -- the same honest "hex of a real typed value" convention this subset's own
-/// `ArtifactDsl`/`ArtifactPack` snapshot codec already uses, reused here for leaf values so the
-/// STRUCTURE of the diff (tri-states, collection triples, recursive node tags) stays hand-rolled
-/// while leaf-value bytes aren't hand-reinvented per type.
+/// `SemioTransform`/`Vec<PathSegment>`/whole `DrawNode`/`DrawLayer`/`DrawStyle` payloads) reuse the
+/// REAL hex/bracket-encoded value codecs the sibling `📸️snapshot` facet already established
+/// (`enc_rgba`/`enc_point2`/`enc_transform`/`enc_path_segment`/`enc_node`/`enc_layer`/`enc_style`,
+/// imported above) -- drawing wave: replaces the old hex-of-`serde_json` shortcut these leaf values
+/// were on pre-wave. One source of truth for the entity encoding across `📸️snapshot`/`🔺️diff`/
+/// `🧬️mutations`, not three independently-invented copies.
 //#region 🔖️Primitives
 fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
@@ -775,12 +779,6 @@ fn enc_str(s: &str) -> String {
 }
 fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-fn enc_json<T: Serialize>(v: &T) -> String {
-    hex_encode(&serde_json::to_vec(v).unwrap_or_default())
-}
-fn dec_json<T: for<'de> Deserialize<'de>>(s: &str) -> Result<T, String> {
-    serde_json::from_slice(&hex_decode(s)?).map_err(|e| e.to_string())
 }
 fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
@@ -801,25 +799,25 @@ fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<
 //#region 🔖️NodeValueCodec
 fn enc_node_diff(d: &DrawNodeDiff) -> String {
     match d {
-        DrawNodeDiff::Path(p) => format!("P[{},{}]", encode_option(&p.segments, enc_json), encode_option(&p.style, |v| encode_option(v, |s| enc_str(s)))),
-        DrawNodeDiff::Text(t) => format!("T[{},{},{}]", encode_option(&t.value, |v| enc_str(v)), encode_option(&t.at, enc_json), encode_option(&t.style, |v| encode_option(v, |s| enc_str(s)))),
+        DrawNodeDiff::Path(p) => format!("P[{},{}]", encode_option(&p.segments, |v| enc_list(v, enc_path_segment)), encode_option(&p.style, |v| encode_option(v, |s| enc_str(s)))),
+        DrawNodeDiff::Text(t) => format!("T[{},{},{}]", encode_option(&t.value, |v| enc_str(v)), encode_option(&t.at, enc_point2), encode_option(&t.style, |v| encode_option(v, |s| enc_str(s)))),
         DrawNodeDiff::Group(g) => format!(
             "G[{},{}]",
-            encode_option(&g.transform, enc_json),
+            encode_option(&g.transform, enc_transform),
             match &g.children {
-                Some(c) => format!("[1,{}]", enc_indexed_triple(c, enc_node_diff, enc_json::<DrawNode>)),
+                Some(c) => format!("[1,{}]", enc_indexed_triple(c, enc_node_diff, enc_node)),
                 None => "[0]".to_string(),
             }
         ),
         DrawNodeDiff::Image(i) => format!(
             "I[{},{},{},{},{}]",
-            encode_option(&i.at, enc_json),
+            encode_option(&i.at, enc_point2),
             encode_option(&i.width, |v| v.to_string()),
             encode_option(&i.height, |v| v.to_string()),
             encode_option(&i.mime, |v| enc_str(v)),
             encode_option(&i.bytes, |v| hex_encode(v)),
         ),
-        DrawNodeDiff::Replace { node } => format!("R[{}]", enc_json(node)),
+        DrawNodeDiff::Replace { node } => format!("R[{}]", enc_node(node)),
     }
 }
 fn dec_node_diff(s: &str) -> Result<DrawNodeDiff, String> {
@@ -829,20 +827,20 @@ fn dec_node_diff(s: &str) -> Result<DrawNodeDiff, String> {
         "P" => {
             let parts = split_top_level(inner, ',');
             let [segments, style] = parts.as_slice() else { return Err(format!("path diff: expected 2 fields, got {}", parts.len())) };
-            Ok(DrawNodeDiff::Path(DrawPathDiff { segments: decode_option(segments, dec_json::<Vec<PathSegment>>)?, style: decode_option(style, |v| decode_option(v, dec_str))? }))
+            Ok(DrawNodeDiff::Path(DrawPathDiff { segments: decode_option(segments, |v| dec_list(v, dec_path_segment))?, style: decode_option(style, |v| decode_option(v, dec_str))? }))
         }
         "T" => {
             let parts = split_top_level(inner, ',');
             let [value, at, style] = parts.as_slice() else { return Err(format!("text diff: expected 3 fields, got {}", parts.len())) };
-            Ok(DrawNodeDiff::Text(DrawTextDiff { value: decode_option(value, dec_str)?, at: decode_option(at, dec_json::<SemioPoint2>)?, style: decode_option(style, |v| decode_option(v, dec_str))? }))
+            Ok(DrawNodeDiff::Text(DrawTextDiff { value: decode_option(value, dec_str)?, at: decode_option(at, dec_point2)?, style: decode_option(style, |v| decode_option(v, dec_str))? }))
         }
         "G" => {
             let parts = split_top_level(inner, ',');
             let [transform_s, children_s] = parts.as_slice() else { return Err(format!("group diff: expected 2 fields, got {}", parts.len())) };
-            let transform = decode_option(transform_s, dec_json::<SemioTransform>)?;
+            let transform = decode_option(transform_s, dec_transform)?;
             let children = match split_top_level(strip_brackets(children_s)?, ',').as_slice() {
                 ["0"] => None,
-                [tag, rest @ ..] if *tag == "1" => Some(dec_indexed_triple(&rest.join(","), dec_node_diff, dec_json::<DrawNode>)?),
+                [tag, rest @ ..] if *tag == "1" => Some(dec_indexed_triple(&rest.join(","), dec_node_diff, dec_node)?),
                 other => return Err(format!("group children: bad shape {other:?}")),
             };
             Ok(DrawNodeDiff::Group(DrawGroupDiff { transform, children }))
@@ -851,14 +849,14 @@ fn dec_node_diff(s: &str) -> Result<DrawNodeDiff, String> {
             let parts = split_top_level(inner, ',');
             let [at, width, height, mime, bytes] = parts.as_slice() else { return Err(format!("image diff: expected 5 fields, got {}", parts.len())) };
             Ok(DrawNodeDiff::Image(DrawImageDiff {
-                at: decode_option(at, dec_json::<SemioPoint2>)?,
+                at: decode_option(at, dec_point2)?,
                 width: decode_option(width, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
                 height: decode_option(height, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
                 mime: decode_option(mime, dec_str)?,
                 bytes: decode_option(bytes, hex_decode)?,
             }))
         }
-        "R" => Ok(DrawNodeDiff::Replace { node: dec_json::<DrawNode>(inner)? }),
+        "R" => Ok(DrawNodeDiff::Replace { node: dec_node(inner)? }),
         other => Err(format!("node diff: unknown tag {other:?}")),
     }
 }
@@ -866,7 +864,7 @@ fn dec_node_diff(s: &str) -> Result<DrawNodeDiff, String> {
 
 //#region 🔖️TopLevelCodec
 fn enc_canvas(c: &DrawCanvasDiff) -> String {
-    format!("[{},{},{}]", encode_option(&c.width, |v| v.to_string()), encode_option(&c.height, |v| v.to_string()), encode_option(&c.background, |v| encode_option(v, enc_json)))
+    format!("[{},{},{}]", encode_option(&c.width, |v| v.to_string()), encode_option(&c.height, |v| v.to_string()), encode_option(&c.background, |v| encode_option(v, enc_rgba)))
 }
 fn dec_canvas(s: &str) -> Result<DrawCanvasDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -874,15 +872,15 @@ fn dec_canvas(s: &str) -> Result<DrawCanvasDiff, String> {
     Ok(DrawCanvasDiff {
         width: decode_option(width, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
         height: decode_option(height, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
-        background: decode_option(background, |v| decode_option(v, dec_json::<SemioRgba>))?,
+        background: decode_option(background, |v| decode_option(v, dec_rgba))?,
     })
 }
 
 fn enc_style_diff(d: &DrawStyleDiff) -> String {
     format!(
         "[{},{},{},{}]",
-        encode_option(&d.fill, |v| encode_option(v, enc_json)),
-        encode_option(&d.stroke, |v| encode_option(v, enc_json)),
+        encode_option(&d.fill, |v| encode_option(v, enc_rgba)),
+        encode_option(&d.stroke, |v| encode_option(v, enc_rgba)),
         encode_option(&d.stroke_width, |v| encode_option(v, |x| x.to_string())),
         encode_option(&d.opacity, |v| encode_option(v, |x| x.to_string())),
     )
@@ -891,8 +889,8 @@ fn dec_style_diff(s: &str) -> Result<DrawStyleDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [fill, stroke, stroke_width, opacity] = parts.as_slice() else { return Err(format!("style diff: expected 4 fields, got {}", parts.len())) };
     Ok(DrawStyleDiff {
-        fill: decode_option(fill, |v| decode_option(v, dec_json::<SemioRgba>))?,
-        stroke: decode_option(stroke, |v| decode_option(v, dec_json::<SemioRgba>))?,
+        fill: decode_option(fill, |v| decode_option(v, dec_rgba))?,
+        stroke: decode_option(stroke, |v| decode_option(v, dec_rgba))?,
         stroke_width: decode_option(stroke_width, |v| decode_option(v, |x| x.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())))?,
         opacity: decode_option(opacity, |v| decode_option(v, |x| x.parse::<f32>().map_err(|e: std::num::ParseFloatError| e.to_string())))?,
     })
@@ -913,10 +911,10 @@ fn print_drawing_diff(d: &SemioDrawingDiff) -> String {
         tokens.push(format!("canvas={}", enc_canvas(v)));
     }
     if let Some(v) = &d.styles {
-        tokens.push(format!("styles={}", enc_named_triple(v, |k: &String| enc_str(k), enc_style_diff, enc_json::<DrawStyle>)));
+        tokens.push(format!("styles={}", enc_named_triple(v, |k: &String| enc_str(k), enc_style_diff, enc_style)));
     }
     if let Some(v) = &d.layers {
-        tokens.push(format!("layers={}", enc_indexed_triple(v, enc_layer_diff, enc_json::<DrawLayer>)));
+        tokens.push(format!("layers={}", enc_indexed_triple(v, enc_layer_diff, enc_layer)));
     }
     tokens.join(" ")
 }
@@ -929,14 +927,30 @@ fn parse_drawing_diff(line: &str) -> Result<SemioDrawingDiff, String> {
         if let Some(rest) = token.strip_prefix("canvas=") {
             d.canvas = Some(dec_canvas(rest)?);
         } else if let Some(rest) = token.strip_prefix("styles=") {
-            d.styles = Some(dec_named_triple(rest, dec_str, dec_style_diff, dec_json::<DrawStyle>)?);
+            d.styles = Some(dec_named_triple(rest, dec_str, dec_style_diff, dec_style)?);
         } else if let Some(rest) = token.strip_prefix("layers=") {
-            d.layers = Some(dec_indexed_triple(rest, dec_layer_diff, dec_json::<DrawLayer>)?);
+            d.layers = Some(dec_indexed_triple(rest, dec_layer_diff, dec_layer)?);
         } else {
             return Err(format!("drawing diff: unknown token {token:?}"));
         }
     }
     Ok(d)
+}
+
+/// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
+/// shortcut. `format u8` + `presence u8` (bit0=`canvas`, bit1=`styles`, bit2=`layers`) are two REAL
+/// fixed header fields; past that, 0-3 varint-length-prefixed opaque blobs follow (one per present
+/// collection, reusing the same `enc_canvas`/`enc_named_triple`/`enc_indexed_triple` text this
+/// facet's own `print_diff` already emits) -- one opaque blob per present field rather than
+/// per-segment `Cond`-guards (`protocol-cond-cannot-chain`: a second `if`-guard on a field that's
+/// itself only conditionally decoded hard-errors `eval_cond`).
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 
 impl protocol::DiffCodec for SemioDrawingDiff {
@@ -947,90 +961,144 @@ impl protocol::DiffCodec for SemioDrawingDiff {
         parse_drawing_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        let mut presence = 0u8;
+        if self.canvas.is_some() { presence |= 1; }
+        if self.styles.is_some() { presence |= 2; }
+        if self.layers.is_some() { presence |= 4; }
+        let mut out = vec![DIFF_BINARY_FORMAT, presence];
+        if let Some(c) = &self.canvas {
+            write_bytes_lp(&mut out, enc_canvas(c).as_bytes());
+        }
+        if let Some(s) = &self.styles {
+            write_bytes_lp(&mut out, enc_named_triple(s, |k: &String| enc_str(k), enc_style_diff, enc_style).as_bytes());
+        }
+        if let Some(l) = &self.layers {
+            write_bytes_lp(&mut out, enc_indexed_triple(l, enc_layer_diff, enc_layer).as_bytes());
+        }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        let mut reader = store::ByteReader::new(bytes);
+        let format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
+        if format != DIFF_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {format}") });
+        }
+        let presence = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff presence", offset: 1, detail: e.to_string() })?;
+        let map_err = |what: &'static str| move |e: String| protocol::ProtocolError::Malformed { what, offset: 2, detail: e };
+        let canvas = if presence & 1 != 0 {
+            let blob = read_bytes_lp(&mut reader).map_err(map_err("diff canvas blob"))?;
+            let text = std::str::from_utf8(&blob).map_err(|e| protocol::ProtocolError::Malformed { what: "diff canvas utf8", offset: 2, detail: e.to_string() })?;
+            Some(dec_canvas(text).map_err(map_err("diff canvas"))?)
+        } else {
+            None
+        };
+        let styles = if presence & 2 != 0 {
+            let blob = read_bytes_lp(&mut reader).map_err(map_err("diff styles blob"))?;
+            let text = std::str::from_utf8(&blob).map_err(|e| protocol::ProtocolError::Malformed { what: "diff styles utf8", offset: 2, detail: e.to_string() })?;
+            Some(dec_named_triple(text, dec_str, dec_style_diff, dec_style).map_err(map_err("diff styles"))?)
+        } else {
+            None
+        };
+        let layers = if presence & 4 != 0 {
+            let blob = read_bytes_lp(&mut reader).map_err(map_err("diff layers blob"))?;
+            let text = std::str::from_utf8(&blob).map_err(|e| protocol::ProtocolError::Malformed { what: "diff layers utf8", offset: 2, detail: e.to_string() })?;
+            Some(dec_indexed_triple(text, dec_layer_diff, dec_layer).map_err(map_err("diff layers"))?)
+        } else {
+            None
+        };
+        Ok(SemioDrawingDiff { canvas, styles, layers })
     }
 }
 //#endregion 🔖️TopLevelCodec
 //#endregion 🔖️HandcraftedDiffCodec
 
+//#region 🔖️Demo
+/// 🌱 `sweep_a`/`sweep_b`, promoted to module scope so both this facet's own tests AND
+/// `🎹️composer/🦀️component.rs`'s conformance-law tests can build representative diffs from them
+/// (a private item of `#[cfg(test)] mod tests` below is not visible to the sibling `composer`
+/// module — same real, first-hit variant of this pattern brep's own report flags).
+#[cfg(test)]
+fn transform(tx: f64) -> SemioTransform {
+    SemioTransform { translation: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3 { x: tx, y: 0.0, z: 0.0 }, rotation: crate::artifacts::semio::standards::v1::engine::geometry::SemioQuaternion::default(), scale: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
+}
+
+#[cfg(test)]
+pub(crate) fn sweep_a() -> SemioDrawingSnapshot {
+    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
+    SemioDrawingSnapshot {
+        schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
+        canvas: DrawCanvas { width: 100.0, height: 50.0, background: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) },
+        styles: vec![
+            DrawStyle { name: "keep".into(), fill: Some(SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(1.0), opacity: None },
+            DrawStyle { name: "gone".into(), fill: None, stroke: Some(SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }), stroke_width: None, opacity: Some(0.5) },
+        ],
+        layers: vec![
+            DrawLayer {
+                id: "l0".into(),
+                name: "base".into(),
+                visible: true,
+                root: DrawNode::Group {
+                    transform: SemioTransform::identity(),
+                    children: vec![
+                        DrawNode::Path { segments: vec![PathSegment::MoveTo { to: SemioPoint2 { x: 0.0, y: 0.0 } }, PathSegment::Close], style: Some("keep".into()) },
+                        DrawNode::Text { value: "old".into(), at: SemioPoint2 { x: 1.0, y: 1.0 }, style: None },
+                    ],
+                },
+            },
+            DrawLayer { id: "l1".into(), name: "removed-layer".into(), visible: false, root: DrawNode::default() },
+            DrawLayer { id: "l1b".into(), name: "removed-layer-2".into(), visible: false, root: DrawNode::default() },
+        ],
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn sweep_b() -> SemioDrawingSnapshot {
+    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
+    SemioDrawingSnapshot {
+        schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
+        canvas: DrawCanvas { width: 200.0, height: 80.0, background: None },
+        styles: vec![
+            DrawStyle { name: "keep".into(), fill: Some(SemioRgba { r: 0.0, g: 0.0, b: 1.0, a: 1.0 }), stroke: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }), stroke_width: Some(3.0), opacity: Some(0.9) },
+            DrawStyle { name: "added".into(), fill: None, stroke: None, stroke_width: None, opacity: None },
+        ],
+        layers: vec![
+            DrawLayer {
+                id: "l0".into(),
+                name: "base-renamed".into(),
+                visible: false,
+                root: DrawNode::Group {
+                    transform: transform(5.0),
+                    children: vec![
+                        DrawNode::Path { segments: vec![PathSegment::MoveTo { to: SemioPoint2 { x: 9.0, y: 9.0 } }, PathSegment::LineTo { to: SemioPoint2 { x: 1.0, y: 1.0 } }, PathSegment::Close], style: None },
+                        DrawNode::Text { value: "old".into(), at: SemioPoint2 { x: 1.0, y: 1.0 }, style: None },
+                        DrawNode::Group { transform: SemioTransform::identity(), children: Vec::new() },
+                    ],
+                },
+            },
+            DrawLayer { id: "l2".into(), name: "added-layer".into(), visible: true, root: DrawNode::default() },
+        ],
+    }
+}
+
+/// 🌱 Representative `SemioDrawingDiff` cases (incl. the empty no-op diff), single source of truth
+/// for `diff_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<SemioDrawingDiff> {
+    use protocol::command::DiffAlgebra;
+    let a = sweep_a();
+    let b = sweep_b();
+    let c = SemioDrawingSnapshot::default();
+    vec![SemioDrawingDiff::default(), SemioDrawingDiff::between(&a, &b), SemioDrawingDiff::between(&b, &a), SemioDrawingDiff::between(&a, &c), SemioDrawingDiff::between(&c, &a)]
+}
+//#endregion 🔖️Demo
+
 //#region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint3, SemioQuaternion};
-    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
     use protocol::DiffCodec;
-
-    fn transform(tx: f64) -> SemioTransform {
-        SemioTransform { translation: SemioPoint3 { x: tx, y: 0.0, z: 0.0 }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
-    }
-
-    /// 🧪️ `sweep_a`/`sweep_b`: differ in EVERY mutable field, incl. tri-state `Some(None)`
-    /// (`canvas.background`, a `Path.style` clear) and every collection's removed/modified/added.
-    /// `styles` is name-keyed so a single `between()` naturally shows all three simultaneously;
-    /// `layers`/`Group.children` are index-keyed (naive positional pairwise-then-tail per the
-    /// recipe's "between matching" rule, same as svg's own `between_children` -- NOT an
-    /// LCS/move-aware diff), so a single comparison can only ever show removed XOR added
-    /// alongside modified (never both at once, since exactly one list's tail is non-empty) --
-    /// `layers` is sized to demonstrate removed+modified, `children` added+modified, so the
-    /// sweep as a whole still exercises every op kind across its collections.
-    fn sweep_a() -> SemioDrawingSnapshot {
-        SemioDrawingSnapshot {
-            schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
-            canvas: DrawCanvas { width: 100.0, height: 50.0, background: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) },
-            styles: vec![
-                DrawStyle { name: "keep".into(), fill: Some(SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(1.0), opacity: None },
-                DrawStyle { name: "gone".into(), fill: None, stroke: Some(SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }), stroke_width: None, opacity: Some(0.5) },
-            ],
-            layers: vec![
-                DrawLayer {
-                    id: "l0".into(),
-                    name: "base".into(),
-                    visible: true,
-                    root: DrawNode::Group {
-                        transform: SemioTransform::identity(),
-                        children: vec![
-                            DrawNode::Path { segments: vec![PathSegment::MoveTo { to: SemioPoint2 { x: 0.0, y: 0.0 } }, PathSegment::Close], style: Some("keep".into()) },
-                            DrawNode::Text { value: "old".into(), at: SemioPoint2 { x: 1.0, y: 1.0 }, style: None },
-                        ],
-                    },
-                },
-                DrawLayer { id: "l1".into(), name: "removed-layer".into(), visible: false, root: DrawNode::default() },
-                DrawLayer { id: "l1b".into(), name: "removed-layer-2".into(), visible: false, root: DrawNode::default() },
-            ],
-        }
-    }
-
-    fn sweep_b() -> SemioDrawingSnapshot {
-        SemioDrawingSnapshot {
-            schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
-            canvas: DrawCanvas { width: 200.0, height: 80.0, background: None },
-            styles: vec![
-                DrawStyle { name: "keep".into(), fill: Some(SemioRgba { r: 0.0, g: 0.0, b: 1.0, a: 1.0 }), stroke: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }), stroke_width: Some(3.0), opacity: Some(0.9) },
-                DrawStyle { name: "added".into(), fill: None, stroke: None, stroke_width: None, opacity: None },
-            ],
-            layers: vec![
-                DrawLayer {
-                    id: "l0".into(),
-                    name: "base-renamed".into(),
-                    visible: false,
-                    root: DrawNode::Group {
-                        transform: transform(5.0),
-                        children: vec![
-                            DrawNode::Path { segments: vec![PathSegment::MoveTo { to: SemioPoint2 { x: 9.0, y: 9.0 } }, PathSegment::LineTo { to: SemioPoint2 { x: 1.0, y: 1.0 } }, PathSegment::Close], style: None },
-                            DrawNode::Text { value: "old".into(), at: SemioPoint2 { x: 1.0, y: 1.0 }, style: None },
-                            DrawNode::Group { transform: SemioTransform::identity(), children: Vec::new() },
-                        ],
-                    },
-                },
-                DrawLayer { id: "l2".into(), name: "added-layer".into(), visible: true, root: DrawNode::default() },
-            ],
-        }
-    }
 
     #[test]
     fn field_sweep_every_field_and_every_collection_shape() {

@@ -1,4 +1,7 @@
-; Binary diff form = the text diff's UTF-8 bytes verbatim (protocol::DiffCodec::encode_diff wraps
-; print_diff() directly; no separate binary framing, same simplification gif/svg/docx use).
-document = text-diff-bytes
-text-diff-bytes = *OCTET  ; exactly the print_diff() ASCII output, re-encoded as UTF-8
+; ABNF-style descriptive mirror of `stdio.semio.document`'s real binary diff frame -- see the
+; authoritative `📡️component.protocol.semio` for the conformance-tested version.
+document       = format presence payload
+format         = %x01                  ; DIFF_BINARY_FORMAT
+presence       = OCTET                 ; bit0=styles bit1=images bit2=blocks
+payload        = *OCTET                ; 0-3 varint-length-prefixed collection blobs,
+                                        ; see component.rs's DiffCodec::encode_diff

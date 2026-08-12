@@ -50,34 +50,18 @@ impl protocol::OpBinary for CadMutation {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::artifacts::cad::mutations::tests::every_mutation;
-    use crate::artifacts::cad::mutations::{CadMutation, CadObjectPatch, CadReferencePatch};
-    use crate::artifacts::cad::CadPaneId;
 
+    /// ⚖️ The pinned pre-migration byte fixture retired with the generic `Patch*`/`Set*` variants
+    /// it exercised (SEMANTIC-MUTATIONS-OVERHAUL, 26/08/12): the wire format legitimately changed —
+    /// greenfield, no backward compat — so round-tripping every current variant (below) is the law
+    /// that matters now, not byte-for-byte parity with a vocabulary that no longer exists.
     #[test]
     fn cad_mutation_print_op_round_trips_every_variant_as_one_line() {
         for op in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&op);
             store::os_store::test_support::assert_op_text_binary_equivalence(&op);
         }
-    }
-
-    #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
-        let hex = |op: &CadMutation| -> String { protocol::OpBinary::encode_op(op).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect() };
-        assert_eq!(hex(&CadMutation::RemoveObject { pane: CadPaneId::Shape, object_id: "object-1".into() }), "010101086f626a6563742d3102000a00010600");
-        assert_eq!(
-            hex(&CadMutation::PatchObject { pane: CadPaneId::Building, object_id: "object-1".into(), patch: CadObjectPatch { label: Some("Renamed".into()), visible: Some(false), ..Default::default() } }),
-            "0102020752656e616d6564086f626a6563742d3103000a01010601020e0d020006000201"
-        );
-        assert_eq!(hex(&CadMutation::PatchObject { pane: CadPaneId::Building, object_id: "object-1".into(), patch: CadObjectPatch::default() }), "010201086f626a6563742d3103000a01010600020e0d00");
-        assert_eq!(
-            hex(&CadMutation::PatchReference { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), patch: CadReferencePatch { hidden: Some(true), ..Default::default() } }),
-            "010a02057265662d310d7370617469616c2e736861706503000601010600020e0d010602"
-        );
-        assert_eq!(hex(&CadMutation::PatchReference { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), patch: CadReferencePatch::default() }), "010a02057265662d310d7370617469616c2e736861706503000601010600020e0d00");
-        assert_eq!(hex(&CadMutation::SetActiveModelDefinition { model_definition_id: "aec.building".into() }), "010c010c6165632e6275696c64696e6701000600");
     }
 }
 //#endregion 🧪️Tests

@@ -376,7 +376,7 @@ pub mod app {
 
     //#region 🔖️ArtifactKind
     /// 🗂️ `OsMediaCapability`/`ArtifactKindSpec` now live in `semio-framework-core` (both this crate and
-    /// `semio-framework-os` already depend on it) the same way `MediaFormat` already does — re-exported
+    /// `semio-framework-os` already depend on it) the same way the legacy format enum used to — re-exported
     /// here verbatim instead of duplicated, so `AppBuilder::artifact_kind(...)` and
     /// `semio_framework_os`'s artifact catalog registry share one definition.
     pub use semio_framework::{ArtifactKindSpec, OsMediaCapability};
@@ -391,10 +391,13 @@ pub mod app {
     /// `ArtifactKindSpec.media_type` and `AppBuilder::media_input(...)`/`media_output(...)` port specs
     /// without a direct `semio-framework-core` dependency.
     pub use semio_framework::{MediaClass, MediaType};
-    /// 🎞️ `MediaWireFormat`/`MediaFormat` back `MediaArtifactDescriptor::wire` (see `🔖️DocumentContract`
+    /// 🎞️ `MediaWireFormat` backs `MediaArtifactDescriptor::wire` (see `🔖️DocumentContract`
     /// below) — the plugin ABI's `consume-media`/`produce-media` payload framing, separate from
     /// `MediaPayload` above (which pairs with `Media`'s per-port `MediaType` projection).
-    pub use semio_framework::{MediaWireFormat, MediaFormat};
+    /// The legacy format enum was retired in ticket 26/08/11/
+    /// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6 — `MediaWireFormat::
+    /// Binary` now carries a plain format kind id string.
+    pub use semio_framework::MediaWireFormat;
     //#endregion 🔖️MediaPort
 
     //#region 🔖️Dialect
@@ -402,7 +405,7 @@ pub mod app {
     pub use semio_framework::IoError;
 
     /// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
-    /// 2). Defined in `semio_framework` (alongside `MediaFormat`) so plugins and the OS product
+    /// 2). Defined in `semio_framework` so plugins and the OS product
     /// share one definition without an inverted dependency; re-exported here verbatim.
     pub use semio_framework::{
         StandardId, SubsetId, Dialect, ArtifactDialect,
@@ -635,6 +638,27 @@ pub mod app {
         /// 👃️ Cheap recognizability probe -- no allocation, no full parse.
         fn sniff(source: &AnalyzeSource) -> IoConfidence;
         fn analyze(sources: &[AnalyzeSource]) -> Analysis<Self::Parts>;
+    }
+
+    /// 💡️ Read-side inference surface — one per artifact standard, sibling of `ArtifactAnalyzer`
+    /// (not a widening of `ArtifactBuilder`: inference is read-only and cache-aware, unlike the
+    /// authoring lifecycle `ArtifactBuilder` models). `infer`/`infer_cached` must stay
+    /// observationally equal — `infer_cached`'s default is an honest passthrough for artifacts
+    /// with no `InferredField`s yet (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+    pub trait ArtifactInferrer: Sized {
+        type Snapshot;
+        type Inference: protocol::Inference<Self::Snapshot>;
+
+        fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
+            protocol::Inference::infer(snapshot)
+        }
+
+        /// 🧠️ Cache-aware variant; the default passthrough ignores `cache`/`session` and just calls
+        /// `infer` — override once the standard registers real `InferredField`s.
+        fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
+            let _ = (cache, session);
+            Self::infer(snapshot)
+        }
     }
     //#endregion 🔖️ArtifactBuilder
 
@@ -4540,7 +4564,7 @@ pub mod app {
         #[error("document schema mismatch: expected {expected}, found {found}")]
         SchemaMismatch { expected: String, found: String },
         #[error("no binary importer registered for format {0:?}")]
-        NoImporter(MediaFormat),
+        NoImporter(String),
     }
 
     /// @emoji 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
@@ -4673,7 +4697,7 @@ pub mod app {
                     self.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).map_err(|fault| MediaArtifactError::Payload(fault.message))
                 }
                 MediaWireFormat::Document { schema } => Err(MediaArtifactError::SchemaMismatch { expected: self.document_schema().to_string(), found: schema }),
-                MediaWireFormat::Binary { format } => Err(MediaArtifactError::NoImporter(format)),
+                MediaWireFormat::Binary { format_kind } => Err(MediaArtifactError::NoImporter(format_kind)),
             }
         }
     }
@@ -9455,7 +9479,7 @@ pub mod engagement {
 pub use app::testkit;
 pub use app::ActionFactory;
 pub use app::{
-    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactBuilder, ArtifactDecomposer, ArtifactAnalyzer, ArtifactComposer, ArtifactSerializer, ArtifactDeserializer, composer_entry_of, deserializer_entry_of, serializer_entry_of, ArtifactKindSpec, Confidence, Decomposition, DecomposeSource, ConfigView, ArtifactApp, ArtifactView, DraftView, Emit, ExampleSource, HistoryView,
+    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactBuilder, ArtifactDecomposer, ArtifactAnalyzer, ArtifactComposer, ArtifactInferrer, ArtifactSerializer, ArtifactDeserializer, composer_entry_of, deserializer_entry_of, serializer_entry_of, ArtifactKindSpec, Confidence, Decomposition, DecomposeSource, ConfigView, ArtifactApp, ArtifactView, DraftView, Emit, ExampleSource, HistoryView,
     KeybindingSpec, MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsArtifactApp,
     WindowKindSpec,
 };

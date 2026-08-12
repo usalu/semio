@@ -9,8 +9,8 @@ use ui_wgpu::wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, Surfa
 // 🔀️ ArtifactKindSpec/OsMediaCapability/MediaType/MediaClass/MediaForm/MediaWireFormat/MediaPortSpec/
 // PortMultiplicity/MediaCompat/AppIo/ArtifactPresentation/ConfigSpec/CommandGrammar/Media/MediaPayload/
 // MediaConverter now live locally (see 🔖️MediaVocabulary below) — relocated from 🔺️mesh, ticket
-// 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT wave 4a. `MediaFormat` itself stays in mesh.
-use crate::mesh::MediaFormat;
+// 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT wave 4a. The legacy format enum itself was retired in
+// ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6.
 use crate::IconName;
 
 //#region 🔖️Manifest
@@ -2827,8 +2827,10 @@ pub mod kernel;
 
 //#region 🔖️MediaVocabulary
 // 🔀️ Relocated verbatim from 🔺️mesh/🦀️component.rs (ticket 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT
-// wave 4a) — manifest-vocabulary types, not codec material; mesh keeps only MeshData/Primitives/
-// generic obj-glb-stl codecs plus the still-required MediaFormat enum (see that file's own note).
+// wave 4a) — manifest-vocabulary types, not codec material; mesh keeps MeshData/Primitives/
+// generic obj-glb-stl codecs and the DWG bit-codec, but the legacy media-format enum itself was retired
+// in ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6 — every
+// format-kind field below is now a plain string kind id.
 //#region ArtifactKind
 /// 🧬️ Which geometry backend a resource kind's media exporters/importers target — the manifest-level
 /// counterpart threaded onto `AppDefinition.artifact_kinds` (see `ArtifactKindSpec`). Canonical home for
@@ -2862,8 +2864,10 @@ pub struct ArtifactKindSpec {
     pub media_capability: OsMediaCapability,
     pub media_type: MediaType,
     pub schema: String,
-    pub export_formats: Vec<MediaFormat>,
-    pub import_formats: Vec<MediaFormat>,
+    /// 🗄️ Export target format kind ids (string, the legacy format enum was retired — ticket 26/08/11/
+    /// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
+    pub export_formats: Vec<String>,
+    pub import_formats: Vec<String>,
     /// 🗄️ Stdio export target kind ids (e.g. `stdio.json`) — additive peer of `export_formats`.
     #[serde(default, skip_serializing_if = "Vec::is_empty", skip_deserializing)]
     pub export_stdio_kinds: Vec<&'static str>,
@@ -2874,7 +2878,7 @@ pub struct ArtifactKindSpec {
 //#endregion ArtifactKind
 
 //#region MediaType
-/// 🧬️ Typed-media lattice: every port/wire in the workflow carries a `MediaType` (`class` × `form`) instead of the legacy string `artifact_kind`. This is separate from `MediaFormat` above — `MediaType` is what a wire negotiates, `MediaFormat` is only how bytes are encoded once they actually cross a process boundary (see `MediaWireFormat`). Dependent tickets retire `OsMediaCapability` (see the `ArtifactKind` region above) onto `MediaForm::{Brep,Mesh}`, which already covers what `OsMediaCapability::{Brep,MeshOnly}` expresses.
+/// 🧬️ Typed-media lattice: every port/wire in the workflow carries a `MediaType` (`class` × `form`) instead of the legacy string `artifact_kind`. `MediaType` is what a wire negotiates; a format kind id string is only how bytes are encoded once they actually cross a process boundary (see `MediaWireFormat`). Dependent tickets retire `OsMediaCapability` (see the `ArtifactKind` region above) onto `MediaForm::{Brep,Mesh}`, which already covers what `OsMediaCapability::{Brep,MeshOnly}` expresses.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -2921,12 +2925,15 @@ pub struct MediaType {
     pub form: MediaForm,
 }
 
-/// 🔌️ How a `MediaType` is actually encoded once it crosses a process boundary — binary payloads reuse `MediaFormat`, structured payloads carry a schema id instead (see `ArtifactKindSpec::schema`).
+/// 🔌️ How a `MediaType` is actually encoded once it crosses a process boundary — binary payloads
+/// carry a format kind id string (the legacy format enum was retired — ticket 26/08/11/
+/// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6), structured payloads carry
+/// a schema id instead (see `ArtifactKindSpec::schema`).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum MediaWireFormat {
-    Binary { format: MediaFormat },
+    Binary { format_kind: String },
     Document { schema: String }
 }
 
@@ -3025,8 +3032,8 @@ pub struct AppIo {
     pub document_media_type: MediaType,
     /// 🔌️ App-specific ports only — the implicit document ports are auto-injected by `all_ports`.
     pub ports: Vec<MediaPortSpec>,
-    pub export_formats: Vec<MediaFormat>,
-    pub import_formats: Vec<MediaFormat>,
+    pub export_formats: Vec<String>,
+    pub import_formats: Vec<String>,
     pub artifact: ArtifactPresentation,
 }
 
@@ -3217,7 +3224,7 @@ pub struct Media {
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum MediaPayload {
     Structured { schema: String, json: String },
-    Binary { format: MediaFormat, blob_hash: String }
+    Binary { format_kind: String, blob_hash: String }
 }
 
 /// 🔑️ A cheap identity for one port's current output, independent of serializing the full payload — the unit the `SpaceRunner` compares to decide whether a downstream node actually needs to see a new value.
@@ -3301,7 +3308,7 @@ mod media_vocabulary_tests {
 
         let binary = Media {
             media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
-            payload: MediaPayload::Binary { format: MediaFormat::Glb, blob_hash: "abc123".into() },
+            payload: MediaPayload::Binary { format_kind: "glb".into(), blob_hash: "abc123".into() },
         };
         assert_eq!(MediaFingerprint::of(&binary), MediaFingerprint("abc123".into()), "binary payload reuses its blob hash verbatim");
     }
@@ -4507,23 +4514,6 @@ mod app_label_tests {
         assert_eq!(serde_json::from_str::<HostEffect>(&payload_json).unwrap(), with_payload);
     }
 
-    #[test]
-    fn os_media_format_ply_and_las_round_trip() {
-        use crate::mesh::MediaFormat;
-        for (format, ext, mime, binary) in [
-            (MediaFormat::Ply, "ply", "model/ply", false),
-            (MediaFormat::Las, "las", "application/vnd.las", true),
-        ] {
-            assert_eq!(format.as_str(), ext);
-            assert_eq!(format.mime_type(), mime);
-            assert_eq!(format.is_binary(), binary);
-            assert_eq!(MediaFormat::parse(ext), Some(format));
-            let json = serde_json::to_string(&format).unwrap();
-            assert_eq!(json, format!("\"{ext}\""));
-            let round: MediaFormat = serde_json::from_str(&json).unwrap();
-            assert_eq!(round, format);
-        }
-    }
     //#endregion 🔖️ActionArgsAndUtilitiesTests
 
     #[cfg(feature = "typegen")]
@@ -4651,7 +4641,6 @@ mod app_label_tests {
         crate::ui::kernel::Rights::export().unwrap();
         crate::ui::kernel::ArtifactKind::export().unwrap();
         crate::ui::kernel::Scope::export().unwrap();
-        crate::mesh::MediaFormat::export().unwrap();
         crate::ui::OsMediaCapability::export().unwrap();
         crate::ui::ArtifactKindSpec::export().unwrap();
         crate::ui::MediaClass::export().unwrap();

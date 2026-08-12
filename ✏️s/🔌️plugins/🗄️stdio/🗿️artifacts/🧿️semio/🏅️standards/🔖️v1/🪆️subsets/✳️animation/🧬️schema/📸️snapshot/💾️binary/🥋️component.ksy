@@ -2,10 +2,21 @@ meta:
   id: stdio_semio_animation_snapshot
   endian: le
 doc: |
-  stdio.semio.animation.snapshot binary layout — see 📡️component.protocol.semio for the field grammar.
+  `pack` (binary) form of a `stdio.semio.animation` snapshot, past the `semio_format` envelope: a
+  real fixed `format` byte, a real varint-length-prefixed `schema` string, then one opaque `payload`
+  tail (the `timelines` collection, itself embedding `channels`/`keyframes` and the data-carrying
+  `AnimTargetProperty`/`AnimValue` tagged unions — a homogeneous-but-variable-length repeated-record
+  shape the protocol dialect's `repeat` block can't describe untagged, see the sibling
+  `📡️component.protocol.semio`'s own comment). Not a JSON blob — see `📸️snapshot/🦀️component.rs`'s
+  `encode_animation_snapshot_binary` for the payload's real internal varint/length-prefixed layout.
 seq:
-  - id: magic
-    contents: "stdio.semio.animation.snapshot"
-  - id: body
+  - id: format
+    type: u1
+  - id: schema_len
+    type: vlq_base128_le
+  - id: schema_bytes
+    size: schema_len.value
+    type: str
+    encoding: UTF-8
+  - id: payload
     size-eos: true
-    doc: hex-encoded JSON envelope body (see the artifact's own ArtifactPack/DiffCodec impl)

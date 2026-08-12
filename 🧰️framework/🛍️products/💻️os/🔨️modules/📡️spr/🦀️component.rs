@@ -24,8 +24,10 @@ pub use crate::os_spr::causal::{
 };
 pub use crate::os_spr::channel::{decode_app_command, decode_app_frame, encode_app_command, encode_app_frame, AppCommand, AppFrame, SectionProbe, CHANNEL_VERSION};
 pub use crate::os_spr::command::{
-    apply_collection_mutation, collection_diff_from_mutation, inverse_collection_mutation, mutation_descriptor, register_mutation_descriptor, CollectionDiff, CollectionMutation, CommandOutcome, DiffCodec, Edit, Identified, ItemPatch, OpBinary,
-    OpText, Mutation, MutationDescriptor, MutationDiff, MutationEvent, MutationMeta, MutationUpcaster, Patchable, ReconcileReport, ReconcileSeverity,
+    apply_collection_mutation, collection_diff_from_mutation, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, named_apply, register_mutation_descriptor, str_eq, CollectionDiff, CollectionMutation, CommandOutcome, DiffAlgebra,
+    DiffCodec, Edit, Identified, IndexedTripleDiff, ItemPatch, MutationKind, NamedTripleDiff, OpBinary, OpText, Mutation, MutationDescriptor, MutationDiff, MutationEvent, MutationMeta, MutationUpcaster, Patchable, ReconcileReport, ReconcileSeverity,
+    SemanticDescriptor, SemanticMutation, APPROVED_VERBS,
+    DiffRegions, Inference, InferenceFieldSpec, InferenceSpec, TouchedPaths,
 };
 pub use crate::os_spr::wire::{ActorId, ConflictRule, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, MergeStrategyKind, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
 pub use crate::os_spr::crdt::merge_concurrent_diffs;

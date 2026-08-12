@@ -1,69 +1,74 @@
-dialect grammar stdio.semio.cad.mutations
-root = document
-; `OpText::print_op`/`parse_op` grammar for `SemioCadMutation` -- NO semio envelope: `OpBinary`
-; is `print_op().into_bytes()` (see ../💾️binary/📡️component.protocol.semio, byte-identical).
-; Grammar: `keyword arg=value ...` (space-separated), one alternative per variant.
-document = "no-mutation" / ( keyword SP args )
-args = arg *( SP arg )
-arg = key "=" value
+dialect grammar
+grammar semio.cad.mutations
+extension semio
+start op
 
-keyword = "set-snapshot" / "add-layer" / "remove-layer" / "set-layer" / "add-block" / "remove-block"
-        / "set-block-base-point" / "add-entity" / "remove-entity" / "set-entity-layer"
-        / "set-entity-geometry" / "add-block-entity" / "remove-block-entity"
-        / "set-block-entity-layer" / "set-block-entity-geometry"
-key = "snapshot" / "layer" / "name" / "color-index" / "line-type" / "visible" / "block"
-    / "base-point" / "entity" / "handle" / "block-name"
-; `value` is keyword-dependent (see the per-variant field list below); the grammar's `arg` rule
-; is deliberately permissive (any hex/bracket value) -- the real discriminator is the KEYWORD,
-; matching `parse_cad_mutation`'s own dispatch (`🦀️component.rs`).
-value = cad-snapshot / layer / block / entity-record / entity / point2 / hexstr
-      / option-i32 / option-str / option-bool
+# cad wave: real one-line `OpText::print_op`/`parse_op` shape emitted by
+# `🧬️mutations/🦀️component.rs` (`print_cad_mutation`/`parse_cad_mutation`) —
+# "keyword arg=value ..." (space-separated; space is lexer trivia at this dialect level). Every
+# keyword/field-name token below is copied verbatim from the real `format!(...)` call sites in that
+# file's `print_cad_mutation`, not invented.
+op = no-mutation | set-snapshot | add-layer | remove-layer | set-layer | add-block | remove-block | set-block-base-point | add-entity | remove-entity | set-entity-layer | set-entity-geometry | add-block-entity | remove-block-entity | set-block-entity-layer | set-block-entity-geometry
 
-; --- per-variant real arg lists (informative -- see 🦀️component.rs `print_cad_mutation` for the
-; authoritative dispatch) ---
-; set-snapshot        snapshot=<cad-snapshot>
-; add-layer           layer=<layer>
-; remove-layer        name=<hexstr>
-; set-layer           name=<hexstr> color-index=<option-i32> line-type=<option-str> visible=<option-bool>
-; add-block           block=<block>
-; remove-block        name=<hexstr>
-; set-block-base-point name=<hexstr> base-point=<point2>
-; add-entity          entity=<entity-record>
-; remove-entity       handle=<hexstr>
-; set-entity-layer    handle=<hexstr> layer=<hexstr>
-; set-entity-geometry handle=<hexstr> entity=<entity>
-; add-block-entity    block-name=<hexstr> entity=<entity-record>
-; remove-block-entity block-name=<hexstr> handle=<hexstr>
-; set-block-entity-layer    block-name=<hexstr> handle=<hexstr> layer=<hexstr>
-; set-block-entity-geometry block-name=<hexstr> handle=<hexstr> entity=<entity>
+no-mutation = "no-mutation"
+set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
+add-layer = "add-layer" "layer" "=" layer
+remove-layer = "remove-layer" "name" "=" hex
+set-layer = "set-layer" "name" "=" hex "color-index" "=" option-i32 "line-type" "=" option-str "visible" "=" option-bool
+add-block = "add-block" "block" "=" block
+remove-block = "remove-block" "name" "=" hex
+set-block-base-point = "set-block-base-point" "name" "=" hex "base-point" "=" point2
+add-entity = "add-entity" "entity" "=" entity-record
+remove-entity = "remove-entity" "handle" "=" hex
+set-entity-layer = "set-entity-layer" "handle" "=" hex "layer" "=" hex
+set-entity-geometry = "set-entity-geometry" "handle" "=" hex "entity" "=" entity
+add-block-entity = "add-block-entity" "block-name" "=" hex "entity" "=" entity-record
+remove-block-entity = "remove-block-entity" "block-name" "=" hex "handle" "=" hex
+set-block-entity-layer = "set-block-entity-layer" "block-name" "=" hex "handle" "=" hex "layer" "=" hex
+set-block-entity-geometry = "set-block-entity-geometry" "block-name" "=" hex "handle" "=" hex "entity" "=" entity
 
-cad-snapshot = "[" hexstr "," layer-list "," block-list "," entity-record-list "]"
-layer-list = "[" [ layer *( "," layer ) ] "]"
-block-list = "[" [ block *( "," block ) ] "]"
-entity-record-list = "[" [ entity-record *( "," entity-record ) ] "]"
+option-i32 = "[" "0" "]" | "[" "1" "," i32 "]"
+option-str = "[" "0" "]" | "[" "1" "," hex "]"
+option-bool = "[" "0" "]" | "[" "1" "," bool "]"
 
-option-i32 = "[0]" / ( "[1," i32 "]" )
-option-str = "[0]" / ( "[1," hexstr "]" )
-option-bool = "[0]" / ( "[1," bool01 "]" )
+# `enc_cad_snapshot`/`dec_cad_snapshot` — `[hex(schema),[layer,...],[block,...],[entityRecord,...]]`.
+snapshot-lit = "[" hex "," "[" layer-items? "]" "," "[" block-items? "]" "," "[" entity-record-items? "]" "]"
+layer-items = layer {"," layer}*
+block-items = block {"," block}*
+entity-record-items = entity-record {"," entity-record}*
 
-layer = "[" hexstr "," i32 "," hexstr "," bool01 "]"
-entity-record = "[" hexstr "," hexstr "," entity "]"
-block = "[" hexstr "," point2 "," entity-record-list "]"
+# `enc_layer`/`enc_block`/`enc_entity_record`/`enc_entity` — the same full-VALUE codecs
+# `📸️snapshot/📝️text/📖️component.grammar.semio` declares (restated here so this leaf grammar is
+# self-contained, matching the repo's existing per-facet convention).
+layer = "[" hex "," i32 "," hex "," bool "]"
+entity-record = "[" hex "," hex "," entity "]"
+entity-record-list = "[" entity-record-items? "]"
+block = "[" hex "," point2 "," entity-record-list "]"
 
-entity = line / arc / circle / ellipse / polyline / text-entity / insert / solid / dimension
-line = "L[" point2 "," point2 "]"
-arc = "A[" point2 "," f64 "," f64 "," f64 "]"
-circle = "C[" point2 "," f64 "]"
-ellipse = "E[" point2 "," point2 "," f64 "," f64 "," f64 "]"
-polyline = "P[" point2-list "," bool01 "]"
-point2-list = "[" [ point2 *( "," point2 ) ] "]"
-text-entity = "T[" point2 "," f64 "," f64 "," hexstr "]"
-insert = "I[" hexstr "," point2 "," point2 "," f64 "]"
-solid = "S[" point2 "," point2 "," point2 "," point2 "]"
-dimension = "D[" point2 "," point2 "," f64 "," hexstr "]"
+entity = line | arc | circle | ellipse | polyline | text-entity | insert | solid | dimension
+line = "L" "[" point2 "," point2 "]"
+arc = "A" "[" point2 "," number "," number "," number "]"
+circle = "C" "[" point2 "," number "]"
+ellipse = "E" "[" point2 "," point2 "," number "," number "," number "]"
+polyline = "P" "[" point2-list "," bool "]"
+text-entity = "T" "[" point2 "," number "," number "," hex "]"
+insert = "I" "[" hex "," point2 "," point2 "," number "]"
+solid = "S" "[" point2 "," point2 "," point2 "," point2 "]"
+dimension = "D" "[" point2 "," point2 "," number "," hex "]"
 
-point2 = "[" f64 "," f64 "]"
-hexstr = *HEXDIG
-i32 = ["-"] 1*DIGIT
-f64 = ["-"] 1*DIGIT ["." 1*DIGIT] [("e"/"E") ["+"/"-"] 1*DIGIT]
-bool01 = "0" / "1"
+point2 = "[" number "," number "]"
+point2-list = "[" point2-items? "]"
+point2-items = point2 {"," point2}*
+
+i32 = INT
+bool = "0" | "1"
+
+number = INT | FLOAT
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — a run of lowercase hex digits (`enc_str`/`hex_encode`'s own alphabet), incl. the
+# empty string. `Symbol::Ref` already falls back from "no production of this name" to "macro of
+# this name", so referencing `hex` with no matching production routes here automatically. Using a
+# hand-rolled `{INT|IDENT}*` production instead would be wrong: it never backtracks and would
+# silently swallow the next literal keyword token (e.g. `handle=<hex> layer=<hex>` — the literal
+# `layer` tokenizes as a plain `IDENT`, exactly like a stray hex letter run would).

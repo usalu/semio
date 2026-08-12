@@ -1,23 +1,41 @@
-//! Draw mutation — `ReorderLayer` payload + builder + apply.
-use crate::artifacts::draw::mutations::{apply_draw_edit_mutation, DrawMutation};
+//! 🔃 Draw mutation — `ReorderLayer`: repositions (and optionally re-parents) an existing layer to
+//! a FINAL-state `(parent_id, index)` address — never spatial.
+use crate::artifacts::draw::diff::DrawDiff;
+use crate::artifacts::draw::mutations::DrawMutation;
 use crate::artifacts::draw::DrawSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
-/// @emoji `ReorderLayer` mutation payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// 🔃 `reorder-layer` payload.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "reorder-layer")]
 pub struct ReorderLayer {
     pub layer_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub parent_id: Option<String>,
     pub index: usize,
 }
 
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn reorder_layer(layer_id: String, parent_id: Option<String>, index: usize) -> DrawMutation {
-    DrawMutation::ReorderLayer { layer_id, parent_id, index }
+    DrawMutation::ReorderLayer(ReorderLayer { layer_id, parent_id, index })
 }
 
-pub fn apply(doc: &mut DrawSnapshot, layer_id: &str, parent_id: &Option<String>, index: usize) {
-    *doc = apply_draw_edit_mutation(doc, &DrawMutation::ReorderLayer { layer_id: layer_id.into(), parent_id: parent_id.clone(), index });
+impl protocol::MutationKind<DrawSnapshot, DrawMutation> for ReorderLayer {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "layer", kind: "reorder-layer", record: "ReorderedLayer" };
+
+    fn diff(&self, base: &DrawSnapshot) -> DrawDiff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Reorder layer \"{}\"", self.layer_id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.layer_id.clone()]
+    }
 }
 //#endregion 🔖️Mutation

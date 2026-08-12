@@ -1,6 +1,114 @@
-dialect grammar stdio.xlsx.snapshot
-root = document
-document = header body
-header = 'schema' SP 'stdio.xlsx' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.xlsx.snapshot
+extension xml
+start document
+comment none
+string double raw
+string single raw
+
+# FG-wave (xlsx follows docx's OPC pattern-setter, see this ticket's own brief): `stdio.xlsx`
+# (ECMA-376 SpreadsheetML) is a ZIP/OPC package -- binary-native AT THE CONTAINER level (this
+# facet's binary sibling, ../💾️binary/📡️component.protocol.semio, restates zip's own real ZIP/OPC
+# byte layout, `🎒️zip/🏅️standards/🔖️2.0/…/📡️component.protocol.semio`). THIS grammar facet
+# instead models the real TEXT syntax of the XML parts an OPC xlsx package carries --
+# `[Content_Types].xml`, `_rels/.rels` (+ `xl/_rels/workbook.xml.rels`), this format's own
+# `xl/workbook.xml` (sheet list), `xl/worksheets/sheetN.xml` ((row,col)-keyed cells), and
+# `xl/sharedStrings.xml` -- restated from docx's own just-landed FG-wave grammar
+# (`📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`,
+# cited verbatim wherever the shape is OPC-universal) since cross-artifact `use` does not resolve
+# at walk time (`📖️grammar-recipe.md` §2.1/§3) -- the SAME honest-restatement precedent every OPC
+# family member has used since zip's own P2 pilot. Unmodeled parts (styles, themes, calc chain, …)
+# stay verbatim inside `opc` (never fed through this grammar at all, same as docx's `word/numbering.xml`).
+#
+# Real element/attribute vocabulary traced directly from this artifact's own real Rust codec (not
+# invented, not guessed):
+# - `[Content_Types].xml` / `_rels/.rels` (+ any per-part `*.rels`): OPC-universal, IDENTICAL shape
+#   to docx's own `content-types-part`/`relationships-part` productions (both artifacts share the
+#   SAME `🎒️zip/📦️opc/🦀️component.rs` codec) -- `OpcContentTypes::to_xml`/`from_xml` (:125-176,
+#   `CONTENT_TYPES_NS` :53), `relationships_to_xml`/`relationships_from_xml` (:251-292,
+#   `RELATIONSHIPS_NS` :54).
+# - `xl/workbook.xml`: `<workbook xmlns=.. xmlns:r=..><sheets>(<sheet name=.. sheetId=..
+#   r:id=../>)*</sheets></workbook>` -- `⚙️engine/🦀️component.rs`'s `workbook_to_xml`/
+#   `workbook_sheets_from_xml` (:180-227).
+# - `xl/worksheets/sheetN.xml`: `<worksheet xmlns=..><sheetData>(<row r=..>(<c r=.. t=?..>
+#   (<v>text?</v>|<is><t xml:space=..>text?</t></is>|<f>expr?</f><v>text?</v>?)?</c>)*</row>)*
+#   </sheetData></worksheet>` -- same engine file's `worksheet_to_xml`/`cell_to_xml`/
+#   `worksheet_cells_from_xml`/`v_element`/`is_element`/`f_element` (:230-444). `t` (cell type) is
+#   present for every non-Number `XlsxCellValue` (`s`=SharedString, `inlineStr`=InlineString,
+#   `b`=Boolean, `str`=a Formula's cached-InlineString case -- `cached_value_xml` :250-259) and
+#   ABSENT for `Number` (the numeric default) and `Empty` (a bare self-closing `<c r=".."/>`, no
+#   `<v>` at all) -- modeled generically via `cell-type?`/TEXT since the grammar doesn't need to
+#   enumerate every `t` VALUE, only its presence shape.
+# - `xl/sharedStrings.xml`: `<sst xmlns=.. count=.. uniqueCount=..>(<si><t xml:space=.. >text?</t>
+#   </si>)*</sst>` -- same engine file's `sst_to_xml`/`shared_strings_from_xml` (:126-170), reusing
+#   the SAME `t-elem` production `is-elem`'s `<is><t .../></is>` shape already needs (`is_element`
+#   and `sst_to_xml` build byte-identical `<t xml:space="preserve">` elements).
+#
+# `comment none`: XML has no `#`-comment syntax (same rationale docx's/xml's own grammar files
+# document -- this vocabulary's numeric character references, if any future growth needed them,
+# use `#` as a literal sigil immediately after `&`).
+#
+# `string double raw` + `string single raw` (restated verbatim from docx's/xml's own grammar, same
+# real quirk): every attribute value here is quoted `"`/`'` and captured VERBATIM -- entity
+# decoding in this artifact's own real parser only ever runs over element CONTENT text
+# (`xml_unescape_text`, transitively via the shared `xml_document_from_text`), never attribute
+# values.
+#
+# `<`/`>`/`&`/`;` below are the P2-M1-promoted single-char terminals (LT/GT/AMP/SEMICOLON); `:`
+# (namespace-prefixed names, `xmlns:r`/`r:id`/`xml:space`/…) was already a real single-char lexer
+# token, so a colon-bearing name is modeled the SAME way docx's/xml's own `name = IDENT ":" IDENT
+# | IDENT` production does -- decomposed into separate literal tokens, never one fused literal
+# string. `(`/`)`/`:`/`+`/`-`/`*`/`,` inside `formula-text` are ALSO already real single-char
+# lexer tokens (`Literal` matching compares raw token TEXT, not token KIND -- confirmed live
+# against the shared lexer's `single` match table, `🔍️lexer/🦀️component.rs`) -- no header
+# directive or promotion needed for any of them, unlike the genuinely-promoted `<>&;` set.
+document = part+
+part = content-types-part | relationships-part | workbook-part | worksheet-part | shared-strings-part
+
+# ── [Content_Types].xml (OPC-universal, identical to docx's own) ──────────────────────────────
+content-types-part = LT "Types" "xmlns" "=" TEXT GT ct-entry* LT "/" "Types" GT
+ct-entry = ct-default | ct-override
+ct-default = LT "Default" "Extension" "=" TEXT "ContentType" "=" TEXT "/" GT
+ct-override = LT "Override" "PartName" "=" TEXT "ContentType" "=" TEXT "/" GT
+
+# ── _rels/.rels and xl/_rels/workbook.xml.rels (OPC-universal, identical to docx's own) ───────
+relationships-part = LT "Relationships" "xmlns" "=" TEXT GT relationship* LT "/" "Relationships" GT
+relationship = LT "Relationship" "Id" "=" TEXT "Type" "=" TEXT "Target" "=" TEXT rel-target-mode? "/" GT
+rel-target-mode = "TargetMode" "=" TEXT
+
+# ── xl/workbook.xml ─────────────────────────────────────────────────────────────────────────
+workbook-part = LT "workbook" "xmlns" "=" TEXT "xmlns" ":" "r" "=" TEXT GT LT "sheets" GT sheet-entry* LT "/" "sheets" GT LT "/" "workbook" GT
+sheet-entry = LT "sheet" "name" "=" TEXT "sheetId" "=" TEXT "r" ":" "id" "=" TEXT "/" GT
+
+# ── xl/worksheets/sheetN.xml ────────────────────────────────────────────────────────────────
+worksheet-part = LT "worksheet" "xmlns" "=" TEXT GT LT "sheetData" GT row* LT "/" "sheetData" GT LT "/" "worksheet" GT
+# 🩹 `row` is always non-empty in practice (`worksheet_to_xml` only groups rows that already have
+# >=1 cell -- `by_row` is built FROM `sheet.cells`, never pre-populated for an empty row), but the
+# self-closing form is spec-legal SpreadsheetML and included for an honestly complete model.
+row = LT "row" "r" "=" TEXT GT cell* LT "/" "row" GT | LT "row" "r" "=" TEXT "/" GT
+cell = cell-open cell-content? cell-close | cell-self-closing
+cell-open = LT "c" "r" "=" TEXT cell-type? GT
+cell-self-closing = LT "c" "r" "=" TEXT cell-type? "/" GT
+cell-close = LT "/" "c" GT
+cell-type = "t" "=" TEXT
+cell-content = v-elem | is-elem | formula-content
+v-elem = LT "v" GT text-run? LT "/" "v" GT
+is-elem = LT "is" GT t-elem LT "/" "is" GT
+formula-content = f-elem v-elem?
+f-elem = LT "f" GT formula-text? LT "/" "f" GT
+
+# ── xl/sharedStrings.xml (reuses `t-elem`, `is-elem`'s own sibling shape) ─────────────────────
+shared-strings-part = LT "sst" "xmlns" "=" TEXT "count" "=" TEXT "uniqueCount" "=" TEXT GT si-entry* LT "/" "sst" GT
+si-entry = LT "si" GT t-elem LT "/" "si" GT
+t-elem = LT "t" "xml" ":" "space" "=" TEXT GT text-run? LT "/" "t" GT | LT "t" "xml" ":" "space" "=" TEXT "/" GT
+
+# ── Shared leaf productions ────────────────────────────────────────────────────────────────────
+# 🔤️ Plain string content (`si`/`is` text, cell `<v>`/numeric text) -- restated from docx's own
+# `text-run` shape (`{IDENT | INT | FLOAT}+`), no punctuation alphabet needed since this artifact's
+# demo/real fixtures never emit an escaped entity through this facet.
+text-run = {IDENT | INT | FLOAT}+
+# 🔢️ `<f>` formula-body content -- a spreadsheet formula's real alphabet (function calls, cell/
+# range references, arithmetic) genuinely needs `(` `)` `:` `+` `-` `*` `,` alongside IDENT/INT/
+# FLOAT -- every one of these is ALREADY a real single-char lexer token (see the header note
+# above), so no grammar-dialect change is needed, only this wider alternation.
+formula-text = {IDENT | INT | FLOAT | "(" | ")" | ":" | "+" | "-" | "*" | "," }+

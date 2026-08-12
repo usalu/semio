@@ -11,7 +11,18 @@ use crate::artifacts::remodel::{
     CameraPosePreview, DenseResolution, ImageAsset, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RemodelSnapshot, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot, REMODEL_DOCUMENT_SCHEMA,
 };
 use base64::Engine as _;
-use semio_framework_plugin::{MeshData, MeshExporter, MediaFormat};
+use semio_framework_plugin::{ArtifactSerializer, MeshData};
+use semio_s_plugin_stdio::artifacts::{
+    las::standards::v1_0::engine as las_engine,
+    ply::standards::v1_0::engine as ply_engine,
+    semio::standards::v1::{
+        engine::geometry::{SemioPoint3, SemioRgba, SemioUv},
+        subsets::mesh::{
+            io::export::serializers::artifacts::{las::v1_0::any::SemioMeshToLas, ply::v1_0::any::SemioMeshToPly},
+            schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology},
+        },
+    },
+};
 use serde_json::Value;
 
 //#region 🔖️Register
@@ -102,13 +113,21 @@ pub fn next_remodel_id(prefix: &str) -> String {
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
 /// `create_remodel_app` already declares via `.artifact_kind(...)`, plus the two Wave-2 port-recipe ports:
 /// `photos:in` (incoming source images for reconstruction) and `mesh:out` (the current reconstructed mesh).
+/// 🗄️ `export_formats`/`import_formats` are left empty, matching this same plugin's sibling
+/// `artifact_kind()` (`🗿️artifacts/📸️remodel/🦀️component.rs`), which already carries the real dialect
+/// ids on `ArtifactKindSpec::export_stdio_kinds`/`import_stdio_kinds` (`s.stdio.glb`/`obj`/`stl`/`ply`/
+/// `las`/`png`) instead of the deprecated enum this file used to import from `semio_framework_plugin` — see
+/// `26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT` W6. `AppIo` itself has no
+/// such additive string-id peer fields yet (unlike `ArtifactKindSpec`), so unlike that sibling, this
+/// list cannot be repopulated with real dialect ids without a framework-level `AppIo` change — out of
+/// this plugin's write scope; flagged for the ticket's framework closer.
 pub fn remodel_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: "remodel.scene".into(),
         document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
         ports: vec![remodel_photos_in_port(), remodel_mesh_out_port()],
-        export_formats: vec![MediaFormat::Glb, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Ply, MediaFormat::Las, MediaFormat::Png],
-        import_formats: vec![MediaFormat::Glb, MediaFormat::Obj],
+        export_formats: vec![],
+        import_formats: vec![],
         artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.remodel".into(), name: "3D Remodel".into(), dimension: "3d".into(), component_kind: "remodel".into() },
     }
 }
@@ -367,134 +386,45 @@ pub fn describe_video_probe(probe: &remodel_video::VideoProbe) -> (remodel_video
 //#endregion 🔖️EngineMapping
 
 //#region 🔖️Exporters
-/// 🌐️ Hand-rolled ASCII Stanford PLY mesh exporter (vertex positions + optional per-vertex color, plus
-/// the triangle face list). No PLY/LAS writer exists yet in `remodel_mesh`/`remodel_dense`/`remodel_geo`
-/// (checked) — export-only, simple, well-specified formats are acceptable to hand-roll here per the
-/// house convention that a library-side writer is only mandatory once one already exists.
-pub struct PlyExporter;
-impl MeshExporter for PlyExporter {
-    fn format(&self) -> MediaFormat {
-        MediaFormat::Ply
-    }
-    fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String> {
-        Ok(mesh_to_ply(mesh).into_bytes())
-    }
+/// 🧬️ Builds a real `semio/mesh` snapshot (one mesh, one primitive) from this engine's flat
+/// `MeshData` buffer — the hand-off point onto stdio's real `SemioMeshToPly`/`SemioMeshToLas`
+/// serializers (`26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT`, W5a),
+/// replacing the two hand-rolled `MeshExporter` codecs this file used to carry. Topology is
+/// `Triangles` whenever an explicit triangle index list is present (or the flat position count is
+/// itself a multiple of 3, mirroring this engine's own pre-extraction always-triangulate
+/// assumption), else `Points` — the only two topologies `SemioMeshToPly` accepts.
+fn mesh_data_to_semio_mesh(mesh: &MeshData) -> SemioMeshSnapshot {
+    let positions: Vec<SemioPoint3> = mesh.positions.chunks(3).map(|p| SemioPoint3 { x: f64::from(p[0]), y: f64::from(p[1]), z: f64::from(p[2]) }).collect();
+    let normals: Vec<SemioPoint3> = mesh.normals.chunks(3).map(|n| SemioPoint3 { x: f64::from(n[0]), y: f64::from(n[1]), z: f64::from(n[2]) }).collect();
+    let colors: Vec<SemioRgba> = if mesh.colors.len() == mesh.positions.len() {
+        mesh.colors.chunks(3).map(|c| SemioRgba { r: c[0], g: c[1], b: c[2], a: 1.0 }).collect()
+    } else {
+        Vec::new()
+    };
+    let uvs: Vec<SemioUv> = mesh.uvs.chunks(2).map(|uv| SemioUv { u: f64::from(uv[0]), v: f64::from(uv[1]) }).collect();
+    let topology = if !mesh.indices.is_empty() || positions.len().is_multiple_of(3) { SemioTopology::Triangles } else { SemioTopology::Points };
+    let primitive = SemioPrimitive { id: "remodel-mesh-0".into(), topology, positions, normals, uvs, colors, indices: mesh.indices.clone(), material_id: None };
+    SemioMeshSnapshot { schema: "stdio.semio.mesh".into(), meshes: vec![SemioMesh { id: "remodel-mesh".into(), primitives: vec![primitive] }], materials: Vec::new(), textures: Vec::new() }
 }
 
-fn mesh_to_ply(mesh: &MeshData) -> String {
-    let vertex_count = mesh.vertex_count();
-    let has_color = mesh.colors.len() == mesh.positions.len();
-    let mut out = String::new();
-    out.push_str("ply\nformat ascii 1.0\ncomment semio-remodel\n");
-    out.push_str(&format!("element vertex {vertex_count}\n"));
-    out.push_str("property float x\nproperty float y\nproperty float z\n");
-    if has_color {
-        out.push_str("property uchar red\nproperty uchar green\nproperty uchar blue\n");
-    }
-    out.push_str(&format!("element face {}\n", mesh.triangle_count()));
-    out.push_str("property list uchar int vertex_indices\nend_header\n");
-    for vertex in 0..vertex_count {
-        let base = vertex * 3;
-        out.push_str(&format!("{} {} {}", mesh.positions[base], mesh.positions[base + 1], mesh.positions[base + 2]));
-        if has_color {
-            let r = (mesh.colors[base].clamp(0.0, 1.0) * 255.0).round() as u8;
-            let g = (mesh.colors[base + 1].clamp(0.0, 1.0) * 255.0).round() as u8;
-            let b = (mesh.colors[base + 2].clamp(0.0, 1.0) * 255.0).round() as u8;
-            out.push_str(&format!(" {r} {g} {b}"));
-        }
-        out.push('\n');
-    }
-    for triangle in mesh.indices.as_chunks::<3>().0 {
-        out.push_str(&format!("3 {} {} {}\n", triangle[0], triangle[1], triangle[2]));
-    }
-    out
+/// 🌐️ Encodes a mesh as an ASCII Stanford PLY file via stdio's real `SemioMeshToPly` serializer +
+/// `ply::engine::encode_ply` — real codec reuse, not a re-implementation (replaces this file's
+/// former hand-rolled `PlyExporter`/`mesh_to_ply`).
+pub fn mesh_to_ply_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
+    let semio = mesh_data_to_semio_mesh(mesh);
+    let ply = SemioMeshToPly::serialize(&semio).map_err(|error| error.to_string())?;
+    ply_engine::encode_ply(&ply)
 }
 
-/// 🛰️ Hand-rolled binary LAS 1.2 exporter (public header block + point data record format 0): encodes
-/// each mesh vertex as one unclassified LAS point at millimeter scale — a documented simplification
-/// standing in for a real point-cloud-native LAS export (this codec is registered mesh-generically, so
-/// it always receives a `MeshData`, never a raw point cloud).
-pub struct LasExporter;
-impl MeshExporter for LasExporter {
-    fn format(&self) -> MediaFormat {
-        MediaFormat::Las
-    }
-    fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String> {
-        Ok(mesh_to_las(mesh))
-    }
-}
-
-fn pad_ascii(bytes: &[u8], len: usize) -> Vec<u8> {
-    let mut out = vec![0u8; len];
-    let n = bytes.len().min(len);
-    out[..n].copy_from_slice(&bytes[..n]);
-    out
-}
-
-fn mesh_to_las(mesh: &MeshData) -> Vec<u8> {
-    let vertex_count = mesh.vertex_count();
-    let scale = 0.001_f64;
-    let mut min = [f64::INFINITY; 3];
-    let mut max = [f64::NEG_INFINITY; 3];
-    for vertex in 0..vertex_count {
-        for axis in 0..3 {
-            let value = f64::from(mesh.positions[vertex * 3 + axis]);
-            min[axis] = min[axis].min(value);
-            max[axis] = max[axis].max(value);
-        }
-    }
-    if vertex_count == 0 {
-        min = [0.0; 3];
-        max = [0.0; 3];
-    }
-    let mut out = Vec::with_capacity(227 + vertex_count * 20);
-    out.extend_from_slice(b"LASF");
-    out.extend_from_slice(&0u16.to_le_bytes()); // file source id
-    out.extend_from_slice(&0u16.to_le_bytes()); // global encoding
-    out.extend_from_slice(&[0u8; 16]); // project id guid
-    out.push(1); // version major
-    out.push(2); // version minor
-    out.extend_from_slice(&pad_ascii(b"semio", 32));
-    out.extend_from_slice(&pad_ascii(b"semio-remodel", 32));
-    out.extend_from_slice(&1u16.to_le_bytes()); // file creation day of year
-    out.extend_from_slice(&2026u16.to_le_bytes()); // file creation year
-    out.extend_from_slice(&227u16.to_le_bytes()); // header size
-    out.extend_from_slice(&227u32.to_le_bytes()); // offset to point data (no VLRs)
-    out.extend_from_slice(&0u32.to_le_bytes()); // number of variable length records
-    out.push(0); // point data record format
-    out.extend_from_slice(&20u16.to_le_bytes()); // point data record length
-    out.extend_from_slice(&(vertex_count as u32).to_le_bytes()); // legacy number of point records
-    for _ in 0..5 {
-        out.extend_from_slice(&0u32.to_le_bytes()); // legacy number of points by return
-    }
-    for _ in 0..3 {
-        out.extend_from_slice(&scale.to_le_bytes()); // x/y/z scale factor
-    }
-    for _ in 0..3 {
-        out.extend_from_slice(&0.0f64.to_le_bytes()); // x/y/z offset
-    }
-    out.extend_from_slice(&max[0].to_le_bytes());
-    out.extend_from_slice(&min[0].to_le_bytes());
-    out.extend_from_slice(&max[1].to_le_bytes());
-    out.extend_from_slice(&min[1].to_le_bytes());
-    out.extend_from_slice(&max[2].to_le_bytes());
-    out.extend_from_slice(&min[2].to_le_bytes());
-    debug_assert_eq!(out.len(), 227, "LAS 1.2 public header block must be exactly 227 bytes");
-    for vertex in 0..vertex_count {
-        let x = (f64::from(mesh.positions[vertex * 3]) / scale).round() as i32;
-        let y = (f64::from(mesh.positions[vertex * 3 + 1]) / scale).round() as i32;
-        let z = (f64::from(mesh.positions[vertex * 3 + 2]) / scale).round() as i32;
-        out.extend_from_slice(&x.to_le_bytes());
-        out.extend_from_slice(&y.to_le_bytes());
-        out.extend_from_slice(&z.to_le_bytes());
-        out.extend_from_slice(&0u16.to_le_bytes()); // intensity
-        out.push(0b0000_1001); // return number 1 of 1
-        out.push(0); // classification: unclassified
-        out.push(0); // scan angle rank
-        out.push(0); // user data
-        out.extend_from_slice(&0u16.to_le_bytes()); // point source id
-    }
-    out
+/// 🛰️ Encodes a mesh as a binary LAS point cloud (point data format 0-3, chosen automatically from
+/// whether any point carries RGB) via stdio's real `SemioMeshToLas` serializer + `las::engine::encode_las`
+/// — real codec reuse, not a re-implementation (replaces this file's former hand-rolled
+/// `LasExporter`/`mesh_to_las`; a mesh's face/index connectivity is honestly dropped, matching LAS's
+/// own "point cloud, no topology" semantics — see `SemioMeshToLas`'s own doc comment).
+pub fn mesh_to_las_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
+    let semio = mesh_data_to_semio_mesh(mesh);
+    let las = SemioMeshToLas::serialize(&semio).map_err(|error| error.to_string())?;
+    las_engine::encode_las(&las)
 }
 
 pub fn remodel_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
@@ -554,9 +484,9 @@ mod tests {
     //#endregion 🔖️IoTests
 
     #[test]
-    fn ply_exporter_writes_a_well_formed_ascii_header() {
+    fn mesh_to_ply_bytes_writes_a_well_formed_ascii_file_via_stdio() {
         let mesh = mesh_from_kind("box");
-        let bytes = PlyExporter.export(&mesh).expect("ply export");
+        let bytes = mesh_to_ply_bytes(&mesh).expect("ply export");
         let text = String::from_utf8(bytes).expect("ply is ascii");
         assert!(text.starts_with("ply\nformat ascii 1.0\n"));
         assert!(text.contains(&format!("element vertex {}\n", mesh.vertex_count())));
@@ -565,9 +495,12 @@ mod tests {
     }
 
     #[test]
-    fn las_exporter_writes_a_227_byte_header_plus_20_bytes_per_point() {
+    fn mesh_to_las_bytes_writes_a_227_byte_header_plus_20_bytes_per_point_via_stdio() {
+        // 🧪️ `mesh_from_kind("box")` carries no vertex colors, so `SemioMeshToLas` + stdio's
+        // `choose_point_format` land on point-data format 0 (no RGB/GPS) — 20 bytes/point, same
+        // shape this file's former hand-rolled LAS 1.2 writer always produced.
         let mesh = mesh_from_kind("box");
-        let bytes = LasExporter.export(&mesh).expect("las export");
+        let bytes = mesh_to_las_bytes(&mesh).expect("las export");
         assert_eq!(&bytes[0..4], b"LASF");
         assert_eq!(bytes.len(), 227 + mesh.vertex_count() * 20);
         let header_size = u16::from_le_bytes([bytes[94], bytes[95]]);

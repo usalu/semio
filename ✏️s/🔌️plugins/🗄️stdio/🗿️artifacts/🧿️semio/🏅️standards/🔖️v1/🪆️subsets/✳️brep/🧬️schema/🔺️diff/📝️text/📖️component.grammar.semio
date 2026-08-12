@@ -1,9 +1,109 @@
-dialect grammar stdio.semio.brep.diff
-root = diff-line
-; Real hand-rolled `SemioBrepDiff::print_diff`/`parse_diff` grammar (protocol::DiffCodec).
-; See ../💾️binary/🔠️component.abnf for the full ABNF-formalized production set (text and binary
-; encode/decode the SAME grammar -- `encode_diff` is `print_diff().into_bytes()` verbatim).
-diff-line = [token (SP token)*]
-token = collection "=" named-triple
-collection = "vertices" | "edges" | "loops" | "faces" | "shells" | "solids"
-named-triple = "[" removed-list "]" ";" "[" modified-list "]" ";" "[" added-list "]"
+dialect grammar
+grammar semio.brep.diff
+extension semio
+start document
+
+# brep wave: real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `🔺️diff/🦀️component.rs` (`print_brep_diff`/`parse_brep_diff`) — token-per-nonempty-collection,
+# space-separated (space is lexer trivia, irrelevant at this dialect level); each collection field
+# encodes as the shared `engine::triples::enc_named_triple`/`dec_named_triple`
+# `[removed];[modified];[added]` bracket-depth-aware triple (recipe's own collection-triple shape,
+# §1.4). All 6 top-level fields are optional (an unchanged diff prints as the empty string).
+document = vertices-line? edges-line? loops-line? faces-line? shells-line? solids-line?
+
+vertices-line = "vertices" "=" vertices-triple
+vertices-triple = "[" removed-list? "]" ";" "[" vertex-modified-list? "]" ";" "[" vertex-added-list? "]"
+vertex-modified-list = vertex-modified {"," vertex-modified}*
+vertex-modified = hex ":" vertex-diff
+vertex-added-list = vertex {"," vertex}*
+
+edges-line = "edges" "=" edges-triple
+edges-triple = "[" removed-list? "]" ";" "[" edge-modified-list? "]" ";" "[" edge-added-list? "]"
+edge-modified-list = edge-modified {"," edge-modified}*
+edge-modified = hex ":" edge-diff
+edge-added-list = edge {"," edge}*
+
+loops-line = "loops" "=" loops-triple
+loops-triple = "[" removed-list? "]" ";" "[" loop-modified-list? "]" ";" "[" loop-added-list? "]"
+loop-modified-list = loop-modified {"," loop-modified}*
+loop-modified = hex ":" loop-diff
+loop-added-list = brep-loop {"," brep-loop}*
+
+faces-line = "faces" "=" faces-triple
+faces-triple = "[" removed-list? "]" ";" "[" face-modified-list? "]" ";" "[" face-added-list? "]"
+face-modified-list = face-modified {"," face-modified}*
+face-modified = hex ":" face-diff
+face-added-list = face {"," face}*
+
+shells-line = "shells" "=" shells-triple
+shells-triple = "[" removed-list? "]" ";" "[" shell-modified-list? "]" ";" "[" shell-added-list? "]"
+shell-modified-list = shell-modified {"," shell-modified}*
+shell-modified = hex ":" shell-diff
+shell-added-list = shell {"," shell}*
+
+solids-line = "solids" "=" solids-triple
+solids-triple = "[" removed-list? "]" ";" "[" solid-modified-list? "]" ";" "[" solid-added-list? "]"
+solid-modified-list = solid-modified {"," solid-modified}*
+solid-modified = hex ":" solid-diff
+solid-added-list = solid {"," solid}*
+
+removed-list = hex {"," hex}*
+
+# `enc_*_diff`/`dec_*_diff` — each entity diff's `Option<T>` fields, printed via the shared `[0]`
+# (None) / `[1,<value>]` (Some) tri-state tag (recipe §1.4's "tri-state" pattern), field order
+# matching `🔺️diff/🦀️component.rs`'s `BrepVertexDiff`/`BrepEdgeDiff`/`BrepLoopDiff`/`BrepFaceDiff`/
+# `BrepShellDiff`/`BrepSolidDiff` exactly.
+vertex-diff = "[" option-point3 "]"
+edge-diff = "[" option-hex "," option-hex "," option-curve "]"
+loop-diff = "[" option-loop-edge-list "]"
+face-diff = "[" option-hex "," option-hex-list "," option-surface "," option-bool "]"
+shell-diff = "[" option-shell-face-list "]"
+solid-diff = "[" option-solid-shell-list "]"
+
+option-point3 = "[" "0" "]" | "[" "1" "," point3 "]"
+option-hex = "[" "0" "]" | "[" "1" "," hex "]"
+option-curve = "[" "0" "]" | "[" "1" "," curve "]"
+option-surface = "[" "0" "]" | "[" "1" "," surface "]"
+option-bool = "[" "0" "]" | "[" "1" "," bool "]"
+option-hex-list = "[" "0" "]" | "[" "1" "," hex-list "]"
+option-loop-edge-list = "[" "0" "]" | "[" "1" "," loop-edge-list "]"
+option-shell-face-list = "[" "0" "]" | "[" "1" "," shell-face-list "]"
+option-solid-shell-list = "[" "0" "]" | "[" "1" "," solid-shell-list "]"
+
+# `enc_vertex`/`enc_edge`/`enc_loop`/`enc_face`/`enc_shell`/`enc_solid`/`enc_curve`/`enc_surface` —
+# the same full-VALUE codecs `📸️snapshot/📝️text/📖️component.grammar.semio` declares (restated here
+# so this leaf grammar is self-contained, matching the repo's existing per-facet convention).
+vertex = "[" hex "," point3 "]"
+edge = "[" hex "," hex "," hex "," curve "]"
+brep-loop = "[" hex "," loop-edge-list "]"
+face = "[" hex "," hex "," hex-list "," surface "," bool "]"
+shell = "[" hex "," shell-face-list "]"
+solid = "[" hex "," solid-shell-list "]"
+
+loop-edge = "[" hex "," bool "]"
+loop-edge-list = "[" loop-edge-items? "]"
+loop-edge-items = loop-edge {"," loop-edge}*
+shell-face = "[" hex "," bool "]"
+shell-face-list = "[" shell-face-items? "]"
+shell-face-items = shell-face {"," shell-face}*
+solid-shell = "[" hex "," bool "]"
+solid-shell-list = "[" solid-shell-items? "]"
+solid-shell-items = solid-shell {"," solid-shell}*
+hex-list = "[" hex-items? "]"
+hex-items = hex {"," hex}*
+
+curve = "L" "[" point3 "," point3 "]" | "C" "[" point3 "," point3 "," number "]" | "E" "[" point3 "," point3 "," number "," number "]" | "N" "[" point3-list "," number-list "," number "," number-list "]"
+surface = "P" "[" point3 "," point3 "]" | "C" "[" point3 "," point3 "," number "]" | "O" "[" point3 "," point3 "," number "," number "]" | "S" "[" point3 "," number "]" | "T" "[" point3 "," point3 "," number "," number "]" | "N" "[" point3-list "," number-list "," number "," number "," number "," number "," number-list "," number-list "]"
+
+point3 = "[" number "," number "," number "]"
+point3-list = "[" point3-items? "]"
+point3-items = point3 {"," point3}*
+number-list = "[" number-items? "]"
+number-items = number {"," number}*
+bool = "0" | "1"
+
+number = INT | FLOAT
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — see the sibling `📸️snapshot/📝️text/📖️component.grammar.semio`'s own `hex` doc
+# comment for why a hand-rolled `{INT|IDENT}*` production would be wrong here.

@@ -1,0 +1,30 @@
+test artifacts::cad::standards::v1::engine::transformation::tests::face_plane_group_key_is_stable ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::diff::text::tests::object_collection_diffs_absorb_into_one_apply ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::diff::text::tests::whole_artifact_diff_replaces_the_snapshot_and_absorbs_every_earlier_edit ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::mutations::binary::tests::add_object_round_trips_through_store ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::mutations::binary::tests::cad_projection_defaults ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::mutations::binary::tests::encode_decode_op_round_trips_a_representative_operation ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::mutations::binary::tests::set_scene_replaces_projection_and_inverts ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::mutations::binary::tests::translate_objects_updates_origin ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::mutations::component::tests::inverse_inverts_every_variant_against_a_populated_scene ... ok
+test artifacts::cad::standards::v1::engine::interaction::tests::slab_preview_shows_footprint_point ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::mutations::text::tests::optional_field_rows_keep_their_pre_migration_bytes ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::snapshot::binary::tests::cad_scene_round_trips_through_pack ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::mutations::text::tests::cad_mutation_print_op_round_trips_every_variant_as_one_line ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::snapshot::binary::tests::cad_scene_with_all_geometry_panes_round_trips_through_pack ... ok
+test artifacts::cad::standards::v1::engine::interaction::tests::external_wall_interaction_commits_via_generic_from_2_points_and_height ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::snapshot::binary::tests::command_envelope_round_trip_holds_for_an_applied_operation ... ok
+test artifacts::cad::standards::v1::engine::interaction::tests::box_interaction_commits_after_height ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::snapshot::text::tests::cad_scene_round_trips_through_dsl_document ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::snapshot::text::tests::cad_scene_with_all_geometry_panes_round_trips_through_dsl_document ... ok
+test artifacts::cad::standards::v1::subsets::any::schema::snapshot::text::tests::default_example_dsl_round_trips ... ok
+test artifacts::cad::standards::v1::engine::interaction::tests::reinforced_concrete_column_interaction_commits_as_cylinder ... ok
+test artifacts::cad::standards::v1::engine::interaction::tests::box_interaction_commits_via_shell_normalized_repl_line ... ok
+test artifacts::cad::standards::v1::engine::interaction::tests::sphere_interaction_commits_via_command_finish ... ok
+test apps::cad::component::tests::engagement_repeat_last_restarts_the_last_finalized_interaction ... ok
+test apps::cad::component::tests::forest_example_uses_per_object_brep_meshes ... ok
+test apps::cad::component::tests::renders_world_scene_for_each_pane ... ok
+
+test result: ok. 130 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.23s
+
+EXIT=0

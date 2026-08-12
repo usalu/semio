@@ -1,5 +1,3 @@
-//! 📄️ Text representation marker for `s.stdio.semio.document.snapshot`: the DSL text form is
-//! `stdio.semio.document.dsl.v1\n<hex(json(SemioDocumentSnapshot))>` (see `store::ArtifactDsl`
-//! impl on `SemioDocumentSnapshot` — envelope preamble + hex-encoded JSON body, honestly documented
-//! rather than a `*OCTET` catch-all).
-pub const TEXT_MARKER: &str = "s.stdio.semio.document";
+//! 📝️ Text representation codec surface for `s.stdio.semio.document` (snapshot) — grammar include.
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");

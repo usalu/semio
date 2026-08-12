@@ -1,0 +1,20 @@
+warning: function `demo_snapshot_b` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1381:15
+     |
+1381 | pub(crate) fn demo_snapshot_b() -> BcfSnapshot {
+     |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_diff_cases` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1425:15
+     |
+1425 | pub(crate) fn demo_diff_cases() -> Vec<BcfDiff> {
+     |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_mutation_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:606:15
+    |
+606 | pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
+    |               ^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-stdio` (lib) generated 485 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 175 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 1m 25s

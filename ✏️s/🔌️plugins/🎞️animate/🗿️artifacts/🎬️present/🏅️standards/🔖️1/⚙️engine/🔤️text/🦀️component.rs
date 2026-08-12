@@ -240,7 +240,8 @@ pub mod text {
     impl Text {
         pub fn new(content: impl Into<EcoString>, color: Color) -> Self {
             let content = content.into();
-            let svg = typst_markup_to_svg(&wrap_text(&content, TEXT_SIZE_PT)).unwrap_or_default();
+            let renderer = default_text_renderer();
+            let svg = typst_markup_to_validated_svg(&renderer, &wrap_text(&content, TEXT_SIZE_PT));
             let mut inner = svg_to_vobject(&svg, color);
             inner.set_name(content.to_string());
             Self { inner, content, font_size: TEXT_SIZE_PT }
@@ -331,7 +332,8 @@ pub mod text {
         pub fn new(source: impl Into<EcoString>, color: Color) -> Self {
             let source = source.into();
             let wrapped = format!("#set page(width: {TEXT_PAGE_PT}pt, height: {TEXT_PAGE_PT}pt, margin: {TEXT_MARGIN_PT}pt, fill: none)\n#set text(size: {TEXT_SIZE_PT}pt, font: \"Courier New\")\n`{source}`");
-            let svg = typst_markup_to_svg(&wrapped).unwrap_or_default();
+            let renderer = default_text_renderer();
+            let svg = typst_markup_to_validated_svg(&renderer, &wrapped);
             let mut inner_v = svg_to_vobject(&svg, color);
             inner_v.set_name(source.to_string());
             Self { source: source.clone(), inner: Text { inner: inner_v, content: source, font_size: TEXT_SIZE_PT } }
@@ -353,7 +355,8 @@ pub mod text {
         pub fn new(expr: impl Into<EcoString>, color: Color) -> Self {
             let latex = expr.into();
             let wrapped = format!("#set page(width: {}pt, height: {}pt, margin: {}pt, fill: none)\n#set text(size: {}pt)\n$ {latex} $", TEXT_PAGE_PT, TEXT_PAGE_PT, TEXT_MARGIN_PT, TEXT_SIZE_PT);
-            let svg = typst_markup_to_svg(&wrapped).unwrap_or_default();
+            let renderer = default_text_renderer();
+            let svg = typst_markup_to_validated_svg(&renderer, &wrapped);
             let mut inner = svg_to_vobject(&svg, color);
             inner.set_name(latex.to_string());
             Self { inner, latex }
@@ -455,6 +458,58 @@ pub mod text {
         }
         out
     }
+
+    //#region 🔖️TextRenderer
+    /// 🖨️ Small local interface isolating the external Typst library (CLAUDE.md: "external libs
+    /// behind an interface") — `typst`/`typst-svg`/`typst-assets`/`fontdb`/`comemo`/`ecow` usage
+    /// stays entirely inside `TypstTextRenderer` below; nothing outside this module ever names a
+    /// `typst::*` type directly. Distinct from the FFmpeg deletion in `⚙️engine/🎥️video` — Typst
+    /// is a real, working, in-process library call (no subprocess), so it is isolated, not deleted.
+    pub trait TextRenderer {
+        /// 🖊️ Compiles markup to a single merged SVG string, or `None` on a compile failure.
+        fn render_svg(&self, markup: &str) -> Option<String>;
+    }
+
+    /// 🖨️ The real Typst-backed implementation (moved verbatim from the former free function).
+    pub struct TypstTextRenderer;
+
+    impl TextRenderer for TypstTextRenderer {
+        fn render_svg(&self, markup: &str) -> Option<String> {
+            typst_markup_to_svg(markup)
+        }
+    }
+
+    fn default_text_renderer() -> TypstTextRenderer {
+        TypstTextRenderer
+    }
+
+    /// 🧬️ Renders `markup` through `renderer` (isolated behind [`TextRenderer`]) and feeds the
+    /// resulting SVG string through stdio's real SVG codec (`parse_svg_xml`), producing a real
+    /// `SvgSnapshot` — this is the "output feeds a real `SvgSnapshot` encoded via stdio's svg
+    /// engine" leg of the isolation. Returns `None` if either the render or the stdio parse fails
+    /// (Typst's compiled SVG is expected to already be well-formed; a parse failure here would be
+    /// a real bug, not a normal-flow case, so callers fall back the same way a render failure does).
+    fn render_markup_to_svg_snapshot(renderer: &dyn TextRenderer, markup: &str) -> Option<semio_s_plugin_stdio::artifacts::svg::SvgSnapshot> {
+        use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::parse_svg_xml;
+        let svg_text = renderer.render_svg(markup)?;
+        let doc = parse_svg_xml(&svg_text).ok()?;
+        Some(semio_s_plugin_stdio::artifacts::svg::SvgSnapshot { schema: semio_s_plugin_stdio::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc })
+    }
+
+    /// 🖨️ Renders `markup` and returns the SVG text stdio's own real codec re-serialized from the
+    /// parsed `SvgSnapshot` — the geometry extraction below (`svg_to_vobject`) keeps consuming a
+    /// plain SVG string (via `usvg`, a full SVG resolver/rasterizer library doing `<use>`/`<defs>`/
+    /// CSS resolution that stdio's structural svg codec deliberately does not attempt — a
+    /// rendering concern, not a duplicated codec), but that string is now stdio-validated first
+    /// instead of Typst's raw, unchecked output.
+    fn typst_markup_to_validated_svg(renderer: &dyn TextRenderer, markup: &str) -> String {
+        use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::write_svg_xml;
+        match render_markup_to_svg_snapshot(renderer, markup) {
+            Some(snapshot) => write_svg_xml(&snapshot.doc),
+            None => String::new(),
+        }
+    }
+    //#endregion 🔖️TextRenderer
 
     fn typst_compile_markup_to_svg(markup: &str, fonts: &'static [Font], book: &'static LazyHash<FontBook>) -> Option<String> {
         static LIB: OnceLock<LazyHash<Library>> = OnceLock::new();

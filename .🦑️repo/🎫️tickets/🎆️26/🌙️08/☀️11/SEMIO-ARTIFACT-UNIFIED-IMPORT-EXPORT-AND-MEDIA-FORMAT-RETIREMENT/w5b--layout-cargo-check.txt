@@ -1,0 +1,150 @@
+22 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `IoPayload`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:6:112
+  |
+6 |     ArtifactComposer, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId,...
+  |                                                                                                                ^^^^^^^^^
+
+warning: hidden lifetime parameters in types are deprecated
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:22:27
+   |
+22 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+help: indicate the anonymous lifetime
+   |
+22 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:3772:5
+     |
+3772 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:3771:5
+     |
+3771 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: `#[warn(unused_attributes)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4252:5
+     |
+4252 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4251:5
+     |
+4251 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4429:5
+     |
+4429 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4428:5
+     |
+4428 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4723:5
+     |
+4723 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4722:5
+     |
+4722 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4896:5
+     |
+4896 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4895:5
+     |
+4895 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5108:5
+     |
+5108 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5107:5
+     |
+5107 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5330:5
+     |
+5330 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5329:5
+     |
+5329 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5550:5
+     |
+5550 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5549:5
+     |
+5549 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused import: `DiffCodec`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/🔺️diff/🦀️component.rs:18:16
+   |
+18 | use protocol::{DiffCodec, MutationDiff};
+   |                ^^^^^^^^^
+
+warning: unused import: `protocol::DiffCodec`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🔺️diff/🦀️component.rs:24:5
+   |
+24 | use protocol::DiffCodec;
+   |     ^^^^^^^^^^^^^^^^^^^
+
+warning: trait `artifacts::gltf::standards::v2_0::subsets::any::schema::diff::component::ItemDiff<T>` is more private than the item `GltfCollectionDiff<T, D>`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:243:1
+    |
+243 | impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ implementation `GltfCollectionDiff<T, D>` is reachable at visibility `pub`
+    |
+note: but trait `artifacts::gltf::standards::v2_0::subsets::any::schema::diff::component::ItemDiff<T>` is only usable at visibility `pub(crate)`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:184:1
+    |
+184 | pub(crate) trait ItemDiff<T>: Clone + PartialEq {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_bounds)]` on by default
+

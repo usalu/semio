@@ -1,0 +1,60 @@
+test artifacts::zip::standards::v2_0::subsets::any::schema::mutations::component::tests::op_text_binary_roundtrip_law ... ok
+test artifacts::zip::standards::v2_0::subsets::any::schema::mutations::component::tests::out_of_range_entry_mutation_is_noop_not_panic ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::conforming_snapshot_has_no_diagnostics ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::data_descriptor_bit_is_soft ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::encrypted_entry_is_hard ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::high_version_needed_is_soft ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::masked_local_header_bit_is_hard ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::strong_encryption_bit_is_hard ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::version_needed_at_ceiling_is_clean ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::builder::tests::hard_violation_injected_via_raw_mutate_still_fails_build ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::builder::tests::typed_constructors_build_clean ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::composer::tests::clean_snapshot_composes_and_stamps_iso21320 ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::composer::tests::encrypted_entry_gets_normalized_away_and_still_composes ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::composer::tests::high_version_needed_gets_capped ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::composer::tests::subset_validator_flags_real_violations_without_normalizing ... ok
+test artifacts::xlsx::standards::v_ecma_376::engine::tests::conformance_laws::ops_grammar_conformance_law ... ok
+test artifacts::xlsx::standards::v_ecma_376::engine::tests::conformance_laws::diff_grammar_conformance_law ... ok
+test artifacts::pptx::standards::v_ecma_376::engine::tests::conformance_laws::ops_grammar_conformance_law ... ok
+test artifacts::gif::examples::dancing::component::tests::dancing_source_nonempty_and_decodes ... ok
+test artifacts::gif::standards::v89a::engine::tests::conformance_laws::protocol_walk_law ... ok
+test artifacts::gif::examples::dancing::dancing_tests::decode_encode_decode_round_trip_is_stable ... ok
+test artifacts::gif::standards::v89a::engine::tests::conformance_laws::grammar_conformance_law ... ok
+test artifacts::gif::examples::dancing::dancing_tests::analyzer_builder_round_trip_matches ... ok
+test artifacts::gif::standards::v89a::engine::tests::conformance_laws::fixture_honesty_law ... ok
+
+failures:
+
+---- artifacts::semio::standards::v1::subsets::brep::composer::tests::conformance_laws::fixture_honesty_law stdout ----
+
+thread 'artifacts::semio::standards::v1::subsets::brep::composer::tests::conformance_laws::fixture_honesty_law' (195769663) panicked at ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🎹️composer/🦀️component.rs:327:102:
+parse shipped .dsl.semio fixture: TextError { message: "brep snapshot: unknown line \"PLACEHOLDER_WILL_BE_REGENERATED_FROM_REAL_print_dsl_OUTPUT\"", span: TextSpan { line: 1, column: 1, length: 0 }, expected: None }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- artifacts::semio::standards::v1::subsets::model::composer::tests::conformance_laws::fixture_honesty_law stdout ----
+
+thread 'artifacts::semio::standards::v1::subsets::model::composer::tests::conformance_laws::fixture_honesty_law' (195770251) panicked at ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🎹️composer/🦀️component.rs:347:103:
+parse shipped .dsl.semio fixture: TextError { message: "model snapshot: unknown line \"PLACEHOLDER — will be regenerated from real SemioModelSnapshot::print_dsl(demo_semio_model_snapshot()) output via a temporary test once semio-s-plugin-stdio compiles cleanly.\"", span: TextSpan { line: 1, column: 1, length: 0 }, expected: None }
+
+---- artifacts::semio::standards::v1::subsets::object::composer::tests::conformance_laws::fixture_honesty_law stdout ----
+
+thread 'artifacts::semio::standards::v1::subsets::object::composer::tests::conformance_laws::fixture_honesty_law' (195770315) panicked at ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🎹️composer/🦀️component.rs:251:104:
+parse shipped .dsl.semio fixture: TextError { message: "expected [...], got \"PLACEHOLDER-REGENERATE-VIA-TEMP-TEST\"", span: TextSpan { line: 1, column: 1, length: 0 }, expected: None }
+
+---- artifacts::semio::standards::v1::subsets::object::composer::tests::conformance_laws::grammar_conformance_law stdout ----
+
+thread 'artifacts::semio::standards::v1::subsets::object::composer::tests::conformance_laws::grammar_conformance_law' (195770316) panicked at ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🎹️composer/🦀️component.rs:185:13:
+grammar did not recognize demo dsl body:
+stdio.semio.object
+[737464696f2e73656d696f2e6f626a656374,M[6e616d65:S[73656d696f],636f756e74:I[3432],726174696f:F[332e353030],626c6f62:Y[000102ff],74616773:L[S[61],Z],6c696e6b6564:R[6e31]],[6e31:B[1]]]
+
+
+failures:
+    artifacts::semio::standards::v1::subsets::brep::composer::tests::conformance_laws::fixture_honesty_law
+    artifacts::semio::standards::v1::subsets::model::composer::tests::conformance_laws::fixture_honesty_law
+    artifacts::semio::standards::v1::subsets::object::composer::tests::conformance_laws::fixture_honesty_law
+    artifacts::semio::standards::v1::subsets::object::composer::tests::conformance_laws::grammar_conformance_law
+
+test result: FAILED. 1866 passed; 4 failed; 4 ignored; 0 measured; 0 filtered out; finished in 17.22s
+
+error: test failed, to rerun pass `-p semio-s-plugin-stdio --lib`

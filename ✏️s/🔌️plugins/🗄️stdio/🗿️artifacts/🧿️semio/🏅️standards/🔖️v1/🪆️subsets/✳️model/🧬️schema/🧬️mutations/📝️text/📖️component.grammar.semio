@@ -1,27 +1,70 @@
 dialect grammar
-grammar stdio.semio.model.mutation
-extension op
-start line
+grammar semio.model.mutations
+extension semio
+start op
 
-; `SemioModelMutation`'s hand-rolled `OpText` (🧬️mutations/🦀️component.rs §OpCodecs) -- one line
-; of compact serde_json for the whole tagged enum, no envelope. `mutation` is the serde tag; the
-; remaining members are exactly this variant's struct-variant fields (see the Rust enum for the
-; full 11-variant field list: NoMutation, SetSnapshot, Insert/Remove/Set x {SpatialNode, Element,
-; Relation}).
-line = json-text
-json-text = ws value ws
-value = object | array | string | number | "true" | "false" | "null"
-object = "{" ws ( member ( ws "," ws member )* )? ws "}"
-member = string ws ":" ws value
-array = "[" ws ( value ( ws "," ws value )* )? ws "]"
-string = quote ( unescaped | escape )* quote
-quote = %x22
-unescaped = %x20-21 | %x23-5B | %x5D-10FFFF
-escape = "\" ( %x22 | "\" | "/" | "b" | "f" | "n" | "r" | "t" | ( "u" hexdig hexdig hexdig hexdig ) )
-number = "-"? int frac? exp?
-int = "0" | ( %x31-39 digit* )
-frac = "." digit+
-exp = ( "e" | "E" ) ( "+" | "-" )? digit+
-digit = %x30-39
-hexdig = digit | %x41-46 | %x61-66
-ws = ( %x20 | %x09 )*
+# P2 pilot (model): real one-line `OpText::print_op`/`parse_op` shape ALREADY emitted by
+# `🧬️mutations/🦀️component.rs` (`print_semio_model_mutation`/`parse_semio_model_mutation`) —
+# "keyword arg=value ..." (space-separated; space is lexer trivia at this dialect level). Every
+# keyword/field-name token below is copied verbatim from the real `format!(...)` call sites in that
+# file's `print_semio_model_mutation`, not invented.
+op = no-mutation | set-snapshot | insert-spatial-node | remove-spatial-node | set-spatial-node | insert-element | remove-element | set-element | insert-relation | remove-relation | set-relation
+
+no-mutation = "no-mutation"
+set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
+insert-spatial-node = "insert-spatial-node" "node" "=" spatial-node
+remove-spatial-node = "remove-spatial-node" "id" "=" hex
+set-spatial-node = "set-spatial-node" "id" "=" hex "kind" "=" option-spatial-kind "name" "=" option-hex "parent_id" "=" option-option-hex "placement" "=" option-transform
+insert-element = "insert-element" "element" "=" element
+remove-element = "remove-element" "id" "=" hex
+set-element = "set-element" "id" "=" hex "class" "=" option-element-class "placement" "=" option-transform "geometry" "=" option-geometry-ref "spatial_id" "=" option-option-hex "psets" "=" option-psets
+insert-relation = "insert-relation" "relation" "=" relation
+remove-relation = "remove-relation" "id" "=" hex
+set-relation = "set-relation" "id" "=" hex "kind" "=" option-relation-kind "from" "=" option-hex "to" "=" option-hex
+
+# `enc_semio_model_snapshot`/`dec_semio_model_snapshot` — `[hex(schema),[spatial-node,...],[element,...],[relation,...]]`.
+snapshot-lit = "[" hex "," "[" spatial-list? "]" "," "[" element-list? "]" "," "[" relation-list? "]" "]"
+spatial-list = spatial-node {"," spatial-node}*
+element-list = element {"," element}*
+relation-list = relation {"," relation}*
+
+# `enc_spatial_node`/`enc_element`/`enc_relation` — the same full-VALUE codecs
+# `📸️snapshot/📝️text/📖️component.grammar.semio` declares (restated here so this leaf grammar is
+# self-contained, matching the repo's existing per-facet convention).
+spatial-node = "[" hex "," spatial-kind "," hex "," option-hex "," transform "]"
+spatial-kind = "S" | "B" | "T" | "P"
+element = "[" hex "," element-class "," transform "," geometry-ref "," option-hex "," "[" pset-list? "]" "]"
+element-class = "WA" | "SL" | "CO" | "BE" | "DO" | "WI" | "RO" | "ST" | "FU" | "OT" "[" hex "]"
+geometry-ref = "N" | "B" "[" hex "]" | "M" "[" hex "]"
+pset-list = property-set {"," property-set}*
+property-set = "[" hex "," "[" property-list? "]" "]"
+property-list = property {"," property}*
+property = "[" hex "," pset-value "]"
+pset-value = "T" "[" hex "]" | "N" "[" number "]" | "B" "[" bit "]"
+bit = "0" | "1"
+relation = "[" hex "," relation-kind "," hex "," hex "]"
+relation-kind = "AG" | "CI" | "CN" | "FV" | "VE" | "OT" "[" hex "]"
+transform = "[" point3 "," quat "," point3 "]"
+point3 = "[" number "," number "," number "]"
+quat = "[" number "," number "," number "," number "]"
+
+# Tri-state `Option<T>`/doubly-tri-state `Option<Option<T>>` tags (recipe §1.4's "tri-state"
+# pattern, verbatim shape) — one per `Set*` variant's optional field.
+option-hex = "[" "0" "]" | "[" "1" "," hex "]"
+option-option-hex = "[" "0" "]" | "[" "1" "," option-hex "]"
+option-spatial-kind = "[" "0" "]" | "[" "1" "," spatial-kind "]"
+option-transform = "[" "0" "]" | "[" "1" "," transform "]"
+option-element-class = "[" "0" "]" | "[" "1" "," element-class "]"
+option-geometry-ref = "[" "0" "]" | "[" "1" "," geometry-ref "]"
+option-psets = "[" "0" "]" | "[" "1" "," "[" pset-list? "]" "]"
+option-relation-kind = "[" "0" "]" | "[" "1" "," relation-kind "]"
+
+number = INT | FLOAT
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — a run of lowercase hex digits (`enc_str`/`hex_encode`'s own alphabet), incl. the
+# empty string. `Symbol::Ref` already falls back from "no production of this name" to "macro of
+# this name", so referencing `hex` with no matching production routes here automatically. Using a
+# hand-rolled `{INT|IDENT}*` production instead would be wrong: it never backtracks and would
+# silently swallow the next literal keyword token (e.g. `id=<hex> kind=<hex>` — the literal `kind`
+# tokenizes as a plain `IDENT`, exactly like a stray hex letter run would).

@@ -17,9 +17,9 @@ use crate::apps::shooting::panels::{catalogue as catalogue_panel, document as do
 use crate::apps::shooting::terminology::shooting_play_labels;
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, ArtifactApp, ArtifactView, DslValue, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPayload, MediaType, OsMediaCapability, MediaFormat, UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
+    MediaPayload, MediaType, OsMediaCapability, UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
 };
 use store::EngineHandles;
 use std::collections::HashMap;
@@ -267,10 +267,10 @@ pub fn create_shooting_app() -> App {
                 media_capability: OsMediaCapability::MeshOnly,
                 media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
                 schema: "2d.image".into(),
-                export_formats: vec![MediaFormat::Png],
-                import_formats: vec![MediaFormat::Png],
-                    export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+                export_formats: vec![],
+                import_formats: vec![],
+                    export_stdio_kinds: vec!["stdio.png"],
+        import_stdio_kinds: vec!["stdio.png"],
     })
             .media_output(crate::artifacts::shooting::engine::shooting_photos_out_port())
             .icon_id("camera")

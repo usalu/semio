@@ -651,6 +651,18 @@ fn parse_semio_video_diff(line: &str) -> Result<SemioVideoDiff, String> {
     Ok(SemioVideoDiff { streams: Some(dec_streams_diff(rest)?) })
 }
 
+/// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
+/// `store::ByteReader`, same helpers workflow's/mesh's upgraded diff facets reuse) backing the
+/// real `DiffCodec::encode_diff`/`decode_diff` below.
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    store::pack_rt::write_varint_u64(out, s.len() as u64);
+    out.extend_from_slice(s.as_bytes());
+}
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+}
+
 impl protocol::DiffCodec for SemioVideoDiff {
     fn print_diff(&self) -> String {
         print_semio_video_diff(self)
@@ -658,17 +670,56 @@ impl protocol::DiffCodec for SemioVideoDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_semio_video_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`/`DocxDiff`'s
-    /// hand-rolled codecs use — satisfies every `DiffCodec` law without inventing a second wire
-    /// format.
+    /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
+    /// shortcut (same treatment workflow's/mesh's own upgraded diff facets use). `format u8` +
+    /// `presence u8` (bit0 = `streams` present) are two REAL fixed fields; when present, `streams`
+    /// follows as one varint-length-prefixed opaque blob (the same `enc_streams_diff` bracket/hex
+    /// text `print_diff` already emits) — a length-prefixed segment rather than a bare trailing
+    /// `bytes` chain so the shape stays uniform with workflow's/mesh's multi-field diff frames
+    /// (`protocol-cond-cannot-chain`: a second `if`-guard on a field that's itself only
+    /// conditionally decoded hard-errors `eval_cond` — see this wave's report).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        let presence: u8 = if self.streams.is_some() { 0b01 } else { 0b00 };
+        let mut out = vec![DIFF_BINARY_FORMAT, presence];
+        if let Some(v) = &self.streams {
+            write_str_lp(&mut out, &enc_streams_diff(v));
+        }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
+        }
+        if bytes[0] != DIFF_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
+        }
+        let presence = bytes[1];
+        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let streams = if presence & 0b01 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff streams blob", offset: 2, detail: e })?;
+            Some(dec_streams_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff streams text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        Ok(SemioVideoDiff { streams })
     }
 }
+
+//#region 🔖️Demo
+/// 🌱 Representative `SemioVideoDiff` cases — the empty (no-op) diff, `a→b`, and `b→a` over
+/// `snapshot_a()`/`snapshot_b()` — covering `streams.removed`/`.modified`/`.added` AND, within a
+/// modified stream, nested `samples.removed`/`.modified`/`.added` (both directions combined).
+/// `pub(crate)` module-scope so `🎹️composer/🦀️component.rs`'s conformance-law tests can reuse it —
+/// same convention workflow's/mesh's own `demo_diff_cases()` use.
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<SemioVideoDiff> {
+    let a = handcrafted_diff_codec_tests::snapshot_a();
+    let b = handcrafted_diff_codec_tests::snapshot_b();
+    vec![SemioVideoDiff::default(), SemioVideoDiff::between(&a, &b), SemioVideoDiff::between(&b, &a)]
+}
+//#endregion 🔖️Demo
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
 
@@ -678,7 +729,7 @@ mod handcrafted_diff_codec_tests {
     use super::*;
     use protocol::DiffCodec;
 
-    fn snapshot_a() -> SemioVideoSnapshot {
+    pub(crate) fn snapshot_a() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![
@@ -700,7 +751,7 @@ mod handcrafted_diff_codec_tests {
         }
     }
 
-    fn snapshot_b() -> SemioVideoSnapshot {
+    pub(crate) fn snapshot_b() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![

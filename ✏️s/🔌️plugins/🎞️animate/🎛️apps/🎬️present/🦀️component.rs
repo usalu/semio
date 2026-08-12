@@ -15,7 +15,7 @@ use crate::apps::present::commands::{engagement, grid, shell, source, tile, view
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::apps::present::modes::main;
 use crate::apps::present::modes::main::windows::tile_editor;
-use crate::apps::present::panels::{catalogue, document, inspection};
+use crate::apps::present::panels::{artifact, catalogue, inspection};
 use crate::apps::present::terminology::animate_present_labels;
 use crate::artifacts::present::engine::{build_tile_morph_prompt, next_frame_tile_crop, next_frame_tile_id};
 use crate::artifacts::present::op::PresentMutation;
@@ -29,7 +29,7 @@ use std::collections::HashSet;
 //#region 🔖️Constants
 pub const PRESENT_PLAY_APP_ID: &str = "animate-present-play";
 pub use catalogue::PRESENT_PLAY_BODY_CATALOGUE;
-pub use document::PRESENT_PLAY_BODY_DOCUMENT;
+pub use artifact::PRESENT_PLAY_BODY_DOCUMENT;
 pub use inspection::PRESENT_PLAY_BODY_DETAILS;
 pub use tile_editor::PRESENT_PLAY_BODY_MAIN;
 
@@ -192,7 +192,7 @@ impl ArtifactApp for AnimatePresentPlayApp {
         let labels = animate_present_labels(config);
         match body_key {
             PRESENT_PLAY_BODY_MAIN => tile_editor::render(deck, selected),
-            PRESENT_PLAY_BODY_DOCUMENT => document::render(deck, selected, labels),
+            PRESENT_PLAY_BODY_DOCUMENT => artifact::render(deck, selected, labels),
             PRESENT_PLAY_BODY_CATALOGUE => catalogue::render(deck, labels),
             PRESENT_PLAY_BODY_DETAILS => inspection::render(deck, selected, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -215,7 +215,7 @@ pub fn create_animate_present_app() -> App {
             .default_mode_id(main::PRESENT_PLAY_MODE_MAIN)
             .window_kind_def(tile_editor::definition())
             .default_layout(main::layout())
-            .panel_tab_def(document::definition())
+            .panel_tab_def(artifact::definition())
             .panel_tab_def(catalogue::definition())
             .panel_tab_def(inspection::definition())
             // ✏️ Document-mutating: dispatched as VCS operations with a true inverse.

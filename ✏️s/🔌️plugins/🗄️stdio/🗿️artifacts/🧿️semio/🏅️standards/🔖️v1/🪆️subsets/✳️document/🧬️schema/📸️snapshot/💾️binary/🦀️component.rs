@@ -1,5 +1,3 @@
-//! 💾️ Binary representation marker for `s.stdio.semio.document.snapshot`: the pack binary form is
-//! `wrap_binary(envelope, json(SemioDocumentSnapshot))` (see `store::ArtifactPack` impl on
-//! `SemioDocumentSnapshot`) — a `store::semio_format::SemioEnvelope` header followed by the raw
-//! JSON payload bytes.
-pub const BINARY_MAGIC: &str = "s.stdio.semio.document";
+//! 💾️ Binary representation codec surface for `s.stdio.semio.document` (snapshot) — protocol include.
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");

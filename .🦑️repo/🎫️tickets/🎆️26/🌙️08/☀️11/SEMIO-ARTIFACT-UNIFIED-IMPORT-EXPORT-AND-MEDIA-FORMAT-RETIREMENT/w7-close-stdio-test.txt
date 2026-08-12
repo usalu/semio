@@ -1,0 +1,20 @@
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::masked_local_header_bit_is_hard ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::strong_encryption_bit_is_hard ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::analyzer::tests::version_needed_at_ceiling_is_clean ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::builder::tests::hard_violation_injected_via_raw_mutate_still_fails_build ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::builder::tests::typed_constructors_build_clean ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::composer::tests::clean_snapshot_composes_and_stamps_iso21320 ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::composer::tests::encrypted_entry_gets_normalized_away_and_still_composes ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::composer::tests::high_version_needed_gets_capped ... ok
+test artifacts::zip::standards::v2_0::subsets::iso21320::composer::tests::subset_validator_flags_real_violations_without_normalizing ... ok
+test artifacts::xml::standards::v1_0::engine::tests::conformance_laws::diff_grammar_conformance_law ... ok
+test artifacts::zip::standards::v2_0::engine::tests::conformance_laws::diff_grammar_conformance_law ... ok
+test artifacts::semio::standards::v1::subsets::model::composer::tests::conformance_laws::diff_grammar_conformance_law ... ok
+test artifacts::xlsx::standards::v_ecma_376::engine::tests::conformance_laws::ops_grammar_conformance_law ... ok
+test artifacts::xlsx::standards::v_ecma_376::engine::tests::conformance_laws::diff_grammar_conformance_law ... ok
+test artifacts::pptx::standards::v_ecma_376::engine::tests::conformance_laws::ops_grammar_conformance_law ... ok
+test artifacts::gif::examples::dancing::dancing_tests::analyzer_builder_round_trip_matches ... ok
+test artifacts::gif::standards::v89a::engine::tests::conformance_laws::fixture_honesty_law ... ok
+
+test result: ok. 1930 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 9.53s
+

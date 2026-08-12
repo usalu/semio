@@ -239,18 +239,82 @@ impl protocol::OpText for SemioVideoMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `SemioVideoDiff`'s hand-rolled codec
-/// uses.
+/// 🏷️ Ordinal table, same declaration order as `SemioVideoMutation`'s own enum variants and
+/// `parse_semio_video_mutation`'s keyword match — the real binary `tag` field's source of truth.
+const OP_KEYWORDS: [&str; 9] = [
+    "no-mutation",
+    "set-snapshot",
+    "insert-stream",
+    "remove-stream",
+    "set-stream-meta",
+    "insert-sample",
+    "remove-sample",
+    "set-sample-data",
+    "set-sample-flags",
+];
+fn variant_ordinal(m: &SemioVideoMutation) -> u8 {
+    match m {
+        SemioVideoMutation::NoMutation => 0,
+        SemioVideoMutation::SetSnapshot { .. } => 1,
+        SemioVideoMutation::InsertStream { .. } => 2,
+        SemioVideoMutation::RemoveStream { .. } => 3,
+        SemioVideoMutation::SetStreamMeta { .. } => 4,
+        SemioVideoMutation::InsertSample { .. } => 5,
+        SemioVideoMutation::RemoveSample { .. } => 6,
+        SemioVideoMutation::SetSampleData { .. } => 7,
+        SemioVideoMutation::SetSampleFlags { .. } => 8,
+    }
+}
+/// ✂️ Just the `key=value ...` argument tail of `print_semio_video_mutation` (empty for
+/// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text keyword
+/// itself is redundant in the binary payload.
+fn print_semio_video_mutation_args(m: &SemioVideoMutation) -> String {
+    match print_semio_video_mutation(m).split_once(' ') {
+        Some((_, rest)) => rest.to_string(),
+        None => String::new(),
+    }
+}
+
+/// ⚡️ Real binary op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut
+/// (same treatment workflow's/mesh's own upgraded mutations facets use). `format u8`
+/// (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see [`OP_KEYWORDS`]) are two
+/// REAL fixed fields; the variant's own `key=value ...` argument payload follows as one opaque
+/// trailing `bytes` chain — reusing the already-real, already-tested `print_semio_video_mutation`/
+/// `parse_semio_video_mutation` text codec rather than re-deriving a second independent encoding.
 impl protocol::OpBinary for SemioVideoMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_semio_video_mutation_args(self).as_bytes());
+        Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        const OP_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
+        }
+        if bytes[0] != OP_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        let tag = bytes[1];
+        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
+        let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️Demo
+/// 🌱 Representative `SemioVideoMutation` cases (one per variant, `pub(crate)` module-scope) for
+/// the conformance-law tests — delegates to the existing test module's own `sample_mutations()`
+/// (byte-identical) rather than keep an independent copy, same dedupe workflow's/mesh's own waves
+/// perform.
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<SemioVideoMutation> {
+    tests::sample_mutations()
+}
+//#endregion 🔖️Demo
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -330,7 +394,7 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     //#region 🔖️MutationDiffLaw
-    fn sample_mutations() -> Vec<SemioVideoMutation> {
+    pub(crate) fn sample_mutations() -> Vec<SemioVideoMutation> {
         vec![
             SemioVideoMutation::NoMutation,
             SemioVideoMutation::SetSnapshot { snapshot: sweep_b() },

@@ -9,11 +9,12 @@
 
 use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets, IndexAdded, NamedModified, NamedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::{
-    dec_object_id, dec_semio_object_node, dec_semio_value, dec_str, enc_object_id, enc_semio_object_node, enc_semio_value, enc_str, value_diff_between,
+    dec_object_id, dec_semio_object_node_bin, dec_semio_value, dec_semio_value_bin, dec_str, enc_object_id,
+    enc_semio_object_node_bin, enc_semio_value, enc_semio_value_bin, enc_str, value_diff_between, write_str_lp, read_str_lp,
     NamedAdded, SemioObjectDiff, SemioValueDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::diff_set_snapshot;
-use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{ObjectId, SemioObjectEntry, SemioObjectNode, SemioObjectSnapshot, SemioValue};
+use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{dec_semio_object_snapshot, enc_semio_object_snapshot, ObjectId, SemioObjectEntry, SemioObjectNode, SemioObjectSnapshot, SemioValue};
 use protocol::{Mutation, MutationDiff, OpText};
 #[cfg(test)]
 use protocol::command::DiffAlgebra;
@@ -295,17 +296,14 @@ fn enc_path(p: &SemioObjectPath) -> String {
 fn dec_path(s: &str) -> Result<SemioObjectPath, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_segment).collect()
 }
+/// 🧭️ `enc_semio_snapshot`/`dec_semio_snapshot` — thin aliases for the single-source-of-truth
+/// `SemioObjectSnapshot` text codec now owned by the sibling `📸️snapshot/🦀️component.rs` (also
+/// reused there by `ArtifactDsl`/`ArtifactPack`), rather than a second independent copy.
 fn enc_semio_snapshot(s: &SemioObjectSnapshot) -> String {
-    let objects = s.objects.iter().map(enc_semio_object_node).collect::<Vec<_>>().join(",");
-    format!("[{},{},[{}]]", enc_str(&s.schema), enc_semio_value(&s.root), objects)
+    enc_semio_object_snapshot(s)
 }
 fn dec_semio_snapshot(s: &str) -> Result<SemioObjectSnapshot, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [schema_s, root_s, objects_s] = parts.as_slice() else { return Err(format!("semio object snapshot: expected 3 fields, got {}", parts.len())) };
-    let objects_inner = strip_brackets(objects_s)?;
-    let objects = split_top_level(objects_inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_semio_object_node).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioObjectSnapshot { schema: dec_str(schema_s)?, root: dec_semio_value(root_s)?, objects })
+    dec_semio_object_snapshot(s)
 }
 
 fn print_object_mutation(m: &SemioObjectMutation) -> String {
@@ -365,18 +363,221 @@ impl OpText for SemioObjectMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `SemioObjectDiff`'s hand-rolled codec
-/// uses.
+//#region 🔖️OpBinaryPrimitives
+/// 🧭️ Real recursive binary twin of [`enc_path`]/[`dec_path`] — a varint segment COUNT, then per
+/// segment a 1-byte kind tag (`0`=Key/`1`=Index) and its own real payload. Template copied from
+/// json's own `enc_json_path_bin`/`dec_json_path_bin`.
+fn enc_semio_path_bin(path: &[SemioObjectPathSegment], out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, path.len() as u64);
+    for segment in path {
+        match segment {
+            SemioObjectPathSegment::Key { key } => {
+                out.push(0);
+                write_str_lp(out, key);
+            }
+            SemioObjectPathSegment::Index { index } => {
+                out.push(1);
+                store::pack_rt::write_varint_u64(out, *index as u64);
+            }
+        }
+    }
+}
+fn dec_semio_path_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioObjectPath, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut path = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        let tag = reader.read_u8().map_err(|e| e.to_string())?;
+        match tag {
+            0 => path.push(SemioObjectPathSegment::Key { key: read_str_lp(reader)? }),
+            1 => path.push(SemioObjectPathSegment::Index { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize }),
+            other => return Err(format!("semio object path binary: unknown segment tag {other}")),
+        }
+    }
+    Ok(path)
+}
+
+/// 🧭️ Real recursive binary twin of [`enc_semio_snapshot`]/[`dec_semio_snapshot`] — used ONLY by
+/// `SetSnapshot`'s own `OpBinary` payload (the sibling `📸️snapshot/🦀️component.rs`'s own
+/// `ArtifactPack` stays text-native, matching `json`'s exact precedent — see that file's doc
+/// comment).
+fn enc_semio_object_snapshot_bin(s: &SemioObjectSnapshot, out: &mut Vec<u8>) {
+    write_str_lp(out, &s.schema);
+    enc_semio_value_bin(&s.root, out);
+    store::pack_rt::write_varint_u64(out, s.objects.len() as u64);
+    for node in &s.objects {
+        enc_semio_object_node_bin(node, out);
+    }
+}
+fn dec_semio_object_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioObjectSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let root = dec_semio_value_bin(reader)?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut objects = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        objects.push(dec_semio_object_node_bin(reader)?);
+    }
+    Ok(SemioObjectSnapshot { schema, root, objects })
+}
+//#endregion 🔖️OpBinaryPrimitives
+
+/// 🧪️ Real binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// upgraded from the `print_op().into_bytes()` text-as-binary shortcut this facet started with.
+/// `tag` is the `SemioObjectMutation` variant ordinal, in the same 0-8 order
+/// `print_object_mutation`'s own keyword match uses. Every variant's own path/key/value/id payload
+/// is real LEB128-varint-framed binary (never text-as-bytes) — same treatment json's own
+/// `JsonMutation::encode_op`/`decode_op` uses.
 impl protocol::OpBinary for SemioObjectMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let tag: u8 = match self {
+            SemioObjectMutation::NoMutation => 0,
+            SemioObjectMutation::SetSnapshot { .. } => 1,
+            SemioObjectMutation::SetValue { .. } => 2,
+            SemioObjectMutation::SetMapEntry { .. } => 3,
+            SemioObjectMutation::RemoveMapEntry { .. } => 4,
+            SemioObjectMutation::InsertListItem { .. } => 5,
+            SemioObjectMutation::RemoveListItem { .. } => 6,
+            SemioObjectMutation::SetObject { .. } => 7,
+            SemioObjectMutation::RemoveObject { .. } => 8,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            SemioObjectMutation::NoMutation => {}
+            SemioObjectMutation::SetSnapshot { snapshot } => enc_semio_object_snapshot_bin(snapshot, &mut out),
+            SemioObjectMutation::SetValue { path, value } => {
+                enc_semio_path_bin(path, &mut out);
+                enc_semio_value_bin(value, &mut out);
+            }
+            SemioObjectMutation::SetMapEntry { path, key, value } => {
+                enc_semio_path_bin(path, &mut out);
+                write_str_lp(&mut out, key);
+                enc_semio_value_bin(value, &mut out);
+            }
+            SemioObjectMutation::RemoveMapEntry { path, key } => {
+                enc_semio_path_bin(path, &mut out);
+                write_str_lp(&mut out, key);
+            }
+            SemioObjectMutation::InsertListItem { path, index, value } => {
+                enc_semio_path_bin(path, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_semio_value_bin(value, &mut out);
+            }
+            SemioObjectMutation::RemoveListItem { path, index } => {
+                enc_semio_path_bin(path, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+            }
+            SemioObjectMutation::SetObject { id, value } => {
+                write_str_lp(&mut out, &id.value);
+                enc_semio_value_bin(value, &mut out);
+            }
+            SemioObjectMutation::RemoveObject { id } => {
+                write_str_lp(&mut out, &id.value);
+            }
+        }
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(SemioObjectMutation::NoMutation),
+            1 => {
+                let snapshot = dec_semio_object_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                Ok(SemioObjectMutation::SetSnapshot { snapshot })
+            }
+            2 => {
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(SemioObjectMutation::SetValue { path, value })
+            }
+            3 => {
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
+                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(SemioObjectMutation::SetMapEntry { path, key, value })
+            }
+            4 => {
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
+                Ok(SemioObjectMutation::RemoveMapEntry { path, key })
+            }
+            5 => {
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(SemioObjectMutation::InsertListItem { path, index, value })
+            }
+            6 => {
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                Ok(SemioObjectMutation::RemoveListItem { path, index })
+            }
+            7 => {
+                let id = ObjectId::new(read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?);
+                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(SemioObjectMutation::SetObject { id, value })
+            }
+            8 => {
+                let id = ObjectId::new(read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?);
+                Ok(SemioObjectMutation::RemoveObject { id })
+            }
+            other => Err(malformed("op tag", 1, format!("unknown op tag {other}"))),
+        }
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🧪️ Representative `SemioObjectMutation` values, one per variant, incl. nested/list/map payload
+/// values, a `Ref`/`Bytes` payload, and a multi-segment `SemioObjectPath` mixing both segment
+/// kinds — the single source of truth reused by `op_text_binary_roundtrip_law` below AND by
+/// `🎹️composer/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law` conformance
+/// tests, same convention json's own `demo_mutation_cases` uses.
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<SemioObjectMutation> {
+    fn snap(root: SemioValue, objects: Vec<SemioObjectNode>) -> SemioObjectSnapshot {
+        SemioObjectSnapshot { schema: crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA.into(), root, objects }
+    }
+    fn mapv(pairs: Vec<(&str, SemioValue)>) -> SemioValue {
+        SemioValue::Map { entries: pairs.into_iter().map(|(k, v)| SemioObjectEntry { key: k.into(), value: v }).collect() }
+    }
+    fn listv(items: Vec<SemioValue>) -> SemioValue {
+        SemioValue::List { items }
+    }
+    fn intv(lexeme: &str) -> SemioValue {
+        SemioValue::Int { lexeme: lexeme.into() }
+    }
+    fn strv(s: &str) -> SemioValue {
+        SemioValue::Str { value: s.into() }
+    }
+    fn node(id: &str, value: SemioValue) -> SemioObjectNode {
+        SemioObjectNode { id: ObjectId::new(id), value }
+    }
+
+    let mixed_path = vec![SemioObjectPathSegment::Key { key: "outer".into() }, SemioObjectPathSegment::Index { index: 2 }, SemioObjectPathSegment::Key { key: "inner".into() }];
+    vec![
+        SemioObjectMutation::NoMutation,
+        SemioObjectMutation::SetSnapshot {
+            snapshot: snap(
+                mapv(vec![("a", intv("1")), ("b", listv(vec![strv("x"), SemioValue::Null, SemioValue::Bool { value: true }]))]),
+                vec![node("n1", SemioValue::Bytes { value: vec![1, 2, 3] })],
+            ),
+        },
+        SemioObjectMutation::SetValue { path: vec![], value: SemioValue::Ref { id: ObjectId::new("n1") } },
+        SemioObjectMutation::SetMapEntry { path: vec![], key: "a".into(), value: SemioValue::Float { lexeme: "2.5e10".into() } },
+        SemioObjectMutation::SetMapEntry { path: mixed_path.clone(), key: "k".into(), value: mapv(vec![("nested", strv("v"))]) },
+        SemioObjectMutation::RemoveMapEntry { path: vec![SemioObjectPathSegment::Key { key: "outer".into() }], key: "gone".into() },
+        SemioObjectMutation::InsertListItem { path: vec![SemioObjectPathSegment::Key { key: "list".into() }], index: 1, value: listv(vec![intv("1"), intv("2")]) },
+        SemioObjectMutation::RemoveListItem { path: vec![SemioObjectPathSegment::Index { index: 0 }], index: 3 },
+        SemioObjectMutation::SetValue { path: mixed_path, value: SemioValue::Null },
+        SemioObjectMutation::SetObject { id: ObjectId::new("n1"), value: SemioValue::Bytes { value: vec![255, 0, 128] } },
+        SemioObjectMutation::RemoveObject { id: ObjectId::new("n1") },
+    ]
+}
+//#endregion 🔖️DemoCases
 
 //#region 🔖️Tests
 #[cfg(test)]
@@ -521,21 +722,7 @@ mod tests {
     fn op_text_binary_roundtrip_law() {
         use protocol::{OpBinary, OpText};
 
-        let mixed_path = vec![SemioObjectPathSegment::Key { key: "outer".into() }, SemioObjectPathSegment::Index { index: 2 }, SemioObjectPathSegment::Key { key: "inner".into() }];
-        let cases = vec![
-            SemioObjectMutation::NoMutation,
-            SemioObjectMutation::SetSnapshot { snapshot: snap(mapv(vec![("a", intv("1")), ("b", listv(vec![strv("x"), SemioValue::Null, SemioValue::Bool { value: true }]))]), vec![node("n1", SemioValue::Bytes { value: vec![1, 2, 3] })]) },
-            SemioObjectMutation::SetValue { path: vec![], value: SemioValue::Ref { id: ObjectId::new("n1") } },
-            SemioObjectMutation::SetMapEntry { path: vec![], key: "a".into(), value: SemioValue::Float { lexeme: "2.5e10".into() } },
-            SemioObjectMutation::SetMapEntry { path: mixed_path.clone(), key: "k".into(), value: mapv(vec![("nested", strv("v"))]) },
-            SemioObjectMutation::RemoveMapEntry { path: vec![SemioObjectPathSegment::Key { key: "outer".into() }], key: "gone".into() },
-            SemioObjectMutation::InsertListItem { path: vec![SemioObjectPathSegment::Key { key: "list".into() }], index: 1, value: listv(vec![intv("1"), intv("2")]) },
-            SemioObjectMutation::RemoveListItem { path: vec![SemioObjectPathSegment::Index { index: 0 }], index: 3 },
-            SemioObjectMutation::SetValue { path: mixed_path, value: SemioValue::Null },
-            SemioObjectMutation::SetObject { id: ObjectId::new("n1"), value: SemioValue::Bytes { value: vec![255, 0, 128] } },
-            SemioObjectMutation::RemoveObject { id: ObjectId::new("n1") },
-        ];
-        for m in cases {
+        for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = <SemioObjectMutation as OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

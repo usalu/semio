@@ -1,0 +1,7 @@
+📸️remodel (semio-s-plugin-remodel): errors=0 generated 10 warnings
+📐️cad (semio-s-plugin-cad): errors=0 generated 7 warnings
+🎞️animate (semio-s-plugin-animate): errors=0 generated 5 warnings
+🔋️energy (semio-s-plugin-energy): errors=0 generated 6 warnings
+🏛️architect (semio-s-plugin-architect): errors=0 generated 81 warnings
+🏗️fem (semio-s-plugin-fem): errors=0 generated 59 warnings
+norm (semio-s-plugin-norm): errors=0 generated 258 warnings

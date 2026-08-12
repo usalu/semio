@@ -77,7 +77,7 @@ impl SchemaCatalog {
 //#region 🔖️GraphQlStatePreamble
 /// 🔗 Shared GraphQL `@state` SDL preamble — declared once, never repeated per artifact.
 pub const GRAPHQL_STATE_PREAMBLE: &str = "\
-enum StateClass { PERSISTENT SHARED_UI LOCAL_UI PREVIEW EFFECT }\n\
+enum StateClass { PERSISTENT SHARED_UI LOCAL_UI PREVIEW EFFECT INFERRED }\n\
 directive @state(class: StateClass!) on FIELD_DEFINITION\
 ";
 //#endregion 🔖️GraphQlStatePreamble
@@ -154,8 +154,9 @@ impl ArtifactSchemaRegistry {
 
 //#region 🔖️GlobalArtifactSchemaCatalog
 use semio_framework_os_kernel::{
-    register_kernel_app_schema_descriptor, register_kernel_artifact_schema_descriptor, with_kernel_app_schema_catalog,
-    with_kernel_artifact_schema_catalog, KernelAppSchemaDescriptor, KernelArtifactSchemaDescriptor, KernelFacetLeaves,
+    register_kernel_app_schema_descriptor, register_kernel_artifact_inference_descriptor, register_kernel_artifact_schema_descriptor,
+    with_kernel_app_schema_catalog, with_kernel_artifact_inference_catalog, with_kernel_artifact_schema_catalog, KernelAppSchemaDescriptor,
+    KernelArtifactInferenceDescriptor, KernelArtifactSchemaDescriptor, KernelFacetLeaves,
 };
 
 fn facet_leaves_to_kernel(leaves: FacetLeaves) -> KernelFacetLeaves {
@@ -266,6 +267,104 @@ pub fn artifact_schema_graphql_sdl(key: &str) -> Option<String> {
     })
 }
 //#endregion 🔖️GlobalArtifactSchemaCatalog
+
+//#region 🔖️ArtifactInferenceDescriptor
+/// 💡️ Registered descriptor for one artifact's 💡️inference schema facet — a SIBLING to
+/// [`ArtifactSchemaDescriptor`], not a field on it (see [`KernelArtifactInferenceDescriptor`]'s own
+/// doc for why). `id` is the inference schema's own id, `"{artifact_id}.inference"`.
+#[derive(Clone, Debug)]
+pub struct ArtifactInferenceDescriptor {
+    pub id: &'static str,
+    pub inference: FacetLeaves,
+}
+
+fn inference_descriptor_to_kernel(descriptor: ArtifactInferenceDescriptor) -> KernelArtifactInferenceDescriptor {
+    KernelArtifactInferenceDescriptor { id: descriptor.id, inference: facet_leaves_to_kernel(descriptor.inference) }
+}
+
+fn inference_descriptor_from_kernel(kernel: &KernelArtifactInferenceDescriptor) -> ArtifactInferenceDescriptor {
+    ArtifactInferenceDescriptor { id: kernel.id, inference: facet_leaves_from_kernel(&kernel.inference) }
+}
+
+/// 📚 Runtime registry of [`ArtifactInferenceDescriptor`] values — inference twin of [`ArtifactSchemaRegistry`].
+pub struct ArtifactInferenceRegistry {
+    by_id: HashMap<&'static str, ArtifactInferenceDescriptor>,
+}
+
+impl Default for ArtifactInferenceRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ArtifactInferenceRegistry {
+    pub fn new() -> Self {
+        Self { by_id: HashMap::new() }
+    }
+
+    pub fn register(&mut self, descriptor: ArtifactInferenceDescriptor) {
+        self.by_id.insert(descriptor.id, descriptor);
+    }
+
+    pub fn get(&self, id: &str) -> Option<&ArtifactInferenceDescriptor> {
+        self.by_id.get(id)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &ArtifactInferenceDescriptor> {
+        self.by_id.values()
+    }
+
+    pub fn len(&self) -> usize {
+        self.by_id.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.by_id.is_empty()
+    }
+}
+
+/// 📎 Registers one artifact's handcrafted inference descriptor into the OS-wide catalog. `id` on
+/// the descriptor must be `"{artifact_id}.inference"`, matching its owning `ArtifactSchemaDescriptor`'s id.
+pub fn register_artifact_inference_descriptor(descriptor: ArtifactInferenceDescriptor) {
+    register_kernel_artifact_inference_descriptor(inference_descriptor_to_kernel(descriptor));
+}
+
+/// 🔎 Whether `id` (the inference schema id) is present in the OS-wide inference descriptor registry.
+pub fn artifact_inference_descriptor_registered(id: &str) -> bool {
+    semio_framework_os_kernel::kernel_artifact_inference_descriptor_registered(id)
+}
+
+/// 📚 Invokes `visit` with the OS-wide [`ArtifactInferenceRegistry`] snapshot.
+pub fn with_artifact_inference_registry<R>(visit: impl FnOnce(&ArtifactInferenceRegistry) -> R) -> R {
+    let mut registry = ArtifactInferenceRegistry::new();
+    with_kernel_artifact_inference_catalog(|entries| {
+        for entry in entries {
+            registry.register(inference_descriptor_from_kernel(entry));
+        }
+    });
+    visit(&registry)
+}
+
+/// 🔣 Invokes `visit` with a [`SchemaCatalog`] of normative inference JSON leaves, keyed by the
+/// inference schema id (`"{artifact_id}.inference"`).
+pub fn with_inference_json_schema_catalog<R>(visit: impl FnOnce(&SchemaCatalog) -> R) -> R {
+    let mut catalog = SchemaCatalog::new();
+    with_kernel_artifact_inference_catalog(|entries| {
+        for entry in entries {
+            catalog.load_json(entry.id, parse_normative_json_leaf(entry.id, "inference", entry.inference.json_schema));
+        }
+    });
+    visit(&catalog)
+}
+
+/// 🔗 Returns composed GraphQL SDL (shared `@state` preamble + facet leaf) for an inference schema
+/// id (`"{artifact_id}.inference"`).
+pub fn artifact_inference_graphql_sdl(key: &str) -> Option<String> {
+    with_kernel_artifact_inference_catalog(|entries| {
+        entries.iter().find(|entry| entry.id == key).map(|entry| graphql_leaf_with_preamble(entry.inference.graphql))
+    })
+}
+//#endregion 🔖️ArtifactInferenceDescriptor
 
 //#region 🔖️AppSchemaDescriptor
 /// 🧬️ Registered descriptor for one app owner's config + presence schema facets.
@@ -449,6 +548,7 @@ pub fn parse_state_class_kebab(value: &str) -> Option<StateClass> {
         "local-ui" => Some(StateClass::LocalUi),
         "preview" => Some(StateClass::Preview),
         "effect" => Some(StateClass::Effect),
+        "inferred" => Some(StateClass::Inferred),
         _ => None,
     }
 }
@@ -461,6 +561,7 @@ pub fn state_class_kebab(class: StateClass) -> &'static str {
         StateClass::LocalUi => "local-ui",
         StateClass::Preview => "preview",
         StateClass::Effect => "effect",
+        StateClass::Inferred => "inferred",
     }
 }
 //#endregion 🔖️StateClassKebab
@@ -592,8 +693,17 @@ mod tests {
 
     #[test]
     fn graphql_state_preamble_matches_normative_sdl() {
-        assert!(GRAPHQL_STATE_PREAMBLE.contains("enum StateClass { PERSISTENT SHARED_UI LOCAL_UI PREVIEW EFFECT }"));
+        assert!(GRAPHQL_STATE_PREAMBLE.contains("enum StateClass { PERSISTENT SHARED_UI LOCAL_UI PREVIEW EFFECT INFERRED }"));
         assert!(GRAPHQL_STATE_PREAMBLE.contains("directive @state(class: StateClass!) on FIELD_DEFINITION"));
+    }
+
+    #[test]
+    fn state_class_kebab_round_trips_every_variant_including_inferred() {
+        for class in [StateClass::Persistent, StateClass::SharedUi, StateClass::LocalUi, StateClass::Preview, StateClass::Effect, StateClass::Inferred] {
+            let kebab = state_class_kebab(class);
+            assert_eq!(parse_state_class_kebab(kebab), Some(class));
+        }
+        assert_eq!(state_class_kebab(StateClass::Inferred), "inferred");
     }
 
     #[test]
@@ -610,6 +720,38 @@ mod tests {
             .expect("register");
         catalog.validate("probe", &json!({ "n": 1 })).expect("validate");
     }
+
+    //#region 🔖️ArtifactInferenceDescriptorParity
+    #[test]
+    fn artifact_inference_registry_registers_independently_of_the_snapshot_diff_mutations_descriptor() {
+        let mut registry = ArtifactInferenceRegistry::new();
+        let empty = FacetLeaves { rust: "", typescript: "", graphql: "component { id }", json_schema: "", proto: "" };
+        registry.register(ArtifactInferenceDescriptor { id: "s.wave3.synthetic.inference", inference: empty });
+        assert_eq!(registry.len(), 1);
+        assert!(!registry.is_empty());
+        assert!(registry.get("s.wave3.synthetic.inference").is_some());
+
+        let mut walked = 0usize;
+        for descriptor in registry.iter() {
+            walked += 1;
+            assert_eq!(descriptor.id, "s.wave3.synthetic.inference");
+        }
+        assert_eq!(walked, 1);
+    }
+
+    #[test]
+    fn artifact_inference_graphql_sdl_composes_shared_preamble_with_facet_leaf() {
+        register_artifact_inference_descriptor(ArtifactInferenceDescriptor {
+            id: "s.wave3.synthetic.sdl-probe.inference",
+            inference: FacetLeaves { rust: "", typescript: "", graphql: "type SdlProbeInference { flag: Boolean }", json_schema: "", proto: "" },
+        });
+        assert!(artifact_inference_descriptor_registered("s.wave3.synthetic.sdl-probe.inference"));
+        let sdl = artifact_inference_graphql_sdl("s.wave3.synthetic.sdl-probe.inference").expect("registered inference sdl");
+        assert!(sdl.contains("INFERRED"), "composed SDL must carry the shared @state preamble");
+        assert!(sdl.contains("type SdlProbeInference"));
+        assert!(artifact_inference_graphql_sdl("s.wave3.synthetic.unregistered.inference").is_none());
+    }
+    //#endregion 🔖️ArtifactInferenceDescriptorParity
 
     //#region 🔖️AppSchemaRegistryParity
 

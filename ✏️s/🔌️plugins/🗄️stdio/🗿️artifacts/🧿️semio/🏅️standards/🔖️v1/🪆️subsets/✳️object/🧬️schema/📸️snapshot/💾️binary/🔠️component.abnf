@@ -1,26 +1,13 @@
 ; abnf stdio.semio.object snapshot (pack/binary payload)
-; payload is UTF-8 compact-JSON `SemioObjectSnapshot` -- see ../📝️text/📖️component.grammar.semio
-; for the full grammar; restated here for a self-contained ABNF reading.
-document = snapshot-json
-snapshot-json = %x7B %s"\"schema\"" %x3A json-string %x2C
-                %s"\"root\"" %x3A semio-value %x2C
-                %s"\"objects\"" %x3A %x5B [ object-node *( %x2C object-node ) ] %x5D %x7D
-object-node = %x7B %s"\"id\"" %x3A object-id %x2C %s"\"value\"" %x3A semio-value %x7D
-object-id = %x7B %s"\"value\"" %x3A json-string %x7D
+; payload is UTF-8 tag-prefixed SemioObjectSnapshot text -- see ../📝️text/📖️component.grammar.semio
+; for the full grammar; restated here for a self-contained ABNF reading. NOT JSON, NOT hex-of-JSON.
+document = "[" hex "," value "," "[" *object-node "]" "]"
+object-node = hex ":" value [","]
 
-semio-value = null-value / bool-value / int-value / float-value / str-value
-            / bytes-value / list-value / map-value / ref-value
-null-value  = %x7B %s"\"kind\":\"null\"" %x7D
-bool-value  = %x7B %s"\"kind\":\"bool\"," %s"\"value\"" %x3A ( %s"true" / %s"false" ) %x7D
-int-value   = %x7B %s"\"kind\":\"int\"," %s"\"lexeme\"" %x3A json-string %x7D
-float-value = %x7B %s"\"kind\":\"float\"," %s"\"lexeme\"" %x3A json-string %x7D
-str-value   = %x7B %s"\"kind\":\"str\"," %s"\"value\"" %x3A json-string %x7D
-bytes-value = %x7B %s"\"kind\":\"bytes\"," %s"\"value\"" %x3A %x5B [ 1*DIGIT *( %x2C 1*DIGIT ) ] %x5D %x7D
-list-value  = %x7B %s"\"kind\":\"list\"," %s"\"items\"" %x3A %x5B [ semio-value *( %x2C semio-value ) ] %x5D %x7D
-map-value   = %x7B %s"\"kind\":\"map\"," %s"\"entries\"" %x3A %x5B [ map-entry *( %x2C map-entry ) ] %x5D %x7D
-ref-value   = %x7B %s"\"kind\":\"ref\"," %s"\"id\"" %x3A object-id %x7D
-map-entry   = %x7B %s"\"key\"" %x3A json-string %x2C %s"\"value\"" %x3A semio-value %x7D
-
-json-string = DQUOTE *( unescaped / escape ) DQUOTE
-unescaped = %x20-21 / %x23-5B / %x5D-10FFFF
-escape = %x5C ( DQUOTE / %x5C / %x2F / %x62 / %x66 / %x6E / %x72 / %x74 / ( %x75 4HEXDIG ) )
+value = "Z" / ("B" "[" bit "]") / ("I" "[" hex "]") / ("F" "[" hex "]") / ("S" "[" hex "]")
+      / ("Y" "[" hex "]") / ("L" "[" *list-item "]") / ("M" "[" *map-item "]") / ("R" "[" hex "]")
+list-item = value [","]
+map-item = hex ":" value [","]
+bit = "0" / "1"
+hex = *HEXDIGLC
+HEXDIGLC = %x30-39 / %x61-66 ; lowercase hex digits only

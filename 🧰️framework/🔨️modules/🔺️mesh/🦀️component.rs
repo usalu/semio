@@ -804,359 +804,28 @@ fn stl_face_normal(a: [f32; 3], b: [f32; 3], c: [f32; 3]) -> [f32; 3] {
 }
 //#endregion Stl
 
-//#region MediaFormat
-/// 🗂️ Closed media format catalog — kept in parity with `🖼️assets/📃️list/📋️mimes.csv` (derived from `STDIO_FORMAT_CATALOG`). Neutral models: MeshData, Brep, DwgDrawing, RasterImage, PageDoc,
-/// TableDoc, TextDoc, Archive, Value. Lives in mesh (not os) so exporters and OS registration share
-/// one definition without an inverted dependency.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-#[serde(rename_all = "camelCase")]
-/// ⚠️ DEPRECATED for new stdio IO — prefer `ArtifactKindSpec::{export,import}_stdio_kinds` string kind ids. Kept temporarily so domain plugins keep compiling mid-migration.
-pub enum MediaFormat {
-    Glb,
-    Gltf,
-    Stl,
-    Obj,
-    Ply,
-    Las,
-    Step,
-    Ifc,
-    Dwg,
-    Dxf,
-    Svg,
-    Png,
-    Jpg,
-    Gif,
-    Bmp,
-    Tiff,
-    Pdf,
-    Docx,
-    Pptx,
-    Csv,
-    Xlsx,
-    Md,
-    Txt,
-    Zip,
-    Bcf,
-    Json,
-}
-
-impl MediaFormat {
-    pub const ALL: &'static [MediaFormat] = &[
-        Self::Glb, Self::Gltf, Self::Stl, Self::Obj, Self::Ply, Self::Las, Self::Step, Self::Ifc,
-        Self::Dwg, Self::Dxf, Self::Svg, Self::Png, Self::Jpg, Self::Gif, Self::Bmp, Self::Tiff,
-        Self::Pdf, Self::Docx, Self::Pptx, Self::Csv, Self::Xlsx, Self::Md, Self::Txt, Self::Zip,
-        Self::Bcf, Self::Json,
-    ];
-
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Glb => "glb",
-            Self::Gltf => "gltf",
-            Self::Stl => "stl",
-            Self::Obj => "obj",
-            Self::Ply => "ply",
-            Self::Las => "las",
-            Self::Step => "step",
-            Self::Ifc => "ifc",
-            Self::Dwg => "dwg",
-            Self::Dxf => "dxf",
-            Self::Svg => "svg",
-            Self::Png => "png",
-            Self::Jpg => "jpg",
-            Self::Gif => "gif",
-            Self::Bmp => "bmp",
-            Self::Tiff => "tiff",
-            Self::Pdf => "pdf",
-            Self::Docx => "docx",
-            Self::Pptx => "pptx",
-            Self::Csv => "csv",
-            Self::Xlsx => "xlsx",
-            Self::Md => "md",
-            Self::Txt => "txt",
-            Self::Zip => "zip",
-            Self::Bcf => "bcf",
-            Self::Json => "json",
-        }
-    }
-
-    pub fn mime_type(&self) -> &'static str {
-        match self {
-            Self::Glb => "model/gltf-binary",
-            Self::Gltf => "model/gltf+json",
-            Self::Stl => "model/stl",
-            Self::Obj => "model/obj",
-            Self::Ply => "model/ply",
-            Self::Las => "application/vnd.las",
-            Self::Step => "model/step",
-            Self::Ifc => "application/x-ifc",
-            Self::Dwg => "image/vnd.dwg",
-            Self::Dxf => "image/vnd.dxf",
-            Self::Svg => "image/svg+xml",
-            Self::Png => "image/png",
-            Self::Jpg => "image/jpeg",
-            Self::Gif => "image/gif",
-            Self::Bmp => "image/bmp",
-            Self::Tiff => "image/tiff",
-            Self::Pdf => "application/pdf",
-            Self::Docx => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            Self::Pptx => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-            Self::Csv => "text/csv",
-            Self::Xlsx => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            Self::Md => "text/markdown",
-            Self::Txt => "text/plain",
-            Self::Zip => "application/zip",
-            Self::Bcf => "application/vnd.bcf+xml",
-            Self::Json => "application/json",
-        }
-    }
-
-    /// @emoji 🗂️ Emoji-prefixed format folder under `🚪️io/<dir>/`.
-    pub fn dir_name(&self) -> &'static str {
-        match self {
-            Self::Glb => "🧊️glb",
-            Self::Gltf => "🧊️gltf",
-            Self::Stl => "🟪️stl",
-            Self::Obj => "🧊️obj",
-            Self::Ply => "☁️ply",
-            Self::Las => "☁️las",
-            Self::Step => "📐️step",
-            Self::Ifc => "🏗️ifc",
-            Self::Dwg => "🖊️dwg",
-            Self::Dxf => "🖊️dxf",
-            Self::Svg => "🎨️svg",
-            Self::Png => "📷️png",
-            Self::Jpg => "📷️jpg",
-            Self::Gif => "🎞️gif",
-            Self::Bmp => "🖼️bmp",
-            Self::Tiff => "🖼️tiff",
-            Self::Pdf => "📄️pdf",
-            Self::Docx => "📜️docx",
-            Self::Pptx => "🎞️pptx",
-            Self::Csv => "📊️csv",
-            Self::Xlsx => "📕️xlsx",
-            Self::Md => "📝️md",
-            Self::Txt => "📄txt",
-            Self::Zip => "🎒️zip",
-            Self::Bcf => "💬️bcf",
-            Self::Json => "🔣️json",
-        }
-    }
-
-    /// @emoji 🔢️ Whether this format's payload is base64-encoded binary rather than plain text.
-    pub fn is_binary(&self) -> bool {
-        matches!(
-            self,
-            Self::Png
-                | Self::Jpg
-                | Self::Gif
-                | Self::Bmp
-                | Self::Tiff
-                | Self::Glb
-                | Self::Stl
-                | Self::Dwg
-                | Self::Las
-                | Self::Pdf
-                | Self::Docx
-                | Self::Pptx
-                | Self::Xlsx
-                | Self::Zip
-                | Self::Bcf
-                | Self::Ifc
-        )
-    }
-
-    pub fn parse(value: &str) -> Option<Self> {
-        match value {
-            "glb" => Some(Self::Glb),
-            "gltf" => Some(Self::Gltf),
-            "stl" => Some(Self::Stl),
-            "obj" => Some(Self::Obj),
-            "ply" => Some(Self::Ply),
-            "las" => Some(Self::Las),
-            "step" | "stp" => Some(Self::Step),
-            "ifc" => Some(Self::Ifc),
-            "dwg" => Some(Self::Dwg),
-            "dxf" => Some(Self::Dxf),
-            "svg" => Some(Self::Svg),
-            "png" => Some(Self::Png),
-            "jpg" | "jpeg" => Some(Self::Jpg),
-            "gif" => Some(Self::Gif),
-            "bmp" => Some(Self::Bmp),
-            "tiff" | "tif" => Some(Self::Tiff),
-            "pdf" => Some(Self::Pdf),
-            "docx" => Some(Self::Docx),
-            "pptx" => Some(Self::Pptx),
-            "csv" => Some(Self::Csv),
-            "xlsx" => Some(Self::Xlsx),
-            "md" | "markdown" => Some(Self::Md),
-            "txt" => Some(Self::Txt),
-            "zip" => Some(Self::Zip),
-            "bcf" => Some(Self::Bcf),
-            "json" => Some(Self::Json),
-            other => normalize_stdio_format_kind(other).and_then(|short| match short {
-                "glb" => Some(Self::Glb),
-                "gltf" => Some(Self::Gltf),
-                "stl" => Some(Self::Stl),
-                "obj" => Some(Self::Obj),
-                "ply" => Some(Self::Ply),
-                "las" => Some(Self::Las),
-                "step" => Some(Self::Step),
-                "ifc" => Some(Self::Ifc),
-                "dwg" => Some(Self::Dwg),
-                "dxf" => Some(Self::Dxf),
-                "svg" => Some(Self::Svg),
-                "png" => Some(Self::Png),
-                "jpg" => Some(Self::Jpg),
-                "gif" => Some(Self::Gif),
-                "bmp" => Some(Self::Bmp),
-                "tiff" => Some(Self::Tiff),
-                "pdf" => Some(Self::Pdf),
-                "docx" => Some(Self::Docx),
-                "pptx" => Some(Self::Pptx),
-                "csv" => Some(Self::Csv),
-                "xlsx" => Some(Self::Xlsx),
-                "md" => Some(Self::Md),
-                "txt" => Some(Self::Txt),
-                "zip" => Some(Self::Zip),
-                "bcf" => Some(Self::Bcf),
-                "json" => Some(Self::Json),
-                _ => None,
-            }),
-        }
-    }
-
-    /// 🗄️ Stdio kind id for this legacy enum variant (`stdio.dwg`).
-    pub fn stdio_kind_id(&self) -> &'static str {
-        stdio_format_kind_id(self.as_str()).unwrap_or(self.as_str())
-    }
-}
-//#endregion MediaFormat
-
-//#region StdioFormatCatalog
-/// 🗄️ One stdio format artifact — kind id, mime, extension, and folder slug.
-/// Canonical peer of `🖼️assets/📃️list/📋️mimes.csv` (derived from this table).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct StdioFormatEntry {
-    pub id: &'static str,
-    pub short_id: &'static str,
-    pub mime: &'static str,
-    pub extension: &'static str,
-    pub name: &'static str,
-    pub full_name: &'static str,
-    pub neutral: &'static str,
-    pub dir_name: &'static str,
-    pub is_binary: bool,
-}
-
-/// 🗄️ Closed stdio format catalog (28 artifacts) — SSOT for accept filters / mimes.csv.
-pub const STDIO_FORMAT_CATALOG: &[StdioFormatEntry] = &[
-    StdioFormatEntry { id: "stdio.binary", short_id: "binary", mime: "application/octet-stream", extension: ".bin", name: "Binary", full_name: "Raw Binary Bytes", neutral: "Bytes", dir_name: "💾️binary", is_binary: true },
-    StdioFormatEntry { id: "stdio.txt", short_id: "txt", mime: "text/plain", extension: ".txt", name: "Text", full_name: "Plain Text", neutral: "TextDoc", dir_name: "📄txt", is_binary: false },
-    StdioFormatEntry { id: "stdio.xml", short_id: "xml", mime: "application/xml", extension: ".xml", name: "XML", full_name: "Extensible Markup Language", neutral: "XmlDoc", dir_name: "📰xml", is_binary: false },
-    StdioFormatEntry { id: "stdio.deflate", short_id: "deflate", mime: "application/zlib", extension: ".zz", name: "Deflate", full_name: "Zlib Deflate Stream", neutral: "DeflateStream", dir_name: "🗜️deflate", is_binary: true },
-    StdioFormatEntry { id: "stdio.zip", short_id: "zip", mime: "application/zip", extension: ".zip", name: "ZIP", full_name: "Zip Archive", neutral: "Archive", dir_name: "🎒️zip", is_binary: true },
-    StdioFormatEntry { id: "stdio.json", short_id: "json", mime: "application/json", extension: ".json", name: "JSON", full_name: "JavaScript Object Notation", neutral: "Value", dir_name: "🔣️json", is_binary: false },
-    StdioFormatEntry { id: "stdio.csv", short_id: "csv", mime: "text/csv", extension: ".csv", name: "CSV", full_name: "Comma-Separated Values", neutral: "TableDoc", dir_name: "📊️csv", is_binary: false },
-    StdioFormatEntry { id: "stdio.md", short_id: "md", mime: "text/markdown", extension: ".md", name: "Markdown", full_name: "Markdown Text", neutral: "TextDoc", dir_name: "📝️md", is_binary: false },
-    StdioFormatEntry { id: "stdio.gltf", short_id: "gltf", mime: "model/gltf+json", extension: ".gltf", name: "GLTF", full_name: "GL Transmission Format JSON", neutral: "MeshData", dir_name: "🧊️gltf", is_binary: false },
-    StdioFormatEntry { id: "stdio.obj", short_id: "obj", mime: "model/obj", extension: ".obj", name: "OBJ", full_name: "Wavefront Object", neutral: "MeshData", dir_name: "🧊️obj", is_binary: false },
-    StdioFormatEntry { id: "stdio.stl", short_id: "stl", mime: "model/stl", extension: ".stl", name: "STL", full_name: "Stereolithography", neutral: "MeshData", dir_name: "🟪️stl", is_binary: true },
-    StdioFormatEntry { id: "stdio.ply", short_id: "ply", mime: "model/ply", extension: ".ply", name: "PLY", full_name: "Polygon File Format", neutral: "MeshData", dir_name: "☁️ply", is_binary: false },
-    StdioFormatEntry { id: "stdio.las", short_id: "las", mime: "application/vnd.las", extension: ".las", name: "LAS", full_name: "ASPRS LAS Point Cloud", neutral: "MeshData", dir_name: "☁️las", is_binary: true },
-    StdioFormatEntry { id: "stdio.step", short_id: "step", mime: "model/step", extension: ".step", name: "STEP", full_name: "ISO 10303 STEP", neutral: "Brep", dir_name: "📐️step", is_binary: false },
-    StdioFormatEntry { id: "stdio.ifc", short_id: "ifc", mime: "application/x-ifc", extension: ".ifc", name: "IFC", full_name: "Industry Foundation Classes", neutral: "Brep", dir_name: "🏗️ifc", is_binary: true },
-    StdioFormatEntry { id: "stdio.dwg", short_id: "dwg", mime: "image/vnd.dwg", extension: ".dwg", name: "DWG", full_name: "Drawing", neutral: "DwgDrawing", dir_name: "🖊️dwg", is_binary: true },
-    StdioFormatEntry { id: "stdio.dxf", short_id: "dxf", mime: "image/vnd.dxf", extension: ".dxf", name: "DXF", full_name: "Drawing Exchange Format", neutral: "DwgDrawing", dir_name: "🖊️dxf", is_binary: false },
-    StdioFormatEntry { id: "stdio.svg", short_id: "svg", mime: "image/svg+xml", extension: ".svg", name: "SVG", full_name: "Scalable Vector Graphics", neutral: "DwgDrawing", dir_name: "🎨️svg", is_binary: false },
-    StdioFormatEntry { id: "stdio.png", short_id: "png", mime: "image/png", extension: ".png", name: "PNG", full_name: "Portable Network Graphics", neutral: "RasterImage", dir_name: "📷️png", is_binary: true },
-    StdioFormatEntry { id: "stdio.jpg", short_id: "jpg", mime: "image/jpeg", extension: ".jpg", name: "JPEG", full_name: "Joint Photographic Experts Group", neutral: "RasterImage", dir_name: "📷️jpg", is_binary: true },
-    StdioFormatEntry { id: "stdio.gif", short_id: "gif", mime: "image/gif", extension: ".gif", name: "GIF", full_name: "Graphics Interchange Format", neutral: "RasterImage", dir_name: "🎞️gif", is_binary: true },
-    StdioFormatEntry { id: "stdio.bmp", short_id: "bmp", mime: "image/bmp", extension: ".bmp", name: "BMP", full_name: "Bitmap", neutral: "RasterImage", dir_name: "🖼️bmp", is_binary: true },
-    StdioFormatEntry { id: "stdio.tiff", short_id: "tiff", mime: "image/tiff", extension: ".tiff", name: "TIFF", full_name: "Tagged Image File Format", neutral: "RasterImage", dir_name: "🖼️tiff", is_binary: true },
-    StdioFormatEntry { id: "stdio.pdf", short_id: "pdf", mime: "application/pdf", extension: ".pdf", name: "PDF", full_name: "Portable Document Format", neutral: "PageDoc", dir_name: "📄️pdf", is_binary: true },
-    StdioFormatEntry { id: "stdio.docx", short_id: "docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", extension: ".docx", name: "DOCX", full_name: "Office Open XML Word", neutral: "PageDoc", dir_name: "📜️docx", is_binary: true },
-    StdioFormatEntry { id: "stdio.pptx", short_id: "pptx", mime: "application/vnd.openxmlformats-officedocument.presentationml.presentation", extension: ".pptx", name: "PPTX", full_name: "Office Open XML PowerPoint", neutral: "PageDoc", dir_name: "🎞️pptx", is_binary: true },
-    StdioFormatEntry { id: "stdio.xlsx", short_id: "xlsx", mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", extension: ".xlsx", name: "XLSX", full_name: "Office Open XML Excel", neutral: "TableDoc", dir_name: "📕️xlsx", is_binary: true },
-    StdioFormatEntry { id: "stdio.bcf", short_id: "bcf", mime: "application/vnd.bcf+xml", extension: ".bcf", name: "BCF", full_name: "BIM Collaboration Format", neutral: "Archive", dir_name: "💬️bcf", is_binary: true },
-];
-
-/// 🏷️ Strip optional `stdio.` prefix and aliases into a catalog short id.
-pub fn normalize_stdio_format_kind(value: &str) -> Option<&'static str> {
-    let trimmed = value.trim();
-    let short = trimmed.strip_prefix("stdio.").unwrap_or(trimmed);
-    let short = match short {
-        "jpeg" => "jpg",
-        "tif" => "tiff",
-        "stp" => "step",
-        "markdown" => "md",
-        other => other,
-    };
-    STDIO_FORMAT_CATALOG.iter().find(|row| row.short_id == short).map(|row| row.short_id)
-}
-
-/// 🗂️ Resolve `dwg` / `stdio.dwg` to the catalog entry.
-pub fn stdio_format_entry(value: &str) -> Option<&'static StdioFormatEntry> {
-    let short = normalize_stdio_format_kind(value)?;
-    STDIO_FORMAT_CATALOG.iter().find(|row| row.short_id == short)
-}
-
-/// 🏷️ Full stdio kind id (`stdio.dwg`) for a short or full kind string.
-pub fn stdio_format_kind_id(value: &str) -> Option<&'static str> {
-    stdio_format_entry(value).map(|row| row.id)
-}
-
-/// 🗂️ File-picker `accept` filter from stdio format kind ids (short or `stdio.*`).
-pub fn stdio_accept_filter(format_artifact_kinds: &[&str]) -> String {
-    format_artifact_kinds
-        .iter()
-        .filter_map(|kind| stdio_format_entry(kind))
-        .map(|row| row.extension)
-        .collect::<Vec<_>>()
-        .join(",")
-}
-
-/// 📋️ Serialize the catalog as the canonical `📋️mimes.csv` body (header + rows).
-pub fn stdio_mimes_csv() -> String {
-    let mut out = String::from("MIME,Extension,Name,FullName,Neutral,Dir,Kind\n");
-    for row in STDIO_FORMAT_CATALOG {
-        out.push_str(row.mime);
-        out.push(',');
-        out.push_str(row.extension);
-        out.push(',');
-        out.push_str(row.name);
-        out.push(',');
-        out.push_str(row.full_name);
-        out.push(',');
-        out.push_str(row.neutral);
-        out.push(',');
-        out.push_str(row.dir_name);
-        out.push(',');
-        out.push_str(row.id);
-        out.push('\n');
-    }
-    out
-}
-//#endregion StdioFormatCatalog
-
-
 //#region MeshCodec
-/// 🔌️ Format-keyed mesh export codec; concrete implementations below are zero-dependency (hand-rolled OBJ/GLB/STL). B-Rep apps additionally get `SolidExporter` (kernel/3d/brep/rs) which wraps the real kernel's STEP/STL/OBJ writers, and reuse `GlbExporter`/`GlbImporter` here via a tessellation bridge so GLB is the same codec everywhere.
+/// 🔌️ Format-keyed mesh export codec; concrete implementations below are zero-dependency
+/// (hand-rolled OBJ/GLB/STL). B-Rep apps additionally get `SolidExporter` (kernel/3d/brep/rs) which
+/// wraps the real kernel's STEP/STL/OBJ writers, and reuse `GlbExporter`/`GlbImporter` here via a
+/// tessellation bridge so GLB is the same codec everywhere. `format_kind` is the short stdio format
+/// kind id (the legacy format enum was retired — ticket 26/08/11/
+/// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
 pub trait MeshExporter: Send + Sync {
-    fn format(&self) -> MediaFormat;
+    fn format_kind(&self) -> &'static str;
     fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String>;
 }
 
 /// 🔌️ Format-keyed mesh import codec; see `MeshExporter`.
 pub trait MeshImporter: Send + Sync {
-    fn format(&self) -> MediaFormat;
+    fn format_kind(&self) -> &'static str;
     fn import(&self, bytes: &[u8]) -> Result<MeshData, String>;
 }
 
 pub struct ObjExporter;
 impl MeshExporter for ObjExporter {
-    fn format(&self) -> MediaFormat {
-        MediaFormat::Obj
+    fn format_kind(&self) -> &'static str {
+        "obj"
     }
     fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String> {
         Ok(mesh_to_obj(mesh, "mesh").into_bytes())
@@ -1165,8 +834,8 @@ impl MeshExporter for ObjExporter {
 
 pub struct ObjImporter;
 impl MeshImporter for ObjImporter {
-    fn format(&self) -> MediaFormat {
-        MediaFormat::Obj
+    fn format_kind(&self) -> &'static str {
+        "obj"
     }
     fn import(&self, bytes: &[u8]) -> Result<MeshData, String> {
         let text = std::str::from_utf8(bytes).map_err(|error| error.to_string())?;
@@ -1176,8 +845,8 @@ impl MeshImporter for ObjImporter {
 
 pub struct GlbExporter;
 impl MeshExporter for GlbExporter {
-    fn format(&self) -> MediaFormat {
-        MediaFormat::Glb
+    fn format_kind(&self) -> &'static str {
+        "glb"
     }
     fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String> {
         Ok(mesh_to_glb(mesh))
@@ -1186,8 +855,8 @@ impl MeshExporter for GlbExporter {
 
 pub struct GlbImporter;
 impl MeshImporter for GlbImporter {
-    fn format(&self) -> MediaFormat {
-        MediaFormat::Glb
+    fn format_kind(&self) -> &'static str {
+        "glb"
     }
     fn import(&self, bytes: &[u8]) -> Result<MeshData, String> {
         mesh_from_glb(bytes)
@@ -1196,8 +865,8 @@ impl MeshImporter for GlbImporter {
 
 pub struct StlExporter;
 impl MeshExporter for StlExporter {
-    fn format(&self) -> MediaFormat {
-        MediaFormat::Stl
+    fn format_kind(&self) -> &'static str {
+        "stl"
     }
     fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String> {
         Ok(mesh_to_stl(mesh))
@@ -1206,8 +875,8 @@ impl MeshExporter for StlExporter {
 
 pub struct StlImporter;
 impl MeshImporter for StlImporter {
-    fn format(&self) -> MediaFormat {
-        MediaFormat::Stl
+    fn format_kind(&self) -> &'static str {
+        "stl"
     }
     fn import(&self, bytes: &[u8]) -> Result<MeshData, String> {
         mesh_from_stl(bytes)
@@ -1215,65 +884,14 @@ impl MeshImporter for StlImporter {
 }
 //#endregion MeshCodec
 
-//#region NeutralDocuments
-/// 🖼️ Raster pixel buffer shared by png/jpg/gif/bmp/tiff codecs.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct RasterImage {
-    pub width: u32,
-    pub height: u32,
-    /// 🎨 Row-major RGBA8 pixels (`width * height * 4` bytes).
-    pub rgba: Vec<u8>,
-}
-
-/// 📄️ Multi-page document for pdf/docx/pptx.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct PageDoc {
-    pub title: String,
-    pub pages: Vec<PageDocPage>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct PageDocPage {
-    pub text: String,
-}
-
-/// 📊️ Tabular document for csv/xlsx.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct TableDoc {
-    pub headers: Vec<String>,
-    pub rows: Vec<Vec<String>>,
-}
-
-/// 📝️ Plain/markdown text document for md/txt.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct TextDoc {
-    pub body: String,
-}
-
-/// 🎒️ Named binary entries for zip/bcf.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct Archive {
-    pub entries: Vec<ArchiveEntry>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct ArchiveEntry {
-    pub path: String,
-    pub bytes: Vec<u8>,
-}
-
-/// ⚠️ Media IO error shared by ArtifactImport/Export and framework codecs.
+//#region IoError
+/// ⚠️ Media IO error shared by ArtifactImport/Export and framework codecs. `Unsupported` carries the
+/// unsupported format's kind id string (the legacy format enum was retired — ticket 26/08/11/
+/// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
 #[derive(Clone, Debug, PartialEq)]
 pub enum IoError {
     Format(String),
-    Unsupported(MediaFormat),
+    Unsupported(String),
     Payload(String),
 }
 
@@ -1281,21 +899,14 @@ impl std::fmt::Display for IoError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Format(m) => write!(f, "format: {m}"),
-            Self::Unsupported(fmt) => write!(f, "unsupported: {}", fmt.as_str()),
+            Self::Unsupported(fmt) => write!(f, "unsupported: {fmt}"),
             Self::Payload(m) => write!(f, "payload: {m}"),
         }
     }
 }
 
 impl std::error::Error for IoError {}
-
-/// ↔️ Codec between a neutral document and on-disk bytes.
-pub trait ArtifactCodec<T>: Send + Sync {
-    fn format(&self) -> MediaFormat;
-    fn export(&self, doc: &T) -> Result<Vec<u8>, IoError>;
-    fn import(&self, bytes: &[u8]) -> Result<T, IoError>;
-}
-//#endregion NeutralDocuments
+//#endregion IoError
 
 //#region Dwg
 /// 📐️ Hand-rolled DWG codec: a self-contained, round-trippable binary interchange format using the AC1015 (R2000) file magic and an R2000-flavored section-locator/CRC/handle container (bit primitives BS/BL/BD/handle refs per https://www.opendesign.com/files/guestdownloads/OpenDesign_Specification_for_.dwg_files.pdf). Entity/header field layouts are a semio-defined subset chosen for lossless round-tripping through this codec; byte-exact third-party AutoCAD/ODA interop needs follow-up validation against a real DWG viewer.
@@ -2523,621 +2134,6 @@ pub fn dwg_drawing_to_paths(drawing: &DwgDrawing) -> Vec<Vec<DwgPathSegment>> {
 //#endregion DwgBridges
 //#endregion Dwg
 
-//#region ArtifactCodecs
-//#region TextCsvJson
-/// 📄 UTF-8 text (.txt).
-pub struct TxtCodec;
-impl ArtifactCodec<TextDoc> for TxtCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Txt }
-    fn export(&self, doc: &TextDoc) -> Result<Vec<u8>, IoError> { Ok(doc.body.as_bytes().to_vec()) }
-    fn import(&self, bytes: &[u8]) -> Result<TextDoc, IoError> {
-        Ok(TextDoc { body: String::from_utf8(bytes.to_vec()).map_err(|e| IoError::Payload(e.to_string()))? })
-    }
-}
-
-/// 📝️ Markdown (.md).
-pub struct MdCodec;
-impl ArtifactCodec<TextDoc> for MdCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Md }
-    fn export(&self, doc: &TextDoc) -> Result<Vec<u8>, IoError> { TxtCodec.export(doc) }
-    fn import(&self, bytes: &[u8]) -> Result<TextDoc, IoError> { TxtCodec.import(bytes) }
-}
-
-/// 🔣️ JSON value (.json).
-pub struct JsonCodec;
-impl ArtifactCodec<serde_json::Value> for JsonCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Json }
-    fn export(&self, doc: &serde_json::Value) -> Result<Vec<u8>, IoError> {
-        serde_json::to_vec_pretty(doc).map_err(|e| IoError::Payload(e.to_string()))
-    }
-    fn import(&self, bytes: &[u8]) -> Result<serde_json::Value, IoError> {
-        serde_json::from_slice(bytes).map_err(|e| IoError::Payload(e.to_string()))
-    }
-}
-
-/// 📊️ CSV table (.csv).
-pub struct CsvCodec;
-impl ArtifactCodec<TableDoc> for CsvCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Csv }
-    fn export(&self, doc: &TableDoc) -> Result<Vec<u8>, IoError> {
-        let mut out = String::new();
-        out.push_str(&csv_escape_row(&doc.headers));
-        out.push('\n');
-        for row in &doc.rows {
-            out.push_str(&csv_escape_row(row));
-            out.push('\n');
-        }
-        Ok(out.into_bytes())
-    }
-    fn import(&self, bytes: &[u8]) -> Result<TableDoc, IoError> {
-        let text = String::from_utf8(bytes.to_vec()).map_err(|e| IoError::Payload(e.to_string()))?;
-        let mut lines = text.lines().filter(|l| !l.is_empty());
-        let headers = csv_parse_row(lines.next().unwrap_or(""));
-        let rows = lines.map(csv_parse_row).collect();
-        Ok(TableDoc { headers, rows })
-    }
-}
-
-fn csv_escape_row(cells: &[String]) -> String {
-    cells.iter().map(|c| {
-        if c.contains(',') || c.contains('"') || c.contains('\n') {
-            format!("\"{}\"", c.replace('"', "\"\""))
-        } else {
-            c.clone()
-        }
-    }).collect::<Vec<_>>().join(",")
-}
-
-fn csv_parse_row(line: &str) -> Vec<String> {
-    let mut cells = Vec::new();
-    let mut cur = String::new();
-    let mut in_q = false;
-    let mut chars = line.chars().peekable();
-    while let Some(ch) = chars.next() {
-        if in_q {
-            if ch == '"' {
-                if chars.peek() == Some(&'"') { chars.next(); cur.push('"'); }
-                else { in_q = false; }
-            } else { cur.push(ch); }
-        } else if ch == '"' { in_q = true; }
-        else if ch == ',' { cells.push(std::mem::take(&mut cur)); }
-        else { cur.push(ch); }
-    }
-    cells.push(cur);
-    cells
-}
-//#endregion TextCsvJson
-
-//#region RasterCodecs
-const SMRI_MAGIC: &[u8; 4] = b"SMRI";
-
-fn encode_raw_rgba(img: &RasterImage) -> Vec<u8> {
-    let mut out = Vec::with_capacity(16 + img.rgba.len());
-    out.extend_from_slice(SMRI_MAGIC);
-    out.extend_from_slice(&img.width.to_le_bytes());
-    out.extend_from_slice(&img.height.to_le_bytes());
-    out.extend_from_slice(&img.rgba);
-    out
-}
-
-fn decode_raw_rgba(bytes: &[u8]) -> Result<RasterImage, IoError> {
-    if bytes.len() < 12 || &bytes[0..4] != SMRI_MAGIC {
-        return Err(IoError::Format("expected SMRI raster container".into()));
-    }
-    let width = u32::from_le_bytes(bytes[4..8].try_into().unwrap());
-    let height = u32::from_le_bytes(bytes[8..12].try_into().unwrap());
-    let need = (width as usize).saturating_mul(height as usize).saturating_mul(4);
-    if bytes.len() < 12 + need {
-        return Err(IoError::Payload("truncated raster".into()));
-    }
-    Ok(RasterImage { width, height, rgba: bytes[12..12 + need].to_vec() })
-}
-
-/// 🖼️ Windows BMP (BI_RGB, 32-bit).
-pub struct BmpCodec;
-impl ArtifactCodec<RasterImage> for BmpCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Bmp }
-    fn export(&self, doc: &RasterImage) -> Result<Vec<u8>, IoError> {
-        let w = doc.width as i32;
-        let h = doc.height as i32;
-        let row = (doc.width as usize) * 4;
-        let pixel_size = row * doc.height as usize;
-        let file_size = 54 + pixel_size;
-        let mut out = Vec::with_capacity(file_size);
-        out.extend_from_slice(b"BM");
-        out.extend_from_slice(&(file_size as u32).to_le_bytes());
-        out.extend_from_slice(&0u16.to_le_bytes());
-        out.extend_from_slice(&0u16.to_le_bytes());
-        out.extend_from_slice(&54u32.to_le_bytes());
-        out.extend_from_slice(&40u32.to_le_bytes());
-        out.extend_from_slice(&w.to_le_bytes());
-        out.extend_from_slice(&h.to_le_bytes());
-        out.extend_from_slice(&1u16.to_le_bytes());
-        out.extend_from_slice(&32u16.to_le_bytes());
-        out.extend_from_slice(&0u32.to_le_bytes());
-        out.extend_from_slice(&(pixel_size as u32).to_le_bytes());
-        out.extend_from_slice(&0u32.to_le_bytes());
-        out.extend_from_slice(&0u32.to_le_bytes());
-        out.extend_from_slice(&0u32.to_le_bytes());
-        out.extend_from_slice(&0u32.to_le_bytes());
-        for y in (0..doc.height as usize).rev() {
-            let start = y * row;
-            for x in 0..doc.width as usize {
-                let i = start + x * 4;
-                out.push(doc.rgba[i + 2]);
-                out.push(doc.rgba[i + 1]);
-                out.push(doc.rgba[i]);
-                out.push(doc.rgba[i + 3]);
-            }
-        }
-        Ok(out)
-    }
-    fn import(&self, bytes: &[u8]) -> Result<RasterImage, IoError> {
-        if bytes.len() < 54 || &bytes[0..2] != b"BM" {
-            return Err(IoError::Format("not a BMP".into()));
-        }
-        let offset = u32::from_le_bytes(bytes[10..14].try_into().unwrap()) as usize;
-        let width = i32::from_le_bytes(bytes[18..22].try_into().unwrap()).unsigned_abs();
-        let height_signed = i32::from_le_bytes(bytes[22..26].try_into().unwrap());
-        let height = height_signed.unsigned_abs();
-        let bpp = u16::from_le_bytes(bytes[28..30].try_into().unwrap());
-        if bpp != 32 { return Err(IoError::Format("only 32-bit BMP supported".into())); }
-        let row = width as usize * 4;
-        let mut rgba = vec![0u8; row * height as usize];
-        for y in 0..height as usize {
-            let src_y = if height_signed < 0 { y } else { height as usize - 1 - y };
-            let src = offset + src_y * row;
-            for x in 0..width as usize {
-                let s = src + x * 4;
-                let d = y * row + x * 4;
-                if s + 3 >= bytes.len() { return Err(IoError::Payload("truncated bmp".into())); }
-                rgba[d] = bytes[s + 2];
-                rgba[d + 1] = bytes[s + 1];
-                rgba[d + 2] = bytes[s];
-                rgba[d + 3] = bytes[s + 3];
-            }
-        }
-        Ok(RasterImage { width, height, rgba })
-    }
-}
-
-macro_rules! raw_rgba_codec {
-    ($name:ident, $fmt:ident) => {
-        pub struct $name;
-        impl ArtifactCodec<RasterImage> for $name {
-            fn format(&self) -> MediaFormat { MediaFormat::$fmt }
-            fn export(&self, doc: &RasterImage) -> Result<Vec<u8>, IoError> { Ok(encode_raw_rgba(doc)) }
-            fn import(&self, bytes: &[u8]) -> Result<RasterImage, IoError> { decode_raw_rgba(bytes) }
-        }
-    };
-}
-raw_rgba_codec!(PngCodec, Png);
-raw_rgba_codec!(JpgCodec, Jpg);
-raw_rgba_codec!(GifCodec, Gif);
-raw_rgba_codec!(TiffCodec, Tiff);
-//#endregion RasterCodecs
-
-//#region PageTableArchive
-/// 📄️ PDF codec (one text page per PageDoc page).
-pub struct PdfCodec;
-impl ArtifactCodec<PageDoc> for PdfCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Pdf }
-    fn export(&self, doc: &PageDoc) -> Result<Vec<u8>, IoError> {
-        let text = doc.pages.iter().map(|p| p.text.as_str()).collect::<Vec<_>>().join("\\n");
-        let escaped = text.replace('\\', "\\\\").replace('(', "\\(").replace(')', "\\)");
-        let content = format!("BT /F1 12 Tf 50 750 Td ({escaped}) Tj ET");
-        let objects = [
-            "1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n".to_string(),
-            "2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n".to_string(),
-            "3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources<< /Font<< /F1 5 0 R >> >> >>endobj\n".to_string(),
-            format!("4 0 obj<< /Length {} >>stream\n{}\nendstream\nendobj\n", content.len(), content),
-            "5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\n".to_string(),
-        ];
-        let mut body = String::from("%PDF-1.4\n");
-        let mut offsets = vec![0usize];
-        for obj in &objects {
-            offsets.push(body.len());
-            body.push_str(obj);
-        }
-        let xref_at = body.len();
-        body.push_str(&format!("xref\n0 {}\n0000000000 65535 f \n", offsets.len()));
-        for off in &offsets[1..] {
-            body.push_str(&format!("{off:010} 00000 n \n"));
-        }
-        body.push_str(&format!("trailer<< /Size {} /Root 1 0 R >>\nstartxref\n{xref_at}\n%%EOF\n", offsets.len()));
-        let _ = &doc.title;
-        Ok(body.into_bytes())
-    }
-    fn import(&self, bytes: &[u8]) -> Result<PageDoc, IoError> {
-        let text = String::from_utf8_lossy(bytes);
-        if !text.starts_with("%PDF") { return Err(IoError::Format("not a PDF".into())); }
-        let body = text
-            .split("stream")
-            .nth(1)
-            .and_then(|s| s.split("endstream").next())
-            .unwrap_or("")
-            .trim()
-            .to_string();
-        Ok(PageDoc { title: String::new(), pages: vec![PageDocPage { text: body }] })
-    }
-}
-
-fn store_zip(entries: &[(String, Vec<u8>)]) -> Vec<u8> {
-    let mut out = Vec::new();
-    let mut central = Vec::new();
-    let mut offsets = Vec::new();
-    for (name, data) in entries {
-        offsets.push(out.len() as u32);
-        let name_b = name.as_bytes();
-        out.extend_from_slice(&0x04034b50u32.to_le_bytes());
-        out.extend_from_slice(&20u16.to_le_bytes());
-        out.extend_from_slice(&0u16.to_le_bytes());
-        out.extend_from_slice(&0u16.to_le_bytes());
-        out.extend_from_slice(&0u16.to_le_bytes());
-        out.extend_from_slice(&0u16.to_le_bytes());
-        out.extend_from_slice(&0u32.to_le_bytes()); // crc
-        out.extend_from_slice(&(data.len() as u32).to_le_bytes());
-        out.extend_from_slice(&(data.len() as u32).to_le_bytes());
-        out.extend_from_slice(&(name_b.len() as u16).to_le_bytes());
-        out.extend_from_slice(&0u16.to_le_bytes());
-        out.extend_from_slice(name_b);
-        out.extend_from_slice(data);
-    }
-    let central_start = out.len() as u32;
-    for (i, (name, data)) in entries.iter().enumerate() {
-        let name_b = name.as_bytes();
-        central.extend_from_slice(&0x02014b50u32.to_le_bytes());
-        central.extend_from_slice(&20u16.to_le_bytes());
-        central.extend_from_slice(&20u16.to_le_bytes());
-        central.extend_from_slice(&0u16.to_le_bytes());
-        central.extend_from_slice(&0u16.to_le_bytes());
-        central.extend_from_slice(&0u16.to_le_bytes());
-        central.extend_from_slice(&0u16.to_le_bytes());
-        central.extend_from_slice(&0u32.to_le_bytes());
-        central.extend_from_slice(&(data.len() as u32).to_le_bytes());
-        central.extend_from_slice(&(data.len() as u32).to_le_bytes());
-        central.extend_from_slice(&(name_b.len() as u16).to_le_bytes());
-        central.extend_from_slice(&0u16.to_le_bytes());
-        central.extend_from_slice(&0u16.to_le_bytes());
-        central.extend_from_slice(&0u16.to_le_bytes());
-        central.extend_from_slice(&0u16.to_le_bytes());
-        central.extend_from_slice(&0u32.to_le_bytes());
-        central.extend_from_slice(&offsets[i].to_le_bytes());
-        central.extend_from_slice(name_b);
-    }
-    let central_size = central.len() as u32;
-    out.extend_from_slice(&central);
-    out.extend_from_slice(&0x06054b50u32.to_le_bytes());
-    out.extend_from_slice(&0u16.to_le_bytes());
-    out.extend_from_slice(&0u16.to_le_bytes());
-    out.extend_from_slice(&(entries.len() as u16).to_le_bytes());
-    out.extend_from_slice(&(entries.len() as u16).to_le_bytes());
-    out.extend_from_slice(&central_size.to_le_bytes());
-    out.extend_from_slice(&central_start.to_le_bytes());
-    out.extend_from_slice(&0u16.to_le_bytes());
-    out
-}
-
-fn read_store_zip(bytes: &[u8]) -> Result<Vec<(String, Vec<u8>)>, IoError> {
-    let mut entries = Vec::new();
-    let mut i = 0usize;
-    while i + 30 <= bytes.len() {
-        let sig = u32::from_le_bytes(bytes[i..i + 4].try_into().unwrap());
-        if sig != 0x04034b50 { break; }
-        let comp = u16::from_le_bytes(bytes[i + 8..i + 10].try_into().unwrap());
-        if comp != 0 { return Err(IoError::Format("only store zip supported".into())); }
-        let size = u32::from_le_bytes(bytes[i + 18..i + 22].try_into().unwrap()) as usize;
-        let name_len = u16::from_le_bytes(bytes[i + 26..i + 28].try_into().unwrap()) as usize;
-        let extra = u16::from_le_bytes(bytes[i + 28..i + 30].try_into().unwrap()) as usize;
-        let name_start = i + 30;
-        let data_start = name_start + name_len + extra;
-        let data_end = data_start + size;
-        if data_end > bytes.len() { return Err(IoError::Payload("truncated zip".into())); }
-        let name = String::from_utf8_lossy(&bytes[name_start..name_start + name_len]).into_owned();
-        entries.push((name, bytes[data_start..data_end].to_vec()));
-        i = data_end;
-    }
-    Ok(entries)
-}
-
-/// 🎒️ ZIP archive.
-pub struct ZipCodec;
-impl ArtifactCodec<Archive> for ZipCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Zip }
-    fn export(&self, doc: &Archive) -> Result<Vec<u8>, IoError> {
-        let entries: Vec<_> = doc.entries.iter().map(|e| (e.path.clone(), e.bytes.clone())).collect();
-        Ok(store_zip(&entries))
-    }
-    fn import(&self, bytes: &[u8]) -> Result<Archive, IoError> {
-        let entries = read_store_zip(bytes)?.into_iter().map(|(path, bytes)| ArchiveEntry { path, bytes }).collect();
-        Ok(Archive { entries })
-    }
-}
-
-/// 💬️ BCF is a ZIP with `bcf/markup.bcf` text.
-pub struct BcfCodec;
-impl ArtifactCodec<Archive> for BcfCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Bcf }
-    fn export(&self, doc: &Archive) -> Result<Vec<u8>, IoError> { ZipCodec.export(doc) }
-    fn import(&self, bytes: &[u8]) -> Result<Archive, IoError> { ZipCodec.import(bytes) }
-}
-
-fn ooxml_document(kind: &str, body: &str) -> Vec<u8> {
-    let content_types = format!(
-        r#"<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/{kind}" ContentType="application/vnd.openxmlformats-officedocument.{kind}+xml"/></Types>"#
-    );
-    let rels = r#"<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="document.xml"/></Relationships>"#;
-    let doc_xml = format!(r#"<?xml version="1.0"?><root><body>{body}</body></root>"#);
-    store_zip(&[
-        ("[Content_Types].xml".into(), content_types.into_bytes()),
-        ("_rels/.rels".into(), rels.as_bytes().to_vec()),
-        ("document.xml".into(), doc_xml.into_bytes()),
-    ])
-}
-
-fn ooxml_read_body(bytes: &[u8]) -> Result<String, IoError> {
-    let entries = read_store_zip(bytes)?;
-    let doc = entries.into_iter().find(|(n, _)| n.ends_with("document.xml")).ok_or_else(|| IoError::Format("missing document.xml".into()))?;
-    let text = String::from_utf8_lossy(&doc.1);
-    let start = text.find("<body>").map(|i| i + 6).unwrap_or(0);
-    let end = text.find("</body>").unwrap_or(text.len());
-    Ok(text[start..end].to_string())
-}
-
-/// 📜️ DOCX (OOXML package).
-pub struct DocxCodec;
-impl ArtifactCodec<PageDoc> for DocxCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Docx }
-    fn export(&self, doc: &PageDoc) -> Result<Vec<u8>, IoError> {
-        let body = doc.pages.iter().map(|p| p.text.as_str()).collect::<Vec<_>>().join("\n");
-        Ok(ooxml_document("wordprocessingml.document.main", &body))
-    }
-    fn import(&self, bytes: &[u8]) -> Result<PageDoc, IoError> {
-        Ok(PageDoc { title: String::new(), pages: vec![PageDocPage { text: ooxml_read_body(bytes)? }] })
-    }
-}
-
-/// 🎞️ PPTX (OOXML package).
-pub struct PptxCodec;
-impl ArtifactCodec<PageDoc> for PptxCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Pptx }
-    fn export(&self, doc: &PageDoc) -> Result<Vec<u8>, IoError> {
-        let body = doc.pages.iter().map(|p| p.text.as_str()).collect::<Vec<_>>().join("\n");
-        Ok(ooxml_document("presentationml.presentation.main", &body))
-    }
-    fn import(&self, bytes: &[u8]) -> Result<PageDoc, IoError> {
-        DocxCodec.import(bytes)
-    }
-}
-
-/// 📕️ XLSX (OOXML package carrying CSV body).
-pub struct XlsxCodec;
-impl ArtifactCodec<TableDoc> for XlsxCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Xlsx }
-    fn export(&self, doc: &TableDoc) -> Result<Vec<u8>, IoError> {
-        let csv = String::from_utf8(CsvCodec.export(doc)?).map_err(|e| IoError::Payload(e.to_string()))?;
-        Ok(ooxml_document("spreadsheetml.sheet.main", &csv))
-    }
-    fn import(&self, bytes: &[u8]) -> Result<TableDoc, IoError> {
-        let body = ooxml_read_body(bytes)?;
-        CsvCodec.import(body.as_bytes())
-    }
-}
-//#endregion PageTableArchive
-
-//#region MeshExtraCodecs
-/// ☁️ ASCII PLY mesh.
-pub struct PlyCodec;
-impl ArtifactCodec<MeshData> for PlyCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Ply }
-    fn export(&self, doc: &MeshData) -> Result<Vec<u8>, IoError> {
-        let mut out = String::new();
-        out.push_str("ply\nformat ascii 1.0\n");
-        out.push_str(&format!("element vertex {}\n", doc.positions.len() / 3));
-        out.push_str("property float x\nproperty float y\nproperty float z\n");
-        out.push_str(&format!("element face {}\n", doc.indices.len() / 3));
-        out.push_str("property list uchar int vertex_indices\nend_header\n");
-        for i in 0..doc.positions.len() / 3 {
-            out.push_str(&format!("{} {} {}\n", doc.positions[i * 3], doc.positions[i * 3 + 1], doc.positions[i * 3 + 2]));
-        }
-        for i in 0..doc.indices.len() / 3 {
-            out.push_str(&format!("3 {} {} {}\n", doc.indices[i * 3], doc.indices[i * 3 + 1], doc.indices[i * 3 + 2]));
-        }
-        Ok(out.into_bytes())
-    }
-    fn import(&self, bytes: &[u8]) -> Result<MeshData, IoError> {
-        let text = String::from_utf8(bytes.to_vec()).map_err(|e| IoError::Payload(e.to_string()))?;
-        if !text.starts_with("ply") { return Err(IoError::Format("not ply".into())); }
-        let mut positions = Vec::new();
-        let mut indices = Vec::new();
-        let mut vertex_count = 0usize;
-        let mut face_count = 0usize;
-        let mut header_done = false;
-        let mut verts_read = 0usize;
-        for line in text.lines() {
-            if !header_done {
-                if let Some(rest) = line.strip_prefix("element vertex ") { vertex_count = rest.trim().parse().unwrap_or(0); }
-                if let Some(rest) = line.strip_prefix("element face ") { face_count = rest.trim().parse().unwrap_or(0); }
-                if line.trim() == "end_header" { header_done = true; }
-                continue;
-            }
-            let parts: Vec<_> = line.split_whitespace().collect();
-            if verts_read < vertex_count {
-                if parts.len() >= 3 {
-                    positions.push(parts[0].parse().unwrap_or(0.0));
-                    positions.push(parts[1].parse().unwrap_or(0.0));
-                    positions.push(parts[2].parse().unwrap_or(0.0));
-                    verts_read += 1;
-                }
-            } else if indices.len() / 3 < face_count {
-                if parts.len() >= 4 {
-                    indices.push(parts[1].parse().unwrap_or(0));
-                    indices.push(parts[2].parse().unwrap_or(0));
-                    indices.push(parts[3].parse().unwrap_or(0));
-                }
-            }
-        }
-        Ok(MeshData { positions, normals: vec![], colors: vec![], indices, uvs: vec![], face_ids: vec![], vertex_ids: vec![], edge_positions: vec![], edge_ids: vec![], edge_uvs: vec![], edge_is_seam: vec![], paint_texture_base64: None })
-    }
-}
-
-/// ☁️ Minimal LAS 1.2 point cloud (XYZ only).
-pub struct LasCodec;
-impl ArtifactCodec<MeshData> for LasCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Las }
-    fn export(&self, doc: &MeshData) -> Result<Vec<u8>, IoError> {
-        let n = (doc.positions.len() / 3) as u32;
-        let mut out = vec![0u8; 227];
-        out[0..4].copy_from_slice(b"LASF");
-        out[24] = 1; out[25] = 2; // version 1.2
-        out[94..96].copy_from_slice(&227u16.to_le_bytes()); // header size
-        out[96..100].copy_from_slice(&227u32.to_le_bytes()); // offset to points
-        out[104] = 0; // point format 0
-        out[105..107].copy_from_slice(&20u16.to_le_bytes());
-        out[107..111].copy_from_slice(&n.to_le_bytes());
-        // scale 0.01
-        out[131..139].copy_from_slice(&1e-2f64.to_le_bytes());
-        out[139..147].copy_from_slice(&1e-2f64.to_le_bytes());
-        out[147..155].copy_from_slice(&1e-2f64.to_le_bytes());
-        for i in 0..n as usize {
-            let x = (doc.positions[i * 3] / 0.01) as i32;
-            let y = (doc.positions[i * 3 + 1] / 0.01) as i32;
-            let z = (doc.positions[i * 3 + 2] / 0.01) as i32;
-            out.extend_from_slice(&x.to_le_bytes());
-            out.extend_from_slice(&y.to_le_bytes());
-            out.extend_from_slice(&z.to_le_bytes());
-            out.extend_from_slice(&0u16.to_le_bytes()); // intensity
-            out.push(0); // return info
-            out.push(0); // classification
-            out.push(0); // scan angle
-            out.push(0); // user data
-            out.extend_from_slice(&0u16.to_le_bytes()); // point source
-        }
-        Ok(out)
-    }
-    fn import(&self, bytes: &[u8]) -> Result<MeshData, IoError> {
-        if bytes.len() < 227 || &bytes[0..4] != b"LASF" { return Err(IoError::Format("not las".into())); }
-        let offset = u32::from_le_bytes(bytes[96..100].try_into().unwrap()) as usize;
-        let n = u32::from_le_bytes(bytes[107..111].try_into().unwrap()) as usize;
-        let sx = f64::from_le_bytes(bytes[131..139].try_into().unwrap());
-        let sy = f64::from_le_bytes(bytes[139..147].try_into().unwrap());
-        let sz = f64::from_le_bytes(bytes[147..155].try_into().unwrap());
-        let mut positions = Vec::with_capacity(n * 3);
-        let mut p = offset;
-        for _ in 0..n {
-            if p + 12 > bytes.len() { break; }
-            let x = i32::from_le_bytes(bytes[p..p + 4].try_into().unwrap()) as f32 * sx as f32;
-            let y = i32::from_le_bytes(bytes[p + 4..p + 8].try_into().unwrap()) as f32 * sy as f32;
-            let z = i32::from_le_bytes(bytes[p + 8..p + 12].try_into().unwrap()) as f32 * sz as f32;
-            positions.push(x); positions.push(y); positions.push(z);
-            p += 20;
-        }
-        Ok(MeshData { positions, normals: vec![], colors: vec![], indices: vec![], uvs: vec![], face_ids: vec![], vertex_ids: vec![], edge_positions: vec![], edge_ids: vec![], edge_uvs: vec![], edge_is_seam: vec![], paint_texture_base64: None })
-    }
-}
-
-/// 🧊️ glTF JSON (positions + indices only).
-pub struct GltfCodec;
-impl ArtifactCodec<MeshData> for GltfCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Gltf }
-    fn export(&self, doc: &MeshData) -> Result<Vec<u8>, IoError> {
-        let value = serde_json::json!({
-            "asset": {"version": "2.0"},
-            "meshes": [{"primitives": [{"attributes": {"POSITION": 0}, "indices": 1}]}],
-            "accessors": [
-                {"count": doc.positions.len() / 3, "type": "VEC3", "componentType": 5126},
-                {"count": doc.indices.len(), "type": "SCALAR", "componentType": 5123}
-            ],
-            "semioPositions": doc.positions,
-            "semioIndices": doc.indices,
-        });
-        serde_json::to_vec_pretty(&value).map_err(|e| IoError::Payload(e.to_string()))
-    }
-    fn import(&self, bytes: &[u8]) -> Result<MeshData, IoError> {
-        let v: serde_json::Value = serde_json::from_slice(bytes).map_err(|e| IoError::Payload(e.to_string()))?;
-        let positions: Vec<f32> = serde_json::from_value(v.get("semioPositions").cloned().unwrap_or_default())
-            .map_err(|e| IoError::Payload(e.to_string()))?;
-        let indices: Vec<u32> = serde_json::from_value(v.get("semioIndices").cloned().unwrap_or_default())
-            .map_err(|e| IoError::Payload(e.to_string()))?;
-        Ok(MeshData { positions, normals: vec![], colors: vec![], indices, uvs: vec![], face_ids: vec![], vertex_ids: vec![], edge_positions: vec![], edge_ids: vec![], edge_uvs: vec![], edge_is_seam: vec![], paint_texture_base64: None })
-    }
-}
-
-/// 🖊️ Minimal DXF (LINE entities from mesh edges as polylines of positions).
-pub struct DxfCodec;
-impl ArtifactCodec<DwgDrawing> for DxfCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Dxf }
-    fn export(&self, doc: &DwgDrawing) -> Result<Vec<u8>, IoError> {
-        let mut out = String::from("0\nSECTION\n2\nENTITIES\n");
-        for entity in &doc.entities {
-            if let DwgGeometry::Line { start, end } = &entity.geometry {
-                out.push_str(&format!("0\nLINE\n8\n0\n10\n{}\n20\n{}\n30\n{}\n11\n{}\n21\n{}\n31\n{}\n", start[0], start[1], start[2], end[0], end[1], end[2]));
-            }
-        }
-        out.push_str("0\nENDSEC\n0\nEOF\n");
-        Ok(out.into_bytes())
-    }
-    fn import(&self, bytes: &[u8]) -> Result<DwgDrawing, IoError> {
-        let text = String::from_utf8(bytes.to_vec()).map_err(|e| IoError::Payload(e.to_string()))?;
-        let mut drawing = DwgDrawing::default();
-        let lines: Vec<&str> = text.lines().collect();
-        let mut i = 0;
-        while i + 1 < lines.len() {
-            if lines[i].trim() == "0" && lines[i + 1].trim() == "LINE" {
-                let mut start = [0.0f64; 3];
-                let mut end = [0.0f64; 3];
-                i += 2;
-                while i + 1 < lines.len() && lines[i].trim() != "0" {
-                    let code = lines[i].trim();
-                    let val = lines[i + 1].trim();
-                    match code {
-                        "10" => start[0] = val.parse().unwrap_or(0.0),
-                        "20" => start[1] = val.parse().unwrap_or(0.0),
-                        "30" => start[2] = val.parse().unwrap_or(0.0),
-                        "11" => end[0] = val.parse().unwrap_or(0.0),
-                        "21" => end[1] = val.parse().unwrap_or(0.0),
-                        "31" => end[2] = val.parse().unwrap_or(0.0),
-                        _ => {}
-                    }
-                    i += 2;
-                }
-                drawing.entities.push(DwgEntity {
-                    layer: 0,
-                    color: DwgColor::ByLayer,
-                    geometry: DwgGeometry::Line { start, end },
-                });
-                continue;
-            }
-            i += 1;
-        }
-        Ok(drawing)
-    }
-}
-
-/// 🏗️ IFC STEP text carrying mesh JSON via IFCPROPERTYSINGLEVALUE.
-pub struct IfcCodec;
-impl ArtifactCodec<MeshData> for IfcCodec {
-    fn format(&self) -> MediaFormat { MediaFormat::Ifc }
-    fn export(&self, doc: &MeshData) -> Result<Vec<u8>, IoError> {
-        let payload = serde_json::to_string(doc).map_err(|e| IoError::Payload(e.to_string()))?;
-        let escaped = payload.replace('\'', "''");
-        let body = format!(
-            "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('Semio IFC'),'2;1');\nFILE_NAME('semio.ifc','',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPROPERTYSINGLEVALUE('SemioMeshJson',$,IFCTEXT('{escaped}'),$);\nENDSEC;\nEND-ISO-10303-21;\n"
-        );
-        Ok(body.into_bytes())
-    }
-    fn import(&self, bytes: &[u8]) -> Result<MeshData, IoError> {
-        let text = String::from_utf8(bytes.to_vec()).map_err(|e| IoError::Payload(e.to_string()))?;
-        let marker = "IFCPROPERTYSINGLEVALUE('SemioMeshJson',$,IFCTEXT('";
-        let start = text.find(marker).ok_or_else(|| IoError::Format("missing SemioMeshJson IFC property".into()))? + marker.len();
-        let end = text[start..].find("');").ok_or_else(|| IoError::Format("truncated IFC mesh".into()))? + start;
-        let json = text[start..end].replace("''", "'");
-        serde_json::from_str(&json).map_err(|e| IoError::Payload(e.to_string()))
-    }
-}
-//#endregion MeshExtraCodecs
-//#endregion ArtifactCodecs
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3526,46 +2522,13 @@ mod tests {
     }
 
     #[test]
-    fn os_media_format_str_mime_binary_and_parse_round_trip_all_variants() {
-        for format in MediaFormat::ALL {
-            assert_eq!(MediaFormat::parse(format.as_str()), Some(*format));
-            assert!(!format.mime_type().is_empty());
-            assert!(!format.dir_name().is_empty());
-        }
-        assert!(MediaFormat::Glb.is_binary());
-        assert!(MediaFormat::Png.is_binary());
-        assert!(!MediaFormat::Obj.is_binary());
-        assert!(!MediaFormat::Ply.is_binary(), "Ply defaults to the ASCII/text wire encoding");
-        assert!(MediaFormat::Las.is_binary());
-        assert_eq!(MediaFormat::parse("bogus"), None);
-        assert_eq!(MediaFormat::parse("jpeg"), Some(MediaFormat::Jpg));
-        assert_eq!(MediaFormat::parse("stp"), Some(MediaFormat::Step));
-    }
-
-    #[test]
-    fn document_codecs_round_trip_text_table_raster_archive() {
-        let text = TextDoc { body: "hello **world**".into() };
-        assert_eq!(MdCodec.import(&MdCodec.export(&text).unwrap()).unwrap(), text);
-        assert_eq!(TxtCodec.import(&TxtCodec.export(&text).unwrap()).unwrap(), text);
-
-        let table = TableDoc {
-            headers: vec!["a".into(), "b".into()],
-            rows: vec![vec!["1".into(), "x,y".into()]],
-        };
-        assert_eq!(CsvCodec.import(&CsvCodec.export(&table).unwrap()).unwrap(), table);
-
-        let img = RasterImage { width: 1, height: 1, rgba: vec![10, 20, 30, 255] };
-        assert_eq!(BmpCodec.import(&BmpCodec.export(&img).unwrap()).unwrap(), img);
-        assert_eq!(PngCodec.import(&PngCodec.export(&img).unwrap()).unwrap(), img);
-
-        let archive = Archive { entries: vec![ArchiveEntry { path: "a.txt".into(), bytes: b"hi".to_vec() }] };
-        assert_eq!(ZipCodec.import(&ZipCodec.export(&archive).unwrap()).unwrap(), archive);
-
-        let page = PageDoc { title: "t".into(), pages: vec![PageDocPage { text: "body".into() }] };
-        let pdf = PdfCodec.export(&page).unwrap();
-        assert!(String::from_utf8_lossy(&pdf).starts_with("%PDF"));
-        let round = DocxCodec.import(&DocxCodec.export(&page).unwrap()).unwrap();
-        assert_eq!(round.pages[0].text, "body");
+    fn mesh_exporter_and_importer_use_short_format_kind_ids_not_media_format() {
+        assert_eq!(ObjExporter.format_kind(), "obj");
+        assert_eq!(ObjImporter.format_kind(), "obj");
+        assert_eq!(GlbExporter.format_kind(), "glb");
+        assert_eq!(GlbImporter.format_kind(), "glb");
+        assert_eq!(StlExporter.format_kind(), "stl");
+        assert_eq!(StlImporter.format_kind(), "stl");
     }
 
     #[test]

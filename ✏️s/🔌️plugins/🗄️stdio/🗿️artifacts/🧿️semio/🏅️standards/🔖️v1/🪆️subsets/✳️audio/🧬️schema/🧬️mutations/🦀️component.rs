@@ -11,9 +11,9 @@ use crate::artifacts::semio::standards::v1::subsets::audio::schema::diff::{
     parse_u32, parse_usize,
 };
 use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use protocol::Mutation;
-#[cfg(test)]
-use protocol::{OpBinary, OpText};
+/// 🔧️ Unconditional — `impl protocol::OpBinary for SemioAudioMutation` below's `encode_op`/
+/// `decode_op` are now real production code (binary upgrade, this wave), not test-only.
+use protocol::{Mutation, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -180,16 +180,107 @@ impl protocol::OpText for SemioAudioMutation {
     fn print_op(&self) -> String { print_audio_mutation(self) }
 }
 
+/// 🧾️ Keyword table + variant ordinal, 0-indexed in enum declaration order — the binary frame's
+/// `tag` byte, `📖️grammar/component.grammar.semio`'s `op` alternatives, and this array must all
+/// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in
+/// `🎹️composer/🦀️component.rs`).
+const OP_KEYWORDS: [&str; 10] = [
+    "no-mutation",
+    "set-snapshot",
+    "set-sample-rate",
+    "set-format",
+    "insert-channel",
+    "remove-channel",
+    "set-channel-samples",
+    "insert-tag",
+    "remove-tag",
+    "set-tag-value",
+];
+fn variant_ordinal(m: &SemioAudioMutation) -> u8 {
+    match m {
+        SemioAudioMutation::NoMutation => 0,
+        SemioAudioMutation::SetSnapshot { .. } => 1,
+        SemioAudioMutation::SetSampleRate { .. } => 2,
+        SemioAudioMutation::SetFormat { .. } => 3,
+        SemioAudioMutation::InsertChannel { .. } => 4,
+        SemioAudioMutation::RemoveChannel { .. } => 5,
+        SemioAudioMutation::SetChannelSamples { .. } => 6,
+        SemioAudioMutation::InsertTag { .. } => 7,
+        SemioAudioMutation::RemoveTag { .. } => 8,
+        SemioAudioMutation::SetTagValue { .. } => 9,
+    }
+}
+/// ✂️ Just the argument tail of `print_audio_mutation` (empty for `no-mutation`) — the binary
+/// frame's `tag` byte already carries the keyword, so the text keyword itself (and its separating
+/// space) is redundant in the binary payload.
+fn print_audio_mutation_args(m: &SemioAudioMutation) -> String {
+    match print_audio_mutation(m).split_once(' ') {
+        Some((_, rest)) => rest.to_string(),
+        None => String::new(),
+    }
+}
+
+/// ⚡️ Real binary op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut.
+/// `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see
+/// [`OP_KEYWORDS`]) are two REAL fixed fields; the variant's own argument payload follows as one
+/// opaque trailing `bytes` chain — reuses the already-real, already-tested `print_audio_mutation`/
+/// `parse_audio_mutation` text codec rather than re-deriving a second independent encoding.
 impl protocol::OpBinary for SemioAudioMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(print_audio_mutation(self).into_bytes())
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_audio_mutation_args(self).as_bytes());
+        Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        parse_audio_mutation(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        const OP_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
+        }
+        if bytes[0] != OP_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        let tag = bytes[1];
+        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
+        let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️Demo
+/// 🌱 Representative `SemioAudioMutation` cases, one per variant — single source of truth for
+/// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs` and this
+/// file's own `op_text_binary_roundtrip_law`.
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<SemioAudioMutation> {
+    fn channel(seed: f32) -> SemioAudioChannel {
+        SemioAudioChannel { samples: vec![seed, seed + 1.0, seed + 2.0] }
+    }
+    fn fixture() -> SemioAudioSnapshot {
+        SemioAudioSnapshot {
+            sample_rate: 44_100,
+            format: SemioAudioFormat::Pcm16,
+            channels: vec![channel(1.0), channel(2.0), channel(3.0)],
+            tags: vec![SemioAudioTag { key: "title".into(), value: "t0".into() }],
+            ..SemioAudioSnapshot::default()
+        }
+    }
+    vec![
+        SemioAudioMutation::NoMutation,
+        SemioAudioMutation::SetSnapshot { snapshot: SemioAudioSnapshot { sample_rate: 9_000, ..fixture() } },
+        SemioAudioMutation::SetSampleRate { sample_rate: 48_000 },
+        SemioAudioMutation::SetFormat { format: SemioAudioFormat::Float32 },
+        SemioAudioMutation::InsertChannel { index: 1, channel: channel(9.0) },
+        SemioAudioMutation::RemoveChannel { index: 1 },
+        SemioAudioMutation::SetChannelSamples { index: 0, samples: vec![0.25, 0.5, 0.75] },
+        SemioAudioMutation::InsertTag { index: 0, tag: SemioAudioTag { key: "artist".into(), value: "a".into() } },
+        SemioAudioMutation::RemoveTag { index: 0 },
+        SemioAudioMutation::SetTagValue { index: 0, value: "changed".into() },
+    ]
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]

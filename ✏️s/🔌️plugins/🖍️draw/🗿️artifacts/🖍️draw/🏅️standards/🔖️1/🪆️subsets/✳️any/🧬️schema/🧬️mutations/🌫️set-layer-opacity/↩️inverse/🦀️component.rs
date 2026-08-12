@@ -1,10 +1,13 @@
-//! ↩️ Inverse for `SetLayerOpacity`.
+//! ↩️ Inverse for `SetLayerOpacity` — reconstructed from BASE state.
+use crate::artifacts::draw::engine::{find_draw_layer, layer_base};
 use crate::artifacts::draw::mutations::DrawMutation;
 use crate::artifacts::draw::DrawSnapshot;
 
 //#region 🔖️Inverse
-/// Draw inverses snapshot the pre-state document (exact restore).
-pub fn inverse(base: &DrawSnapshot) -> Vec<DrawMutation> {
-    vec![DrawMutation::SetSnapshot { snapshot: base.clone() }]
+pub fn inverse(payload: &super::mutation::SetLayerOpacity, base: &DrawSnapshot) -> Vec<DrawMutation> {
+    match find_draw_layer(base, &payload.layer_id) {
+        Some(layer) => vec![super::mutation::set_layer_opacity(payload.layer_id.clone(), layer_base(layer).opacity)],
+        None => Vec::new(),
+    }
 }
 //#endregion 🔖️Inverse

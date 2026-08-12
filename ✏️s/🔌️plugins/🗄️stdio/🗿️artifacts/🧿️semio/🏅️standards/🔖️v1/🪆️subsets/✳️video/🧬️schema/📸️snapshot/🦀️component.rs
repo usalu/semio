@@ -2,7 +2,17 @@
 //! opaque data}} — container-typed, payload-opaque (honest boundary per the master plan: real,
 //! complete metadata for this subset's own shape; the compressed sample bytes themselves are
 //! never decoded here — that is W3/W4's container-format job, mp4/avi).
+//!
+//! 🧩️ `#[derive(dsl::DslArtifact)]` was tried first per this ticket's brief. Blocked the same way
+//! image's own bare-`Option<Vec<u8>>`-on-the-snapshot gap generalizes: `SemioVideoStream.samples:
+//! Vec<SemioVideoSample>` nests a `Vec<u8>` buffer field (`data`) inside a `Vec<T>`-of-struct field
+//! (`streams`) — the derive's `#[dsl(table)]`/`Vec<Record>` support (confirmed by reading the
+//! framework's `SceneDocument`/`TableDocument` worked examples) covers one level of id-keyed
+//! `Vec<Record>`; it has no tested path for a nested buffer-bearing leaf record two collections
+//! deep, the SAME `derive-nested-multi-buffer-record` wall mesh's own report first named. Hand-rolled
+//! instead — see this wave's report `mechanism_gaps`.
 
+use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -92,12 +102,207 @@ impl Default for SemioVideoSnapshot {
 }
 //#endregion 🔖️Snapshot
 
+//#region 🔖️TextPrimitives
+/// 🧪️ Real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same
+/// style as this subset's own `🔺️diff`/`🧬️mutations` facets (`GifDiff`/`SvgDiff`/`DocxDiff`'s
+/// established hand-rolled convention). Duplicated here (not imported from `schema::diff`) to keep
+/// `snapshot` — the base type `diff`/`mutations` both depend ON — free of a reverse dependency on
+/// either sibling facet (same convention `workflow`'s own pilot established).
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+fn enc_bool(b: &bool) -> String {
+    if *b { "1".to_string() } else { "0".to_string() }
+}
+fn dec_bool(s: &str) -> Result<bool, String> {
+    match s {
+        "1" => Ok(true),
+        "0" => Ok(false),
+        other => Err(format!("bool: bad value {other:?}")),
+    }
+}
+fn enc_kind(k: &SemioVideoStreamKind) -> String {
+    match k { SemioVideoStreamKind::Video => "V", SemioVideoStreamKind::Audio => "A", SemioVideoStreamKind::Subtitle => "S" }.to_string()
+}
+fn dec_kind(s: &str) -> Result<SemioVideoStreamKind, String> {
+    match s {
+        "V" => Ok(SemioVideoStreamKind::Video),
+        "A" => Ok(SemioVideoStreamKind::Audio),
+        "S" => Ok(SemioVideoStreamKind::Subtitle),
+        other => Err(format!("stream kind: bad value {other:?}")),
+    }
+}
+fn enc_rational(r: &SemioRational) -> String {
+    format!("[{},{}]", r.num, r.den)
+}
+fn dec_rational(s: &str) -> Result<SemioRational, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [num, den] = parts.as_slice() else { return Err(format!("rational: expected 2 fields, got {}", parts.len())) };
+    Ok(SemioRational {
+        num: num.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
+        den: den.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
+    })
+}
+fn enc_sample(s: &SemioVideoSample) -> String {
+    format!("[{},{},{}]", s.pts, enc_bool(&s.key), hex_encode(&s.data))
+}
+fn dec_sample(s: &str) -> Result<SemioVideoSample, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [pts, key, data] = parts.as_slice() else { return Err(format!("sample: expected 3 fields, got {}", parts.len())) };
+    Ok(SemioVideoSample { pts: pts.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, key: dec_bool(key)?, data: hex_decode(data)? })
+}
+fn enc_stream(s: &SemioVideoStream) -> String {
+    format!("[{},{},{},{},{},[{}]]", enc_kind(&s.kind), enc_str(&s.codec), s.width, s.height, enc_rational(&s.rate), s.samples.iter().map(enc_sample).collect::<Vec<_>>().join(","))
+}
+fn dec_stream(s: &str) -> Result<SemioVideoStream, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [kind, codec, width, height, rate, samples] = parts.as_slice() else { return Err(format!("stream: expected 6 fields, got {}", parts.len())) };
+    let samples = split_top_level(strip_brackets(samples)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_sample).collect::<Result<Vec<_>, String>>()?;
+    Ok(SemioVideoStream {
+        kind: dec_kind(kind)?,
+        codec: dec_str(codec)?,
+        width: width.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
+        height: height.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
+        rate: dec_rational(rate)?,
+        samples,
+    })
+}
+
+/// 📄️ The real structured text body: two lines — `schema=<hex>`, `streams=[<stream>,...]` —
+/// matching the grammar's `document = artifact-mark schema-line streams-line`. Newlines are pure
+/// lexer trivia in the shared dialect, so this is genuinely recognizable by `dsl::Recognizer`, not
+/// merely readable.
+fn print_video_snapshot_body(s: &SemioVideoSnapshot) -> String {
+    format!("schema={}\nstreams=[{}]", enc_str(&s.schema), s.streams.iter().map(enc_stream).collect::<Vec<_>>().join(","))
+}
+fn parse_video_snapshot_body(body: &str) -> Result<SemioVideoSnapshot, String> {
+    let mut schema = None;
+    let mut streams = Vec::new();
+    for line in body.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        if let Some(rest) = line.strip_prefix("schema=") {
+            schema = Some(dec_str(rest)?);
+        } else if let Some(rest) = line.strip_prefix("streams=") {
+            let inner = strip_brackets(rest)?;
+            streams = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_stream).collect::<Result<Vec<_>, String>>()?;
+        } else {
+            return Err(format!("video snapshot: unknown line {line:?}"));
+        }
+    }
+    let schema = schema.ok_or_else(|| "video snapshot: missing schema line".to_string())?;
+    Ok(SemioVideoSnapshot { schema, streams })
+}
+//#endregion 🔖️TextPrimitives
+
+//#region 🔖️BinaryPrimitives
+/// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
+/// `store::ByteReader`, same helpers workflow's/mesh's upgraded facets reuse) backing the real
+/// `ArtifactPack` below — replaces the old `serde_json::to_vec`-in-envelope shortcut.
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+fn kind_tag(k: SemioVideoStreamKind) -> u8 {
+    match k { SemioVideoStreamKind::Video => 0, SemioVideoStreamKind::Audio => 1, SemioVideoStreamKind::Subtitle => 2 }
+}
+fn kind_from_tag(t: u8) -> Result<SemioVideoStreamKind, String> {
+    match t {
+        0 => Ok(SemioVideoStreamKind::Video),
+        1 => Ok(SemioVideoStreamKind::Audio),
+        2 => Ok(SemioVideoStreamKind::Subtitle),
+        other => Err(format!("stream kind: bad tag {other}")),
+    }
+}
+
+fn encode_video_snapshot_binary(s: &SemioVideoSnapshot) -> Vec<u8> {
+    const PACK_BINARY_FORMAT: u8 = 1;
+    let mut out = Vec::new();
+    out.push(PACK_BINARY_FORMAT);
+    write_str_lp(&mut out, &s.schema);
+    store::pack_rt::write_varint_u64(&mut out, s.streams.len() as u64);
+    for stream in &s.streams {
+        out.push(kind_tag(stream.kind));
+        write_str_lp(&mut out, &stream.codec);
+        out.extend_from_slice(&stream.width.to_le_bytes());
+        out.extend_from_slice(&stream.height.to_le_bytes());
+        out.extend_from_slice(&stream.rate.num.to_le_bytes());
+        out.extend_from_slice(&stream.rate.den.to_le_bytes());
+        store::pack_rt::write_varint_u64(&mut out, stream.samples.len() as u64);
+        for sample in &stream.samples {
+            out.extend_from_slice(&sample.pts.to_le_bytes());
+            out.push(if sample.key { 1 } else { 0 });
+            write_bytes_lp(&mut out, &sample.data);
+        }
+    }
+    out
+}
+fn decode_video_snapshot_binary(bytes: &[u8]) -> Result<SemioVideoSnapshot, String> {
+    const PACK_BINARY_FORMAT: u8 = 1;
+    let mut reader = store::ByteReader::new(bytes);
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    if format != PACK_BINARY_FORMAT {
+        return Err(format!("unsupported pack format {format}"));
+    }
+    let schema = read_str_lp(&mut reader)?;
+    let stream_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut streams = Vec::with_capacity(stream_count as usize);
+    for _ in 0..stream_count {
+        let kind = kind_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?;
+        let codec = read_str_lp(&mut reader)?;
+        let width = reader.read_u32_le().map_err(|e| e.to_string())?;
+        let height = reader.read_u32_le().map_err(|e| e.to_string())?;
+        let num = i64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "rate.num: truncated".to_string())?);
+        let den = i64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "rate.den: truncated".to_string())?);
+        let sample_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+        let mut samples = Vec::with_capacity(sample_count as usize);
+        for _ in 0..sample_count {
+            let pts = reader.read_u64_le().map_err(|e| e.to_string())?;
+            let key = match reader.read_u8().map_err(|e| e.to_string())? {
+                0 => false,
+                1 => true,
+                other => return Err(format!("sample key: bad tag {other}")),
+            };
+            let data = read_bytes_lp(&mut reader)?;
+            samples.push(SemioVideoSample { pts, key, data });
+        }
+        streams.push(SemioVideoStream { kind, codec, width, height, rate: SemioRational { num, den }, samples });
+    }
+    Ok(SemioVideoSnapshot { schema, streams })
+}
+//#endregion 🔖️BinaryPrimitives
+
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🧬️ JSON-pack round trip wrapped in the repo-wide `store::semio_format` envelope (the same
-/// convention every neutral semio-subset snapshot uses — this subset's snapshot is not itself an
-/// on-disk file format, so there is no bespoke binary layout to hand-roll here; the honest
-/// per-field structure lives in the `SemioVideoDiff`/`SemioVideoMutation` grammars instead, which
-/// ARE hand-rolled below).
+/// 🎁 Real structured text/binary codecs (video wave — off the old hex-dump-of-`serde_json`
+/// shortcut, following workflow's/mesh's/image's proven pattern). Wrapped in the repo-wide
+/// `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioVideoSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str { STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA }
@@ -107,24 +312,11 @@ impl store::ArtifactDsl for SemioVideoSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if hex.len() % 2 != 0 {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        let mut i = 0usize;
-        while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16)
-                .map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
-            bytes.push(byte);
-            i += 2;
-        }
-        serde_json::from_slice(&bytes).map_err(|e| store::TextError::new(format!("json decode: {e}"), dsl::TextSpan::at(1, 1)))
+        parse_video_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = serde_json::to_vec(self).unwrap_or_default();
-        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+        let body = print_video_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -137,7 +329,7 @@ impl store::ArtifactDsl for SemioVideoSnapshot {
 impl store::ArtifactPack for SemioVideoSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = serde_json::to_vec(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = encode_video_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -156,10 +348,44 @@ impl store::ArtifactPack for SemioVideoSnapshot {
             )));
         }
         let _ = options;
-        serde_json::from_slice(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
+        decode_video_snapshot_binary(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
+
+//#region 🔖️Demo
+/// 🌱 The demo `s.stdio.semio.video` document — 2 streams (one video w/ 2 samples incl. a key
+/// frame, one audio w/ no samples), exercising every leaf shape at least once. Single source of
+/// truth for `📚️examples/…/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` and for the
+/// conformance-law tests in `🎹️composer/🦀️component.rs`.
+#[cfg(test)]
+pub(crate) fn demo_video_snapshot() -> SemioVideoSnapshot {
+    SemioVideoSnapshot {
+        schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+        streams: vec![
+            SemioVideoStream {
+                kind: SemioVideoStreamKind::Video,
+                codec: "h264".into(),
+                width: 1920,
+                height: 1080,
+                rate: SemioRational { num: 30, den: 1 },
+                samples: vec![
+                    SemioVideoSample { pts: 0, key: true, data: vec![0x00, 0x01, 0x02, 0x03] },
+                    SemioVideoSample { pts: 33, key: false, data: vec![0x04, 0x05] },
+                ],
+            },
+            SemioVideoStream {
+                kind: SemioVideoStreamKind::Audio,
+                codec: "aac".into(),
+                width: 0,
+                height: 0,
+                rate: SemioRational { num: 48_000, den: 1_000 },
+                samples: Vec::new(),
+            },
+        ],
+    }
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]

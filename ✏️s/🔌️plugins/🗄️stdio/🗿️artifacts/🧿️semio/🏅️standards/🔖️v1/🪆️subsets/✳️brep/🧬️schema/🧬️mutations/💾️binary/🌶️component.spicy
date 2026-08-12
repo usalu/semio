@@ -1,7 +1,11 @@
 module Stdio_semio_brep_mutations;
 
-# Binary payload: UTF-8 compact-JSON bytes of a SemioBrepMutation (serde_json::to_vec), same
-# grammar as the sibling text facet.
+# Real binary frame: `format` (1 byte) + `tag` (1 byte, the SemioBrepMutation variant ordinal,
+# see 🧬️mutations/🦀️component.rs's OP_KEYWORDS/variant_ordinal), then the variant's own
+# `key=value ...` argument text as one opaque trailing payload. Replaces the old whole-enum
+# compact-JSON shortcut.
 type Document = unit {
+    format: uint8;
+    tag: uint8;
     payload: bytes &eod &convert=$$.decode("utf-8");
 };

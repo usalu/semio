@@ -1,9 +1,10 @@
-//! ↩️ Inverse for `RotateObjects`.
+//! ↩️ Inverse for `RotateObjects` — the negated angle undoes a relative composed rotation.
+use super::mutation::RotateObjects;
 use crate::artifacts::cad::mutations::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_base: &CadSnapshot, object_ids: &[String], ax: f64, ay: f64, az: f64, angle: f64) -> Vec<CadMutation> {
-    vec![CadMutation::RotateObjects { object_ids: object_ids.to_vec(), ax, ay, az, angle: -angle }]
+pub fn inverse(payload: &RotateObjects, _base: &CadSnapshot) -> Vec<CadMutation> {
+    vec![CadMutation::RotateObjects(RotateObjects { object_ids: payload.object_ids.clone(), ax: payload.ax, ay: payload.ay, az: payload.az, angle: -payload.angle })]
 }
 //#endregion 🔖️Inverse

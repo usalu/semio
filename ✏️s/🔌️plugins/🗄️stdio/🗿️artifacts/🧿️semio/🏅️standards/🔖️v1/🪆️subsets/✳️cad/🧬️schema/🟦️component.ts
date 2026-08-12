@@ -1,10 +1,10 @@
-/** 🧬️ SemioCadArtifact schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioCadArtifact
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface SemioCadArtifactEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ SemioCadArtifact schema — full artifact state, mirrors `SemioCadSnapshot` field for field
+ * (see `📸️snapshot/🟦️component.ts` for the nested `CadLayer`/`CadBlock`/`CadEntityRecord` shapes). */
+import type { CadLayer, CadBlock, CadEntityRecord } from "./📸️snapshot/🟦️component";
+
 export interface SemioCadArtifact {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioCadArtifactEntry[];
+  /** @state persistent */ layers: CadLayer[];
+  /** @state persistent */ blocks: CadBlock[];
+  /** @state persistent */ entities: CadEntityRecord[];
 }

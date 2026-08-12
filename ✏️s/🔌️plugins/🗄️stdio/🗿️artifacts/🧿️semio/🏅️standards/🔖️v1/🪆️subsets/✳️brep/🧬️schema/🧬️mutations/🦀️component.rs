@@ -5,9 +5,12 @@
 //! once `mutate` was flipped to return `(Self, Diff)`).
 
 use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::engine::triples::{NamedModified, NamedTripleDiff};
+use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{
-    BrepEdgeDiff, BrepFaceDiff, BrepLoopDiff, BrepShellDiff, BrepSolidDiff, BrepVertexDiff, SemioBrepDiff,
+    dec_curve, dec_edge, dec_face, dec_list, dec_loop, dec_loop_edge, dec_point3, dec_shell, dec_shell_face, dec_solid, dec_solid_shell, dec_str,
+    dec_surface, dec_vertex, enc_bool, enc_curve, enc_edge, enc_face, enc_list, enc_loop, enc_loop_edge, enc_point3, enc_shell, enc_shell_face,
+    enc_solid, enc_solid_shell, enc_str, enc_surface, enc_vertex, parse_bool, BrepEdgeDiff, BrepFaceDiff, BrepLoopDiff, BrepShellDiff, BrepSolidDiff,
+    BrepVertexDiff, SemioBrepDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
     BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell,
@@ -15,7 +18,10 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
 };
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
-#[cfg(test)]
+/// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioBrepMutation` block below
+/// calls `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope
+/// in production code too, not merely under `#[cfg(test)]` (same fix workflow's own mutations
+/// facet needed).
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -179,85 +185,271 @@ pub fn apply_semio_brep_mutation(snapshot: &mut SemioBrepSnapshot, mutation: &Se
 //#endregion 🔖️Diff
 
 //#region OpCodecs
-/// 🎙️ Handcrafted `OpText`/`OpBinary`: plain `serde_json` round-trip of the whole enum (one line
-/// of compact JSON per op), the same "JSON-pack passthrough" honesty boundary the subset's own
-/// `ArtifactPack` impl uses. Deliberately NOT `#[derive(dsl::DslOps)]` + `#[dsl(block)]` (the
-/// grammar/hand-rolled-op-triple path every OTHER artifact's real mutation vocabulary uses) —
-/// that path requires the embedded snapshot type to itself implement `dsl::DslField` (via
-/// `dsl::DslRecord`), which spans every nested type in the snapshot tree and is out of this
-/// wave's scope per the f6 §4 dsl-derive gaps (generics E0107 on collection-diff types, no
-/// `DslField` for `NamedTripleDiff`).
-impl protocol::OpText for SemioBrepMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+/// 🧪️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION brep wave: real hand-rolled
+/// `OpText`/`OpBinary`, replacing the old whole-enum compact-`serde_json` passthrough. Grammar:
+/// `keyword arg=value ...` (space-separated), reusing the sibling `🔺️diff` facet's now-`pub(crate)`
+/// hex/value primitives (`enc_str`/`enc_point3`/`enc_curve`/`enc_surface`/`enc_vertex`/`enc_edge`/
+/// `enc_loop`/`enc_face`/`enc_shell`/`enc_solid`/`enc_list`/...) rather than re-deriving a second
+/// independent copy — one source of truth for the entity encoding, same convention workflow's own
+/// mutations facet established (importing from its sibling `schema::diff`).
+fn enc_brep_snapshot(s: &SemioBrepSnapshot) -> String {
+    format!(
+        "[{},{},{},{},{},{},{}]",
+        enc_str(&s.schema),
+        enc_list(&s.vertices, enc_vertex),
+        enc_list(&s.edges, enc_edge),
+        enc_list(&s.loops, enc_loop),
+        enc_list(&s.faces, enc_face),
+        enc_list(&s.shells, enc_shell),
+        enc_list(&s.solids, enc_solid),
+    )
+}
+fn dec_brep_snapshot(s: &str) -> Result<SemioBrepSnapshot, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [schema, vertices, edges, loops, faces, shells, solids] = parts.as_slice() else {
+        return Err(format!("snapshot: expected 7 fields, got {}", parts.len()));
+    };
+    Ok(SemioBrepSnapshot {
+        schema: dec_str(schema)?,
+        vertices: dec_list(vertices, dec_vertex)?,
+        edges: dec_list(edges, dec_edge)?,
+        loops: dec_list(loops, dec_loop)?,
+        faces: dec_list(faces, dec_face)?,
+        shells: dec_list(shells, dec_shell)?,
+        solids: dec_list(solids, dec_solid)?,
+    })
+}
+
+fn print_brep_mutation(m: &SemioBrepMutation) -> String {
+    match m {
+        SemioBrepMutation::NoMutation => "no-mutation".to_string(),
+        SemioBrepMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_brep_snapshot(snapshot)),
+        SemioBrepMutation::AddVertex { vertex } => format!("add-vertex vertex={}", enc_vertex(vertex)),
+        SemioBrepMutation::RemoveVertex { id } => format!("remove-vertex id={}", enc_str(id)),
+        SemioBrepMutation::SetVertexPoint { id, point } => format!("set-vertex-point id={} point={}", enc_str(id), enc_point3(point)),
+        SemioBrepMutation::AddEdge { edge } => format!("add-edge edge={}", enc_edge(edge)),
+        SemioBrepMutation::RemoveEdge { id } => format!("remove-edge id={}", enc_str(id)),
+        SemioBrepMutation::SetEdgeEndpoints { id, start_vertex, end_vertex } => format!("set-edge-endpoints id={} start={} end={}", enc_str(id), enc_str(start_vertex), enc_str(end_vertex)),
+        SemioBrepMutation::SetEdgeCurve { id, curve } => format!("set-edge-curve id={} curve={}", enc_str(id), enc_curve(curve)),
+        SemioBrepMutation::AddLoop { brep_loop } => format!("add-loop loop={}", enc_loop(brep_loop)),
+        SemioBrepMutation::RemoveLoop { id } => format!("remove-loop id={}", enc_str(id)),
+        SemioBrepMutation::SetLoopEdges { id, edges } => format!("set-loop-edges id={} edges={}", enc_str(id), enc_list(edges, enc_loop_edge)),
+        SemioBrepMutation::AddFace { face } => format!("add-face face={}", enc_face(face)),
+        SemioBrepMutation::RemoveFace { id } => format!("remove-face id={}", enc_str(id)),
+        SemioBrepMutation::SetFaceSurface { id, surface } => format!("set-face-surface id={} surface={}", enc_str(id), enc_surface(surface)),
+        SemioBrepMutation::SetFaceOrientation { id, orientation } => format!("set-face-orientation id={} orientation={}", enc_str(id), enc_bool(*orientation)),
+        SemioBrepMutation::SetFaceLoops { id, outer_loop, inner_loops } => format!("set-face-loops id={} outer={} inner={}", enc_str(id), enc_str(outer_loop), enc_list(inner_loops, |s: &String| enc_str(s))),
+        SemioBrepMutation::AddShell { shell } => format!("add-shell shell={}", enc_shell(shell)),
+        SemioBrepMutation::RemoveShell { id } => format!("remove-shell id={}", enc_str(id)),
+        SemioBrepMutation::SetShellFaces { id, faces } => format!("set-shell-faces id={} faces={}", enc_str(id), enc_list(faces, enc_shell_face)),
+        SemioBrepMutation::AddSolid { solid } => format!("add-solid solid={}", enc_solid(solid)),
+        SemioBrepMutation::RemoveSolid { id } => format!("remove-solid id={}", enc_str(id)),
+        SemioBrepMutation::SetSolidShells { id, shells } => format!("set-solid-shells id={} shells={}", enc_str(id), enc_list(shells, enc_solid_shell)),
     }
-    fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_default()
+}
+fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, String> {
+    if line == "no-mutation" {
+        return Ok(SemioBrepMutation::NoMutation);
+    }
+    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    let args: std::collections::BTreeMap<&str, &str> = rest
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|tok| tok.split_once('=').ok_or_else(|| format!("brep mutation: bad arg token {tok:?}")))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .collect();
+    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("brep mutation: missing arg '{k}' for '{keyword}'"));
+    match keyword {
+        "set-snapshot" => Ok(SemioBrepMutation::SetSnapshot { snapshot: dec_brep_snapshot(arg("snapshot")?)? }),
+        "add-vertex" => Ok(SemioBrepMutation::AddVertex { vertex: dec_vertex(arg("vertex")?)? }),
+        "remove-vertex" => Ok(SemioBrepMutation::RemoveVertex { id: dec_str(arg("id")?)? }),
+        "set-vertex-point" => Ok(SemioBrepMutation::SetVertexPoint { id: dec_str(arg("id")?)?, point: dec_point3(arg("point")?)? }),
+        "add-edge" => Ok(SemioBrepMutation::AddEdge { edge: dec_edge(arg("edge")?)? }),
+        "remove-edge" => Ok(SemioBrepMutation::RemoveEdge { id: dec_str(arg("id")?)? }),
+        "set-edge-endpoints" => Ok(SemioBrepMutation::SetEdgeEndpoints { id: dec_str(arg("id")?)?, start_vertex: dec_str(arg("start")?)?, end_vertex: dec_str(arg("end")?)? }),
+        "set-edge-curve" => Ok(SemioBrepMutation::SetEdgeCurve { id: dec_str(arg("id")?)?, curve: dec_curve(arg("curve")?)? }),
+        "add-loop" => Ok(SemioBrepMutation::AddLoop { brep_loop: dec_loop(arg("loop")?)? }),
+        "remove-loop" => Ok(SemioBrepMutation::RemoveLoop { id: dec_str(arg("id")?)? }),
+        "set-loop-edges" => Ok(SemioBrepMutation::SetLoopEdges { id: dec_str(arg("id")?)?, edges: dec_list(arg("edges")?, dec_loop_edge)? }),
+        "add-face" => Ok(SemioBrepMutation::AddFace { face: dec_face(arg("face")?)? }),
+        "remove-face" => Ok(SemioBrepMutation::RemoveFace { id: dec_str(arg("id")?)? }),
+        "set-face-surface" => Ok(SemioBrepMutation::SetFaceSurface { id: dec_str(arg("id")?)?, surface: dec_surface(arg("surface")?)? }),
+        "set-face-orientation" => Ok(SemioBrepMutation::SetFaceOrientation { id: dec_str(arg("id")?)?, orientation: parse_bool(arg("orientation")?)? }),
+        "set-face-loops" => Ok(SemioBrepMutation::SetFaceLoops { id: dec_str(arg("id")?)?, outer_loop: dec_str(arg("outer")?)?, inner_loops: dec_list(arg("inner")?, dec_str)? }),
+        "add-shell" => Ok(SemioBrepMutation::AddShell { shell: dec_shell(arg("shell")?)? }),
+        "remove-shell" => Ok(SemioBrepMutation::RemoveShell { id: dec_str(arg("id")?)? }),
+        "set-shell-faces" => Ok(SemioBrepMutation::SetShellFaces { id: dec_str(arg("id")?)?, faces: dec_list(arg("faces")?, dec_shell_face)? }),
+        "add-solid" => Ok(SemioBrepMutation::AddSolid { solid: dec_solid(arg("solid")?)? }),
+        "remove-solid" => Ok(SemioBrepMutation::RemoveSolid { id: dec_str(arg("id")?)? }),
+        "set-solid-shells" => Ok(SemioBrepMutation::SetSolidShells { id: dec_str(arg("id")?)?, shells: dec_list(arg("shells")?, dec_solid_shell)? }),
+        other => Err(format!("brep mutation: unknown keyword {other:?}")),
     }
 }
 
+impl protocol::OpText for SemioBrepMutation {
+    fn print_op(&self) -> String {
+        print_brep_mutation(self)
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_brep_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    }
+}
+
+/// 🏷️ Ordinal table, same declaration order as `SemioBrepMutation`'s own enum variants and
+/// `parse_brep_mutation`'s keyword match — the real binary `tag` field's source of truth.
+const OP_KEYWORDS: [&str; 23] = [
+    "no-mutation",
+    "set-snapshot",
+    "add-vertex",
+    "remove-vertex",
+    "set-vertex-point",
+    "add-edge",
+    "remove-edge",
+    "set-edge-endpoints",
+    "set-edge-curve",
+    "add-loop",
+    "remove-loop",
+    "set-loop-edges",
+    "add-face",
+    "remove-face",
+    "set-face-surface",
+    "set-face-orientation",
+    "set-face-loops",
+    "add-shell",
+    "remove-shell",
+    "set-shell-faces",
+    "add-solid",
+    "remove-solid",
+    "set-solid-shells",
+];
+fn variant_ordinal(m: &SemioBrepMutation) -> u8 {
+    match m {
+        SemioBrepMutation::NoMutation => 0,
+        SemioBrepMutation::SetSnapshot { .. } => 1,
+        SemioBrepMutation::AddVertex { .. } => 2,
+        SemioBrepMutation::RemoveVertex { .. } => 3,
+        SemioBrepMutation::SetVertexPoint { .. } => 4,
+        SemioBrepMutation::AddEdge { .. } => 5,
+        SemioBrepMutation::RemoveEdge { .. } => 6,
+        SemioBrepMutation::SetEdgeEndpoints { .. } => 7,
+        SemioBrepMutation::SetEdgeCurve { .. } => 8,
+        SemioBrepMutation::AddLoop { .. } => 9,
+        SemioBrepMutation::RemoveLoop { .. } => 10,
+        SemioBrepMutation::SetLoopEdges { .. } => 11,
+        SemioBrepMutation::AddFace { .. } => 12,
+        SemioBrepMutation::RemoveFace { .. } => 13,
+        SemioBrepMutation::SetFaceSurface { .. } => 14,
+        SemioBrepMutation::SetFaceOrientation { .. } => 15,
+        SemioBrepMutation::SetFaceLoops { .. } => 16,
+        SemioBrepMutation::AddShell { .. } => 17,
+        SemioBrepMutation::RemoveShell { .. } => 18,
+        SemioBrepMutation::SetShellFaces { .. } => 19,
+        SemioBrepMutation::AddSolid { .. } => 20,
+        SemioBrepMutation::RemoveSolid { .. } => 21,
+        SemioBrepMutation::SetSolidShells { .. } => 22,
+    }
+}
+/// ✂️ Just the `key=value ...` argument tail of `print_brep_mutation` (empty for `no-mutation`) —
+/// the binary frame's `tag` byte already carries the keyword, so the text keyword itself is
+/// redundant in the binary payload.
+fn print_brep_mutation_args(m: &SemioBrepMutation) -> String {
+    match print_brep_mutation(m).split_once(' ') {
+        Some((_, rest)) => rest.to_string(),
+        None => String::new(),
+    }
+}
+
+/// ⚡️ Real binary op frame, replacing the old whole-enum compact-`serde_json::to_vec` shortcut.
+/// `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see
+/// [`OP_KEYWORDS`]) are two REAL fixed fields; the variant's own `key=value ...` argument payload
+/// follows as one opaque trailing `bytes` chain — reusing the already-real, already-tested
+/// `print_brep_mutation`/`parse_brep_mutation` text codec rather than re-deriving a second
+/// independent encoding.
 impl protocol::OpBinary for SemioBrepMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_brep_mutation_args(self).as_bytes());
+        Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
+        const OP_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
+        }
+        if bytes[0] != OP_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        let tag = bytes[1];
+        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
+        let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️Demo
+/// 🌱 Shared fixture + representative `SemioBrepMutation` cases (one per variant, incl.
+/// `NoMutation`) — single source of truth for this facet's own tests AND
+/// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+#[cfg(test)]
+fn fixture() -> SemioBrepSnapshot {
+    let mut s = SemioBrepSnapshot::default();
+    s.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }];
+    s.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];
+    s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }] }];
+    s.faces = vec![BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true }];
+    s.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] }];
+    s.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: false }] }];
+    s
+}
+
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<SemioBrepMutation> {
+    let base = fixture();
+    vec![
+        SemioBrepMutation::NoMutation,
+        SemioBrepMutation::SetSnapshot { snapshot: base.clone() },
+        SemioBrepMutation::AddVertex { vertex: BrepVertex { id: "v-new".into(), point: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } } },
+        SemioBrepMutation::RemoveVertex { id: "v1".into() },
+        SemioBrepMutation::SetVertexPoint { id: "v1".into(), point: SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } },
+        SemioBrepMutation::AddEdge { edge: BrepEdge { id: "e-new".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Circle { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.0 } } },
+        SemioBrepMutation::RemoveEdge { id: "e1".into() },
+        SemioBrepMutation::SetEdgeEndpoints { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into() },
+        SemioBrepMutation::SetEdgeCurve { id: "e1".into(), curve: BrepCurve::Nurbs { control_points: vec![SemioPoint3::default(), SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }], weights: vec![1.0, 1.0], degree: 1, knots: vec![0.0, 0.0, 1.0, 1.0] } },
+        SemioBrepMutation::AddLoop { brep_loop: BrepLoop { id: "l-new".into(), edges: vec![] } },
+        SemioBrepMutation::RemoveLoop { id: "l1".into() },
+        SemioBrepMutation::SetLoopEdges { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: false }] },
+        SemioBrepMutation::AddFace { face: BrepFace { id: "f-new".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Sphere { center: SemioPoint3::default(), radius: 1.0 }, orientation: true } },
+        SemioBrepMutation::RemoveFace { id: "f1".into() },
+        SemioBrepMutation::SetFaceSurface { id: "f1".into(), surface: BrepSurface::Torus { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, major_radius: 3.0, minor_radius: 1.0 } },
+        SemioBrepMutation::SetFaceOrientation { id: "f1".into(), orientation: false },
+        SemioBrepMutation::SetFaceLoops { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec!["l1".into()] },
+        SemioBrepMutation::AddShell { shell: BrepShell { id: "s-new".into(), faces: vec![] } },
+        SemioBrepMutation::RemoveShell { id: "s1".into() },
+        SemioBrepMutation::SetShellFaces { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: false }] },
+        SemioBrepMutation::AddSolid { solid: BrepSolid { id: "so-new".into(), shells: vec![] } },
+        SemioBrepMutation::RemoveSolid { id: "so1".into() },
+        SemioBrepMutation::SetSolidShells { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: true }] },
+    ]
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    /// 🧱️ One populated item per collection, self-referentially consistent, so every `Remove*`/
-    /// `Set*` variant below has something real to act against.
-    fn populated_snapshot() -> SemioBrepSnapshot {
-        let mut s = SemioBrepSnapshot::default();
-        s.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }];
-        s.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];
-        s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }] }];
-        s.faces = vec![BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true }];
-        s.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] }];
-        s.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: false }] }];
-        s
-    }
-
-    fn all_mutations(base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
-        vec![
-            SemioBrepMutation::SetSnapshot { snapshot: { let mut s = base.clone(); s.vertices[0].point = SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 }; s } },
-            SemioBrepMutation::AddVertex { vertex: BrepVertex { id: "v-new".into(), point: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } } },
-            SemioBrepMutation::RemoveVertex { id: "v1".into() },
-            SemioBrepMutation::SetVertexPoint { id: "v1".into(), point: SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } },
-            SemioBrepMutation::AddEdge { edge: BrepEdge { id: "e-new".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Circle { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.0 } } },
-            SemioBrepMutation::RemoveEdge { id: "e1".into() },
-            SemioBrepMutation::SetEdgeEndpoints { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into() },
-            SemioBrepMutation::SetEdgeCurve { id: "e1".into(), curve: BrepCurve::Circle { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 3.0 } },
-            SemioBrepMutation::AddLoop { brep_loop: BrepLoop { id: "l-new".into(), edges: vec![] } },
-            SemioBrepMutation::RemoveLoop { id: "l1".into() },
-            SemioBrepMutation::SetLoopEdges { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: false }] },
-            SemioBrepMutation::AddFace { face: BrepFace { id: "f-new".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Sphere { center: SemioPoint3::default(), radius: 1.0 }, orientation: true } },
-            SemioBrepMutation::RemoveFace { id: "f1".into() },
-            SemioBrepMutation::SetFaceSurface { id: "f1".into(), surface: BrepSurface::Sphere { center: SemioPoint3::default(), radius: 2.0 } },
-            SemioBrepMutation::SetFaceOrientation { id: "f1".into(), orientation: false },
-            SemioBrepMutation::SetFaceLoops { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec!["l1".into()] },
-            SemioBrepMutation::AddShell { shell: BrepShell { id: "s-new".into(), faces: vec![] } },
-            SemioBrepMutation::RemoveShell { id: "s1".into() },
-            SemioBrepMutation::SetShellFaces { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: false }] },
-            SemioBrepMutation::AddSolid { solid: BrepSolid { id: "so-new".into(), shells: vec![] } },
-            SemioBrepMutation::RemoveSolid { id: "so1".into() },
-            SemioBrepMutation::SetSolidShells { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: true }] },
-        ]
-    }
-
     /// 🧪️ mutation_diff_law: ∀ variant, `apply_semio_brep_mutation`'s returned diff equals
     /// `mutation.diff(base)`, and applying that diff to `base` equals the in-place mutated
     /// snapshot.
     #[test]
     fn mutation_diff_law_covers_every_variant() {
-        let base = populated_snapshot();
-        for m in all_mutations(&base) {
+        let base = fixture();
+        for m in demo_mutation_cases() {
             let expected_diff = <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(&m, &base);
             let mut applied = base.clone();
             let returned_diff = apply_semio_brep_mutation(&mut applied, &m);
@@ -270,8 +462,8 @@ mod tests {
     /// mutation restores `base`.
     #[test]
     fn inverse_law_mutation_level_round_trips_every_variant() {
-        let base = populated_snapshot();
-        for m in all_mutations(&base) {
+        let base = fixture();
+        for m in demo_mutation_cases() {
             let mut s = base.clone();
             let _ = apply_semio_brep_mutation(&mut s, &m);
             let invs = <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::inverse(&m, &base);
@@ -283,14 +475,11 @@ mod tests {
         }
     }
 
-    /// 🧪️ op_text_binary_roundtrip_law: handcrafted `OpText`/`OpBinary` JSON round-trip, covering
-    /// every variant (incl. `NoMutation`).
+    /// 🧪️ op_text_binary_roundtrip_law: real `OpText`/`OpBinary` round-trip, covering every
+    /// variant (incl. `NoMutation`).
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = populated_snapshot();
-        let mut ms = vec![SemioBrepMutation::NoMutation];
-        ms.extend(all_mutations(&base));
-        for m in ms {
+        for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = SemioBrepMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

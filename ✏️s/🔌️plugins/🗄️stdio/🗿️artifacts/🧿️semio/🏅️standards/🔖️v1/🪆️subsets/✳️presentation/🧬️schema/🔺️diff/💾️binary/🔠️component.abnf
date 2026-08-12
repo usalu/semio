@@ -1,2 +1,7 @@
-binary = line
-line   = *OCTET  ; UTF-8 bytes of the 📝️text facet's grammar output, verbatim
+; ABNF-style descriptive mirror of `stdio.semio.presentation`'s real binary diff frame -- see the
+; authoritative `📡️component.protocol.semio` for the conformance-tested version.
+document       = format presence payload
+format         = %x01                  ; DIFF_BINARY_FORMAT
+presence       = OCTET                 ; bit0=masters bit1=layouts bit2=slides
+payload        = *OCTET                ; 0-3 varint-length-prefixed collection blobs,
+                                        ; see component.rs's DiffCodec::encode_diff

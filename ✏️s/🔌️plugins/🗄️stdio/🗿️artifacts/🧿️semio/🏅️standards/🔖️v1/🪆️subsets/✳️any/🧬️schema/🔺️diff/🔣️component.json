@@ -1,10 +1,22 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio/diff.json",
   "title": "SemioDiff",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
-  "type": "object",
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+  "description": "The envelope union's own diff — real mirror of the Rust `SemioDiff`. `NoChange`, 13 same-kind wrappers each nesting that subset's own REAL diff schema (cross-file $ref, never redeclared), and `Replace` (cross-kind change or explicit SetSnapshot — no sparse representation exists for a subset-kind change). Tag key is `kind` (distinct from the snapshot facet's `subset` tag key).",
+  "oneOf": [
+    { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "noChange" } } },
+    { "type": "object", "required": ["kind", "brep"], "properties": { "kind": { "const": "brep" }, "brep": { "$ref": "https://semio.tech/schema/s.stdio.semio.brep/diff.json", "description": "SemioBrepDiff (brep subset's own diff schema)" } } },
+    { "type": "object", "required": ["kind", "mesh"], "properties": { "kind": { "const": "mesh" }, "mesh": { "$ref": "https://semio.tech/schema/s.stdio.semio.mesh/diff.json", "description": "SemioMeshDiff (mesh subset's own diff schema)" } } },
+    { "type": "object", "required": ["kind", "model"], "properties": { "kind": { "const": "model" }, "model": { "$ref": "https://semio.tech/schema/s.stdio.semio.model/diff.json", "description": "SemioModelDiff (model subset's own diff schema)" } } },
+    { "type": "object", "required": ["kind", "object"], "properties": { "kind": { "const": "object" }, "object": { "$ref": "https://semio.tech/schema/s.stdio.semio.object/diff.json", "description": "SemioObjectDiff (object subset's own diff schema)" } } },
+    { "type": "object", "required": ["kind", "document"], "properties": { "kind": { "const": "document" }, "document": { "$ref": "https://semio.tech/schema/s.stdio.semio.document/diff.json", "description": "SemioDocumentDiff (document subset's own diff schema)" } } },
+    { "type": "object", "required": ["kind", "cad"], "properties": { "kind": { "const": "cad" }, "cad": { "$ref": "https://semio.tech/schema/s.stdio.semio.cad/diff.json", "description": "SemioCadDiff (cad subset's own diff schema)" } } },
+    { "type": "object", "required": ["kind", "drawing"], "properties": { "kind": { "const": "drawing" }, "drawing": { "$ref": "https://semio.tech/schema/s.stdio.semio.drawing/diff.json", "description": "SemioDrawingDiff (drawing subset's own diff schema)" } } },
+    { "type": "object", "required": ["kind", "image"], "properties": { "kind": { "const": "image" }, "image": { "$ref": "https://semio.tech/schema/s.stdio.semio.image/diff.json", "description": "SemioImageDiff (image subset's own diff schema)" } } },
+    { "type": "object", "required": ["kind", "video"], "properties": { "kind": { "const": "video" }, "video": { "$ref": "https://semio.tech/schema/s.stdio.semio.video/diff.json", "description": "SemioVideoDiff (video subset's own diff schema)" } } },
+    { "type": "object", "required": ["kind", "audio"], "properties": { "kind": { "const": "audio" }, "audio": { "$ref": "https://semio.tech/schema/s.stdio.semio.audio/diff.json", "description": "SemioAudioDiff (audio subset's own diff schema)" } } },
+    { "type": "object", "required": ["kind", "animation"], "properties": { "kind": { "const": "animation" }, "animation": { "$ref": "https://semio.tech/schema/s.stdio.semio.animation/diff.json", "description": "SemioAnimationDiff (animation subset's own diff schema)" } } },
+    { "type": "object", "required": ["kind", "presentation"], "properties": { "kind": { "const": "presentation" }, "presentation": { "$ref": "https://semio.tech/schema/s.stdio.semio.presentation/diff.json", "description": "SemioPresentationDiff (presentation subset's own diff schema)" } } },
+    { "type": "object", "required": ["kind", "workflow"], "properties": { "kind": { "const": "workflow" }, "workflow": { "$ref": "https://semio.tech/schema/s.stdio.semio.workflow/diff.json", "description": "SemioWorkflowDiff (workflow subset's own diff schema)" } } },
+    { "type": "object", "required": ["kind", "snapshot"], "properties": { "kind": { "const": "replace" }, "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.semio/snapshot.json", "description": "SemioSnapshot (this subset's own snapshot schema)" } } }
+  ]
 }

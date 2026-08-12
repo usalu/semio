@@ -1,7 +1,53 @@
-(* SemioPresentationSnapshot text envelope. *)
-document = header , body ;
-header   = "schema" , " " , "stdio.semio.presentation.snapshot" , newline ;
-body     = payload , [ newline ] ;
-payload  = { hexdigit } ;
-hexdigit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" ;
-newline  = "\n" ;
+(* ISO-14977-style EBNF for `stdio.semio.presentation`'s real text DSL body — descriptive mirror of
+   the authoritative `📖️component.grammar.semio` (same production names). *)
+document = artifact mark, schema line, masters line, layouts line, slides line ;
+artifact mark = 's.stdio.semio.presentation' ;
+
+schema line = 'schema', '=', hex ;
+masters line = 'masters', '=', '[', [ master, { ',', master } ], ']' ;
+layouts line = 'layouts', '=', '[', [ layout, { ',', layout } ], ']' ;
+slides line = 'slides', '=', '[', [ slide, { ',', slide } ], ']' ;
+
+master = '[', hex, ',', '[', [ shape, { ',', shape } ], ']', ']' ;
+layout = '[', hex, ',', hex, ',', '[', [ shape, { ',', shape } ], ']', ']' ;
+slide = '[', hex, ',', option hex, ',', '[', [ shape, { ',', shape } ], ']', ',', '[', [ block, { ',', block } ], ']', ']' ;
+
+shape = textbox shape | picture shape | table shape | placeholder shape ;
+textbox shape = 'X', '[', frame, ',', '[', [ block, { ',', block } ], ']', ']' ;
+picture shape = 'P', '[', frame, ',', image, ']' ;
+table shape = 'T', '[', frame, ',', '[', [ row, { ',', row } ], ']', ']' ;
+placeholder shape = 'H', '[', frame, ',', placeholder kind, ']' ;
+
+frame = '[', point2, ',', integer, ',', integer, ']' ;
+point2 = '[', integer, ',', integer, ']' ;
+image = '[', hex, ',', hex, ',', hex, ']' ;
+placeholder kind = 'T' | 'S' | 'B' | 'F' | 'N' | 'D' | 'O', '[', hex, ']' ;
+
+row = '[', [ cell, { ',', cell } ], ']' ;
+cell = '[', [ block, { ',', block } ], ']' ;
+
+(* `document::DocBlock` value grammar, copied from document's own real grammar mirror — `row`/
+   `cell` renamed `doc row`/`doc cell` to avoid the name collision with this file's own `row`/`cell`
+   above (`SlideTableRow`/`SlideTableCell`, owned by this subset). *)
+block = paragraph block | heading block | list block | table block | code block | quote block | image block | pagebreak block ;
+paragraph block = 'P', '[', option hex, ',', '[', [ run, { ',', run } ], ']', ']' ;
+heading block = 'H', '[', integer, ',', option hex, ',', '[', [ run, { ',', run } ], ']', ']' ;
+list block = 'L', '[', bool, ',', '[', [ list item, { ',', list item } ], ']', ']' ;
+table block = 'T', '[', '[', [ doc row, { ',', doc row } ], ']', ']' ;
+code block = 'C', '[', option hex, ',', hex, ']' ;
+quote block = 'Q', '[', [ block, { ',', block } ], ']' ;
+image block = 'I', '[', hex, ',', hex, ',', option f64, ',', option f64, ']' ;
+pagebreak block = 'B', '[', ']' ;
+
+run = '[', hex, ',', run style, ']' ;
+run style = '[', bool, ',', bool, ',', bool, ',', option f64, ',', option hex, ',', option hex, ',', option hex, ']' ;
+list item = '[', '[', [ block, { ',', block } ], ']', ']' ;
+doc row = '[', '[', [ doc cell, { ',', doc cell } ], ']', ']' ;
+doc cell = '[', '[', [ block, { ',', block } ], ']', ']' ;
+
+option hex = '[', '0', ']' | '[', '1', ',', hex, ']' ;
+option f64 = '[', '0', ']' | '[', '1', ',', integer, ']' ;
+bool = '0' | '1' ;
+
+(* `hex` is the framework's `hex` MACRO (a run of lowercase hex digits, incl. empty); `integer`
+   is the shared lexer's `INT` token. *)

@@ -1,22 +1,38 @@
-//! Draw mutation — `SetLayerOpacity` payload + builder + apply.
-use crate::artifacts::draw::mutations::{apply_draw_edit_mutation, DrawMutation};
+//! 🌫️ Draw mutation — `SetLayerOpacity`: sets one layer's `opacity` scalar.
+use crate::artifacts::draw::diff::DrawDiff;
+use crate::artifacts::draw::mutations::DrawMutation;
 use crate::artifacts::draw::DrawSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
-/// @emoji `SetLayerOpacity` mutation payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// 🌫️ `set-layer-opacity` payload.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "set-layer-opacity")]
 pub struct SetLayerOpacity {
     pub layer_id: String,
     pub opacity: f64,
 }
 
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn set_layer_opacity(layer_id: String, opacity: f64) -> DrawMutation {
-    DrawMutation::SetLayerOpacity { layer_id, opacity }
+    DrawMutation::SetLayerOpacity(SetLayerOpacity { layer_id, opacity })
 }
 
-pub fn apply(doc: &mut DrawSnapshot, layer_id: &str, opacity: f64) {
-    *doc = apply_draw_edit_mutation(doc, &DrawMutation::SetLayerOpacity { layer_id: layer_id.into(), opacity });
+impl protocol::MutationKind<DrawSnapshot, DrawMutation> for SetLayerOpacity {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer-opacity", record: "SetLayerOpacity" };
+
+    fn diff(&self, base: &DrawSnapshot) -> DrawDiff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Set layer \"{}\" opacity to {}", self.layer_id, self.opacity)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.layer_id.clone()]
+    }
 }
 //#endregion 🔖️Mutation

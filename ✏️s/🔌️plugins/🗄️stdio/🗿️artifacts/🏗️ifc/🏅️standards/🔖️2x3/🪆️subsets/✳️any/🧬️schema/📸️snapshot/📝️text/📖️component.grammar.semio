@@ -1,6 +1,41 @@
-dialect grammar stdio.ifc.2x3.snapshot
-root = document
-document = header body
-header = 'schema' SP 'stdio.ifc.2x3' NL
-body = payload NL?
-payload = *OCTET
+# 📖️ Real ISO 10303-21 Part-21 exchange-file grammar. Ticket
+# 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: replaces the old ABNF
+# placeholder this file used to contain (`dialect grammar stdio.ifc.2x3.snapshot` / `*OCTET` hex-dump
+# stub) with the real dialect, matching this facet's own reuse of
+# `step::engine::part21::{parse_part21,write_part21}` 1:1 — IFC2X3 rides the exact same Part-21
+# container syntax STEP/IFC4 do (buildingSMART Coordination View 2.0 era, own EXPRESS schema, per
+# `⚙️engine/🦀️component.rs`'s own `IFC2X3_SCHEMA_NAME` FILE_SCHEMA-validation gate). This file
+# restates `🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`'s
+# own productions verbatim-in-shape (cross-artifact/cross-standard `use` doesn't resolve at
+# recognize time; own copy per the recipe's specific-code mandate, same precedent every OPC-family
+# member and `4` itself already established) — only the grammar/envelope ids differ. Same M1 header
+# directives for the same reason: `comment line none` + `comment block "/*" "*/"` resolve the
+# `#N=...` entity-ref-vs-`#`-comment collision; `string single doubled` turns on `''`-doubling for
+# every `'...'` token (the `\X\HH\`/`\X2\HHHH...\X0\` escapes stay opaque TEXT-token content).
+# https://www.iso.org/standard/38056.html (ISO/PAS 16739:2005, IFC2X3) / https://www.iso.org/standard/63141.html (Part 21)
+dialect grammar
+grammar stdio.ifc.2x3.snapshot
+extension ifc
+start document
+comment line none
+comment block "/*" "*/"
+string single doubled
+
+document = envelope-mark exchange-file
+envelope-mark = "stdio.ifc.2x3"
+
+exchange-file = "ISO-10303-21" ";" "HEADER" ";" file-description-record file-name-record file-schema-record "ENDSEC" ";" "DATA" ";" instance* "ENDSEC" ";" "END-ISO-10303-21" ";"
+file-description-record = "FILE_DESCRIPTION" "(" value-list ")" ";"
+file-name-record = "FILE_NAME" "(" value-list ")" ";"
+file-schema-record = "FILE_SCHEMA" "(" value-list ")" ";"
+
+# One `#N=TYPE(args);` simple instance, or a spec-legal `#N=(TYPE1(...)TYPE2(...));` COMPLEX
+# instance (`Part21Instance.entities` — ISO 10303-21 §4.2), same shape `4`'s own `IfcComplexType`
+# handles and this standard's own `Part21Instance.entities: Vec<(String,Vec<Part21Value>)>`
+# structurally already supports (1 entry = simple, 2+ = complex).
+instance = "#" INT "=" instance-body ";"
+instance-body = entity-record | "(" entity-record+ ")"
+entity-record = IDENT "(" value-list ")"
+
+value-list = {step-value {"," step-value}*}?
+step-value = "$" | "*" | "#" INT | TEXT | DOTENUM | INT | FLOAT | "(" value-list ")" | IDENT "(" value-list ")"

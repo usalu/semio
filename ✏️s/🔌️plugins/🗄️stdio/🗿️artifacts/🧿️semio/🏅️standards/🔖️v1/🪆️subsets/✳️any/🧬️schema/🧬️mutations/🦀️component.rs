@@ -25,14 +25,7 @@ use crate::artifacts::semio::standards::v1::subsets::presentation::schema::{muta
 use crate::artifacts::semio::standards::v1::subsets::workflow::schema::{mutations::SemioWorkflowMutation, snapshot::SemioWorkflowSnapshot};
 use protocol::Mutation;
 use protocol::MutationDiff;
-/// 🔧️ `OpText` unconditional — the non-test `impl protocol::OpBinary for SemioMutation` block
-/// below calls `self.print_op()` via method syntax, needing `OpText` in scope in production code
-/// too (see the same fix applied repo-wide by the W2b closer for document/workflow/image's own
-/// mutation modules). `OpBinary` itself is only ever called via method/associated-fn syntax from
-/// this file's own tests, so it stays `#[cfg(test)]`-gated (avoids an unused-import warning on a
-/// plain non-test `cargo check`).
 use protocol::OpText;
-#[cfg(test)]
 use protocol::OpBinary;
 use serde::{Deserialize, Serialize};
 
@@ -133,34 +126,216 @@ pub fn apply_semio_mutation(snapshot: &mut SemioSnapshot, mutation: &SemioMutati
 //#endregion 🔖️Mutation
 
 //#region OpCodecs
-/// 🎙️ Handcrafted `OpText`/`OpBinary`: plain `serde_json` round-trip of the whole enum (one line
-/// of compact JSON per op) — the SAME "JSON-pack passthrough" convention `brep`'s (and every
-/// other W2a/W2b subset's) own, already-real, already-complete `SemioXMutation::OpText` impl
-/// uses for its own full vocabulary (see e.g. `subsets::brep::schema::mutations`'s own doc
-/// comment: "the same JSON-pack passthrough honesty boundary the subset's own ArtifactPack impl
-/// uses"). Not a shortcut unique to this envelope subset — deliberately NOT
-/// `#[derive(dsl::DslOps)]` for the same reason every subset's own mutation module already
-/// documents: that path needs every embedded type (here, all 13 subsets' full nested trees at
-/// once) to implement `dsl::DslField`, squarely out of scope (f6 §4 dsl-derive gaps).
+/// 🎙️ Real delegating text/binary op codec — replaces the old whole-enum `serde_json` passthrough.
+/// Text is one `tag:payload` line: `payload` for the 13 wrapped variants is exactly that subset's
+/// OWN already-real `OpText::print_op()`/`parse_op()` output (genuine reuse, never re-derived
+/// here); `setSnapshot`'s payload is hex(`SemioSnapshot::print_dsl`) — real delegation to this
+/// envelope's own now-real `ArtifactDsl` (📸️snapshot/🦀️component.rs), hex-flattened to keep
+/// `print_op`'s one-physical-line contract; `noMutation` carries no payload.
+fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
+    match m {
+        SemioMutation::NoMutation => "noMutation",
+        SemioMutation::SetSnapshot { .. } => "setSnapshot",
+        SemioMutation::Brep(_) => "brep",
+        SemioMutation::Mesh(_) => "mesh",
+        SemioMutation::Model(_) => "model",
+        SemioMutation::Object(_) => "object",
+        SemioMutation::Document(_) => "document",
+        SemioMutation::Cad(_) => "cad",
+        SemioMutation::Drawing(_) => "drawing",
+        SemioMutation::Image(_) => "image",
+        SemioMutation::Video(_) => "video",
+        SemioMutation::Audio(_) => "audio",
+        SemioMutation::Animation(_) => "animation",
+        SemioMutation::Presentation(_) => "presentation",
+        SemioMutation::Workflow(_) => "workflow",
+    }
+}
+
+/// 🏷️ Binary tag ordinal for [`SemioMutation`] — `0` = `NoMutation`, `1` = `SetSnapshot`,
+/// `2..=14` = the 13 wrapped subset kinds (enum declaration order).
+fn mutation_tag(m: &SemioMutation) -> u8 {
+    match m {
+        SemioMutation::NoMutation => 0,
+        SemioMutation::SetSnapshot { .. } => 1,
+        SemioMutation::Brep(_) => 2,
+        SemioMutation::Mesh(_) => 3,
+        SemioMutation::Model(_) => 4,
+        SemioMutation::Object(_) => 5,
+        SemioMutation::Document(_) => 6,
+        SemioMutation::Cad(_) => 7,
+        SemioMutation::Drawing(_) => 8,
+        SemioMutation::Image(_) => 9,
+        SemioMutation::Video(_) => 10,
+        SemioMutation::Audio(_) => 11,
+        SemioMutation::Animation(_) => 12,
+        SemioMutation::Presentation(_) => 13,
+        SemioMutation::Workflow(_) => 14,
+    }
+}
+
+fn enc_hex_snapshot(snapshot: &SemioSnapshot) -> String {
+    let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(snapshot);
+    text.as_bytes().iter().map(|b| format!("{b:02x}")).collect()
+}
+fn dec_hex_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
+    if hex.len() % 2 != 0 {
+        return Err("setSnapshot: odd hex length".to_string());
+    }
+    let mut bytes = Vec::with_capacity(hex.len() / 2);
+    let mut i = 0usize;
+    while i < hex.len() {
+        let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| format!("setSnapshot: invalid hex: {e}"))?;
+        bytes.push(byte);
+        i += 2;
+    }
+    let text = String::from_utf8(bytes).map_err(|e| format!("setSnapshot: utf8 decode: {e}"))?;
+    <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|e| format!("setSnapshot: dsl decode: {e}"))
+}
+
+fn print_semio_mutation(m: &SemioMutation) -> String {
+    let tag = subset_mutation_tag(m);
+    match m {
+        SemioMutation::NoMutation => tag.to_string(),
+        SemioMutation::SetSnapshot { snapshot } => format!("{tag}:{}", enc_hex_snapshot(snapshot)),
+        SemioMutation::Brep(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Mesh(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Model(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Object(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Document(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Cad(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Drawing(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Image(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Video(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Audio(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Animation(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Presentation(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Workflow(m) => format!("{tag}:{}", m.print_op()),
+    }
+}
+
+fn parse_semio_mutation(line: &str) -> Result<SemioMutation, String> {
+    if line == "noMutation" {
+        return Ok(SemioMutation::NoMutation);
+    }
+    let (tag, rest) = line.split_once(':').ok_or_else(|| format!("semio mutation: missing ':' in {line:?}"))?;
+    match tag {
+        "setSnapshot" => Ok(SemioMutation::SetSnapshot { snapshot: dec_hex_snapshot(rest)? }),
+        "brep" => Ok(SemioMutation::Brep(SemioBrepMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "mesh" => Ok(SemioMutation::Mesh(SemioMeshMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "model" => Ok(SemioMutation::Model(SemioModelMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "object" => Ok(SemioMutation::Object(SemioObjectMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "document" => Ok(SemioMutation::Document(SemioDocumentMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "cad" => Ok(SemioMutation::Cad(SemioCadMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "drawing" => Ok(SemioMutation::Drawing(SemioDrawingMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "image" => Ok(SemioMutation::Image(SemioImageMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "video" => Ok(SemioMutation::Video(SemioVideoMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "audio" => Ok(SemioMutation::Audio(SemioAudioMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "animation" => Ok(SemioMutation::Animation(SemioAnimationMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "presentation" => Ok(SemioMutation::Presentation(SemioPresentationMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "workflow" => Ok(SemioMutation::Workflow(SemioWorkflowMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        other => Err(format!("semio mutation: unknown tag {other:?}")),
+    }
+}
+
 impl protocol::OpText for SemioMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+        parse_semio_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_default()
+        print_semio_mutation(self)
     }
 }
 
 impl protocol::OpBinary for SemioMutation {
+    /// ⚡️ Real delegating binary: `format u8` + `tag u8` ([`mutation_tag`]) as two genuine,
+    /// individually protocol-walkable fixed header fields, then ONE opaque trailing payload — for
+    /// the 13 wrapped variants, the wrapped subset's OWN real `OpBinary::encode_op()` bytes
+    /// (genuine reuse); for `SetSnapshot`, the wrapped snapshot's own real
+    /// `ArtifactPack::encode_pack()` bytes; `NoMutation` carries no payload.
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut out = vec![OP_BINARY_FORMAT, mutation_tag(self)];
+        let payload: Vec<u8> = match self {
+            SemioMutation::NoMutation => Vec::new(),
+            SemioMutation::SetSnapshot { snapshot } => <SemioSnapshot as store::ArtifactPack>::encode_pack(snapshot),
+            SemioMutation::Brep(m) => m.encode_op()?,
+            SemioMutation::Mesh(m) => m.encode_op()?,
+            SemioMutation::Model(m) => m.encode_op()?,
+            SemioMutation::Object(m) => m.encode_op()?,
+            SemioMutation::Document(m) => m.encode_op()?,
+            SemioMutation::Cad(m) => m.encode_op()?,
+            SemioMutation::Drawing(m) => m.encode_op()?,
+            SemioMutation::Image(m) => m.encode_op()?,
+            SemioMutation::Video(m) => m.encode_op()?,
+            SemioMutation::Audio(m) => m.encode_op()?,
+            SemioMutation::Animation(m) => m.encode_op()?,
+            SemioMutation::Presentation(m) => m.encode_op()?,
+            SemioMutation::Workflow(m) => m.encode_op()?,
+        };
+        out.extend_from_slice(&payload);
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        const OP_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated".to_string() });
+        }
+        let format = bytes[0];
+        if format != OP_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported format {format}") });
+        }
+        let tag = bytes[1];
+        let payload = &bytes[2..];
+        Ok(match tag {
+            0 => SemioMutation::NoMutation,
+            1 => SemioMutation::SetSnapshot { snapshot: <SemioSnapshot as store::ArtifactPack>::decode_pack(payload)? },
+            2 => SemioMutation::Brep(SemioBrepMutation::decode_op(payload)?),
+            3 => SemioMutation::Mesh(SemioMeshMutation::decode_op(payload)?),
+            4 => SemioMutation::Model(SemioModelMutation::decode_op(payload)?),
+            5 => SemioMutation::Object(SemioObjectMutation::decode_op(payload)?),
+            6 => SemioMutation::Document(SemioDocumentMutation::decode_op(payload)?),
+            7 => SemioMutation::Cad(SemioCadMutation::decode_op(payload)?),
+            8 => SemioMutation::Drawing(SemioDrawingMutation::decode_op(payload)?),
+            9 => SemioMutation::Image(SemioImageMutation::decode_op(payload)?),
+            10 => SemioMutation::Video(SemioVideoMutation::decode_op(payload)?),
+            11 => SemioMutation::Audio(SemioAudioMutation::decode_op(payload)?),
+            12 => SemioMutation::Animation(SemioAnimationMutation::decode_op(payload)?),
+            13 => SemioMutation::Presentation(SemioPresentationMutation::decode_op(payload)?),
+            14 => SemioMutation::Workflow(SemioWorkflowMutation::decode_op(payload)?),
+            other => return Err(protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("unknown tag {other}") }),
+        })
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️Demo
+/// 🌱 All 15 top-level [`SemioMutation`] tags (`NoMutation`, `SetSnapshot`, and each of the 13
+/// wrapped-kind `NoMutation`-equivalent variants) — full dispatch-table coverage for this facet's
+/// grammar/protocol conformance-law tests. Single source of truth shared with
+/// `🎹️composer/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`.
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
+    vec![
+        SemioMutation::NoMutation,
+        SemioMutation::SetSnapshot { snapshot: SemioSnapshot::default() },
+        SemioMutation::Brep(SemioBrepMutation::NoMutation),
+        SemioMutation::Mesh(SemioMeshMutation::NoMutation),
+        SemioMutation::Model(SemioModelMutation::NoMutation),
+        SemioMutation::Object(SemioObjectMutation::NoMutation),
+        SemioMutation::Document(SemioDocumentMutation::NoMutation),
+        SemioMutation::Cad(SemioCadMutation::NoMutation),
+        SemioMutation::Drawing(SemioDrawingMutation::NoMutation),
+        SemioMutation::Image(SemioImageMutation::NoMutation),
+        SemioMutation::Video(SemioVideoMutation::NoMutation),
+        SemioMutation::Audio(SemioAudioMutation::NoMutation),
+        SemioMutation::Animation(SemioAnimationMutation::NoMutation),
+        SemioMutation::Presentation(SemioPresentationMutation::NoMutation),
+        SemioMutation::Workflow(SemioWorkflowMutation::NoMutation),
+    ]
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]

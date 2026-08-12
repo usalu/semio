@@ -1,4 +1,12 @@
 module Stdio_semio_audio_diff;
-type Document = unit {
+
+# Spicy mirror (descriptive, not test-parsed — the real byte-level walker is
+# ../📡️component.protocol.semio, walked by dsl::walk_protocol) for the REAL binary
+# `SemioAudioDiff::encode_diff`/`decode_diff` frame. `format`/`presence` are real, fully described;
+# the remaining opaque payload (`protocol-cond-cannot-chain` gap) is one trailing byte span.
+
+public type Frame = unit {
+    format: uint8;      # DIFF_BINARY_FORMAT, currently 1
+    presence: uint8;    # bit0=sample_rate bit1=format bit2=channels bit3=tags
     payload: bytes &eod;
 };

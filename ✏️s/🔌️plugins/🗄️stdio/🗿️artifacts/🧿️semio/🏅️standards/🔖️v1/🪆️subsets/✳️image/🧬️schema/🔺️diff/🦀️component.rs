@@ -445,6 +445,19 @@ fn parse_u8(s: &str) -> Result<u8, String> { s.parse().map_err(|e: std::num::Par
 fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
 fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
 
+/// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
+/// `store::ByteReader`, same helpers this subset's own `📸️snapshot` facet's `ArtifactPack` uses)
+/// backing the real `DiffCodec::encode_diff`/`decode_diff` below.
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    store::pack_rt::write_varint_u64(out, s.len() as u64);
+    out.extend_from_slice(s.as_bytes());
+}
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec();
+    String::from_utf8(bytes).map_err(|e| e.to_string())
+}
+
 pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt { None => "[0]".to_string(), Some(v) => format!("[1,{}]", enc(v)) }
 }
@@ -543,19 +556,109 @@ impl protocol::DiffCodec for SemioImageDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_image_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim — same simplification gif's/`WriterDiff`'s hand-rolled
-    /// `DiffCodec` uses: satisfies every law (round-trips, deterministic) without a second, denser
-    /// wire format this wave's scope didn't call for.
+    /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
+    /// shortcut. `format u8` + `presence u8` (bit0=`width` bit1=`height` bit2=`colorspace`
+    /// bit3=`bitDepth` bit4=`icc` bit5=`frames` bit6=`metadata`) are two REAL fixed fields; each
+    /// present field then follows as its own varint-length-prefixed opaque text blob (the same
+    /// per-field `enc_*`/`enc_frames_diff`/`enc_metadata_diff` text `print_diff` already produces)
+    /// — independently-delimited segments rather than one bare trailing `bytes` because there can
+    /// be 0-7 of them (chaining a `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a
+    /// second `if`-guard on a field that was itself only conditionally decoded hard-errors
+    /// `eval_cond` — see `✳️workflow`'s/`✳️mesh`'s pilot reports).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        let mut presence = 0u8;
+        if self.width.is_some() { presence |= 0b0000_0001; }
+        if self.height.is_some() { presence |= 0b0000_0010; }
+        if self.colorspace.is_some() { presence |= 0b0000_0100; }
+        if self.bit_depth.is_some() { presence |= 0b0000_1000; }
+        if self.icc.is_some() { presence |= 0b0001_0000; }
+        if self.frames.is_some() { presence |= 0b0010_0000; }
+        if self.metadata.is_some() { presence |= 0b0100_0000; }
+        let mut out = vec![DIFF_BINARY_FORMAT, presence];
+        if let Some(v) = self.width { write_str_lp(&mut out, &v.to_string()); }
+        if let Some(v) = self.height { write_str_lp(&mut out, &v.to_string()); }
+        if let Some(v) = self.colorspace { write_str_lp(&mut out, &enc_colorspace(v).to_string()); }
+        if let Some(v) = self.bit_depth { write_str_lp(&mut out, &v.to_string()); }
+        if let Some(v) = &self.icc { write_str_lp(&mut out, &encode_option(v, |b| hex_encode(b))); }
+        if let Some(v) = &self.frames { write_str_lp(&mut out, &enc_frames_diff(v)); }
+        if let Some(v) = &self.metadata { write_str_lp(&mut out, &enc_metadata_diff(v)); }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
+        }
+        if bytes[0] != DIFF_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
+        }
+        let presence = bytes[1];
+        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let width = if presence & 0b0000_0001 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff width blob", offset: 2, detail: e })?;
+            Some(parse_u32(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff width text", offset: 2, detail: e })?)
+        } else { None };
+        let height = if presence & 0b0000_0010 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff height blob", offset: 2, detail: e })?;
+            Some(parse_u32(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff height text", offset: 2, detail: e })?)
+        } else { None };
+        let colorspace = if presence & 0b0000_0100 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff colorspace blob", offset: 2, detail: e })?;
+            Some(dec_colorspace(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff colorspace text", offset: 2, detail: e })?)
+        } else { None };
+        let bit_depth = if presence & 0b0000_1000 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff bit_depth blob", offset: 2, detail: e })?;
+            Some(parse_u8(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff bit_depth text", offset: 2, detail: e })?)
+        } else { None };
+        let icc = if presence & 0b0001_0000 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff icc blob", offset: 2, detail: e })?;
+            Some(decode_option(&text, hex_decode).map_err(|e| protocol::ProtocolError::Malformed { what: "diff icc text", offset: 2, detail: e })?)
+        } else { None };
+        let frames = if presence & 0b0010_0000 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff frames blob", offset: 2, detail: e })?;
+            Some(dec_frames_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff frames text", offset: 2, detail: e })?)
+        } else { None };
+        let metadata = if presence & 0b0100_0000 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff metadata blob", offset: 2, detail: e })?;
+            Some(dec_metadata_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff metadata text", offset: 2, detail: e })?)
+        } else { None };
+        Ok(SemioImageDiff { width, height, colorspace, bit_depth, icc, frames, metadata })
     }
 }
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🔖️Demo
+/// 🌱 Representative `SemioImageDiff` cases (empty/no-op, a full field sweep both directions incl.
+/// the `icc` tri-state and both collection triples, a bare frame/metadata insert) — single source
+/// of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<SemioImageDiff> {
+    fn frame(seed: u8, len: usize) -> SemioImageFrame {
+        SemioImageFrame { delay_ms: 100, rgba8: vec![seed; len] }
+    }
+    let a = SemioImageSnapshot {
+        width: 10, height: 8, colorspace: SemioColorspace::Rgb, bit_depth: 8,
+        frames: vec![frame(1, 4), frame(2, 4)],
+        icc: Some(vec![1, 2, 3]),
+        metadata: vec![SemioImageMetadataEntry { key: "keep".into(), value: "old".into() }],
+        ..SemioImageSnapshot::default()
+    };
+    let b = SemioImageSnapshot {
+        width: 20, height: 16, colorspace: SemioColorspace::GrayscaleAlpha, bit_depth: 16,
+        frames: vec![{ let mut f = frame(1, 4); f.delay_ms = 500; f }, frame(6, 9)],
+        icc: None,
+        metadata: vec![SemioImageMetadataEntry { key: "keep".into(), value: "new".into() }, SemioImageMetadataEntry { key: "fresh".into(), value: "hi".into() }],
+        ..SemioImageSnapshot::default()
+    };
+    vec![
+        SemioImageDiff::default(),
+        <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&a, &b),
+        <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&b, &a),
+    ]
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]
@@ -735,26 +838,10 @@ mod tests {
     /// `between()` result.
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {
-        let a = SemioImageSnapshot {
-            width: 10, height: 8, colorspace: SemioColorspace::Rgb, bit_depth: 8,
-            frames: vec![frame(1, 4), frame(2, 4)],
-            icc: Some(vec![1, 2, 3]),
-            metadata: vec![SemioImageMetadataEntry { key: "keep".into(), value: "old".into() }],
-            ..SemioImageSnapshot::default()
-        };
-        let b = SemioImageSnapshot {
-            width: 20, height: 16, colorspace: SemioColorspace::GrayscaleAlpha, bit_depth: 16,
-            frames: vec![{ let mut f = frame(1, 4); f.delay_ms = 500; f }, frame(6, 9)],
-            icc: None,
-            metadata: vec![SemioImageMetadataEntry { key: "keep".into(), value: "new".into() }, SemioImageMetadataEntry { key: "fresh".into(), value: "hi".into() }],
-            ..SemioImageSnapshot::default()
-        };
-        let cases = vec![
-            SemioImageDiff::default(),
-            <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&a, &b),
-            <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&b, &a),
-        ];
-        for d in cases {
+        // 🌱 Reuses `demo_diff_cases()` (single source of truth, also feeds
+        // `diff_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`)
+        // rather than an independent copy of the same base/other fixture pair.
+        for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
             let parsed = SemioImageDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));

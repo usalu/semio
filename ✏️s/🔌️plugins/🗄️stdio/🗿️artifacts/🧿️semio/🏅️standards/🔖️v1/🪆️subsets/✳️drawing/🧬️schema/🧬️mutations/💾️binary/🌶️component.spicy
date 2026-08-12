@@ -1,5 +1,10 @@
-module Semio_semio_drawing_mutations;
-# serde_json::to_vec, no separate envelope -- bytes ARE UTF-8 mutation-tagged JSON.
+module Stdio_semio_drawing_mutations;
+
+# Real binary op frame: `format` (1 byte) + `tag` (1 byte, the `SemioDrawingMutation` variant
+# ordinal), then one opaque `payload` tail (the variant's own `key=value ...` argument text) — see
+# the sibling `📡️component.protocol.semio`'s comment on the boundary.
 type Document = unit {
-    json_bytes: bytes &eod;
+    format: uint8;
+    tag: uint8;
+    payload: bytes &eod;
 };

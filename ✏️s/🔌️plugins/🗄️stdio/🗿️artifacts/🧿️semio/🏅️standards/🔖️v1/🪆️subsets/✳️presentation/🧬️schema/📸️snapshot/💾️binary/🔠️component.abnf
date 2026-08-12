@@ -1,7 +1,9 @@
-envelope    = envelope-id-len envelope-id component-tag version payload-len payload
-envelope-id-len = 4OCTET  ; u32 LE
-envelope-id     = *OCTET  ; UTF-8, envelope-id-len bytes
-component-tag   = OCTET
-version         = 4OCTET  ; u32 LE
-payload-len     = 8OCTET  ; u64 LE
-payload         = *OCTET  ; serde_json(SemioPresentationSnapshot), payload-len bytes
+; ABNF-style descriptive mirror of `stdio.semio.presentation`'s real `pack` binary frame (past the
+; `semio_format` envelope) -- see the authoritative `📡️component.protocol.semio` for the
+; conformance-tested version.
+document       = format schema-len schema-bytes payload
+format         = %x01                  ; PACK_BINARY_FORMAT
+schema-len     = 1*OCTET               ; LEB128 varint byte count
+schema-bytes   = *OCTET                ; UTF-8, schema-len bytes
+payload        = *OCTET                ; opaque tail: masters/layouts/slides,
+                                        ; see component.rs's encode_presentation_snapshot_binary

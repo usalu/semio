@@ -1,5 +1,15 @@
-dialect grammar stdio.semio.diff
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.semio.diff"
+dialect grammar
+grammar semio.any.diff
+extension semio
+start diff
+
+# W-S closer (`any`): `SemioDiff::print_diff` is one line — `noChange`, or `<tag>:<payload>` where
+# `payload` for the 13 same-kind variants is exactly that wrapped subset's OWN real `print_diff()`
+# output (already validated by THAT subset's own `🔺️diff/📝️text/📖️component.grammar.semio`), and
+# for `replace` is hex(`SemioSnapshot::print_dsl`). Modeled the same way as the snapshot facet:
+# a real tag alternation, then the opaque remainder as REST — re-describing all 13 nested diff
+# grammars (plus the recursive snapshot grammar for `replace`) inline here would duplicate
+# already-real, already-tested files.
+tag = "replace" | "brep" | "mesh" | "model" | "object" | "document" | "cad" | "drawing" | "image" | "video" | "audio" | "animation" | "presentation" | "workflow"
+tagged-diff = tag ":" REST
+diff = "noChange" | tagged-diff

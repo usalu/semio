@@ -7704,6 +7704,7 @@ dependencies = [
  "nalgebra 0.33.3",
  "parry3d",
  "semio-framework",
+ "semio-framework-hash",
  "semio-framework-math",
  "semio-framework-os",
  "semio-framework-os-infinite",

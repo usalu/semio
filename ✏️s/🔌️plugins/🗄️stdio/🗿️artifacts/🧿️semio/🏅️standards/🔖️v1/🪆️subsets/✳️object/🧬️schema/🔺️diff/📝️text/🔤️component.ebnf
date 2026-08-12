@@ -1,5 +1,6 @@
-(* EBNF for `stdio.semio.object`'s hand-rolled `DiffCodec` wire text form -- same shape as the
-   sibling 📖️component.grammar.semio, restated here for a self-contained EBNF reading. *)
+(* EBNF for `stdio.semio.object`'s hand-rolled `DiffCodec` wire text form -- space-separated
+   key=value tokens (either/both absent = unchanged), tag-prefixed hex encoding, NOT JSON. Same
+   shape as the sibling 📖️component.grammar.semio, restated here for a self-contained reading. *)
 document = [ root token, [ space, objects token ] | objects token ] ;
 root token = 'root', '=', value diff ;
 objects token = 'objects', '=', named triple ;

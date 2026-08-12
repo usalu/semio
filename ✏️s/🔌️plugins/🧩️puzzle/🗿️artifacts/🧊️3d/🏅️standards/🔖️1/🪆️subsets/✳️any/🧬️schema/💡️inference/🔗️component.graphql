@@ -1,0 +1,22 @@
+# 💡️ Puzzle3d inference schema — flatPosition (plane + center) per object.
+
+type Puzzle3dInference {
+  flatPositions: [Puzzle3dFlatPositionEntry!]! @state(class: INFERRED)
+}
+
+type Puzzle3dFlatPositionEntry {
+  objectId: String!
+  pose: FlattenPose!
+}
+
+type FlattenPose {
+  plane: FlattenPlane!
+  center: [Float!]!
+  orientation: [Float!]!
+}
+
+type FlattenPlane {
+  origin: [Float!]!
+  xAxis: [Float!]!
+  yAxis: [Float!]!
+}

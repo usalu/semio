@@ -238,9 +238,9 @@ impl BlobStore for InMemoryBlobStore {
 pub fn media_to_artifact(media: &Media, blob_store: &dyn BlobStore) -> Result<(Vec<u8>, Vec<u8>), RunError> {
     let (wire, blob_hash, data) = match &media.payload {
         MediaPayload::Structured { schema, json } => (MediaWireFormat::Document { schema: schema.clone() }, None, json.clone().into_bytes()),
-        MediaPayload::Binary { format, blob_hash } => {
+        MediaPayload::Binary { format_kind, blob_hash } => {
             let bytes = blob_store.get(blob_hash).map_err(|error| RunError::Host(error.to_string()))?.ok_or_else(|| RunError::Host(format!("blob not found: {blob_hash}")))?;
-            (MediaWireFormat::Binary { format: *format }, Some(blob_hash.clone()), bytes)
+            (MediaWireFormat::Binary { format_kind: format_kind.clone() }, Some(blob_hash.clone()), bytes)
         }
     };
     let descriptor = semio_framework_plugin::app::MediaArtifactDescriptor { edge_id: None, port_id: None, kind_id: None, media_type: Some(media.media_type), wire, blob_hash };
@@ -258,9 +258,10 @@ pub fn media_from_artifact(descriptor: &[u8], data: Vec<u8>, blob_store: &dyn Bl
     let media_type = descriptor.media_type.ok_or_else(|| RunError::Host("media artifact descriptor is missing media_type".to_string()))?;
     let payload = match descriptor.wire {
         MediaWireFormat::Document { schema } => MediaPayload::Structured { schema, json: String::from_utf8(data).map_err(|error| RunError::Host(error.to_string()))? },
-        MediaWireFormat::Binary { format } => {
-            let blob_ref = blob_store.put(&data, format.mime_type()).map_err(|error| RunError::Host(error.to_string()))?;
-            MediaPayload::Binary { format, blob_hash: blob_ref.hash }
+        MediaWireFormat::Binary { format_kind } => {
+            let mime = semio_framework::format_descriptor(&format_kind).map(|d| d.mime).unwrap_or_else(|| "application/octet-stream".to_string());
+            let blob_ref = blob_store.put(&data, &mime).map_err(|error| RunError::Host(error.to_string()))?;
+            MediaPayload::Binary { format_kind, blob_hash: blob_ref.hash }
         }
     };
     Ok(Media { media_type, payload })
@@ -300,6 +301,7 @@ fn app_frame_fault_summary(fault: &[u8]) -> String {
     format!("{}: {}", fault.code.0, fault.message)
 }
 
+#[cfg(test)]
 fn run_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
     dsl::encode_fault_bytes(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new(code.into()), message))
 }
@@ -1627,7 +1629,7 @@ mod tests {
 
     #[test]
     fn vector_to_raster_rejects_non_structured_payload() {
-        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Binary { format: semio_framework::MediaFormat::Png, blob_hash: "hash".into() } };
+        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Binary { format_kind: "png".into(), blob_hash: "hash".into() } };
         assert!(vector_to_raster(&media).is_err());
     }
 

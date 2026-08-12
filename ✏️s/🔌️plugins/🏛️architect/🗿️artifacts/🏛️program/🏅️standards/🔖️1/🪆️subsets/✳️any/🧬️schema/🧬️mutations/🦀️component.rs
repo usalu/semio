@@ -143,7 +143,7 @@ pub fn apply_program_mutation(program: &mut ProgramSnapshot, operation: &Program
         ProgramMutation::Validations(collection_operation) => apply_collection_mutation(&mut program.validations, collection_operation),
         ProgramMutation::Performance(collection_operation) => apply_collection_mutation(&mut program.performance, collection_operation),
         ProgramMutation::Quality(collection_operation) => apply_collection_mutation(&mut program.quality, collection_operation),
-        ProgramMutation::Documents(collection_operation) => apply_collection_mutation(&mut program.documents, collection_operation),
+        ProgramMutation::Documents(collection_operation) => apply_collection_mutation(&mut program.artifacts, collection_operation),
         ProgramMutation::Changes(collection_operation) => apply_collection_mutation(&mut program.changes, collection_operation),
         ProgramMutation::Collaboration(collection_operation) => apply_collection_mutation(&mut program.collaboration, collection_operation),
         ProgramMutation::Analyses(collection_operation) => apply_collection_mutation(&mut program.analyses, collection_operation),
@@ -229,7 +229,7 @@ pub fn inverse_program_mutation(program: &ProgramSnapshot, operation: &ProgramMu
         ProgramMutation::Validations(collection_operation) => ProgramMutation::Validations(inverse_collection_mutation(&program.validations, collection_operation)),
         ProgramMutation::Performance(collection_operation) => ProgramMutation::Performance(inverse_collection_mutation(&program.performance, collection_operation)),
         ProgramMutation::Quality(collection_operation) => ProgramMutation::Quality(inverse_collection_mutation(&program.quality, collection_operation)),
-        ProgramMutation::Documents(collection_operation) => ProgramMutation::Documents(inverse_collection_mutation(&program.documents, collection_operation)),
+        ProgramMutation::Documents(collection_operation) => ProgramMutation::Documents(inverse_collection_mutation(&program.artifacts, collection_operation)),
         ProgramMutation::Changes(collection_operation) => ProgramMutation::Changes(inverse_collection_mutation(&program.changes, collection_operation)),
         ProgramMutation::Collaboration(collection_operation) => ProgramMutation::Collaboration(inverse_collection_mutation(&program.collaboration, collection_operation)),
         ProgramMutation::Analyses(collection_operation) => ProgramMutation::Analyses(inverse_collection_mutation(&program.analyses, collection_operation)),
@@ -338,7 +338,7 @@ impl Mutation<ProgramSnapshot> for ProgramMutation {
         ProgramMutation::Validations(m) => crate::artifacts::program::diff::diff_validations(m, &base.validations),
         ProgramMutation::Performance(m) => crate::artifacts::program::diff::diff_performance(m, &base.performance),
         ProgramMutation::Quality(m) => crate::artifacts::program::diff::diff_quality(m, &base.quality),
-        ProgramMutation::Documents(m) => crate::artifacts::program::diff::diff_documents(m, &base.documents),
+        ProgramMutation::Documents(m) => crate::artifacts::program::diff::diff_documents(m, &base.artifacts),
         ProgramMutation::Assumptions(m) => crate::artifacts::program::diff::diff_assumptions(m, &base.assumptions),
         ProgramMutation::Constraints(m) => crate::artifacts::program::diff::diff_constraints(m, &base.constraints),
         ProgramMutation::ComplianceRecords(m) => crate::artifacts::program::diff::diff_compliance_records(m, &base.compliance_records),
@@ -1146,10 +1146,10 @@ mod tests {
         };
         let operation = ProgramMutation::Documents(CollectionMutation::Add { index: 0, item });
         apply_program_mutation(&mut program, &operation);
-        assert_eq!(program.documents.len(), 1);
+        assert_eq!(program.artifacts.len(), 1);
         let undo = inverse_program_mutation(&program, &operation);
         apply_program_mutation(&mut program, &undo);
-        assert!(program.documents.is_empty());
+        assert!(program.artifacts.is_empty());
     }
 
     #[test]

@@ -963,7 +963,7 @@ pub mod host {
     mod tests {
         use super::*;
         use crate::workflow::{empty_workflow, placeholder_media_contract, validate_workflow, MediaContract, WorkflowEdge, WorkflowPosition};
-        use semio_framework::{MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, MediaFormat, PluginManifest, WindowKindDefinition};
+        use semio_framework::{MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, PluginManifest, WindowKindDefinition};
         use std::sync::Arc;
         use store::{MemoryBackbone, MemoryBackbonePort};
         use ui_wgpu::wgpu::SurfaceKind;
@@ -1565,7 +1565,7 @@ pub mod host {
                     contract: MediaContract {
                         kind_id: "puzzle.2d.fixture".into(),
                         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
-                        wire: MediaWireFormat::Binary { format: MediaFormat::Stl },
+                        wire: MediaWireFormat::Binary { format_kind: "stl".into() },
                         conversion: Some((MediaForm::Brep, MediaForm::Mesh)),
                     },
                 },
@@ -2526,16 +2526,17 @@ pub mod media_export_raster {
     // #region media_export_raster
     //! 🖼️ SVG rasterization, DWG flattening, and media-export registration helpers.
 
-    use semio_framework::MediaFormat;
     #[cfg(not(feature = "os-host-full"))]
     use std::sync::LazyLock;
 
     //#region 🔖️MediaRegistryRegistryStubs
     // 🧬️ Default-feature builds have no `workflow` module, so keep a local registry. With
     // `os-host-full`, re-export the workflow registry so `register_*` and `export_os_app_instance_media`
-    // share one OnceLock (stubs previously shadowed the real handlers at crate root).
+    // share one OnceLock (stubs previously shadowed the real handlers at crate root). Keyed on string
+    // format kind ids, not the legacy format enum (retired — ticket 26/08/11/
+    // SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
     #[cfg(feature = "os-host-full")]
-    pub use crate::workflow::{register_os_media_export_handler, register_os_media_import_handler, OsMediaExportResult, export_os_app_instance_media, export_os_app_instance_media_kind, import_os_app_instance_media, import_os_app_instance_media_kind};
+    pub use crate::workflow::{register_os_media_export_handler_kind, register_os_media_import_handler_kind, OsMediaExportResult, export_os_app_instance_media_kind, import_os_app_instance_media_kind};
 
     #[cfg(not(feature = "os-host-full"))]
     /// 🖼️ Host-local media export result (workflow module gated behind os-host-full).
@@ -2551,7 +2552,7 @@ pub mod media_export_raster {
     impl OsMediaExportResult {
         /// 📤️ Build an export result from raw bytes + stdio format kind id.
         pub fn from_format_kind_bytes(bytes: Vec<u8>, format_artifact_kind: &str, file_stem: &str) -> Result<Self, String> {
-            let entry = semio_framework::stdio_format_entry(format_artifact_kind)
+            let entry = semio_framework::format_descriptor(format_artifact_kind)
                 .ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
             let data = if entry.is_binary {
                 base64::engine::general_purpose::STANDARD.encode(&bytes)
@@ -2560,26 +2561,16 @@ pub mod media_export_raster {
             };
             Ok(Self {
                 data,
-                mime_type: entry.mime.into(),
+                mime_type: entry.mime.clone(),
                 file_name: format!("{file_stem}{}", entry.extension),
                 encoding: if entry.is_binary { Some("base64".into()) } else { None },
             })
-        }
-
-        pub fn from_format_bytes(bytes: Vec<u8>, format: MediaFormat, file_stem: &str) -> Result<Self, String> {
-            Self::from_format_kind_bytes(bytes, format.as_str(), file_stem)
         }
     }
 
     /// 🗂️ Build a file-picker `accept` filter from stdio format kind ids (`dwg` / `stdio.dwg`).
     pub fn media_accept_filter_kinds(format_artifact_kinds: &[&str]) -> String {
-        semio_framework::stdio_accept_filter(format_artifact_kinds)
-    }
-
-    /// 🗂️ Build a file-picker `accept` filter from declared MediaFormats (thin adapter).
-    pub fn media_accept_filter(formats: &[MediaFormat]) -> String {
-        let kinds: Vec<&str> = formats.iter().map(|format| format.as_str()).collect();
-        media_accept_filter_kinds(&kinds)
+        semio_framework::format_accept_filter(format_artifact_kinds)
     }
 
     #[cfg(not(feature = "os-host-full"))]
@@ -2588,34 +2579,34 @@ pub mod media_export_raster {
     type OsMediaImportHandler = Box<dyn Fn(&[u8]) -> Result<Value, String> + Send + Sync>;
 
     #[cfg(not(feature = "os-host-full"))]
-    static OS_MEDIA_EXPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, MediaFormat), OsMediaExportHandler>>> =
+    static OS_MEDIA_EXPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, String), OsMediaExportHandler>>> =
         LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
     #[cfg(not(feature = "os-host-full"))]
-    static OS_MEDIA_IMPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, MediaFormat), OsMediaImportHandler>>> =
+    static OS_MEDIA_IMPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, String), OsMediaImportHandler>>> =
         LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
 
     #[cfg(not(feature = "os-host-full"))]
-    pub fn register_os_media_export_handler(
+    pub fn register_os_media_export_handler_kind(
         artifact_kind: &str,
-        format: MediaFormat,
+        format_artifact_kind: &str,
         handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static,
     ) {
         OS_MEDIA_EXPORT_HANDLERS
             .lock()
             .expect("media export registry")
-            .insert((artifact_kind.to_string(), format), Box::new(handler));
+            .insert((artifact_kind.to_string(), format_artifact_kind.to_string()), Box::new(handler));
     }
 
     #[cfg(not(feature = "os-host-full"))]
-    pub fn register_os_media_import_handler(
+    pub fn register_os_media_import_handler_kind(
         artifact_kind: &str,
-        format: MediaFormat,
+        format_artifact_kind: &str,
         handler: impl Fn(&[u8]) -> Result<Value, String> + Send + Sync + 'static,
     ) {
         OS_MEDIA_IMPORT_HANDLERS
             .lock()
             .expect("media import registry")
-            .insert((artifact_kind.to_string(), format), Box::new(handler));
+            .insert((artifact_kind.to_string(), format_artifact_kind.to_string()), Box::new(handler));
     }
     //#endregion 🔖️MediaRegistryRegistryStubs
     use base64::Engine;
@@ -2772,25 +2763,25 @@ pub mod media_export_raster {
 
     /// @emoji 💾️ Registers SVG, PNG, and DWG export handlers for one 2D resource kind.
     pub fn register_2d_export_handlers(artifact_kind: &'static str, file_stem: &'static str, document_to_svg: Svg2dDocumentRenderer) {
-        register_os_media_export_handler(artifact_kind, MediaFormat::Svg, move |doc| {
+        register_os_media_export_handler_kind(artifact_kind, "svg", move |doc| {
             let (svg, _width, _height) = document_to_svg(doc)?;
-            Ok(OsMediaExportResult { data: svg, mime_type: MediaFormat::Svg.mime_type().into(), file_name: format!("{file_stem}.svg"), encoding: None })
+            Ok(OsMediaExportResult { data: svg, mime_type: "image/svg+xml".into(), file_name: format!("{file_stem}.svg"), encoding: None })
         });
-        register_os_media_export_handler(artifact_kind, MediaFormat::Png, move |doc| {
+        register_os_media_export_handler_kind(artifact_kind, "png", move |doc| {
             let (svg, width, height) = document_to_svg(doc)?;
             let data = rasterize_svg_to_png_base64(&svg, width, height)?;
-            Ok(OsMediaExportResult { data, mime_type: MediaFormat::Png.mime_type().into(), file_name: format!("{file_stem}.png"), encoding: Some("base64".into()) })
+            Ok(OsMediaExportResult { data, mime_type: "image/png".into(), file_name: format!("{file_stem}.png"), encoding: Some("base64".into()) })
         });
-        register_os_media_export_handler(artifact_kind, MediaFormat::Dwg, move |doc| {
+        register_os_media_export_handler_kind(artifact_kind, "dwg", move |doc| {
             let (svg, _width, _height) = document_to_svg(doc)?;
             let bytes = svg_to_dwg_bytes(&svg)?;
-            Ok(OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: MediaFormat::Dwg.mime_type().into(), file_name: format!("{file_stem}.dwg"), encoding: Some("base64".into()) })
+            Ok(OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: "image/vnd.dwg".into(), file_name: format!("{file_stem}.dwg"), encoding: Some("base64".into()) })
         });
     }
 
     /// @emoji 📥️ Registers a DWG import handler for one 2D resource kind, rasterizing DWG geometry into flat SVG first.
     pub fn register_dwg_import_handler(artifact_kind: &'static str, from_dwg: fn(&DwgDrawing) -> Result<Value, String>) {
-        register_os_media_import_handler(artifact_kind, MediaFormat::Dwg, move |bytes| {
+        register_os_media_import_handler_kind(artifact_kind, "dwg", move |bytes| {
             let drawing = semio_framework::dwg_from_bytes(bytes)?;
             from_dwg(&drawing)
         });
@@ -2798,11 +2789,12 @@ pub mod media_export_raster {
 
     /// @emoji 🧵️ Registers one `MeshExporter` format (Obj/Glb/Stl/…) for a mesh resource kind; call once per format — `mesh_from_document` bridges the OS workflow's per-document export pipeline down to the format-agnostic `MeshData` the exporter instance actually encodes. DWG stays on `register_mesh_dwg_import_handler`'s sibling below; it is not part of the `MeshExporter` mechanism.
     pub fn register_mesh_exporter(artifact_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>, exporter: Box<dyn semio_framework_plugin::MeshExporter>) {
-        let format = exporter.format();
-        let ext = format.as_str();
-        let mime_type = format.mime_type().to_string();
-        let binary = format.is_binary();
-        register_os_media_export_handler(artifact_kind, format, move |doc| {
+        let format_kind = exporter.format_kind();
+        let descriptor = semio_framework::format_descriptor(format_kind);
+        let ext = descriptor.as_ref().map(|d| d.extension.trim_start_matches('.').to_string()).unwrap_or_else(|| format_kind.to_string());
+        let mime_type = descriptor.as_ref().map(|d| d.mime.clone()).unwrap_or_else(|| "application/octet-stream".to_string());
+        let binary = descriptor.as_ref().map(|d| d.is_binary).unwrap_or(true);
+        register_os_media_export_handler_kind(artifact_kind, format_kind, move |doc| {
             let mesh = mesh_from_document(doc)?;
             let bytes = exporter.export(&mesh)?;
             let data = if binary { base64::engine::general_purpose::STANDARD.encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
@@ -2812,8 +2804,8 @@ pub mod media_export_raster {
 
     /// @emoji 🧵️ Registers one `MeshImporter` format (Obj/Glb/Stl/…) for a mesh resource kind; `document_from_mesh` bridges the decoded `MeshData` back into the app's own document shape.
     pub fn register_mesh_importer(artifact_kind: &'static str, document_from_mesh: fn(&semio_framework_plugin::MeshData) -> Result<Value, String>, importer: Box<dyn semio_framework_plugin::MeshImporter>) {
-        let format = importer.format();
-        register_os_media_import_handler(artifact_kind, format, move |bytes| {
+        let format_kind = importer.format_kind();
+        register_os_media_import_handler_kind(artifact_kind, format_kind, move |bytes| {
             let mesh = importer.import(bytes)?;
             document_from_mesh(&mesh)
         });
@@ -2821,7 +2813,7 @@ pub mod media_export_raster {
 
     /// @emoji 📥️ Registers a DWG import handler for one mesh resource kind.
     pub fn register_mesh_dwg_import_handler(artifact_kind: &'static str, document_from_mesh: fn(&semio_framework_plugin::MeshData) -> Result<Value, String>) {
-        register_os_media_import_handler(artifact_kind, MediaFormat::Dwg, move |bytes| {
+        register_os_media_import_handler_kind(artifact_kind, "dwg", move |bytes| {
             let drawing = semio_framework::dwg_from_bytes(bytes)?;
             let mesh = semio_framework::dwg_drawing_to_mesh(&drawing);
             document_from_mesh(&mesh)
@@ -2830,11 +2822,11 @@ pub mod media_export_raster {
 
     /// @emoji 💾️ Registers a DWG export handler for one mesh resource kind; DWG is not part of the `MeshExporter` mechanism (it flattens a mesh into a DWG drawing, not a mesh codec), so it stays a dedicated registrar alongside `register_mesh_exporter`.
     pub fn register_mesh_dwg_export_handler(artifact_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>) {
-        register_os_media_export_handler(artifact_kind, MediaFormat::Dwg, move |doc| {
+        register_os_media_export_handler_kind(artifact_kind, "dwg", move |doc| {
             let mesh = mesh_from_document(doc)?;
             let drawing = semio_framework::mesh_to_dwg_drawing(&mesh);
             let bytes = semio_framework::dwg_to_bytes(&drawing)?;
-            Ok(OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: MediaFormat::Dwg.mime_type().into(), file_name: format!("{file_stem}.dwg"), encoding: Some("base64".into()) })
+            Ok(OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: "image/vnd.dwg".into(), file_name: format!("{file_stem}.dwg"), encoding: Some("base64".into()) })
         });
     }
 
@@ -2853,38 +2845,38 @@ pub mod media_export_raster {
         HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
     }
 
-    fn solid_registry_key(artifact_kind: &str, format: &MediaFormat) -> String {
-        format!("{}:{}", artifact_kind, format.as_str())
+    fn solid_registry_key(artifact_kind: &str, format_kind: &str) -> String {
+        format!("{}:{}", artifact_kind, format_kind)
     }
 
     /// @emoji 🧊️ Registers a B-Rep solid exporter (STEP/STL/OBJ/GLB, operating on `GeometryHandle` via `semio_framework_3d::brep::kernel::Brep` rather than a tessellated `MeshData`) for a resource kind; call once per format.
     pub fn register_solid_exporter(artifact_kind: &str, exporter: Box<dyn semio_framework_3d::brep::kernel::SolidExporter>) {
-        let key = solid_registry_key(artifact_kind, &exporter.format());
+        let key = solid_registry_key(artifact_kind, exporter.format_kind());
         solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(key, exporter);
     }
 
     /// @emoji 🧊️ Registers a B-Rep solid importer for a resource kind; see `register_solid_exporter`.
     pub fn register_solid_importer(artifact_kind: &str, importer: Box<dyn semio_framework_3d::brep::kernel::SolidImporter>) {
-        let key = solid_registry_key(artifact_kind, &importer.format());
+        let key = solid_registry_key(artifact_kind, importer.format_kind());
         solid_importers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(key, importer);
     }
 
     /// @emoji 🧊️ Looks up a previously registered solid exporter for a resource kind + format.
-    pub fn solid_exporter_for(artifact_kind: &str, format: &MediaFormat) -> bool {
-        solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&solid_registry_key(artifact_kind, format))
+    pub fn solid_exporter_for(artifact_kind: &str, format_kind: &str) -> bool {
+        solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&solid_registry_key(artifact_kind, format_kind))
     }
 
     /// @emoji 🧊️ Exports `shapes` from `kernel` through the solid exporter registered for `artifact_kind` + `format`.
-    pub fn export_registered_solid(artifact_kind: &str, format: &MediaFormat, kernel: &semio_framework_3d::brep::kernel::Brep, shapes: &[semio_framework_3d::brep::engine::GeometryHandle], deflection: f64) -> Result<Vec<u8>, String> {
-        let key = solid_registry_key(artifact_kind, format);
+    pub fn export_registered_solid(artifact_kind: &str, format_kind: &str, kernel: &semio_framework_3d::brep::kernel::Brep, shapes: &[semio_framework_3d::brep::engine::GeometryHandle], deflection: f64) -> Result<Vec<u8>, String> {
+        let key = solid_registry_key(artifact_kind, format_kind);
         let handlers = solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let exporter = handlers.get(&key).ok_or_else(|| format!("no solid export handler for {key}"))?;
         exporter.export(kernel, shapes, deflection).map_err(|error| error.to_string())
     }
 
     /// @emoji 🧊️ Imports bytes into `kernel` through the solid importer registered for `artifact_kind` + `format`.
-    pub fn import_registered_solid(artifact_kind: &str, format: &MediaFormat, kernel: &mut semio_framework_3d::brep::kernel::Brep, data: &[u8], tolerance: f64) -> Result<Vec<semio_framework_3d::brep::engine::GeometryHandle>, String> {
-        let key = solid_registry_key(artifact_kind, format);
+    pub fn import_registered_solid(artifact_kind: &str, format_kind: &str, kernel: &mut semio_framework_3d::brep::kernel::Brep, data: &[u8], tolerance: f64) -> Result<Vec<semio_framework_3d::brep::engine::GeometryHandle>, String> {
+        let key = solid_registry_key(artifact_kind, format_kind);
         let handlers = solid_importers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let importer = handlers.get(&key).ok_or_else(|| format!("no solid import handler for {key}"))?;
         importer.import(kernel, data, tolerance).map_err(|error| error.to_string())
@@ -3065,44 +3057,43 @@ pub use crate::workflow_kernel::{
     }
 
     /// 🔀️ Prefers a shared `Document{schema}` wire (structured payloads round-trip losslessly) over a shared
-    /// `Binary{format}` wire (the first common `MediaFormat` between the two descriptors' export/import
-    /// lists) — see `MediaWireFormat`.
+    /// `Binary{format_kind}` wire (the first common format kind id between the two descriptors' export/import
+    /// lists) — see `MediaWireFormat`. The legacy format enum was retired — ticket 26/08/11/
+    /// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6.
     fn negotiate_wire_format(source: &OsArtifactDescriptor, target: &OsArtifactDescriptor) -> Option<MediaWireFormat> {
         if !source.schema.is_empty() && source.schema == target.schema {
             return Some(MediaWireFormat::Document { schema: source.schema.clone() });
         }
         if !source.export_stdio_kinds.is_empty() && !target.import_stdio_kinds.is_empty() {
             for kind in &source.export_stdio_kinds {
-                let short = semio_framework::normalize_stdio_format_kind(kind).unwrap_or(kind.as_str());
+                let short = semio_framework::format_descriptor(kind).map(|d| d.short_id).unwrap_or_else(|| kind.clone());
                 let hit = target.import_stdio_kinds.iter().any(|other| {
-                    semio_framework::normalize_stdio_format_kind(other).unwrap_or(other.as_str()) == short
+                    semio_framework::format_descriptor(other).map(|d| d.short_id).unwrap_or_else(|| other.clone()) == short
                 });
                 if hit {
-                    if let Some(format) = MediaFormat::parse(short) {
-                        return Some(MediaWireFormat::Binary { format });
-                    }
+                    return Some(MediaWireFormat::Binary { format_kind: short });
                 }
             }
         }
-        if let Some(format) = registry_shared_stdio_dialect(&source.kind, &target.kind) {
-            return Some(MediaWireFormat::Binary { format });
+        if let Some(format_kind) = registry_shared_stdio_dialect(&source.kind, &target.kind) {
+            return Some(MediaWireFormat::Binary { format_kind });
         }
-        source.export_formats.iter().find(|format| target.import_formats.contains(format)).map(|format| MediaWireFormat::Binary { format: *format })
+        source.export_formats.iter().find(|format| target.import_formats.contains(format)).map(|format| MediaWireFormat::Binary { format_kind: format.clone() })
     }
 
     /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: see the os-side twin of this function for
     /// the full rationale — consults the live typed IO registry as a supplement to the
     /// `export_stdio_kinds`/`import_stdio_kinds` static lists, catching drift between the two.
-    fn registry_shared_stdio_dialect(source_kind: &str, target_kind: &str) -> Option<MediaFormat> {
+    fn registry_shared_stdio_dialect(source_kind: &str, target_kind: &str) -> Option<String> {
         use semio_framework::IoDirection;
         let target_reads: HashSet<&str> = semio_framework::io_dialects_for(target_kind, IoDirection::Import).iter().map(|d| d.artifact_kind).collect();
         if target_reads.contains(source_kind) {
-            if let Some(format) = MediaFormat::parse(source_kind) {
-                return Some(format);
+            if let Some(descriptor) = semio_framework::format_descriptor(source_kind) {
+                return Some(descriptor.short_id);
             }
         }
         let source_reads: HashSet<&str> = semio_framework::io_dialects_for(source_kind, IoDirection::Import).iter().map(|d| d.artifact_kind).collect();
-        target_reads.intersection(&source_reads).find_map(|candidate| MediaFormat::parse(candidate))
+        target_reads.intersection(&source_reads).find_map(|candidate| semio_framework::format_descriptor(candidate).map(|d| d.short_id))
     }
 
     /// @emoji ✅️ Validates workflow connectivity, cycle freedom (via `workflow::validate_workflow`,
@@ -3409,9 +3400,6 @@ pub use crate::workflow_kernel::{
     // was confirmed dead (zero callers) and deleted outright.
 
     //#region 🔖️MediaExport
-    /// 🗂️ Defined in `semio_framework` (below this crate in the dependency graph) so `MeshExporter`/`MeshImporter` there can name it too; re-exported here verbatim.
-    pub use semio_framework::MediaFormat;
-
     //#region 🔖️MediaCapability
     #[cfg(feature = "os-host-full")]
     pub use crate::registry::os_resource_media_capability;
@@ -3419,7 +3407,7 @@ pub use crate::workflow_kernel::{
     fn os_resource_media_capability(_kind: &str) -> semio_framework::OsMediaCapability {
         semio_framework::OsMediaCapability::MeshOnly
     }
-    /// 🗂️ Defined in `semio_framework` alongside `MediaFormat`/`ArtifactKindSpec`; re-exported here
+    /// 🗂️ Defined in `semio_framework` alongside `ArtifactKindSpec`; re-exported here
     /// verbatim. `os_resource_media_capability` is a registry lookup (see `crate::registry`) driven by each
     /// app's declared `ArtifactKindSpec.media_capability` instead of a hardcoded per-app match.
     pub use semio_framework::OsMediaCapability;
@@ -3434,19 +3422,21 @@ pub use crate::workflow_kernel::{
     }
 
     impl OsMediaExportResult {
-        /// 📤️ Build an export result from raw format bytes (base64 when binary).
-        pub fn from_format_bytes(bytes: Vec<u8>, format: MediaFormat, file_stem: &str) -> Result<Self, String> {
-            let binary = format.is_binary();
-            let data = if binary {
+        /// 📤️ Build an export result from raw bytes + stdio format kind id (the legacy format enum was retired —
+        /// ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
+        pub fn from_format_kind_bytes(bytes: Vec<u8>, format_artifact_kind: &str, file_stem: &str) -> Result<Self, String> {
+            let entry = semio_framework::format_descriptor(format_artifact_kind)
+                .ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+            let data = if entry.is_binary {
                 base64::engine::general_purpose::STANDARD.encode(&bytes)
             } else {
                 String::from_utf8(bytes).map_err(|error| error.to_string())?
             };
             Ok(Self {
                 data,
-                mime_type: format.mime_type().into(),
-                file_name: format!("{file_stem}.{}", format.as_str()),
-                encoding: if binary { Some("base64".into()) } else { None },
+                mime_type: entry.mime.clone(),
+                file_name: format!("{file_stem}{}", entry.extension),
+                encoding: if entry.is_binary { Some("base64".into()) } else { None },
             })
         }
     }
@@ -3458,21 +3448,10 @@ pub use crate::workflow_kernel::{
         HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
     }
 
-    /// 🗂️ Registry key `(artifact_kind, format_artifact_kind)` — stdio kind ids or `MediaFormat::as_str()`.
+    /// 🗂️ Registry key `(artifact_kind, format_artifact_kind)` — stdio kind ids.
     fn os_media_handler_key(artifact_kind: &str, format_artifact_kind: &str) -> String {
         format!("{artifact_kind}:{format_artifact_kind}")
     }
-
-    /// 🧷 Thin MediaFormat adapter — prefer kind-string APIs for stdio.
-    fn os_media_export_key(artifact_kind: &str, format: &MediaFormat) -> String {
-        os_media_handler_key(artifact_kind, format.as_str())
-    }
-
-    /// @emoji 💾️ Registers an export handler for a media resource kind and format.
-    pub fn register_os_media_export_handler(artifact_kind: &str, format: MediaFormat, handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static) {
-        export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(os_media_export_key(artifact_kind, &format), Box::new(handler));
-    }
-
 
     /// 🗄️ Registers an export handler keyed by `(artifact_kind, format_artifact_kind)` stdio/kind ids.
     pub fn register_os_media_export_handler_kind(
@@ -3486,88 +3465,24 @@ pub use crate::workflow_kernel::{
             .insert(os_media_handler_key(artifact_kind, format_artifact_kind), Box::new(handler));
     }
 
-    /// 📐️ Import vs export direction for `required_media_formats`.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    pub enum MediaDirection {
-        Import,
-        Export,
-    }
-
-    /// 🗂️ Required formats from the MediaClass × MediaForm lattice (ticket 26/08/10/ARTIFACT-IO-FACETS). Always includes `Json`. Import mirrors export; TwoD import always requires `Dwg`.
-    pub fn required_media_formats(media_type: MediaType, direction: MediaDirection) -> Vec<MediaFormat> {
-        let mut formats: Vec<MediaFormat> = match (media_type.class, media_type.form) {
-            (MediaClass::TwoD, MediaForm::Raster) => vec![
-                MediaFormat::Png, MediaFormat::Jpg, MediaFormat::Gif, MediaFormat::Bmp, MediaFormat::Tiff,
-                MediaFormat::Svg, MediaFormat::Pdf, MediaFormat::Dwg, MediaFormat::Json,
-            ],
-            (MediaClass::TwoD, _) => vec![
-                MediaFormat::Svg, MediaFormat::Png, MediaFormat::Dwg, MediaFormat::Dxf, MediaFormat::Pdf, MediaFormat::Json,
-            ],
-            (MediaClass::ThreeD, MediaForm::Brep) => vec![
-                MediaFormat::Glb, MediaFormat::Gltf, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Step,
-                MediaFormat::Ifc, MediaFormat::Dwg, MediaFormat::Png, MediaFormat::Json,
-            ],
-            (MediaClass::ThreeD, _) => vec![
-                MediaFormat::Glb, MediaFormat::Gltf, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Ply,
-                MediaFormat::Las, MediaFormat::Dwg, MediaFormat::Png, MediaFormat::Json,
-            ],
-            (MediaClass::Text, _) => vec![MediaFormat::Md, MediaFormat::Txt, MediaFormat::Pdf, MediaFormat::Docx, MediaFormat::Json],
-            (MediaClass::Data, _) => vec![MediaFormat::Json, MediaFormat::Csv, MediaFormat::Xlsx, MediaFormat::Zip],
-            (MediaClass::Graph, _) => vec![MediaFormat::Json, MediaFormat::Svg, MediaFormat::Png, MediaFormat::Md, MediaFormat::Csv],
-            (MediaClass::Kit, MediaForm::Brep) => vec![
-                MediaFormat::Glb, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Zip, MediaFormat::Png, MediaFormat::Json,
-                MediaFormat::Step, MediaFormat::Ifc,
-            ],
-            (MediaClass::Kit, _) => vec![MediaFormat::Glb, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Zip, MediaFormat::Png, MediaFormat::Json],
-            (MediaClass::Computation, _) => vec![MediaFormat::Csv, MediaFormat::Json, MediaFormat::Md],
-            (MediaClass::Presentation, _) => vec![
-                MediaFormat::Pdf, MediaFormat::Pptx, MediaFormat::Md, MediaFormat::Png, MediaFormat::Svg, MediaFormat::Json,
-            ],
-        };
-        if !formats.contains(&MediaFormat::Json) {
-            formats.push(MediaFormat::Json);
-        }
-        if direction == MediaDirection::Import && media_type.class == MediaClass::TwoD && !formats.contains(&MediaFormat::Dwg) {
-            formats.push(MediaFormat::Dwg);
-        }
-        formats
-    }
-
-    /// @emoji ✅️ Ensures every known resource kind has required export handlers.
-    pub fn assert_os_media_export_coverage() -> Result<(), String> {
-        let handlers = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let mut missing = Vec::new();
-        for descriptor in crate::registry::list_os_artifact_descriptors() {
-            for format in required_media_formats(descriptor.media_type, MediaDirection::Export) {
-                if !handlers.contains_key(&os_media_export_key(&descriptor.kind, &format)) {
-                    missing.push(format!("{}:{}", descriptor.kind, format.as_str()));
-                }
-            }
-        }
-        if missing.is_empty() {
-            Ok(())
-        } else {
-            Err(format!("missing os media export handlers: {}", missing.join(", ")))
-        }
-    }
-
     /// 📤️ Export via `(artifact_kind, format_artifact_kind)` stdio kind ids.
     pub fn export_os_app_instance_media_kind(node: &WorkflowNode, source_document: &Value, format_artifact_kind: &str) -> Result<OsMediaExportResult, String> {
-        let short = semio_framework::normalize_stdio_format_kind(format_artifact_kind).unwrap_or(format_artifact_kind);
-        if let Some(result) = registry_export_media(&node.yields, short, source_document) {
+        let short = semio_framework::normalize_format_kind(format_artifact_kind).unwrap_or_else(|| format_artifact_kind.to_string());
+        if let Some(result) = registry_export_media(&node.yields, &short, source_document) {
             return result;
         }
         let handlers = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let handler = handlers
-            .get(&os_media_handler_key(&node.yields, short))
+            .get(&os_media_handler_key(&node.yields, &short))
             .or_else(|| handlers.get(&os_media_handler_key(&node.yields, format_artifact_kind)))
             .ok_or_else(|| format!("no export handler for {}:{}", node.yields, format_artifact_kind))?;
         handler(source_document)
     }
 
     /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: see the os-side twin of this function for
-    /// the full rationale -- dispatches export via the typed registry's EXPORT-direction entries
-    /// before falling back to the old stringly handler map.
+    /// the full rationale -- dispatches export via `io_dispatch` (real subset validation + one-hop
+    /// fallback guard, ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT
+    /// W6) before falling back to the old stringly handler map.
     fn registry_export_media(artifact_kind: &str, format_kind: &str, source_document: &Value) -> Option<Result<OsMediaExportResult, String>> {
         use semio_framework::{IoDirection, IoKey, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload};
         let native_kind = format!("s.{artifact_kind}");
@@ -3584,11 +3499,10 @@ pub use crate::workflow_kernel::{
             format_standard: target.standard.0.to_string(),
             format_subset: target.subset.0.to_string(),
         };
-        let entry = semio_framework::io_resolve(&key).ok()?;
         let json_bridge = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
         let json_text = serde_json::to_string(source_document).ok()?;
         let sources = [ErasedComposeSource { dialect: json_bridge, payload: IoPayload::Text(json_text) }];
-        let composed = (entry.compose)(&sources).ok()?;
+        let composed = semio_framework::io_dispatch(&key, &sources).ok()?;
         let bytes = match composed.payload {
             IoPayload::Binary(b) => b,
             IoPayload::Text(t) => t.into_bytes(),
@@ -3596,16 +3510,8 @@ pub use crate::workflow_kernel::{
         Some(OsMediaExportResult::from_format_kind_bytes(bytes, format_kind, artifact_kind))
     }
 
-    pub fn export_os_app_instance_media(node: &WorkflowNode, source_document: &Value, format: MediaFormat) -> Result<OsMediaExportResult, String> {
-        export_os_app_instance_media_kind(node, source_document, format.as_str())
-    }
-
-    pub fn os_media_export_extension_for_format_kind(format_artifact_kind: &str) -> Option<&'static str> {
-        semio_framework::stdio_format_entry(format_artifact_kind).map(|row| row.short_id)
-    }
-
-    pub fn os_media_export_extension_for_format(format: &MediaFormat) -> &'static str {
-        format.as_str()
+    pub fn os_media_export_extension_for_format_kind(format_artifact_kind: &str) -> Option<String> {
+        semio_framework::format_descriptor(format_artifact_kind).map(|row| row.short_id)
     }
 
     type OsMediaImportHandler = Box<dyn Fn(&[u8]) -> Result<Value, String> + Send + Sync>;
@@ -3614,12 +3520,6 @@ pub use crate::workflow_kernel::{
         static HANDLERS: OnceLock<Mutex<HashMap<String, OsMediaImportHandler>>> = OnceLock::new();
         HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
     }
-
-    /// @emoji 📥️ Registers an import handler for a media resource kind and format; the handler turns raw bytes into a complete source document.
-    pub fn register_os_media_import_handler(artifact_kind: &str, format: MediaFormat, handler: impl Fn(&[u8]) -> Result<Value, String> + Send + Sync + 'static) {
-        import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(os_media_export_key(artifact_kind, &format), Box::new(handler));
-    }
-
 
     /// 🗄️ Registers an import handler keyed by `(artifact_kind, format_artifact_kind)` stdio/kind ids.
     pub fn register_os_media_import_handler_kind(
@@ -3633,33 +3533,15 @@ pub use crate::workflow_kernel::{
             .insert(os_media_handler_key(artifact_kind, format_artifact_kind), Box::new(handler));
     }
 
-    /// @emoji ✅️ Ensures every known resource kind has required import handlers.
-    pub fn assert_os_media_import_coverage() -> Result<(), String> {
-        let handlers = import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let mut missing = Vec::new();
-        for descriptor in crate::registry::list_os_artifact_descriptors() {
-            for format in required_media_formats(descriptor.media_type, MediaDirection::Import) {
-                if !handlers.contains_key(&os_media_export_key(&descriptor.kind, &format)) {
-                    missing.push(format!("{}:{}", descriptor.kind, format.as_str()));
-                }
-            }
-        }
-        if missing.is_empty() {
-            Ok(())
-        } else {
-            Err(format!("missing os media import handlers: {}", missing.join(", ")))
-        }
-    }
-
     /// 📥️ Import via `(artifact_kind, format_artifact_kind)` stdio kind ids.
     pub fn import_os_app_instance_media_kind(node: &WorkflowNode, data: &[u8], format_artifact_kind: &str) -> Result<Value, String> {
-        let short = semio_framework::normalize_stdio_format_kind(format_artifact_kind).unwrap_or(format_artifact_kind);
-        if let Some(result) = registry_import_media(&node.yields, short, data) {
+        let short = semio_framework::normalize_format_kind(format_artifact_kind).unwrap_or_else(|| format_artifact_kind.to_string());
+        if let Some(result) = registry_import_media(&node.yields, &short, data) {
             return result;
         }
         let handlers = import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let handler = handlers
-            .get(&os_media_handler_key(&node.yields, short))
+            .get(&os_media_handler_key(&node.yields, &short))
             .or_else(|| handlers.get(&os_media_handler_key(&node.yields, format_artifact_kind)))
             .ok_or_else(|| format!("no import handler for {}:{}", node.yields, format_artifact_kind))?;
         handler(data)
@@ -3667,7 +3549,7 @@ pub use crate::workflow_kernel::{
 
     /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: see the os-side twin of this function for
     /// the full rationale -- two-hop dispatch (target bytes -> native pack bytes -> json text)
-    /// through the typed registry before falling back to the old stringly handler map.
+    /// through `io_dispatch` before falling back to the old stringly handler map.
     fn registry_import_media(artifact_kind: &str, format_kind: &str, data: &[u8]) -> Option<Result<Value, String>> {
         use semio_framework::{IoDirection, IoKey, ErasedComposeSource, IoPayload};
         let native_kind = format!("s.{artifact_kind}");
@@ -3680,9 +3562,8 @@ pub use crate::workflow_kernel::{
             direction: IoDirection::Import,
             format_kind: source_dialect.artifact_kind.to_string(), format_standard: source_dialect.standard.0.to_string(), format_subset: source_dialect.subset.0.to_string(),
         };
-        let import_entry = semio_framework::io_resolve(&import_key).ok()?;
         let sources = [ErasedComposeSource { dialect: source_dialect, payload: IoPayload::Binary(data.to_vec()) }];
-        let native = (import_entry.compose)(&sources).ok()?;
+        let native = semio_framework::io_dispatch(&import_key, &sources).ok()?;
 
         let export_dialect = semio_framework::io_dialects_for(&native_kind, IoDirection::Export)
             .into_iter().find(|d| d.artifact_kind == "s.stdio.json")?;
@@ -3691,19 +3572,13 @@ pub use crate::workflow_kernel::{
             direction: IoDirection::Export,
             format_kind: export_dialect.artifact_kind.to_string(), format_standard: export_dialect.standard.0.to_string(), format_subset: export_dialect.subset.0.to_string(),
         };
-        let export_entry = semio_framework::io_resolve(&export_key).ok()?;
         let native_sources = [ErasedComposeSource { dialect: native.dialect, payload: native.payload }];
-        let json_out = (export_entry.compose)(&native_sources).ok()?;
+        let json_out = semio_framework::io_dispatch(&export_key, &native_sources).ok()?;
         let bytes = match json_out.payload {
             IoPayload::Binary(b) => b,
             IoPayload::Text(t) => t.into_bytes(),
         };
         Some(serde_json::from_slice(&bytes).map_err(|e| e.to_string()))
-    }
-
-    /// @emoji 📥️ Imports raw bytes for an app instance's resource kind, returning the new inline source document.
-    pub fn import_os_app_instance_media(node: &WorkflowNode, data: &[u8], format: MediaFormat) -> Result<Value, String> {
-        import_os_app_instance_media_kind(node, data, format.as_str())
     }
     //#endregion 🔖️MediaExport
 
@@ -3718,26 +3593,6 @@ pub use crate::workflow_kernel::{
         }
 
         #[test]
-        fn export_coverage_accepts_registered_handlers() {
-            for descriptor in crate::registry::list_os_artifact_descriptors() {
-                for format in required_media_formats(descriptor.media_type, MediaDirection::Export) {
-                    register_os_media_export_handler(&descriptor.kind, format, |_| Ok(OsMediaExportResult { data: "export".into(), mime_type: "application/octet-stream".into(), file_name: "export.bin".into(), encoding: None }));
-                }
-            }
-            assert!(assert_os_media_export_coverage().is_ok());
-        }
-
-        #[test]
-        fn import_coverage_accepts_registered_handlers() {
-            for descriptor in crate::registry::list_os_artifact_descriptors() {
-                for format in required_media_formats(descriptor.media_type, MediaDirection::Import) {
-                    register_os_media_import_handler(&descriptor.kind, format, |_| Ok(serde_json::json!({})));
-                }
-            }
-            assert!(assert_os_media_import_coverage().is_ok());
-        }
-
-        #[test]
         fn svg_to_dwg_round_trip_produces_a_polyline() {
             let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect x="1" y="1" width="4" height="4"/></svg>"#;
             let bytes = crate::media_export_raster::svg_to_dwg_bytes(svg).expect("svg to dwg");
@@ -3749,7 +3604,7 @@ pub use crate::workflow_kernel::{
         fn mesh_dwg_registrar_round_trips_a_box() {
             use base64::Engine;
             crate::media_export_raster::register_mesh_dwg_export_handler("3d.__dwg_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
-            let result = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_export_key("3d.__dwg_test", &MediaFormat::Dwg)).expect("dwg handler registered")(&serde_json::json!({})).expect("export dwg");
+            let result = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_handler_key("3d.__dwg_test", "dwg")).expect("dwg handler registered")(&serde_json::json!({})).expect("export dwg");
             let bytes = base64::engine::general_purpose::STANDARD.decode(result.data).expect("decode base64");
             let drawing = semio_framework::dwg_from_bytes(&bytes).expect("dwg from bytes");
             assert!(!drawing.entities.is_empty());
@@ -3760,7 +3615,7 @@ pub use crate::workflow_kernel::{
             use base64::Engine;
             crate::media_export_raster::register_mesh_exporter("3d.__mesh_exporter_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
             let result =
-                export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_export_key("3d.__mesh_exporter_test", &MediaFormat::Glb)).expect("glb handler registered")(&serde_json::json!({})).expect("export glb");
+                export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_handler_key("3d.__mesh_exporter_test", "glb")).expect("glb handler registered")(&serde_json::json!({})).expect("export glb");
             let bytes = base64::engine::general_purpose::STANDARD.decode(result.data).expect("decode base64");
             let mesh = semio_framework::mesh_from_glb(&bytes).expect("glb decodes back to a mesh");
             assert!(mesh.vertex_count() > 0);
@@ -3771,7 +3626,7 @@ pub use crate::workflow_kernel::{
             crate::media_export_raster::register_mesh_importer("3d.__mesh_importer_test", |mesh| Ok(serde_json::json!({ "vertexCount": mesh.vertex_count() })), Box::new(semio_framework_plugin::ObjImporter));
             let obj_bytes = semio_framework::mesh_to_obj(&semio_framework_plugin::mesh_from_kind("box"), "box").into_bytes();
             let handlers = import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let handler = handlers.get(&os_media_export_key("3d.__mesh_importer_test", &MediaFormat::Obj)).expect("obj handler registered");
+            let handler = handlers.get(&os_media_handler_key("3d.__mesh_importer_test", "obj")).expect("obj handler registered");
             let document = handler(&obj_bytes).expect("import obj");
             assert!(document["vertexCount"].as_u64().expect("vertex count") > 0);
         }
@@ -3782,10 +3637,10 @@ pub use crate::workflow_kernel::{
             let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).expect("box");
             crate::media_export_raster::register_solid_exporter("3d.__solid_test", Box::new(semio_framework_3d::brep::kernel::StepSolidExporter));
             crate::media_export_raster::register_solid_importer("3d.__solid_test", Box::new(semio_framework_3d::brep::kernel::StepSolidImporter));
-            assert!(crate::media_export_raster::solid_exporter_for("3d.__solid_test", &MediaFormat::Step));
-            let bytes = crate::media_export_raster::export_registered_solid("3d.__solid_test", &MediaFormat::Step, &kernel, &[solid], 0.1).expect("export step");
+            assert!(crate::media_export_raster::solid_exporter_for("3d.__solid_test", "step"));
+            let bytes = crate::media_export_raster::export_registered_solid("3d.__solid_test", "step", &kernel, &[solid], 0.1).expect("export step");
             assert!(!bytes.is_empty());
-            let imported = crate::media_export_raster::import_registered_solid("3d.__solid_test", &MediaFormat::Step, &mut kernel, &bytes, 0.1).expect("import step");
+            let imported = crate::media_export_raster::import_registered_solid("3d.__solid_test", "step", &mut kernel, &bytes, 0.1).expect("import step");
             assert!(!imported.is_empty());
         }
 
@@ -4102,13 +3957,13 @@ pub mod wasm_exports {
     pub fn wasm_media_accept_filter_kinds(format_artifact_kinds: JsValue) -> Result<String, JsValue> {
         let kinds: Vec<String> = serde_wasm_bindgen::from_value(format_artifact_kinds).map_err(|e| JsValue::from_str(&e.to_string()))?;
         let refs: Vec<&str> = kinds.iter().map(|s| s.as_str()).collect();
-        Ok(semio_framework::stdio_accept_filter(&refs))
+        Ok(semio_framework::format_accept_filter(&refs))
     }
 
     /// 🏷️ Normalize `stdio.dwg` / `dwg` to short stdio format kind id (WASM bridge).
     #[wasm_bindgen(js_name = normalizeStdioFormatKind)]
     pub fn wasm_normalize_stdio_format_kind(value: &str) -> String {
-        semio_framework::normalize_stdio_format_kind(value).unwrap_or(value).to_string()
+        semio_framework::format_descriptor(value).map(|d| d.short_id).unwrap_or_else(|| value.to_string())
     }
 
     // #endregion wasm_exports
@@ -4122,7 +3977,7 @@ pub mod registry {
     use crate::space;
     use crate::workflow;
     use crate::instance::OsParameterFieldSpec;
-    use semio_framework::{AppDefinition, ArtifactKindSpec, ConfigSpec, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, MediaFormat, PluginManifest, WindowKindDefinition};
+    use semio_framework::{AppDefinition, ArtifactKindSpec, ConfigSpec, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, PluginManifest, WindowKindDefinition};
     use semio_framework::{Locale, Terminology};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
@@ -4145,10 +4000,10 @@ pub mod registry {
         pub media_type: MediaType,
         /// 🔌️ Structured-payload schema id, mirrored from `ArtifactKindSpec::schema` — see
         /// `crate::workflow::negotiate_media_contract`, which prefers a matching schema over a shared
-        /// binary `MediaFormat`.
+        /// binary format kind id.
         pub schema: String,
-        pub export_formats: Vec<MediaFormat>,
-        pub import_formats: Vec<MediaFormat>,
+        pub export_formats: Vec<String>,
+        pub import_formats: Vec<String>,
         /// 🗄️ Stdio export target kind ids (`stdio.json` / short `json`).
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub export_stdio_kinds: Vec<String>,
@@ -4642,8 +4497,8 @@ pub use instance::{
 };
 pub use media_export_raster::{
     dwg_drawing_to_svg, export_registered_solid, import_registered_solid, rasterize_svg_to_png_base64, register_2d_export_handlers, register_dwg_import_handler, register_mesh_dwg_export_handler, register_mesh_dwg_import_handler,
-    register_mesh_exporter, register_mesh_importer, register_os_media_export_handler, register_os_media_import_handler, register_solid_exporter, register_solid_importer, solid_exporter_for, svg_to_dwg_bytes,
-    OsMediaExportResult, media_accept_filter, media_accept_filter_kinds,
+    register_mesh_exporter, register_mesh_importer, register_os_media_export_handler_kind, register_os_media_import_handler_kind, register_solid_exporter, register_solid_importer, solid_exporter_for, svg_to_dwg_bytes,
+    OsMediaExportResult, media_accept_filter_kinds,
 };
 pub use media_export_simple::{map_points_svg, pages_rects_svg, title_card_svg, wrap_svg};
 #[cfg(feature = "os-host-full")]
@@ -4661,11 +4516,11 @@ pub use ui_wgpu::wgpu::*;
 pub use vcs::{Author, Checkpoint, VcsError};
 #[cfg(feature = "os-host-full")]
 pub use crate::workflow::{
-    apply_flow_fixture_to_os_workflow, apply_workflow_operation, assert_os_media_export_coverage, assert_os_media_import_coverage, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot,
-    export_os_app_instance_media, export_os_app_instance_media_kind, import_os_app_instance_media, import_os_app_instance_media_kind, negotiate_media_contract, os_media_export_extension_for_format, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture,
-    os_workflow_to_node_graph_payload, patch_workflow_parameter, placeholder_media_contract, plan_workflow, required_media_formats, MediaDirection,
+    apply_flow_fixture_to_os_workflow, apply_workflow_operation, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot,
+    export_os_app_instance_media_kind, import_os_app_instance_media_kind, negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture,
+    os_workflow_to_node_graph_payload, patch_workflow_parameter, placeholder_media_contract, plan_workflow,
     sync_workflow_parameter_ports, validate_workflow, validate_workflow_snapshot, validate_workflow_parameter_config_binding, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
-    workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, OsMediaCapability, MediaFormat, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, Workflow, WorkflowDelivery, WorkflowSnapshot,
+    workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, OsMediaCapability, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, Workflow, WorkflowDelivery, WorkflowSnapshot,
     WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowNode, WorkflowMutation, WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType,
     WorkflowPosition, WorkflowValidation, OS_MEDIA_FLOW_MODULE_ID, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
 };

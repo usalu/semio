@@ -1,10 +1,8 @@
-/** 🧬️ SemioAnimationArtifact schema. 🚧 scaffolded by W1b — generic facet mirror; the SemioAnimationArtifact
- * `🦀️component.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface SemioAnimationArtifactEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ SemioAnimationArtifact schema — full artifact state, mirrors `SemioAnimationSnapshot` field
+ * for field (see `📸️snapshot/🟦️component.ts` for the nested `AnimTimeline` shape). */
+import type { AnimTimeline } from "./📸️snapshot/🟦️component";
+
 export interface SemioAnimationArtifact {
   /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioAnimationArtifactEntry[];
+  /** @state persistent */ timelines: AnimTimeline[];
 }

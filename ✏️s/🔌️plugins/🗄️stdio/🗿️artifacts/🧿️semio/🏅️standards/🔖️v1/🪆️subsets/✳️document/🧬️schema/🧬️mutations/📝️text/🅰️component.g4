@@ -1,14 +1,19 @@
-grammar SemioDocumentMutation;
-// `keyword arg=value ...` (space-separated), same shape docx/svg/gif's hand-rolled ops use, or
-// the literal `no-mutation` token (see `print_document_mutation`/`parse_document_mutation` in
-// the sibling `🦀️component.rs` for the real hand-rolled grammar and full keyword list).
-document : NO_MUTATION EOF | keyword (' ' arg)* EOF ;
-NO_MUTATION : 'no-mutation' ;
-keyword  : 'set-snapshot' | 'insert-block' | 'remove-block' | 'set-block-content'
-         | 'set-paragraph-style' | 'set-heading-level' | 'set-list-ordered' | 'set-run-text'
-         | 'set-run-style' | 'set-image-block' | 'insert-style' | 'remove-style'
-         | 'set-style-name' | 'set-style-based-on' | 'insert-image' | 'remove-image'
-         | 'set-image-bytes' ;
-arg      : IDENT '=' VALUE ;
-IDENT    : [a-z-]+ ;
-VALUE    : ~[ ]* ;
+// ANTLR4 grammar for `stdio.semio.document`'s real one-line `OpText` text form — descriptive
+// mirror of the authoritative `📖️component.grammar.semio` (same production names, abridged: full
+// per-keyword argument detail lives there).
+grammar Semio_document_mutations;
+
+op: noMutation | keywordOp EOF;
+noMutation: 'no-mutation';
+keywordOp: KEYWORD arg*;
+KEYWORD: 'set-snapshot' | 'insert-block' | 'remove-block' | 'set-block-content' | 'set-paragraph-style'
+       | 'set-heading-level' | 'set-list-ordered' | 'set-run-text' | 'set-run-style' | 'set-image-block'
+       | 'insert-style' | 'remove-style' | 'set-style-name' | 'set-style-based-on' | 'insert-image'
+       | 'remove-image' | 'set-image-bytes';
+arg: IDENT '=' value;
+value: '[' .*? ']' | HEX | INT;
+
+IDENT: [a-zA-Z] [a-zA-Z-]*;
+HEX: [0-9a-f]*;
+INT: [0-9]+;
+WS: [ \t\r\n]+ -> skip;

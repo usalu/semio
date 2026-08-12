@@ -1,8 +1,12 @@
 module Stdio_semio_mesh_diff;
 
-# BINARY representation — identical to the TEXT grammar, UTF-8 encoded, no additional framing:
-# encode_diff() is print_diff().into_bytes() verbatim (../🦀️component.rs's `TopLevel` region).
+# Spicy mirror (descriptive, not test-parsed — the real byte-level walker is
+# ../📡️component.protocol.semio, walked by dsl::walk_protocol) for the REAL binary
+# `DiffCodec::encode_diff`/`decode_diff` frame (../../🦀️component.rs) — replaces the old
+# `print_diff().into_bytes()` text-as-binary shortcut.
 
 public type Envelope = unit {
-    text_utf8: bytes &eod;   # UTF-8 bytes of the print_diff() text grammar
+    format: uint8;     # DIFF_BINARY_FORMAT, currently 1
+    presence: uint8;   # bit0=meshes, bit1=materials, bit2=textures
+    payload: bytes &eod;   # 0-3 varint-length-prefixed UTF-8 blobs, one per bit set in `presence`
 };

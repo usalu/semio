@@ -1,0 +1,20 @@
+    |
+367 | pub struct GisTerrainEngine {
+    |            ---------------- field in this struct
+368 |     artifact: crate::artifacts::gisterrain::schema::GisTerrainArtifact,
+    |     ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `artifact` is never read
+   --> ✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././././../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:654:5
+    |
+653 | pub struct GisMapEngine {
+    |            ------------ field in this struct
+654 |     artifact: crate::artifacts::gismap::schema::GisMapArtifact,
+    |     ^^^^^^^^
+
+warning: `semio-s-plugin-gis` (lib) generated 15 warnings (run `cargo fix --lib -p semio-s-plugin-gis` to apply 11 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 51.86s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 13`

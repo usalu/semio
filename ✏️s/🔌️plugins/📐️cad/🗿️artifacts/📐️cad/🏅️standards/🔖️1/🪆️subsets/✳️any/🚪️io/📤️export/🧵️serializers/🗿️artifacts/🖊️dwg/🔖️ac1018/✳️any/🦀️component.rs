@@ -11,6 +11,13 @@ pub fn serialize(from: &CadSnapshot) -> Result<DwgSnapshot, store::PackError> {
     Ok(DwgSnapshot {
         schema: STDIO_DWG_DOCUMENT_SCHEMA.into(),
         version: "AC1027".into(),
+        // 🧊️ ac1018 is a frozen legacy shim (see this struct's own docstring) -- not migrated by
+        // this ticket. `codepage`/`maintenance_version` are new fields on the shared `DwgSnapshot`
+        // struct this dead (zero-caller) function must still satisfy to compile; `0` matches their
+        // own `#[serde(default)]`, i.e. "unknown", the same honest stance `SentinelOnly` already
+        // takes for `decode_status` below.
+        codepage: 0,
+        maintenance_version: 0,
         bytes: cad_to_wire(from),
         section_names: Vec::new(),
         // 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: this

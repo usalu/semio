@@ -1,0 +1,36 @@
+{
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle3d/inference.json",
+  "title": "Puzzle3dInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["flatPositions"],
+  "properties": {
+    "flatPositions": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/FlattenPose" },
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "FlattenPlane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "xAxis", "yAxis"],
+      "properties": {
+        "origin": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "xAxis": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "yAxis": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+      }
+    },
+    "FlattenPose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plane", "center", "orientation"],
+      "properties": {
+        "plane": { "$ref": "#/$defs/FlattenPlane" },
+        "center": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+        "orientation": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 }
+      }
+    }
+  }
+}

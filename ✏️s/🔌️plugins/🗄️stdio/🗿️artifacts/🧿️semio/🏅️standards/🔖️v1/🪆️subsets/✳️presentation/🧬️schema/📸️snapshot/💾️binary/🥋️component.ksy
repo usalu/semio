@@ -1,23 +1,25 @@
 meta:
-  id: semio_presentation_snapshot
+  id: stdio_semio_presentation_snapshot
   endian: le
 doc: |
-  Binary envelope for `stdio.semio.semio.presentation` snapshots: `SemioEnvelope` header
-  (component=pack, version) followed by the serde_json-serialized `SemioPresentationSnapshot`
-  payload verbatim (opaque at this binary-envelope level -- see the sibling JSON Schema for the
-  payload's own structured shape).
+  `pack` (binary) form of a `stdio.semio.presentation` snapshot, past the `semio_format` envelope: a
+  real fixed `format` byte, a real varint-length-prefixed `schema` string, then one opaque `payload`
+  tail (the `masters`/`layouts`/`slides` collections — a homogeneous-but-variable-length
+  repeated-record shape the protocol dialect's `repeat` block can't describe untagged, see the
+  sibling `📡️component.protocol.semio`'s own comment; `slides` also embeds a data-carrying tagged
+  `SlideShape` union whose `TextBox`/`Table` variants further embed document's own recursive
+  `DocBlock` union, real-tag-byte-encoded, with every `DocBlock` leaf reusing document's real
+  `enc_block`/`dec_block` TEXT codec embedded as a length-prefixed UTF-8 blob). Not a JSON blob —
+  see `📸️snapshot/🦀️component.rs`'s `encode_presentation_snapshot_binary` for the payload's real
+  internal varint/length-prefixed layout.
 seq:
-  - id: envelope_id_len
-    type: u4
-  - id: envelope_id
-    type: str
-    size: envelope_id_len
-    encoding: UTF-8
-  - id: component_tag
+  - id: format
     type: u1
-  - id: version
-    type: u4
-  - id: payload_len
-    type: u8
+  - id: schema_len
+    type: vlq_base128_le
+  - id: schema_bytes
+    size: schema_len.value
+    type: str
+    encoding: UTF-8
   - id: payload
-    size: payload_len
+    size-eos: true

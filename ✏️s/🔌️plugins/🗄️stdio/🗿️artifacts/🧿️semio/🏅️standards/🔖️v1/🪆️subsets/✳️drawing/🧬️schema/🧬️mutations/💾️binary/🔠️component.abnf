@@ -1,5 +1,7 @@
-; abnf stdio.semio.drawing mutation binary -- serde_json::to_vec, no separate envelope: bytes ARE
-; UTF-8 mutation-tagged JSON, same grammar as ../📝️text/📖️component.grammar.semio
-document = *json-octet
-json-octet = OCTET  ; UTF-8 byte of the text-facet document
-
+; ABNF-style descriptive mirror of `stdio.semio.drawing`'s real binary op frame -- see the
+; authoritative `📡️component.protocol.semio` for the conformance-tested version.
+document       = format tag payload
+format         = %x01                  ; OP_BINARY_FORMAT
+tag            = OCTET                 ; SemioDrawingMutation variant ordinal, see OP_KEYWORDS
+payload        = *OCTET                ; opaque tail: "key=value ..." argument text, see
+                                        ; component.rs's OpBinary::encode_op

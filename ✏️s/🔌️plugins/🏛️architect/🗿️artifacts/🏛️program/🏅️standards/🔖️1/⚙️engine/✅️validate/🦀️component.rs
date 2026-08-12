@@ -162,7 +162,7 @@ fn build_entity_index(program: &ProgramSnapshot) -> EntityIndex {
     for e in &program.quality {
         register("quality", &e.header.id, &e.header.name);
     }
-    for e in &program.documents {
+    for e in &program.artifacts {
         register("documents", &e.header.id, &e.header.name);
     }
     for e in &program.changes {

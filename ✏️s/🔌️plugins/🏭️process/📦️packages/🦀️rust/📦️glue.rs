@@ -466,7 +466,7 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/📄️document/🦀️component.rs"]
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/📄️artifact/🦀️component.rs"]
             pub mod document;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪜️step/🦀️component.rs"]
             pub mod step;
@@ -526,7 +526,7 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/🧊️3d/📌️panels/📄️document/🦀️component.rs"]
+            #[path = "../../🎛️apps/🧊️3d/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
             #[path = "../../🎛️apps/🧊️3d/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;

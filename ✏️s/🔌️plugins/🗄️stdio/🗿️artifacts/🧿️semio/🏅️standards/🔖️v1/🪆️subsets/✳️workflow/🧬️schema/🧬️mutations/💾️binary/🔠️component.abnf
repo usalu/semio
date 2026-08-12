@@ -1,4 +1,6 @@
-; abnf s.stdio.semio.workflow mutation BINARY wire format -- UTF-8 bytes of the mutation TEXT wire
-; format verbatim; see 🧬️mutations/📝️text/📖️component.grammar.semio for the real token grammar.
-document = op-line-utf8
-op-line-utf8 = *OCTET
+; ABNF-style descriptive mirror of `stdio.semio.workflow`'s real op binary frame -- see the
+; authoritative `📡️component.protocol.semio` for the conformance-tested version.
+document = format tag payload
+format   = %x01                  ; OP_BINARY_FORMAT
+tag      = OCTET                 ; SemioWorkflowMutation variant ordinal, see OP_KEYWORDS
+payload  = *OCTET                ; opaque "key=value ..." UTF-8 argument tail, see component.rs

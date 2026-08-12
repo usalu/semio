@@ -16,10 +16,34 @@ use semio_framework_3d::brep::kernel::{mesh_data_from_mesh_transfer, Brep};
 use semio_framework_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle, MeshTransfer};
 use semio_framework::{parse_contributions, MeshImporter};
 use std::sync::{Mutex, OnceLock};
-use semio_framework_plugin::{mesh_from_kind, MeshData, MediaFormat, WorldProjectionConfig};
+use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
 use serde_json::Value;
 use std::collections::HashSet;
 use crate::artifacts::cad::engine::transformation::solid_for_object;
+//#region 🔖️SemioBridgeImports
+// 🌉️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a: cad's
+// native-geometry export/import stops hand-rolling OBJ/STL bytes and stops trusting the framework
+// brep kernel's own STEP text unvalidated -- it builds real `semio/mesh` and `semio/brep` snapshots
+// from the live `GeometryHandle`s and calls through stdio's own codecs (real trait impls, zero
+// reimplementation) to get bytes, per the plan's `📐️cad → semio/brep (bridges to step) / semio/mesh
+// (bridges to obj/stl/gltf/ply/las)` extraction map row.
+use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
+// 🌉️ W8 scenario (a) test-only bridge: semio/mesh -> gltf, chaining onto the SemioBrepBridge round
+// trip below (real `SemioMeshToGltf` codec, see its own file for the leaf's full doc comment).
+#[cfg(test)]
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::io::export::serializers::artifacts::step::v_ap214::any::SemioBrepToStep;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::engine::encode_obj;
+use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::engine::encode_stl_binary;
+use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::engine::part21::{parse_part21, write_part21};
+use semio_s_plugin_stdio::artifacts::step::StepSnapshot;
+//#endregion 🔖️SemioBridgeImports
 
 //#region 🔖️Compute
 pub const CAD_EXAMPLE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";
@@ -364,23 +388,160 @@ pub struct CadSolidExport {
     pub encoding: Option<String>,
 }
 
-/// @emoji 📤️ Encodes `solids` through the kernel's native OBJ/STL/STEP codec for `format`; STL is
-/// base64-wrapped since it is a binary format, OBJ/STEP stay UTF-8 text.
-pub fn export_solids_as(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], format: MediaFormat, stem: &str) -> Option<CadSolidExport> {
-    let filename = format!("{stem}.{}", format.as_str());
-    let mime_type = format.mime_type().to_string();
+//#region 🔖️SolidExportDialects
+// 🌉️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6: the
+// deprecated framework format-enum layer is retired in favor of the plain `"s.stdio.<format>"`
+// dialect id strings used throughout this ticket's io_dispatch/Dialect machinery.
+pub const CAD_SOLID_EXPORT_DIALECT_OBJ: &str = "s.stdio.obj";
+pub const CAD_SOLID_EXPORT_DIALECT_STL: &str = "s.stdio.stl";
+pub const CAD_SOLID_EXPORT_DIALECT_STEP: &str = "s.stdio.step";
+
+/// @emoji 🧾️ File extension for a `s.stdio.<format>` dialect id, as used in `export_solids_as`'s
+/// downloaded filename.
+fn cad_solid_export_extension(dialect_id: &str) -> Option<&'static str> {
+    match dialect_id {
+        CAD_SOLID_EXPORT_DIALECT_OBJ => Some("obj"),
+        CAD_SOLID_EXPORT_DIALECT_STL => Some("stl"),
+        CAD_SOLID_EXPORT_DIALECT_STEP => Some("step"),
+        _ => None,
+    }
+}
+
+/// @emoji 📎️ MIME type for a `s.stdio.<format>` dialect id, kept in parity with the retired
+/// enum's mime-type values for the three formats `export_solids_as` supports.
+fn cad_solid_export_mime_type(dialect_id: &str) -> Option<&'static str> {
+    match dialect_id {
+        CAD_SOLID_EXPORT_DIALECT_OBJ => Some("model/obj"),
+        CAD_SOLID_EXPORT_DIALECT_STL => Some("model/stl"),
+        CAD_SOLID_EXPORT_DIALECT_STEP => Some("model/step"),
+        _ => None,
+    }
+}
+//#endregion 🔖️SolidExportDialects
+
+//#region 🔖️SemioBridge
+/// 🌉️ Tessellates every solid in `solids` (via the live kernel) into one `SemioMeshSnapshot` —
+/// one `SemioMesh`/one `SemioPrimitive` per solid, real positions/normals carried, `uvs`/`colors`
+/// left empty (the kernel's `MeshTransfer` carries neither). Solids that fail to tessellate or
+/// tessellate to zero triangles are skipped (never a fabricated triangle); `None` only when NOT A
+/// SINGLE solid produced real geometry.
+fn semio_mesh_snapshot_from_solids(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], deflection: f64) -> Option<SemioMeshSnapshot> {
+    let mut meshes = Vec::new();
+    for (index, handle) in solids.iter().enumerate() {
+        let Ok(transfer) = block_on(kernel.tessellate(handle, deflection)) else { continue };
+        if transfer.index.is_empty() || transfer.position.is_empty() {
+            continue;
+        }
+        let positions: Vec<SemioPoint3> = transfer.position.chunks_exact(3).map(|c| SemioPoint3 { x: c[0] as f64, y: c[1] as f64, z: c[2] as f64 }).collect();
+        let normals: Vec<SemioPoint3> = transfer.normal.chunks_exact(3).map(|c| SemioPoint3 { x: c[0] as f64, y: c[1] as f64, z: c[2] as f64 }).collect();
+        meshes.push(SemioMesh {
+            id: format!("{}-{index}", handle.as_str()),
+            primitives: vec![SemioPrimitive {
+                id: format!("{}-{index}-prim-0", handle.as_str()),
+                topology: SemioTopology::Triangles,
+                positions,
+                normals,
+                uvs: Vec::new(),
+                colors: Vec::new(),
+                indices: transfer.index.clone(),
+                material_id: None,
+            }],
+        });
+    }
+    if meshes.is_empty() {
+        return None;
+    }
+    Some(SemioMeshSnapshot { schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(), meshes, materials: Vec::new(), textures: Vec::new() })
+}
+
+/// 🌉️ Real AP214 STEP text → `SemioBrepSnapshot`, via stdio's own Part-21 tokenizer + the genuine
+/// `SemioBrepFromStep` entity-graph walk (never a re-implementation of either).
+/// 🩹️ Confirmed framework bug (out of this plugin's write scope — reported, not patched at the
+/// source): `🧰️framework/🔨️modules/🧊️3d/📐️brep/📄️step/🦀️component.rs::write_step` builds its
+/// `ADVANCED_BREP_SHAPE_REPRESENTATION` item list via `format!("({},)", items.join(", "))` —
+/// UNCONDITIONALLY appending a trailing comma before the closing `)`, for every export (0, 1, or N
+/// items). That is not valid ISO 10303-21 (a Part-21 list never permits a trailing comma before its
+/// close), and stdio's own Part-21 tokenizer correctly rejects it (`UnexpectedChar { found: ')',
+/// expected: "value" }`) rather than guessing. Quote-aware (a `,)` inside a real STEP string
+/// literal, e.g. a product name, is left untouched) — repairs ONLY this exact malformed shape so
+/// cad's `semio/brep` bridge can consume the kernel's real, otherwise-correct geometry today.
+fn repair_step_trailing_comma_before_close_paren(text: &str) -> String {
+    let chars: Vec<char> = text.chars().collect();
+    let mut out = String::with_capacity(text.len());
+    let mut in_string = false;
+    let mut i = 0;
+    while i < chars.len() {
+        let c = chars[i];
+        if c == '\'' {
+            in_string = !in_string;
+            out.push(c);
+            i += 1;
+            continue;
+        }
+        if !in_string && c == ',' {
+            let mut j = i + 1;
+            while j < chars.len() && chars[j].is_whitespace() {
+                j += 1;
+            }
+            if j < chars.len() && chars[j] == ')' {
+                i += 1;
+                continue;
+            }
+        }
+        out.push(c);
+        i += 1;
+    }
+    out
+}
+
+fn semio_brep_snapshot_from_step_text(text: &str) -> Option<SemioBrepSnapshot> {
+    let repaired = repair_step_trailing_comma_before_close_paren(text);
+    let document = parse_part21(&repaired).ok()?;
+    let step_snapshot = StepSnapshot::from_part21_document(document);
+    SemioBrepFromStep::deserialize(&step_snapshot).ok()
+}
+
+/// 🌉️ Inverse of `semio_brep_snapshot_from_step_text` — real `SemioBrepToStep` serialize +
+/// stdio's own Part-21 writer.
+fn step_text_from_semio_brep_snapshot(brep: &SemioBrepSnapshot) -> Option<String> {
+    let step_snapshot = SemioBrepToStep::serialize(brep).ok()?;
+    Some(write_part21(&step_snapshot.to_part21_document()))
+}
+//#endregion 🔖️SemioBridge
+
+/// @emoji 📤️ Encodes `solids` for `format`, routed through stdio's real semio-subset codecs
+/// instead of a local hand-rolled encoder: OBJ/STL tessellate `solids` (via the live kernel) into
+/// a `semio/mesh` snapshot and call stdio's own `SemioMeshToObj`/`SemioMeshToStl` + text/binary
+/// grammar encoders; STEP still SOURCES its geometry from the framework brep kernel's native
+/// `export_step` (the kernel's own AP214 writer — a real, working, geometry-exact encoder that
+/// lives one layer below this plugin, not ad-hoc plugin-level codec duplication) but the BYTES
+/// actually returned now come from re-encoding that text through a real `semio/brep` round trip
+/// (`StepSnapshot` → `SemioBrepFromStep` → `SemioBrepToStep` → `StepSnapshot` → Part-21 text),
+/// which both validates the kernel's output against stdio's AP214 entity-graph walk and produces
+/// the export from the SAME codec stdio/semio uses everywhere else. STL is base64-wrapped since it
+/// is a binary format, OBJ/STEP stay UTF-8 text.
+pub fn export_solids_as(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], format: &str, stem: &str) -> Option<CadSolidExport> {
+    let extension = cad_solid_export_extension(format)?;
+    let filename = format!("{stem}.{extension}");
+    let mime_type = cad_solid_export_mime_type(format)?.to_string();
     match format {
-        MediaFormat::Obj => {
-            let text = block_on(kernel.export_obj(solids, 0.1)).ok()?;
+        CAD_SOLID_EXPORT_DIALECT_OBJ => {
+            let mesh_snapshot = semio_mesh_snapshot_from_solids(kernel, solids, 0.1)?;
+            let obj_snapshot = SemioMeshToObj::serialize(&mesh_snapshot).ok()?;
+            let text = encode_obj(&obj_snapshot);
             Some(CadSolidExport { filename, data: Value::String(text), mime_type, encoding: None })
         }
-        MediaFormat::Stl => {
-            let bytes = block_on(kernel.export_stl(solids, 0.1)).ok()?;
+        CAD_SOLID_EXPORT_DIALECT_STL => {
+            let mesh_snapshot = semio_mesh_snapshot_from_solids(kernel, solids, 0.1)?;
+            let stl_snapshot = SemioMeshToStl::serialize(&mesh_snapshot).ok()?;
+            let bytes = encode_stl_binary(&stl_snapshot);
             let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
             Some(CadSolidExport { filename, data: Value::String(encoded), mime_type, encoding: Some("base64".into()) })
         }
-        MediaFormat::Step => {
-            let text = block_on(kernel.export_step(solids)).ok()?;
+        CAD_SOLID_EXPORT_DIALECT_STEP => {
+            let kernel_text = block_on(kernel.export_step(solids)).ok()?;
+            let brep_snapshot = semio_brep_snapshot_from_step_text(&kernel_text)?;
+            let text = step_text_from_semio_brep_snapshot(&brep_snapshot)?;
             Some(CadSolidExport { filename, data: Value::String(text), mime_type, encoding: None })
         }
         _ => None,
@@ -775,4 +936,186 @@ impl CadEngine {
 
 }
 //#endregion 🔖️ArtifactEngine
+
+//#region 🔖️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use semio_framework_3d::brep::kernel::Brep;
+
+    //#region 🔖️SemioMeshBridge
+    #[test]
+    fn export_solids_as_obj_uses_real_stdio_mesh_codec_not_hand_rolled_bytes() {
+        let mut kernel = Brep::new();
+        let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
+        let export = export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_OBJ, "box").expect("obj export");
+        let Value::String(text) = export.data else { panic!("expected text data") };
+        // 🌉️ Real OBJ grammar (stdio's own `encode_obj`) — proves this is no longer the deleted
+        // `kernel.export_obj` call, and definitely not the fabricated byte-reinterpret bug: a real
+        // box tessellates to >= 8 vertices and >= 12 triangular faces.
+        let vertex_lines = text.lines().filter(|l| l.starts_with("v ")).count();
+        let face_lines = text.lines().filter(|l| l.starts_with("f ")).count();
+        assert!(vertex_lines >= 8, "expected real OBJ vertices, got {vertex_lines} in {text:?}");
+        assert!(face_lines >= 12, "expected real OBJ faces, got {face_lines}");
+        assert_eq!(export.mime_type, cad_solid_export_mime_type(CAD_SOLID_EXPORT_DIALECT_OBJ).unwrap());
+        assert!(export.encoding.is_none());
+    }
+
+    #[test]
+    fn export_solids_as_stl_uses_real_stdio_mesh_codec() {
+        let mut kernel = Brep::new();
+        let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
+        let export = export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_STL, "box").expect("stl export");
+        let Value::String(encoded) = export.data else { panic!("expected base64 text data") };
+        assert_eq!(export.encoding.as_deref(), Some("base64"));
+        let bytes = base64::engine::general_purpose::STANDARD.decode(&encoded).expect("valid base64");
+        // 🌉️ Real binary STL (stdio's own `encode_stl_binary`): 80-byte header + u32 triangle count
+        // + 50 bytes/triangle, never a fabricated byte-reinterpret blob.
+        assert!(bytes.len() > 84, "expected a real binary STL body, got {} bytes", bytes.len());
+        let triangle_count = u32::from_le_bytes(bytes[80..84].try_into().unwrap());
+        assert!(triangle_count >= 12, "expected a real box's 12+ triangles, got {triangle_count}");
+        assert_eq!(bytes.len(), 84 + (triangle_count as usize) * 50);
+    }
+
+    #[test]
+    fn export_solids_as_obj_none_for_a_solid_that_fails_to_tessellate() {
+        let mut kernel = Brep::new();
+        // A disposed handle can no longer tessellate -- real absence, never a fabricated triangle.
+        let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
+        block_on(kernel.dispose(&solid));
+        assert!(export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_OBJ, "gone").is_none());
+    }
+    //#endregion 🔖️SemioMeshBridge
+
+    //#region 🔖️SemioBrepBridge
+    /// 🌉️ Scenario (a) — cad's own half of the master plan's e2e acceptance scenario, FULL chain:
+    /// cad → semio/brep → .step → reimport → semio/brep → semio/mesh → .gltf, geometry-equivalent
+    /// end to end. First exercises the REAL `SemioBrepFromStep`/`SemioBrepToStep` round trip
+    /// `export_solids_as` runs internally, then independently re-parses the resulting STEP text back
+    /// through the SAME `semio/brep` bridge (not the framework kernel's native STEP reader — see
+    /// this test's inline note on why) and checks the reimported topology counts match the original
+    /// — proving the semio/brep bridge didn't silently corrupt or drop geometry. Then chains the
+    /// remaining two hops: tessellates the same solid the reimported brep describes into a real
+    /// `semio/mesh` snapshot and asserts its bounding box matches the reimported brep's own vertex
+    /// bounding box (the brep↔mesh geometry-equivalence link), then serializes that mesh through the
+    /// REAL `SemioMeshToGltf` codec and decodes the exported gltf buffer's own raw POSITION bytes
+    /// back into a bounding box, asserting it still matches — proving the box's real spatial extent
+    /// survives all the way to the final `.gltf` bytes, not just that codecs ran without erroring.
+    #[test]
+    fn export_solids_as_step_round_trips_through_real_semio_brep_bridge() {
+        let mut kernel = Brep::new();
+        let solid = block_on(kernel.box_prim(2.0, 3.0, 4.0)).expect("box");
+        let original_volume = block_on(kernel.volume(&solid)).expect("volume");
+        assert!((original_volume - 24.0).abs() < 1e-6, "box volume sanity: {original_volume}");
+
+        let kernel_text = block_on(kernel.export_step(std::slice::from_ref(&solid))).expect("kernel step export");
+        let original_brep = semio_brep_snapshot_from_step_text(&kernel_text).expect("semio/brep from kernel step");
+
+        let export = export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_STEP, "box").expect("step export");
+        let Value::String(step_text) = export.data else { panic!("expected text data") };
+        assert!(step_text.starts_with("ISO-10303-21;"), "real Part-21 header expected, got {step_text:?}");
+        assert!(step_text.contains("MANIFOLD_SOLID_BREP") || step_text.contains("ADVANCED_BREP_SHAPE_REPRESENTATION"), "expected real AP214 brep entities");
+
+        // 🌉️ Independently re-parse the bridge's OWN STEP output back through the SAME
+        // `semio/brep` bridge — NOT the framework kernel's `import_step` (that reader is a
+        // narrower AP203 subset that hard-requires all 3 `AXIS2_PLACEMENT_3D` references to be
+        // non-null and rejects `SemioBrepToStep`'s own spec-valid `$` ref_direction output, a
+        // genuine framework-reader gap out of this plugin's write scope — reported, not patched
+        // here). Checks geometry-equivalence at the semio/brep level the bridge itself owns: same
+        // solid/face/vertex counts as what the kernel's own STEP text produced, proving the
+        // write→reparse cycle is lossless for a plain box (Plane-only faces, fully within
+        // `SemioBrepFromStep`'s documented vocabulary), not just that *some* STEP text came out.
+        let reimported_brep = semio_brep_snapshot_from_step_text(&step_text).expect("reimport via semio/brep bridge");
+        assert_eq!(reimported_brep.solids.len(), original_brep.solids.len(), "solid count geometry-equivalence");
+        assert_eq!(reimported_brep.faces.len(), original_brep.faces.len(), "face count geometry-equivalence");
+        assert_eq!(reimported_brep.vertices.len(), original_brep.vertices.len(), "vertex count geometry-equivalence");
+
+        // 🌉️ Scenario (a) continued: semio/brep → semio/mesh → .gltf. Feeding the bridge's own
+        // STEP text back through `kernel.import_step` to derive a mesh from the REIMPORTED brep
+        // specifically is blocked by the same framework AP203-subset reader gap documented above —
+        // so this hop tessellates the SAME live solid the reimported brep was just proven
+        // topologically equivalent to, then checks the resulting mesh/gltf geometry against the
+        // reimported brep's OWN vertex data (not the original box dims), so every assertion below
+        // is anchored to what came out of the semio/brep reimport, not what went in.
+        fn vertex_bounds(points: impl Iterator<Item = [f64; 3]>) -> ([f64; 3], [f64; 3]) {
+            let mut min = [f64::INFINITY; 3];
+            let mut max = [f64::NEG_INFINITY; 3];
+            for p in points {
+                for axis in 0..3 {
+                    min[axis] = min[axis].min(p[axis]);
+                    max[axis] = max[axis].max(p[axis]);
+                }
+            }
+            (min, max)
+        }
+        let (brep_min, brep_max) = vertex_bounds(reimported_brep.vertices.iter().map(|v| [v.point.x, v.point.y, v.point.z]));
+        for axis in 0..3 {
+            assert!(brep_max[axis] > brep_min[axis], "reimported brep must carry real spatial extent on axis {axis}, got min {:?} max {:?}", brep_min, brep_max);
+        }
+
+        let mesh_snapshot = semio_mesh_snapshot_from_solids(&mut kernel, std::slice::from_ref(&solid), 0.1).expect("tessellate the same solid the reimported brep describes into a real semio/mesh snapshot");
+        let mesh_positions: Vec<[f64; 3]> = mesh_snapshot.meshes.iter().flat_map(|m| m.primitives.iter()).flat_map(|p| p.positions.iter()).map(|p| [p.x, p.y, p.z]).collect();
+        assert!(!mesh_positions.is_empty(), "expected real tessellated mesh positions, not an empty semio/mesh snapshot");
+        let (mesh_min, mesh_max) = vertex_bounds(mesh_positions.iter().copied());
+        for axis in 0..3 {
+            assert!((mesh_min[axis] - brep_min[axis]).abs() < 1e-6, "semio/mesh vs reimported semio/brep bounding-box MIN mismatch on axis {axis}: mesh {} vs brep {}", mesh_min[axis], brep_min[axis]);
+            assert!((mesh_max[axis] - brep_max[axis]).abs() < 1e-6, "semio/mesh vs reimported semio/brep bounding-box MAX mismatch on axis {axis}: mesh {} vs brep {}", mesh_max[axis], brep_max[axis]);
+        }
+
+        let gltf = SemioMeshToGltf::serialize(&mesh_snapshot).expect("real semio/mesh -> gltf codec must succeed on a real tessellated box");
+        assert_eq!(gltf.document.meshes.len(), 1, "expected exactly one gltf mesh for one solid");
+        assert_eq!(gltf.buffers.len(), 1, "expected one packed geometry buffer");
+        // 🌉️ `SemioMeshToGltf::serialize` unconditionally pushes the POSITION accessor first (before
+        // any conditional NORMAL/TEXCOORD_0/COLOR_0), so accessors[0] is always POSITION here.
+        let position_accessor = gltf.document.accessors.first().expect("POSITION accessor must exist");
+        assert_eq!(position_accessor.count, mesh_positions.len(), "gltf POSITION accessor count must match the semio/mesh vertex count");
+        let buffer_view = &gltf.document.buffer_views[position_accessor.buffer_view.expect("POSITION accessor must reference a bufferView")];
+        let raw = &gltf.buffers[0][buffer_view.byte_offset..buffer_view.byte_offset + buffer_view.byte_length];
+        let decoded_positions: Vec<[f64; 3]> = raw
+            .chunks_exact(12)
+            .map(|triple| {
+                [
+                    f32::from_le_bytes(triple[0..4].try_into().unwrap()) as f64,
+                    f32::from_le_bytes(triple[4..8].try_into().unwrap()) as f64,
+                    f32::from_le_bytes(triple[8..12].try_into().unwrap()) as f64,
+                ]
+            })
+            .collect();
+        assert_eq!(decoded_positions.len(), mesh_positions.len(), "decoded gltf buffer must carry exactly the semio/mesh vertex count");
+        let (gltf_min, gltf_max) = vertex_bounds(decoded_positions.into_iter());
+        for axis in 0..3 {
+            assert!((gltf_min[axis] - brep_min[axis]).abs() < 1e-4, "final .gltf bytes vs reimported semio/brep bounding-box MIN mismatch on axis {axis}: gltf {} vs brep {}", gltf_min[axis], brep_min[axis]);
+            assert!((gltf_max[axis] - brep_max[axis]).abs() < 1e-4, "final .gltf bytes vs reimported semio/brep bounding-box MAX mismatch on axis {axis}: gltf {} vs brep {}", gltf_max[axis], brep_max[axis]);
+        }
+    }
+
+    /// 🌉️ Directly exercises the two new bridge helpers (rather than through `export_solids_as`) to
+    /// prove `SemioBrepSnapshot` itself carries real, non-empty topology -- not just that the
+    /// STEP text round trip happens to look right.
+    #[test]
+    fn semio_brep_snapshot_from_step_text_carries_real_topology() {
+        let mut kernel = Brep::new();
+        let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
+        let step_text = block_on(kernel.export_step(std::slice::from_ref(&solid))).expect("kernel step export");
+        let brep = semio_brep_snapshot_from_step_text(&step_text).expect("semio/brep from step");
+        assert!(!brep.solids.is_empty(), "expected at least one real BrepSolid");
+        assert!(!brep.faces.is_empty(), "expected real BrepFaces, not an empty shell");
+        assert!(!brep.vertices.is_empty(), "expected real BrepVertexes");
+        let round_tripped = step_text_from_semio_brep_snapshot(&brep).expect("semio/brep to step");
+        assert!(round_tripped.starts_with("ISO-10303-21;"));
+    }
+
+    /// 🩹️ Direct, isolated proof of the framework `write_step` workaround: repairs a trailing
+    /// comma before `)` while leaving an identical-looking comma inside a real STEP string literal
+    /// alone (a genuine, if unlikely, product name could legitimately contain `,)`).
+    #[test]
+    fn repair_step_trailing_comma_before_close_paren_is_quote_aware() {
+        assert_eq!(repair_step_trailing_comma_before_close_paren("(#1,)"), "(#1)");
+        assert_eq!(repair_step_trailing_comma_before_close_paren("(#1, #2,)"), "(#1, #2)");
+        assert_eq!(repair_step_trailing_comma_before_close_paren("()"), "()");
+        assert_eq!(repair_step_trailing_comma_before_close_paren("('weird,)name', #1)"), "('weird,)name', #1)");
+    }
+    //#endregion 🔖️SemioBrepBridge
+}
+//#endregion 🔖️Tests
 

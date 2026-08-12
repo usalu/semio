@@ -1,15 +1,61 @@
-(* ISO-14977-style EBNF for the hand-rolled `stdio.semio.model.diff` text grammar (single line,
-   space-separated `field=value` tokens -- see `SemioModelDiff::print_diff`/`parse_diff`). *)
-line = token, { ' ', token } ;
-token = ( 'spatial=' | 'elements=' | 'relations=' ), named triple ;
+(* ISO-14977-style EBNF for `stdio.semio.model`'s real diff text line — descriptive mirror of the
+   authoritative `📖️component.grammar.semio` (same production names). *)
+document = [ spatial line ], [ elements line ], [ relations line ] ;
 
-(* Shared 🧰️triples wire shape: bracket-depth-aware "[removed];[modified];[added]". *)
-named triple = '[', removed csv, '];[', modified csv, '];[', added csv, ']' ;
-removed csv = [ hex, { ',', hex } ] ;
-modified csv = [ modified entry, { ',', modified entry } ] ;
-modified entry = hex, ':', diff payload ;
-added csv = [ item, { ',', item } ] ;
-diff payload = '[', { any character }, ']' ;
-item = '[', { any character }, ']' ;
-hex = hex digit, { hex digit } ;
-hex digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' ;
+spatial line = 'spatial', '=', spatial triple ;
+spatial triple = '[', [ removed list ], ']', ';', '[', [ spatial modified list ], ']', ';', '[', [ spatial added list ], ']' ;
+spatial modified list = spatial modified, { ',', spatial modified } ;
+spatial modified = hex, ':', spatial node diff ;
+spatial added list = spatial node, { ',', spatial node } ;
+
+elements line = 'elements', '=', elements triple ;
+elements triple = '[', [ removed list ], ']', ';', '[', [ element modified list ], ']', ';', '[', [ element added list ], ']' ;
+element modified list = element modified, { ',', element modified } ;
+element modified = hex, ':', element diff ;
+element added list = element, { ',', element } ;
+
+relations line = 'relations', '=', relations triple ;
+relations triple = '[', [ removed list ], ']', ';', '[', [ relation modified list ], ']', ';', '[', [ relation added list ], ']' ;
+relation modified list = relation modified, { ',', relation modified } ;
+relation modified = hex, ':', relation diff ;
+relation added list = relation, { ',', relation } ;
+
+removed list = hex, { ',', hex } ;
+
+spatial node = '[', hex, ',', spatial kind, ',', hex, ',', opt str, ',', transform, ']' ;
+spatial kind = 'S' | 'B' | 'T' | 'P' ;
+element = '[', hex, ',', element class, ',', transform, ',', geometry ref, ',', opt str, ',', '[', [ pset list ], ']', ']' ;
+element class = 'WA' | 'SL' | 'CO' | 'BE' | 'DO' | 'WI' | 'RO' | 'ST' | 'FU' | 'OT', '[', hex, ']' ;
+geometry ref = 'N' | 'B', '[', hex, ']' | 'M', '[', hex, ']' ;
+pset list = property set, { ',', property set } ;
+property set = '[', hex, ',', '[', [ property list ], ']', ']' ;
+property list = property, { ',', property } ;
+property = '[', hex, ',', pset value, ']' ;
+pset value = 'T', '[', hex, ']' | 'N', '[', number, ']' | 'B', '[', bit, ']' ;
+bit = '0' | '1' ;
+relation = '[', hex, ',', relation kind, ',', hex, ',', hex, ']' ;
+relation kind = 'AG' | 'CI' | 'CN' | 'FV' | 'VE' | 'OT', '[', hex, ']' ;
+opt str = '[', '0', ']' | '[', '1', ',', hex, ']' ;
+transform = '[', point3, ',', quat, ',', point3, ']' ;
+point3 = '[', number, ',', number, ',', number, ']' ;
+quat = '[', number, ',', number, ',', number, ',', number, ']' ;
+
+spatial node diff = '[', option spatial kind, ',', option hex, ',', option option hex, ',', option transform, ']' ;
+option spatial kind = '[', '0', ']' | '[', '1', ',', spatial kind, ']' ;
+option hex = '[', '0', ']' | '[', '1', ',', hex, ']' ;
+option option hex = '[', '0', ']' | '[', '1', ',', option hex, ']' ;
+option transform = '[', '0', ']' | '[', '1', ',', transform, ']' ;
+
+element diff = '[', option element class, ',', option transform, ',', option geometry ref, ',', option option hex, ',', option psets, ']' ;
+option element class = '[', '0', ']' | '[', '1', ',', element class, ']' ;
+option geometry ref = '[', '0', ']' | '[', '1', ',', geometry ref, ']' ;
+option psets = '[', '0', ']' | '[', '1', ',', '[', [ pset list ], ']', ']' ;
+
+relation diff = '[', option relation kind, ',', option hex, ',', option hex, ']' ;
+option relation kind = '[', '0', ']' | '[', '1', ',', relation kind, ']' ;
+
+number = int | float ;
+int = [ '-' ], digit, { digit } ;
+float = [ '-' ], digit, { digit }, '.', digit, { digit } ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;

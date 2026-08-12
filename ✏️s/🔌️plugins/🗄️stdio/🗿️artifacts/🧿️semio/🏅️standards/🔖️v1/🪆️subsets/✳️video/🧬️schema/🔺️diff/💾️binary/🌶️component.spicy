@@ -1,6 +1,11 @@
 module Stdio_semio_video_diff;
-# stdio.semio.video diff binary layout: UTF-8 bytes of the text grammar (../📝️text) verbatim —
-# protocol::DiffCodec::encode_diff == print_diff().into_bytes(), no separate binary framing.
+# Spicy mirror (descriptive, not test-parsed — the real byte-level walker is
+# ../📡️component.protocol.semio, walked by dsl::walk_protocol) for the REAL binary diff frame
+# (video wave, replacing the old print_diff().into_bytes() text-as-binary shortcut). `format` +
+# `presence` (bit0 = streams present) are real, fully described fixed fields; the optional
+# streams blob is one opaque trailing `payload` (protocol-cond-cannot-chain gap).
 type Document = unit {
-    text_utf8: bytes &eod &convert=$$.decode("utf8");
+    format: uint8;
+    presence: uint8;
+    payload: bytes &eod;
 };

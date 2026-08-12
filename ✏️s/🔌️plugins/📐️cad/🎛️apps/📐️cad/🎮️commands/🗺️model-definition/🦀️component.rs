@@ -2,11 +2,12 @@
 
 use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
+use crate::artifacts::cad::mutations::change_active_model_definition::mutation::ChangeActiveModelDefinition;
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use crate::apps::cad::{runtime_of, snapshot_of, CadPlayRuntime};
+use crate::apps::cad::{reset_document_effect, runtime_of, snapshot_of, CadPlayRuntime};
 use crate::artifacts::cad::engine::{default_document, forest_play_camera, forest_play_scene, CAD_EXAMPLE_FOREST_LEFT};
 
 
@@ -21,7 +22,7 @@ pub mod focus_model_definition {
     }
 
     pub fn handle(payload: &FocusModelDefinition, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![CadMutation::SetActiveModelDefinition { model_definition_id: payload.model_definition_id.clone() }]))
+        Ok(Emit::mutations(vec![CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: payload.model_definition_id.clone() })]))
     }
 }
 //#endregion 🔖️FocusModelDefinition
@@ -56,7 +57,7 @@ pub mod set_active_example {
         } else {
             return Ok(Emit::default());
         };
-        let mut emit = Emit::mutations(vec![CadMutation::SetSnapshot { snapshot: Box::new(scene) }]);
+        let mut emit = Emit { effects: vec![reset_document_effect(&scene)], ..Default::default() };
         emit.config_mutations = vec![snapshot_of(&runtime, cfg.snapshot)];
         Ok(emit)
     }

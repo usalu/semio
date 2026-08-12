@@ -2,6 +2,8 @@
 
 use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
+use crate::artifacts::cad::mutations::create_object::mutation::CreateObject;
+use crate::artifacts::cad::mutations::delete_object::mutation::DeleteObject as DeleteObjectMutation;
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -30,7 +32,7 @@ pub mod add_object {
         let pane = cad_pane_from_model_definition_id(&document.active_model_definition_id).unwrap_or(CadPaneId::Shape);
         let object = make_object_for_typology(typology, cad_pane_objects(document, pane).len(), pane);
         runtime.selected_object_ids = SelectionSet::from(vec![object.id.clone()]);
-        let mut emit = Emit::mutations(vec![CadMutation::AddObject { pane, object }]);
+        let mut emit = Emit::mutations(vec![CadMutation::CreateObject(CreateObject { pane, object })]);
         emit.config_mutations = vec![snapshot_of(&runtime, cfg.snapshot)];
         Ok(emit)
     }
@@ -96,7 +98,7 @@ pub mod delete_object {
         let mut runtime = runtime_of(cfg);
         if let Some(pane) = cad_find_object_pane(document, &payload.object_id) {
             runtime.selected_object_ids.remove_id(&payload.object_id);
-            let mut emit = Emit::mutations(vec![CadMutation::RemoveObject { pane, object_id: payload.object_id.clone() }]);
+            let mut emit = Emit::mutations(vec![CadMutation::DeleteObject(DeleteObjectMutation { pane, object_id: payload.object_id.clone() })]);
             emit.config_mutations = vec![snapshot_of(&runtime, cfg.snapshot)];
             return Ok(emit);
         }
@@ -123,7 +125,7 @@ pub mod duplicate_object {
             duplicate.id = next_cad_id("object");
             duplicate.label = format!("{} copy", duplicate.label);
             runtime.selected_object_ids = SelectionSet::from(vec![duplicate.id.clone()]);
-            let mut emit = Emit::mutations(vec![CadMutation::AddObject { pane, object: duplicate }]);
+            let mut emit = Emit::mutations(vec![CadMutation::CreateObject(CreateObject { pane, object: duplicate })]);
             emit.config_mutations = vec![snapshot_of(&runtime, cfg.snapshot)];
             return Ok(emit);
         }

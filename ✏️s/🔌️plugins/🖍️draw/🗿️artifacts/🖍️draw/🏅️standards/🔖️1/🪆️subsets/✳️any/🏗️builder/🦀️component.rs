@@ -22,7 +22,7 @@ impl ArtifactBuilder for DrawBuilder {
     }
     fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
         let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-        self.snapshot = crate::artifacts::draw::schema::mutations::apply_draw_edit_mutation(&self.snapshot, &mutation);
+        self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
         (self, diff)
     }
     fn absorb(mut self, diff: Self::Diff) -> Self {

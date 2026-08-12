@@ -54,12 +54,6 @@ fn compose_export_ply(sources: &[ErasedComposeSource]) -> Result<ComposedArtifac
     let bytes = crate::artifacts::puzzle3d::io::export::serializers::artifacts::ply::v1_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
     Ok(ComposedArtifact { dialect: EXPORT_PLY_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
 }
-const EXPORT_ZIP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
-fn compose_export_zip(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-    let snapshot = rebuild_native_snapshot(sources)?;
-    let bytes = crate::artifacts::puzzle3d::io::export::serializers::artifacts::zip::v2_0::any::export(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-    Ok(ComposedArtifact { dialect: EXPORT_ZIP_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-}
 const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
 fn compose_export_png(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
     let snapshot = rebuild_native_snapshot(sources)?;
@@ -104,7 +98,6 @@ pub fn entries() -> &'static [ComposerEntry] {
         composer_entry_of::<Puzzle3dAnyComposer>(),
         ComposerEntry { writes: EXPORT_LAS_DIALECT, reads: &[PUZZLE3D_DIALECT], compose: compose_export_las },
         ComposerEntry { writes: EXPORT_PLY_DIALECT, reads: &[PUZZLE3D_DIALECT], compose: compose_export_ply },
-        ComposerEntry { writes: EXPORT_ZIP_DIALECT, reads: &[PUZZLE3D_DIALECT], compose: compose_export_zip },
         ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[PUZZLE3D_DIALECT], compose: compose_export_png },
         ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[PUZZLE3D_DIALECT], compose: compose_export_json },
         ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[PUZZLE3D_DIALECT], compose: compose_export_dwg },

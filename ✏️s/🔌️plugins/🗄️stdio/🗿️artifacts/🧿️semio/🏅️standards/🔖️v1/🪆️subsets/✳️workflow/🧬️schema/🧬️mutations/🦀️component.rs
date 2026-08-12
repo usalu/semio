@@ -259,42 +259,105 @@ impl protocol::OpText for SemioWorkflowMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `DocxMutation`'s hand-rolled codec
-/// uses.
+/// 🏷️ Ordinal table, same declaration order as `SemioWorkflowMutation`'s own enum variants and
+/// `parse_workflow_mutation`'s keyword match — the real binary `tag` field's source of truth.
+const OP_KEYWORDS: [&str; 13] = [
+    "no-mutation",
+    "set-snapshot",
+    "insert-node",
+    "remove-node",
+    "set-node-kind",
+    "set-node-label",
+    "set-node-position",
+    "set-node-param",
+    "remove-node-param",
+    "insert-edge",
+    "remove-edge",
+    "set-edge-endpoints",
+    "set-edge-kind",
+];
+fn variant_ordinal(m: &SemioWorkflowMutation) -> u8 {
+    match m {
+        SemioWorkflowMutation::NoMutation => 0,
+        SemioWorkflowMutation::SetSnapshot { .. } => 1,
+        SemioWorkflowMutation::InsertNode { .. } => 2,
+        SemioWorkflowMutation::RemoveNode { .. } => 3,
+        SemioWorkflowMutation::SetNodeKind { .. } => 4,
+        SemioWorkflowMutation::SetNodeLabel { .. } => 5,
+        SemioWorkflowMutation::SetNodePosition { .. } => 6,
+        SemioWorkflowMutation::SetNodeParam { .. } => 7,
+        SemioWorkflowMutation::RemoveNodeParam { .. } => 8,
+        SemioWorkflowMutation::InsertEdge { .. } => 9,
+        SemioWorkflowMutation::RemoveEdge { .. } => 10,
+        SemioWorkflowMutation::SetEdgeEndpoints { .. } => 11,
+        SemioWorkflowMutation::SetEdgeKind { .. } => 12,
+    }
+}
+/// ✂️ Just the `key=value ...` argument tail of `print_workflow_mutation` (empty for
+/// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text
+/// keyword itself is redundant in the binary payload.
+fn print_workflow_mutation_args(m: &SemioWorkflowMutation) -> String {
+    match print_workflow_mutation(m).split_once(' ') {
+        Some((_, rest)) => rest.to_string(),
+        None => String::new(),
+    }
+}
+
+/// ⚡️ P2 pilot: real binary op frame, replacing the old `print_op().into_bytes()` text-as-binary
+/// shortcut. `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see
+/// [`OP_KEYWORDS`]) are two REAL fixed fields; the variant's own `key=value ...` argument payload
+/// follows as one opaque trailing `bytes` chain — reusing the already-real, already-tested
+/// `print_workflow_mutation`/`parse_workflow_mutation` text codec rather than re-deriving a second
+/// independent encoding.
 impl protocol::OpBinary for SemioWorkflowMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_workflow_mutation_args(self).as_bytes());
+        Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        const OP_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
+        }
+        if bytes[0] != OP_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        let tag = bytes[1];
+        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
+        let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
 
-//#region 🔖️Tests
+//#region 🔖️Demo
+/// 🌱 Shared fixture helpers + representative `SemioWorkflowMutation` cases (one per variant) —
+/// single source of truth for this facet's own tests AND `ops_grammar_conformance_law`/
+/// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::command::DiffAlgebra;
+fn node(id: &str, kind: &str, label: &str, x: f64, y: f64) -> WorkflowNode {
+    WorkflowNode { id: id.into(), kind: kind.into(), label: label.into(), params: vec![crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::WorkflowParam { key: "k".into(), value: "v".into() }], position: SemioPoint2 { x, y } }
+}
+#[cfg(test)]
+fn edge(id: &str, from_node: &str, to_node: &str, kind: &str) -> WorkflowEdge {
+    WorkflowEdge { id: id.into(), from: PortRef { node: from_node.into(), port: "out".into() }, to: PortRef { node: to_node.into(), port: "in".into() }, kind: kind.into() }
+}
 
-    fn node(id: &str, kind: &str, label: &str, x: f64, y: f64) -> WorkflowNode {
-        WorkflowNode { id: id.into(), kind: kind.into(), label: label.into(), params: vec![crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::WorkflowParam { key: "k".into(), value: "v".into() }], position: SemioPoint2 { x, y } }
+#[cfg(test)]
+fn fixture() -> SemioWorkflowSnapshot {
+    SemioWorkflowSnapshot {
+        schema: crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::STDIO_SEMIOWORKFLOW_DOCUMENT_SCHEMA.into(),
+        nodes: vec![node("n1", "source", "Source", 0.0, 0.0), node("n2", "sink", "Sink", 10.0, 10.0)],
+        edges: vec![edge("e1", "n1", "n2", "data")],
     }
-    fn edge(id: &str, from_node: &str, to_node: &str, kind: &str) -> WorkflowEdge {
-        WorkflowEdge { id: id.into(), from: PortRef { node: from_node.into(), port: "out".into() }, to: PortRef { node: to_node.into(), port: "in".into() }, kind: kind.into() }
-    }
+}
 
-    fn fixture() -> SemioWorkflowSnapshot {
-        SemioWorkflowSnapshot {
-            schema: crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::STDIO_SEMIOWORKFLOW_DOCUMENT_SCHEMA.into(),
-            nodes: vec![node("n1", "source", "Source", 0.0, 0.0), node("n2", "sink", "Sink", 10.0, 10.0)],
-            edges: vec![edge("e1", "n1", "n2", "data")],
-        }
-    }
-
-    fn sample_mutations() -> Vec<SemioWorkflowMutation> {
-        vec![
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<SemioWorkflowMutation> {
+    vec![
             SemioWorkflowMutation::NoMutation,
             SemioWorkflowMutation::SetSnapshot { snapshot: fixture() },
             SemioWorkflowMutation::InsertNode { node: node("n3", "transform", "T", 5.0, 5.0) },
@@ -310,12 +373,19 @@ mod tests {
             SemioWorkflowMutation::SetEdgeEndpoints { id: "e1".into(), from: PortRef { node: "n2".into(), port: "out".into() }, to: PortRef { node: "n1".into(), port: "in".into() } },
             SemioWorkflowMutation::SetEdgeKind { id: "e1".into(), kind: "changed".into() },
         ]
-    }
+}
+//#endregion 🔖️Demo
+
+//#region 🔖️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use protocol::command::DiffAlgebra;
 
     //#region 🔖️MutationDiffLaw
     #[test]
     fn mutation_diff_law() {
-        for mutation in sample_mutations() {
+        for mutation in demo_mutation_cases() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
             let applied_via_diff = protocol::MutationDiff::apply(&diff_direct, &base);
@@ -332,7 +402,7 @@ mod tests {
     //#region 🔖️InverseLaw
     #[test]
     fn inverse_law() {
-        for mutation in sample_mutations() {
+        for mutation in demo_mutation_cases() {
             let base = fixture();
 
             let mut round_tripped = base.clone();
@@ -354,7 +424,7 @@ mod tests {
     //#region 🔖️OpTextBinaryRoundtripLaw
     #[test]
     fn op_text_binary_roundtrip_law() {
-        for mutation in sample_mutations() {
+        for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = SemioWorkflowMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

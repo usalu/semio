@@ -21,6 +21,8 @@ use protocol::{MutationDiff, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
+/// 🏷️ Variant ordinals for the real binary `OpBinary` frame below (`tag u8`) — declaration order,
+/// 0-12. Must stay in lockstep with `variant_ordinal`/`OP_KEYWORDS`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioAnimationMutation {
@@ -169,13 +171,32 @@ pub fn apply_semio_animation_mutation(snapshot: &mut SemioAnimationSnapshot, mut
     diff
 }
 
+//#region SnapshotLit
+/// 🧩️ `SetSnapshot`'s whole-snapshot payload — `[hex(schema),[timeline,...]]`, reusing the diff
+/// facet's own `pub(crate)` `enc_timeline`/`dec_timeline`/`enc_str`/`dec_str`/`enc_list`/`dec_list`
+/// value codecs (one source of truth, not a third independent copy). W2c closer fix: this REPLACES
+/// the old whole-enum `serde_json::to_string`/`from_str` passthrough — a real JSON-transfer-ban
+/// violation the brief specifically flagged as a recurring pattern to check for (confirmed present
+/// here, unlike the sibling `🔺️diff` facet, which was already fully real pre-wave).
+fn enc_animation_snapshot(s: &SemioAnimationSnapshot) -> String {
+    use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{enc_list, enc_str, enc_timeline};
+    format!("[{},{}]", enc_str(&s.schema), enc_list(&s.timelines, enc_timeline))
+}
+fn dec_animation_snapshot(s: &str) -> Result<SemioAnimationSnapshot, String> {
+    use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+    use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{dec_list, dec_str, dec_timeline};
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [schema, timelines] = parts.as_slice() else { return Err(format!("snapshot-lit: expected 2 fields, got {}", parts.len())) };
+    Ok(SemioAnimationSnapshot { schema: dec_str(schema)?, timelines: dec_list(timelines, dec_timeline)? })
+}
+//#endregion SnapshotLit
+
 //#region OpCodecs
 /// 🎙️ Handcrafted `OpText`/`OpBinary` — one `TAG:payload` line per variant, reusing the diff
 /// module's `pub(crate)` value codecs (`enc_timeline`/`enc_channel`/`enc_keyframe`/`enc_target`/
 /// `enc_value`/`enc_interpolation`/hex-string helpers) instead of re-deriving a second parallel
-/// grammar. `NoMutation`/`SetSnapshot` keep the JSON-pack passthrough already proven honest for
-/// this neutral semio type (see the snapshot module's own `ArtifactPack` doc comment) since
-/// `SetSnapshot`'s payload is a whole `SemioAnimationSnapshot`, not a handful of scalar fields.
+/// grammar. `SetSnapshot` reuses the `enc_animation_snapshot`/`dec_animation_snapshot` whole-
+/// snapshot codec above (W2c closer fix — was `serde_json`, see that region's doc comment).
 impl protocol::OpText for SemioAnimationMutation {
     fn print_op(&self) -> String {
         use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{
@@ -184,7 +205,7 @@ impl protocol::OpText for SemioAnimationMutation {
         use SemioAnimationMutation::*;
         match self {
             NoMutation => "N".to_string(),
-            SetSnapshot { snapshot } => format!("S:{}", enc_str(&serde_json::to_string(snapshot).unwrap_or_default())),
+            SetSnapshot { snapshot } => format!("S:{}", enc_animation_snapshot(snapshot)),
             InsertTimeline { index, timeline } => format!("IT:{index},{}", enc_timeline(timeline)),
             RemoveTimeline { index } => format!("RT:{index}"),
             SetTimelineName { index, name } => format!("TN:{index},{}", match name { None => "[0]".to_string(), Some(n) => format!("[1,{}]", enc_str(n)) }),
@@ -215,10 +236,7 @@ impl protocol::OpText for SemioAnimationMutation {
         let (tag, rest) = line.split_once(':').ok_or_else(|| fail(format!("op: bad shape {line:?}")))?;
         (|| -> Result<Self, String> {
             match tag {
-                "S" => {
-                    let json = dec_str(rest)?;
-                    Ok(SetSnapshot { snapshot: serde_json::from_str(&json).map_err(|e| e.to_string())? })
-                }
+                "S" => Ok(SetSnapshot { snapshot: dec_animation_snapshot(rest)? }),
                 "IT" => {
                     let (index, timeline) = rest.split_once(',').ok_or_else(|| "IT: missing comma".to_string())?;
                     Ok(InsertTimeline { index: parse_usize(index)?, timeline: dec_timeline(timeline)? })
@@ -291,60 +309,109 @@ impl protocol::OpText for SemioAnimationMutation {
     }
 }
 
+/// 🏷️ `SemioAnimationMutation` variant ordinals — declaration order, 0-12 (matches
+/// `parse_op`'s own keyword match). Used by the real `OpBinary` frame below.
+const OP_KEYWORDS: [&str; 13] = ["N", "S", "IT", "RT", "TN", "IC", "RC", "CT", "CI", "IK", "RK", "KT", "KV"];
+fn variant_ordinal(m: &SemioAnimationMutation) -> u8 {
+    use SemioAnimationMutation::*;
+    match m {
+        NoMutation => 0,
+        SetSnapshot { .. } => 1,
+        InsertTimeline { .. } => 2,
+        RemoveTimeline { .. } => 3,
+        SetTimelineName { .. } => 4,
+        InsertChannel { .. } => 5,
+        RemoveChannel { .. } => 6,
+        SetChannelTarget { .. } => 7,
+        SetChannelInterpolation { .. } => 8,
+        InsertKeyframe { .. } => 9,
+        RemoveKeyframe { .. } => 10,
+        SetKeyframeTime { .. } => 11,
+        SetKeyframeValue { .. } => 12,
+    }
+}
+const OP_BINARY_FORMAT: u8 = 1;
+
+/// 🔢️ Real binary op frame (animation wave — off the old whole-`OpText`-line `.into_bytes()` F6
+/// text-as-binary shortcut). `format u8` + `tag u8` (the variant ordinal above) as two real fixed
+/// fields, then the variant's own `key=value,...` argument text (i.e. `print_op`'s output with its
+/// `TAG:` prefix stripped) as one opaque trailing `bytes` chain — reuses the real, tested
+/// `print_op`/`parse_op` text codec (one source of truth), same treatment every prior semio wave's
+/// `OpBinary` upgrade uses.
 impl protocol::OpBinary for SemioAnimationMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
+        let printed = <Self as protocol::OpText>::print_op(self);
+        let args = match printed.split_once(':') {
+            Some((_, rest)) => rest,
+            None => "",
+        };
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(args.as_bytes());
+        Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        <Self as protocol::OpText>::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let malformed = |what: &'static str, detail: String| protocol::ProtocolError::Malformed { what, offset: 0, detail };
+        let [format, tag, rest @ ..] = bytes else { return Err(malformed("op header", format!("expected at least 2 bytes, got {}", bytes.len()))) };
+        if *format != OP_BINARY_FORMAT {
+            return Err(malformed("op format", format!("unsupported op format {format}")));
+        }
+        let keyword = OP_KEYWORDS.get(*tag as usize).ok_or_else(|| malformed("op tag", format!("unknown op tag {tag}")))?;
+        let args = std::str::from_utf8(rest).map_err(|e| malformed("op args utf8", e.to_string()))?;
+        let line = if *keyword == "N" { "N".to_string() } else { format!("{keyword}:{args}") };
+        <Self as protocol::OpText>::parse_op(&line).map_err(|e| malformed("op text", e.to_string()))
     }
 }
 //#endregion OpCodecs
+
+/// 🧱️ Module-scope (not `mod tests`-local) fixture + demo mutation cases — so the `🎹️composer`
+/// conformance-law tests can reuse them, same promotion pattern every prior semio wave's report
+/// documents (a private item of a child `mod tests` isn't visible to a sibling module).
+#[cfg(test)]
+fn fixture() -> SemioAnimationSnapshot {
+    SemioAnimationSnapshot {
+        timelines: vec![AnimTimeline {
+            name: Some("walk".into()),
+            channels: vec![AnimChannel {
+                target: AnimTarget { node: "hip".into(), property: crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::AnimTargetProperty::Translation },
+                interpolation: AnimInterpolation::Linear,
+                keyframes: vec![AnimKeyframe { t: 0.0, value: AnimValue::Scalar { value: 1.0 } }],
+            }],
+        }],
+        ..SemioAnimationSnapshot::default()
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<SemioAnimationMutation> {
+    let base = fixture();
+    use SemioAnimationMutation::*;
+    vec![
+        NoMutation,
+        SetSnapshot { snapshot: base.clone() },
+        InsertTimeline { index: 1, timeline: AnimTimeline { name: Some("wave".into()), channels: vec![] } },
+        RemoveTimeline { index: 0 },
+        SetTimelineName { index: 0, name: None },
+        InsertChannel { timeline_index: 0, index: 1, channel: base.timelines[0].channels[0].clone() },
+        RemoveChannel { timeline_index: 0, index: 0 },
+        SetChannelTarget { timeline_index: 0, index: 0, target: AnimTarget { node: "spine".into(), property: crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::AnimTargetProperty::Rotation } },
+        SetChannelInterpolation { timeline_index: 0, index: 0, interpolation: AnimInterpolation::Step },
+        InsertKeyframe { timeline_index: 0, channel_index: 0, index: 1, keyframe: AnimKeyframe { t: 2.0, value: AnimValue::Scalar { value: 5.0 } } },
+        RemoveKeyframe { timeline_index: 0, channel_index: 0, index: 0 },
+        SetKeyframeTime { timeline_index: 0, channel_index: 0, index: 0, t: 3.5 },
+        SetKeyframeValue { timeline_index: 0, channel_index: 0, index: 0, value: AnimValue::Weights { values: vec![0.1, 0.9] } },
+    ]
+}
 
 //#region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn base_snapshot() -> SemioAnimationSnapshot {
-        SemioAnimationSnapshot {
-            timelines: vec![AnimTimeline {
-                name: Some("walk".into()),
-                channels: vec![AnimChannel {
-                    target: AnimTarget { node: "hip".into(), property: crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::AnimTargetProperty::Translation },
-                    interpolation: AnimInterpolation::Linear,
-                    keyframes: vec![AnimKeyframe { t: 0.0, value: AnimValue::Scalar { value: 1.0 } }],
-                }],
-            }],
-            ..SemioAnimationSnapshot::default()
-        }
-    }
-
-    fn all_variants(base: &SemioAnimationSnapshot) -> Vec<SemioAnimationMutation> {
-        use SemioAnimationMutation::*;
-        vec![
-            NoMutation,
-            SetSnapshot { snapshot: base.clone() },
-            InsertTimeline { index: 1, timeline: AnimTimeline { name: Some("wave".into()), channels: vec![] } },
-            RemoveTimeline { index: 0 },
-            SetTimelineName { index: 0, name: None },
-            InsertChannel { timeline_index: 0, index: 1, channel: base.timelines[0].channels[0].clone() },
-            RemoveChannel { timeline_index: 0, index: 0 },
-            SetChannelTarget { timeline_index: 0, index: 0, target: AnimTarget { node: "spine".into(), property: crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::AnimTargetProperty::Rotation } },
-            SetChannelInterpolation { timeline_index: 0, index: 0, interpolation: AnimInterpolation::Step },
-            InsertKeyframe { timeline_index: 0, channel_index: 0, index: 1, keyframe: AnimKeyframe { t: 2.0, value: AnimValue::Scalar { value: 5.0 } } },
-            RemoveKeyframe { timeline_index: 0, channel_index: 0, index: 0 },
-            SetKeyframeTime { timeline_index: 0, channel_index: 0, index: 0, t: 3.5 },
-            SetKeyframeValue { timeline_index: 0, channel_index: 0, index: 0, value: AnimValue::Weights { values: vec![0.1, 0.9] } },
-        ]
-    }
-
     /// 🧪️ mutation_diff_law: `m.diff(base).apply(base) == { apply_x_mutation(&mut s, m); s }`.
     #[test]
     fn mutation_diff_law_covers_every_variant() {
-        let base = base_snapshot();
-        for m in all_variants(&base) {
+        let base = fixture();
+        for m in demo_mutation_cases() {
             let diff = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(&m, &base);
             let via_diff = diff.apply(&base);
 
@@ -359,8 +426,8 @@ mod tests {
     /// 🧪️ inverse_law: every variant's inverse restores `base` when applied after the mutation.
     #[test]
     fn inverse_law_covers_every_variant() {
-        let base = base_snapshot();
-        for m in all_variants(&base) {
+        let base = fixture();
+        for m in demo_mutation_cases() {
             let mut mutated = base.clone();
             let _ = apply_semio_animation_mutation(&mut mutated, &m);
             let inv = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(&m, &base);
@@ -375,8 +442,8 @@ mod tests {
     /// variant.
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = base_snapshot();
-        for m in all_variants(&base) {
+        let base = fixture();
+        for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = SemioAnimationMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));

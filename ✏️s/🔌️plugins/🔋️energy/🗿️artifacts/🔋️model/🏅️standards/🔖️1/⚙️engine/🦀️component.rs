@@ -130,6 +130,17 @@ impl EnergyModelEngine {
             serde_json::to_string(&results).map_err(|e| crate::error::Error::severe(e.to_string()))?;
         Ok(results)
     }
+
+    /// 📤️ The engine's owned `EnergyModelArtifact` (distinct from the persisted snapshot —
+    /// carries preview `results_json` too).
+    pub fn artifact(&self) -> &EnergyModelArtifact {
+        &self.artifact_state
+    }
+
+    /// 📤️ The persisted snapshot this engine was built from.
+    pub fn snapshot(&self) -> &EnergyModelSnapshot {
+        &self.snapshot_state
+    }
 }
 //#endregion 🔖️ArtifactEngine
 
@@ -146,7 +157,6 @@ mod tests {
 
     #[test]
     fn engine_owns_artifact_not_snapshot_alias() {
-        use protocol::ArtifactEngine;
         let engine = EnergyModelEngine::new(empty_energy_model_snapshot());
         assert_eq!(engine.artifact().schema, ENERGY_MODEL_DOCUMENT_SCHEMA);
         assert!(engine.artifact().results_json.is_empty());

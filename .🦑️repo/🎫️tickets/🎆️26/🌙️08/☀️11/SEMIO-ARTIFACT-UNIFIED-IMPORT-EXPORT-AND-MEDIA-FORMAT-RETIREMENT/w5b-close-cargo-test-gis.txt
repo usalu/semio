@@ -1,0 +1,6 @@
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::binary::tests::gis3d_terrain_document_text_round_trips_through_store ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::snapshot::text::tests::gis_map_document_dsl_round_trips_bundled_reuse_example ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::snapshot::text::tests::print_dsl_reproduces_the_bundled_example_text_verbatim ... ok
+
+test result: ok. 155 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+

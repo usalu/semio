@@ -1,0 +1,44 @@
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+error: functions tagged with `#[proc_macro_derive]` must currently reside in the root of the crate
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:1594:1
+     |
+1594 | pub fn derive_dsl_record(input: TokenStream) -> TokenStream {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: functions tagged with `#[proc_macro_derive]` must currently reside in the root of the crate
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:1649:1
+     |
+1649 | pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: functions tagged with `#[proc_macro_derive]` must currently reside in the root of the crate
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:1732:1
+     |
+1732 | pub fn derive_dsl_diff(input: TokenStream) -> TokenStream {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: functions tagged with `#[proc_macro_derive]` must currently reside in the root of the crate
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:1789:1
+     |
+1789 | pub fn derive_dsl_scalar(input: TokenStream) -> TokenStream {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: functions tagged with `#[proc_macro_derive]` must currently reside in the root of the crate
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:1927:1
+     |
+1927 | pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: functions tagged with `#[proc_macro_derive]` must currently reside in the root of the crate
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:1946:1
+     |
+1946 | pub fn derive_dsl_enum(input: TokenStream) -> TokenStream {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: functions tagged with `#[proc_macro_derive]` must currently reside in the root of the crate
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:1999:1
+     |
+1999 | pub fn derive_mutations(input: TokenStream) -> TokenStream {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: could not compile `semio-framework-os-kernel-dsl-derive` (lib) due to 7 previous errors

@@ -2,13 +2,14 @@
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
 use crate::artifacts::xlsx::schema::diff::{
-    dec_cell_value, dec_ct_entry, dec_owner_rels, dec_part, dec_sheet, dec_str, diff_insert_sheet, diff_insert_shared_string, diff_remove_cell,
-    diff_remove_shared_string, diff_remove_sheet, diff_rename_sheet, diff_set_cell, diff_set_shared_string, diff_set_snapshot, enc_cell_value,
-    enc_ct_entry, enc_owner_rels, enc_part, enc_sheet, enc_str, split_top_level, strip_brackets, XlsxDiff,
+    dec_cell_value, dec_cell_value_bin, dec_ct_entry, dec_opc_part_bin, dec_owner_rels, dec_part, dec_rel_bin, dec_sheet, dec_sheet_bin, dec_str,
+    diff_insert_sheet, diff_insert_shared_string, diff_remove_cell, diff_remove_shared_string, diff_remove_sheet, diff_rename_sheet, diff_set_cell,
+    diff_set_shared_string, diff_set_snapshot, enc_cell_value, enc_cell_value_bin, enc_ct_entry, enc_opc_part_bin, enc_owner_rels, enc_part,
+    enc_rel_bin, enc_sheet, enc_sheet_bin, enc_str, read_str_lp, split_top_level, strip_brackets, write_str_lp, XlsxDiff,
 };
-use crate::artifacts::xlsx::schema::snapshot::{XlsxCellValue, XlsxSheet, XlsxWorkbook};
+use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
 use crate::artifacts::xlsx::XlsxSnapshot;
-use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
+use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
 use protocol::{Mutation, OpText};
 #[cfg(test)]
 use protocol::OpBinary;
@@ -285,38 +286,390 @@ impl protocol::OpText for XlsxMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification as `XlsxDiff`'s hand-rolled codec.
+//#region 🔖️OpBinaryCodec
+/// 🧪️ FG-wave: real recursive binary primitives backing the upgraded `OpBinary` impl below --
+/// mirrors docx's own `../🧬️mutations/🦀️component.rs`'s `OpBinaryCodec` region shape (this
+/// wave's OPC pattern-setter), reusing `store::pack_rt::write_varint_u64`/`store::ByteReader`
+/// plus `XlsxDiff`'s own `write_str_lp`/`read_str_lp`/`enc_opc_part_bin`/`dec_opc_part_bin`/
+/// `enc_rel_bin`/`dec_rel_bin`/`enc_sheet_bin`/`dec_sheet_bin`/`enc_cell_value_bin`/
+/// `dec_cell_value_bin` (`../🔺️diff/🦀️component.rs`, `pub(crate)` to this artifact).
+/// 🌱 Full (non-diff) `OpcContentTypes`/`OpcPackage`/`XlsxWorkbook`/`XlsxSnapshot` binary codecs --
+/// only `SetSnapshot`'s whole-payload encoding needs these, mirroring this file's own
+/// `enc_content_types`/`enc_opc_package`/`enc_workbook`/`enc_xlsx_snapshot` text forms above.
+/// Owners sorted for a deterministic encoding, same `HashMap`-iteration-order caveat those text
+/// forms document.
+fn enc_opc_content_types_bin(ct: &OpcContentTypes, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, ct.defaults.len() as u64);
+    for e in &ct.defaults {
+        write_str_lp(out, &e.0);
+        write_str_lp(out, &e.1);
+    }
+    store::pack_rt::write_varint_u64(out, ct.overrides.len() as u64);
+    for e in &ct.overrides {
+        write_str_lp(out, &e.0);
+        write_str_lp(out, &e.1);
+    }
+}
+fn dec_opc_content_types_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcContentTypes, String> {
+    let default_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut defaults = Vec::with_capacity(default_count as usize);
+    for _ in 0..default_count {
+        defaults.push((read_str_lp(reader)?, read_str_lp(reader)?));
+    }
+    let override_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut overrides = Vec::with_capacity(override_count as usize);
+    for _ in 0..override_count {
+        overrides.push((read_str_lp(reader)?, read_str_lp(reader)?));
+    }
+    Ok(OpcContentTypes { defaults, overrides })
+}
+fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, pkg.parts.len() as u64);
+    for p in &pkg.parts {
+        enc_opc_part_bin(p, out);
+    }
+    enc_opc_content_types_bin(&pkg.content_types, out);
+    let mut owners: Vec<&String> = pkg.relationships.keys().collect();
+    owners.sort();
+    store::pack_rt::write_varint_u64(out, owners.len() as u64);
+    for owner in owners {
+        write_str_lp(out, owner);
+        let list = &pkg.relationships[owner];
+        store::pack_rt::write_varint_u64(out, list.len() as u64);
+        for r in list {
+            enc_rel_bin(r, out);
+        }
+    }
+}
+fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage, String> {
+    let part_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut parts = Vec::with_capacity(part_count as usize);
+    for _ in 0..part_count {
+        parts.push(dec_opc_part_bin(reader)?);
+    }
+    let content_types = dec_opc_content_types_bin(reader)?;
+    let owner_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut relationships = HashMap::with_capacity(owner_count as usize);
+    for _ in 0..owner_count {
+        let owner = read_str_lp(reader)?;
+        let rel_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+        let mut list = Vec::with_capacity(rel_count as usize);
+        for _ in 0..rel_count {
+            list.push(dec_rel_bin(reader)?);
+        }
+        relationships.insert(owner, list);
+    }
+    Ok(OpcPackage { parts, content_types, relationships })
+}
+fn enc_workbook_bin(wb: &XlsxWorkbook, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, wb.sheets.len() as u64);
+    for s in &wb.sheets {
+        enc_sheet_bin(s, out);
+    }
+    store::pack_rt::write_varint_u64(out, wb.shared_strings.len() as u64);
+    for s in &wb.shared_strings {
+        write_str_lp(out, s);
+    }
+}
+fn dec_workbook_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxWorkbook, String> {
+    let sheet_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut sheets = Vec::with_capacity(sheet_count as usize);
+    for _ in 0..sheet_count {
+        sheets.push(dec_sheet_bin(reader)?);
+    }
+    let string_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut shared_strings = Vec::with_capacity(string_count as usize);
+    for _ in 0..string_count {
+        shared_strings.push(read_str_lp(reader)?);
+    }
+    Ok(XlsxWorkbook { sheets, shared_strings })
+}
+fn enc_xlsx_snapshot_bin(s: &XlsxSnapshot, out: &mut Vec<u8>) {
+    write_str_lp(out, &s.schema);
+    enc_opc_package_bin(&s.opc, out);
+    enc_workbook_bin(&s.workbook, out);
+}
+fn dec_xlsx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let opc = dec_opc_package_bin(reader)?;
+    let workbook = dec_workbook_bin(reader)?;
+    Ok(XlsxSnapshot { schema, opc, workbook })
+}
+//#endregion 🔖️OpBinaryCodec
+
+/// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
+/// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut (confirmed still on that
+/// shortcut live by direct read of this file before this wave, not assumed). `tag` is the
+/// `XlsxMutation` variant ordinal, in the SAME 0-9 order `print_xlsx_mutation`'s own keyword
+/// match uses.
 impl protocol::OpBinary for XlsxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let tag: u8 = match self {
+            XlsxMutation::NoMutation => 0,
+            XlsxMutation::SetSnapshot { .. } => 1,
+            XlsxMutation::InsertSheet { .. } => 2,
+            XlsxMutation::RemoveSheet { .. } => 3,
+            XlsxMutation::RenameSheet { .. } => 4,
+            XlsxMutation::SetCell { .. } => 5,
+            XlsxMutation::RemoveCell { .. } => 6,
+            XlsxMutation::InsertSharedString { .. } => 7,
+            XlsxMutation::RemoveSharedString { .. } => 8,
+            XlsxMutation::SetSharedString { .. } => 9,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            XlsxMutation::NoMutation => {}
+            XlsxMutation::SetSnapshot { snapshot } => enc_xlsx_snapshot_bin(snapshot, &mut out),
+            XlsxMutation::InsertSheet { sheet } => enc_sheet_bin(sheet, &mut out),
+            XlsxMutation::RemoveSheet { name } => write_str_lp(&mut out, name),
+            XlsxMutation::RenameSheet { name, new_name } => {
+                write_str_lp(&mut out, name);
+                write_str_lp(&mut out, new_name);
+            }
+            XlsxMutation::SetCell { sheet_name, row, col, value } => {
+                write_str_lp(&mut out, sheet_name);
+                store::pack_rt::write_varint_u64(&mut out, *row as u64);
+                store::pack_rt::write_varint_u64(&mut out, *col as u64);
+                enc_cell_value_bin(value, &mut out);
+            }
+            XlsxMutation::RemoveCell { sheet_name, row, col } => {
+                write_str_lp(&mut out, sheet_name);
+                store::pack_rt::write_varint_u64(&mut out, *row as u64);
+                store::pack_rt::write_varint_u64(&mut out, *col as u64);
+            }
+            XlsxMutation::InsertSharedString { value } => write_str_lp(&mut out, value),
+            XlsxMutation::RemoveSharedString { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64),
+            XlsxMutation::SetSharedString { index, value } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                write_str_lp(&mut out, value);
+            }
+        }
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(XlsxMutation::NoMutation),
+            1 => {
+                let snapshot = dec_xlsx_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                Ok(XlsxMutation::SetSnapshot { snapshot })
+            }
+            2 => {
+                let sheet = dec_sheet_bin(&mut reader).map_err(|e| malformed("op sheet", reader.position(), e))?;
+                Ok(XlsxMutation::InsertSheet { sheet })
+            }
+            3 => {
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                Ok(XlsxMutation::RemoveSheet { name })
+            }
+            4 => {
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let new_name = read_str_lp(&mut reader).map_err(|e| malformed("op new_name", reader.position(), e))?;
+                Ok(XlsxMutation::RenameSheet { name, new_name })
+            }
+            5 => {
+                let sheet_name = read_str_lp(&mut reader).map_err(|e| malformed("op sheet_name", reader.position(), e))?;
+                let row = reader.read_varint_u64().map_err(|e| malformed("op row", reader.position(), e.to_string()))? as u32;
+                let col = reader.read_varint_u64().map_err(|e| malformed("op col", reader.position(), e.to_string()))? as u32;
+                let value = dec_cell_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(XlsxMutation::SetCell { sheet_name, row, col, value })
+            }
+            6 => {
+                let sheet_name = read_str_lp(&mut reader).map_err(|e| malformed("op sheet_name", reader.position(), e))?;
+                let row = reader.read_varint_u64().map_err(|e| malformed("op row", reader.position(), e.to_string()))? as u32;
+                let col = reader.read_varint_u64().map_err(|e| malformed("op col", reader.position(), e.to_string()))? as u32;
+                Ok(XlsxMutation::RemoveCell { sheet_name, row, col })
+            }
+            7 => {
+                let value = read_str_lp(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(XlsxMutation::InsertSharedString { value })
+            }
+            8 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                Ok(XlsxMutation::RemoveSharedString { index })
+            }
+            9 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let value = read_str_lp(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(XlsxMutation::SetSharedString { index, value })
+            }
+            other => Err(malformed("op tag", 1, format!("unknown XlsxMutation tag {other}"))),
+        }
     }
 }
 //#endregion 🔖️MutationCodec
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🧪️ FG-wave: representative `XlsxSnapshot`/`XlsxMutation` fixtures -- the single source of
+/// truth reused by this file's own `mutation_diff_law`/`inverse_law`/`op_text_binary_roundtrip_law`
+/// tests below AND by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
+/// conformance tests, same shape docx's own `demo_mutation_cases()` establishes (this wave's OPC
+/// pattern-setter). Promoted from the former test-only `fixture`/`sweep_a`/`sweep_b`/
+/// `sample_mutations` (the last renamed for the same convention).
+pub(crate) fn fixture() -> XlsxSnapshot {
+    crate::artifacts::xlsx::engine::build_minimal_xlsx(XlsxWorkbook {
+        sheets: vec![
+            XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] },
+            XlsxSheet { name: "Sheet2".into(), cells: vec![] },
+        ],
+        shared_strings: vec!["hello".into()],
+    })
+}
+
+//#region 🔖️Fixtures
+/// 🌱 `sweep_a`/`sweep_b`: differ in EVERY mutable field, both `workbook` and `opc`. `sheets`
+/// (a true name-keyed collection) gets one removed, one modified-in-every-field (cells:
+/// removed+modified+added all in ONE direction, since `(row,col)` is real identity, not
+/// position), one added. `shared_strings` (index-keyed, i.e. position-pairwise-matched, same
+/// category as `IndexedTripleDiff`) is a DIFFERENT length in each fixture — per this ticket's
+/// "known structural trap" note, a single same-direction `between()` over such a collection
+/// can never show both `removed` AND `added` from one call, so `a -> b` exercises
+/// `removed`+`modified` and `b -> a` (asserted separately in `field_sweep`) exercises
+/// `added`+`modified`. OPC content_types/parts/relationships each get one removed, one
+/// modified, one added (all true name-keyed collections, exercised in one direction).
+pub(crate) fn sweep_a() -> XlsxSnapshot {
+    let mut opc = OpcPackage::empty();
+    opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
+    opc.content_types.set_default("xml", "application/xml");
+    opc.content_types.set_default("toRemove", "application/octet-stream");
+    opc.set_part("xl/workbook.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml", b"<workbook/>".to_vec());
+    opc.set_part("xl/toModify.xml", "application/xml", b"old".to_vec());
+    opc.set_part("xl/toRemove.xml", "application/xml", b"gone".to_vec());
+    opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "xl/workbook.xml");
+    opc.add_relationship("", "rId9", "http://example/toRemove", "xl/toRemove.xml");
+    // 🩹 Owner key deliberately `"xl/toModify.xml"`, NOT `"xl/workbook.xml"` — the real
+    // engine (`regenerate_workbook_parts`) always populates a MULTI-entry `relationships`
+    // list under owner `"xl/workbook.xml"` (one per worksheet + one for shared strings); if
+    // this synthetic "modified owner" case reused that exact key, `inverse_law`'s two-hop
+    // `SetSnapshot` round trip against `fixture()` (an engine-built snapshot) would compose
+    // a partial-overlap MODIFY on a real multi-item Vec, which — per the diff module's own
+    // documented survivor-position convention — does not reconstruct exact Vec ORDER through
+    // two independent `between()` calls (only content). Using a synthetic owner absent from
+    // any engine-built snapshot keeps this a clean whole-owner remove+add in that scenario
+    // (captured/restored as one atomic `(owner, Vec<Rel>)` tuple, order-exact by construction)
+    // while still genuinely exercising `relationships.modified` here in `field_sweep`.
+    opc.relationships.insert(
+        "xl/toModify.xml".into(),
+        vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "worksheets/old.xml".into(), target_mode: OpcTargetMode::Internal }],
+    );
+    opc.relationships.insert(
+        "xl/toRemove.xml".into(),
+        vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/ownerToRemove".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }],
+    );
+
+    XlsxSnapshot::from_parts(
+        opc,
+        XlsxWorkbook {
+            sheets: vec![
+                XlsxSheet {
+                    name: "toModify".into(),
+                    cells: vec![
+                        XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) },
+                        XlsxCell { row: 2, col: 0, value: XlsxCellValue::Boolean(false) },
+                    ],
+                },
+                XlsxSheet { name: "stay".into(), cells: vec![] },
+                XlsxSheet { name: "toDrop".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::SharedString(0) }] },
+            ],
+            // 🎯️ Length 3 vs `sweep_b`'s 2: per this ticket's "known structural trap" note, a
+            // single same-direction `between()` over an index-keyed (pairwise-position-matched)
+            // collection can never show BOTH `removed` AND `added` from one call -- so `a -> b`
+            // exercises `shared_strings.removed` (index 2, since `b` is shorter) +
+            // `shared_strings.modified` (index 1); `b -> a` (asserted separately in
+            // `field_sweep`) exercises `shared_strings.added` (the same index 2, recurring).
+            shared_strings: vec!["keep".into(), "toModify".into(), "toRemove".into()],
+        },
+    )
+}
+
+pub(crate) fn sweep_b() -> XlsxSnapshot {
+    let mut opc = OpcPackage::empty();
+    opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
+    opc.content_types.set_default("xml", "application/xml");
+    opc.content_types.set_default("added", "application/octet-stream");
+    opc.set_part("xl/workbook.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml", b"<workbook/>changed".to_vec());
+    opc.set_part("xl/toModify.xml", "application/xml", b"new".to_vec());
+    opc.set_part("xl/added.xml", "application/xml", b"fresh".to_vec());
+    // 🩹 AFTER the `set_part` calls above (which already appended `toModify`'s override entry
+    // at position 1): a bare `set_override` on an EXISTING key updates its VALUE in place,
+    // never its position — same convention docx's own `field_sweep` fixture documents (the OPC
+    // module's `overrides` is order-sensitive `Vec<(String,String)>` equality, not ours to
+    // change).
+    opc.content_types.set_override("xl/toModify.xml", "application/xml-modified");
+    opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "xl/workbook.xml");
+    opc.relationships.insert(
+        "xl/toModify.xml".into(),
+        vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "worksheets/new.xml".into(), target_mode: OpcTargetMode::Internal }],
+    );
+    opc.relationships.insert("xl/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::Internal }]);
+
+    XlsxSnapshot::from_parts(
+        opc,
+        XlsxWorkbook {
+            sheets: vec![
+                XlsxSheet {
+                    name: "toModify".into(),
+                    cells: vec![
+                        // row (1,0) survives with a changed value; row (2,0) is dropped; row
+                        // (3,0) is a NET-NEW cell -- exercises `cells.removed` +
+                        // `cells.modified` + `cells.added` all in the SAME sheet-modify.
+                        XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(2.0) },
+                        XlsxCell { row: 3, col: 0, value: XlsxCellValue::Formula { expr: "SUM(A1:A2)".into(), cached: Some(Box::new(XlsxCellValue::Number(3.0))) } },
+                    ],
+                },
+                XlsxSheet { name: "stay".into(), cells: vec![] },
+                XlsxSheet { name: "added".into(), cells: vec![XlsxCell { row: 1, col: 1, value: XlsxCellValue::InlineString("brand new".into()) }] },
+            ],
+            // 🎯️ Length 2: index 2 ("toRemove") no longer exists — exercises
+            // `shared_strings.removed` on `a -> b` (see `sweep_a`'s doc comment); the same
+            // index recurs as `shared_strings.added` on `b -> a`.
+            shared_strings: vec!["keep".into(), "toModify-changed".into()],
+        },
+    )
+}
+//#endregion 🔖️Fixtures
+
+/// 🧪️ The demo cases proper -- one representative `XlsxMutation` per variant.
+pub(crate) fn demo_mutation_cases() -> Vec<XlsxMutation> {
+    vec![
+        XlsxMutation::NoMutation,
+        XlsxMutation::SetSnapshot { snapshot: sweep_b() },
+        XlsxMutation::InsertSheet { sheet: XlsxSheet { name: "x".into(), cells: vec![] } },
+        // 🎯️ `RemoveSheet`/`RenameSheet` target `"Sheet2"`, the LAST sheet in `fixture()` --
+        // same last-position caveat as the dedicated `remove_sheet_inverse_restores_removed_sheet`/
+        // `rename_sheet_apply_and_inverse` tests document (`sheets` is name-keyed; a
+        // mutation-level `InsertSheet`-based inverse always APPENDS, so exact Vec-position
+        // restoration is only guaranteed when the target was already last).
+        XlsxMutation::RemoveSheet { name: "Sheet2".into() },
+        XlsxMutation::RenameSheet { name: "Sheet2".into(), new_name: "Renamed".into() },
+        XlsxMutation::SetCell { sheet_name: "Sheet1".into(), row: 1, col: 0, value: XlsxCellValue::Boolean(true) },
+        XlsxMutation::SetCell { sheet_name: "Sheet1".into(), row: 9, col: 9, value: XlsxCellValue::Number(42.0) },
+        XlsxMutation::RemoveCell { sheet_name: "Sheet1".into(), row: 1, col: 0 },
+        XlsxMutation::InsertSharedString { value: "z".into() },
+        // 🎯️ `RemoveSharedString` targets index 0, the LAST-in-position entry `fixture()`
+        // (which has only one shared string) has -- like docx's own `RemovePart` precedent
+        // (see that artifact's `sample_mutations` doc comment), a name/key-keyed (here
+        // index-keyed) collection's mutation-level inverse only restores exact ORIGINAL
+        // Vec position when the removed item was already last; the same caveat applies here.
+        XlsxMutation::RemoveSharedString { index: 0 },
+        XlsxMutation::SetSharedString { index: 0, value: "y".into() },
+    ]
+}
+//#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::artifacts::xlsx::schema::diff::{XlsxCellDiff, XlsxOpcPartDiff};
-    use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxWorkbook};
-    use crate::artifacts::zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
-
-    fn fixture() -> XlsxSnapshot {
-        crate::artifacts::xlsx::engine::build_minimal_xlsx(XlsxWorkbook {
-            sheets: vec![
-                XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] },
-                XlsxSheet { name: "Sheet2".into(), cells: vec![] },
-            ],
-            shared_strings: vec!["hello".into()],
-        })
-    }
 
     #[test]
     fn insert_then_remove_sheet_apply_and_inverse() {
@@ -434,149 +787,10 @@ mod tests {
         assert_eq!(after3, base);
     }
 
-    //#region 🔖️Fixtures
-    /// 🌱 `sweep_a`/`sweep_b`: differ in EVERY mutable field, both `workbook` and `opc`. `sheets`
-    /// (a true name-keyed collection) gets one removed, one modified-in-every-field (cells:
-    /// removed+modified+added all in ONE direction, since `(row,col)` is real identity, not
-    /// position), one added. `shared_strings` (index-keyed, i.e. position-pairwise-matched, same
-    /// category as `IndexedTripleDiff`) is a DIFFERENT length in each fixture — per this ticket's
-    /// "known structural trap" note, a single same-direction `between()` over such a collection
-    /// can never show both `removed` AND `added` from one call, so `a -> b` exercises
-    /// `removed`+`modified` and `b -> a` (asserted separately in `field_sweep`) exercises
-    /// `added`+`modified`. OPC content_types/parts/relationships each get one removed, one
-    /// modified, one added (all true name-keyed collections, exercised in one direction).
-    fn sweep_a() -> XlsxSnapshot {
-        let mut opc = OpcPackage::empty();
-        opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
-        opc.content_types.set_default("xml", "application/xml");
-        opc.content_types.set_default("toRemove", "application/octet-stream");
-        opc.set_part("xl/workbook.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml", b"<workbook/>".to_vec());
-        opc.set_part("xl/toModify.xml", "application/xml", b"old".to_vec());
-        opc.set_part("xl/toRemove.xml", "application/xml", b"gone".to_vec());
-        opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "xl/workbook.xml");
-        opc.add_relationship("", "rId9", "http://example/toRemove", "xl/toRemove.xml");
-        // 🩹 Owner key deliberately `"xl/toModify.xml"`, NOT `"xl/workbook.xml"` — the real
-        // engine (`regenerate_workbook_parts`) always populates a MULTI-entry `relationships`
-        // list under owner `"xl/workbook.xml"` (one per worksheet + one for shared strings); if
-        // this synthetic "modified owner" case reused that exact key, `inverse_law`'s two-hop
-        // `SetSnapshot` round trip against `fixture()` (an engine-built snapshot) would compose
-        // a partial-overlap MODIFY on a real multi-item Vec, which — per the diff module's own
-        // documented survivor-position convention — does not reconstruct exact Vec ORDER through
-        // two independent `between()` calls (only content). Using a synthetic owner absent from
-        // any engine-built snapshot keeps this a clean whole-owner remove+add in that scenario
-        // (captured/restored as one atomic `(owner, Vec<Rel>)` tuple, order-exact by construction)
-        // while still genuinely exercising `relationships.modified` here in `field_sweep`.
-        opc.relationships.insert(
-            "xl/toModify.xml".into(),
-            vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "worksheets/old.xml".into(), target_mode: OpcTargetMode::Internal }],
-        );
-        opc.relationships.insert(
-            "xl/toRemove.xml".into(),
-            vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/ownerToRemove".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }],
-        );
-
-        XlsxSnapshot::from_parts(
-            opc,
-            XlsxWorkbook {
-                sheets: vec![
-                    XlsxSheet {
-                        name: "toModify".into(),
-                        cells: vec![
-                            XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) },
-                            XlsxCell { row: 2, col: 0, value: XlsxCellValue::Boolean(false) },
-                        ],
-                    },
-                    XlsxSheet { name: "stay".into(), cells: vec![] },
-                    XlsxSheet { name: "toDrop".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::SharedString(0) }] },
-                ],
-                // 🎯️ Length 3 vs `sweep_b`'s 2: per this ticket's "known structural trap" note, a
-                // single same-direction `between()` over an index-keyed (pairwise-position-matched)
-                // collection can never show BOTH `removed` AND `added` from one call -- so `a -> b`
-                // exercises `shared_strings.removed` (index 2, since `b` is shorter) +
-                // `shared_strings.modified` (index 1); `b -> a` (asserted separately in
-                // `field_sweep`) exercises `shared_strings.added` (the same index 2, recurring).
-                shared_strings: vec!["keep".into(), "toModify".into(), "toRemove".into()],
-            },
-        )
-    }
-
-    fn sweep_b() -> XlsxSnapshot {
-        let mut opc = OpcPackage::empty();
-        opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
-        opc.content_types.set_default("xml", "application/xml");
-        opc.content_types.set_default("added", "application/octet-stream");
-        opc.set_part("xl/workbook.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml", b"<workbook/>changed".to_vec());
-        opc.set_part("xl/toModify.xml", "application/xml", b"new".to_vec());
-        opc.set_part("xl/added.xml", "application/xml", b"fresh".to_vec());
-        // 🩹 AFTER the `set_part` calls above (which already appended `toModify`'s override entry
-        // at position 1): a bare `set_override` on an EXISTING key updates its VALUE in place,
-        // never its position — same convention docx's own `field_sweep` fixture documents (the OPC
-        // module's `overrides` is order-sensitive `Vec<(String,String)>` equality, not ours to
-        // change).
-        opc.content_types.set_override("xl/toModify.xml", "application/xml-modified");
-        opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "xl/workbook.xml");
-        opc.relationships.insert(
-            "xl/toModify.xml".into(),
-            vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "worksheets/new.xml".into(), target_mode: OpcTargetMode::Internal }],
-        );
-        opc.relationships.insert("xl/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::Internal }]);
-
-        XlsxSnapshot::from_parts(
-            opc,
-            XlsxWorkbook {
-                sheets: vec![
-                    XlsxSheet {
-                        name: "toModify".into(),
-                        cells: vec![
-                            // row (1,0) survives with a changed value; row (2,0) is dropped; row
-                            // (3,0) is a NET-NEW cell -- exercises `cells.removed` +
-                            // `cells.modified` + `cells.added` all in the SAME sheet-modify.
-                            XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(2.0) },
-                            XlsxCell { row: 3, col: 0, value: XlsxCellValue::Formula { expr: "SUM(A1:A2)".into(), cached: Some(Box::new(XlsxCellValue::Number(3.0))) } },
-                        ],
-                    },
-                    XlsxSheet { name: "stay".into(), cells: vec![] },
-                    XlsxSheet { name: "added".into(), cells: vec![XlsxCell { row: 1, col: 1, value: XlsxCellValue::InlineString("brand new".into()) }] },
-                ],
-                // 🎯️ Length 2: index 2 ("toRemove") no longer exists — exercises
-                // `shared_strings.removed` on `a -> b` (see `sweep_a`'s doc comment); the same
-                // index recurs as `shared_strings.added` on `b -> a`.
-                shared_strings: vec!["keep".into(), "toModify-changed".into()],
-            },
-        )
-    }
-    //#endregion 🔖️Fixtures
-
     //#region 🔖️MutationDiffLaw
-    fn sample_mutations() -> Vec<XlsxMutation> {
-        vec![
-            XlsxMutation::NoMutation,
-            XlsxMutation::SetSnapshot { snapshot: sweep_b() },
-            XlsxMutation::InsertSheet { sheet: XlsxSheet { name: "x".into(), cells: vec![] } },
-            // 🎯️ `RemoveSheet`/`RenameSheet` target `"Sheet2"`, the LAST sheet in `fixture()` --
-            // same last-position caveat as the dedicated `remove_sheet_inverse_restores_removed_sheet`/
-            // `rename_sheet_apply_and_inverse` tests document (`sheets` is name-keyed; a
-            // mutation-level `InsertSheet`-based inverse always APPENDS, so exact Vec-position
-            // restoration is only guaranteed when the target was already last).
-            XlsxMutation::RemoveSheet { name: "Sheet2".into() },
-            XlsxMutation::RenameSheet { name: "Sheet2".into(), new_name: "Renamed".into() },
-            XlsxMutation::SetCell { sheet_name: "Sheet1".into(), row: 1, col: 0, value: XlsxCellValue::Boolean(true) },
-            XlsxMutation::SetCell { sheet_name: "Sheet1".into(), row: 9, col: 9, value: XlsxCellValue::Number(42.0) },
-            XlsxMutation::RemoveCell { sheet_name: "Sheet1".into(), row: 1, col: 0 },
-            XlsxMutation::InsertSharedString { value: "z".into() },
-            // 🎯️ `RemoveSharedString` targets index 0, the LAST-in-position entry `fixture()`
-            // (which has only one shared string) has -- like docx's own `RemovePart` precedent
-            // (see that artifact's `sample_mutations` doc comment), a name/key-keyed (here
-            // index-keyed) collection's mutation-level inverse only restores exact ORIGINAL
-            // Vec position when the removed item was already last; the same caveat applies here.
-            XlsxMutation::RemoveSharedString { index: 0 },
-            XlsxMutation::SetSharedString { index: 0, value: "y".into() },
-        ]
-    }
-
     #[test]
     fn mutation_diff_law() {
-        for mutation in sample_mutations() {
+        for mutation in demo_mutation_cases() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
             let applied_via_diff = MutationDiff::apply(&diff_direct, &base);
@@ -593,7 +807,7 @@ mod tests {
     //#region 🔖️InverseLaw
     #[test]
     fn inverse_law() {
-        for mutation in sample_mutations() {
+        for mutation in demo_mutation_cases() {
             let base = fixture();
 
             let mut round_tripped = base.clone();

@@ -1,7 +1,9 @@
-(* s.stdio.semio.mesh DiffCodec text grammar (protocol::DiffCodec::print_diff/parse_diff).
+(* EBNF mirror (descriptive, not test-parsed — the real recognizer is ../📖️component.grammar.semio)
+   for s.stdio.semio.mesh's DiffCodec text grammar (protocol::DiffCodec::print_diff/parse_diff).
    Space-separated `key=value` tokens, one per changed top-level field (meshes/materials/
    textures); each value is a bracket-depth-aware named triple `[removed];[modified];[added]`
-   (engine::triples::enc_named_triple). Empty document = no change (SemioMeshDiff::default()). *)
+   (engine::triples::enc_named_triple). `added` entries are `index:item` pairs (`NamedAdded<T>`).
+   Empty document = no change (SemioMeshDiff::default()). *)
 document = [ token, { " ", token } ] ;
 token = "meshes=", triple | "materials=", triple | "textures=", triple ;
 triple = "[", list, "]", ";", "[", list, "]", ";", "[", list, "]" ;

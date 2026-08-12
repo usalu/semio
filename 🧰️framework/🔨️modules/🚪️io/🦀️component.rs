@@ -2,7 +2,7 @@
 //! 🚪️ Dialect vocabulary and typed artifact-to-artifact IO dispatch registry.
 //! Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase 2 (standards/subsets). Lives beside
 //! `🔺️mesh` (not `os`) so plugins and the OS product share one definition without an
-//! inverted dependency — same reasoning as `mesh::MediaFormat`.
+//! inverted dependency — same reasoning as mesh's now-retired legacy format enum.
 
 use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
 use serde::{Deserialize, Serialize};

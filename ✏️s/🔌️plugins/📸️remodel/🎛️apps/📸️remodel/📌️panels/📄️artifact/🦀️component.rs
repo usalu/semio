@@ -5,7 +5,7 @@ use crate::apps::remodel::config::RemodelConfig;
 use crate::apps::remodel::terminology::RemodelLabels;
 use crate::artifacts::remodel::engine::stage_display;
 use crate::artifacts::remodel::{ReconstructionStage, RemodelSnapshot};
-use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
+use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const REMODEL_PLAY_BODY_PIPELINE: &str = "remodel.play.pipeline";
@@ -14,8 +14,8 @@ pub const REMODEL_PLAY_BODY_PIPELINE: &str = "remodel.play.pipeline";
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
-        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_DOCUMENT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
         group: PanelGroup::Workbench,
         body_key: Some(REMODEL_PLAY_BODY_PIPELINE.into()),
         children: Vec::new(),
@@ -46,7 +46,7 @@ mod tests {
     #[test]
     fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
-        assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
+        assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
         assert_eq!(definition.body_key.as_deref(), Some(REMODEL_PLAY_BODY_PIPELINE));
     }
 

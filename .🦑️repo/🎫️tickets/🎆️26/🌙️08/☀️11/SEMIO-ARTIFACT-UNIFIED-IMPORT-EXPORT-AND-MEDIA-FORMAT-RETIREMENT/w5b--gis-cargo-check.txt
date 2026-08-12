@@ -1,0 +1,40 @@
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:394:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/⚙️engine/🦀️component.rs:614:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/⚙️engine/🦀️component.rs:544:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:334:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/⚙️engine/🦀️component.rs:159:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:531:15: warning: function `demo_diff_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/⚙️engine/🦀️component.rs:174:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1183:15: warning: function `demo_diff_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/⚙️engine/🦀️component.rs:131:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:416:8: warning: method `absorb` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:231:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:423:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1316:15: warning: function `demo_diff_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:379:15: warning: function `demo_mutation_cases` is never used
+warning: `semio-s-plugin-stdio` (lib) generated 482 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 171 suggestions)
+    Checking semio-s-plugin-gis v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust)
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📦️glue.rs:14:1: warning: unused extern crate: unused
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././../../🗿️artifacts/🏔️gisterrain/🦀️component.rs:3:9: warning: unused import: `crate::artifacts::gisterrain::schema::snapshot::GisTerrainSnapshot`
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././../../🗿️artifacts/🏔️gisterrain/🦀️component.rs:4:9: warning: unused import: `crate::artifacts::gisterrain::schema::mutations::GisTerrainMutation`
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././../../🗿️artifacts/🏔️gisterrain/🦀️component.rs:5:9: warning: unused import: `crate::artifacts::gisterrain::schema::diff::GisTerrainDiff`
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-exaggeration/🔺️diff/🦀️component.rs:4:5: warning: unused import: `protocol::MutationDiff`
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-imported-features/🔺️diff/🦀️component.rs:4:5: warning: unused import: `protocol::MutationDiff`
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:4:48: warning: unused import: `ArtifactBuilder`
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:31:27: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././../../🗿️artifacts/🗺️gismap/🦀️component.rs:4:9: warning: unused import: `crate::artifacts::gismap::schema::snapshot::GisMapSnapshot`
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././../../🗿️artifacts/🗺️gismap/🦀️component.rs:5:9: warning: unused import: `crate::artifacts::gismap::schema::mutations::GisMapMutation`
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././../../🗿️artifacts/🗺️gismap/🦀️component.rs:6:9: warning: unused import: `crate::artifacts::gismap::schema::diff::GisMapDiff`
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:111:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././././././../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:4:48: warning: unused import: `ArtifactBuilder`
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././././././../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:29:27: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:41:9: warning: variable does not need to be mutable
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:35:9: warning: variable does not need to be mutable
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././././../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:368:5: warning: field `artifact` is never read
+✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././././../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:629:5: warning: field `artifact` is never read
+warning: `semio-s-plugin-gis` (lib) generated 18 warnings (run `cargo fix --lib -p semio-s-plugin-gis` to apply 14 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 1m 03s
+    Blocking waiting for file lock on package cache
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+EXIT:0

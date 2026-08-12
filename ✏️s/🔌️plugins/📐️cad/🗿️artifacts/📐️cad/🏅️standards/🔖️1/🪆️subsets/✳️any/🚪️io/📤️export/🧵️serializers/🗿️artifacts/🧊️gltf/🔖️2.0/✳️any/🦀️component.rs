@@ -1,15 +1,13 @@
 //! Serialize cad to stdio.gltf.
-
+//!
+//! 🧹️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a: the
+//! binary `serialize()` this file used to carry no longer compiled against the real `GltfSnapshot`
+//! shape (`document` is stdio's own typed `GltfDocument`, not a bare `serde_json::Value`) and had
+//! zero callers (`CadComposer` only ever calls `serialize_text` below) — deleted outright.
 use crate::artifacts::cad::CadSnapshot;
-use semio_s_plugin_stdio::artifacts::gltf::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
 
 //#region Serialize
 pub fn register() {}
-
-pub fn serialize(from: &CadSnapshot) -> Result<GltfSnapshot, store::PackError> {
-    let document = serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), vertices: Vec::new(), document })
-}
 
 pub fn serialize_text(from: &CadSnapshot) -> Result<String, store::PackError> {
     Ok(<CadSnapshot as store::ArtifactDsl>::print_dsl(from))

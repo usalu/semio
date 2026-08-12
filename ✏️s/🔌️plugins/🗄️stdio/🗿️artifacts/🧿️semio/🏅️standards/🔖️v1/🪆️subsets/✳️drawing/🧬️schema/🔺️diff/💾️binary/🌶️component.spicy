@@ -1,6 +1,10 @@
-module Semio_semio_drawing_diff;
-# no separate binary envelope -- bytes ARE the UTF-8 text-facet grammar verbatim (json's own
-# stdio.json.diff binary leaf precedent).
+module Stdio_semio_drawing_diff;
+
+# Real binary diff frame: `format` (1 byte) + `presence` bitmask (bit0=canvas, bit1=styles,
+# bit2=layers), then one opaque `payload` tail of 0-3 varint-length-prefixed blobs — see the
+# sibling `📡️component.protocol.semio`'s comment on the `protocol-cond-cannot-chain` boundary.
 type Document = unit {
-    text_bytes: bytes &eod;
+    format: uint8;
+    presence: uint8;
+    payload: bytes &eod;
 };

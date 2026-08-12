@@ -1,3 +1,36 @@
-dialect protocol stdio.ifc.2x3.mutations
-magic = %x00
-payload = *OCTET
+# 📡️ REAL binary op frame. Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION:
+# replaces the prior literal-JSON `serde_json::to_vec`/`from_slice` shortcut (`../../🦀️component.rs`'s
+# old `OpBinary::encode_op`/`decode_op` — the LAST standard-specific `POLICY_STDIO_JSON_TRANSFER_BAN`
+# violation named anywhere in this program's own census) AND the old ABNF placeholder this file used
+# to contain. `Ifc2x3Mutation` is a genuine data-carrying enum whose variants embed
+# `Part21Instance`/`Part21Header`/`Ifc2x3Snapshot` (itself embedding `Part21Value`, a self-recursive
+# data-carrying enum via `List`/`Typed`) — no `DslField` impl exists or can exist (blanket impls
+# cover only ints/bool/String/Vec<T where T: DslField>/BTreeMap/[T;N]/DslValue/Wire, never a
+# data-carrying enum), so the generic `format u8 | ordinal varint | record body` layout
+# (`pack_rt::encode_record_body`/`dsl::variants_binary::encode_op`, both requiring a `RecordSpec`
+# derived FROM a `DslField` impl) genuinely does not fit — same structural blocker `4`'s own
+# `IfcMutation` doc comment cites.
+#
+# Handcrafted instead: `format u8` (`store::OP_BINARY_FORMAT` convention) + `tag u8` (the
+# `Ifc2x3Mutation` variant ordinal, same 0-4 order `parse_ifc2x3_mutation`'s own keyword match uses)
+# as two REAL fixed fields, then the variant's own id/instance/header/snapshot payload as one
+# trailing `bytes` chain. Every flat field (`id`) IS real field-by-field binary at the Rust layer
+# (`enc_part21_instance_bin`/`enc_part21_header_bin`/`write_str_bin` in `../../🔺️diff/🦀️component.rs`,
+# reused here, plus this file's own `enc_ifc2x3_snapshot_bin`) — only `Part21Value::List`/`Typed`'s
+# self-recursion into `Vec<Part21Value>` cannot be re-modeled field-by-field AT THIS DIALECT LAYER,
+# because `Prim::Ref` (the only construct that could describe that self-recursion here)
+# unconditionally errors during `walk_protocol` (`protocol-prim-ref-recursion`, recipe §5 — confirmed
+# unchanged through every FG-wave pilot, not fixed by this wave either). Same honest-boundary
+# treatment the plan prescribes: opaque at the protocol layer, genuinely structured (and
+# round-trip-tested) at the Rust layer.
+dialect protocol
+protocol stdio.ifc.2x3.mutation
+version 1
+schema stdio.ifc.2x3
+start record
+
+framing record
+header fixed 2
+field format u8
+field tag u8
+chain payload bytes

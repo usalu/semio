@@ -1,0 +1,60 @@
+  --> ✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️component.rs:11:9
+   |
+11 |         page: PageDoc { width: 612.0, height: 792.0, text: <LayoutSnapshot as store::ArtifactDsl>::print_dsl(from) },
+   |         ^^^^ unknown field
+   |
+help: a field with a similar name exists
+   |
+11 |         pages: PageDoc { width: 612.0, height: 792.0, text: <LayoutSnapshot as store::ArtifactDsl>::print_dsl(from) },
+   |             +
+
+error[E0609]: no field `page` on type `&semio_s_plugin_stdio::artifacts::pdf::PdfSnapshot`
+ --> ✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️component.rs:9:61
+  |
+9 |     <LayoutSnapshot as store::ArtifactDsl>::parse_dsl(&from.page.text)
+  |                                                             ^^^^ unknown field
+  |
+help: a field with a similar name exists
+  |
+9 |     <LayoutSnapshot as store::ArtifactDsl>::parse_dsl(&from.pages.text)
+  |                                                                 +
+
+error[E0308]: mismatched types
+ --> ✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:9:66
+  |
+9 |     Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
+  |                                                                  ^^^^^ expected `JsonValue`, found `Value`
+
+error[E0308]: mismatched types
+    --> ✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:9:28
+     |
+   9 |     serde_json::from_value(from.value.clone()).map_err(|e| store::TextError::new(format!("layout<-json: {e}"), dsl::TextSpan::at(1...
+     |     ---------------------- ^^^^^^^^^^^^^^^^^^ expected `Value`, found `JsonValue`
+     |     |
+     |     arguments to this function are incorrect
+     |
+note: function defined here
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/value/mod.rs:1037:8
+     |
+1037 | pub fn from_value<T>(value: Value) -> Result<T, Error>
+     |        ^^^^^^^^^^
+
+warning: unused variable: `app`
+   --> ✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/././../../🎛️apps/📏️layout/🦀️component.rs:573:13
+    |
+573 |         let app = LayoutPlayApp::default();
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+   --> ✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/././../../🎛️apps/📏️layout/🦀️component.rs:587:13
+    |
+587 |         let app = LayoutPlayApp::default();
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+Some errors have detailed explanations: E0063, E0308, E0432, E0560, E0609.
+For more information about an error, try `rustc --explain E0063`.
+warning: `semio-s-plugin-layout` (lib test) generated 22 warnings
+error: could not compile `semio-s-plugin-layout` (lib test) due to 6 previous errors; 22 warnings emitted
+EXIT=101

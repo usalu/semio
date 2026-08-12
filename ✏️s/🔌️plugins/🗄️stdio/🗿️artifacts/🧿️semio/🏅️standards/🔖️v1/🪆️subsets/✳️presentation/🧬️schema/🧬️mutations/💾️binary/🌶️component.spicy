@@ -1,4 +1,10 @@
-module SemioPresentationMutations;
-public type Binary = unit {
-    line: bytes &eod; # UTF-8 text of the mutation grammar, verbatim
+module Stdio_semio_presentation_mutations;
+
+# Real binary `SemioPresentationMutation` op frame: `format` (1 byte) + `tag` (1 byte, the variant
+# ordinal), then one opaque `payload` tail — see the sibling `📡️component.protocol.semio`'s
+# comment / `🧬️mutations/🦀️component.rs`'s `OP_KEYWORDS`.
+type Document = unit {
+    format: uint8;
+    tag: uint8;
+    payload: bytes &eod;
 };

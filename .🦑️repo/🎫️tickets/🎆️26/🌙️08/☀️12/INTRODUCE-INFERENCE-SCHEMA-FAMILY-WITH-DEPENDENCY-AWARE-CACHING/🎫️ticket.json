@@ -1,0 +1,13 @@
+{
+  "title": "Introduce Inference Schema Family with Dependency-Aware Caching",
+  "emoji": "💡️",
+  "status": "open",
+  "description": "Add a fourth schema family — 💡️inference: all information that can be inferred from a snapshot — to every artifact schema (snapshot/diff/mutations already exist; inference is new). Full facet parity with the existing families (rs/ts/graphql/json/proto + 📝️text 8-leaf grammar tree + 💾️binary 6-leaf protocol tree per owning subset). Ship an optional, configurable caching engine with full dependency support: content-addressed per-entity merkle dependency-hash chains + diff-driven tier-1 invalidation gating, config surface (enabled/budget/persistence), and an optional db_projection-backed checkpoint adapter. Canonical worked example: flatPosition (plane + center) per object in puzzle/trinity/block-style graph artifacts, invalidated only when parent position, parent vortex, or the object's own vortex changes — per the closed-ticket merkle design at 26/04/17/OPTIMIZE-FLATTEN-DESIGN-WITH-MERKLE-HASH-CACHE. Also fixes existing anti-patterns: puzzle-5d's flatten_snapshot_inplace writing derived poses into the persistent snapshot, and trinity's recompute_derived writing flatPosition into the authored PropertyBag with 6 full-clone-and-recompute call sites.\n\nFull design plan at /Users/ueli/.claude/plans/introduce-inferences-to-every-elegant-reddy.md — read it first. Scope: framework spine (new Inference/DiffRegions/InferredField traits in 📡️spr, new StateClass::Inferred, descriptor changes in 🧬️schema + kernel wire, new 💡️inference OS module for the cache engine, ArtifactInferrer trait), taxonomy.json + ~10 script.ts policy changes (seed-then-shrink allowlists, never hand-counted), two pilot plugins (puzzle incl. 5d snapshot slimming, trinity incl. PropertyBag cleanup), then a ~107-subset fan-out across all plugins (stdio serial due to shared glue.rs, everything else parallel batched per-plugin), then a final tighten wave flipping the descriptor field from optional to mandatory. Coordinate with the open ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION ticket (26/08/10) which owns the same stdio snapshot/codec leaf surface — treat its snapshot leaves as read-only inputs.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2546"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪a96b3b8ca71a47d999152d710c32f9f4"
+  ]
+}

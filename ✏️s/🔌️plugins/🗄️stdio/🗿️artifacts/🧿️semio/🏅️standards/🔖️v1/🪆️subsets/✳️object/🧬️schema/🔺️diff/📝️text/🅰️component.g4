@@ -1,6 +1,7 @@
-// ANTLR4 grammar for `stdio.semio.object`'s hand-rolled `DiffCodec` wire text form -- see the
-// sibling 📖️component.grammar.semio for the authoritative production set.
-grammar Stdio_semio_object_diff;
+// ANTLR4 grammar for `stdio.semio.object`'s hand-rolled `DiffCodec` wire text form -- space-
+// separated `key=value` tokens (either/both absent = unchanged), tag-prefixed hex encoding, NOT
+// JSON. See the sibling 📖️component.grammar.semio for the authoritative production set.
+grammar Semio_object_diff;
 
 document: (rootToken (WS objectsToken)? | objectsToken)?;
 rootToken: 'root' '=' valueDiff;

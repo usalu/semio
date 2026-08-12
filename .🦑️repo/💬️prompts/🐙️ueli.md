@@ -366,10 +366,27 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
-Introduce analytics to every artifact schema.
+
+
+---
+
+The mutations are extremely adhoc.
+Instead of generic mutations there must be semantic handcrafted (rename, update, flatten, etc) mutations for everything.
+Every mutation creates a diff and implements calls for all inverse mutations.
+See the legacy compose/client/schema/graphql/schema.golden.graphql for reference of a more complete schema.
+
+---
+
+Introduce inferences to every artifact schema.
 A snapshot is a data structure that describes all the information that is persisted.
 A diff is a data structure that describes all the information that can be changed on a snapshot.
-A mutation is a data structure that holds all the 
+A mutation is a data structure that holds all the creating a valid diff.
+An inference is a data structure that holds all the information that can be inferred from a snapshot.
+Caching must be optional and configurable with fullblown support for dependecies, etc
+
+e.g. flatPosition (plane and centers) for objects are inferred and cached and only change when the parent position changes or the parent vortex changes or the object vortex changes.
+
+Integrate it into the schema and complete everything.
 
 ---
 

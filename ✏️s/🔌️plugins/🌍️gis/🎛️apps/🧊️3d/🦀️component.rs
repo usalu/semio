@@ -76,10 +76,6 @@ impl ArtifactApp for Gis3dPlayApp {
         Some(gis3d_io())
     }
 
-    fn whole_document_operation(snapshot: GisTerrainSnapshot) -> Option<GisTerrainMutation> {
-        Some(GisTerrainMutation::SetSnapshot { snapshot })
-    }
-
     /// 🎞️ `scene:out` (see `crate::artifacts::gisterrain::engine::gis3d_scene_media`) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
@@ -97,26 +93,18 @@ impl ArtifactApp for Gis3dPlayApp {
 
     /// 🎞️ `map:in` writes the incoming `2d.map` descriptor JSON verbatim into
     /// `GisTerrainSnapshot::imported_features_json` (rendered as an extra pin layer, see the
-    /// 🏔️terrain window) plus the inherited `document:in` default (replicated inline for the same
-    /// reason as `export_media`).
+    /// 🏔️terrain window) via `change-imported-features`. `document:in` (whole-document replace) is
+    /// deliberately unimplemented — per the semantic-mutations taxonomy, whole-document replace has
+    /// no in-history mutation; it goes through `ArtifactStore::reset` (file-open/import/load-example),
+    /// entirely outside this method.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "map:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "map:in only accepts a Structured JSON payload".into()));
                 };
-                Ok(Emit::mutations(vec![GisTerrainMutation::SetImportedFeatures { features_json: json.clone() }]))
-            }
-            "document:in" => {
-                let MediaPayload::Structured { json, .. } = &media.payload else {
-                    return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
-                };
-                let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let snapshot = <GisTerrainSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                match Self::whole_document_operation(snapshot) {
-                    Some(operation) => Ok(Emit::mutations(vec![operation])),
-                    None => Err(MediaError::NotImplemented),
-                }
+                use crate::artifacts::gisterrain::mutations::change_imported_features::mutation::ChangeImportedFeatures;
+                Ok(Emit::mutations(vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: json.clone() })]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -375,7 +363,8 @@ mod tests {
         let incoming = json!({ "positions": [{ "id": "imported-1", "lon": 1.0, "lat": 2.0 }] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: incoming.clone() } };
         let emit = Gis3dPlayApp::import_media("map:in", &media, &doc).expect("map:in import");
-        assert_eq!(emit.artifact_mutations, vec![GisTerrainMutation::SetImportedFeatures { features_json: incoming }]);
+        use crate::artifacts::gisterrain::mutations::change_imported_features::mutation::ChangeImportedFeatures;
+        assert_eq!(emit.artifact_mutations, vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: incoming })]);
     }
 
     #[test]

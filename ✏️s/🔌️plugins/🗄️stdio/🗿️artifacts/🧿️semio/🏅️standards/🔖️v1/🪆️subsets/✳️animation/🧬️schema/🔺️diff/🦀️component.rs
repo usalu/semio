@@ -244,13 +244,19 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 //#region 🔖️ValueCodecs
 /// 🧭️ Full-item ("added"-slot) encoders/decoders for every snapshot-owned value type — reused both
 /// by the collection-triple `added` entries and by the sparse per-field diff codecs below.
+/// 🎯️ `t`/`r`/`s`/`w` for the unit variants, `c:<hex>` for `Custom{name}` (W2c closer fix: the
+/// trailing `:` separator, not `c<hex>` glued directly, is REQUIRED — the shared lexer's
+/// `is_ident_continue` includes alphanumerics, so a bare `c` immediately followed by hex digits
+/// lexes as ONE fused identifier token, not two; the grammar's `"c" ":" hex` production could
+/// never match a glued token otherwise. Matches `📸️snapshot/🦀️component.rs`'s own duplicated
+/// `enc_property`/`dec_property` field-for-field.
 pub(crate) fn enc_property(p: &AnimTargetProperty) -> String {
     match p {
         AnimTargetProperty::Translation => "t".to_string(),
         AnimTargetProperty::Rotation => "r".to_string(),
         AnimTargetProperty::Scale => "s".to_string(),
         AnimTargetProperty::Weights => "w".to_string(),
-        AnimTargetProperty::Custom { name } => format!("c{}", enc_str(name)),
+        AnimTargetProperty::Custom { name } => format!("c:{}", enc_str(name)),
     }
 }
 pub(crate) fn dec_property(s: &str) -> Result<AnimTargetProperty, String> {
@@ -260,7 +266,7 @@ pub(crate) fn dec_property(s: &str) -> Result<AnimTargetProperty, String> {
         "s" => Ok(AnimTargetProperty::Scale),
         "w" => Ok(AnimTargetProperty::Weights),
         other => {
-            let rest = other.strip_prefix('c').ok_or_else(|| format!("bad property {other:?}"))?;
+            let rest = other.strip_prefix("c:").ok_or_else(|| format!("bad property {other:?}"))?;
             Ok(AnimTargetProperty::Custom { name: dec_str(rest)? })
         }
     }
@@ -616,6 +622,14 @@ fn parse_semio_animation_diff(line: &str) -> Result<SemioAnimationDiff, String> 
     Ok(SemioAnimationDiff { timelines: (!indexed_is_empty(&d)).then_some(d) })
 }
 
+/// 🔢️ Real binary diff frame (animation wave — off the old `print_diff().into_bytes()` F6
+/// text-as-binary shortcut). `format u8` + `presence u8` (bit0=`timelines`) as two real fixed
+/// header fields; when present, the SAME `enc_indexed_triple`-produced text this facet's own
+/// `print_diff` already emits follows as one opaque trailing byte chain (last field in the frame,
+/// so no length prefix is needed — matches the recipe's §2.5 "opaque payload LAST" rule). Only one
+/// collection exists here (unlike brep's 6/workflow's 2), so `presence` only ever uses bit0.
+const DIFF_BINARY_FORMAT: u8 = 1;
+
 impl protocol::DiffCodec for SemioAnimationDiff {
     fn print_diff(&self) -> String {
         print_semio_animation_diff(self)
@@ -624,31 +638,90 @@ impl protocol::DiffCodec for SemioAnimationDiff {
         parse_semio_animation_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let mut out = vec![DIFF_BINARY_FORMAT];
+        match &self.timelines {
+            Some(v) => {
+                out.push(1u8);
+                out.extend_from_slice(enc_indexed_triple(v, enc_timeline_diff, enc_timeline).as_bytes());
+            }
+            None => out.push(0u8),
+        }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let malformed = |what: &'static str, detail: String| protocol::ProtocolError::Malformed { what, offset: 0, detail };
+        let [format, presence, rest @ ..] = bytes else { return Err(malformed("diff header", format!("expected at least 2 bytes, got {}", bytes.len()))) };
+        if *format != DIFF_BINARY_FORMAT {
+            return Err(malformed("diff format", format!("unsupported diff format {format}")));
+        }
+        let timelines = match presence {
+            0 => None,
+            1 => {
+                let text = std::str::from_utf8(rest).map_err(|e| malformed("diff payload utf8", e.to_string()))?;
+                Some(dec_indexed_triple(text, dec_timeline_diff, dec_timeline).map_err(|e| malformed("diff payload", e))?)
+            }
+            other => return Err(malformed("diff presence", format!("unknown presence byte {other}"))),
+        };
+        Ok(SemioAnimationDiff { timelines })
     }
 }
 //#endregion 🔖️HandcraftedDiffCodec
+
+/// 🧱️ Small value-builder helpers, module-scope (not `mod tests`-local) so the `🎹️composer`
+/// conformance-law tests can reuse them via `demo_diff_cases()` below — same promotion pattern
+/// every prior semio wave's report documents (a private item of a child `mod tests` isn't visible
+/// to a sibling module).
+#[cfg(test)]
+pub(crate) fn kf(t: f64, value: AnimValue) -> AnimKeyframe {
+    AnimKeyframe { t, value }
+}
+#[cfg(test)]
+pub(crate) fn channel(node: &str, property: AnimTargetProperty, interpolation: AnimInterpolation, keyframes: Vec<AnimKeyframe>) -> AnimChannel {
+    AnimChannel { target: AnimTarget { node: node.into(), property }, interpolation, keyframes }
+}
+#[cfg(test)]
+pub(crate) fn timeline(name: Option<&str>, channels: Vec<AnimChannel>) -> AnimTimeline {
+    AnimTimeline { name: name.map(String::from), channels }
+}
+
+/// 🌱 Representative `SemioAnimationDiff` cases (empty + both directions of a rich `between`) —
+/// single source of truth for the composer's `diff_grammar_conformance_law`/`protocol_walk_law`,
+/// reused by this module's own `diff_codec_text_binary_roundtrip_law` test below.
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<SemioAnimationDiff> {
+    let a = SemioAnimationSnapshot {
+        timelines: vec![
+            timeline(Some("gone"), vec![]),
+            timeline(Some("kept"), vec![channel("n", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])]),
+        ],
+        ..SemioAnimationSnapshot::default()
+    };
+    let b = SemioAnimationSnapshot {
+        timelines: vec![
+            timeline(
+                None,
+                vec![channel(
+                    "n",
+                    AnimTargetProperty::Rotation,
+                    AnimInterpolation::CubicSpline,
+                    vec![kf(0.0, AnimValue::Quat { value: SemioQuaternion::default() }), kf(1.0, AnimValue::Weights { values: vec![0.1, 0.9] })],
+                )],
+            ),
+            timeline(Some("added"), vec![channel("m", AnimTargetProperty::Custom { name: "x".into() }, AnimInterpolation::Step, vec![])]),
+        ],
+        ..SemioAnimationSnapshot::default()
+    };
+    vec![
+        SemioAnimationDiff::default(),
+        <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&a, &b),
+        <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&b, &a),
+    ]
+}
 
 //#region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn kf(t: f64, value: AnimValue) -> AnimKeyframe {
-        AnimKeyframe { t, value }
-    }
-
-    fn channel(node: &str, property: AnimTargetProperty, interpolation: AnimInterpolation, keyframes: Vec<AnimKeyframe>) -> AnimChannel {
-        AnimChannel { target: AnimTarget { node: node.into(), property }, interpolation, keyframes }
-    }
-
-    fn timeline(name: Option<&str>, channels: Vec<AnimChannel>) -> AnimTimeline {
-        AnimTimeline { name: name.map(String::from), channels }
-    }
 
     //#region AbsorbCanonical
     /// 🧪️ Canonical absorb case 1 (at the innermost `keyframes` level): `Insert(2,f)` then
@@ -857,26 +930,7 @@ mod tests {
     /// three collection triples (removed/modified/added) at every nesting depth.
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {
-        let a = SemioAnimationSnapshot {
-            timelines: vec![
-                timeline(Some("gone"), vec![]),
-                timeline("kept".into(), vec![channel("n", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])]),
-            ],
-            ..SemioAnimationSnapshot::default()
-        };
-        let b = SemioAnimationSnapshot {
-            timelines: vec![
-                timeline(None, vec![channel("n", AnimTargetProperty::Rotation, AnimInterpolation::CubicSpline, vec![kf(0.0, AnimValue::Quat { value: SemioQuaternion::default() }), kf(1.0, AnimValue::Weights { values: vec![0.1, 0.9] })])]),
-                timeline(Some("added"), vec![channel("m", AnimTargetProperty::Custom { name: "x".into() }, AnimInterpolation::Step, vec![])]),
-            ],
-            ..SemioAnimationSnapshot::default()
-        };
-        let cases = vec![
-            SemioAnimationDiff::default(),
-            <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&a, &b),
-            <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&b, &a),
-        ];
-        for d in cases {
+        for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
             let parsed = SemioAnimationDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));

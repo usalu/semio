@@ -16,7 +16,12 @@ use sha2::{Digest, Sha256};
 use zip::write::SimpleFileOptions;
 use zip::ZipWriter;
 
-use crate::artifacts::layout::engine::{parse_layout_document, resolve_page, LayoutError};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::{SemioRgba, SemioTransform};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
+    DrawCanvas, DrawLayer, DrawNode, DrawStyle, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
+};
+
+use crate::artifacts::layout::engine::{compose_svg_from_drawing, parse_layout_document, rect_path_segments, resolve_page, LayoutError};
 use crate::artifacts::layout::{Frame, LayoutBounds, LayoutSnapshot, LayoutRect, Page, ParagraphStyle, TextStory};
 
 //#region 🖼️Display
@@ -375,52 +380,73 @@ pub fn screen_to_world_json(camera: &Camera, viewport: &Viewport, sx: f64, sy: f
 //#endregion ⚙️Scene
 
 //#region 📤️Export
-pub fn export_display_list_svg(list: &DisplayList) -> String {
-    let mut out = String::new();
-    out.push_str(&format!(r#"<svg xmlns="http://www.w3.org/2000/svg" width="{}" height="{}" viewBox="0 0 {} {}">"#, list.page_width, list.page_height, list.page_width, list.page_height));
-    out.push('\n');
-    out.push_str(&format!(r#"<rect width="{}" height="{}" fill="white"/>"#, list.page_width, list.page_height));
-    out.push('\n');
-    for rect in &list.rects {
+/// 🌉️ Maps a rendered `DisplayList` onto a real `SemioDrawingSnapshot`: one white background rect,
+/// one rect-shaped `DrawNode::Path` per filled/stroked `DisplayRect` (real fill/stroke color, same
+/// two-pass fill-then-stroke behavior the previous hand-rolled SVG had), one colored rect per
+/// `DisplayImage` (placeholder vs. resolved tint), and one small filled rect per `DisplayGlyph` —
+/// same "glyph as a small box" fidelity the previous string builder had (this engine never emits
+/// real font outlines to SVG on either path).
+fn display_list_to_semio_drawing(list: &DisplayList) -> SemioDrawingSnapshot {
+    let mut styles = vec![DrawStyle { name: "background".into(), fill: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }), stroke: None, stroke_width: None, opacity: None }];
+    let mut children = vec![DrawNode::Path { segments: rect_path_segments(0.0, 0.0, list.page_width as f64, list.page_height as f64), style: Some("background".into()) }];
+
+    for (index, rect) in list.rects.iter().enumerate() {
+        let segments = rect_path_segments(rect.x as f64, rect.y as f64, rect.width as f64, rect.height as f64);
         if let Some(fill) = &rect.fill {
-            out.push_str(&format!(r#"<rect x="{}" y="{}" width="{}" height="{}" fill="rgba({},{},{},{})"/>"#, rect.x, rect.y, rect.width, rect.height, (fill.0[0] * 255.0) as u8, (fill.0[1] * 255.0) as u8, (fill.0[2] * 255.0) as u8, fill.0[3]));
-            out.push('\n');
+            let name = format!("rect-fill-{index}");
+            styles.push(DrawStyle { name: name.clone(), fill: Some(color_to_semio_rgba(fill)), stroke: None, stroke_width: None, opacity: None });
+            children.push(DrawNode::Path { segments: segments.clone(), style: Some(name) });
         }
         if let Some(stroke) = &rect.stroke {
-            out.push_str(&format!(
-                r#"<rect x="{}" y="{}" width="{}" height="{}" fill="none" stroke="rgba({},{},{},{})" stroke-width="1"/>"#,
-                rect.x,
-                rect.y,
-                rect.width,
-                rect.height,
-                (stroke.0[0] * 255.0) as u8,
-                (stroke.0[1] * 255.0) as u8,
-                (stroke.0[2] * 255.0) as u8,
-                stroke.0[3]
-            ));
-            out.push('\n');
+            let name = format!("rect-stroke-{index}");
+            styles.push(DrawStyle { name: name.clone(), fill: None, stroke: Some(color_to_semio_rgba(stroke)), stroke_width: Some(1.0), opacity: None });
+            children.push(DrawNode::Path { segments, style: Some(name) });
         }
     }
-    for image in &list.images {
-        let fill = if image.placeholder { "rgba(235,225,215,1)" } else { "rgba(220,220,220,1)" };
-        out.push_str(&format!(r#"<rect x="{}" y="{}" width="{}" height="{}" fill="{}"/>"#, image.x, image.y, image.width, image.height, fill));
-        out.push('\n');
+
+    for (index, image) in list.images.iter().enumerate() {
+        let color = if image.placeholder { SemioRgba { r: 0.92, g: 0.88, b: 0.84, a: 1.0 } } else { SemioRgba { r: 0.86, g: 0.86, b: 0.86, a: 1.0 } };
+        let name = format!("image-{index}");
+        styles.push(DrawStyle { name: name.clone(), fill: Some(color), stroke: None, stroke_width: None, opacity: None });
+        children.push(DrawNode::Path { segments: rect_path_segments(image.x as f64, image.y as f64, image.width as f64, image.height as f64), style: Some(name) });
     }
+
     for run in &list.text_runs {
-        for glyph in &run.glyphs {
-            out.push_str(&format!(r#"<rect x="{}" y="{}" width="{}" height="{}" fill="black"/>"#, glyph.x, glyph.y, glyph.font_size * 0.45, glyph.font_size));
-            out.push('\n');
+        for (index, glyph) in run.glyphs.iter().enumerate() {
+            let name = format!("glyph-{}-{index}", run.object_id);
+            styles.push(DrawStyle { name: name.clone(), fill: Some(SemioRgba { r: 0.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: None, opacity: None });
+            children.push(DrawNode::Path {
+                segments: rect_path_segments(glyph.x as f64, glyph.y as f64, (glyph.font_size * 0.45) as f64, glyph.font_size as f64),
+                style: Some(name),
+            });
         }
     }
-    out.push_str("</svg>");
-    out
+
+    SemioDrawingSnapshot {
+        schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
+        canvas: DrawCanvas { width: list.page_width as f64, height: list.page_height as f64, background: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) },
+        styles,
+        layers: vec![DrawLayer { id: list.page_id.clone(), name: list.page_id.clone(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children } }],
+    }
+}
+
+fn color_to_semio_rgba(color: &DisplayColor) -> SemioRgba {
+    SemioRgba { r: color.0[0], g: color.0[1], b: color.0[2], a: color.0[3] }
+}
+
+/// 🌉️ Composes through stdio's real `drawing↔svg` bridge (`io_dispatch`, via
+/// `crate::artifacts::layout::engine::compose_svg_from_drawing`) — no hand-rolled SVG string here
+/// anymore.
+pub fn export_display_list_svg(list: &DisplayList) -> Result<String, LayoutError> {
+    let drawing = display_list_to_semio_drawing(list);
+    compose_svg_from_drawing(&drawing).map_err(LayoutError::Svg)
 }
 
 pub fn export_document_svg(doc: &LayoutSnapshot, page_id: &str) -> Result<String, LayoutError> {
     let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| LayoutError::PageNotFound(page_id.to_string()))?;
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, doc, page, page_id, &[], None, false);
-    Ok(export_display_list_svg(&list))
+    export_display_list_svg(&list)
 }
 
 pub fn export_document_pdf(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, LayoutError> {
@@ -744,11 +770,15 @@ mod tests {
     }
 
     #[test]
-    fn svg_export_contains_rect_and_wraps_a_valid_document() {
+    fn svg_export_contains_path_and_wraps_a_valid_document() {
+        crate::artifacts::layout::engine::ensure_stdio_semio_drawing_registered();
         let doc = sample_document();
         let svg = export_document_svg(&doc, "page-1").expect("svg export succeeds");
         assert!(svg.starts_with("<svg"));
-        assert!(svg.contains("<rect"));
+        // 🌉️ Composed through stdio's real semio/drawing→svg bridge now — `DrawNode::Path` always
+        // lowers to an SVG `<path>` element (the bridge's vocabulary has no `<rect>`), unlike the
+        // previous hand-rolled string builder this replaced.
+        assert!(svg.contains("<path"));
         assert!(svg.ends_with("</svg>"));
     }
 

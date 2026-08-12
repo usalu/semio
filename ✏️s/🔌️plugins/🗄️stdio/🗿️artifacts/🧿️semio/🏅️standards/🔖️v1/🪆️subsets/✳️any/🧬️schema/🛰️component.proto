@@ -1,7 +1,10 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
+// 🧬️ SemioArtifact schema — full artifact state, mirrors SemioSnapshot field for field.
 package semio.s_stdio_semio.artifact;
+
+import "📸️snapshot/🛰️component.proto";
+
 message SemioArtifact {
   string schema = 1;
-  string entries_wire = 2;
+  semio.s_stdio_semio.snapshot.SemioSubsetSnapshot subset = 2;
 }

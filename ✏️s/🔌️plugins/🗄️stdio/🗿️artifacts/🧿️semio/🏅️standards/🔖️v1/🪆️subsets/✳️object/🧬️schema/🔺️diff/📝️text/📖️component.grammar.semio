@@ -5,27 +5,25 @@ start document
 
 # `protocol::DiffCodec::print_diff`/`parse_diff` (`🦀️component.rs`'s `print_object_diff`/
 # `parse_object_diff`) — a SINGLE LINE, space-separated `key=value` tokens, either or both absent
-# (an absent field = unchanged). NOT `serde_json` on the wire (unlike the snapshot facet): this is
-# the hand-rolled tag-prefixed hex grammar every field-diff codec in this program uses.
-document = ( root-token ( SP objects-token )? | objects-token )?
+# (an absent field = unchanged). NOT `serde_json` on the wire (unlike the sibling `📸️snapshot` facet
+# BEFORE this ticket — now likewise real, see that facet's own grammar): this is the hand-rolled
+# tag-prefixed hex grammar every field-diff codec in this program uses.
+document = root-token? objects-token?
 root-token = "root" "=" value-diff
 objects-token = "objects" "=" named-triple
 
 # `enc_value_diff`/`dec_value_diff` — tag-prefixed: `P`=rePlace (carries a full `value`), `B`=Bool,
 # `I`=Int, `F`=Float, `S`=Str, `Y`=bYtes, `L`=List (nests an `indexed-triple`), `M`=Map (nests a
 # `named-triple`), `R`=Ref.
-value-diff = "P" "[" value "]" | "B" "[" bit "]" | "I" "[" hex "]" | "F" "[" hex "]" | "S" "[" hex "]"
-           | "Y" "[" hex "]" | "L" "[" indexed-triple "]" | "M" "[" named-triple "]" | "R" "[" hex "]"
+value-diff = "P" "[" value "]" | "B" "[" bit "]" | "I" "[" hex "]" | "F" "[" hex "]" | "S" "[" hex "]" | "Y" "[" hex "]" | "L" "[" indexed-triple "]" | "M" "[" named-triple "]" | "R" "[" hex "]"
 bit = "0" | "1"
 
 # `enc_indexed_triple`/`dec_indexed_triple` (shared `engine::triples`) — `[removed];[modified];[added]`,
 # index-keyed. Used by `List`.
-indexed-triple = "[" ( index-removed ( "," index-removed )* )? "]" ";"
-                 "[" ( index-modified ( "," index-modified )* )? "]" ";"
-                 "[" ( index-added ( "," index-added )* )? "]"
-index-removed = INT
-index-modified = INT ":" value-diff
-index-added = INT ":" value
+indexed-triple = "[" index-removed* "]" ";" "[" index-modified* "]" ";" "[" index-added* "]"
+index-removed = INT ","?
+index-modified = INT ":" value-diff ","?
+index-added = INT ":" value ","?
 
 # `enc_named_triple`/`dec_named_triple` (shared `engine::triples`) — same shape, name/id-keyed.
 # Used by `Map` (key = hex string) and the top-level `objects` graph (key = hex object id).
@@ -33,19 +31,28 @@ index-added = INT ":" value
 # `NamedAdded<T>` wrapper — the shared engine's `NamedTripleDiff<K,D,T>.added: Vec<T>` alone
 # carries no position, which broke `between_roundtrip_law`'s reverse direction until fixed; see
 # `NamedAdded`'s doc comment in the sibling `🦀️component.rs`).
-named-triple = "[" ( hex ( "," hex )* )? "]" ";"
-               "[" ( named-modified ( "," named-modified )* )? "]" ";"
-               "[" ( named-item ( "," named-item )* )? "]"
-named-modified = hex ":" value-diff
+named-triple = "[" named-removed* "]" ";" "[" named-modified* "]" ";" "[" named-item* "]"
+named-removed = hex ","?
+named-modified = hex ":" value-diff ","?
 # `named-item` = `index:key:value` (a full `Map` entry) or `index:id:value` (a full graph node),
 # depending on which top-level token this triple sits under.
-named-item = INT ":" hex ":" value
+named-item = INT ":" hex ":" value ","?
 
 # `enc_semio_value`/`dec_semio_value` — restated here (identical to the sibling
-# ../../📸️snapshot/📝️text/📖️component.grammar.semio's `semio-value`, flattened to this facet's own
-# tag alphabet) so this leaf grammar is self-contained.
-value = "Z" | "B" "[" bit "]" | "I" "[" hex "]" | "F" "[" hex "]" | "S" "[" hex "]" | "Y" "[" hex "]"
-      | "L" "[" ( value ( "," value )* )? "]" | "M" "[" ( entry ( "," entry )* )? "]" | "R" "[" hex "]"
-entry = hex ":" value
+# ../../📸️snapshot/📝️text/📖️component.grammar.semio's `value`, flattened to this facet's own
+# tag alphabet) so this leaf grammar is self-contained. Genuinely recursive: `L`/`M` reference
+# `list-item`/`map-item` which reference `value` back — exercised end-to-end by
+# `diff_grammar_conformance_law` against real `print_diff` output covering every `SemioValueDiff`
+# variant, incl. the `Replace` kind-change fallback and nested list/map/objects-graph triples.
+value = "Z" | "B" "[" bit "]" | "I" "[" hex "]" | "F" "[" hex "]" | "S" "[" hex "]" | "Y" "[" hex "]" | "L" "[" list-item* "]" | "M" "[" map-item* "]" | "R" "[" hex "]"
+list-item = value ","?
+map-item = hex ":" value ","?
 
-hex = ( HEXDIG HEXDIG )*
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO (`📖️grammar/🦀️component.rs`'s `default_macros`/`macro_hex_ok`), NOT a
+# `hex = (HEXDIG HEXDIG)*`-shaped production: `HEXDIG` is not a terminal this dialect's lexer
+# recognizes, and (independently, per the recipe's own pitfall #2) a hand-rolled `Star` production
+# never backtracks — a hex run directly followed by a bareword literal sharing its token KIND would
+# get silently swallowed into the greedy Star. `Symbol::Ref` already falls back from "no production
+# of this name" to "macro of this name" — the macro's own backtracking
+# (`Recognizer::match_macro_span`, largest-span-first) is the only correct mechanism.

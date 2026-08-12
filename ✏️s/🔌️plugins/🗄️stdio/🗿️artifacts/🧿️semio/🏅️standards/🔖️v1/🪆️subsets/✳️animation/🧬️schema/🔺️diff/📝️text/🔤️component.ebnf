@@ -1,4 +1,47 @@
-(* ebnf stdio.semio.animation.diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.semio.animation.diff', newline ;
-body = timelines_triple ;
+(* ISO-14977-style EBNF for `stdio.semio.animation`'s real `DiffCodec::print_diff`/`parse_diff`
+   text shape — descriptive mirror of the authoritative `📖️component.grammar.semio` (same
+   production names). An unchanged diff prints as the empty string, hence the optional top-level
+   clause. *)
+document = [ timelines clause ] ;
+
+timelines clause = 'timelines', '{', '[', [ index, { ',', index } ], ']', ';', '[', [ timeline modified, { ',', timeline modified } ], ']', ';', '[', [ timeline added, { ',', timeline added } ], ']', '}' ;
+timeline modified = index, ':', timeline diff ;
+timeline added = index, ':', timeline ;
+
+timeline diff = '[', [ timeline diff field, { ',', timeline diff field } ], ']' ;
+timeline diff field = ( 'N', ':', option name ) | ( 'C', ':', '[', channels triple body, ']' ) ;
+channels triple body = '[', [ index, { ',', index } ], ']', ';', '[', [ channel modified, { ',', channel modified } ], ']', ';', '[', [ channel added, { ',', channel added } ], ']' ;
+channel modified = index, ':', channel diff ;
+channel added = index, ':', channel ;
+
+channel diff = '[', [ channel diff field, { ',', channel diff field } ], ']' ;
+channel diff field = ( 'G', ':', target ) | ( 'I', ':', interpolation ) | ( 'K', ':', '[', keyframes triple body, ']' ) ;
+keyframes triple body = '[', [ index, { ',', index } ], ']', ';', '[', [ keyframe modified, { ',', keyframe modified } ], ']', ';', '[', [ keyframe added, { ',', keyframe added } ], ']' ;
+keyframe modified = index, ':', keyframe diff ;
+keyframe added = index, ':', keyframe ;
+
+keyframe diff = '[', [ keyframe diff field, { ',', keyframe diff field } ], ']' ;
+keyframe diff field = ( 'T', ':', number ) | ( 'Y', ':', value ) ;
+
+option name = ( '[', '0', ']' ) | ( '[', '1', ',', hex, ']' ) ;
+
+timeline = '[', option name, ',', channel list, ']' ;
+channel list = '[', [ channel, { ',', channel } ], ']' ;
+channel = '[', target, ',', interpolation, ',', keyframe list, ']' ;
+keyframe list = '[', [ keyframe, { ',', keyframe } ], ']' ;
+keyframe = '[', number, ',', value, ']' ;
+target = '[', hex, ',', property, ']' ;
+property = 't' | 'r' | 's' | 'w' | ( 'c', ':', hex ) ;
+interpolation = 'l' | 's' | 'c' ;
+value = ( 'S', ':', number ) | ( 'V', ':', point3 ) | ( 'Q', ':', quat ) | ( 'W', ':', number list ) ;
+
+point3 = '[', number, ',', number, ',', number, ']' ;
+quat = '[', number, ',', number, ',', number, ',', number, ']' ;
+number list = '[', [ number, { ',', number } ], ']' ;
+
+index = int ;
+number = int | float ;
+int = [ '-' ], digit, { digit } ;
+float = [ '-' ], digit, { digit }, '.', digit, { digit } ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;

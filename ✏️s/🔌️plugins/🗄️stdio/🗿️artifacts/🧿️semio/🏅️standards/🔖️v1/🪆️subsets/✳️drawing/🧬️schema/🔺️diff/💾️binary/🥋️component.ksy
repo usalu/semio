@@ -1,12 +1,17 @@
 meta:
-  id: semio_drawing_diff
+  id: stdio_semio_drawing_diff
   endian: le
 doc: |
-  `SemioDrawingDiff`'s hand-rolled `protocol::DiffCodec::encode_diff` -- no separate binary
-  envelope, the bytes ARE the UTF-8 text-facet grammar (../📝️text/📖️component.grammar.semio)
-  verbatim, matching json's own `stdio.json.diff` binary leaf precedent.
+  Real binary diff frame for `stdio.semio.drawing`: `format` (1 byte) + `presence` bitmask
+  (bit0=canvas, bit1=styles, bit2=layers), then one opaque `payload` tail holding 0-3
+  varint-length-prefixed blobs (one per present field) — see the sibling
+  `📡️component.protocol.semio`'s comment on the `protocol-cond-cannot-chain` boundary. Not a JSON
+  blob — see `🔺️diff/🦀️component.rs`'s `DiffCodec::encode_diff` for the payload's real internal
+  layout.
 seq:
-  - id: text
+  - id: format
+    type: u1
+  - id: presence
+    type: u1
+  - id: payload
     size-eos: true
-    encoding: UTF-8
-    doc: space-separated field=value tokens, see ../📝️text/📖️component.grammar.semio

@@ -1,12 +1,15 @@
-//! 🔄 CAD mutation — `RotateObjects` payload + builder + apply.
+//! 🔄️ CAD mutation — `RotateObjects` payload + `MutationKind` impl.
 use crate::artifacts::cad::mutations::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
+use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
-/// @emoji 🔄 `RotateObjects` mutation payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// 🔄️ Relative multi-select axis-angle rotation, composed onto each object's own current
+/// orientation quaternion.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "rotate-objects")]
 pub struct RotateObjects {
     pub object_ids: Vec<String>,
     pub ax: f64,
@@ -15,13 +18,20 @@ pub struct RotateObjects {
     pub angle: f64,
 }
 
-pub fn rotate_objects(object_ids: Vec<String>, ax: f64, ay: f64, az: f64, angle: f64) -> CadMutation {
-    CadMutation::RotateObjects { object_ids, ax, ay, az, angle }
-}
+impl MutationKind<CadSnapshot, CadMutation> for RotateObjects {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rotate", entity: "objects", kind: "rotate-objects", record: "RotatedObjects" };
 
-pub fn apply(projection: &mut CadSnapshot, object_ids: &[String], ax: f64, ay: f64, az: f64, angle: f64) {
-    let mutation = CadMutation::RotateObjects { object_ids: object_ids.to_vec(), ax, ay, az, angle };
-    let diff = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, projection);
-    *projection = <crate::artifacts::cad::diff::CadDiff as protocol::MutationDiff<CadSnapshot>>::apply(&diff, projection);
+    fn diff(&self, base: &CadSnapshot) -> crate::artifacts::cad::diff::CadDiff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Rotate {} object(s)", self.object_ids.len())
+    }
+    fn target(&self) -> Vec<String> {
+        self.object_ids.clone()
+    }
 }
 //#endregion 🔖️Mutation

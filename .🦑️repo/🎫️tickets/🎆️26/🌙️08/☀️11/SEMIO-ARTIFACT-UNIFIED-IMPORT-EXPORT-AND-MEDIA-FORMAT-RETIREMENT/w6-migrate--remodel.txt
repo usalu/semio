@@ -1,0 +1,40 @@
+W6 migrate — plugin: remodel (✏️s/🔌️plugins/📸️remodel/**)
+
+Census: 1 file using MediaFormat.
+  ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/⚙️engine/🦀️component.rs
+
+Investigation:
+- Only usage site: remodel_io() building semio_framework_plugin::AppIo, fields
+  export_formats: vec![MediaFormat::Glb, MediaFormat::Obj, MediaFormat::Stl, MediaFormat::Ply, MediaFormat::Las, MediaFormat::Png]
+  import_formats: vec![MediaFormat::Glb, MediaFormat::Obj]
+- Read 🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs MediaFormat enum (26 variants) — confirmed Glb/Obj/Stl/Ply/Las/Png are all real variants.
+- Read 🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs — AppIo.export_formats/import_formats are STILL typed Vec<MediaFormat> in the framework (not yet migrated to Vec<String>). Framework file is out of write scope for W6 plugin agents.
+- Compared with this same plugin's sibling ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs artifact_kind() -> ArtifactKindSpec, already migrated (presumably W5): export_formats/import_formats left as `vec![]` (empty, still Vec<MediaFormat> typed), with the real dialect ids moved onto the additive ArtifactKindSpec::export_stdio_kinds / import_stdio_kinds: Vec<&'static str> fields ("stdio.dwg","stdio.gltf","stdio.json","stdio.las","stdio.obj","stdio.ply","stdio.png","stdio.stl").
+- AppIo has NO such additive string-id peer fields (checked 🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs AppIo struct, region 🔖️AppIo) — only export_formats/import_formats: Vec<MediaFormat>.
+- Confirmed AppIo.export_formats/import_formats are not read anywhere downstream (grepped 🧰️framework/ for `.export_formats`/`.import_formats` — only ArtifactKindSpec-typed `spec.export_formats.clone()` in os component.rs / os host component.rs are read; AppIo's copies are unused scaffolding per its own doc comment "apps don't populate this yet").
+
+Fix applied (component.rs):
+- Dropped `MediaFormat` from the `use semio_framework_plugin::{...}` import.
+- export_formats/import_formats literals -> `vec![]`, matching the sibling artifact_kind() precedent in this plugin (real dialect ids already live on ArtifactKindSpec.export_stdio_kinds/import_stdio_kinds elsewhere, populated by W5).
+- Added a doc comment on remodel_io() explaining the empty vecs, pointing at the sibling, and flagging that AppIo lacks the additive stdio-kind string fields ArtifactKindSpec has, so the real ids cannot be repopulated in-scope — needs a framework AppIo change from the ticket's framework closer.
+
+Exit checklist:
+- grep -c "MediaFormat" on the touched file -> 0
+- cargo check -p semio-s-plugin-remodel -> clean (only pre-existing unrelated warnings: unused imports elsewhere, dead_code, elided lifetimes)
+- cargo test -p semio-s-plugin-remodel --lib -> 360 passed, 2 failed
+    FAILED (pre-existing, unrelated to this change, not touched by this diff):
+      artifacts::remodel::standards::v1::engine::images::tests::jpeg_decode_never_panics_on_truncated_input
+        (panic: "truncation at 752 bytes should error, not decode" — 🖼️images/🦀️component.rs:975)
+      artifacts::remodel::standards::v1::engine::reconstruction::tests::long::video_in_yields_watertight_mesh_out
+        (panic: "expected a non-empty mesh, got 0 triangles" — 🏭️reconstruction/🦀️component.rs:1460)
+    Both are in files this task never touched (jpeg image decoding, reconstruction pipeline) — unrelated to
+    MediaFormat/remodel_io. `remodel_io_declares_photos_in_and_mesh_out` (the IoTests region covering
+    remodel_io()) PASSED.
+  git diff confirms the only component.rs change in scope of this task is the ⚙️engine file; other
+  modified files under ✏️s/🔌️plugins/📸️remodel/ (📌️panels/📄️artifact, two json serializer files) predate
+  this session (pre-existing working-tree changes from concurrent dev activity, not touched here).
+
+Flagged follow-up (framework, out of scope): AppIo (🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs, region
+🔖️AppIo) should gain export_stdio_kinds/import_stdio_kinds: Vec<&'static str> additive fields mirroring
+ArtifactKindSpec, so apps like remodel can carry real dialect ids on AppIo instead of leaving
+export_formats/import_formats permanently empty.

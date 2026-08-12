@@ -1,0 +1,30 @@
+     |
+2586 |         LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
+     |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2586 -         LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
+2586 +         LazyLock::new(|| Mutex::new(HashMap::new()));
+     |
+
+warning: the `#![feature]` attribute can only be used at the crate root
+ --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4:1
+  |
+4 | #![feature(linkage)]
+  | ^^^^^^^^^^^^^^^^^^^^
+  |
+  = help: the crate root is at `🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs`
+  = note: `#[warn(unused_attributes)]` (part of `#[warn(unused)]`) on by default
+
+warning: feature `linkage` is declared but not used
+ --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs:2:12
+  |
+2 | #![feature(linkage)]
+  |            ^^^^^^^
+  |
+  = note: `#[warn(unused_features)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-plugin-host` (lib) generated 3 warnings (run `cargo fix --lib -p semio-framework-plugin-host` to apply 3 suggestions)
+warning: `semio-framework-os` (lib) generated 10 warnings (run `cargo fix --lib -p semio-framework-os` to apply 8 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.71s

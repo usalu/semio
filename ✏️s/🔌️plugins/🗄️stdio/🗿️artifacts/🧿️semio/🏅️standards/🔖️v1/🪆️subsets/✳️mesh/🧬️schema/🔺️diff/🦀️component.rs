@@ -514,6 +514,17 @@ pub(crate) fn enc_bytes(b: &[u8]) -> String {
 pub(crate) fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
     hex_decode(s)
 }
+/// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
+/// `store::ByteReader`) backing the real `DiffCodec::encode_diff`/`decode_diff` below.
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    store::pack_rt::write_varint_u64(out, s.len() as u64);
+    out.extend_from_slice(s.as_bytes());
+}
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec();
+    String::from_utf8(bytes).map_err(|e| e.to_string())
+}
 fn parse_f32(s: &str) -> Result<f32, String> { s.parse().map_err(|e: std::num::ParseFloatError| e.to_string()) }
 fn parse_f64(s: &str) -> Result<f64, String> { s.parse().map_err(|e: std::num::ParseFloatError| e.to_string()) }
 fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
@@ -719,11 +730,18 @@ pub(crate) fn dec_texture_diff(s: &str) -> Result<SemioTextureDiff, String> {
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
+fn enc_meshes_diff(d: &SemioMeshesDiff) -> String { enc_named_triple(d, |k: &String| enc_str(k), enc_mesh_item_diff, enc_named_added_mesh) }
+fn dec_meshes_diff(s: &str) -> Result<SemioMeshesDiff, String> { dec_named_triple(s, dec_str, dec_mesh_item_diff, dec_named_added_mesh) }
+fn enc_materials_diff(d: &SemioMaterialsDiff) -> String { enc_named_triple(d, |k: &String| enc_str(k), enc_material_diff, enc_named_added_material) }
+fn dec_materials_diff(s: &str) -> Result<SemioMaterialsDiff, String> { dec_named_triple(s, dec_str, dec_material_diff, dec_named_added_material) }
+fn enc_textures_diff(d: &SemioTexturesDiff) -> String { enc_named_triple(d, |k: &String| enc_str(k), enc_texture_diff, enc_named_added_texture) }
+fn dec_textures_diff(s: &str) -> Result<SemioTexturesDiff, String> { dec_named_triple(s, dec_str, dec_texture_diff, dec_named_added_texture) }
+
 fn print_mesh_diff(d: &SemioMeshDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.meshes { tokens.push(format!("meshes={}", enc_named_triple(v, |k: &String| enc_str(k), enc_mesh_item_diff, enc_named_added_mesh))); }
-    if let Some(v) = &d.materials { tokens.push(format!("materials={}", enc_named_triple(v, |k: &String| enc_str(k), enc_material_diff, enc_named_added_material))); }
-    if let Some(v) = &d.textures { tokens.push(format!("textures={}", enc_named_triple(v, |k: &String| enc_str(k), enc_texture_diff, enc_named_added_texture))); }
+    if let Some(v) = &d.meshes { tokens.push(format!("meshes={}", enc_meshes_diff(v))); }
+    if let Some(v) = &d.materials { tokens.push(format!("materials={}", enc_materials_diff(v))); }
+    if let Some(v) = &d.textures { tokens.push(format!("textures={}", enc_textures_diff(v))); }
     tokens.join(" ")
 }
 fn parse_mesh_diff(line: &str) -> Result<SemioMeshDiff, String> {
@@ -732,9 +750,9 @@ fn parse_mesh_diff(line: &str) -> Result<SemioMeshDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("meshes=") { d.meshes = Some(dec_named_triple(rest, dec_str, dec_mesh_item_diff, dec_named_added_mesh)?); }
-        else if let Some(rest) = token.strip_prefix("materials=") { d.materials = Some(dec_named_triple(rest, dec_str, dec_material_diff, dec_named_added_material)?); }
-        else if let Some(rest) = token.strip_prefix("textures=") { d.textures = Some(dec_named_triple(rest, dec_str, dec_texture_diff, dec_named_added_texture)?); }
+        if let Some(rest) = token.strip_prefix("meshes=") { d.meshes = Some(dec_meshes_diff(rest)?); }
+        else if let Some(rest) = token.strip_prefix("materials=") { d.materials = Some(dec_materials_diff(rest)?); }
+        else if let Some(rest) = token.strip_prefix("textures=") { d.textures = Some(dec_textures_diff(rest)?); }
         else { return Err(format!("semio mesh diff: unknown token {token:?}")); }
     }
     Ok(d)
@@ -747,17 +765,122 @@ impl protocol::DiffCodec for SemioMeshDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_mesh_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`/`BcfDiff`/
-    /// `DocxDiff` all use — satisfies every `DiffCodec` law without inventing a second wire format.
+    /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
+    /// shortcut (per this wave's brief item 5). `format u8` + `presence u8` (bit0 = `meshes`
+    /// present, bit1 = `materials` present, bit2 = `textures` present) are two REAL fixed fields;
+    /// each present collection then follows as its own varint-length-prefixed opaque blob (the
+    /// same `enc_meshes_diff`/`enc_materials_diff`/`enc_textures_diff` bracket/hex text
+    /// `print_diff` already produces) — independently-delimited segments rather than one bare
+    /// trailing `bytes` because there can be 0-3 of them (chaining a `Cond` per-segment hits the
+    /// `protocol-cond-cannot-chain` gap: a second `if`-guard on a field that was itself only
+    /// conditionally decoded hard-errors `eval_cond` — see `✳️workflow`'s pilot report).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        let mut presence = 0u8;
+        if self.meshes.is_some() { presence |= 0b001; }
+        if self.materials.is_some() { presence |= 0b010; }
+        if self.textures.is_some() { presence |= 0b100; }
+        let mut out = vec![DIFF_BINARY_FORMAT, presence];
+        if let Some(v) = &self.meshes { write_str_lp(&mut out, &enc_meshes_diff(v)); }
+        if let Some(v) = &self.materials { write_str_lp(&mut out, &enc_materials_diff(v)); }
+        if let Some(v) = &self.textures { write_str_lp(&mut out, &enc_textures_diff(v)); }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
+        }
+        if bytes[0] != DIFF_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
+        }
+        let presence = bytes[1];
+        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let meshes = if presence & 0b001 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff meshes blob", offset: 2, detail: e })?;
+            Some(dec_meshes_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff meshes text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        let materials = if presence & 0b010 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff materials blob", offset: 2, detail: e })?;
+            Some(dec_materials_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff materials text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        let textures = if presence & 0b100 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff textures blob", offset: 2, detail: e })?;
+            Some(dec_textures_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff textures text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        Ok(SemioMeshDiff { meshes, materials, textures })
     }
 }
 //#endregion 🔖️TopLevel
+
+//#region 🔖️Demo
+/// 🌱 Representative `SemioMeshDiff` cases (empty/no-op, a full meshes+materials+textures sweep
+/// both directions incl. the nested primitives triple, a bare mesh/texture insert) — single
+/// source of truth for `grammar_conformance_law`/`protocol_walk_law` in
+/// `🎹️composer/🦀️component.rs`. Local snapshot fixtures (not imported from `schema::mutations`,
+/// which itself depends ON `schema::diff` — see this file's own module doc comment on why
+/// `diff`/`snapshot`/`mutations` avoid reverse dependencies on each other).
+#[cfg(test)]
+fn demo_snapshot_a() -> SemioMeshSnapshot {
+    SemioMeshSnapshot {
+        meshes: vec![SemioMesh {
+            id: "keep".into(),
+            primitives: vec![
+                SemioPrimitive { id: "toRemove".into(), topology: SemioTopology::Points, ..Default::default() },
+                SemioPrimitive {
+                    id: "toModify".into(),
+                    topology: SemioTopology::Triangles,
+                    positions: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }],
+                    material_id: Some("mat-a".into()),
+                    ..Default::default()
+                },
+            ],
+        }],
+        materials: vec![SemioMaterial { id: "mat-a".into(), base_color: SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }, metallic: 0.0, roughness: 1.0 }],
+        textures: vec![SemioTexture { id: "tex-a".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] }],
+        ..Default::default()
+    }
+}
+#[cfg(test)]
+fn demo_snapshot_b() -> SemioMeshSnapshot {
+    SemioMeshSnapshot {
+        meshes: vec![SemioMesh {
+            id: "keep".into(),
+            primitives: vec![
+                SemioPrimitive {
+                    id: "toModify".into(),
+                    topology: SemioTopology::Lines,
+                    positions: vec![SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 }],
+                    material_id: None,
+                    ..Default::default()
+                },
+                SemioPrimitive { id: "added".into(), topology: SemioTopology::Points, ..Default::default() },
+            ],
+        }],
+        materials: vec![SemioMaterial { id: "mat-a".into(), base_color: SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, metallic: 1.0, roughness: 0.0 }],
+        textures: vec![SemioTexture { id: "tex-a".into(), mime: "image/jpeg".into(), bytes: vec![4, 5] }],
+        ..Default::default()
+    }
+}
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<SemioMeshDiff> {
+    let a = demo_snapshot_a();
+    let b = demo_snapshot_b();
+    vec![
+        SemioMeshDiff::default(),
+        <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &b),
+        <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&b, &a),
+        diff_add_mesh(&a, SemioMesh { id: "extra".into(), primitives: vec![] }),
+        diff_add_texture(&a, SemioTexture { id: "extra-tex".into(), mime: "image/gif".into(), bytes: vec![7, 7] }),
+    ]
+}
+//#endregion 🔖️Demo
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🔖️Tests

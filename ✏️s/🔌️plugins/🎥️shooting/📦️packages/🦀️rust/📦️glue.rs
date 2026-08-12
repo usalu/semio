@@ -609,7 +609,7 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/🎥️shooting/📌️panels/📄️document/🦀️component.rs"]
+            #[path = "../../🎛️apps/🎥️shooting/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
             #[path = "../../🎛️apps/🎥️shooting/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;

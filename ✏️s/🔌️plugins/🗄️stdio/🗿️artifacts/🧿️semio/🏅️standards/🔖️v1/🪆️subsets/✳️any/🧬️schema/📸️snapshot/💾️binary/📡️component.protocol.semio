@@ -1,3 +1,26 @@
-dialect protocol stdio.semio.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.snapshot"
+dialect protocol
+protocol stdio.semio.snapshot
+version 1
+schema stdio.semio
+start body
+framing record
+
+# W-S closer (`any`): REAL binary pack frame, replacing the old `serde_json::to_vec`-in-envelope
+# shortcut. `format u8` + `tag u8` (real subset ordinal, `📸️snapshot/🦀️component.rs`'s
+# `subset_ordinal`) are genuinely, individually protocol-walkable, then `schema_len`/`schema_bytes`
+# (real, varint-length-prefixed UTF-8 — this envelope's own top-level `schema` field). Past that,
+# `payload` is the WRAPPED subset's own full, already-real `ArtifactPack::encode_pack()` output —
+# a real nested `semio_format` envelope in its own right — modeled as one opaque trailing chain
+# (the `protocol-array-of-records`/`protocol-prim-ref-recursion` gap: one-of-13 heterogeneous
+# nested payloads can't be tag-dispatched by `repeat`, which only dispatches WITHIN one block, not
+# across an entire independent sub-protocol). The real Rust `encode_semio_snapshot_binary`/
+# `decode_semio_snapshot_binary` stays genuinely delegating; only the protocol DESCRIPTION stops at
+# this boundary, same honest treatment every P1-P3 pilot's own nested payload uses.
+header fixed 2
+field format u8
+field tag u8
+
+segment schema_len varint
+segment schema_bytes Array(u8, Field(schema_len))
+
+chain payload bytes

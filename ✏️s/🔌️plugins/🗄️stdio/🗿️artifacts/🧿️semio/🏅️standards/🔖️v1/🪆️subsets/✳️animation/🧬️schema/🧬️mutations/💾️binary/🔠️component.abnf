@@ -1,3 +1,6 @@
-; abnf stdio.semio.animation.mutations
-document = body
-body = op
+; ABNF-style descriptive mirror of `stdio.semio.animation`'s real binary op frame -- see the
+; authoritative `📡️component.protocol.semio` for the conformance-tested version.
+document       = format tag payload
+format         = %x01                  ; OP_BINARY_FORMAT
+tag            = OCTET                 ; SemioAnimationMutation variant ordinal, 0-12
+payload        = *OCTET                ; opaque tail: the variant's own key=value,... argument text

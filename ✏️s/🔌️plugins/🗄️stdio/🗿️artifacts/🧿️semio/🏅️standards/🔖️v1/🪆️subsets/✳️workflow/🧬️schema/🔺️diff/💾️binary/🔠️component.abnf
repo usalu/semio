@@ -1,5 +1,6 @@
-; abnf s.stdio.semio.workflow diff BINARY wire format -- UTF-8 bytes of the diff TEXT wire format
-; verbatim; see 🔺️diff/📝️text/🔠️component.abnf's sibling text grammar (📖️component.grammar.semio)
-; for the real token structure.
-document = diff-line-utf8
-diff-line-utf8 = *OCTET
+; ABNF-style descriptive mirror of `stdio.semio.workflow`'s real diff binary frame -- see the
+; authoritative `📡️component.protocol.semio` for the conformance-tested version.
+document  = format presence payload
+format    = %x01                  ; DIFF_BINARY_FORMAT
+presence  = OCTET                 ; bit0=nodes present, bit1=edges present
+payload   = *OCTET                ; 0-2 varint-length-prefixed opaque blobs, see component.rs

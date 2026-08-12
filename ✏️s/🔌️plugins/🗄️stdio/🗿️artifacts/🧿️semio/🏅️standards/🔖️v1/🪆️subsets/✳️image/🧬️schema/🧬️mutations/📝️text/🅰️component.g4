@@ -1,30 +1,32 @@
-// 🅰️ Real wire grammar for `SemioImageMutation`'s hand-rolled `OpText::print_op`/`parse_op` — see
-// the `🦀️component.rs` sibling's `🔖️OpCodecs` region. `NoMutation` prints as the bare literal
-// `no`; every other variant prints as `tag:` followed by comma-separated positional fields
-// (bracket-depth-aware, reusing `engine::triples`' split/strip helpers so `setSnapshot`'s nested
-// `[...]` snapshot payload never confuses the top-level split).
-grammar Semio_image_mutation_text;
+// 🅰️ ANTLR mirror (descriptive, not test-parsed — the real recognizer is
+// ../📖️component.grammar.semio, walked by dsl::Recognizer) for `SemioImageMutation::print_op`/
+// `parse_op` (../../🦀️component.rs's `print_image_mutation`/`parse_image_mutation`).
+grammar Stdio_semio_image_mutations;
 
-op   : 'no'
-     | 'setSnapshot:' snapshot
-     | 'setDimensions:' DIGIT+ ',' DIGIT+
-     | 'setColorspace:' ('r'|'a'|'g'|'y'|'i')
-     | 'setBitDepth:' DIGIT+
-     | 'setIcc:' option
-     | 'insertFrame:' DIGIT+ ',' frame
-     | 'removeFrame:' DIGIT+
-     | 'moveFrame:' DIGIT+ ',' DIGIT+
-     | 'setFrameDelay:' DIGIT+ ',' DIGIT+
-     | 'setFramePixels:' DIGIT+ ',' HEXDIGIT*
-     | 'setMetadataEntry:' HEXDIGIT* ',' HEXDIGIT*
-     | 'removeMetadataEntry:' HEXDIGIT*
-     ;
-snapshot : '[' DIGIT+ ',' DIGIT+ ',' ('r'|'a'|'g'|'y'|'i') ',' DIGIT+ ',' option ',' '[' frameList ']' ',' '[' entryList ']' ']' ;
-frame    : '[' DIGIT+ ',' HEXDIGIT* ']' ;
-frameList: (frame (',' frame)*)? ;
-entryList: (entry (',' entry)*)? ;
-entry    : HEXDIGIT* ',' HEXDIGIT* ;
-option   : '[0]' | '[1,' HEXDIGIT* ']' ;
+op : noOp | setSnapshot | setDimensions | setColorspace | setBitDepth | setIcc | insertFrame | removeFrame | moveFrame | setFrameDelay | setFramePixels | setMetadataEntry | removeMetadataEntry ;
 
-HEXDIGIT : [0-9a-f] ;
-DIGIT    : [0-9] ;
+noOp                 : 'no' ;
+setSnapshot          : 'setSnapshot' ':' snapshot ;
+setDimensions        : 'setDimensions' ':' INT ',' INT ;
+setColorspace        : 'setColorspace' ':' colorspace ;
+setBitDepth          : 'setBitDepth' ':' INT ;
+setIcc                : 'setIcc' ':' optionHex ;
+insertFrame           : 'insertFrame' ':' INT ',' frame ;
+removeFrame            : 'removeFrame' ':' INT ;
+moveFrame              : 'moveFrame' ':' INT ',' INT ;
+setFrameDelay          : 'setFrameDelay' ':' INT ',' INT ;
+setFramePixels         : 'setFramePixels' ':' INT ',' HEX ;
+setMetadataEntry       : 'setMetadataEntry' ':' HEX ',' HEX ;
+removeMetadataEntry    : 'removeMetadataEntry' ':' HEX ;
+
+snapshot   : '[' INT ',' INT ',' colorspace ',' INT ',' optionHex ',' '[' frameList? ']' ',' '[' entryList? ']' ']' ;
+frameList  : frame (',' frame)* ;
+frame      : '[' INT ',' HEX ']' ;
+entryList  : entry (',' entry)* ;
+entry      : '[' HEX ',' HEX ']' ;
+colorspace : 'r' | 'a' | 'g' | 'y' | 'i' ;
+optionHex  : '[' '0' ']' | '[' '1' ',' HEX ']' ;
+
+HEX : [0-9a-f]* ;
+INT : '-'? [0-9]+ ;
+WS  : [ \t\r\n]+ -> skip ;

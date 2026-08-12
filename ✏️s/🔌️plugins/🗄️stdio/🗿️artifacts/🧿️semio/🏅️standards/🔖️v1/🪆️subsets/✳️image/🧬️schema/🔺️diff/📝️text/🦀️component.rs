@@ -1,3 +1,3 @@
-//! 🚧 scaffolded by W1b — text representation marker for `stdio.semio.image.diff`. Full grammar-backed
-//! parse/print lands in W2/W3.
-pub const TEXT_MARKER: &str = "stdio.semio.image.diff";
+//! 📝️ Text representation codec surface for `stdio.semio.image` (diff) — grammar include.
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");

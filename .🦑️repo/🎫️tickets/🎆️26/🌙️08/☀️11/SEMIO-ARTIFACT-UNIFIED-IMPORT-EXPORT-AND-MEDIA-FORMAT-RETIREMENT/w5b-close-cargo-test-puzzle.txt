@@ -1,0 +1,6 @@
+test examples::puzzle5d::nakagin_capsule_tower_tests::dsl_asset_parses_and_round_trips ... ok
+test examples::puzzle5d::capsule_dream_tests::flatten_matches_golden_poses_to_1e4 ... ok
+test examples::puzzle5d::capsule_dream_tests::dsl_asset_parses_and_round_trips ... ok
+
+test result: ok. 421 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.13s
+

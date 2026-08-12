@@ -1,3 +1,18 @@
-dialect protocol stdio.semio.mutations
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.semio.mutations"
+dialect protocol
+protocol stdio.semio.mutations
+version 1
+schema stdio.semio
+start body
+framing record
+
+# W-S closer (`any`): REAL binary op frame, replacing the old whole-enum `serde_json` shortcut.
+# `format u8` + `tag u8` (real mutation-variant ordinal, `🧬️mutations/🦀️component.rs`'s
+# `mutation_tag`) are genuinely, individually protocol-walkable fixed header fields — matches the
+# recipe's own §2.5 op-binary shape exactly (json's mutations protocol). Past the header, `payload`
+# is the WRAPPED subset's own real `OpBinary::encode_op()` bytes (or, for `setSnapshot`, the
+# wrapped snapshot's own real `ArtifactPack::encode_pack()` bytes) — one opaque trailing chain.
+header fixed 2
+field format u8
+field tag u8
+
+chain payload bytes

@@ -1,7 +1,12 @@
-; abnf s.stdio.semio.mesh snapshot (binary) — the shared `.semio` binary envelope
-; (store::semio_format::wrap_binary) wrapping the REAL SemioMeshSnapshot JSON payload.
-document       = envelope-magic token-len token json-payload
-envelope-magic = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A   ; 8 bytes: 0x89 "SEM" CR LF SUB LF
-token-len      = 4OCTET                                     ; u32, little-endian
-token          = 22OCTET                                    ; UTF-8 "stdio.semio.mesh.pack v1"
-json-payload   = *OCTET                                     ; serde_json::to_vec(SemioMeshSnapshot) — the neutral type's own JSON, the real complete boundary for this subset
+; ABNF mirror (descriptive, not test-parsed — the real byte-level walker is
+; ../📡️component.protocol.semio, walked by dsl::walk_protocol) for s.stdio.semio.mesh snapshot
+; (binary) — the shared `.semio` binary envelope (store::semio_format::wrap_binary) wrapping the
+; REAL varint-length-prefixed SemioMeshSnapshot binary pack (NOT serde_json::to_vec).
+document        = envelope-magic token-len token format schema-len schema-bytes payload
+envelope-magic  = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A   ; 8 bytes: 0x89 "SEM" CR LF SUB LF
+token-len       = 4OCTET                                     ; u32, little-endian
+token           = 22OCTET                                    ; UTF-8 "stdio.semio.mesh.pack v1"
+format          = OCTET                                      ; PACK_BINARY_FORMAT, currently 1
+schema-len      = 1*OCTET                                    ; LEB128 varint
+schema-bytes    = *OCTET                                     ; UTF-8 schema id, e.g. stdio.semio.mesh
+payload         = *OCTET                                     ; meshes/materials/textures — see ../../🦀️component.rs's encode_mesh_snapshot_binary; opaque here (protocol-array-of-records gap)

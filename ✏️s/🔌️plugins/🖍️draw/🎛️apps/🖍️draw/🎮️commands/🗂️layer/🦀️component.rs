@@ -55,7 +55,7 @@ pub mod add_layer {
         let layer = create_layer_by_kind(&payload.kind);
         let select_id = layer_id(&layer).to_string();
         Ok(Emit {
-            artifact_mutations: vec![DrawMutation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }],
+            artifact_mutations: vec![crate::artifacts::draw::mutations::create_layer(None, Some(document.layers.len()), layer)],
             config_mutations: vec![DrawConfigMutation::SetSelection { ids: vec![select_id] }],
             ..Default::default()
         })
@@ -80,7 +80,7 @@ pub mod drop_layer_kind {
         let layer = create_layer_by_kind(&payload.kind);
         let (parent_id, index) = resolve_reorder_target(document, &payload.target_row_id, &payload.drop_position);
         let select_id = layer_id(&layer).to_string();
-        Ok(Emit { artifact_mutations: vec![DrawMutation::AddLayer { parent_id, index: Some(index), layer: Box::new(layer) }], config_mutations: vec![DrawConfigMutation::SetSelection { ids: vec![select_id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![crate::artifacts::draw::mutations::create_layer(parent_id, Some(index), layer)], config_mutations: vec![DrawConfigMutation::SetSelection { ids: vec![select_id] }], ..Default::default() })
     }
 }
 //#endregion 🔖️DropLayerKind
@@ -100,7 +100,7 @@ pub mod move_layer {
     pub fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let (parent_id, index) = resolve_reorder_target(document, &payload.target_row_id, &payload.drop_position);
-        Ok(Emit::mutations(vec![DrawMutation::ReorderLayer { layer_id: payload.layer_id.clone(), parent_id, index }]))
+        Ok(Emit::mutations(vec![crate::artifacts::draw::mutations::reorder_layer(payload.layer_id.clone(), parent_id, index)]))
     }
 }
 //#endregion 🔖️MoveLayer
@@ -122,7 +122,7 @@ pub mod delete_layer {
             return Ok(Emit::default());
         }
         let remaining: Vec<String> = config.selected_ids.iter().filter(|id| **id != payload.layer_id).cloned().collect();
-        Ok(Emit { artifact_mutations: vec![DrawMutation::RemoveLayer { layer_id: payload.layer_id.clone() }], config_mutations: vec![DrawConfigMutation::SetSelection { ids: remaining }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![crate::artifacts::draw::mutations::delete_layer(payload.layer_id.clone())], config_mutations: vec![DrawConfigMutation::SetSelection { ids: remaining }], ..Default::default() })
     }
 }
 //#endregion 🔖️DeleteLayer
@@ -141,7 +141,7 @@ pub mod duplicate_layer {
         if payload.layer_id.is_empty() {
             return Ok(Emit::default());
         }
-        Ok(Emit::mutations(vec![DrawMutation::DuplicateLayer { layer_id: payload.layer_id.clone() }]))
+        Ok(Emit::mutations(vec![crate::artifacts::draw::mutations::duplicate_layer(payload.layer_id.clone())]))
     }
 }
 //#endregion 🔖️DuplicateLayer
@@ -161,7 +161,7 @@ pub mod toggle_layer_visible {
         match find_draw_layer(document, &payload.layer_id) {
             Some(layer) => {
                 let visible = !crate::artifacts::draw::engine::layer_base(layer).visible;
-                Ok(Emit::mutations(vec![DrawMutation::SetLayerVisible { layer_id: payload.layer_id.clone(), visible }]))
+                Ok(Emit::mutations(vec![crate::artifacts::draw::mutations::set_layer_visible(payload.layer_id.clone(), visible)]))
             }
             None => Ok(Emit::default()),
         }
@@ -190,7 +190,7 @@ pub mod combine_boolean {
         let layer = create_draw_boolean_layer("Boolean", &payload.operation, ids);
         let select_id = layer_id(&layer).to_string();
         Ok(Emit {
-            artifact_mutations: vec![DrawMutation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }],
+            artifact_mutations: vec![crate::artifacts::draw::mutations::create_layer(None, Some(document.layers.len()), layer)],
             config_mutations: vec![DrawConfigMutation::SetSelection { ids: vec![select_id] }],
             ..Default::default()
         })
@@ -258,7 +258,7 @@ pub mod set_selected_opacity {
     pub fn handle(payload: &SetSelectedOpacity, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, _session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
-        let operations: Vec<DrawMutation> = config.selected_ids.iter().filter(|id| find_draw_layer(document, id).is_some()).map(|id| DrawMutation::SetLayerOpacity { layer_id: id.clone(), opacity: payload.value }).collect();
+        let operations: Vec<DrawMutation> = config.selected_ids.iter().filter(|id| find_draw_layer(document, id).is_some()).map(|id| crate::artifacts::draw::mutations::set_layer_opacity(id.clone(), payload.value)).collect();
         if operations.is_empty() {
             return Ok(Emit::default());
         }

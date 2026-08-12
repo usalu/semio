@@ -1,12 +1,19 @@
-//! 🧬️ CAD artifact — document mutation dispatch enum + shared patches/helpers.
+//! 🧬️ CAD artifact — document mutation dispatch enum + shared internal patch/helper types.
+//! Every variant wraps exactly one `🧬️mutations/<kind>/🦠️mutation` payload struct implementing
+//! `protocol::MutationKind<CadSnapshot, CadMutation>`; `#[derive(dsl::Mutations)]` below
+//! generates `impl protocol::Mutation`/`impl protocol::SemanticMutation` by delegating to each
+//! payload's own `diff`/`inverse` — see `🧪️MutationsDeriveLaws` in
+//! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs` for the reference shape.
 
-use crate::artifacts::cad::diff::{apply_reference_patch, CadDiff, CadNodePatchEntry, CadNodesDelta, CadObjectPatchEntry, CadObjectsDelta};
-use crate::artifacts::cad::{cad_pane_objects, CadNode, CadObject, CadPaneId, CadReference, CadSnapshot};
-use protocol::Mutation;
+use crate::artifacts::cad::diff::{CadDiff, CadObjectPatchEntry, CadObjectsDelta};
+use crate::artifacts::cad::{cad_pane_objects, CadObject, CadPaneId, CadSnapshot};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
-//#region 🔖️Mutations
+//#region 🔖️InternalPatches
+/// 🩹️ Option-bag field delta for [`CadObject`] — INTERNAL diff-construction glue only (per
+/// `📓️taxonomy.md`'s forbidden vocabulary, an option-bag `Patch` type may survive as a
+/// diff-fragment helper, never as a mutation's own payload). Every `🧬️mutations/<kind>` leaf that
+/// touches one or more `CadObject` scalar fields builds one of these to feed `CadObjectsDelta`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct CadObjectPatch {
@@ -24,12 +31,14 @@ pub struct CadObjectPatch {
     pub solid_handle: Option<String>,
 }
 
+/// 🩹️ Option-bag field delta for [`crate::artifacts::cad::CadNode`] — INTERNAL diff-construction glue only.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct CadNodePatch {
     pub label: Option<String>,
 }
 
+/// 🩹️ Option-bag field delta for [`crate::artifacts::cad::CadReference`] — INTERNAL diff-construction glue only.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct CadReferencePatch {
@@ -43,241 +52,49 @@ pub struct CadReferencePatch {
     pub locked: Option<bool>,
     pub opacity: Option<f64>,
 }
+//#endregion 🔖️InternalPatches
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+//#region 🔖️Mutations
+/// 🧬️ Closed semantic mutation vocabulary for the cad document, derived per
+/// `📓️derivation-rules.md` from `CadSnapshot`'s shape. `SetSnapshot`/`SetPaneObjects`-as-whole-doc-
+/// replace and every generic `Patch*`/`CollectionMutation` variant this facet used to carry are
+/// gone — whole-document replace is not an in-history mutation at all (routed through
+/// `ArtifactStore::reset`, see `CadPlayApp::whole_document_operation` returning `None` now).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
+#[mutations(snapshot = CadSnapshot, diff = CadDiff, schema = "cad.cad")]
 pub enum CadMutation {
-    AddObject {
-        pane: CadPaneId,
-        #[dsl(block)]
-        object: CadObject,
-    },
-    RemoveObject {
-        pane: CadPaneId,
-        object_id: String,
-    },
-    PatchObject {
-        pane: CadPaneId,
-        object_id: String,
-        #[dsl(block)]
-        patch: CadObjectPatch,
-    },
-    TranslateObjects {
-        object_ids: Vec<String>,
-        dx: f64,
-        dy: f64,
-        dz: f64,
-    },
-    RotateObjects {
-        object_ids: Vec<String>,
-        ax: f64,
-        ay: f64,
-        az: f64,
-        angle: f64,
-    },
-    ScaleObjects {
-        object_ids: Vec<String>,
-        sx: f64,
-        sy: f64,
-        sz: f64,
-    },
-    SetPaneObjects {
-        pane: CadPaneId,
-        objects: Vec<CadObject>,
-    },
-    AddNode {
-        #[dsl(block)]
-        node: CadNode,
-    },
-    RemoveNode {
-        node_id: String,
-    },
-    RenameNode {
-        node_id: String,
-        label: String,
-    },
-    PatchReference {
-        model_definition_id: String,
-        reference_id: String,
-        #[dsl(block)]
-        patch: CadReferencePatch,
-    },
-    SetReferences {
-        model_definition_id: String,
-        references: Vec<CadReference>,
-    },
-    SetActiveModelDefinition {
-        model_definition_id: String,
-    },
-    SetSnapshot {
-        #[dsl(block)]
-        snapshot: Box<CadSnapshot>,
-    },
+    CreateObject(create_object::mutation::CreateObject),
+    DeleteObject(delete_object::mutation::DeleteObject),
+    RenameObject(rename_object::mutation::RenameObject),
+    ChangeObjectTypology(change_object_typology::mutation::ChangeObjectTypology),
+    ChangeObjectVisible(change_object_visible::mutation::ChangeObjectVisible),
+    ChangeObjectLocked(change_object_locked::mutation::ChangeObjectLocked),
+    MoveObject(move_object::mutation::MoveObject),
+    RotateObject(rotate_object::mutation::RotateObject),
+    ScaleObject(scale_object::mutation::ScaleObject),
+    ReplaceObjectGeometry(replace_object_geometry::mutation::ReplaceObjectGeometry),
+    DragObjects(drag_objects::mutation::DragObjects),
+    RotateObjects(rotate_objects::mutation::RotateObjects),
+    ScaleObjects(scale_objects::mutation::ScaleObjects),
+    ReplacePaneObjects(replace_pane_objects::mutation::ReplacePaneObjects),
+    CreateNode(create_node::mutation::CreateNode),
+    DeleteNode(delete_node::mutation::DeleteNode),
+    RenameNode(rename_node::mutation::RenameNode),
+    ChangeReferenceHidden(change_reference_hidden::mutation::ChangeReferenceHidden),
+    ChangeReferenceLocked(change_reference_locked::mutation::ChangeReferenceLocked),
+    ChangeReferenceWidth(change_reference_width::mutation::ChangeReferenceWidth),
+    MoveReference(move_reference::mutation::MoveReference),
+    ReplaceReferenceMedia(replace_reference_media::mutation::ReplaceReferenceMedia),
+    ReplaceReferences(replace_references::mutation::ReplaceReferences),
+    ChangeActiveModelDefinition(change_active_model_definition::mutation::ChangeActiveModelDefinition),
 }
+//#endregion 🔖️Mutations
 
-
-
-
-fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
-    [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]
-}
-
-fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
-    let len = (ax * ax + ay * ay + az * az).sqrt();
-    if len < 1e-8 {
-        return [0.0, 0.0, 0.0, 1.0];
-    }
-    let half = angle * 0.5;
-    let s = half.sin();
-    [ax / len * s, ay / len * s, az / len * s, half.cos()]
-}
-impl Mutation<CadSnapshot> for CadMutation {
-    type Diff = CadDiff;
-
-    fn diff(&self, projection: &CadSnapshot) -> CadDiff {
-        match self {
-            CadMutation::AddObject { pane, object } => CadDiff {
-                objects: pane_objects_delta_for_add(*pane, object),
-                building_objects: pane_objects_delta_for_add_if(*pane, CadPaneId::Building, object),
-                energy_objects: pane_objects_delta_for_add_if(*pane, CadPaneId::Energy, object),
-                structure_classic_objects: pane_objects_delta_for_add_if(*pane, CadPaneId::StructureClassic, object),
-                ..Default::default()
-            },
-            CadMutation::RemoveObject { pane, object_id } => CadDiff {
-                objects: pane_objects_delta_for_remove(*pane, CadPaneId::Shape, object_id),
-                building_objects: pane_objects_delta_for_remove(*pane, CadPaneId::Building, object_id),
-                energy_objects: pane_objects_delta_for_remove(*pane, CadPaneId::Energy, object_id),
-                structure_classic_objects: pane_objects_delta_for_remove(*pane, CadPaneId::StructureClassic, object_id),
-                ..Default::default()
-            },
-            CadMutation::PatchObject { pane, object_id, patch } => CadDiff {
-                objects: pane_objects_delta_for_patch(*pane, CadPaneId::Shape, object_id, patch),
-                building_objects: pane_objects_delta_for_patch(*pane, CadPaneId::Building, object_id, patch),
-                energy_objects: pane_objects_delta_for_patch(*pane, CadPaneId::Energy, object_id, patch),
-                structure_classic_objects: pane_objects_delta_for_patch(*pane, CadPaneId::StructureClassic, object_id, patch),
-                ..Default::default()
-            },
-            CadMutation::TranslateObjects { object_ids, dx, dy, dz } => {
-                transform_objects_diff(projection, object_ids, |object| CadObjectPatch { origin: Some([object.origin[0] + dx, object.origin[1] + dy, object.origin[2] + dz]), ..Default::default() })
-            }
-            CadMutation::RotateObjects { object_ids, ax, ay, az, angle } => {
-                let delta = quat_from_axis_angle(*ax, *ay, *az, *angle);
-                transform_objects_diff(projection, object_ids, |object| {
-                    let current = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-                    CadObjectPatch { orientation: Some(quat_mul(delta, current)), ..Default::default() }
-                })
-            }
-            CadMutation::ScaleObjects { object_ids, sx, sy, sz } => transform_objects_diff(projection, object_ids, |object| {
-                let current = object.scale.unwrap_or([1.0, 1.0, 1.0]);
-                CadObjectPatch { scale: Some([current[0] * sx, current[1] * sy, current[2] * sz]), ..Default::default() }
-            }),
-            CadMutation::SetPaneObjects { pane, objects } => {
-                let mut diff = CadDiff::default();
-                let removed: Vec<String> = cad_pane_objects(projection, *pane).iter().map(|object| object.id.clone()).collect();
-                let delta = CadObjectsDelta { removed, added: objects.clone(), ..Default::default() };
-                set_pane_objects_delta(&mut diff, *pane, delta);
-                diff
-            }
-            CadMutation::AddNode { node } => CadDiff { nodes: Some(CadNodesDelta { added: vec![node.clone()], ..Default::default() }), ..Default::default() },
-            CadMutation::RemoveNode { node_id } => CadDiff { nodes: Some(CadNodesDelta { removed: vec![node_id.clone()], ..Default::default() }), ..Default::default() },
-            CadMutation::RenameNode { node_id, label } => CadDiff { nodes: Some(CadNodesDelta { patched: vec![CadNodePatchEntry { id: node_id.clone(), patch: CadNodePatch { label: Some(label.clone()) } }], ..Default::default() }), ..Default::default() },
-            CadMutation::PatchReference { model_definition_id, reference_id, patch } => {
-                let references = projection.references_by_model_definition_id.get(model_definition_id).cloned().unwrap_or_default();
-                let next = references
-                    .into_iter()
-                    .map(|mut reference| {
-                        if reference.id == *reference_id {
-                            apply_reference_patch(&mut reference, patch);
-                        }
-                        reference
-                    })
-                    .collect();
-                CadDiff { references_by_model_definition_id: Some(BTreeMap::from([(model_definition_id.clone(), next)])), ..Default::default() }
-            }
-            CadMutation::SetReferences { model_definition_id, references } => CadDiff { references_by_model_definition_id: Some(BTreeMap::from([(model_definition_id.clone(), references.clone())])), ..Default::default() },
-            CadMutation::SetActiveModelDefinition { model_definition_id } => CadDiff { active_model_definition_id: Some(model_definition_id.clone()), ..Default::default() },
-            CadMutation::SetSnapshot { snapshot } => CadDiff { artifact: Some(Box::new(crate::artifacts::cad::schema::CadArtifact::from_snapshot((**snapshot).clone()))), ..Default::default() },
-        }
-    }
-
-    fn inverse(&self, projection: &CadSnapshot) -> Vec<Self> {
-        match self {
-            CadMutation::AddObject { pane, object } => super::add_object::inverse::inverse(projection, *pane, object),
-            CadMutation::RemoveObject { pane, object_id } => super::remove_object::inverse::inverse(projection, *pane, object_id),
-            CadMutation::PatchObject { pane, object_id, patch } => super::patch_object::inverse::inverse(projection, *pane, object_id, patch),
-            CadMutation::TranslateObjects { object_ids, dx, dy, dz } => super::translate_objects::inverse::inverse(projection, object_ids, *dx, *dy, *dz),
-            CadMutation::RotateObjects { object_ids, ax, ay, az, angle } => super::rotate_objects::inverse::inverse(projection, object_ids, *ax, *ay, *az, *angle),
-            CadMutation::ScaleObjects { object_ids, sx, sy, sz } => super::scale_objects::inverse::inverse(projection, object_ids, *sx, *sy, *sz),
-            CadMutation::SetPaneObjects { pane, objects } => super::set_pane_objects::inverse::inverse(projection, *pane, objects),
-            CadMutation::AddNode { node } => super::add_node::inverse::inverse(projection, node),
-            CadMutation::RemoveNode { node_id } => super::remove_node::inverse::inverse(projection, node_id),
-            CadMutation::RenameNode { node_id, label } => super::rename_node::inverse::inverse(projection, node_id, label),
-            CadMutation::PatchReference { model_definition_id, reference_id, patch } => super::patch_reference::inverse::inverse(projection, model_definition_id, reference_id, patch),
-            CadMutation::SetReferences { model_definition_id, references } => super::set_references::inverse::inverse(projection, model_definition_id, references),
-            CadMutation::SetActiveModelDefinition { model_definition_id } => super::set_active_model_definition::inverse::inverse(projection, model_definition_id),
-            CadMutation::SetSnapshot { snapshot } => super::set_snapshot::inverse::inverse(projection, snapshot),
-        }
-    }
-}
-
-pub fn reverse_object_patch(before: &CadObject, patch: &CadObjectPatch) -> CadObjectPatch {
-    CadObjectPatch {
-        label: patch.label.as_ref().map(|_| before.label.clone()),
-        typology: patch.typology.as_ref().map(|_| before.typology.clone()),
-        visible: patch.visible.map(|_| before.visible),
-        locked: patch.locked.map(|_| before.locked),
-        origin: patch.origin.map(|_| before.origin),
-        orientation: patch.orientation.map(|_| before.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])),
-        scale: patch.scale.map(|_| before.scale.unwrap_or([1.0, 1.0, 1.0])),
-        mesh_url: patch.mesh_url.as_ref().map(|_| before.mesh_url.clone().unwrap_or_default()),
-        extent: patch.extent.and(before.extent),
-        solid_handle: patch.solid_handle.as_ref().and_then(|_| before.solid_handle.clone()),
-    }
-}
-
-pub fn reverse_reference_patch(before: &CadReference, patch: &CadReferencePatch) -> CadReferencePatch {
-    CadReferencePatch {
-        source_url: patch.source_url.as_ref().map(|_| before.source_url.clone()),
-        media_kind: patch.media_kind.as_ref().map(|_| before.media_kind.clone()),
-        origin: patch.origin.map(|_| before.origin),
-        orientation: patch.orientation.map(|_| before.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])),
-        scale: patch.scale.map(|_| before.scale.unwrap_or(1.0)),
-        width_world: patch.width_world.map(|_| before.width_world),
-        hidden: patch.hidden.map(|_| before.hidden),
-        locked: patch.locked.map(|_| before.locked),
-        opacity: patch.opacity.and(before.opacity),
-    }
-}
-
-fn pane_objects_delta_for_add(pane: CadPaneId, object: &CadObject) -> Option<CadObjectsDelta> {
-    pane_objects_delta_for_add_if(pane, CadPaneId::Shape, object)
-}
-
-fn pane_objects_delta_for_add_if(pane: CadPaneId, target: CadPaneId, object: &CadObject) -> Option<CadObjectsDelta> {
-    if pane == target {
-        Some(CadObjectsDelta { added: vec![object.clone()], ..Default::default() })
-    } else {
-        None
-    }
-}
-
-fn pane_objects_delta_for_remove(pane: CadPaneId, target: CadPaneId, object_id: &str) -> Option<CadObjectsDelta> {
-    if pane == target {
-        Some(CadObjectsDelta { removed: vec![object_id.into()], ..Default::default() })
-    } else {
-        None
-    }
-}
-
-fn pane_objects_delta_for_patch(pane: CadPaneId, target: CadPaneId, object_id: &str, patch: &CadObjectPatch) -> Option<CadObjectsDelta> {
-    if pane == target {
-        Some(CadObjectsDelta { patched: vec![CadObjectPatchEntry { id: object_id.into(), patch: patch.clone() }], ..Default::default() })
-    } else {
-        None
-    }
-}
-
-fn set_pane_objects_delta(diff: &mut CadDiff, pane: CadPaneId, delta: CadObjectsDelta) {
+//#region 🔖️SharedHelpers
+/// 🌉️ Assigns a fresh [`CadObjectsDelta`] onto the [`CadDiff`] field matching `pane` — shared by
+/// every triad leaf that touches a pane's object collection.
+pub fn set_pane_objects_delta(diff: &mut CadDiff, pane: CadPaneId, delta: CadObjectsDelta) {
     match pane {
         CadPaneId::Shape => diff.objects = Some(delta),
         CadPaneId::Building => diff.building_objects = Some(delta),
@@ -286,11 +103,14 @@ fn set_pane_objects_delta(diff: &mut CadDiff, pane: CadPaneId, delta: CadObjects
     }
 }
 
-fn transform_objects_diff(projection: &CadSnapshot, object_ids: &[String], patch_for: impl Fn(&CadObject) -> CadObjectPatch) -> CadDiff {
+/// 🌉️ Shared bulk-transform diff builder: applies `patch_for` to every object in `object_ids`,
+/// scanning every pane, and assembles the resulting sparse [`CadDiff`] — used by
+/// `drag-objects`/`rotate-objects`/`scale-objects`, each of which only differs in `patch_for`'s body.
+pub fn transform_objects_diff(base: &CadSnapshot, object_ids: &[String], patch_for: impl Fn(&CadObject) -> CadObjectPatch) -> CadDiff {
     let mut diff = CadDiff::default();
     for pane in CadPaneId::all() {
         let mut patched = Vec::new();
-        for object in cad_pane_objects(projection, pane) {
+        for object in cad_pane_objects(base, pane) {
             if !object_ids.contains(&object.id) {
                 continue;
             }
@@ -302,66 +122,100 @@ fn transform_objects_diff(projection: &CadSnapshot, object_ids: &[String], patch
     }
     diff
 }
-pub use super::add_object::mutation::{add_object, AddObject};
-pub use super::remove_object::mutation::{remove_object, RemoveObject};
-pub use super::patch_object::mutation::{patch_object, PatchObject};
-pub use super::translate_objects::mutation::{translate_objects, TranslateObjects};
-pub use super::rotate_objects::mutation::{rotate_objects, RotateObjects};
-pub use super::scale_objects::mutation::{scale_objects, ScaleObjects};
-pub use super::set_pane_objects::mutation::{set_pane_objects, SetPaneObjects};
-pub use super::add_node::mutation::{add_node, AddNode};
-pub use super::remove_node::mutation::{remove_node, RemoveNode};
-pub use super::rename_node::mutation::{rename_node, RenameNode};
-pub use super::patch_reference::mutation::{patch_reference, PatchReference};
-pub use super::set_references::mutation::{set_references, SetReferences};
-pub use super::set_active_model_definition::mutation::{set_active_model_definition, SetActiveModelDefinition};
-pub use super::set_snapshot::mutation::{set_snapshot, SetSnapshot};
-//#endregion 🔖️Mutations
+
+/// 🌉️ Quaternion Hamilton product `a * b` — shared by `rotate-object`/`rotate-objects` diff math.
+pub fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
+    [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]
+}
+
+/// 🌉️ Axis-angle → unit quaternion — shared by `rotate-objects`' diff math.
+pub fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
+    let len = (ax * ax + ay * ay + az * az).sqrt();
+    if len < 1e-8 {
+        return [0.0, 0.0, 0.0, 1.0];
+    }
+    let half = angle * 0.5;
+    let s = half.sin();
+    [ax / len * s, ay / len * s, az / len * s, half.cos()]
+}
+//#endregion 🔖️SharedHelpers
+
+//#region 🔖️Leaves
+use super::create_object;
+use super::delete_object;
+use super::rename_object;
+use super::change_object_typology;
+use super::change_object_visible;
+use super::change_object_locked;
+use super::move_object;
+use super::rotate_object;
+use super::scale_object;
+use super::replace_object_geometry;
+use super::drag_objects;
+use super::rotate_objects;
+use super::scale_objects;
+use super::replace_pane_objects;
+use super::create_node;
+use super::delete_node;
+use super::rename_node;
+use super::change_reference_hidden;
+use super::change_reference_locked;
+use super::change_reference_width;
+use super::move_reference;
+use super::replace_reference_media;
+use super::replace_references;
+use super::change_active_model_definition;
+//#endregion 🔖️Leaves
 
 //#region 🧪️Tests
 #[cfg(test)]
 pub mod tests {
     use super::*;
+    use crate::artifacts::cad::mutations::{
+        change_active_model_definition::mutation::ChangeActiveModelDefinition, change_object_locked::mutation::ChangeObjectLocked, change_object_typology::mutation::ChangeObjectTypology,
+        change_object_visible::mutation::ChangeObjectVisible, change_reference_hidden::mutation::ChangeReferenceHidden, change_reference_locked::mutation::ChangeReferenceLocked,
+        change_reference_width::mutation::ChangeReferenceWidth, create_node::mutation::CreateNode, create_object::mutation::CreateObject, delete_node::mutation::DeleteNode, delete_object::mutation::DeleteObject,
+        drag_objects::mutation::DragObjects, move_object::mutation::MoveObject, move_reference::mutation::MoveReference, rename_node::mutation::RenameNode, rename_object::mutation::RenameObject,
+        replace_object_geometry::mutation::ReplaceObjectGeometry, replace_pane_objects::mutation::ReplacePaneObjects, replace_reference_media::mutation::ReplaceReferenceMedia,
+        replace_references::mutation::ReplaceReferences, rotate_object::mutation::RotateObject, rotate_objects::mutation::RotateObjects, scale_object::mutation::ScaleObject, scale_objects::mutation::ScaleObjects,
+    };
     use crate::artifacts::cad::testkit::{sample_object, sample_reference, sample_scene};
+    use protocol::Mutation;
 
     /// ⚖️ One value per `CadMutation` variant — the closed set every wire law below iterates.
     pub fn every_mutation() -> Vec<CadMutation> {
         vec![
-            CadMutation::AddObject { pane: CadPaneId::Shape, object: sample_object("object-1") },
-            CadMutation::RemoveObject { pane: CadPaneId::Shape, object_id: "object-1".into() },
-            CadMutation::PatchObject { pane: CadPaneId::Building, object_id: "object-1".into(), patch: CadObjectPatch { label: Some("Renamed".into()), visible: Some(false), ..Default::default() } },
-            CadMutation::TranslateObjects { object_ids: vec!["object-1".into(), "object-2".into()], dx: 1.0, dy: -1.0, dz: 0.5 },
-            CadMutation::RotateObjects { object_ids: vec!["object-1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.57 },
-            CadMutation::ScaleObjects { object_ids: vec!["object-1".into()], sx: 2.0, sy: 2.0, sz: 2.0 },
-            CadMutation::SetPaneObjects { pane: CadPaneId::Energy, objects: vec![sample_object("object-1"), sample_object("object-2")] },
-            CadMutation::AddNode { node: CadNode { id: "node-1".into(), label: "Root".into(), kind: "group".into() } },
-            CadMutation::RemoveNode { node_id: "node-1".into() },
-            CadMutation::RenameNode { node_id: "node-1".into(), label: "Renamed".into() },
-            CadMutation::PatchReference { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), patch: CadReferencePatch { hidden: Some(true), ..Default::default() } },
-            CadMutation::SetReferences { model_definition_id: "spatial.shape".into(), references: vec![sample_reference()] },
-            CadMutation::SetActiveModelDefinition { model_definition_id: "aec.building".into() },
-            CadMutation::SetSnapshot { snapshot: Box::new(sample_scene()) },
+            CadMutation::CreateObject(CreateObject { pane: CadPaneId::Shape, object: sample_object("object-fresh") }),
+            CadMutation::DeleteObject(DeleteObject { pane: CadPaneId::Shape, object_id: "object-1".into() }),
+            CadMutation::RenameObject(RenameObject { pane: CadPaneId::Shape, object_id: "object-1".into(), new_label: "Renamed".into() }),
+            CadMutation::ChangeObjectTypology(ChangeObjectTypology { pane: CadPaneId::Building, object_id: "object-2".into(), new_typology: "spatial.shape.sphere".into() }),
+            CadMutation::ChangeObjectVisible(ChangeObjectVisible { pane: CadPaneId::Shape, object_id: "object-1".into(), new_visible: false }),
+            CadMutation::ChangeObjectLocked(ChangeObjectLocked { pane: CadPaneId::Shape, object_id: "object-1".into(), new_locked: true }),
+            CadMutation::MoveObject(MoveObject { pane: CadPaneId::Shape, object_id: "object-1".into(), new_origin: [5.0, 6.0, 7.0] }),
+            CadMutation::RotateObject(RotateObject { pane: CadPaneId::Shape, object_id: "object-1".into(), new_orientation: [0.0, 0.0, 0.707, 0.707] }),
+            CadMutation::ScaleObject(ScaleObject { pane: CadPaneId::Shape, object_id: "object-1".into(), new_scale: [2.0, 2.0, 2.0] }),
+            CadMutation::ReplaceObjectGeometry(ReplaceObjectGeometry { pane: CadPaneId::Shape, object_id: "object-1".into(), new_extent: Some([3.0, 3.0, 3.0]), new_mesh_url: Some("https://example.test/other.glb".into()), new_solid_handle: Some("solid-2".into()) }),
+            CadMutation::DragObjects(DragObjects { object_ids: vec!["object-1".into(), "object-2".into()], dx: 1.0, dy: -1.0, dz: 0.5 }),
+            CadMutation::RotateObjects(RotateObjects { object_ids: vec!["object-1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.57 }),
+            CadMutation::ScaleObjects(ScaleObjects { object_ids: vec!["object-1".into()], sx: 2.0, sy: 2.0, sz: 2.0 }),
+            CadMutation::ReplacePaneObjects(ReplacePaneObjects { pane: CadPaneId::Energy, objects: vec![sample_object("object-1"), sample_object("object-2")] }),
+            CadMutation::CreateNode(CreateNode { node: crate::artifacts::cad::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } }),
+            CadMutation::DeleteNode(DeleteNode { node_id: "node-1".into() }),
+            CadMutation::RenameNode(RenameNode { node_id: "node-1".into(), new_label: "Renamed".into() }),
+            CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_hidden: true }),
+            CadMutation::ChangeReferenceLocked(ChangeReferenceLocked { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_locked: false }),
+            CadMutation::ChangeReferenceWidth(ChangeReferenceWidth { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_width_world: 12.0 }),
+            CadMutation::MoveReference(MoveReference { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_origin: [1.0, 1.0, 1.0] }),
+            CadMutation::ReplaceReferenceMedia(ReplaceReferenceMedia { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_source_url: "https://example.test/other.png".into(), new_media_kind: "image".into(), new_orientation: None, new_scale: Some(2.0), new_opacity: Some(0.5) }),
+            CadMutation::ReplaceReferences(ReplaceReferences { model_definition_id: "spatial.shape".into(), references: vec![sample_reference()] }),
+            CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: "aec.building".into() }),
         ]
     }
 
     #[test]
     fn inverse_inverts_every_variant_against_a_populated_scene() {
         let base = sample_scene();
-        // ➕️ `AddObject`/`AddNode` are only invertible for ids the base scene does NOT already carry —
-        // `every_mutation`'s rows deliberately reuse the sample ids to pin the wire format, so the
-        // additive rows get fresh ids here.
-        let operations = every_mutation().into_iter().map(|op| match op {
-            CadMutation::AddObject { pane, mut object } => {
-                object.id = "object-fresh".into();
-                CadMutation::AddObject { pane, object }
-            }
-            CadMutation::AddNode { mut node } => {
-                node.id = "node-fresh".into();
-                CadMutation::AddNode { node }
-            }
-            other => other,
-        });
-        for op in operations {
+        for op in every_mutation() {
             let forward = protocol::MutationDiff::apply(&op.diff(&base), &base);
             let mut restored = forward.clone();
             for inverse in op.inverse(&base) {
@@ -370,5 +224,52 @@ pub mod tests {
             assert_eq!(restored, base, "inverse must restore the base scene for {op:?}");
         }
     }
+
+    #[test]
+    fn every_variant_registers_an_approved_semantic_descriptor() {
+        for op in every_mutation() {
+            let descriptor = protocol::SemanticMutation::semantics(&op);
+            assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {op:?}", descriptor.verb);
+        }
+        assert_eq!(<CadMutation as protocol::SemanticMutation<CadSnapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
+    }
+
+    //#region 🧪️MutationLaws
+    /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`
+    /// (reachable here as `protocol::testkit`, the same `semio_framework_os_kernel` alias every
+    /// other law/round-trip assertion in this crate already goes through), exercised against the
+    /// three most structurally distinct new variants: an id-keyed create/delete pair
+    /// (`rename-object`), a bulk relative-offset gesture (`drag-objects`), and a nested-address
+    /// scalar setter (`change-reference-hidden`).
+    #[test]
+    fn rename_object_satisfies_the_inverse_and_absorb_laws() {
+        let base = sample_scene();
+        let mutation = CadMutation::RenameObject(RenameObject { pane: CadPaneId::Shape, object_id: "object-1".into(), new_label: "Renamed".into() });
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        let d1 = mutation.diff(&base);
+        let d2 = CadMutation::ChangeObjectTypology(ChangeObjectTypology { pane: CadPaneId::Shape, object_id: "object-1".into(), new_typology: "spatial.shape.sphere".into() }).diff(&base);
+        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+
+    #[test]
+    fn drag_objects_satisfies_the_inverse_and_absorb_laws() {
+        let base = sample_scene();
+        let mutation = CadMutation::DragObjects(DragObjects { object_ids: vec!["object-1".into(), "object-2".into()], dx: 1.0, dy: -2.0, dz: 0.5 });
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        let d1 = mutation.diff(&base);
+        let d2 = CadMutation::DragObjects(DragObjects { object_ids: vec!["object-1".into()], dx: 0.1, dy: 0.2, dz: 0.3 }).diff(&base);
+        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+
+    #[test]
+    fn change_reference_hidden_satisfies_the_inverse_and_absorb_laws() {
+        let base = sample_scene();
+        let mutation = CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_hidden: true });
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        let d1 = mutation.diff(&base);
+        let d2 = CadMutation::ChangeReferenceLocked(ChangeReferenceLocked { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_locked: false }).diff(&base);
+        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+    //#endregion 🧪️MutationLaws
 }
 //#endregion 🧪️Tests

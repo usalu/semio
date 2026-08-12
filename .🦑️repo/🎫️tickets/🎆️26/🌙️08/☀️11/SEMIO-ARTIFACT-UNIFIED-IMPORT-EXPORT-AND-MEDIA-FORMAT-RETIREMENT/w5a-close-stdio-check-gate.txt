@@ -1,0 +1,28 @@
+warning: function `parse_usize` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🔺️diff/🦀️component.rs:446:4
+    |
+446 | fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+    |    ^^^^^^^^^^^
+
+warning: function `frame_with_diff_applied` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs:517:4
+    |
+517 | fn frame_with_diff_applied(frame: &SlideFrame, diff: &SlideFrameDiff) -> SlideFrame {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `image_with_diff_applied` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs:551:4
+    |
+551 | fn image_with_diff_applied(image: &SlidePictureImage, diff: &SlidePictureImageDiff) -> SlidePictureImage {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-stdio` (lib) generated 486 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 176 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 15.87s
+warning: function `image_with_diff_applied` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs:551:4
+    |
+551 | fn image_with_diff_applied(image: &SlidePictureImage, diff: &SlidePictureImageDiff) -> SlidePictureImage {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-stdio` (lib) generated 484 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 175 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 21.61s

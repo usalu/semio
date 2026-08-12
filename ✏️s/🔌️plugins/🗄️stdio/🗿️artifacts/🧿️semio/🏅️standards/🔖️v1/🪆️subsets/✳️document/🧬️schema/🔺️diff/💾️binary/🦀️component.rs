@@ -1,4 +1,3 @@
-//! 💾️ Binary representation marker for `s.stdio.semio.document.diff`: `SemioDocumentDiff`'s
-//! `protocol::DiffCodec::encode_diff` is the `print_diff()` text bytes verbatim (see
-//! `🦀️component.rs`'s `HandcraftedDiffCodec` region) — no separate binary framing.
-pub const BINARY_MAGIC: &str = "s.stdio.semio.document.diff";
+//! 💾️ Binary representation codec surface for `s.stdio.semio.document.diff` — protocol include.
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");

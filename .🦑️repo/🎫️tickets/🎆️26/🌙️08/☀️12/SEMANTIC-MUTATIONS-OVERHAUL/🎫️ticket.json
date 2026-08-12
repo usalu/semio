@@ -1,0 +1,13 @@
+{
+  "title": "Semantic Mutations Overhaul",
+  "emoji": "🧬️",
+  "status": "open",
+  "description": "Replace the repo-wide generic mutation vocabulary (Set*/SetSnapshot/CollectionMutation/NoMutation across 107 mutation facets in ✏️s/🔌️plugins) with semantic handcrafted mutations (rename, change-field, move, flatten, connect, …), each with a handcrafted diff and inverse in its 🧬️mutations/\u003cslug\u003e/{🦠️mutation,🔺️diff,↩️inverse} triad. Extend the core framework mechanism (protocol::Mutation/MutationDiff/DiffAlgebra, a new MutationKind/SemanticMutation trait pair, #[derive(Mutations)], DiffKit shared diff engines) and policy engine (📜️script.ts) so semantic vocabulary is enforced and eventually the only expressible one at compile time. Golden schema at compose/client/schema/graphql/schema.golden.graphql is the naming/vocabulary reference only (not implemented). Locked decisions: imperative Rust naming with past-tense only in SemanticDescriptor.record; no whole-document \"import\" mutation — whole-doc replace goes through store.reset outside history via a new Emit.reset_document lane; full workforce rollout via parallel agents/workflows, no pause between waves. Plan lives at /Users/ueli/.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md. Wave 0 (this ticket, serial): framework mechanism + policy rules. Later waves (child tickets): 4 exemplar facets, then mass fan-out across 103 remaining facets, allowlist burn-down, and integration verification.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2545"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪470befa556f04ce6af9ab9f4175360c1"
+  ]
+}

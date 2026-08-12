@@ -10,7 +10,7 @@ use crate::apps::gis2d::commands::{example, features, locale, selection, shell, 
 use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::apps::gis2d::modes::edit;
 use crate::apps::gis2d::modes::edit::windows::map;
-use crate::apps::gis2d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+use crate::apps::gis2d::panels::{artifact as document_panel, catalogue as catalogue_panel, inspection as inspection_panel};
 use crate::apps::gis2d::terminology::gis2d_labels;
 use crate::artifacts::gismap::engine::{gis2d_features_in_port, gis2d_io, gis2d_map_media, gis2d_map_out_port, gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
 use crate::artifacts::gismap::op::GisMapMutation;
@@ -160,9 +160,11 @@ impl ArtifactApp for Gis2dPlayApp {
         Some(gis2d_io())
     }
 
-    fn whole_document_operation(snapshot: GisMapSnapshot) -> Option<GisMapMutation> {
-        Some(GisMapMutation::SetSnapshot { snapshot })
-    }
+    // 🧬️ No `whole_document_operation` override: per the taxonomy's banned-vocabulary rule, whole-
+    // document replace has no in-history mutation — `document:in` falls back to the trait's own
+    // default (`None`) and returns `MediaError::NotImplemented`. `setActiveExample` (this app's real
+    // document-replacing gesture) goes through `positions_operations`/`routes_operations`/
+    // `regions_operations` instead, diffing into batched create/delete/replace-data operations.
 
     /// 🎞️ `map:out` (see `crate::artifacts::gismap::engine::gis2d_map_media`) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
@@ -354,7 +356,9 @@ pub fn create_gis2d_app() -> App {
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             // ✏️ Mutation actions — flow through the document store with true inverses. `setActiveExample`
-            // replaces document content via `SetSnapshot` operations, so it is a Mutation, not a View action.
+            // replaces document content by diffing every collection into batched create/delete/
+            // replace-data operations (never a whole-document `SetSnapshot` — banned by the taxonomy),
+            // so it is a Mutation, not a View action.
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("patchPositions", LocalizedLabel::native("Patch Positions", "Positionen aktualisieren"))
             .mutation("patchRoutes", LocalizedLabel::native("Patch Routes", "Routen aktualisieren"))
@@ -457,7 +461,6 @@ mod tests {
     use semio_framework_plugin::ArtifactApp;
     use super::*;
     use crate::apps::gis2d::testkit::{app, app_with_registry, render};
-    use protocol::CollectionMutation;
     use semio_framework_plugin::{ContextMenuRequest, PluginApp};
 
     //#region 🔖️CommandSurface
@@ -613,7 +616,7 @@ mod tests {
         let incoming = json!({ "positions": [{ "id": "imported-1", "lon": 1.0, "lat": 2.0 }] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: incoming } };
         let emit = Gis2dPlayApp::import_media("features:in", &media, &doc).expect("features:in import");
-        assert!(emit.artifact_mutations.iter().any(|operation| matches!(operation, GisMapMutation::Positions(CollectionMutation::Add { item, .. }) if item.id == "imported-1")));
+        assert!(emit.artifact_mutations.iter().any(|operation| matches!(operation, GisMapMutation::CreatePosition(payload) if payload.item.id == "imported-1")));
     }
 
     #[test]

@@ -1,34 +1,23 @@
-// ANTLR4 grammar for `stdio.semio.object`'s DSL text form: the semio envelope preamble wrapping a
-// hex-encoded compact-JSON `SemioObjectSnapshot` (see the sibling 📖️component.grammar.semio for the
-// authoritative production set).
-grammar Stdio_semio_object_snapshot;
+// ANTLR4 grammar for the `stdio.semio.object` snapshot's wire text form -- a tag-prefixed,
+// hex-encoded recursive encoding of the WHOLE `SemioObjectSnapshot`, genuinely walked/parsed --
+// NOT JSON, NOT hex-of-JSON. See the sibling 📖️component.grammar.semio for the authoritative
+// production set this mirrors.
+grammar Semio_object_snapshot;
 
-document: header body EOF;
-header: 'schema' WS 'stdio.semio.object' NL;
-body: HEXDIG*;
+document: '[' HEX ',' value ',' '[' (objectNode (',' objectNode)*)? ']' ']';
+objectNode: HEX ':' value;
 
-snapshotJson: '{' '"schema"' ':' jsonString ',' '"root"' ':' semioValue ',' '"objects"' ':' '[' (objectNode (',' objectNode)*)? ']' '}';
-objectNode: '{' '"id"' ':' objectId ',' '"value"' ':' semioValue '}';
-objectId: '{' '"value"' ':' jsonString '}';
-
-semioValue
-    : '{' '"kind"' ':' '"null"' '}'
-    | '{' '"kind"' ':' '"bool"' ',' '"value"' ':' ('true' | 'false') '}'
-    | '{' '"kind"' ':' '"int"' ',' '"lexeme"' ':' jsonString '}'
-    | '{' '"kind"' ':' '"float"' ',' '"lexeme"' ':' jsonString '}'
-    | '{' '"kind"' ':' '"str"' ',' '"value"' ':' jsonString '}'
-    | '{' '"kind"' ':' '"bytes"' ',' '"value"' ':' '[' (INT (',' INT)*)? ']' '}'
-    | '{' '"kind"' ':' '"list"' ',' '"items"' ':' '[' (semioValue (',' semioValue)*)? ']' '}'
-    | '{' '"kind"' ':' '"map"' ',' '"entries"' ':' '[' (mapEntry (',' mapEntry)*)? ']' '}'
-    | '{' '"kind"' ':' '"ref"' ',' '"id"' ':' objectId '}'
+value
+    : 'Z'
+    | 'B' '[' BIT ']'
+    | 'I' '[' HEX ']'
+    | 'F' '[' HEX ']'
+    | 'S' '[' HEX ']'
+    | 'Y' '[' HEX ']'
+    | 'L' '[' (value (',' value)*)? ']'
+    | 'M' '[' (HEX ':' value (',' HEX ':' value)*)? ']'
+    | 'R' '[' HEX ']'
     ;
-mapEntry: '{' '"key"' ':' jsonString ',' '"value"' ':' semioValue '}';
 
-jsonString: '"' (ESC | ~["\\])* '"';
-fragment ESC: '\\' (["\\/bfnrt] | UNICODE);
-fragment UNICODE: 'u' HEXDIG HEXDIG HEXDIG HEXDIG;
-fragment HEXDIG: [0-9a-fA-F];
-INT: '-'? [0-9]+;
-
-WS: [ \t]+ -> skip;
-NL: '\r'? '\n';
+BIT: [01];
+HEX: [0-9a-f]*;

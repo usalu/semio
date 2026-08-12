@@ -1,10 +1,40 @@
-//! 🎞️ Video container demuxing and baseline decode: ISO-BMFF/MP4 and RIFF/AVI demux, a hand-rolled H.264
-//! baseline-profile decoder, minimal fixture-synthesis muxers/encoder, and a lazy frame-extraction API sitting
-//! on top of [`remodel_image`]. DAG position: `remodel_image` → `remodel_video` → `remodel_engine`.
+//! 🎞️ Video container demuxing and baseline decode: ISO-BMFF/MP4 and RIFF/AVI demux via stdio's
+//! real `mp4`/`avi` engines (in-process, same-crate-family call — no wasm/IPC), a hand-rolled H.264
+//! baseline-profile PIXEL decoder (the one piece stdio's own mp4 engine deliberately does NOT do —
+//! see `semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::engine::h264`'s own doc comment,
+//! "the full pixel decoder remains at its original remodel location... for a future wave to lift" —
+//! this file, W5a, is that wave), minimal fixture-synthesis muxers built on stdio's real
+//! `encode_mp4`/`encode_avi`, and a lazy frame-extraction API sitting on top of [`remodel_image`].
+//! DAG position: `remodel_image` → `remodel_video` → `remodel_engine`.
+//!
+//! 🧭️ Extraction ticket `26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT`,
+//! W5a: the box-level ISO-BMFF/RIFF demux/mux this file used to hand-roll (`🔖️Bmff`/`🔖️Avi`/`🔖️Mux`
+//! regions, ~1000 LOC) was a real duplicate of stdio's now-complete `mp4`/`avi` artifacts (moved
+//! wholesale from this very file in W3) — deleted here and replaced by real in-process calls to
+//! `semio_s_plugin_stdio::artifacts::{mp4,avi}::standards::{isobmff,v1_0}::engine::{decode_mp4,
+//! encode_mp4,decode_avi,encode_avi}`. The H.264 macroblock reconstruction pipeline (`🔖️Bits`
+//! through `🔖️Decoder`, plus its `🔖️H264Enc` test-fixture synthesizer) has no stdio equivalent —
+//! stdio's mp4 `h264` accessor is container-metadata-only by design — so it stays exactly as it was.
 
 // 🔗️ Sibling engine topic files, aliased to their pre-merge crate names so every path in
 // this file is byte-identical to the crate it was moved from (see 📦️glue.rs for the wiring).
 use crate::artifacts::remodel::engine::images as remodel_image;
+use semio_s_plugin_stdio::artifacts::{
+    avi::{
+        standards::v1_0::{
+            engine as avi_engine,
+            subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader},
+        },
+        STDIO_AVI_DOCUMENT_SCHEMA,
+    },
+    mp4::{
+        standards::isobmff::{
+            engine as mp4_engine,
+            subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track},
+        },
+        STDIO_MP4_DOCUMENT_SCHEMA,
+    },
+};
 
 // #region 🔖️Bytes
 /// 🧭️ Four-character box/chunk code (ISO-BMFF box types, RIFF FourCCs); compared and hashed by raw bytes.
@@ -38,12 +68,17 @@ impl std::fmt::Display for FourCc {
     }
 }
 
-/// ⚠️ Error type for every fallible operation in this crate: demux, probe, decode. Malformed or truncated input
-/// always yields one of these — decoders in this crate never panic on attacker-controlled bytes.
+/// ⚠️ Error type for every fallible operation in this crate: demux (now stdio's, wrapped verbatim
+/// as `Container`), probe, decode. Malformed or truncated input always yields one of these —
+/// decoders in this crate never panic on attacker-controlled bytes.
 #[derive(Clone, Debug, PartialEq)]
 pub enum VideoError {
     Truncated,
-    BadBox(&'static str),
+    /// 🕳️ Wraps a `String` error from stdio's `mp4::engine::decode_mp4`/`avi::engine::decode_avi`
+    /// verbatim — replaces the old hand-rolled box/chunk parser's `BadBox(&'static str)` now that
+    /// every container-level parse error genuinely originates from stdio (a dynamic message, not a
+    /// fixed set of named box-parsing failures this file no longer implements).
+    Container(String),
     NoVideoTrack,
     UnsupportedCodec(FourCc),
     Jpeg(remodel_image::ImageError),
@@ -54,7 +89,7 @@ impl std::fmt::Display for VideoError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Truncated => write!(f, "video container truncated"),
-            Self::BadBox(msg) => write!(f, "malformed container box/chunk: {msg}"),
+            Self::Container(msg) => write!(f, "video container error: {msg}"),
             Self::NoVideoTrack => write!(f, "container has no video track"),
             Self::UnsupportedCodec(fourcc) => write!(f, "unsupported video codec: {fourcc}"),
             Self::Jpeg(e) => write!(f, "jpeg error: {e}"),
@@ -89,164 +124,41 @@ pub enum VideoCodec {
     Unknown(FourCc),
 }
 
-/// 📖️ Bounds-checked cursor over a byte slice; every read fails cleanly with [`VideoError::Truncated`] instead
-/// of panicking, and supports both ISO-BMFF's big-endian and RIFF's little-endian integer encodings.
-pub(crate) struct ByteReader<'a> {
-    data: &'a [u8],
-    pos: usize,
+fn fourcc_from_str(s: &str) -> FourCc {
+    let mut out = [b' '; 4];
+    for (i, b) in s.as_bytes().iter().take(4).enumerate() {
+        out[i] = *b;
+    }
+    FourCc(out)
 }
 
-impl<'a> ByteReader<'a> {
-    pub(crate) fn new(data: &'a [u8]) -> Self {
-        Self { data, pos: 0 }
-    }
-
-    pub(crate) fn pos(&self) -> usize {
-        self.pos
-    }
-
-    pub(crate) fn remaining(&self) -> usize {
-        self.data.len() - self.pos
-    }
-
-    pub(crate) fn take(&mut self, n: usize) -> Result<&'a [u8], VideoError> {
-        let end = self.pos.checked_add(n).ok_or(VideoError::Truncated)?;
-        let slice = self.data.get(self.pos..end).ok_or(VideoError::Truncated)?;
-        self.pos = end;
-        Ok(slice)
-    }
-
-    pub(crate) fn skip(&mut self, n: usize) -> Result<(), VideoError> {
-        self.take(n).map(|_| ())
-    }
-
-    pub(crate) fn u8(&mut self) -> Result<u8, VideoError> {
-        Ok(self.take(1)?[0])
-    }
-
-    pub(crate) fn u16_be(&mut self) -> Result<u16, VideoError> {
-        Ok(u16::from_be_bytes(self.take(2)?.try_into().unwrap()))
-    }
-
-    pub(crate) fn u32_be(&mut self) -> Result<u32, VideoError> {
-        Ok(u32::from_be_bytes(self.take(4)?.try_into().unwrap()))
-    }
-
-    pub(crate) fn u64_be(&mut self) -> Result<u64, VideoError> {
-        Ok(u64::from_be_bytes(self.take(8)?.try_into().unwrap()))
-    }
-
-    pub(crate) fn u32_le(&mut self) -> Result<u32, VideoError> {
-        Ok(u32::from_le_bytes(self.take(4)?.try_into().unwrap()))
-    }
-
-    pub(crate) fn fourcc(&mut self) -> Result<FourCc, VideoError> {
-        Ok(FourCc(self.take(4)?.try_into().unwrap()))
+/// 🏷️ Classifies a container-reported fourcc string into [`VideoCodec`] — shared by both container
+/// families (stdio's `Mp4Codec::Other::fourcc` and `AviStreamFormat::BitmapInfo::compression`).
+fn codec_from_fourcc_str(fourcc: &str) -> VideoCodec {
+    match fourcc.to_ascii_lowercase().as_str() {
+        "avc1" | "avc3" => VideoCodec::Avc,
+        "hvc1" | "hev1" => VideoCodec::Hevc,
+        "vp09" => VideoCodec::Vp9,
+        "av01" => VideoCodec::Av1,
+        "mjpg" | "jpeg" => VideoCodec::Mjpeg,
+        _ => VideoCodec::Unknown(fourcc_from_str(fourcc)),
     }
 }
 // #endregion 🔖️Bytes
 
-// #region 🔖️Bmff
-/// 📦️ One parsed ISO-BMFF box: its four-character type and payload (the bytes after the size/type header,
-/// excluding any nested nesting logic — callers walk further with [`iter_boxes`]/[`find_box`] as needed).
-struct Mp4Box<'a> {
-    kind: FourCc,
-    payload: &'a [u8],
-}
-
-/// 🚶️ Iterates sibling boxes at one level of an ISO-BMFF byte range, honoring both the 32-bit inline size and
-/// the 64-bit `largesize` extension (`size == 1`), and the "extends to end of data" convention (`size == 0`).
-/// <https://www.iso.org/standard/74428.html> (ISO/IEC 14496-12)
-struct Mp4BoxIter<'a> {
-    data: &'a [u8],
-    pos: usize,
-}
-
-fn iter_boxes(data: &[u8]) -> Mp4BoxIter<'_> {
-    Mp4BoxIter { data, pos: 0 }
-}
-
-impl<'a> Iterator for Mp4BoxIter<'a> {
-    type Item = Result<Mp4Box<'a>, VideoError>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.pos >= self.data.len() {
-            return None;
-        }
-        let mut r = ByteReader::new(&self.data[self.pos..]);
-        let size32 = match r.u32_be() {
-            Ok(v) => v,
-            Err(e) => return Some(Err(e)),
-        };
-        let kind = match r.fourcc() {
-            Ok(v) => v,
-            Err(e) => return Some(Err(e)),
-        };
-        let (box_len, header_len) = if size32 == 1 {
-            match r.u64_be() {
-                Ok(v) => (v as usize, 16usize),
-                Err(e) => return Some(Err(e)),
-            }
-        } else if size32 == 0 {
-            (self.data.len() - self.pos, 8usize)
-        } else {
-            (size32 as usize, 8usize)
-        };
-        if box_len < header_len {
-            return Some(Err(VideoError::BadBox("box size smaller than its own header")));
-        }
-        let box_end = match self.pos.checked_add(box_len) {
-            Some(v) if v <= self.data.len() => v,
-            _ => return Some(Err(VideoError::Truncated)),
-        };
-        let payload = &self.data[self.pos + header_len..box_end];
-        self.pos = box_end;
-        Some(Ok(Mp4Box { kind, payload }))
-    }
-}
-
-/// 🔍️ First direct-child box of the given type, or `Ok(None)` if absent; propagates a parse error from any
-/// malformed sibling encountered along the way.
-fn find_box<'a>(data: &'a [u8], want: &[u8; 4]) -> Result<Option<&'a [u8]>, VideoError> {
-    for item in iter_boxes(data) {
-        let b = item?;
-        if b.kind.0 == *want {
-            return Ok(Some(b.payload));
-        }
-    }
-    Ok(None)
-}
-
-/// 🔍️ Every direct-child box of the given type, in document order.
-fn find_boxes<'a>(data: &'a [u8], want: &[u8; 4]) -> Result<Vec<&'a [u8]>, VideoError> {
-    let mut out = Vec::new();
-    for item in iter_boxes(data) {
-        let b = item?;
-        if b.kind.0 == *want {
-            out.push(b.payload);
-        }
-    }
-    Ok(out)
-}
-
-/// 🔍️ Like [`find_box`], but a missing box is itself the error (`ctx` names it for diagnostics).
-fn require_box<'a>(data: &'a [u8], want: &[u8; 4], ctx: &'static str) -> Result<&'a [u8], VideoError> {
-    find_box(data, want)?.ok_or(VideoError::BadBox(ctx))
-}
-
-/// 🎞️ One decodable/probeable sample: its byte range in the source buffer, presentation timestamp, and
-/// whether it is a sync (random-access) sample.
+// #region 🔖️Container
+/// 🎞️ One decodable/probeable sample: its already-extracted access-unit bytes (stdio's
+/// `Mp4Sample.data`/`AviChunk.data` — real per-sample byte payload, not an offset into the source
+/// buffer, unlike this file's pre-extraction `SampleInfo`) and its presentation timestamp.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SampleInfo {
-    pub offset: u64,
-    pub size: u32,
+    data: Vec<u8>,
     pub timestamp_ms: f64,
-    pub is_sync: bool,
 }
 
-/// 🎞️ Probed MP4/ISO-BMFF video track metadata: dimensions, timing, codec, and the resolved per-sample byte
-/// ranges. Produced by [`probe_mp4`] for *any* parseable mp4, even when [`Mp4Info::codec`] is undecodable by
-/// this crate — provenance and timestamps are always recoverable.
+/// 🎞️ Probed MP4/ISO-BMFF video track metadata: dimensions, timing, codec. Produced by
+/// [`probe_mp4`] from stdio's real `decode_mp4` — succeeds for any real mp4, even when
+/// `codec` is undecodable by this crate's own H.264 pixel decoder.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Mp4Info {
     pub width: u32,
@@ -255,440 +167,8 @@ pub struct Mp4Info {
     pub duration_ms: f64,
     pub frame_count: u32,
     pub codec: VideoCodec,
-    pub samples: Vec<SampleInfo>,
-    pub(crate) avc_config: Option<(Vec<u8>, u8)>,
-}
-
-/// 📥️ `mdhd` (media header) → `(timescale, duration_in_timescale_units)`, handling both the 32-bit (version 0)
-/// and 64-bit (version 1) field widths.
-fn parse_mdhd(payload: &[u8]) -> Result<(u32, u64), VideoError> {
-    let mut r = ByteReader::new(payload);
-    let version = r.u8()?;
-    r.skip(3)?;
-    if version == 1 {
-        r.skip(16)?;
-        let timescale = r.u32_be()?;
-        let duration = r.u64_be()?;
-        Ok((timescale, duration))
-    } else {
-        r.skip(8)?;
-        let timescale = r.u32_be()?;
-        let duration = u64::from(r.u32_be()?);
-        Ok((timescale, duration))
-    }
-}
-
-/// 📥️ `VisualSampleEntry` fixed fields → `(width, height, trailing_child_boxes)`; `payload` is the sample
-/// entry's own box payload (i.e. the bytes right after its `size`/`type` header).
-fn parse_visual_sample_entry(payload: &[u8]) -> Result<(u16, u16, &[u8]), VideoError> {
-    let mut r = ByteReader::new(payload);
-    r.skip(6)?;
-    r.skip(2)?;
-    r.skip(2)?;
-    r.skip(2)?;
-    r.skip(12)?;
-    let width = r.u16_be()?;
-    let height = r.u16_be()?;
-    r.skip(4)?;
-    r.skip(4)?;
-    r.skip(4)?;
-    r.skip(2)?;
-    r.skip(32)?;
-    r.skip(2)?;
-    r.skip(2)?;
-    Ok((width, height, &payload[r.pos()..]))
-}
-
-/// 📥️ `avcC` (AVCDecoderConfigurationRecord) → `(sps_pps_nals, nal_length_size)`, where `sps_pps_nals` is a
-/// flat sequence of `(u16 big-endian length, NAL bytes)` entries (SPS entries first, then PPS) — exactly the
-/// format [`H264Decoder::new`] expects. <https://www.iso.org/standard/74428.html> (ISO/IEC 14496-15)
-fn extract_avc_config(children: &[u8]) -> Result<(Vec<u8>, u8), VideoError> {
-    let avcc = require_box(children, b"avcC", "avc1 sample entry missing avcC box")?;
-    let mut r = ByteReader::new(avcc);
-    r.skip(4)?;
-    let length_size_byte = r.u8()?;
-    let nal_length_size = (length_size_byte & 0x03) + 1;
-    let mut sps_pps = Vec::new();
-    let num_sps = r.u8()? & 0x1F;
-    for _ in 0..num_sps {
-        let len = usize::from(r.u16_be()?);
-        let nal = r.take(len)?;
-        sps_pps.extend_from_slice(&(len as u16).to_be_bytes());
-        sps_pps.extend_from_slice(nal);
-    }
-    let num_pps = r.u8()?;
-    for _ in 0..num_pps {
-        let len = usize::from(r.u16_be()?);
-        let nal = r.take(len)?;
-        sps_pps.extend_from_slice(&(len as u16).to_be_bytes());
-        sps_pps.extend_from_slice(nal);
-    }
-    Ok((sps_pps, nal_length_size))
-}
-
-/// 📥️ `stsd` (sample description) → `(codec, width, height, avc_config)`; only the first sample entry is
-/// consulted (multiple codec-switching entries per track are not something this crate's writers ever produce).
-#[allow(
-    clippy::type_complexity,
-    reason = "the four probed fields (codec, width, height, optional avcC config) are each simple and self-explanatory in context; a named struct would just rename them without clarifying anything, and this is a private, single-call-site parser"
-)]
-fn parse_stsd(payload: &[u8]) -> Result<(VideoCodec, u16, u16, Option<(Vec<u8>, u8)>), VideoError> {
-    let mut r = ByteReader::new(payload);
-    r.skip(4)?;
-    let entry_count = r.u32_be()?;
-    if entry_count == 0 {
-        return Err(VideoError::BadBox("stsd has no sample entries"));
-    }
-    let rest = &payload[r.pos()..];
-    let first = match iter_boxes(rest).next() {
-        Some(b) => b?,
-        None => return Err(VideoError::BadBox("stsd missing sample entry box")),
-    };
-    let fourcc = first.kind;
-    let (width, height, children) = parse_visual_sample_entry(first.payload)?;
-    let codec = match &fourcc.0 {
-        b"avc1" | b"avc3" => VideoCodec::Avc,
-        b"hvc1" | b"hev1" => VideoCodec::Hevc,
-        b"vp09" => VideoCodec::Vp9,
-        b"av01" => VideoCodec::Av1,
-        b"mjpg" | b"jpeg" => VideoCodec::Mjpeg,
-        _ => VideoCodec::Unknown(fourcc),
-    };
-    let avc_config = if codec == VideoCodec::Avc { Some(extract_avc_config(children)?) } else { None };
-    Ok((codec, width, height, avc_config))
-}
-
-fn parse_stts(payload: &[u8]) -> Result<Vec<(u32, u32)>, VideoError> {
-    let mut r = ByteReader::new(payload);
-    r.skip(4)?;
-    let count = r.u32_be()?;
-    let mut out = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        out.push((r.u32_be()?, r.u32_be()?));
-    }
-    Ok(out)
-}
-
-fn parse_ctts(payload: &[u8]) -> Result<Vec<(u32, i64)>, VideoError> {
-    let mut r = ByteReader::new(payload);
-    let version = r.u8()?;
-    r.skip(3)?;
-    let count = r.u32_be()?;
-    let mut out = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        let sample_count = r.u32_be()?;
-        let raw = r.u32_be()?;
-        let offset = if version == 1 { i64::from(raw as i32) } else { i64::from(raw) };
-        out.push((sample_count, offset));
-    }
-    Ok(out)
-}
-
-fn parse_stsc(payload: &[u8]) -> Result<Vec<(u32, u32, u32)>, VideoError> {
-    let mut r = ByteReader::new(payload);
-    r.skip(4)?;
-    let count = r.u32_be()?;
-    let mut out = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        out.push((r.u32_be()?, r.u32_be()?, r.u32_be()?));
-    }
-    Ok(out)
-}
-
-/// 📏️ `stsz` sample sizes: either one uniform size shared by every sample, or an explicit per-sample table.
-enum SampleSizes {
-    Uniform { size: u32, count: u32 },
-    PerSample(Vec<u32>),
-}
-
-impl SampleSizes {
-    fn len(&self) -> usize {
-        match self {
-            Self::Uniform { count, .. } => *count as usize,
-            Self::PerSample(v) => v.len(),
-        }
-    }
-
-    fn get(&self, i: usize) -> Result<u32, VideoError> {
-        match self {
-            Self::Uniform { size, count } => {
-                if (i as u32) < *count {
-                    Ok(*size)
-                } else {
-                    Err(VideoError::BadBox("stsz sample index out of range"))
-                }
-            }
-            Self::PerSample(v) => v.get(i).copied().ok_or(VideoError::BadBox("stsz sample index out of range")),
-        }
-    }
-}
-
-fn parse_stsz(payload: &[u8]) -> Result<SampleSizes, VideoError> {
-    let mut r = ByteReader::new(payload);
-    r.skip(4)?;
-    let sample_size = r.u32_be()?;
-    let count = r.u32_be()?;
-    if sample_size != 0 {
-        return Ok(SampleSizes::Uniform { size: sample_size, count });
-    }
-    let mut sizes = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        sizes.push(r.u32_be()?);
-    }
-    Ok(SampleSizes::PerSample(sizes))
-}
-
-fn parse_stco(payload: &[u8]) -> Result<Vec<u64>, VideoError> {
-    let mut r = ByteReader::new(payload);
-    r.skip(4)?;
-    let count = r.u32_be()?;
-    let mut out = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        out.push(u64::from(r.u32_be()?));
-    }
-    Ok(out)
-}
-
-fn parse_co64(payload: &[u8]) -> Result<Vec<u64>, VideoError> {
-    let mut r = ByteReader::new(payload);
-    r.skip(4)?;
-    let count = r.u32_be()?;
-    let mut out = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        out.push(r.u64_be()?);
-    }
-    Ok(out)
-}
-
-fn parse_stss(payload: &[u8]) -> Result<Vec<u32>, VideoError> {
-    let mut r = ByteReader::new(payload);
-    r.skip(4)?;
-    let count = r.u32_be()?;
-    let mut out = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        out.push(r.u32_be()?);
-    }
-    Ok(out)
-}
-
-fn samples_per_chunk_for(stsc: &[(u32, u32, u32)], chunk_number: u32) -> Result<u32, VideoError> {
-    let mut result = None;
-    for &(first_chunk, spc, _) in stsc {
-        if first_chunk == 0 {
-            return Err(VideoError::BadBox("stsc first_chunk must be >= 1"));
-        }
-        if first_chunk <= chunk_number {
-            result = Some(spc);
-        } else {
-            break;
-        }
-    }
-    result.ok_or(VideoError::BadBox("stsc does not cover this chunk"))
-}
-
-/// 🧮️ Standard MP4 sample-table resolution: walks chunks in order, and within each chunk accumulates
-/// per-sample byte offsets from the chunk's start, per `stsc`'s samples-per-chunk (which may change at chunk
-/// boundaries) and `stsz`'s per-sample sizes.
-fn resolve_samples(stsc: &[(u32, u32, u32)], chunk_offsets: &[u64], sizes: &SampleSizes) -> Result<Vec<(u64, u32)>, VideoError> {
-    if stsc.is_empty() {
-        return Err(VideoError::BadBox("stsc has no entries"));
-    }
-    let mut out = Vec::with_capacity(sizes.len());
-    let mut sample_index = 0usize;
-    for (i, &chunk_offset) in chunk_offsets.iter().enumerate() {
-        let chunk_number = i as u32 + 1;
-        let spc = samples_per_chunk_for(stsc, chunk_number)?;
-        let mut offset = chunk_offset;
-        for _ in 0..spc {
-            if sample_index >= sizes.len() {
-                break;
-            }
-            let size = sizes.get(sample_index)?;
-            out.push((offset, size));
-            offset = offset.checked_add(u64::from(size)).ok_or(VideoError::BadBox("chunk offset overflow"))?;
-            sample_index += 1;
-        }
-    }
-    Ok(out)
-}
-
-fn expand_run_length_u32(entries: &[(u32, u32)]) -> Vec<u32> {
-    let mut out = Vec::new();
-    for &(count, value) in entries {
-        out.extend(std::iter::repeat_n(value, count as usize));
-    }
-    out
-}
-
-fn expand_run_length_i64(entries: &[(u32, i64)]) -> Vec<i64> {
-    let mut out = Vec::new();
-    for &(count, value) in entries {
-        out.extend(std::iter::repeat_n(value, count as usize));
-    }
-    out
-}
-
-/// 📥️ Probes an ISO-BMFF/MP4 byte stream's first video track: walks `ftyp/moov/trak/mdia/minf/stbl`, resolves
-/// the full per-sample table (`stts`/`ctts`/`stsc`/`stsz`/`stco`|`co64`/`stss`), and detects the codec from
-/// `stsd` (extracting `avcC` SPS/PPS when it is AVC). Succeeds for any well-formed mp4 track, even when the
-/// codec is one this crate cannot decode — provenance/timestamps stay recoverable either way.
-/// <https://www.iso.org/standard/74428.html> (ISO/IEC 14496-12)
-pub fn probe_mp4(bytes: &[u8]) -> Result<Mp4Info, VideoError> {
-    require_box(bytes, b"ftyp", "mp4 stream missing ftyp box")?;
-    let moov = require_box(bytes, b"moov", "mp4 stream missing moov box")?;
-    let traks = find_boxes(moov, b"trak")?;
-    for trak in traks {
-        let mdia = require_box(trak, b"mdia", "trak missing mdia")?;
-        let hdlr = require_box(mdia, b"hdlr", "mdia missing hdlr")?;
-        if hdlr.len() < 12 || &hdlr[8..12] != b"vide" {
-            continue;
-        }
-        let mdhd = require_box(mdia, b"mdhd", "mdia missing mdhd")?;
-        let (timescale, duration_ticks) = parse_mdhd(mdhd)?;
-        let minf = require_box(mdia, b"minf", "mdia missing minf")?;
-        let stbl = require_box(minf, b"stbl", "minf missing stbl")?;
-        let stsd = require_box(stbl, b"stsd", "stbl missing stsd")?;
-        let (codec, width, height, avc_config) = parse_stsd(stsd)?;
-
-        let stts = require_box(stbl, b"stts", "stbl missing stts")?;
-        let dts_deltas = expand_run_length_u32(&parse_stts(stts)?);
-        let stsc_entries = parse_stsc(require_box(stbl, b"stsc", "stbl missing stsc")?)?;
-        let sizes = parse_stsz(require_box(stbl, b"stsz", "stbl missing stsz")?)?;
-        let chunk_offsets = match find_box(stbl, b"stco")? {
-            Some(p) => parse_stco(p)?,
-            None => parse_co64(require_box(stbl, b"co64", "stbl missing stco/co64")?)?,
-        };
-        let sync = match find_box(stbl, b"stss")? {
-            Some(p) => Some(parse_stss(p)?),
-            None => None,
-        };
-        let sample_count = sizes.len();
-        if dts_deltas.len() != sample_count {
-            return Err(VideoError::BadBox("stts sample count does not match stsz"));
-        }
-        let cts_offsets: Vec<i64> = match find_box(stbl, b"ctts")? {
-            Some(p) => {
-                let expanded = expand_run_length_i64(&parse_ctts(p)?);
-                if expanded.len() != sample_count {
-                    return Err(VideoError::BadBox("ctts sample count does not match stsz"));
-                }
-                expanded
-            }
-            None => vec![0i64; sample_count],
-        };
-        let offsets_sizes = resolve_samples(&stsc_entries, &chunk_offsets, &sizes)?;
-        if offsets_sizes.len() != sample_count {
-            return Err(VideoError::BadBox("stsc/stco resolved sample count does not match stsz"));
-        }
-
-        let mut samples = Vec::with_capacity(sample_count);
-        let mut dts_accum: u64 = 0;
-        for i in 0..sample_count {
-            let (offset, size) = offsets_sizes[i];
-            let pts_ticks = dts_accum as i64 + cts_offsets[i];
-            let timestamp_ms = if timescale > 0 { pts_ticks as f64 * 1000.0 / f64::from(timescale) } else { 0.0 };
-            let is_sync = sync.as_ref().is_none_or(|list| list.contains(&(i as u32 + 1)));
-            samples.push(SampleInfo { offset, size, timestamp_ms, is_sync });
-            dts_accum += u64::from(dts_deltas[i]);
-        }
-
-        let duration_ms = if timescale > 0 { duration_ticks as f64 * 1000.0 / f64::from(timescale) } else { 0.0 };
-        return Ok(Mp4Info { width: u32::from(width), height: u32::from(height), timescale, duration_ms, frame_count: sample_count as u32, codec, samples, avc_config });
-    }
-    Err(VideoError::NoVideoTrack)
-}
-// #endregion 🔖️Bmff
-
-// #region 🔖️Avi
-/// 📦️ One parsed RIFF chunk: its four-character id and payload (odd-length payloads are followed by a pad
-/// byte per RIFF convention, which [`RiffIter`] skips automatically).
-struct RiffChunk<'a> {
-    id: FourCc,
-    payload: &'a [u8],
-}
-
-/// 🚶️ Iterates sibling RIFF chunks (little-endian sizes) at one level — `LIST` chunks are yielded whole
-/// (their 4-byte list-type tag is the first 4 bytes of `payload`); callers recurse into them explicitly.
-struct RiffIter<'a> {
-    data: &'a [u8],
-    pos: usize,
-}
-
-fn iter_riff(data: &[u8]) -> RiffIter<'_> {
-    RiffIter { data, pos: 0 }
-}
-
-impl<'a> Iterator for RiffIter<'a> {
-    type Item = Result<RiffChunk<'a>, VideoError>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.pos >= self.data.len() {
-            return None;
-        }
-        let mut r = ByteReader::new(&self.data[self.pos..]);
-        let id = match r.fourcc() {
-            Ok(v) => v,
-            Err(e) => return Some(Err(e)),
-        };
-        let size = match r.u32_le() {
-            Ok(v) => v,
-            Err(e) => return Some(Err(e)),
-        };
-        let payload_start = self.pos + 8;
-        let payload_end = match payload_start.checked_add(size as usize) {
-            Some(v) if v <= self.data.len() => v,
-            _ => return Some(Err(VideoError::Truncated)),
-        };
-        let payload = &self.data[payload_start..payload_end];
-        let padded_len = size as usize + (size as usize & 1);
-        self.pos = payload_start + padded_len;
-        Some(Ok(RiffChunk { id, payload }))
-    }
-}
-
-fn find_riff_list<'a>(data: &'a [u8], want: &[u8; 4]) -> Result<Option<&'a [u8]>, VideoError> {
-    for item in iter_riff(data) {
-        let c = item?;
-        if c.id.0 == *b"LIST" && c.payload.len() >= 4 && &c.payload[0..4] == want {
-            return Ok(Some(&c.payload[4..]));
-        }
-    }
-    Ok(None)
-}
-
-fn require_riff_list<'a>(data: &'a [u8], want: &[u8; 4], ctx: &'static str) -> Result<&'a [u8], VideoError> {
-    find_riff_list(data, want)?.ok_or(VideoError::BadBox(ctx))
-}
-
-fn find_riff_lists<'a>(data: &'a [u8], want: &[u8; 4]) -> Result<Vec<&'a [u8]>, VideoError> {
-    let mut out = Vec::new();
-    for item in iter_riff(data) {
-        let c = item?;
-        if c.id.0 == *b"LIST" && c.payload.len() >= 4 && &c.payload[0..4] == want {
-            out.push(&c.payload[4..]);
-        }
-    }
-    Ok(out)
-}
-
-fn find_riff_chunk<'a>(data: &'a [u8], want: &[u8; 4]) -> Result<Option<&'a [u8]>, VideoError> {
-    for item in iter_riff(data) {
-        let c = item?;
-        if c.id.0 == *want {
-            return Ok(Some(c.payload));
-        }
-    }
-    Ok(None)
-}
-
-fn require_riff_chunk<'a>(data: &'a [u8], want: &[u8; 4], ctx: &'static str) -> Result<&'a [u8], VideoError> {
-    find_riff_chunk(data, want)?.ok_or(VideoError::BadBox(ctx))
-}
-
-/// 📍️ Byte offset of subslice `sub` within `whole`, given `sub` is known (by construction, via chained
-/// slicing) to lie inside `whole`'s backing allocation — pure address arithmetic, no dereference.
-fn offset_in(whole: &[u8], sub: &[u8]) -> usize {
-    sub.as_ptr() as usize - whole.as_ptr() as usize
+    samples: Vec<SampleInfo>,
+    avc_config: Option<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8)>,
 }
 
 /// 🎞️ Probed RIFF/AVI video stream metadata, mirroring [`Mp4Info`] for the AVI container family.
@@ -699,190 +179,61 @@ pub struct AviInfo {
     pub fps: f64,
     pub frame_count: u32,
     pub codec: VideoCodec,
-    pub samples: Vec<SampleInfo>,
+    samples: Vec<SampleInfo>,
 }
 
-/// 📥️ `avih` (main AVI header, always exactly 56 bytes) → `(micro_sec_per_frame, total_frames, width, height)`.
-fn parse_avih(payload: &[u8]) -> Result<(u32, u32, u32, u32), VideoError> {
-    let mut r = ByteReader::new(payload);
-    let micro_sec_per_frame = r.u32_le()?;
-    r.skip(8)?;
-    r.skip(4)?;
-    let total_frames = r.u32_le()?;
-    r.skip(8)?;
-    r.skip(4)?;
-    let width = r.u32_le()?;
-    let height = r.u32_le()?;
-    Ok((micro_sec_per_frame, total_frames, width, height))
-}
-
-/// 📥️ `strh` (stream header) → `(fcc_type, dw_scale, dw_rate, dw_length)`; only the fields preceding the
-/// legacy `rcFrame` rectangle (whose exact width is ambiguous across encoders) are read.
-fn parse_strh(payload: &[u8]) -> Result<(FourCc, u32, u32, u32), VideoError> {
-    let mut r = ByteReader::new(payload);
-    let fcc_type = r.fourcc()?;
-    r.skip(4)?;
-    r.skip(4)?;
-    r.skip(2)?;
-    r.skip(2)?;
-    r.skip(4)?;
-    let scale = r.u32_le()?;
-    let rate = r.u32_le()?;
-    r.skip(4)?;
-    let length = r.u32_le()?;
-    Ok((fcc_type, scale, rate, length))
-}
-
-/// 📥️ `strf` (video stream format, a `BITMAPINFOHEADER`) → `biCompression`, the codec fourcc.
-fn parse_strf_video_compression(payload: &[u8]) -> Result<FourCc, VideoError> {
-    let mut r = ByteReader::new(payload);
-    r.skip(16)?;
-    r.fourcc()
-}
-
-/// 📇️ One `idx1` index entry: chunk id, `AVIIF_KEYFRAME` flag, and offset/size (offset's base is ambiguous —
-/// see [`parse_idx1`]).
-struct Idx1Entry {
-    ckid: FourCc,
-    flags: u32,
-    chunk_offset: u32,
-    chunk_size: u32,
-}
-
-fn parse_idx1_entries(idx1: &[u8]) -> Result<Vec<Idx1Entry>, VideoError> {
-    let mut r = ByteReader::new(idx1);
-    let mut out = Vec::new();
-    while r.remaining() >= 16 {
-        let ckid = r.fourcc()?;
-        let flags = r.u32_le()?;
-        let chunk_offset = r.u32_le()?;
-        let chunk_size = r.u32_le()?;
-        out.push(Idx1Entry { ckid, flags, chunk_offset, chunk_size });
-    }
-    Ok(out)
-}
-
-/// 📇️ Resolves `idx1` entries to absolute `(data_offset, size, is_sync)` triples. `idx1` offsets are
-/// conventionally relative to the start of the `movi` list's data, but some encoders write them relative to
-/// the start of the file instead — both bases are probed against the first few entries' `ckid` (which must
-/// match the four bytes actually found there), and the base that verifies is used for every entry. An empty
-/// result (neither base verifies) signals the caller to fall back to [`scan_movi_chunks`].
-fn parse_idx1(idx1: &[u8], movi: &[u8], bytes: &[u8]) -> Result<Vec<(u64, u32, bool)>, VideoError> {
-    let entries = parse_idx1_entries(idx1)?;
-    if entries.is_empty() {
-        return Ok(Vec::new());
-    }
-    let movi_start = offset_in(bytes, movi);
-    let candidates = [movi_start, 0usize];
-    let mut chosen_base = None;
-    'bases: for &base in &candidates {
-        for e in entries.iter().take(entries.len().min(4)) {
-            let matches = base.checked_add(e.chunk_offset as usize).and_then(|start| start.checked_add(4).map(|end| (start, end))).and_then(|(start, end)| bytes.get(start..end)).is_some_and(|found| found == e.ckid.0);
-            if !matches {
-                continue 'bases;
-            }
-        }
-        chosen_base = Some(base);
-        break;
-    }
-    let Some(base) = chosen_base else {
-        return Ok(Vec::new());
+/// 📥️ Probes an ISO-BMFF/MP4 byte stream via stdio's real `mp4::engine::decode_mp4`, then adapts
+/// its first (stdio only surfaces video-handler, `vide`, tracks) track into this crate's own
+/// `Mp4Info` shape: per-sample presentation timestamps recovered from `duration`/`cts_offset`
+/// (same DTS-accumulate-then-add-CTS-offset formula this file's pre-extraction `probe_mp4` used),
+/// and the real `avcC` SPS/PPS lists when the track is AVC.
+fn probe_mp4(bytes: &[u8]) -> Result<Mp4Info, VideoError> {
+    let snapshot = mp4_engine::decode_mp4(bytes).map_err(VideoError::Container)?;
+    let track = snapshot.tracks.first().ok_or(VideoError::NoVideoTrack)?;
+    let (codec, avc_config) = match &track.codec {
+        Mp4Codec::Avc { sps, pps, nal_length_size } => (VideoCodec::Avc, Some((sps.clone(), pps.clone(), *nal_length_size))),
+        Mp4Codec::Other { fourcc, .. } => (codec_from_fourcc_str(fourcc), None),
     };
-    let mut out = Vec::new();
-    for e in &entries {
-        if &e.ckid.0[2..4] != b"dc" {
-            continue;
-        }
-        let Some(header_start) = base.checked_add(e.chunk_offset as usize) else { continue };
-        let Some(data_start) = header_start.checked_add(8) else { continue };
-        let Some(data_end) = data_start.checked_add(e.chunk_size as usize) else { continue };
-        if data_end > bytes.len() {
-            continue;
-        }
-        out.push((data_start as u64, e.chunk_size, e.flags & 0x10 != 0));
+    let timescale = track.timescale.max(1);
+    let mut dts_accum: u64 = 0;
+    let mut samples = Vec::with_capacity(track.samples.len());
+    for sample in &track.samples {
+        let pts_ticks = dts_accum as i64 + i64::from(sample.cts_offset);
+        let timestamp_ms = pts_ticks as f64 * 1000.0 / f64::from(timescale);
+        samples.push(SampleInfo { data: sample.data.clone(), timestamp_ms });
+        dts_accum += u64::from(sample.duration);
     }
-    Ok(out)
+    let duration_ms = dts_accum as f64 * 1000.0 / f64::from(timescale);
+    Ok(Mp4Info { width: track.width, height: track.height, timescale, duration_ms, frame_count: samples.len() as u32, codec, samples, avc_config })
 }
 
-/// 📇️ Fallback frame index built by scanning `movi`'s chunks directly (recursing one level into `rec ` sub-
-/// lists, which interleave audio/video chunks per frame group) for `NNdc`-style compressed-video chunk ids;
-/// used when `idx1` is absent or its offsets verify against neither convention. Every scanned MJPEG frame is
-/// independently decodable, so all are reported as sync samples.
-fn scan_movi_chunks<'a>(movi: &'a [u8], bytes: &'a [u8], out: &mut Vec<(u64, u32, bool)>) -> Result<(), VideoError> {
-    for item in iter_riff(movi) {
-        let c = item?;
-        if c.id.0 == *b"LIST" && c.payload.len() >= 4 && &c.payload[0..4] == b"rec " {
-            scan_movi_chunks(&c.payload[4..], bytes, out)?;
-            continue;
-        }
-        if c.id.0.len() == 4 && &c.id.0[2..4] == b"dc" {
-            out.push((offset_in(bytes, c.payload) as u64, c.payload.len() as u32, true));
-        }
-    }
-    Ok(())
-}
-
-/// 📥️ Probes a RIFF/AVI byte stream's first `vids` (video) stream: `avih`/`strh`/`strf` for dimensions, fps
-/// and codec, then `idx1` for the per-frame index (falling back to a direct `movi` scan when `idx1` is
-/// missing or inconsistent). Only `MJPG`-compressed streams are decodable by [`extract_frames`]; other
-/// codecs still probe successfully for provenance.
-pub fn probe_avi(bytes: &[u8]) -> Result<AviInfo, VideoError> {
-    let mut r = ByteReader::new(bytes);
-    let riff = r.fourcc()?;
-    if riff.0 != *b"RIFF" {
-        return Err(VideoError::BadBox("not a RIFF stream"));
-    }
-    r.skip(4)?;
-    let form = r.fourcc()?;
-    if form.0 != *b"AVI " {
-        return Err(VideoError::BadBox("RIFF form is not AVI"));
-    }
-    let body = &bytes[r.pos()..];
-
-    let hdrl = require_riff_list(body, b"hdrl", "avi stream missing hdrl list")?;
-    let avih = require_riff_chunk(hdrl, b"avih", "hdrl missing avih chunk")?;
-    let (micro_sec_per_frame, _total_frames, avih_width, avih_height) = parse_avih(avih)?;
-
-    let strls = find_riff_lists(hdrl, b"strl")?;
-    let mut stream: Option<(f64, VideoCodec)> = None;
-    for strl in strls {
-        let strh = require_riff_chunk(strl, b"strh", "strl missing strh chunk")?;
-        let (fcc_type, scale, rate, _length) = parse_strh(strh)?;
-        if fcc_type.0 != *b"vids" {
-            continue;
-        }
-        let strf = require_riff_chunk(strl, b"strf", "strl missing strf chunk")?;
-        let compression = parse_strf_video_compression(strf)?;
-        let codec = match &compression.0 {
-            b"MJPG" | b"mjpg" => VideoCodec::Mjpeg,
-            _ => VideoCodec::Unknown(compression),
-        };
-        let fps = if scale > 0 {
-            f64::from(rate) / f64::from(scale)
-        } else if micro_sec_per_frame > 0 {
-            1_000_000.0 / f64::from(micro_sec_per_frame)
-        } else {
-            0.0
-        };
-        stream = Some((fps, codec));
-        break;
-    }
-    let (fps, codec) = stream.ok_or(VideoError::NoVideoTrack)?;
-
-    let movi = require_riff_list(body, b"movi", "avi stream missing movi list")?;
-    let mut triples = match find_riff_chunk(body, b"idx1")? {
-        Some(idx1) => parse_idx1(idx1, movi, bytes)?,
-        None => Vec::new(),
+/// 📥️ Probes a RIFF/AVI byte stream via stdio's real `avi::engine::decode_avi`, then adapts its
+/// first `vids` stream into this crate's own `AviInfo` shape (fps from `strh.rate/scale`, falling
+/// back to `avih.micro_sec_per_frame` — same formula this file's pre-extraction `probe_avi` used).
+fn probe_avi(bytes: &[u8]) -> Result<AviInfo, VideoError> {
+    let snapshot = avi_engine::decode_avi(bytes).map_err(VideoError::Container)?;
+    let stream = snapshot.streams.iter().find(|s| s.strh.fcc_type == "vids").ok_or(VideoError::NoVideoTrack)?;
+    let compression = match &stream.strf {
+        AviStreamFormat::BitmapInfo { compression, .. } => compression.clone(),
+        _ => String::new(),
     };
-    if triples.is_empty() {
-        scan_movi_chunks(movi, bytes, &mut triples)?;
-    }
-
-    let samples: Vec<SampleInfo> = triples.into_iter().enumerate().map(|(i, (offset, size, is_sync))| SampleInfo { offset, size, timestamp_ms: if fps > 0.0 { i as f64 * 1000.0 / fps } else { 0.0 }, is_sync }).collect();
-
-    Ok(AviInfo { width: avih_width, height: avih_height, fps, frame_count: samples.len() as u32, codec, samples })
+    let codec = codec_from_fourcc_str(&compression);
+    let fps = if stream.strh.scale > 0 {
+        f64::from(stream.strh.rate) / f64::from(stream.strh.scale)
+    } else if snapshot.main_header.micro_sec_per_frame > 0 {
+        1_000_000.0 / f64::from(snapshot.main_header.micro_sec_per_frame)
+    } else {
+        0.0
+    };
+    let samples: Vec<SampleInfo> = stream
+        .chunks
+        .iter()
+        .enumerate()
+        .map(|(i, chunk)| SampleInfo { data: chunk.data.clone(), timestamp_ms: if fps > 0.0 { i as f64 * 1000.0 / fps } else { 0.0 } })
+        .collect();
+    Ok(AviInfo { width: snapshot.main_header.width, height: snapshot.main_header.height, fps, frame_count: samples.len() as u32, codec, samples })
 }
-// #endregion 🔖️Avi
+// #endregion 🔖️Container
 
 // #region 🔖️H264
 /// ⚠️ Error type for the hand-rolled H.264 baseline decoder. `Unsupported` is used for any spec feature this
@@ -3557,269 +2908,108 @@ pub fn h264_enc_p_skip_sample(mb_w: u32, mb_h: u32, frame_num: u32) -> Vec<u8> {
 // #endregion 🔖️H264Enc
 
 // #region 🔖️Mux
-/// 📦️ Wraps `payload` in a length-prefixed ISO-BMFF box.
-fn mp4_box(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
+/// 📦️ Minimal ISO-BMFF `VisualSampleEntry` box for a given fourcc — stdio's mp4 engine keeps
+/// `Mp4Codec::Other`'s sample-entry box fully caller-supplied (`raw`, see its own doc comment), so
+/// this plugin still needs its own tiny box-builder for the non-AVC fourccs it produces (`mjpg` for
+/// MJPEG-in-MP4 muxing) or synthesizes in tests (`hvc1` for an unsupported-codec provenance test).
+fn visual_sample_entry_box(fourcc: &[u8; 4], width: u32, height: u32) -> Vec<u8> {
+    let mut payload = vec![0u8; 8]; // reserved + data_reference_index
+    payload.extend_from_slice(&[0u8; 16]); // pre_defined/reserved/pre_defined[3]
+    payload.extend_from_slice(&(width as u16).to_be_bytes());
+    payload.extend_from_slice(&(height as u16).to_be_bytes());
+    payload.extend_from_slice(&0x0048_0000u32.to_be_bytes()); // horizresolution, 72 dpi
+    payload.extend_from_slice(&0x0048_0000u32.to_be_bytes()); // vertresolution, 72 dpi
+    payload.extend_from_slice(&[0u8; 4]); // reserved
+    payload.extend_from_slice(&[0, 1]); // frame_count
+    payload.extend_from_slice(&[0u8; 32]); // compressorname
+    payload.extend_from_slice(&[0, 0x18]); // depth = 24
+    payload.extend_from_slice(&[0xFF, 0xFF]); // pre_defined
     let mut out = Vec::with_capacity(8 + payload.len());
     out.extend_from_slice(&((payload.len() + 8) as u32).to_be_bytes());
     out.extend_from_slice(fourcc);
-    out.extend_from_slice(payload);
+    out.extend_from_slice(&payload);
     out
 }
 
-/// 📦️ `VisualSampleEntry` for `codec_fourcc` (`mjpg` or `avc1`); `extra` holds codec-specific child boxes
-/// (e.g. `avcC`), empty for MJPEG.
-fn mp4_visual_sample_entry(codec_fourcc: &[u8; 4], width: u16, height: u16, extra: &[u8]) -> Vec<u8> {
-    let mut payload = vec![0u8; 8];
-    payload.extend_from_slice(&[0, 0]);
-    payload.extend_from_slice(&[0, 0]);
-    payload.extend_from_slice(&[0u8; 12]);
-    payload.extend_from_slice(&width.to_be_bytes());
-    payload.extend_from_slice(&height.to_be_bytes());
-    payload.extend_from_slice(&0x0048_0000u32.to_be_bytes());
-    payload.extend_from_slice(&0x0048_0000u32.to_be_bytes());
-    payload.extend_from_slice(&[0u8; 4]);
-    payload.extend_from_slice(&[0, 1]);
-    payload.extend_from_slice(&[0u8; 32]);
-    payload.extend_from_slice(&[0, 0x18]);
-    payload.extend_from_slice(&[0xFF, 0xFF]);
-    payload.extend_from_slice(extra);
-    mp4_box(codec_fourcc, &payload)
-}
-
-fn mp4_stsd(codec_fourcc: &[u8; 4], width: u16, height: u16, extra: &[u8]) -> Vec<u8> {
-    let mut payload = vec![0u8; 4];
-    payload.extend_from_slice(&1u32.to_be_bytes());
-    payload.extend(mp4_visual_sample_entry(codec_fourcc, width, height, extra));
-    mp4_box(b"stsd", &payload)
-}
-
-fn mp4_stts(frame_count: u32, delta: u32) -> Vec<u8> {
-    let mut payload = vec![0u8; 4];
-    payload.extend_from_slice(&1u32.to_be_bytes());
-    payload.extend_from_slice(&frame_count.to_be_bytes());
-    payload.extend_from_slice(&delta.to_be_bytes());
-    mp4_box(b"stts", &payload)
-}
-
-fn mp4_stsc(frame_count: u32) -> Vec<u8> {
-    let mut payload = vec![0u8; 4];
-    payload.extend_from_slice(&1u32.to_be_bytes());
-    payload.extend_from_slice(&1u32.to_be_bytes());
-    payload.extend_from_slice(&frame_count.to_be_bytes());
-    payload.extend_from_slice(&1u32.to_be_bytes());
-    mp4_box(b"stsc", &payload)
-}
-
-fn mp4_stsz(sizes: &[u32]) -> Vec<u8> {
-    let mut payload = vec![0u8; 4];
-    payload.extend_from_slice(&0u32.to_be_bytes());
-    payload.extend_from_slice(&(sizes.len() as u32).to_be_bytes());
-    for &s in sizes {
-        payload.extend_from_slice(&s.to_be_bytes());
-    }
-    mp4_box(b"stsz", &payload)
-}
-
-fn mp4_stco(offset: u32) -> Vec<u8> {
-    let mut payload = vec![0u8; 4];
-    payload.extend_from_slice(&1u32.to_be_bytes());
-    payload.extend_from_slice(&offset.to_be_bytes());
-    mp4_box(b"stco", &payload)
-}
-
-fn mp4_mdhd(timescale: u32, duration: u32) -> Vec<u8> {
-    let mut payload = vec![0u8; 4];
-    payload.extend_from_slice(&[0u8; 8]);
-    payload.extend_from_slice(&timescale.to_be_bytes());
-    payload.extend_from_slice(&duration.to_be_bytes());
-    payload.extend_from_slice(&[0x55, 0xC4]);
-    payload.extend_from_slice(&[0u8; 2]);
-    mp4_box(b"mdhd", &payload)
-}
-
-fn mp4_hdlr() -> Vec<u8> {
-    let mut payload = vec![0u8; 8];
-    payload.extend_from_slice(b"vide");
-    payload.extend_from_slice(&[0u8; 12]);
-    payload.push(0);
-    mp4_box(b"hdlr", &payload)
-}
-
-/// 🏗️ Assembles the `moov` box for a single video track with `sizes.len()` samples of `codec_fourcc`, all at
-/// a single chunk starting at `mdat_offset` (the absolute file offset of the first sample's bytes).
-#[allow(clippy::too_many_arguments, reason = "this is a flat list of independent box fields for a fixture-synthesis-only muxer; a wrapper struct would only rename them once, at this single call site")]
-fn mp4_build_moov(codec_fourcc: &[u8; 4], width: u32, height: u32, sizes: &[u32], timescale: u32, delta: u32, extra: &[u8], mdat_offset: u32) -> Vec<u8> {
-    let duration = delta * sizes.len() as u32;
-    let stbl = [mp4_stsd(codec_fourcc, width as u16, height as u16, extra), mp4_stts(sizes.len() as u32, delta), mp4_stsc(sizes.len() as u32), mp4_stsz(sizes), mp4_stco(mdat_offset)].concat();
-    let minf = mp4_box(b"stbl", &stbl);
-    let mdia = [mp4_mdhd(timescale, duration), mp4_hdlr(), mp4_box(b"minf", &minf)].concat();
-    let trak = mp4_box(b"mdia", &mdia);
-    let moov = mp4_box(b"trak", &trak);
-    mp4_box(b"moov", &moov)
-}
-
-/// 🏗️ Builds an MP4 with `ftyp`/`moov`/`mdat`, `timescale = 1000` (milliseconds); `probe_mp4` recovers exact
-/// frame count/timestamps/sync flags/dimensions from it.
-fn mp4_mux(codec_fourcc: &[u8; 4], width: u32, height: u32, samples: &[Vec<u8>], fps: f64, extra: &[u8]) -> Vec<u8> {
-    let ftyp = mp4_box(b"ftyp", b"isom\0\0\x02\0isomiso2avc1mp41");
-    let sizes: Vec<u32> = samples.iter().map(|s| s.len() as u32).collect();
-    let delta = if fps > 0.0 { (1000.0 / fps).round() as u32 } else { 1000 }.max(1);
-    let placeholder = mp4_build_moov(codec_fourcc, width, height, &sizes, 1000, delta, extra, 0);
-    let mdat_offset = (ftyp.len() + placeholder.len() + 8) as u32;
-    let moov = mp4_build_moov(codec_fourcc, width, height, &sizes, 1000, delta, extra, mdat_offset);
-    let mdat = mp4_box(b"mdat", &samples.concat());
-    [ftyp, moov, mdat].concat()
-}
-
-/// ✍️ Muxes pre-encoded JPEG frames into a minimal `mjpg`-codec MP4, fixture-synthesis only (no `avcC`,
-/// timescale fixed at milliseconds). Dimensions come from decoding `frames[0]`.
+/// ✍️ Muxes pre-encoded JPEG frames into a minimal `mjpg`-codec MP4 via stdio's real
+/// `mp4::engine::encode_mp4`, fixture-synthesis only (no `avcC`, timescale fixed at milliseconds).
+/// Dimensions come from decoding `frames[0]`.
 pub fn write_mp4_mjpeg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
-    let (w, h) = frames.first().and_then(|f| remodel_image::decode_jpeg(f).ok()).map_or((0, 0), |img| (img.width, img.height));
-    mp4_mux(b"mjpg", w, h, frames, fps, &[])
+    let (width, height) = frames.first().and_then(|f| remodel_image::decode_jpeg(f).ok()).map_or((0, 0), |img| (img.width, img.height));
+    let delta = if fps > 0.0 { (1000.0 / fps).round() as u32 } else { 1000 }.max(1);
+    let samples = frames.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
+    let track = Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::Other { fourcc: "mjpg".into(), raw: visual_sample_entry_box(b"mjpg", width, height) }, width, height, samples };
+    let snapshot = Mp4Snapshot {
+        schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
+        ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "mp41".into()] },
+        tracks: vec![track],
+        unknown_boxes: Vec::new(),
+    };
+    mp4_engine::encode_mp4(&snapshot)
 }
 
-/// ✍️ Builds an `avcC` (AVCDecoderConfigurationRecord) box from this crate's internal `(u16 length, NAL)*`
-/// SPS/PPS format (as produced by [`h264_enc_sps_pps`] or extracted by `probe_mp4`).
-fn build_avcc(sps_pps_nals: &[u8]) -> Vec<u8> {
-    let mut sps_list = Vec::new();
-    let mut pps_list = Vec::new();
-    let mut pos = 0usize;
-    while pos + 2 <= sps_pps_nals.len() {
-        let len = usize::from(u16::from_be_bytes([sps_pps_nals[pos], sps_pps_nals[pos + 1]]));
-        pos += 2;
-        if pos + len > sps_pps_nals.len() {
-            break;
-        }
-        let nal = &sps_pps_nals[pos..pos + len];
-        pos += len;
-        if nal.first().is_some_and(|&h| h & 0x1F == 7) {
-            sps_list.push(nal);
-        } else if nal.first().is_some_and(|&h| h & 0x1F == 8) {
-            pps_list.push(nal);
-        }
-    }
-    let mut out = vec![1, 66, 0, 30, 0xFF, 0xE0 | sps_list.len() as u8];
-    for nal in &sps_list {
-        out.extend_from_slice(&(nal.len() as u16).to_be_bytes());
-        out.extend_from_slice(nal);
-    }
-    out.push(pps_list.len() as u8);
-    for nal in &pps_list {
-        out.extend_from_slice(&(nal.len() as u16).to_be_bytes());
-        out.extend_from_slice(nal);
-    }
-    mp4_box(b"avcC", &out)
-}
-
-/// 📐️ Recovers `(width, height)` by locating and parsing the SPS NAL inside this crate's internal
-/// `(u16 length, NAL)*` SPS/PPS format; `(0, 0)` if no valid SPS is present.
-fn sps_pps_dimensions(sps_pps_nals: &[u8]) -> (u32, u32) {
-    let mut pos = 0usize;
-    while pos + 2 <= sps_pps_nals.len() {
-        let len = usize::from(u16::from_be_bytes([sps_pps_nals[pos], sps_pps_nals[pos + 1]]));
-        pos += 2;
-        let Some(nal_bytes) = sps_pps_nals.get(pos..pos + len) else { break };
-        pos += len;
-        if let Ok(nal) = parse_nal(nal_bytes) {
-            if nal.nal_unit_type == 7 {
-                if let Ok(sps) = parse_sps(&nal.rbsp) {
-                    return (sps.width_px, sps.height_px);
-                }
-            }
-        }
-    }
-    (0, 0)
+/// 📐️ Recovers `(width, height)` from a raw SPS NAL (header byte + RBSP — [`h264_enc_sps_pps_nals`]'s
+/// own output shape) via this crate's own [`parse_nal`]/[`parse_sps`] — `(0, 0)` if not a valid SPS.
+fn sps_nal_dimensions(sps_nal: &[u8]) -> (u32, u32) {
+    parse_nal(sps_nal).ok().filter(|nal| nal.nal_unit_type == 7).and_then(|nal| parse_sps(&nal.rbsp).ok()).map_or((0, 0), |sps| (sps.width_px, sps.height_px))
 }
 
 /// ✍️ Muxes AVCC-length-prefixed H.264 access units (as produced by [`h264_enc_i_pcm_sample`] /
-/// [`h264_enc_p_skip_sample`]) into a minimal `avc1`-codec MP4, fixture-synthesis only. Dimensions are
-/// recovered from `sps_pps` itself (as [`h264_enc_sps_pps`] produces).
-pub fn write_mp4_avc(nal_samples: &[Vec<u8>], sps_pps: &[u8], fps: f64) -> Vec<u8> {
-    let (width, height) = sps_pps_dimensions(sps_pps);
-    mp4_mux(b"avc1", width, height, nal_samples, fps, &build_avcc(sps_pps))
+/// [`h264_enc_p_skip_sample`]) into a minimal `avc1`-codec MP4 via stdio's real
+/// `mp4::engine::encode_mp4`, fixture-synthesis only. Dimensions are recovered from `sps_nal` itself
+/// (as [`h264_enc_sps_pps_nals`] produces).
+pub fn write_mp4_avc(nal_samples: &[Vec<u8>], sps_nal: &[u8], pps_nal: &[u8], fps: f64) -> Vec<u8> {
+    let (width, height) = sps_nal_dimensions(sps_nal);
+    let delta = if fps > 0.0 { (1000.0 / fps).round() as u32 } else { 1000 }.max(1);
+    let samples = nal_samples.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
+    let track = Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::Avc { sps: vec![sps_nal.to_vec()], pps: vec![pps_nal.to_vec()], nal_length_size: 4 }, width, height, samples };
+    let snapshot = Mp4Snapshot {
+        schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
+        ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "avc1".into(), "mp41".into()] },
+        tracks: vec![track],
+        unknown_boxes: Vec::new(),
+    };
+    mp4_engine::encode_mp4(&snapshot)
 }
 
-/// 📦️ Wraps `payload` in a RIFF chunk (little-endian size, even-padded).
-fn riff_chunk(id: &[u8; 4], payload: &[u8]) -> Vec<u8> {
-    let mut out = Vec::with_capacity(8 + payload.len() + 1);
-    out.extend_from_slice(id);
-    out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
-    out.extend_from_slice(payload);
-    if payload.len() % 2 == 1 {
-        out.push(0);
-    }
-    out
-}
-
-fn riff_list(list_type: &[u8; 4], children: &[u8]) -> Vec<u8> {
-    let mut payload = list_type.to_vec();
-    payload.extend_from_slice(children);
-    riff_chunk(b"LIST", &payload)
-}
-
-/// ✍️ Muxes pre-encoded JPEG frames into a minimal MJPG-codec AVI (`avih`/`strh`/`strf`/`movi`/`idx1`),
-/// fixture-synthesis only. Dimensions come from decoding `frames[0]`.
+/// ✍️ Muxes pre-encoded JPEG frames into a minimal MJPG-codec AVI via stdio's real
+/// `avi::engine::encode_avi`, fixture-synthesis only. Dimensions come from decoding `frames[0]`.
 pub fn write_avi_mjpg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
-    let (w, h) = frames.first().and_then(|f| remodel_image::decode_jpeg(f).ok()).map_or((0, 0), |img| (img.width, img.height));
+    let (width, height) = frames.first().and_then(|f| remodel_image::decode_jpeg(f).ok()).map_or((0, 0), |img| (img.width, img.height));
     let micro_sec_per_frame = if fps > 0.0 { (1_000_000.0 / fps).round() as u32 } else { 1_000_000 };
-
-    let mut avih = Vec::new();
-    avih.extend_from_slice(&micro_sec_per_frame.to_le_bytes());
-    avih.extend_from_slice(&0u32.to_le_bytes());
-    avih.extend_from_slice(&0u32.to_le_bytes());
-    avih.extend_from_slice(&0x10u32.to_le_bytes());
-    avih.extend_from_slice(&(frames.len() as u32).to_le_bytes());
-    avih.extend_from_slice(&0u32.to_le_bytes());
-    avih.extend_from_slice(&1u32.to_le_bytes());
-    avih.extend_from_slice(&0u32.to_le_bytes());
-    avih.extend_from_slice(&w.to_le_bytes());
-    avih.extend_from_slice(&h.to_le_bytes());
-    avih.extend_from_slice(&[0u8; 16]);
-
-    let mut strh = Vec::new();
-    strh.extend_from_slice(b"vids");
-    strh.extend_from_slice(b"MJPG");
-    strh.extend_from_slice(&0u32.to_le_bytes());
-    strh.extend_from_slice(&[0u8; 4]);
-    strh.extend_from_slice(&0u32.to_le_bytes());
-    strh.extend_from_slice(&1000u32.to_le_bytes());
-    strh.extend_from_slice(&(if fps > 0.0 { (fps * 1000.0).round() as u32 } else { 1000 }).to_le_bytes());
-    strh.extend_from_slice(&0u32.to_le_bytes());
-    strh.extend_from_slice(&(frames.len() as u32).to_le_bytes());
-    strh.extend_from_slice(&[0u8; 16]);
-
-    let mut strf = Vec::new();
-    strf.extend_from_slice(&40u32.to_le_bytes());
-    strf.extend_from_slice(&(w as i32).to_le_bytes());
-    strf.extend_from_slice(&(h as i32).to_le_bytes());
-    strf.extend_from_slice(&1u16.to_le_bytes());
-    strf.extend_from_slice(&24u16.to_le_bytes());
-    strf.extend_from_slice(b"MJPG");
-    strf.extend_from_slice(&[0u8; 20]);
-
-    let strl = [riff_chunk(b"strh", &strh), riff_chunk(b"strf", &strf)].concat();
-    let hdrl = [riff_chunk(b"avih", &avih), riff_list(b"strl", &strl)].concat();
-
-    let movi_chunks: Vec<u8> = frames.iter().flat_map(|f| riff_chunk(b"00dc", f)).collect();
-    let movi = riff_list(b"movi", &movi_chunks);
-
-    let mut idx1 = Vec::new();
-    let mut offset = 0u32;
-    for f in frames {
-        idx1.extend_from_slice(b"00dc");
-        idx1.extend_from_slice(&0x10u32.to_le_bytes());
-        idx1.extend_from_slice(&offset.to_le_bytes());
-        idx1.extend_from_slice(&(f.len() as u32).to_le_bytes());
-        offset += 8 + f.len() as u32 + (f.len() as u32 % 2);
-    }
-
-    let body = [riff_list(b"hdrl", &hdrl), movi, riff_chunk(b"idx1", &idx1)].concat();
-    let mut out = Vec::new();
-    out.extend_from_slice(b"RIFF");
-    out.extend_from_slice(&(4 + body.len() as u32).to_le_bytes());
-    out.extend_from_slice(b"AVI ");
-    out.extend_from_slice(&body);
-    out
+    let rate = if fps > 0.0 { (fps * 1000.0).round() as u32 } else { 1000 };
+    let chunks: Vec<AviChunk> = frames.iter().map(|data| AviChunk { fourcc: "00dc".into(), data: data.clone(), keyframe: true }).collect();
+    let stream = AviStream {
+        strh: AviStreamHeader {
+            fcc_type: "vids".into(),
+            fcc_handler: "MJPG".into(),
+            flags: 0,
+            priority: 0,
+            language: 0,
+            initial_frames: 0,
+            scale: 1000,
+            rate,
+            start: 0,
+            length: frames.len() as u32,
+            suggested_buffer_size: 0,
+            quality: 0,
+            sample_size: 0,
+            rc_frame_left: 0,
+            rc_frame_top: 0,
+            rc_frame_right: width as i32,
+            rc_frame_bottom: height as i32,
+        },
+        strf: AviStreamFormat::BitmapInfo { size: 40, width: width as i32, height: height as i32, planes: 1, bit_count: 24, compression: "MJPG".into(), size_image: 0, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
+        chunks,
+    };
+    let snapshot = AviSnapshot {
+        schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
+        main_header: AviMainHeader { micro_sec_per_frame, max_bytes_per_sec: 0, padding_granularity: 0, flags: 0x10, total_frames: frames.len() as u32, initial_frames: 0, streams: 1, suggested_buffer_size: 0, width, height, reserved: vec![0, 0, 0, 0] },
+        streams: vec![stream],
+        idx1_present: true,
+        unknown_chunks: Vec::new(),
+    };
+    avi_engine::encode_avi(&snapshot)
 }
 // #endregion 🔖️Mux
 
@@ -3841,9 +3031,9 @@ pub enum VideoProbe {
     Avi(AviInfo),
 }
 
-/// 🔍️ Sniffs `bytes` as ISO-BMFF/MP4 (`ftyp` box) or RIFF/AVI (`RIFF` magic) and probes accordingly. Succeeds
-/// for any well-formed container regardless of codec — [`extract_frames`] is what may reject an undecodable
-/// codec.
+/// 🔍️ Sniffs `bytes` as RIFF/AVI (`RIFF` magic) or ISO-BMFF/MP4 otherwise, and probes accordingly via
+/// stdio's real `decode_mp4`/`decode_avi`. Succeeds for any well-formed container regardless of
+/// codec — [`extract_frames`] is what may reject an undecodable codec.
 pub fn probe(bytes: &[u8]) -> Result<VideoProbe, VideoError> {
     if bytes.len() >= 4 && &bytes[0..4] == b"RIFF" {
         Ok(VideoProbe::Avi(probe_avi(bytes)?))
@@ -3915,12 +3105,24 @@ fn select_sample_indices(total: usize, opts: &VideoIngestOptions) -> Vec<usize> 
     out
 }
 
+/// 🧬️ SPS/PPS as separate NAL lists (stdio's `Mp4Codec::Avc` shape) flattened back into
+/// [`H264Decoder::new`]'s expected `(u16 length, NAL)*` format.
+fn flatten_sps_pps(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>]) -> Vec<u8> {
+    let mut out = Vec::new();
+    for nal in sps_list.iter().chain(pps_list.iter()) {
+        out.extend_from_slice(&(nal.len() as u16).to_be_bytes());
+        out.extend_from_slice(nal);
+    }
+    out
+}
+
 /// 🐌️ Lazy frame decoder over a probed sample table: one decode per [`Iterator::next`], chunkable by callers.
 /// MJPEG frames are independently decodable, so unselected samples are never even opened; baseline AVC's
 /// P-frame chain means every sample up to (and including) each selected target must still be decoded — only
-/// samples *trailing after* the last ever-needed one are skipped.
-pub struct FrameIter<'a> {
-    bytes: &'a [u8],
+/// samples *trailing after* the last ever-needed one are skipped. Owns its samples' bytes directly (stdio's
+/// `decode_mp4`/`decode_avi` already extract them) — no source-buffer lifetime to carry, unlike this file's
+/// pre-extraction `FrameIter`.
+pub struct FrameIter {
     samples: Vec<SampleInfo>,
     decoder: Option<H264Decoder>,
     opts: VideoIngestOptions,
@@ -3929,20 +3131,14 @@ pub struct FrameIter<'a> {
     sample_idx: usize,
 }
 
-impl<'a> FrameIter<'a> {
-    fn new(bytes: &'a [u8], samples: Vec<SampleInfo>, decoder: Option<H264Decoder>, opts: VideoIngestOptions) -> Self {
+impl FrameIter {
+    fn new(samples: Vec<SampleInfo>, decoder: Option<H264Decoder>, opts: VideoIngestOptions) -> Self {
         let selected = select_sample_indices(samples.len(), &opts);
-        Self { bytes, samples, decoder, opts, selected, cursor: 0, sample_idx: 0 }
+        Self { samples, decoder, opts, selected, cursor: 0, sample_idx: 0 }
     }
 }
 
-fn frame_iter_sample_bytes<'a>(bytes: &'a [u8], samples: &[SampleInfo], idx: usize) -> Result<&'a [u8], VideoError> {
-    let s = &samples[idx];
-    let end = s.offset.checked_add(u64::from(s.size)).ok_or(VideoError::Truncated)?;
-    bytes.get(s.offset as usize..end as usize).ok_or(VideoError::Truncated)
-}
-
-impl<'a> Iterator for FrameIter<'a> {
+impl Iterator for FrameIter {
     type Item = Result<ExtractedFrame, VideoError>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -3952,11 +3148,7 @@ impl<'a> Iterator for FrameIter<'a> {
         let target = self.selected[self.cursor];
         match &mut self.decoder {
             None => {
-                let bytes = match frame_iter_sample_bytes(self.bytes, &self.samples, target) {
-                    Ok(b) => b,
-                    Err(e) => return Some(Err(e)),
-                };
-                let image = match remodel_image::decode_jpeg(bytes) {
+                let image = match remodel_image::decode_jpeg(&self.samples[target].data) {
                     Ok(i) => i,
                     Err(e) => return Some(Err(e.into())),
                 };
@@ -3967,11 +3159,7 @@ impl<'a> Iterator for FrameIter<'a> {
             Some(decoder) => {
                 while self.sample_idx <= target {
                     let idx = self.sample_idx;
-                    let bytes = match frame_iter_sample_bytes(self.bytes, &self.samples, idx) {
-                        Ok(b) => b,
-                        Err(e) => return Some(Err(e)),
-                    };
-                    let decoded = match decoder.decode_sample(bytes) {
+                    let decoded = match decoder.decode_sample(&self.samples[idx].data) {
                         Ok(v) => v,
                         Err(e) => return Some(Err(e.into())),
                     };
@@ -3996,25 +3184,24 @@ impl<'a> Iterator for FrameIter<'a> {
 /// 📥️ Probes `bytes`, then returns a lazy [`FrameIter`] applying `opts`. Succeeds for MJPEG (either
 /// container) and baseline AVC (MP4 only); any other codec is [`VideoError::UnsupportedCodec`], routing the
 /// caller to a host decoder.
-pub fn extract_frames<'a>(bytes: &'a [u8], opts: &VideoIngestOptions) -> Result<FrameIter<'a>, VideoError> {
+pub fn extract_frames(bytes: &[u8], opts: &VideoIngestOptions) -> Result<FrameIter, VideoError> {
     match probe(bytes)? {
         VideoProbe::Mp4(info) => match info.codec {
-            VideoCodec::Mjpeg => Ok(FrameIter::new(bytes, info.samples, None, *opts)),
+            VideoCodec::Mjpeg => Ok(FrameIter::new(info.samples, None, *opts)),
             VideoCodec::Avc => {
-                let (sps_pps, nal_length_size) = info.avc_config.ok_or(VideoError::UnsupportedCodec(FourCc(*b"avc1")))?;
-                let decoder = H264Decoder::new(&sps_pps)?.with_nal_length_size(nal_length_size);
-                Ok(FrameIter::new(bytes, info.samples, Some(decoder), *opts))
+                let (sps_list, pps_list, nal_length_size) = info.avc_config.ok_or(VideoError::UnsupportedCodec(FourCc(*b"avc1")))?;
+                let decoder = H264Decoder::new(&flatten_sps_pps(&sps_list, &pps_list))?.with_nal_length_size(nal_length_size);
+                Ok(FrameIter::new(info.samples, Some(decoder), *opts))
             }
             other => Err(VideoError::UnsupportedCodec(codec_fourcc_hint(other))),
         },
         VideoProbe::Avi(info) => match info.codec {
-            VideoCodec::Mjpeg => Ok(FrameIter::new(bytes, info.samples, None, *opts)),
+            VideoCodec::Mjpeg => Ok(FrameIter::new(info.samples, None, *opts)),
             other => Err(VideoError::UnsupportedCodec(codec_fourcc_hint(other))),
         },
     }
 }
 // #endregion 🔖️Extract
-
 // #region 🔖️Tests
 #[cfg(test)]
 mod tests {
@@ -4059,7 +3246,7 @@ mod tests {
     #[test]
     fn video_error_display_messages() {
         assert_eq!(VideoError::Truncated.to_string(), "video container truncated");
-        assert_eq!(VideoError::BadBox("x").to_string(), "malformed container box/chunk: x");
+        assert_eq!(VideoError::Container("x".into()).to_string(), "video container error: x");
         assert_eq!(VideoError::NoVideoTrack.to_string(), "container has no video track");
         assert_eq!(VideoError::UnsupportedCodec(FourCc(*b"xvid")).to_string(), "unsupported video codec: xvid");
         assert_eq!(VideoError::H264(H264Error::NoSps).to_string(), "h264 error: h264 slice references an unparsed sps");
@@ -4075,7 +3262,11 @@ mod tests {
     }
     // #endregion 🔖️CoreTests
 
-    // #region 🔖️BmffTests
+    // #region 🔖️ContainerTests
+    /// 🔬 The real integration point with stdio: mux via `write_mp4_mjpeg` (→ stdio's real
+    /// `encode_mp4`), probe via `probe_mp4` (→ stdio's real `decode_mp4`), and check every sample's
+    /// recovered timestamp — proves the adapter's DTS-accumulation formula matches stdio's own
+    /// `duration`/`cts_offset` semantics, not just that types line up.
     #[test]
     fn write_mp4_mjpeg_probe_round_trip_reports_exact_frames() {
         let frames: Vec<Vec<u8>> = (0..5).map(|i| remodel_image::encode_jpeg(&synth_rgba(16, 16, 100 + i), 90)).collect();
@@ -4085,7 +3276,6 @@ mod tests {
         assert_eq!(info.codec, VideoCodec::Mjpeg);
         assert_eq!(info.width, 16);
         assert_eq!(info.height, 16);
-        assert!(info.samples.iter().all(|s| s.is_sync));
         for (i, s) in info.samples.iter().enumerate() {
             assert!((s.timestamp_ms - i as f64 * 100.0).abs() < 1.0, "sample {i} timestamp {}", s.timestamp_ms);
         }
@@ -4093,8 +3283,8 @@ mod tests {
 
     #[test]
     fn mp4_probe_detects_avc1_codec_from_avcc_sample_entry() {
-        let sps_pps = h264_enc_sps_pps(1, 1);
-        let mp4 = write_mp4_avc(&[h264_enc_i_pcm_sample(1, 1, 0, &[0; 256], &[0; 64], &[0; 64])], &sps_pps, 5.0);
+        let (sps_nal, pps_nal) = h264_enc_sps_pps_nals(1, 1);
+        let mp4 = write_mp4_avc(&[h264_enc_i_pcm_sample(1, 1, 0, &[0; 256], &[0; 64], &[0; 64])], &sps_nal, &pps_nal, 5.0);
         let info = probe_mp4(&mp4).expect("probes");
         assert_eq!(info.codec, VideoCodec::Avc);
         assert_eq!(info.width, 16);
@@ -4102,166 +3292,21 @@ mod tests {
         assert!(info.avc_config.is_some());
     }
 
+    /// 🔬 `probe_mp4` surfaces stdio's own decode error verbatim through `VideoError::Container`,
+    /// rather than swallowing or misclassifying it.
     #[test]
-    fn mp4_probe_truncated_at_every_prefix_length_errors_not_panics() {
-        let frames: Vec<Vec<u8>> = (0..3).map(|i| remodel_image::encode_jpeg(&synth_rgba(16, 16, 200 + i), 80)).collect();
-        let mp4 = write_mp4_mjpeg(&frames, 5.0);
-        for len in 0..mp4.len() {
-            let _ = probe_mp4(&mp4[..len]);
-        }
-        assert!(probe_mp4(&mp4).is_ok());
+    fn mp4_probe_wraps_stdio_decode_errors_as_container() {
+        assert!(matches!(probe_mp4(&[]), Err(VideoError::Container(_))));
+        assert!(matches!(probe_mp4(b"not an mp4 at all"), Err(VideoError::Container(_))));
     }
 
     #[test]
-    fn mp4_probe_co64_and_multi_entry_stsc_resolve_sample_offsets() {
-        let ftyp = mp4_box(b"ftyp", b"isom\0\0\x02\0isom");
-        let stsd = mp4_stsd(b"mjpg", 4, 4, &[]);
-        let stts = mp4_stts(3, 100);
-        let mut stsc_payload = vec![0u8; 4];
-        stsc_payload.extend_from_slice(&2u32.to_be_bytes());
-        stsc_payload.extend_from_slice(&1u32.to_be_bytes());
-        stsc_payload.extend_from_slice(&2u32.to_be_bytes());
-        stsc_payload.extend_from_slice(&1u32.to_be_bytes());
-        stsc_payload.extend_from_slice(&3u32.to_be_bytes());
-        stsc_payload.extend_from_slice(&1u32.to_be_bytes());
-        stsc_payload.extend_from_slice(&1u32.to_be_bytes());
-        let stsc = mp4_box(b"stsc", &stsc_payload);
-        let stsz = mp4_stsz(&[10, 10, 10]);
-        let mut co64_payload = vec![0u8; 4];
-        co64_payload.extend_from_slice(&2u32.to_be_bytes());
-        co64_payload.extend_from_slice(&1000u64.to_be_bytes());
-        co64_payload.extend_from_slice(&1020u64.to_be_bytes());
-        let co64 = mp4_box(b"co64", &co64_payload);
-        let stbl = [stsd, stts, stsc, stsz, co64].concat();
-        let minf = mp4_box(b"stbl", &stbl);
-        let mdia = [mp4_mdhd(1000, 300), mp4_hdlr(), mp4_box(b"minf", &minf)].concat();
-        let trak = mp4_box(b"mdia", &mdia);
-        let moov = mp4_box(b"moov", &mp4_box(b"trak", &trak));
-        let bytes = [ftyp, moov].concat();
-        let info = probe_mp4(&bytes).expect("probes hand-built co64/stsc tree");
-        assert_eq!(info.samples.len(), 3);
-        assert_eq!(info.samples[0].offset, 1000);
-        assert_eq!(info.samples[1].offset, 1010);
-        assert_eq!(info.samples[2].offset, 1020);
-    }
-
-    #[test]
-    fn mp4_probe_ctts_shifts_presentation_timestamps() {
-        let ftyp = mp4_box(b"ftyp", b"isom\0\0\x02\0isom");
-        let stsd = mp4_stsd(b"mjpg", 2, 2, &[]);
-        let stts = mp4_stts(2, 100);
-        let mut ctts_payload = vec![1u8, 0, 0, 0];
-        ctts_payload.extend_from_slice(&2u32.to_be_bytes());
-        ctts_payload.extend_from_slice(&1u32.to_be_bytes());
-        ctts_payload.extend_from_slice(&(50i32).to_be_bytes());
-        ctts_payload.extend_from_slice(&1u32.to_be_bytes());
-        ctts_payload.extend_from_slice(&(-20i32).to_be_bytes());
-        let ctts = mp4_box(b"ctts", &ctts_payload);
-        let stsc = mp4_stsc(2);
-        let stsz = mp4_stsz(&[5, 5]);
-        let stco = mp4_stco(500);
-        let stbl = [stsd, stts, ctts, stsc, stsz, stco].concat();
-        let minf = mp4_box(b"stbl", &stbl);
-        let mdia = [mp4_mdhd(1000, 200), mp4_hdlr(), mp4_box(b"minf", &minf)].concat();
-        let trak = mp4_box(b"mdia", &mdia);
-        let moov = mp4_box(b"moov", &mp4_box(b"trak", &trak));
-        let bytes = [ftyp, moov].concat();
-        let info = probe_mp4(&bytes).expect("probes hand-built ctts tree");
-        assert!((info.samples[0].timestamp_ms - 50.0).abs() < 1e-9);
-        assert!((info.samples[1].timestamp_ms - 80.0).abs() < 1e-9);
-    }
-
-    #[test]
-    fn mp4_probe_missing_ftyp_or_moov_errors() {
-        assert!(matches!(probe_mp4(&[]), Err(VideoError::BadBox(_))));
-        let ftyp_only = mp4_box(b"ftyp", b"isom");
-        assert!(matches!(probe_mp4(&ftyp_only), Err(VideoError::BadBox(_))));
-    }
-
-    #[test]
-    fn mp4_probe_audio_only_track_reports_no_video_track() {
-        let mut hdlr_payload = vec![0u8; 8];
-        hdlr_payload.extend_from_slice(b"soun");
-        hdlr_payload.extend_from_slice(&[0u8; 12]);
-        hdlr_payload.push(0);
-        let mdia = mp4_box(b"mdia", &mp4_box(b"hdlr", &hdlr_payload));
-        let moov = mp4_box(b"moov", &mp4_box(b"trak", &mdia));
-        let ftyp = mp4_box(b"ftyp", b"isom\0\0\x02\0isom");
-        let bytes = [ftyp, moov].concat();
+    fn mp4_probe_reports_no_video_track_when_none_present() {
+        let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, tracks: vec![], unknown_boxes: vec![] };
+        let bytes = mp4_engine::encode_mp4(&snapshot);
         assert!(matches!(probe_mp4(&bytes), Err(VideoError::NoVideoTrack)));
     }
 
-    #[test]
-    fn mp4_probe_stsd_zero_entries_errors() {
-        let ftyp = mp4_box(b"ftyp", b"isom\0\0\x02\0isom");
-        let mut stsd_payload = vec![0u8; 4];
-        stsd_payload.extend_from_slice(&0u32.to_be_bytes());
-        let stsd = mp4_box(b"stsd", &stsd_payload);
-        let stbl = [stsd, mp4_stts(1, 100), mp4_stsc(1), mp4_stsz(&[10]), mp4_stco(0)].concat();
-        let minf = mp4_box(b"stbl", &stbl);
-        let mdia = [mp4_mdhd(1000, 100), mp4_hdlr(), mp4_box(b"minf", &minf)].concat();
-        let moov = mp4_box(b"moov", &mp4_box(b"trak", &mp4_box(b"mdia", &mdia)));
-        let bytes = [ftyp, moov].concat();
-        assert!(matches!(probe_mp4(&bytes), Err(VideoError::BadBox("stsd has no sample entries"))));
-    }
-
-    #[test]
-    fn mp4_probe_stts_sample_count_mismatch_errors() {
-        let ftyp = mp4_box(b"ftyp", b"isom\0\0\x02\0isom");
-        let stsd = mp4_stsd(b"mjpg", 4, 4, &[]);
-        let stbl = [stsd, mp4_stts(2, 100), mp4_stsc(1), mp4_stsz(&[10]), mp4_stco(0)].concat();
-        let minf = mp4_box(b"stbl", &stbl);
-        let mdia = [mp4_mdhd(1000, 200), mp4_hdlr(), mp4_box(b"minf", &minf)].concat();
-        let moov = mp4_box(b"moov", &mp4_box(b"trak", &mp4_box(b"mdia", &mdia)));
-        let bytes = [ftyp, moov].concat();
-        assert!(matches!(probe_mp4(&bytes), Err(VideoError::BadBox("stts sample count does not match stsz"))));
-    }
-
-    #[test]
-    fn mp4_probe_ctts_sample_count_mismatch_errors() {
-        let ftyp = mp4_box(b"ftyp", b"isom\0\0\x02\0isom");
-        let stsd = mp4_stsd(b"mjpg", 4, 4, &[]);
-        let mut ctts_payload = vec![0u8; 4];
-        ctts_payload.extend_from_slice(&1u32.to_be_bytes());
-        ctts_payload.extend_from_slice(&2u32.to_be_bytes());
-        ctts_payload.extend_from_slice(&0i32.to_be_bytes());
-        let ctts = mp4_box(b"ctts", &ctts_payload);
-        let stbl = [stsd, mp4_stts(1, 100), ctts, mp4_stsc(1), mp4_stsz(&[10]), mp4_stco(0)].concat();
-        let minf = mp4_box(b"stbl", &stbl);
-        let mdia = [mp4_mdhd(1000, 100), mp4_hdlr(), mp4_box(b"minf", &minf)].concat();
-        let moov = mp4_box(b"moov", &mp4_box(b"trak", &mp4_box(b"mdia", &mdia)));
-        let bytes = [ftyp, moov].concat();
-        assert!(matches!(probe_mp4(&bytes), Err(VideoError::BadBox("ctts sample count does not match stsz"))));
-    }
-
-    #[test]
-    fn mp4_probe_stsc_resolved_sample_count_mismatch_errors() {
-        let ftyp = mp4_box(b"ftyp", b"isom\0\0\x02\0isom");
-        let stsd = mp4_stsd(b"mjpg", 4, 4, &[]);
-        let stbl = [stsd, mp4_stts(3, 100), mp4_stsc(2), mp4_stsz(&[10, 10, 10]), mp4_stco(0)].concat();
-        let minf = mp4_box(b"stbl", &stbl);
-        let mdia = [mp4_mdhd(1000, 300), mp4_hdlr(), mp4_box(b"minf", &minf)].concat();
-        let moov = mp4_box(b"moov", &mp4_box(b"trak", &mp4_box(b"mdia", &mdia)));
-        let bytes = [ftyp, moov].concat();
-        assert!(matches!(probe_mp4(&bytes), Err(VideoError::BadBox("stsc/stco resolved sample count does not match stsz"))));
-    }
-
-    #[test]
-    fn samples_per_chunk_for_errors_on_invalid_first_chunk_or_uncovered_chunk() {
-        assert!(matches!(samples_per_chunk_for(&[(0, 1, 1)], 1), Err(VideoError::BadBox(_))));
-        assert!(matches!(samples_per_chunk_for(&[(2, 1, 1)], 1), Err(VideoError::BadBox(_))));
-        assert_eq!(samples_per_chunk_for(&[(1, 3, 1), (5, 2, 1)], 4).unwrap(), 3);
-        assert_eq!(samples_per_chunk_for(&[(1, 3, 1), (5, 2, 1)], 5).unwrap(), 2);
-    }
-
-    #[test]
-    fn resolve_samples_rejects_empty_stsc() {
-        let sizes = SampleSizes::Uniform { size: 1, count: 1 };
-        assert!(matches!(resolve_samples(&[], &[0], &sizes), Err(VideoError::BadBox(_))));
-    }
-    // #endregion 🔖️BmffTests
-
-    // #region 🔖️AviTests
     #[test]
     fn write_avi_mjpg_probe_round_trip_reports_exact_frames() {
         let frames: Vec<Vec<u8>> = (0..4).map(|i| remodel_image::encode_jpeg(&synth_rgba(8, 8, 300 + i), 85)).collect();
@@ -4278,106 +3323,27 @@ mod tests {
     }
 
     #[test]
-    fn avi_probe_falls_back_to_movi_scan_without_idx1() {
-        let frames: Vec<Vec<u8>> = (0..3).map(|i| remodel_image::encode_jpeg(&synth_rgba(8, 8, 400 + i), 85)).collect();
-        let mut avih = Vec::new();
-        avih.extend_from_slice(&166_667u32.to_le_bytes());
-        avih.extend_from_slice(&0u32.to_le_bytes());
-        avih.extend_from_slice(&0u32.to_le_bytes());
-        avih.extend_from_slice(&0x10u32.to_le_bytes());
-        avih.extend_from_slice(&(frames.len() as u32).to_le_bytes());
-        avih.extend_from_slice(&0u32.to_le_bytes());
-        avih.extend_from_slice(&1u32.to_le_bytes());
-        avih.extend_from_slice(&0u32.to_le_bytes());
-        avih.extend_from_slice(&8u32.to_le_bytes());
-        avih.extend_from_slice(&8u32.to_le_bytes());
-        avih.extend_from_slice(&[0u8; 16]);
-        let mut strh = Vec::new();
-        strh.extend_from_slice(b"vids");
-        strh.extend_from_slice(b"MJPG");
-        strh.extend_from_slice(&[0u8; 4]);
-        strh.extend_from_slice(&[0u8; 4]);
-        strh.extend_from_slice(&0u32.to_le_bytes());
-        strh.extend_from_slice(&1000u32.to_le_bytes());
-        strh.extend_from_slice(&6000u32.to_le_bytes());
-        strh.extend_from_slice(&0u32.to_le_bytes());
-        strh.extend_from_slice(&(frames.len() as u32).to_le_bytes());
-        strh.extend_from_slice(&[0u8; 16]);
-        let mut strf = Vec::new();
-        strf.extend_from_slice(&40u32.to_le_bytes());
-        strf.extend_from_slice(&8i32.to_le_bytes());
-        strf.extend_from_slice(&8i32.to_le_bytes());
-        strf.extend_from_slice(&1u16.to_le_bytes());
-        strf.extend_from_slice(&24u16.to_le_bytes());
-        strf.extend_from_slice(b"MJPG");
-        strf.extend_from_slice(&[0u8; 20]);
-        let strl = [riff_chunk(b"strh", &strh), riff_chunk(b"strf", &strf)].concat();
-        let hdrl = [riff_chunk(b"avih", &avih), riff_list(b"strl", &strl)].concat();
-        let movi_chunks: Vec<u8> = frames.iter().flat_map(|f| riff_chunk(b"00dc", f)).collect();
-        let movi = riff_list(b"movi", &movi_chunks);
-        let body = [riff_list(b"hdrl", &hdrl), movi].concat();
-        let mut without_idx1 = Vec::new();
-        without_idx1.extend_from_slice(b"RIFF");
-        without_idx1.extend_from_slice(&(4 + body.len() as u32).to_le_bytes());
-        without_idx1.extend_from_slice(b"AVI ");
-        without_idx1.extend_from_slice(&body);
-        let info = probe_avi(&without_idx1).expect("falls back to movi scan when idx1 is absent");
-        assert_eq!(info.frame_count, 3);
+    fn avi_probe_rejects_non_riff_bytes() {
+        assert!(matches!(probe_avi(b"not an avi at all!!"), Err(VideoError::Container(_))));
     }
 
     #[test]
-    fn avi_probe_rejects_non_riff_magic() {
-        assert!(matches!(probe_avi(b"XXXXsize"), Err(VideoError::BadBox(_))));
-    }
-
-    #[test]
-    fn avi_probe_rejects_non_avi_riff_form() {
-        let mut bytes = Vec::new();
-        bytes.extend_from_slice(b"RIFF");
-        bytes.extend_from_slice(&0u32.to_le_bytes());
-        bytes.extend_from_slice(b"WAVE");
-        assert!(matches!(probe_avi(&bytes), Err(VideoError::BadBox(_))));
-    }
-
-    #[test]
-    fn avi_probe_audio_only_stream_reports_no_video_track() {
-        let mut avih = Vec::new();
-        avih.extend_from_slice(&166_667u32.to_le_bytes());
-        avih.extend_from_slice(&0u32.to_le_bytes());
-        avih.extend_from_slice(&0u32.to_le_bytes());
-        avih.extend_from_slice(&0x10u32.to_le_bytes());
-        avih.extend_from_slice(&0u32.to_le_bytes());
-        avih.extend_from_slice(&0u32.to_le_bytes());
-        avih.extend_from_slice(&1u32.to_le_bytes());
-        avih.extend_from_slice(&0u32.to_le_bytes());
-        avih.extend_from_slice(&8u32.to_le_bytes());
-        avih.extend_from_slice(&8u32.to_le_bytes());
-        avih.extend_from_slice(&[0u8; 16]);
-        let mut strh = Vec::new();
-        strh.extend_from_slice(b"auds");
-        strh.extend_from_slice(b"NONE");
-        strh.extend_from_slice(&[0u8; 4]);
-        strh.extend_from_slice(&[0u8; 4]);
-        strh.extend_from_slice(&0u32.to_le_bytes());
-        strh.extend_from_slice(&1000u32.to_le_bytes());
-        strh.extend_from_slice(&6000u32.to_le_bytes());
-        strh.extend_from_slice(&0u32.to_le_bytes());
-        strh.extend_from_slice(&0u32.to_le_bytes());
-        strh.extend_from_slice(&[0u8; 16]);
-        let strl = riff_chunk(b"strh", &strh);
-        let hdrl = [riff_chunk(b"avih", &avih), riff_list(b"strl", &strl)].concat();
-        let movi = riff_list(b"movi", &[]);
-        let body = [riff_list(b"hdrl", &hdrl), movi].concat();
-        let mut bytes = Vec::new();
-        bytes.extend_from_slice(b"RIFF");
-        bytes.extend_from_slice(&(4 + body.len() as u32).to_le_bytes());
-        bytes.extend_from_slice(b"AVI ");
-        bytes.extend_from_slice(&body);
+    fn avi_probe_reports_no_video_track_when_only_audio_present() {
+        let snapshot = AviSnapshot {
+            schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
+            main_header: AviMainHeader { micro_sec_per_frame: 0, max_bytes_per_sec: 0, padding_granularity: 0, flags: 0, total_frames: 0, initial_frames: 0, streams: 1, suggested_buffer_size: 0, width: 0, height: 0, reserved: vec![0, 0, 0, 0] },
+            streams: vec![AviStream {
+                strh: AviStreamHeader { fcc_type: "auds".into(), fcc_handler: "NONE".into(), flags: 0, priority: 0, language: 0, initial_frames: 0, scale: 1, rate: 44100, start: 0, length: 0, suggested_buffer_size: 0, quality: 0, sample_size: 2, rc_frame_left: 0, rc_frame_top: 0, rc_frame_right: 0, rc_frame_bottom: 0 },
+                strf: AviStreamFormat::WaveFormat { format_tag: 1, channels: 1, samples_per_sec: 44100, avg_bytes_per_sec: 88200, block_align: 2, bits_per_sample: 16, extra: vec![] },
+                chunks: vec![],
+            }],
+            idx1_present: false,
+            unknown_chunks: vec![],
+        };
+        let bytes = avi_engine::encode_avi(&snapshot);
         assert!(matches!(probe_avi(&bytes), Err(VideoError::NoVideoTrack)));
     }
-    // #endregion 🔖️AviTests
 
-    // #region 🔖️ProbeTests
     #[test]
     fn probe_dispatches_by_riff_magic() {
         let frames: Vec<Vec<u8>> = (0..2).map(|i| remodel_image::encode_jpeg(&synth_rgba(4, 4, 900 + i), 80)).collect();
@@ -4396,7 +3362,7 @@ mod tests {
         assert_eq!(codec_fourcc_hint(VideoCodec::Mjpeg), FourCc(*b"mjpg"));
         assert_eq!(codec_fourcc_hint(VideoCodec::Unknown(FourCc(*b"zzzz"))), FourCc(*b"zzzz"));
     }
-    // #endregion 🔖️ProbeTests
+    // #endregion 🔖️ContainerTests
 
     // #region 🔖️ExtractTests
     #[test]
@@ -4438,13 +3404,16 @@ mod tests {
 
     #[test]
     fn extract_frames_rejects_unsupported_codec_with_provenance() {
-        let ftyp = mp4_box(b"ftyp", b"isom\0\0\x02\0isom");
-        let stsd = mp4_stsd(b"hvc1", 4, 4, &[]);
-        let stbl = [stsd, mp4_stts(1, 100), mp4_stsc(1), mp4_stsz(&[10]), mp4_stco(0)].concat();
-        let minf = mp4_box(b"stbl", &stbl);
-        let mdia = [mp4_mdhd(1000, 100), mp4_hdlr(), mp4_box(b"minf", &minf)].concat();
-        let moov = mp4_box(b"moov", &mp4_box(b"trak", &mp4_box(b"mdia", &mdia)));
-        let bytes = [ftyp, moov].concat();
+        let track = Mp4Track {
+            track_id: 1,
+            timescale: 1000,
+            codec: Mp4Codec::Other { fourcc: "hvc1".into(), raw: visual_sample_entry_box(b"hvc1", 4, 4) },
+            width: 4,
+            height: 4,
+            samples: vec![Mp4Sample { data: vec![0; 10], duration: 100, cts_offset: 0, sync: true }],
+        };
+        let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, tracks: vec![track], unknown_boxes: vec![] };
+        let bytes = mp4_engine::encode_mp4(&snapshot);
         let info = probe_mp4(&bytes).expect("hvc1 still probes for provenance");
         assert_eq!(info.codec, VideoCodec::Hevc);
         let opts = VideoIngestOptions { stride: 1, max_frames: 0, max_long_edge_px: 0 };
@@ -4462,47 +3431,19 @@ mod tests {
 
     #[test]
     fn extract_frames_avi_rejects_unsupported_codec_with_provenance() {
-        let mut avih = Vec::new();
-        avih.extend_from_slice(&166_667u32.to_le_bytes());
-        avih.extend_from_slice(&0u32.to_le_bytes());
-        avih.extend_from_slice(&0u32.to_le_bytes());
-        avih.extend_from_slice(&0x10u32.to_le_bytes());
-        avih.extend_from_slice(&0u32.to_le_bytes());
-        avih.extend_from_slice(&0u32.to_le_bytes());
-        avih.extend_from_slice(&1u32.to_le_bytes());
-        avih.extend_from_slice(&0u32.to_le_bytes());
-        avih.extend_from_slice(&8u32.to_le_bytes());
-        avih.extend_from_slice(&8u32.to_le_bytes());
-        avih.extend_from_slice(&[0u8; 16]);
-        let mut strh = Vec::new();
-        strh.extend_from_slice(b"vids");
-        strh.extend_from_slice(b"XVID");
-        strh.extend_from_slice(&[0u8; 4]);
-        strh.extend_from_slice(&[0u8; 4]);
-        strh.extend_from_slice(&0u32.to_le_bytes());
-        strh.extend_from_slice(&1000u32.to_le_bytes());
-        strh.extend_from_slice(&6000u32.to_le_bytes());
-        strh.extend_from_slice(&0u32.to_le_bytes());
-        strh.extend_from_slice(&0u32.to_le_bytes());
-        strh.extend_from_slice(&[0u8; 16]);
-        let mut strf = Vec::new();
-        strf.extend_from_slice(&40u32.to_le_bytes());
-        strf.extend_from_slice(&8i32.to_le_bytes());
-        strf.extend_from_slice(&8i32.to_le_bytes());
-        strf.extend_from_slice(&1u16.to_le_bytes());
-        strf.extend_from_slice(&24u16.to_le_bytes());
-        strf.extend_from_slice(b"XVID");
-        strf.extend_from_slice(&[0u8; 20]);
-        let strl = [riff_chunk(b"strh", &strh), riff_chunk(b"strf", &strf)].concat();
-        let hdrl = [riff_chunk(b"avih", &avih), riff_list(b"strl", &strl)].concat();
-        let movi = riff_list(b"movi", &[]);
-        let body = [riff_list(b"hdrl", &hdrl), movi].concat();
-        let mut bytes = Vec::new();
-        bytes.extend_from_slice(b"RIFF");
-        bytes.extend_from_slice(&(4 + body.len() as u32).to_le_bytes());
-        bytes.extend_from_slice(b"AVI ");
-        bytes.extend_from_slice(&body);
-        let info = probe_avi(&bytes).expect("probes for provenance even with an undecodable codec");
+        let snapshot = AviSnapshot {
+            schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
+            main_header: AviMainHeader { micro_sec_per_frame: 166_667, max_bytes_per_sec: 0, padding_granularity: 0, flags: 0x10, total_frames: 0, initial_frames: 0, streams: 1, suggested_buffer_size: 0, width: 8, height: 8, reserved: vec![0, 0, 0, 0] },
+            streams: vec![AviStream {
+                strh: AviStreamHeader { fcc_type: "vids".into(), fcc_handler: "XVID".into(), flags: 0, priority: 0, language: 0, initial_frames: 0, scale: 1000, rate: 6000, start: 0, length: 0, suggested_buffer_size: 0, quality: 0, sample_size: 0, rc_frame_left: 0, rc_frame_top: 0, rc_frame_right: 8, rc_frame_bottom: 8 },
+                strf: AviStreamFormat::BitmapInfo { size: 40, width: 8, height: 8, planes: 1, bit_count: 24, compression: "XVID".into(), size_image: 0, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
+                chunks: vec![],
+            }],
+            idx1_present: false,
+            unknown_chunks: vec![],
+        };
+        let bytes = avi_engine::encode_avi(&snapshot);
+        let info = probe_avi(&bytes).expect("XVID still probes for provenance");
         assert_eq!(info.codec, VideoCodec::Unknown(FourCc(*b"XVID")));
         let opts = VideoIngestOptions { stride: 1, max_frames: 0, max_long_edge_px: 0 };
         assert!(matches!(extract_frames(&bytes, &opts), Err(VideoError::UnsupportedCodec(_))));
@@ -4532,14 +3473,6 @@ mod tests {
     fn select_sample_indices_max_frames_zero_is_unbounded() {
         let opts = VideoIngestOptions { stride: 4, max_frames: 0, max_long_edge_px: 0 };
         assert_eq!(select_sample_indices(10, &opts), vec![0, 4, 8]);
-    }
-
-    #[test]
-    fn frame_iter_sample_bytes_errors_on_overflow_and_out_of_bounds() {
-        let overflow = vec![SampleInfo { offset: u64::MAX, size: 10, timestamp_ms: 0.0, is_sync: true }];
-        assert!(matches!(frame_iter_sample_bytes(b"hello", &overflow, 0), Err(VideoError::Truncated)));
-        let out_of_bounds = vec![SampleInfo { offset: 100, size: 10, timestamp_ms: 0.0, is_sync: true }];
-        assert!(matches!(frame_iter_sample_bytes(b"short", &out_of_bounds, 0), Err(VideoError::Truncated)));
     }
     // #endregion 🔖️ExtractTests
 
@@ -5134,12 +4067,12 @@ mod tests {
             let (mb_w, mb_h) = (3, 2);
             let (width, height) = (mb_w * 16, mb_h * 16);
             let (luma, cb, cr) = pcm_frame(mb_w, mb_h, 2026);
-            let sps_pps = h264_enc_sps_pps(mb_w, mb_h);
+            let (sps_nal, pps_nal) = h264_enc_sps_pps_nals(mb_w, mb_h);
             let mut samples = vec![h264_enc_i_pcm_sample(mb_w, mb_h, 0, &luma, &cb, &cr)];
             for frame_num in 1..8u32 {
                 samples.push(h264_enc_p_skip_sample(mb_w, mb_h, frame_num));
             }
-            let mp4 = write_mp4_avc(&samples, &sps_pps, 12.0);
+            let mp4 = write_mp4_avc(&samples, &sps_nal, &pps_nal, 12.0);
 
             let probed = probe_mp4(&mp4).expect("probes the muxed avc stream");
             assert_eq!(probed.codec, VideoCodec::Avc);

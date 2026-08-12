@@ -1,6 +1,6 @@
-; abnf stdio.semio.model mutation (binary form)
-; `encode_op`/`decode_op` carry NO envelope -- the binary form is exactly `serde_json::to_vec` of
-; the tagged `SemioModelMutation` enum (see the sibling 📡️component.protocol.semio and
-; ../📝️text/📖️component.grammar.semio for the JSON grammar those bytes decode as).
-document = json-bytes
-json-bytes = 1*OCTET  ; UTF-8 JSON text matching the text-facet `line` production, to end of stream
+; ABNF-style descriptive mirror of `stdio.semio.model`'s real op binary frame -- see the
+; authoritative `📡️component.protocol.semio` for the conformance-tested version.
+document = format tag payload
+format   = %x01                  ; OP_BINARY_FORMAT
+tag      = OCTET                 ; SemioModelMutation variant ordinal, see OP_KEYWORDS
+payload  = *OCTET                ; opaque "key=value ..." UTF-8 argument tail, see component.rs

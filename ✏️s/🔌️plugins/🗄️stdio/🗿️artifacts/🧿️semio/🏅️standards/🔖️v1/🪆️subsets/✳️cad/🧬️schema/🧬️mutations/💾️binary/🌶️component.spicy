@@ -1,9 +1,10 @@
 module Stdio_semio_cad_mutations;
 
-# protocol::OpText encode_op/decode_op payload for s.stdio.semio.cad.mutations -- NO semio
-# envelope: encode_op is print_op().into_bytes() verbatim, ASCII text in the
-# ../📝️text/📖️component.grammar.semio "keyword arg=value ..." grammar.
-
-public type Document = unit {
-    payload: bytes &eod;   # print_op() output; see ../📝️text/📖️component.grammar.semio
+# Real binary `OpBinary` frame: `format` (1 byte) + `tag` (1 byte, the `SemioCadMutation` variant
+# ordinal), then one opaque `payload` tail holding the variant's `key=value ...` argument text (see
+# the sibling `📡️component.protocol.semio`'s comment).
+type Document = unit {
+    format: uint8;
+    tag: uint8;
+    payload: bytes &eod;
 };

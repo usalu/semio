@@ -49,7 +49,7 @@ mod document_vcs {
 
         #[wasm_bindgen(js_name = projectionJson)]
         pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]

@@ -1,6 +1,47 @@
-dialect grammar stdio.ifc.2x3.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.ifc.2x3' NL
-body = payload NL?
-payload = *OCTET
+# 📖️ Real `OpText::print_op`/`parse_op` shape for `Ifc2x3Mutation`, hand-rolled since
+# `#[derive(dsl::DslOps)]` fails (`Part21Value`/`Part21Instance`/`Ifc2x3Snapshot`: no `DslField` impl
+# — identical root cause `4`'s own `IfcMutation` doc comment documents for the isomorphic shape).
+# Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: replaces the prior
+# literal-JSON `serde_json::to_string`/`from_str` shortcut (the LAST standard-specific
+# `POLICY_STDIO_JSON_TRANSFER_BAN` violation named anywhere in this program's own census) AND the old
+# ABNF placeholder this file used to contain. One `keyword key=value ...` line, space-separated —
+# every literal below copied verbatim from `print_ifc2x3_mutation`'s real match arms.
+dialect grammar
+grammar stdio.ifc.2x3.mutation
+start document
+
+document = no-mutation | set-snapshot | upsert-instance | remove-instance | set-header
+
+no-mutation = "no-mutation"
+set-snapshot = "set-snapshot" "snapshot" "=" ifc2x3-snapshot
+upsert-instance = "upsert-instance" "instance" "=" part21-instance
+remove-instance = "remove-instance" "id" "=" INT
+set-header = "set-header" "header" "=" part21-header
+
+# `Part21Value`'s tag scheme (`enc_part21_value`/`dec_part21_value`) — same isomorphic shape `4`'s
+# own `IfcValue` tag scheme uses: `U`/`D` Unset/Derived bare letters, `I[n]` Integer, `R[n]` Real,
+# `S[hex]` Str, `E[hex]` Enum, `F[n]` reFerence, `A[items]` List (recursive), `T[hex,[items]]` Typed
+# (recursive).
+part21-value = "U" | "D" | "I" "[" INT "]" | "R" "[" real-num "]" | "S" "[" hex "]" | "E" "[" hex "]" | "F" "[" INT "]" | "A" "[" value-csv "]" | "T" "[" hex "," "[" value-csv "]" "]"
+real-num = INT | FLOAT
+value-csv = {part21-value {"," part21-value}*}?
+# `enc_part21_value_list`: a SELF-bracketed comma list — every reference to this production already
+# includes its own `[` `]`, never re-wrapped by the caller.
+part21-value-list = "[" value-csv "]"
+
+# `enc_part21_header`/`part21-header`: `[fileDescriptionList,fileNameList,fileSchemaList]` — three
+# self-bracketed `part21-value-list`s (`Part21Header` stores each HEADER record as a raw
+# `Vec<Part21Value>`, never a typed struct).
+part21-header = "[" part21-value-list "," part21-value-list "," part21-value-list "]"
+
+# `enc_part21_instance`/`part21-instance`: `[id,[entity,entity,...]]` — 1 entry for a simple
+# instance, 2+ for a real spec-legal COMPLEX instance (ISO 10303-21 §4.2, `Part21Instance.entities`).
+# Each entity is `[hexname,ARGSLIST]` (`ARGSLIST` = a self-bracketed `part21-value-list`).
+entity-item = "[" hex "," part21-value-list "]"
+entity-list = {entity-item {"," entity-item}*}?
+part21-instance = "[" INT "," "[" entity-list "]" "]"
+instance-list = "[" instance-csv "]"
+instance-csv = {part21-instance {"," part21-instance}*}?
+
+# `enc_ifc2x3_snapshot` (only reachable via `SetSnapshot`'s payload): `[schema,header,[instances]]`.
+ifc2x3-snapshot = "[" hex "," part21-header "," instance-list "]"

@@ -8,6 +8,8 @@ use crate::artifacts::fem3d::engine::Fem3dError;
 use crate::artifacts::fem3d::{Fem3dSnapshot, FemElement, FemLoad};
 use crate::model::{Bar3, Dof, Element, Frame3, MemberUdl, NodalLoad, Node, Support};
 use std::collections::HashMap;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 
 // #region 🔖️SolidMeshing
 /// 📐️ Unsigned area of triangle `(p0, p1, p2)` via the shoelace formula — mirrors `fem_2d`'s helper of
@@ -126,6 +128,41 @@ fn area_load_nodal_loads_3d(solid: &MeshedSolid, pressure: f64) -> Vec<NodalLoad
     }
     tributary.into_iter().map(|(node_id, trib)| NodalLoad { node_id, dof: Dof::Tz, value: -pressure * trib }).collect()
 }
+
+//#region 🔖️SemioMeshBridge
+/// 🌉️ Builds a real `SemioMeshSnapshot` from every `FemSolid`'s genuinely triangulated,
+/// height-extruded boundary: `crate::mesh::triangulate` the footprint (same call
+/// `resolve_geometry` above already makes before its own `extrude_tri_mesh`/`split_to_tets`/
+/// `Tet4` pipeline), extruded by the solid's OWN `height` (offset by `base_z`), then
+/// `boundary_faces` for the outward-oriented outer surface — real, tested geometry (`crate::mesh`'s
+/// own volume/area-preservation tests), not fabricated bytes. Feeds the `s.stdio.obj`/`s.stdio.stl`
+/// export leaves, which hand this to stdio's real `SemioMeshToObj`/`SemioMeshToStl` bridge +
+/// `encode_obj`/`encode_stl_ascii` grammar — this function does no byte-level encoding itself.
+///
+/// `FemElement::Bar`/`Frame` line members carry no real cross-section PROFILE in the persisted
+/// data (only `area`/`iy`/`iz`/`j`, scalar section properties) so no honest 3D solid can be
+/// derived from them — they contribute no geometry here. A pure bar/frame model (no `solids`)
+/// yields an empty, still-structurally-valid mesh (and thus an empty .obj/.stl) rather than a
+/// fabricated shape.
+pub(crate) fn build_semio_mesh_snapshot(doc: &Fem3dSnapshot) -> SemioMeshSnapshot {
+    let mut meshes = Vec::with_capacity(doc.solids.len());
+    for solid in &doc.solids {
+        let domain = crate::mesh::PlanarDomain { outer: solid.outline.clone(), holes: solid.holes.clone() };
+        let opts = crate::mesh::MeshOpts { max_edge: solid.mesh_size, min_angle_deg: 20.0 };
+        let Ok(tri_mesh) = crate::mesh::triangulate(&domain, &opts) else { continue };
+        let volume = crate::mesh::extrude_tri_mesh(&tri_mesh, solid.height, 1);
+        let tets = crate::mesh::split_to_tets(&volume);
+        let faces = crate::mesh::boundary_faces(&tets);
+        let positions: Vec<SemioPoint3> = tets.points.iter().map(|p| SemioPoint3 { x: p[0], y: p[1], z: p[2] + solid.base_z }).collect();
+        let indices: Vec<u32> = faces.iter().flat_map(|f| f.iter().copied()).collect();
+        meshes.push(SemioMesh {
+            id: solid.id.clone(),
+            primitives: vec![SemioPrimitive { id: format!("{}-surface", solid.id), topology: SemioTopology::Triangles, positions, indices, ..Default::default() }],
+        });
+    }
+    SemioMeshSnapshot { meshes, ..Default::default() }
+}
+//#endregion 🔖️SemioMeshBridge
 
 /// 🌬️ Translates one `FemLoadCase`'s loads into `(nodal_loads, member_loads)`, resolving `Area` loads
 /// against the already-meshed `solids` — shared by `build_model`, `fem3d_solve_all`, and buckling's

@@ -6,7 +6,7 @@ import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/kernel-
 // #endregion 🧲️Header
 
 
-import { AttributeTable, EdgeRef, Expr, FaceRef, InteractionEvent, InteractionSpec, Model, ModelEntityKind, ModelSpace, ModelSpaceJson, ObjectRef, SelectionEvent, SelectionSpec, SelectionTarget, SolidRef, StepEntityWriter, TypologyRef, VertexRef, WireRef, actionAvailableInModelDefinition, actionOwnedByModelDefinition, applyTransformation, assembleStepFile, buildModelPrimitiveDocument, compileInteraction, computeStat, countViewObjectsForModelDefinition, defaultModelDefinitionId, deletableObjectIdsFromSelection, deleteObjectsFromModel, derivePropertyValue, emitSpatialUdaProperty, evalExpr, evalGuard, expandSelectionTargetsForAccept, formatStatOutputValue, hashModelPrimitives, hashModelVertices, hashSolidRecord, hashVertexPosition, isCallableOnlyInteraction, isFinalInteractionState, isShapeModelDefinition, listApplicablePropertyDefinitionsForModelDefinition, listAttributeDefinitionsForModelDefinitionEntity, listModelDefinitionAttributeDefinitions, listModelDefinitionManifests, listModelDefinitionPropertyDefinitions, listModelDefinitionStatDefinitions, listModelDefinitionTypologies, listModelObjectsForModelDefinition, listPropertyDefinitionsForModelDefinition, listSelectionOperationsForModelDefinition, listSpatialInteractionsForModelDefinition, listStatDefinitionsForModelDefinition, listTransformationsFromModelDefinition, listTransformationsIntoModelDefinition, listTypologiesForModelDefinition, loadAttributeDefinition, loadPropertyDefinition, loadStatDefinition, loadTransformation, loadTypology, mergeInteractionCallOutputs, modelDefinitionIdForInteraction, objectMatchesTypologyPrimitives, objectsForStatCompute, parseInteractionSpec, parseModelJson, parseSpatialUdaPayloads, parseStepEntityMap, resolveModelDefinitionScope, resolveTypologyStyle, selectionEventMatches, stepEscape, stepNumber, stepSpatialFileHeader, validateAttributeValue } from "../📐️geometry/🟦️component.ts";
+import { AttributeTable, EdgeRef, Expr, FaceRef, InteractionEvent, InteractionSpec, Model, ModelEntityKind, ModelSpace, ModelSpaceJson, ObjectRef, SelectionEvent, SelectionSpec, SelectionTarget, SolidRef, TypologyRef, VertexRef, WireRef, actionAvailableInModelDefinition, actionOwnedByModelDefinition, applyTransformation, buildModelPrimitiveDocument, compileInteraction, computeStat, countViewObjectsForModelDefinition, defaultModelDefinitionId, deletableObjectIdsFromSelection, deleteObjectsFromModel, derivePropertyValue, evalExpr, evalGuard, expandSelectionTargetsForAccept, formatStatOutputValue, hashModelPrimitives, hashModelVertices, hashSolidRecord, hashVertexPosition, isCallableOnlyInteraction, isFinalInteractionState, isShapeModelDefinition, listApplicablePropertyDefinitionsForModelDefinition, listAttributeDefinitionsForModelDefinitionEntity, listModelDefinitionAttributeDefinitions, listModelDefinitionManifests, listModelDefinitionPropertyDefinitions, listModelDefinitionStatDefinitions, listModelDefinitionTypologies, listModelObjectsForModelDefinition, listPropertyDefinitionsForModelDefinition, listSelectionOperationsForModelDefinition, listSpatialInteractionsForModelDefinition, listStatDefinitionsForModelDefinition, listTransformationsFromModelDefinition, listTransformationsIntoModelDefinition, listTypologiesForModelDefinition, loadAttributeDefinition, loadPropertyDefinition, loadStatDefinition, loadTransformation, loadTypology, mergeInteractionCallOutputs, modelDefinitionIdForInteraction, objectMatchesTypologyPrimitives, objectsForStatCompute, parseInteractionSpec, parseModelJson, resolveModelDefinitionScope, resolveTypologyStyle, selectionEventMatches, validateAttributeValue } from "../📐️geometry/🟦️component.ts";
 import { ensureTypologyObjectFromCreateDiff, listConstructableTypologiesForModelDefinition, typologyConstructAssetIds, typologyConstructCommitActionForMode, typologyConstructKitByInteraction, typologyConstructModeActionIds, typologyHasNativeConstructKit, typologyIdForInteractionCommit } from "../🧬️typology/🟦️component.ts";
 import { EMPTY_MODEL_DIFF, ModelDiff, SpatialKernel, SpatialPreviewKernel, appendCommittedMeshFaceToModel, applyModelDiff, isEmptyModelDiff } from "../🗺️spatial/🟦️component.ts";
 import { CAD_GUMBALL_HIDDEN, SelectionOperationInteractionDef, cadGumballConfigVisible, clampPointAlongDirection, collectGeometrySelectionTargets, executeSelectionApply, interactionControlForState, interactionLengthEntryForState, interactionLengthEntryLiveDistance, interactionNumericEntryCommitEvent, interactionNumericEntryExplicitLockValue, interactionNumericEntryLockedValue, interactionRecordsDocumentHistory, interactionStepFinalizeEvent, listActionDefs, listModelDefinitionActionSpecs, modelDefinitionActionRegistry, parseActionSpec, pureTsStateEngineProvider, readInteractionContextVec3, resolveDisplay, runRegisteredAction, runSelectionApply, selectionTargetsFromActionResult, selectionTargetsFromContext, selectionTargetsPointTransformDiff } from "../🎬️actions/🟦️component.ts";
@@ -626,31 +626,6 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@semio-tech/cad-js/core step roundtrip helpers", () => {
-    it("stepEscape quotes apostrophes", () => {
-      expect(stepEscape("a'b")).toBe("'a''b'");
-    });
-
-    it("stepNumber formats integers with trailing dot", () => {
-      expect(stepNumber(3)).toBe("3.");
-      expect(stepNumber(0.25)).toBe("0.25");
-    });
-
-    it("parseStepEntityMap reads DATA entities", () => {
-      const text = "DATA;\n#10 = CARTESIAN_POINT('O', (0.,0.,0.));\nENDSEC;";
-      const map = parseStepEntityMap(text);
-      expect(map.get(10)).toContain("CARTESIAN_POINT");
-    });
-
-    it("emitSpatialUdaProperty roundtrips through parseSpatialUdaPayloads", () => {
-      const writer = new StepEntityWriter();
-      writer.emit(10, "GEOMETRIC_REPRESENTATION_CONTEXT(3)");
-      emitSpatialUdaProperty(writer, 12, "spatial.modelspace", '{"revision":1}', "System_Generated");
-      const file = assembleStepFile(stepSpatialFileHeader("t.stp", "2026-05-28T00:00:00Z"), writer);
-      const uda = parseSpatialUdaPayloads(parseStepEntityMap(file));
-      expect(JSON.parse(uda["spatial.modelspace"]!).revision).toBe(1);
-    });
-  });
 
   describe("@semio-tech/cad-js/core interactions", () => {
     async function bootTransformSelection(rt: InteractionRuntime, targets: readonly SelectionTarget[]): Promise<void> {

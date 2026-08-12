@@ -16,7 +16,7 @@ use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
 pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
-pub use dsl_derive::{DslDiff, DslArtifact, DslEnum, DslOps, DslRecord, DslScalar};
+pub use dsl_derive::{DslDiff, DslArtifact, DslEnum, DslOps, DslRecord, DslScalar, Mutations};
 pub use crate::os_dsl::schema::*;
 
 pub use crate::os_dsl::schema::{from_dsl_value, to_dsl_value};

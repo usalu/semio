@@ -1,8 +1,12 @@
 module Stdio_semio_mesh_mutation;
 
-# BINARY representation — identical to the TEXT grammar, UTF-8 encoded, no additional framing:
-# encode_op() is print_op().into_bytes() verbatim (../🦀️component.rs's `OpCodecs` region).
+# Spicy mirror (descriptive, not test-parsed — the real byte-level walker is
+# ../📡️component.protocol.semio, walked by dsl::walk_protocol) for the REAL binary
+# `OpBinary::encode_op`/`decode_op` frame (../../🦀️component.rs) — replaces the old
+# `print_op().into_bytes()` text-as-binary shortcut.
 
 public type Envelope = unit {
-    text_utf8: bytes &eod;   # UTF-8 bytes of the print_op() text grammar
+    format: uint8;   # OP_BINARY_FORMAT, currently 1
+    tag: uint8;      # SemioMeshMutation variant ordinal — see OP_KEYWORDS in ../../🦀️component.rs
+    payload: bytes &eod;   # UTF-8 "key=value ..." argument text (empty for no-mutation)
 };

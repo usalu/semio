@@ -1,4 +1,8 @@
-; stdio.semio.video mutations binary layout: UTF-8 bytes of the text op grammar (../📝️text)
-; verbatim, no separate binary framing — protocol::OpBinary::encode_op is documented to equal
-; print_op().into_bytes() (matching DocxMutation's own hand-rolled codec).
-document = *(UTF8-OCTET)
+; ABNF mirror (descriptive, not test-parsed — the real byte-level walker is
+; ../📡️component.protocol.semio, walked by dsl::walk_protocol) for s.stdio.semio.video mutations
+; (binary) — REAL binary op frame (video wave, replacing the old print_op().into_bytes()
+; text-as-binary shortcut).
+document  = format tag payload
+format    = OCTET      ; OP_BINARY_FORMAT, currently 1
+tag       = OCTET      ; SemioVideoMutation variant ordinal, 0-8 — see ../🦀️component.rs's OP_KEYWORDS
+payload   = *OCTET     ; the variant's own key=value ... argument text, empty for no-mutation

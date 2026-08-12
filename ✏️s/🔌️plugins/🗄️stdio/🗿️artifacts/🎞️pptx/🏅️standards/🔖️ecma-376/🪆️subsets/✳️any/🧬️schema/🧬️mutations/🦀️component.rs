@@ -10,6 +10,10 @@ use crate::artifacts::pptx::schema::diff::{
     enc_ct_entry, enc_list, enc_owner_rels, enc_paragraph, enc_part, enc_shape, enc_slide, enc_str, enc_transform,
     split_top_level, strip_brackets,
 };
+use crate::artifacts::pptx::schema::diff::{
+    dec_paragraph_bin, dec_part_bin, dec_rel_bin, dec_shape_bin, dec_slide_bin, dec_transform_bin, enc_paragraph_bin, enc_part_bin,
+    enc_rel_bin, enc_shape_bin, enc_slide_bin, enc_transform_bin, read_str_lp, write_str_lp,
+};
 use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSlide, PptxTransform};
 use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::zip::opc::OpcPackage;
@@ -17,6 +21,7 @@ use protocol::{Mutation, OpText};
 #[cfg(test)]
 use protocol::OpBinary;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.pptx`. Addresses `presentation.slides` by index
@@ -283,17 +288,251 @@ impl protocol::OpText for PptxMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim, same simplification `PptxDiff`'s hand-rolled codec uses.
+//#region 🔖️OpBinaryCodec
+/// 🧪️ FG-wave: real recursive binary primitives backing the upgraded `OpBinary` impl below --
+/// mirrors `📜️docx/…/🧬️mutations/🦀️component.rs`'s own `enc_docx_snapshot_bin`/`enc_opc_package_bin`
+/// shape, reusing `store::pack_rt::write_varint_u64`/`store::ByteReader` plus `PptxDiff`'s own
+/// `write_str_lp`/`read_str_lp`/`enc_shape_bin`/`dec_shape_bin`/`enc_slide_bin`/`dec_slide_bin`/
+/// `enc_transform_bin`/`dec_transform_bin`/`enc_part_bin`/`dec_part_bin`/`enc_rel_bin`/`dec_rel_bin`
+/// (`../🔺️diff/🦀️component.rs`, `pub(crate)` to this artifact).
+///
+/// 🌱 Full (non-diff) `OpcPackage`/`PptxSnapshot` binary codecs -- only `SetSnapshot`'s
+/// whole-payload encoding needs these, mirroring this file's own `enc_opc_package`/`enc_snapshot`
+/// text forms above. Relationship owners sorted for a deterministic encoding, same `HashMap`
+/// -iteration-order caveat those text forms document.
+fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, pkg.parts.len() as u64);
+    for p in &pkg.parts {
+        enc_part_bin(p, out);
+    }
+    store::pack_rt::write_varint_u64(out, pkg.content_types.defaults.len() as u64);
+    for e in &pkg.content_types.defaults {
+        write_str_lp(out, &e.0);
+        write_str_lp(out, &e.1);
+    }
+    store::pack_rt::write_varint_u64(out, pkg.content_types.overrides.len() as u64);
+    for e in &pkg.content_types.overrides {
+        write_str_lp(out, &e.0);
+        write_str_lp(out, &e.1);
+    }
+    let mut owners: Vec<&String> = pkg.relationships.keys().collect();
+    owners.sort();
+    store::pack_rt::write_varint_u64(out, owners.len() as u64);
+    for owner in owners {
+        write_str_lp(out, owner);
+        let list = &pkg.relationships[owner];
+        store::pack_rt::write_varint_u64(out, list.len() as u64);
+        for r in list {
+            enc_rel_bin(r, out);
+        }
+    }
+}
+fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage, String> {
+    let part_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut parts = Vec::with_capacity(part_count as usize);
+    for _ in 0..part_count {
+        parts.push(dec_part_bin(reader)?);
+    }
+    let mut package = OpcPackage::empty();
+    package.parts = parts;
+    let default_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    for _ in 0..default_count {
+        let k = read_str_lp(reader)?;
+        let v = read_str_lp(reader)?;
+        package.content_types.defaults.push((k, v));
+    }
+    let override_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    for _ in 0..override_count {
+        let k = read_str_lp(reader)?;
+        let v = read_str_lp(reader)?;
+        package.content_types.overrides.push((k, v));
+    }
+    let owner_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut relationships = HashMap::with_capacity(owner_count as usize);
+    for _ in 0..owner_count {
+        let owner = read_str_lp(reader)?;
+        let rel_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+        let mut list = Vec::with_capacity(rel_count as usize);
+        for _ in 0..rel_count {
+            list.push(dec_rel_bin(reader)?);
+        }
+        relationships.insert(owner, list);
+    }
+    package.relationships = relationships;
+    Ok(package)
+}
+/// 🌳 Full `PptxSnapshot`: `[schema,opc,slides]`, mirroring `enc_snapshot`'s text form above.
+fn enc_snapshot_bin(s: &PptxSnapshot, out: &mut Vec<u8>) {
+    write_str_lp(out, &s.schema);
+    enc_opc_package_bin(&s.opc, out);
+    store::pack_rt::write_varint_u64(out, s.presentation.slides.len() as u64);
+    for slide in &s.presentation.slides {
+        enc_slide_bin(slide, out);
+    }
+}
+fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let opc = dec_opc_package_bin(reader)?;
+    let slide_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut slides = Vec::with_capacity(slide_count as usize);
+    for _ in 0..slide_count {
+        slides.push(dec_slide_bin(reader)?);
+    }
+    Ok(PptxSnapshot { schema, opc, presentation: PptxPresentation { slides } })
+}
+fn enc_text_frame_bin(ps: &[PptxParagraph], out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, ps.len() as u64);
+    for p in ps {
+        enc_paragraph_bin(p, out);
+    }
+}
+fn dec_text_frame_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<PptxParagraph>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut out = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        out.push(dec_paragraph_bin(reader)?);
+    }
+    Ok(out)
+}
+//#endregion 🔖️OpBinaryCodec
+
+/// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
+/// upgraded from F1's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
+/// `PptxMutation` variant ordinal, in the same 0-8 order `print_pptx_mutation`'s own keyword
+/// match uses.
 impl protocol::OpBinary for PptxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        let tag: u8 = match self {
+            PptxMutation::NoMutation => 0,
+            PptxMutation::SetSnapshot { .. } => 1,
+            PptxMutation::InsertSlide { .. } => 2,
+            PptxMutation::RemoveSlide { .. } => 3,
+            PptxMutation::MoveSlide { .. } => 4,
+            PptxMutation::InsertShape { .. } => 5,
+            PptxMutation::RemoveShape { .. } => 6,
+            PptxMutation::SetShapeText { .. } => 7,
+            PptxMutation::SetShapePosition { .. } => 8,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            PptxMutation::NoMutation => {}
+            PptxMutation::SetSnapshot { snapshot } => enc_snapshot_bin(snapshot, &mut out),
+            PptxMutation::InsertSlide { index, slide } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_slide_bin(slide, &mut out);
+            }
+            PptxMutation::RemoveSlide { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64),
+            PptxMutation::MoveSlide { from, to } => {
+                store::pack_rt::write_varint_u64(&mut out, *from as u64);
+                store::pack_rt::write_varint_u64(&mut out, *to as u64);
+            }
+            PptxMutation::InsertShape { slide_index, shape_index, shape } => {
+                store::pack_rt::write_varint_u64(&mut out, *slide_index as u64);
+                store::pack_rt::write_varint_u64(&mut out, *shape_index as u64);
+                enc_shape_bin(shape, &mut out);
+            }
+            PptxMutation::RemoveShape { slide_index, shape_index } => {
+                store::pack_rt::write_varint_u64(&mut out, *slide_index as u64);
+                store::pack_rt::write_varint_u64(&mut out, *shape_index as u64);
+            }
+            PptxMutation::SetShapeText { slide_index, shape_index, text_frame } => {
+                store::pack_rt::write_varint_u64(&mut out, *slide_index as u64);
+                store::pack_rt::write_varint_u64(&mut out, *shape_index as u64);
+                enc_text_frame_bin(text_frame, &mut out);
+            }
+            PptxMutation::SetShapePosition { slide_index, shape_index, position } => {
+                store::pack_rt::write_varint_u64(&mut out, *slide_index as u64);
+                store::pack_rt::write_varint_u64(&mut out, *shape_index as u64);
+                enc_transform_bin(position, &mut out);
+            }
+        }
+        Ok(out)
     }
+
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            0 => Ok(PptxMutation::NoMutation),
+            1 => {
+                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                Ok(PptxMutation::SetSnapshot { snapshot })
+            }
+            2 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let slide = dec_slide_bin(&mut reader).map_err(|e| malformed("op slide", reader.position(), e))?;
+                Ok(PptxMutation::InsertSlide { index, slide })
+            }
+            3 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                Ok(PptxMutation::RemoveSlide { index })
+            }
+            4 => {
+                let from = reader.read_varint_u64().map_err(|e| malformed("op from", reader.position(), e.to_string()))? as usize;
+                let to = reader.read_varint_u64().map_err(|e| malformed("op to", reader.position(), e.to_string()))? as usize;
+                Ok(PptxMutation::MoveSlide { from, to })
+            }
+            5 => {
+                let slide_index = reader.read_varint_u64().map_err(|e| malformed("op slide_index", reader.position(), e.to_string()))? as usize;
+                let shape_index = reader.read_varint_u64().map_err(|e| malformed("op shape_index", reader.position(), e.to_string()))? as usize;
+                let shape = dec_shape_bin(&mut reader).map_err(|e| malformed("op shape", reader.position(), e))?;
+                Ok(PptxMutation::InsertShape { slide_index, shape_index, shape })
+            }
+            6 => {
+                let slide_index = reader.read_varint_u64().map_err(|e| malformed("op slide_index", reader.position(), e.to_string()))? as usize;
+                let shape_index = reader.read_varint_u64().map_err(|e| malformed("op shape_index", reader.position(), e.to_string()))? as usize;
+                Ok(PptxMutation::RemoveShape { slide_index, shape_index })
+            }
+            7 => {
+                let slide_index = reader.read_varint_u64().map_err(|e| malformed("op slide_index", reader.position(), e.to_string()))? as usize;
+                let shape_index = reader.read_varint_u64().map_err(|e| malformed("op shape_index", reader.position(), e.to_string()))? as usize;
+                let text_frame = dec_text_frame_bin(&mut reader).map_err(|e| malformed("op text_frame", reader.position(), e))?;
+                Ok(PptxMutation::SetShapeText { slide_index, shape_index, text_frame })
+            }
+            8 => {
+                let slide_index = reader.read_varint_u64().map_err(|e| malformed("op slide_index", reader.position(), e.to_string()))? as usize;
+                let shape_index = reader.read_varint_u64().map_err(|e| malformed("op shape_index", reader.position(), e.to_string()))? as usize;
+                let position = dec_transform_bin(&mut reader).map_err(|e| malformed("op position", reader.position(), e))?;
+                Ok(PptxMutation::SetShapePosition { slide_index, shape_index, position })
+            }
+            other => Err(malformed("op tag", 1, format!("unknown PptxMutation tag {other}"))),
+        }
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️DemoCases
+/// 🧪️ FG-wave: representative `PptxMutation` values -- one per variant -- the single source of
+/// truth reused by this file's own `mutation_diff_law`/`inverse_law`/`op_text_binary_roundtrip_law`
+/// tests AND by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
+/// conformance tests, same shape `📜️docx/…/🧬️mutations/🦀️component.rs`'s own
+/// `demo_mutation_cases()` establishes.
+pub(crate) fn demo_fixture() -> PptxSnapshot {
+    crate::artifacts::pptx::engine::build_minimal_pptx(PptxPresentation {
+        slides: vec![
+            PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("first")], position: PptxTransform { x: 0, y: 0, cx: 100, cy: 100 } }] },
+            PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("second")], position: PptxTransform::default() }] },
+        ],
+    })
+}
+
+pub(crate) fn demo_mutation_cases() -> Vec<PptxMutation> {
+    vec![
+        PptxMutation::NoMutation,
+        PptxMutation::SetSnapshot { snapshot: demo_fixture() },
+        PptxMutation::InsertSlide { index: 1, slide: PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("x")], position: PptxTransform::default() }] } },
+        PptxMutation::RemoveSlide { index: 0 },
+        PptxMutation::MoveSlide { from: 0, to: 1 },
+        PptxMutation::InsertShape { slide_index: 0, shape_index: 1, shape: PptxShape::Picture { blip_rel_id: "rId7".into(), position: PptxTransform { x: 1, y: 2, cx: 3, cy: 4 } } },
+        PptxMutation::RemoveShape { slide_index: 0, shape_index: 0 },
+        PptxMutation::SetShapeText { slide_index: 0, shape_index: 0, text_frame: vec![PptxParagraph::text("z")] },
+        PptxMutation::SetShapePosition { slide_index: 0, shape_index: 0, position: PptxTransform { x: 5, y: 6, cx: 7, cy: 8 } },
+    ]
+}
+//#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
 #[cfg(test)]

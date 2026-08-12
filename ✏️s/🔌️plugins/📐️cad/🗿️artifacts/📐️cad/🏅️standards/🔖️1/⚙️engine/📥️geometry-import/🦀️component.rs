@@ -4,9 +4,18 @@ use crate::artifacts::cad::{CadEdge, CadFace, CadGeometry, CadObject, CadPrimiti
 use semio_framework_3d::brep::kernel::mesh_data_from_mesh_transfer;
 use semio_framework_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, Vec3};
 use semio_framework::mesh_from_indexed;
-use semio_framework_plugin::MeshData;
+use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use serde_json::Value;
 use std::collections::HashMap;
+// 🌉️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a: the
+// hand-rolled `v`/`f`-only OBJ writer this file used to feed the kernel's own `import_obj` reader
+// is now stdio's real `semio/mesh` → `obj` codec (`SemioMeshToObj` + `obj::engine::encode_obj`) —
+// same real mesh→OBJ encoder `⚙️engine/🦀️component.rs`'s `export_solids_as` now uses, no
+// reimplementation.
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
+use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::engine::encode_obj;
 
 //#region 🔖️Parse
 pub fn parse_geometry(value: Option<&Value>) -> CadGeometry {
@@ -325,17 +334,32 @@ fn curve_mesh_from_wire(kernel: &mut dyn BrepKernel, wire: &GeometryHandle) -> O
 }
 
 //#region 🔖️MeshImport
-/// 📦️ Serializes triangle mesh data to a minimal `v`/`f` OBJ payload the kernel's OBJ reader
-/// (which only needs vertex positions and triangle faces) can round-trip into a solid.
-fn mesh_to_obj_text(mesh: &MeshData) -> String {
-    let mut text = String::new();
-    for vertex in mesh.positions.as_chunks::<3>().0 {
-        text.push_str(&format!("v {} {} {}\n", vertex[0], vertex[1], vertex[2]));
+/// 📦️ Real `semio/mesh` snapshot for one triangle mesh (one `SemioMesh`/one `SemioPrimitive`,
+/// indexed positions verbatim, no normals/uvs since `MeshData` carries indices shared across a
+/// flat position pool rather than glTF-style parallel per-vertex arrays — `None` for degenerate
+/// input (not a multiple of 3 indices), never a fabricated triangle).
+fn semio_mesh_snapshot_from_mesh_data(mesh: &MeshData) -> Option<SemioMeshSnapshot> {
+    if mesh.indices.is_empty() || mesh.indices.len() % 3 != 0 || mesh.positions.is_empty() {
+        return None;
     }
-    for triangle in mesh.indices.as_chunks::<3>().0 {
-        text.push_str(&format!("f {} {} {}\n", triangle[0] + 1, triangle[1] + 1, triangle[2] + 1));
-    }
-    text
+    let positions: Vec<SemioPoint3> = mesh.positions.chunks_exact(3).map(|c| SemioPoint3 { x: c[0] as f64, y: c[1] as f64, z: c[2] as f64 }).collect();
+    Some(SemioMeshSnapshot {
+        schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(),
+        meshes: vec![SemioMesh {
+            id: "mesh-0".into(),
+            primitives: vec![SemioPrimitive { id: "mesh-0-prim-0".into(), topology: SemioTopology::Triangles, positions, normals: Vec::new(), uvs: Vec::new(), colors: Vec::new(), indices: mesh.indices.clone(), material_id: None }],
+        }],
+        materials: Vec::new(),
+        textures: Vec::new(),
+    })
+}
+
+/// 📦️ Serializes triangle mesh data to real OBJ text (stdio's own `semio/mesh` → `obj` codec) the
+/// kernel's OBJ reader can round-trip into a solid; `None` when the mesh has no real triangles.
+fn mesh_to_obj_text(mesh: &MeshData) -> Option<String> {
+    let semio_mesh = semio_mesh_snapshot_from_mesh_data(mesh)?;
+    let obj_snapshot = SemioMeshToObj::serialize(&semio_mesh).ok()?;
+    Some(encode_obj(&obj_snapshot))
 }
 
 fn mesh_extent(mesh: &MeshData) -> Option<[f64; 3]> {
@@ -360,7 +384,7 @@ fn mesh_extent(mesh: &MeshData) -> Option<[f64; 3]> {
 /// no triangles or the kernel is unable to import it.
 pub fn cad_object_from_mesh(kernel: &mut dyn BrepKernel, id: impl Into<String>, label: impl Into<String>, typology: impl Into<String>, mesh: &MeshData) -> CadObject {
     let extent = mesh_extent(mesh);
-    let solid_handle = if mesh.indices.len() >= 3 { block_on(kernel.import_obj(&mesh_to_obj_text(mesh), 0.01)).ok().map(|handle| handle.0) } else { None };
+    let solid_handle = mesh_to_obj_text(mesh).and_then(|text| block_on(kernel.import_obj(&text, 0.01)).ok()).map(|handle| handle.0);
     let primitives = solid_handle.clone().map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }]).unwrap_or_default();
     CadObject { id: id.into(), label: label.into(), typology: typology.into(), visible: true, locked: false, origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, mesh_url: None, extent, solid_handle, primitives }
 }

@@ -269,18 +269,118 @@ impl protocol::OpText for SemioImageMutation {
     }
 }
 
+/// 🧾️ Keyword table + variant ordinal, 0-indexed in enum declaration order — the binary frame's
+/// `tag` byte, `📖️grammar/component.grammar.semio`'s `op` alternatives, and this array must all
+/// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in
+/// `🎹️composer/🦀️component.rs`).
+const OP_KEYWORDS: [&str; 13] = [
+    "no",
+    "setSnapshot",
+    "setDimensions",
+    "setColorspace",
+    "setBitDepth",
+    "setIcc",
+    "insertFrame",
+    "removeFrame",
+    "moveFrame",
+    "setFrameDelay",
+    "setFramePixels",
+    "setMetadataEntry",
+    "removeMetadataEntry",
+];
+fn variant_ordinal(m: &SemioImageMutation) -> u8 {
+    match m {
+        SemioImageMutation::NoMutation => 0,
+        SemioImageMutation::SetSnapshot { .. } => 1,
+        SemioImageMutation::SetDimensions { .. } => 2,
+        SemioImageMutation::SetColorspace { .. } => 3,
+        SemioImageMutation::SetBitDepth { .. } => 4,
+        SemioImageMutation::SetIcc { .. } => 5,
+        SemioImageMutation::InsertFrame { .. } => 6,
+        SemioImageMutation::RemoveFrame { .. } => 7,
+        SemioImageMutation::MoveFrame { .. } => 8,
+        SemioImageMutation::SetFrameDelay { .. } => 9,
+        SemioImageMutation::SetFramePixels { .. } => 10,
+        SemioImageMutation::SetMetadataEntry { .. } => 11,
+        SemioImageMutation::RemoveMetadataEntry { .. } => 12,
+    }
+}
+/// ✂️ Just the argument tail of `print_image_mutation` (empty for `no`) — the binary frame's `tag`
+/// byte already carries the keyword, so the text keyword itself (and its `:` separator) is
+/// redundant in the binary payload.
+fn print_image_mutation_args(m: &SemioImageMutation) -> String {
+    match print_image_mutation(m).split_once(':') {
+        Some((_, rest)) => rest.to_string(),
+        None => String::new(),
+    }
+}
+
+/// ⚡️ Real binary op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut.
+/// `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see
+/// [`OP_KEYWORDS`]) are two REAL fixed fields; the variant's own argument payload follows as one
+/// opaque trailing `bytes` chain — reuses the already-real, already-tested `print_image_mutation`/
+/// `parse_image_mutation` text codec rather than re-deriving a second independent encoding.
 impl protocol::OpBinary for SemioImageMutation {
-    /// ⚡️ Binary = the text bytes verbatim — same simplification `SemioImageDiff`'s `DiffCodec`
-    /// uses (see that module's doc comment).
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_image_mutation_args(self).as_bytes());
+        Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        const OP_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
+        }
+        if bytes[0] != OP_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        let tag = bytes[1];
+        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
+        let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword}:{args}") };
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion 🔖️OpCodecs
+
+//#region 🔖️Demo
+/// 🌱 Representative `SemioImageMutation` cases, one per variant — single source of truth for
+/// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs` and this
+/// file's own `op_text_binary_roundtrip_law`.
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<SemioImageMutation> {
+    fn frame(seed: u8, len: usize) -> SemioImageFrame {
+        SemioImageFrame { delay_ms: 100, rgba8: vec![seed; len] }
+    }
+    fn fixture() -> SemioImageSnapshot {
+        SemioImageSnapshot {
+            width: 4, height: 4, colorspace: SemioColorspace::Rgba, bit_depth: 8,
+            frames: vec![frame(1, 16), frame(2, 16)],
+            icc: Some(vec![9, 9]),
+            metadata: vec![SemioImageMetadataEntry { key: "Title".into(), value: "old".into() }],
+            ..SemioImageSnapshot::default()
+        }
+    }
+    vec![
+        SemioImageMutation::NoMutation,
+        SemioImageMutation::SetSnapshot { snapshot: fixture() },
+        SemioImageMutation::SetDimensions { width: 8, height: 8 },
+        SemioImageMutation::SetColorspace { colorspace: SemioColorspace::Grayscale },
+        SemioImageMutation::SetBitDepth { bit_depth: 16 },
+        SemioImageMutation::SetIcc { icc: None },
+        SemioImageMutation::SetIcc { icc: Some(vec![1, 2, 3]) },
+        SemioImageMutation::InsertFrame { index: 1, frame: frame(5, 16) },
+        SemioImageMutation::RemoveFrame { index: 0 },
+        SemioImageMutation::MoveFrame { from: 0, to: 1 },
+        SemioImageMutation::SetFrameDelay { index: 0, delay_ms: 250 },
+        SemioImageMutation::SetFramePixels { index: 1, rgba8: vec![7; 16] },
+        SemioImageMutation::SetMetadataEntry { key: "Title".into(), value: "new".into() },
+        SemioImageMutation::SetMetadataEntry { key: "Author".into(), value: "someone".into() },
+        SemioImageMutation::RemoveMetadataEntry { key: "Title".into() },
+    ]
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]
@@ -305,24 +405,11 @@ mod tests {
         }
     }
 
+    /// 🌱 Reuses `demo_mutation_cases()` (single source of truth, also feeds
+    /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`) rather
+    /// than an independent copy.
     fn sample_mutations() -> Vec<SemioImageMutation> {
-        vec![
-            SemioImageMutation::NoMutation,
-            SemioImageMutation::SetSnapshot { snapshot: fixture() },
-            SemioImageMutation::SetDimensions { width: 8, height: 8 },
-            SemioImageMutation::SetColorspace { colorspace: SemioColorspace::Grayscale },
-            SemioImageMutation::SetBitDepth { bit_depth: 16 },
-            SemioImageMutation::SetIcc { icc: None },
-            SemioImageMutation::SetIcc { icc: Some(vec![1, 2, 3]) },
-            SemioImageMutation::InsertFrame { index: 1, frame: frame(5, 16) },
-            SemioImageMutation::RemoveFrame { index: 0 },
-            SemioImageMutation::MoveFrame { from: 0, to: 1 },
-            SemioImageMutation::SetFrameDelay { index: 0, delay_ms: 250 },
-            SemioImageMutation::SetFramePixels { index: 1, rgba8: vec![7; 16] },
-            SemioImageMutation::SetMetadataEntry { key: "Title".into(), value: "new".into() },
-            SemioImageMutation::SetMetadataEntry { key: "Author".into(), value: "someone".into() },
-            SemioImageMutation::RemoveMetadataEntry { key: "Title".into() },
-        ]
+        demo_mutation_cases()
     }
 
     //#region 🔖️MutationDiffLaw

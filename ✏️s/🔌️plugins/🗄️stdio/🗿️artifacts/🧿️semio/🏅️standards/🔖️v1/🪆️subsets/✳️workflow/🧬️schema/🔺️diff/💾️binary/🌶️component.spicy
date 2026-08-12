@@ -1,6 +1,9 @@
-module Semio_workflow_diff;
-# `s.stdio.semio.workflow` diff BINARY wire format — UTF-8 bytes of the diff TEXT wire format
-# verbatim (see the doc comment on 🔺️diff/💾️binary/🥋️component.ksy).
+module Stdio_semio_workflow_diff;
+
+# `format` (1 byte) + `presence` bitmask, then an opaque `payload` tail (0-2 varint-length-prefixed
+# blobs) — see the sibling `📡️component.protocol.semio`'s comment.
 type Document = unit {
-    diff_line_utf8: bytes &eod;
+    format: uint8;
+    presence: uint8;
+    payload: bytes &eod;
 };

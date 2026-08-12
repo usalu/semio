@@ -4,7 +4,7 @@
 use crate::apps::puzzle2d::terminology::Puzzle2dLabels;
 use crate::apps::puzzle2d::{fixture_edges, fixture_nodes, puzzle2d_action, Puzzle2dScene};
 use semio_framework_plugin::{
-    tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 use serde_json::{json, Value};
 
@@ -15,8 +15,8 @@ pub const PUZZLE2D_PLAY_BODY_LAYERS: &str = "puzzle2d.play.layers";
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
-        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_DOCUMENT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
         group: PanelGroup::Workbench,
         body_key: Some(PUZZLE2D_PLAY_BODY_LAYERS.into()),
         children: Vec::new(),

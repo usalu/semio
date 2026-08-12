@@ -212,6 +212,15 @@ pub trait Patchable<TPatch>: Sized {
 ///
 /// 🎞️ `crate::os_spr::command` re-exports this very type, so `index`/`to_index` is the one wire shape
 /// every caller sees — there is no second spr-side schema to keep in step.
+///
+/// 🗣️ Semantic-mutations overhaul ruling (`.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md`):
+/// this type and its three helper fns below are an INTERNAL diff/inverse ENGINE for a
+/// `🧬️mutations/<kind>/{🔺️diff,↩️inverse}` triad leaf to call — e.g. a `remove-stakeholder` leaf's
+/// `inverse` fn may call [`inverse_collection_mutation`] to compute the captured-item re-add. They
+/// are NOT public mutation vocabulary: no `pub enum *Mutation` dispatch variant may wrap
+/// `CollectionMutation<..>` directly (that erases the verb — `Add`/`Remove`/`Move`/`Patch` say
+/// nothing about *why*). `policySemanticVocabularyBreaches` in `📜️script.ts` enforces this on
+/// `✏️s/**/🧬️mutations/**` dispatch enums once the fan-out wave lands.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum CollectionMutation<TId, TItem, TPatch> {

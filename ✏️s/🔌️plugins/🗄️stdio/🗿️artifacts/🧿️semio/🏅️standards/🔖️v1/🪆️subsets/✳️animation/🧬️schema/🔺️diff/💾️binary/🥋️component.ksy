@@ -2,10 +2,15 @@ meta:
   id: stdio_semio_animation_diff
   endian: le
 doc: |
-  stdio.semio.animation.diff binary layout — see 📡️component.protocol.semio for the field grammar.
+  Real binary diff frame for `stdio.semio.animation`: `format` (1 byte) + `presence` (1 byte,
+  bit0=`timelines` — the only collection this facet has) then, when `presence` bit0 is set, one
+  opaque `payload` tail carrying the SAME `enc_indexed_triple`-produced text this facet's own
+  `print_diff` already emits (`[removed];[modified];[added]`, recipe §1.4's index-keyed collection-
+  triple shape). See the sibling `📡️component.protocol.semio` for the conformance-tested version.
 seq:
-  - id: magic
-    contents: "stdio.semio.animation.diff"
-  - id: body
+  - id: format
+    type: u1
+  - id: presence
+    type: u1
+  - id: payload
     size-eos: true
-    doc: hex-encoded JSON envelope body (see the artifact's own ArtifactPack/DiffCodec impl)

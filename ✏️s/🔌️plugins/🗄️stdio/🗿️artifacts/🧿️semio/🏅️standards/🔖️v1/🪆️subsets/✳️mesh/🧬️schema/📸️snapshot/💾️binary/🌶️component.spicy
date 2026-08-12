@@ -1,12 +1,19 @@
 module Stdio_semio_mesh_snapshot;
 
-# Shared `.semio` binary envelope wrapping a stdio.semio.mesh payload: the REAL SemioMeshSnapshot
-# JSON bytes (this subset's `ArtifactPack` impl). Neutral semio type, not an on-disk file format
-# — no richer binary layout exists below the JSON payload boundary.
+# Spicy mirror (descriptive, not test-parsed — the real byte-level walker is
+# ../📡️component.protocol.semio, walked by dsl::walk_protocol) for the shared `.semio` binary
+# envelope wrapping the REAL varint-length-prefixed SemioMeshSnapshot binary pack (this subset's
+# `ArtifactPack` impl, `encode_mesh_snapshot_binary`/`decode_mesh_snapshot_binary`). Past
+# `format`/`schema_len`/`schema_bytes`, `meshes`/`materials`/`textures` are one opaque trailing
+# `payload` — the `protocol-array-of-records` gap, same boundary the real protocol file uses.
 
 public type Envelope = unit {
     magic: bytes &size=8;                                   # 0x89 "SEM" CR LF SUB LF
     token_len: uint32 &byte-order=spicy::ByteOrder::Little;
     token: bytes &size=self.token_len;                      # UTF-8 "stdio.semio.mesh.pack v1"
-    payload: bytes &eod;                                     # serde_json::to_vec(SemioMeshSnapshot)
+    format: uint8;                                          # PACK_BINARY_FORMAT, currently 1
+    # schema_len: LEB128 varint (real dsl walker's `varint` Prim) — Spicy has no built-in LEB128
+    # unit type; described here only, not test-parsed (see module doc comment). schema_bytes
+    # (UTF-8 schema id) immediately follows, then payload (meshes/materials/textures) to EOD.
+    rest: bytes &eod;
 };

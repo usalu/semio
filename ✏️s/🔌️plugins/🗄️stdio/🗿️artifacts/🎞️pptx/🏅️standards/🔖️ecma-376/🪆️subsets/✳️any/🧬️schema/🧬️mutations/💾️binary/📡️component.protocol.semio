@@ -1,3 +1,38 @@
-dialect protocol stdio.pptx.mutations
-magic = %x00
-payload = *OCTET
+dialect protocol
+protocol stdio.pptx.mutations
+version 1
+schema stdio.pptx
+start record
+
+# FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), replacing F1's
+# `print_op().into_bytes()` text-as-binary shortcut (`../../🦀️component.rs`'s old
+# `OpBinary::encode_op`/`decode_op`). `tag` is the `PptxMutation` variant ordinal, in the SAME 0-8
+# order `print_pptx_mutation`'s own keyword match uses (`NoMutation`=0, `SetSnapshot`=1,
+# `InsertSlide`=2, `RemoveSlide`=3, `MoveSlide`=4, `InsertShape`=5, `RemoveShape`=6,
+# `SetShapeText`=7, `SetShapePosition`=8) -- both REAL fixed fields, individually protocol-walked,
+# matching `📜️docx/…/🧬️mutations/💾️binary/📡️component.protocol.semio`'s own `format`/`tag` header
+# shape (restated here, per-artifact tag assignment).
+#
+# Past that header, the variant's own payload is one opaque trailing `bytes` chain: several
+# variants (`InsertSlide`/`SetSnapshot`'s whole `PptxSnapshot`, `InsertShape`'s `shape: PptxShape`)
+# carry the SAME genuinely recursive/data-carrying payloads `../🔺️diff/💾️binary/
+# 📡️component.protocol.semio` already hits (`protocol-prim-ref-recursion`,
+# `📖️grammar-recipe.md` §5) -- once ANY variant's payload is structurally unwalkable, bundling
+# every variant's payload into the SAME opaque tail (rather than partially structuring only the
+# simpler, flat-field variants like `RemoveSlide`/`MoveSlide`) is the honest, minimal-surface
+# choice, same reasoning `../🔺️diff/💾️binary/📡️component.protocol.semio`'s own doc comment gives.
+#
+# The Rust `encode_op`/`decode_op` side stays genuinely, fully structured past this header -- real
+# LEB128-varint-framed index/collection encoders and recursive per-variant binary sub-encoders
+# (`enc_snapshot_bin`/`enc_opc_package_bin`/`enc_slide_bin`/`enc_shape_bin`/`enc_paragraph_bin`,
+# `../../🦀️component.rs`'s own `🔖️OpBinaryCodec` region), reusing this artifact's
+# `../🔺️diff/🦀️component.rs` `pub(crate)` binary primitives (`write_str_lp`/`read_str_lp`/
+# `write_bytes_lp`/`read_bytes_lp`/`enc_shape_bin`/`dec_shape_bin`/`enc_slide_bin`/`dec_slide_bin`/
+# `enc_transform_bin`/`dec_transform_bin`/`enc_part_bin`/`dec_part_bin`/`enc_rel_bin`/`dec_rel_bin`)
+# rather than re-deriving them a second time -- round-trip tested independently of this protocol
+# description, same honest-boundary treatment `📖️grammar-recipe.md` §2.5 documents.
+framing record
+header fixed 2
+field format u8
+field tag u8
+chain payload bytes

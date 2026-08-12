@@ -1,11 +1,37 @@
-dialect grammar stdio.semio.video.snapshot
-; Envelope line ("schema stdio.semio.video") followed by a hex-encoded UTF-8 JSON document whose
-; own structure is normatively described by the sibling 🔣️component.json (SemioVideoSnapshot:
-; schema, streams[]{kind,codec,width,height,rate{num,den},samples[]{pts,key,data}}). The hex body
-; is opaque to THIS grammar only because JSON is a distinct sibling grammar, not because the
-; payload is unspecified.
-root = document
-document = header NL body
-header = "schema" SP "stdio.semio.video"
-body = hex-digit-pair *
-hex-digit-pair = HEXDIG HEXDIG
+dialect grammar
+grammar stdio.semio.video.snapshot
+extension semio
+start document
+
+# Video wave (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION): real grammar for
+# `SemioVideoSnapshot::print_dsl`/`parse_dsl` (📸️snapshot/🦀️component.rs's
+# `print_video_snapshot_body`/`parse_video_snapshot_body`) — hand-rolled, NOT
+# `#[derive(dsl::DslArtifact)]`: `SemioVideoStream.samples: Vec<SemioVideoSample>` nests a
+# `Vec<u8>` buffer field inside a `Vec<T>`-of-struct field (`streams`), the same
+# `derive-nested-multi-buffer-record` wall mesh's own wave first named. Same hex/bracket-encoded
+# value convention as this subset's own `🔺️diff`/`🧬️mutations` facet grammars (and
+# `GifDiff`/`SvgDiff`/`DocxDiff`'s hand-rolled precedent repo-wide).
+#
+# `document` matches the fixture-honesty harness's own reconstructed body shape (mandatory `semio
+# stdio.semio.video.dsl v1` preamble stripped and replaced with the bare `envelope_id()` token —
+# `artifact-mark` below — before recognition, same convention every P2 pilot's grammar uses).
+artifact-mark = "stdio.semio.video"
+document = artifact-mark schema-line streams-line
+
+schema-line = "schema" "=" hex
+
+streams-line = "streams" "=" "[" stream-list? "]"
+stream-list = stream {"," stream}*
+stream = "[" kind "," hex "," INT "," INT "," rational "," "[" sample-list? "]" "]"
+sample-list = sample {"," sample}*
+sample = "[" INT "," bool "," hex "]"
+rational = "[" INT "," INT "]"
+kind = "V" | "A" | "S"
+bool = "0" | "1"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO (`📖️grammar/🦀️component.rs`'s `default_macros`) — every `schema`/`codec`/`data` leaf
+# string is `enc_str`/`hex_encode` (lowercase-hex UTF-8/byte run). A hand-rolled `{INT|IDENT}*`
+# production would be wrong here (see the sibling `🔺️diff`/`🧬️mutations` grammars' own `hex` doc
+# comment for the two independent reasons why) — `Symbol::Ref`'s production→macro fallback resolves
+# bare `hex` automatically, with real backtracking.

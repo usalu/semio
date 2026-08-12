@@ -1,9 +1,44 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioMutationEntry {
-  key: String!
-  value: String!
-}
-type SemioMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioMutationEntry!]! @state(class: PERSISTENT)
-}
+# 🧬️ SemioMutation schema — real mirror of `🦀️component.rs`. The envelope union's own mutation
+# vocabulary: `NoMutation`, `SetSnapshot` (the only way to change SUBSET KIND — no sparse
+# representation exists for "this artifact used to be a video, now it's a workflow"), and 13
+# wrapper variants each carrying that subset's OWN, already-real, already-hand-written mutation
+# enum unchanged. Adjacently tagged (`#[serde(tag = "mutation", content = "payload")]`, NOT
+# internally tagged like every wrapped subset's own mutation enum — an internally-tagged wrapper
+# here would collide key-for-key with a wrapped variant's OWN `mutation` discriminator field), so
+# every non-unit variant below carries its data under a named `payload` field.
+
+type SemioMutationNoMutation { mutation: String! }
+
+type SemioMutationSetSnapshotPayload { snapshot: SemioSnapshot! } # SemioSnapshot: defined in this subset's own snapshot mirror
+type SemioMutationSetSnapshot { mutation: String!, payload: SemioMutationSetSnapshotPayload! }
+
+type SemioMutationBrep { mutation: String!, payload: SemioBrepMutation! } # defined in ✳️brep's own mutations mirror
+type SemioMutationMesh { mutation: String!, payload: SemioMeshMutation! } # defined in ✳️mesh's own mutations mirror
+type SemioMutationModel { mutation: String!, payload: SemioModelMutation! } # defined in ✳️model's own mutations mirror
+type SemioMutationObject { mutation: String!, payload: SemioObjectMutation! } # defined in ✳️object's own mutations mirror
+type SemioMutationDocument { mutation: String!, payload: SemioDocumentMutation! } # defined in ✳️document's own mutations mirror
+type SemioMutationCad { mutation: String!, payload: SemioCadMutation! } # defined in ✳️cad's own mutations mirror
+type SemioMutationDrawing { mutation: String!, payload: SemioDrawingMutation! } # defined in ✳️drawing's own mutations mirror
+type SemioMutationImage { mutation: String!, payload: SemioImageMutation! } # defined in ✳️image's own mutations mirror
+type SemioMutationVideo { mutation: String!, payload: SemioVideoMutation! } # defined in ✳️video's own mutations mirror
+type SemioMutationAudio { mutation: String!, payload: SemioAudioMutation! } # defined in ✳️audio's own mutations mirror
+type SemioMutationAnimation { mutation: String!, payload: SemioAnimationMutation! } # defined in ✳️animation's own mutations mirror
+type SemioMutationPresentation { mutation: String!, payload: SemioPresentationMutation! } # defined in ✳️presentation's own mutations mirror
+type SemioMutationWorkflow { mutation: String!, payload: SemioWorkflowMutation! } # defined in ✳️workflow's own mutations mirror
+
+union SemioMutation =
+    SemioMutationNoMutation
+  | SemioMutationSetSnapshot
+  | SemioMutationBrep
+  | SemioMutationMesh
+  | SemioMutationModel
+  | SemioMutationObject
+  | SemioMutationDocument
+  | SemioMutationCad
+  | SemioMutationDrawing
+  | SemioMutationImage
+  | SemioMutationVideo
+  | SemioMutationAudio
+  | SemioMutationAnimation
+  | SemioMutationPresentation
+  | SemioMutationWorkflow

@@ -94,8 +94,8 @@ pub fn process3d_io() -> semio_framework_plugin::AppIo {
                 multiplicity: semio_framework_plugin::PortMultiplicity::Many,
             },
         ],
-        export_formats: vec![semio_framework_plugin::MediaFormat::Step, semio_framework_plugin::MediaFormat::Obj, semio_framework_plugin::MediaFormat::Stl, semio_framework_plugin::MediaFormat::Glb],
-        import_formats: vec![semio_framework_plugin::MediaFormat::Step, semio_framework_plugin::MediaFormat::Obj, semio_framework_plugin::MediaFormat::Stl],
+        export_formats: vec![],
+        import_formats: vec![],
         artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.process".into(), name: "3D Process".into(), dimension: "3d".into(), component_kind: "process3d".into() },
     }
 }
@@ -571,11 +571,10 @@ pub fn export_process3d_model(fixture: &Process3dSnapshot, format: &str) -> Opti
     if format == "glb" {
         let mesh = processed_mesh(fixture)?;
         let bytes = semio_framework_plugin::GlbExporter.export(&mesh).ok()?;
-        let media_format = semio_framework_plugin::MediaFormat::Glb;
         return Some(Process3dModelExport {
-            filename: format!("process3d.{}", media_format.as_str()),
+            filename: "process3d.glb".into(),
             data: Value::String(base64::engine::general_purpose::STANDARD.encode(bytes)),
-            mime_type: media_format.mime_type().into(),
+            mime_type: "model/gltf-binary".into(),
             encoding: Some("base64".into()),
         });
     }
@@ -587,10 +586,12 @@ pub fn export_process3d_model(fixture: &Process3dSnapshot, format: &str) -> Opti
     let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, fixture)?;
     let bytes = exporter.export(&*session.kernel().lock().ok()?, &[handle], PROCESS3D_TESSELLATION_TOLERANCE).ok()?;
-    let media_format = exporter.format();
-    let binary = media_format.is_binary();
+    let format_kind = exporter.format_kind();
+    let descriptor = semio_framework::format_descriptor(format_kind);
+    let binary = descriptor.as_ref().map(|d| d.is_binary).unwrap_or(true);
+    let mime_type = descriptor.map(|d| d.mime).unwrap_or_else(|| "application/octet-stream".to_string());
     let data = if binary { Value::String(base64::engine::general_purpose::STANDARD.encode(&bytes)) } else { Value::String(String::from_utf8(bytes).ok()?) };
-    Some(Process3dModelExport { filename: format!("process3d.{}", media_format.as_str()), data, mime_type: media_format.mime_type().into(), encoding: if binary { Some("base64".into()) } else { None } })
+    Some(Process3dModelExport { filename: format!("process3d.{}", format_kind), data, mime_type, encoding: if binary { Some("base64".into()) } else { None } })
 }
 
 /// 📦️ Decodes a `requestFileOpen(readAs: "dataUrl")` payload into raw bytes.
@@ -672,13 +673,16 @@ mod tests {
     }
 
     //#region 🔖️ConfigCoverage
+    /// 🔤️ `AppIo.export_formats`/`import_formats` (unlike `ArtifactKindSpec`) have no `export_stdio_kinds`/
+    /// `import_stdio_kinds` string-id peer and are never read by `register_app_io`, so they stay empty
+    /// here in step with `artifact_kind()`'s own now-empty lists (see that fn's doc).
     #[test]
     fn process3d_io_mirrors_the_declared_artifact_kind() {
         let io = process3d_io();
         assert_eq!(io.document_schema, crate::artifacts::process3d::PROCESS_3D_SCHEMA);
         assert_eq!(io.artifact.id, "3d.process");
-        assert_eq!(io.export_formats.len(), 4);
-        assert_eq!(io.import_formats.len(), 3);
+        assert!(io.export_formats.is_empty());
+        assert!(io.import_formats.is_empty());
     }
 
     /// 🔌️ WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe:

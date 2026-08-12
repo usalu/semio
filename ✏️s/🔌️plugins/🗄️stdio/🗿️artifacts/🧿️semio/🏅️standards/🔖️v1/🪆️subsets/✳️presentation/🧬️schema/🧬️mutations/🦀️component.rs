@@ -6,13 +6,14 @@ use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot:
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::{
     dec_layout, dec_master, dec_shape, dec_slide, decode_option, diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide,
     diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout,
-    diff_set_slide_notes, diff_set_snapshot, diff_set_textbox_blocks, dec_doc_block, dec_frame, dec_str, enc_layout, enc_master, enc_shape, enc_slide,
-    encode_option, enc_doc_block, enc_frame, enc_list, dec_list, enc_str, frame_of, SemioPresentationDiff,
+    diff_set_slide_notes, diff_set_snapshot, diff_set_textbox_blocks, dec_block, dec_frame, dec_str, enc_layout, enc_master, enc_shape, enc_slide,
+    encode_option, enc_block, enc_frame, enc_list, dec_list, enc_str, frame_of, SemioPresentationDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlideShape};
-use protocol::{Mutation, OpText};
-#[cfg(test)]
-use protocol::OpBinary;
+/// 🔧️ `OpBinary`/`OpText` both unconditional (not `#[cfg(test)]`-gated): the real
+/// `impl protocol::OpBinary for SemioPresentationMutation` below (production code) calls
+/// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs both traits in scope.
+use protocol::{Mutation, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -209,11 +210,11 @@ fn print_presentation_mutation(m: &SemioPresentationMutation) -> String {
         SemioPresentationMutation::InsertSlide { index, slide } => format!("insert-slide index={index} slide={}", enc_slide(slide)),
         SemioPresentationMutation::RemoveSlide { index } => format!("remove-slide index={index}"),
         SemioPresentationMutation::SetSlideLayout { index, layout_id } => format!("set-slide-layout index={index} layout-id={}", encode_option(layout_id, |v| enc_str(v))),
-        SemioPresentationMutation::SetSlideNotes { index, notes } => format!("set-slide-notes index={index} notes={}", enc_list(notes, enc_doc_block)),
+        SemioPresentationMutation::SetSlideNotes { index, notes } => format!("set-slide-notes index={index} notes={}", enc_list(notes, enc_block)),
         SemioPresentationMutation::InsertShape { slide_index, shape_index, shape } => format!("insert-shape slide-index={slide_index} shape-index={shape_index} shape={}", enc_shape(shape)),
         SemioPresentationMutation::RemoveShape { slide_index, shape_index } => format!("remove-shape slide-index={slide_index} shape-index={shape_index}"),
         SemioPresentationMutation::SetShapeFrame { slide_index, shape_index, frame } => format!("set-shape-frame slide-index={slide_index} shape-index={shape_index} frame={}", enc_frame(frame)),
-        SemioPresentationMutation::SetTextBoxBlocks { slide_index, shape_index, blocks } => format!("set-textbox-blocks slide-index={slide_index} shape-index={shape_index} blocks={}", enc_list(blocks, enc_doc_block)),
+        SemioPresentationMutation::SetTextBoxBlocks { slide_index, shape_index, blocks } => format!("set-textbox-blocks slide-index={slide_index} shape-index={shape_index} blocks={}", enc_list(blocks, enc_block)),
         SemioPresentationMutation::InsertMaster { master } => format!("insert-master master={}", enc_master(master)),
         SemioPresentationMutation::RemoveMaster { id } => format!("remove-master id={}", enc_str(id)),
         SemioPresentationMutation::InsertLayout { layout } => format!("insert-layout layout={}", enc_layout(layout)),
@@ -240,11 +241,11 @@ fn parse_presentation_mutation(line: &str) -> Result<SemioPresentationMutation, 
         "insert-slide" => Ok(SemioPresentationMutation::InsertSlide { index: usize_arg("index")?, slide: dec_slide(arg("slide")?)? }),
         "remove-slide" => Ok(SemioPresentationMutation::RemoveSlide { index: usize_arg("index")? }),
         "set-slide-layout" => Ok(SemioPresentationMutation::SetSlideLayout { index: usize_arg("index")?, layout_id: decode_option(arg("layout-id")?, dec_str)? }),
-        "set-slide-notes" => Ok(SemioPresentationMutation::SetSlideNotes { index: usize_arg("index")?, notes: dec_list(arg("notes")?, dec_doc_block)? }),
+        "set-slide-notes" => Ok(SemioPresentationMutation::SetSlideNotes { index: usize_arg("index")?, notes: dec_list(arg("notes")?, dec_block)? }),
         "insert-shape" => Ok(SemioPresentationMutation::InsertShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, shape: dec_shape(arg("shape")?)? }),
         "remove-shape" => Ok(SemioPresentationMutation::RemoveShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")? }),
         "set-shape-frame" => Ok(SemioPresentationMutation::SetShapeFrame { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, frame: dec_frame(arg("frame")?)? }),
-        "set-textbox-blocks" => Ok(SemioPresentationMutation::SetTextBoxBlocks { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, blocks: dec_list(arg("blocks")?, dec_doc_block)? }),
+        "set-textbox-blocks" => Ok(SemioPresentationMutation::SetTextBoxBlocks { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, blocks: dec_list(arg("blocks")?, dec_block)? }),
         "insert-master" => Ok(SemioPresentationMutation::InsertMaster { master: dec_master(arg("master")?)? }),
         "remove-master" => Ok(SemioPresentationMutation::RemoveMaster { id: dec_str(arg("id")?)? }),
         "insert-layout" => Ok(SemioPresentationMutation::InsertLayout { layout: dec_layout(arg("layout")?)? }),
@@ -263,17 +264,127 @@ impl OpText for SemioPresentationMutation {
     }
 }
 
-/// ⚡️ Binary = the text bytes verbatim (same simplification as the diff file's hand-rolled codec).
+/// 🏷️ Ordinal table, same declaration order as `SemioPresentationMutation`'s own enum variants
+/// and `parse_presentation_mutation`'s keyword match — the real binary `tag` field's source of
+/// truth.
+const OP_KEYWORDS: [&str; 15] = [
+    "no-mutation",
+    "set-snapshot",
+    "insert-slide",
+    "remove-slide",
+    "set-slide-layout",
+    "set-slide-notes",
+    "insert-shape",
+    "remove-shape",
+    "set-shape-frame",
+    "set-textbox-blocks",
+    "insert-master",
+    "remove-master",
+    "insert-layout",
+    "remove-layout",
+    "set-layout-master",
+];
+fn variant_ordinal(m: &SemioPresentationMutation) -> u8 {
+    match m {
+        SemioPresentationMutation::NoMutation => 0,
+        SemioPresentationMutation::SetSnapshot { .. } => 1,
+        SemioPresentationMutation::InsertSlide { .. } => 2,
+        SemioPresentationMutation::RemoveSlide { .. } => 3,
+        SemioPresentationMutation::SetSlideLayout { .. } => 4,
+        SemioPresentationMutation::SetSlideNotes { .. } => 5,
+        SemioPresentationMutation::InsertShape { .. } => 6,
+        SemioPresentationMutation::RemoveShape { .. } => 7,
+        SemioPresentationMutation::SetShapeFrame { .. } => 8,
+        SemioPresentationMutation::SetTextBoxBlocks { .. } => 9,
+        SemioPresentationMutation::InsertMaster { .. } => 10,
+        SemioPresentationMutation::RemoveMaster { .. } => 11,
+        SemioPresentationMutation::InsertLayout { .. } => 12,
+        SemioPresentationMutation::RemoveLayout { .. } => 13,
+        SemioPresentationMutation::SetLayoutMaster { .. } => 14,
+    }
+}
+/// ✂️ Just the `key=value ...` argument tail of `print_presentation_mutation` (empty for
+/// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text keyword
+/// itself is redundant in the binary payload.
+fn print_presentation_mutation_args(m: &SemioPresentationMutation) -> String {
+    match print_presentation_mutation(m).split_once(' ') {
+        Some((_, rest)) => rest.to_string(),
+        None => String::new(),
+    }
+}
+
+/// ⚡️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION presentation wave: real binary
+/// op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut. `format u8`
+/// (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see [`OP_KEYWORDS`]) are two
+/// REAL fixed fields; the variant's own `key=value ...` argument payload follows as one opaque
+/// trailing `bytes` chain — reusing the already-real, already-tested
+/// `print_presentation_mutation`/`parse_presentation_mutation` text codec rather than re-deriving a
+/// second independent encoding (`protocol-array-of-records`/`protocol-prim-ref-recursion`, per the
+/// grammar recipe's own gap table — same honest boundary the sibling `../../🔺️diff/💾️binary/
+/// 📡️component.protocol.semio` uses).
 impl protocol::OpBinary for SemioPresentationMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_presentation_mutation_args(self).as_bytes());
+        Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        const OP_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
+        }
+        if bytes[0] != OP_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        let tag = bytes[1];
+        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
+        let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs
+
+//#region 🔖️Demo
+/// 🌱 Representative `SemioPresentationMutation` cases (one per variant) — single source of truth
+/// for this facet's own `op_text_binary_roundtrip_law` AND `ops_grammar_conformance_law`/
+/// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+#[cfg(test)]
+pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
+    use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
+
+    let frame = SlideFrame { origin: SemioPoint2 { x: 1.5, y: 2.5 }, width: 3.5, height: 4.5 };
+    vec![
+        SemioPresentationMutation::NoMutation,
+        SemioPresentationMutation::SetSnapshot { snapshot: crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::snapshot_b() },
+        SemioPresentationMutation::InsertSlide {
+            index: 1,
+            slide: Slide {
+                id: "new".into(),
+                layout_id: Some("layout1".into()),
+                shapes: vec![SlideShape::Table { frame, rows: vec![SlideTableRow { cells: vec![SlideTableCell { blocks: vec![DocBlock::paragraph("cell")] }] }] }],
+                notes: Vec::new(),
+            },
+        },
+        SemioPresentationMutation::RemoveSlide { index: 0 },
+        SemioPresentationMutation::SetSlideLayout { index: 0, layout_id: Some("other".into()) },
+        SemioPresentationMutation::SetSlideLayout { index: 0, layout_id: None },
+        SemioPresentationMutation::SetSlideNotes { index: 1, notes: vec![DocBlock::paragraph("hello world")] },
+        SemioPresentationMutation::InsertShape { slide_index: 0, shape_index: 0, shape: SlideShape::Placeholder { frame, kind: PlaceholderKind::Other { value: "custom".into() } } },
+        SemioPresentationMutation::RemoveShape { slide_index: 0, shape_index: 0 },
+        SemioPresentationMutation::SetShapeFrame { slide_index: 0, shape_index: 0, frame },
+        SemioPresentationMutation::SetTextBoxBlocks { slide_index: 0, shape_index: 0, blocks: vec![DocBlock::paragraph("changed"), DocBlock::Heading { level: 1, style_id: Some("s".into()), runs: Vec::new() }] },
+        SemioPresentationMutation::InsertMaster { master: SlideMaster { id: "m2".into(), shapes: Vec::new() } },
+        SemioPresentationMutation::RemoveMaster { id: "master1".into() },
+        SemioPresentationMutation::InsertLayout { layout: SlideLayout { id: "l2".into(), master_id: "master1".into(), shapes: Vec::new() } },
+        SemioPresentationMutation::RemoveLayout { id: "layout1".into() },
+        SemioPresentationMutation::SetLayoutMaster { id: "layout1".into(), master_id: "master1".into() },
+        SemioPresentationMutation::InsertShape { slide_index: 0, shape_index: 1, shape: SlideShape::Picture { frame, image: SlidePictureImage { asset_id: "x".into(), mime: "image/png".into(), bytes: vec![7, 8] } } },
+    ]
+}
+//#endregion 🔖️Demo
 
 //#region 🧪️Tests
 #[cfg(test)]

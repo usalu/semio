@@ -4,10 +4,15 @@
 //! child-plane solve, BFS). Diagram centers use attraction `x`/`y` (compose `u`/`v`).
 
 use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dSnapshot, Puzzle3dVortex};
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 
-/// 🎛 Absolute plane + diagram center for one object after flatten.
-#[derive(Clone, Copy, Debug, PartialEq)]
+/// 🎛 Absolute plane + diagram center for one object after flatten. `Serialize`/`Deserialize`
+/// (added for 💡️inference, ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING):
+/// this is the `Value` type of the `Puzzle3dFlatPlane` `InferredField`, cached by
+/// `InferenceCache` as its own canonical bytes.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FlattenPlane {
     pub origin: [f64; 3],
     pub x_axis: [f64; 3],
@@ -21,7 +26,8 @@ impl Default for FlattenPlane {
 }
 
 /// 🎛 Flattened pose for one object.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FlattenPose {
     pub plane: FlattenPlane,
     pub center: [f64; 2],
@@ -207,29 +213,29 @@ pub fn plane_to_orientation(plane: FlattenPlane) -> [f64; 4] {
     [(m02 + m20) / s, (m12 + m21) / s, 0.25 * s, (m10 - m01) / s]
 }
 
-fn orientation_to_plane(origin: [f64; 3], orientation: [f64; 4]) -> FlattenPlane {
+pub(crate) fn orientation_to_plane(origin: [f64; 3], orientation: [f64; 4]) -> FlattenPlane {
     let m = quaternion_to_matrix(orientation);
     FlattenPlane { origin, x_axis: [m[0], m[1], m[2]], y_axis: [m[4], m[5], m[6]] }
 }
 
 
 
-fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
+pub(crate) fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
     endpoint.split_once(':')
 }
 
-fn find_vortex<'a>(object: &'a Puzzle3dObject, vortex_id: &str) -> Option<&'a Puzzle3dVortex> {
+pub(crate) fn find_vortex<'a>(object: &'a Puzzle3dObject, vortex_id: &str) -> Option<&'a Puzzle3dVortex> {
     object.vortices.iter().find(|vortex| vortex.id == vortex_id)
 }
 
-fn vortex_geom(vortex: &Puzzle3dVortex) -> ([f64; 3], [f64; 3], f64) {
+pub(crate) fn vortex_geom(vortex: &Puzzle3dVortex) -> ([f64; 3], [f64; 3], f64) {
     let point = vortex.position;
     let mut direction = vortex.direction.unwrap_or([0.0, 0.0, 1.0]);
     normalize(&mut direction);
     (point, direction, 0.0)
 }
 
-fn compute_child_plane(
+pub(crate) fn compute_child_plane(
     parent_plane: FlattenPlane,
     parent_point: [f64; 3],
     parent_dir: [f64; 3],
@@ -289,7 +295,7 @@ fn compute_child_plane(
     matrix_to_plane(mul_mat(parent_matrix, transform))
 }
 
-fn diagram_center(parent_center: [f64; 2], parent_direction: [f64; 3], parent_t: f64, attraction: &Puzzle3dAttraction) -> [f64; 2] {
+pub(crate) fn diagram_center(parent_center: [f64; 2], parent_direction: [f64; 3], parent_t: f64, attraction: &Puzzle3dAttraction) -> [f64; 2] {
     let connection_x = attraction.x;
     let connection_y = attraction.y;
     let (child_x, child_y) = if parent_center[0] == 0.0 && parent_center[1] == 0.0 {
@@ -303,6 +309,17 @@ fn diagram_center(parent_center: [f64; 2], parent_direction: [f64; 3], parent_t:
     [round_f(child_x), round_f(child_y)]
 }
 
+/// 🕸️ How one object was placed by [`flatten_objects_with_assignment`]'s BFS: `Root` kept its
+/// stored/default plane (nothing to hash against); `Child` was placed relative to `parent_id`'s
+/// vortex `parent_vortex_id` via `attraction_index`, itself connecting to this object's own vortex
+/// `child_vortex_id` — exactly the edge data a 💡️inference dependency-hash chain needs (see
+/// `Puzzle3dFlatPlane`/`Puzzle3dFlatCenter` in `🧬️schema/💡️inference/🦀️component.rs`).
+#[derive(Clone, Debug, PartialEq)]
+pub enum FlattenParent {
+    Root,
+    Child { parent_id: String, attraction_index: usize, parent_vortex_id: String, child_vortex_id: String },
+}
+
 /// 🌤️ Absolute planes and diagram centers for every object in a snapshot.
 pub fn flatten_snapshot(snapshot: &Puzzle3dSnapshot) -> HashMap<String, FlattenPose> {
     flatten_objects(&snapshot.objects, &snapshot.attractions, None)
@@ -310,8 +327,19 @@ pub fn flatten_snapshot(snapshot: &Puzzle3dSnapshot) -> HashMap<String, FlattenP
 
 /// 🌤️ Absolute planes and diagram centers for object/attraction collections.
 pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttraction], seed_centers: Option<&HashMap<String, [f64; 2]>>) -> HashMap<String, FlattenPose> {
+    flatten_objects_with_assignment(objects, attractions, seed_centers).0
+}
+
+/// 🌤️🕸️ Same BFS as [`flatten_objects`], additionally returning visitation order (topological —
+/// every parent appears before its children, the exact order a 💡️inference `plan()` needs) and each
+/// object's [`FlattenParent`] assignment. Single source of truth: `flatten_objects` delegates here.
+pub fn flatten_objects_with_assignment(
+    objects: &[Puzzle3dObject],
+    attractions: &[Puzzle3dAttraction],
+    seed_centers: Option<&HashMap<String, [f64; 2]>>,
+) -> (HashMap<String, FlattenPose>, Vec<String>, HashMap<String, FlattenParent>) {
     if objects.is_empty() {
-        return HashMap::new();
+        return (HashMap::new(), Vec::new(), HashMap::new());
     }
     let object_map: HashMap<&str, &Puzzle3dObject> = objects.iter().map(|object| (object.id.as_str(), object)).collect();
     let mut adjacency: HashMap<String, Vec<(String, usize)>> = HashMap::new();
@@ -323,10 +351,12 @@ pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttrac
             adjacency.entry(child_id.to_string()).or_default().push((parent_id.to_string(), index));
         }
     }
-    let mut original_centers: HashMap<String, [f64; 2]> = HashMap::new();
+    let original_centers: HashMap<String, [f64; 2]> = HashMap::new();
     let mut piece_planes: HashMap<String, FlattenPlane> = HashMap::new();
     let mut piece_centers: HashMap<String, [f64; 2]> = HashMap::new();
     let mut visited: HashSet<String> = HashSet::new();
+    let mut order: Vec<String> = Vec::new();
+    let mut assignment: HashMap<String, FlattenParent> = HashMap::new();
 
     let bfs_root = |root_id: &str,
                     object_map: &HashMap<&str, &Puzzle3dObject>,
@@ -334,7 +364,9 @@ pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttrac
                     attractions: &[Puzzle3dAttraction],
                     visited: &mut HashSet<String>,
                     piece_planes: &mut HashMap<String, FlattenPlane>,
-                    piece_centers: &mut HashMap<String, [f64; 2]>| {
+                    piece_centers: &mut HashMap<String, [f64; 2]>,
+                    order: &mut Vec<String>,
+                    assignment: &mut HashMap<String, FlattenParent>| {
         let mut queue: VecDeque<String> = VecDeque::new();
         queue.push_back(root_id.to_string());
         visited.insert(root_id.to_string());
@@ -351,6 +383,8 @@ pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttrac
                 piece_centers.insert(root_id.to_string(), stored_center);
             }
         }
+        order.push(root_id.to_string());
+        assignment.insert(root_id.to_string(), FlattenParent::Root);
         while let Some(current_id) = queue.pop_front() {
             let current_plane = *piece_planes.get(&current_id).unwrap_or(&FlattenPlane::default());
             let parent_center = *piece_centers.get(&current_id).unwrap_or(&[0.0, 0.0]);
@@ -371,6 +405,8 @@ pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttrac
                         .unwrap_or([0.0, 0.0]);
                     piece_planes.insert(neighbor_id.clone(), stored_plane);
                     piece_centers.insert(neighbor_id.clone(), stored_center);
+                    order.push(neighbor_id.clone());
+                    assignment.insert(neighbor_id.clone(), FlattenParent::Root);
                     queue.push_back(neighbor_id);
                     continue;
                 }
@@ -378,12 +414,16 @@ pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttrac
                 let Some((design_parent_id, design_parent_vortex)) = parse_endpoint(&attraction.attracting) else {
                     piece_planes.insert(neighbor_id.clone(), FlattenPlane::default());
                     piece_centers.insert(neighbor_id.clone(), [0.0, 0.0]);
+                    order.push(neighbor_id.clone());
+                    assignment.insert(neighbor_id.clone(), FlattenParent::Root);
                     queue.push_back(neighbor_id);
                     continue;
                 };
                 let Some((_design_child_id, design_child_vortex)) = parse_endpoint(&attraction.attracted) else {
                     piece_planes.insert(neighbor_id.clone(), FlattenPlane::default());
                     piece_centers.insert(neighbor_id.clone(), [0.0, 0.0]);
+                    order.push(neighbor_id.clone());
+                    assignment.insert(neighbor_id.clone(), FlattenParent::Root);
                     queue.push_back(neighbor_id);
                     continue;
                 };
@@ -396,6 +436,8 @@ pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttrac
                 let (Some(parent_vortex), Some(child_vortex)) = (find_vortex(current_object, current_vortex_id), find_vortex(neighbor_object, neighbor_vortex_id)) else {
                     piece_planes.insert(neighbor_id.clone(), FlattenPlane::default());
                     piece_centers.insert(neighbor_id.clone(), [0.0, 0.0]);
+                    order.push(neighbor_id.clone());
+                    assignment.insert(neighbor_id.clone(), FlattenParent::Root);
                     queue.push_back(neighbor_id);
                     continue;
                 };
@@ -404,6 +446,16 @@ pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttrac
                 let child_plane = compute_child_plane(current_plane, parent_point, parent_direction, child_point, child_direction, attraction);
                 piece_planes.insert(neighbor_id.clone(), child_plane);
                 piece_centers.insert(neighbor_id.clone(), diagram_center(parent_center, parent_direction, parent_t, attraction));
+                order.push(neighbor_id.clone());
+                assignment.insert(
+                    neighbor_id.clone(),
+                    FlattenParent::Child {
+                        parent_id: current_id.clone(),
+                        attraction_index,
+                        parent_vortex_id: current_vortex_id.to_string(),
+                        child_vortex_id: neighbor_vortex_id.to_string(),
+                    },
+                );
                 queue.push_back(neighbor_id);
             }
         }
@@ -411,12 +463,12 @@ pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttrac
 
     for object in objects {
         if matches!(object.anchor, Puzzle3dObjectAnchor::Fixed) && !visited.contains(&object.id) {
-            bfs_root(&object.id, &object_map, &adjacency, attractions, &mut visited, &mut piece_planes, &mut piece_centers);
+            bfs_root(&object.id, &object_map, &adjacency, attractions, &mut visited, &mut piece_planes, &mut piece_centers, &mut order, &mut assignment);
         }
     }
     for object in objects {
         if !visited.contains(&object.id) {
-            bfs_root(&object.id, &object_map, &adjacency, attractions, &mut visited, &mut piece_planes, &mut piece_centers);
+            bfs_root(&object.id, &object_map, &adjacency, attractions, &mut visited, &mut piece_planes, &mut piece_centers, &mut order, &mut assignment);
         }
     }
 
@@ -427,7 +479,7 @@ pub fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttrac
         let orientation = plane_to_orientation(plane);
         out.insert(object.id.clone(), FlattenPose { plane, center, orientation });
     }
-    out
+    (out, order, assignment)
 }
 
 #[cfg(test)]

@@ -58,7 +58,7 @@ mod tests {
         assert!(inspector_json.contains("Kartenebene"));
         assert!(!inspector_json.contains("\"Map View\""));
 
-        let document_json = render(&mut app, crate::apps::gis2d::panels::document::GIS2D_PLAY_BODY_DOCUMENT);
+        let document_json = render(&mut app, crate::apps::gis2d::panels::artifact::GIS2D_PLAY_BODY_DOCUMENT);
         assert!(document_json.contains("Wasser"));
         assert!(!document_json.contains("\"Water\""));
 

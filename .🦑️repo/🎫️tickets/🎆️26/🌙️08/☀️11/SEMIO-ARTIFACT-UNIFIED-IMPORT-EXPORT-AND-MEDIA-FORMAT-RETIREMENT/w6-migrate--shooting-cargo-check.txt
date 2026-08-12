@@ -1,0 +1,30 @@
+  --> ✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:32:27
+   |
+32 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+   = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+   = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+   |
+32 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused import: `crate::artifacts::shooting::standards::v1::subsets::any::schema::diff::text::*`
+   --> ✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/📦️glue.rs:473:114
+    |
+473 | ...schema::diff::*; pub use crate::artifacts::shooting::standards::v1::subsets::any::schema::diff::text::*; pub mod schema { pub us...
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `artifact` is never read
+   --> ✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/././././../../🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:538:5
+    |
+537 | pub struct ShootingEngine {
+    |            -------------- field in this struct
+538 |     artifact: crate::artifacts::shooting::schema::ShootingArtifact,
+    |     ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-plugin-shooting` (lib) generated 9 warnings (run `cargo fix --lib -p semio-s-plugin-shooting` to apply 7 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 2m 04s

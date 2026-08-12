@@ -9,9 +9,8 @@
 //! Import row (gltf ← that dialect) and an Export row (that dialect ← gltf), so adding this one
 //! dependency makes gltf's registered rows cover both the `.gltf` JSON dialect (via `DEP_JSON`)
 //! and the `.glb` binary dialect (via `DEP_BINARY`) of the SAME `s.stdio.gltf@2.0/*` coordinate --
-//! there is no separate MIME registry at this layer (`MediaFormat` is the deprecated stringly one,
-//! see its own doc comment; every current stdio artifact leaves `ArtifactKindSpec.{export,
-//! import}_formats` empty, gltf included, for consistency).
+//! there is no separate MIME registry at this layer: every current stdio artifact leaves
+//! `ArtifactKindSpec.{export, import}_formats` empty, gltf included, for consistency.
 
 use semio_framework_plugin::{ArtifactComposer, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
 use crate::artifacts::gltf::GltfSnapshot;

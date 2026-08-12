@@ -1,9 +1,15 @@
-(* `keyword arg=value ...` (space-separated) or the literal token "no-mutation". *)
-document = "no-mutation" | keyword, { " ", arg } ;
-keyword = "set-snapshot" | "insert-block" | "remove-block" | "set-block-content"
-        | "set-paragraph-style" | "set-heading-level" | "set-list-ordered" | "set-run-text"
-        | "set-run-style" | "set-image-block" | "insert-style" | "remove-style"
-        | "set-style-name" | "set-style-based-on" | "insert-image" | "remove-image"
-        | "set-image-bytes" ;
-arg = ident, "=", value ;
-value = { printable char - " " } ;
+(* ISO-14977-style EBNF for `stdio.semio.document`'s real one-line `OpText` text form —
+   descriptive mirror of the authoritative `📖️component.grammar.semio` (same production names,
+   abridged: full per-keyword argument detail lives there). *)
+op = no mutation | keyword, { space, arg } ;
+no mutation = 'no-mutation' ;
+keyword = 'set-snapshot' | 'insert-block' | 'remove-block' | 'set-block-content'
+        | 'set-paragraph-style' | 'set-heading-level' | 'set-list-ordered' | 'set-run-text'
+        | 'set-run-style' | 'set-image-block' | 'insert-style' | 'remove-style'
+        | 'set-style-name' | 'set-style-based-on' | 'insert-image' | 'remove-image'
+        | 'set-image-bytes' ;
+arg = ident, '=', value ;
+ident = letter, { letter | '-' } ;
+value = '[', bracketed content, ']' | hex | integer ;
+(* `bracketed content` = arbitrary further-nested bracket/comma-delimited value text — see the
+   authoritative grammar for the exhaustive, byte-for-byte per-keyword expansion. *)

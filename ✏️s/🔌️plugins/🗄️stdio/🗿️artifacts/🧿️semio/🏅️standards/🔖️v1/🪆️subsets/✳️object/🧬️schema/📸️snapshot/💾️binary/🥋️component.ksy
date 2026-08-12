@@ -1,14 +1,15 @@
 meta:
-  id: stdio_semio_object_snapshot
+  id: semio_object_snapshot
   endian: le
 doc: |
-  `pack` (binary) form of a `stdio.semio.object` snapshot: the `semio_format` envelope wrapping a
-  `payload` segment whose bytes are a COMPACT `serde_json` serialization of the whole
-  `SemioObjectSnapshot` struct (`schema`/`root`/`objects`), UTF-8 encoded -- the exact same JSON
-  shape as `../📝️text/📖️component.grammar.semio`'s `snapshot-json` production. Not an opaque blob:
-  the payload's own internal structure is defined there, not here -- this leaf's concern is only
-  the envelope framing this codec adds around it (same convention `json`'s own binary leaf uses).
+  `pack` (binary) form of a `stdio.semio.object` snapshot: the `semio_format` envelope (magic/
+  header/footer, described once at the framework level, not re-inlined here) wraps a `payload`
+  segment whose bytes are this facet's OWN real recursive tag-prefixed text encoding of the WHOLE
+  `SemioObjectSnapshot` (`[hex(schema),<value>,[<node>,...]]`), UTF-8 encoded -- text-native like
+  the sibling `json` artifact's own snapshot facet, NOT hex-of-JSON, NOT `serde_json`. Not an
+  opaque blob: the payload's own internal structure (the `SemioValue` tagged-union recursion) is
+  defined at `../📝️text/📖️component.grammar.semio`, not here.
 seq:
   - id: payload
     size-eos: true
-    doc: UTF-8 compact-JSON `SemioObjectSnapshot`, see the text-facet grammar for its structure.
+    doc: UTF-8 tag-prefixed SemioObjectSnapshot text, see the text-facet grammar for its structure.

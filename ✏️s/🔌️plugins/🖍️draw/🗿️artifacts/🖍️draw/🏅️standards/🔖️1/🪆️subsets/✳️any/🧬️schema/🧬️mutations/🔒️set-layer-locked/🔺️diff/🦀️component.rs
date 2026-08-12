@@ -1,38 +1,9 @@
-//! 🔺️ Diff fragment yielded by `SetLayerLocked`.
-use crate::artifacts::draw::diff::DrawDiff;
-use crate::artifacts::draw::mutations::DrawMutation;
+//! 🔺️ Sparse diff builder for `SetLayerLocked`.
+use crate::artifacts::draw::diff::{diff_set_layer_locked, DrawDiff};
 use crate::artifacts::draw::DrawSnapshot;
-use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
-/// @emoji 🔺️ Diff produced by one `SetLayerLocked` mutation.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct SetLayerLockedDiff {
-    pub mutation: Option<DrawMutation>,
-}
-
-impl SetLayerLockedDiff {
-    pub fn from_mutation(mutation: DrawMutation) -> Self {
-        Self { mutation: Some(mutation) }
-    }
-}
-
-impl MutationDiff<DrawSnapshot> for SetLayerLockedDiff {
-    fn apply(&self, projection: &DrawSnapshot) -> DrawSnapshot {
-        match &self.mutation {
-            Some(mutation) => {
-                let diff = <DrawMutation as protocol::Mutation<DrawSnapshot>>::diff(mutation, projection);
-                <DrawDiff as MutationDiff<DrawSnapshot>>::apply(&diff, projection)
-            }
-            None => projection.clone(),
-        }
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.mutation.is_some() {
-            *self = other;
-        }
-    }
+pub fn diff(payload: &super::mutation::SetLayerLocked, _base: &DrawSnapshot) -> DrawDiff {
+    diff_set_layer_locked(&payload.layer_id, payload.locked)
 }
 //#endregion 🔖️Diff

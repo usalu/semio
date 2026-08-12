@@ -932,6 +932,168 @@ pub fn derive_dsl_enum(input: TokenStream) -> TokenStream {
 }
 //#endregion 🔖️DslEnum
 
+//#region 🔖️Mutations
+/// @emoji 🗣️ `#[mutations(snapshot = ..., diff = ..., schema = "...")]` container attrs for
+/// `#[derive(Mutations)]` — see that macro's doc.
+#[derive(Default)]
+struct MutationsAttrs {
+    snapshot: Option<Type>,
+    diff: Option<Type>,
+    schema: Option<String>,
+}
+
+fn parse_mutations_attrs(input: &DeriveInput) -> MutationsAttrs {
+    let mut out = MutationsAttrs::default();
+    for attr in &input.attrs {
+        if !attr.path().is_ident("mutations") {
+            continue;
+        }
+        let _ = attr.parse_nested_meta(|meta| {
+            if meta.path.is_ident("snapshot") {
+                out.snapshot = Some(meta.value()?.parse()?);
+            } else if meta.path.is_ident("diff") {
+                out.diff = Some(meta.value()?.parse()?);
+            } else if meta.path.is_ident("schema") {
+                let value: syn::LitStr = meta.value()?.parse()?;
+                out.schema = Some(value.value());
+            }
+            Ok(())
+        });
+    }
+    out
+}
+
+/// @emoji 🦠️ Wires an artifact's mutation dispatch enum, whose every variant is a single-field
+/// tuple wrapping a `::protocol::MutationKind<Snapshot, Self>` payload struct declared in a
+/// `🧬️mutations/<kind>/🦠️mutation/` triad leaf — `#[mutations(snapshot = YourSnapshot, diff =
+/// YourDiff, schema = "your.doc.schema")]` on the enum. Generates `impl ::protocol::Mutation`
+/// (match-delegating `diff`/`inverse` to each variant's `MutationKind` impl — the leaf, not this
+/// enum, holds the handcrafted logic), `impl ::protocol::SemanticMutation` (`kinds`/`semantics`/
+/// `label`/`target`), a `register_<enum>_descriptors()` fn, and per-variant `const _: () =
+/// assert!(..)` checks that `MutationKind::SEMANTICS.kind` matches the variant's own kebab name
+/// and that `SEMANTICS.verb` is in `::protocol::APPROVED_VERBS` — both are BUILD errors, not
+/// findings a later policy scan has to catch. See
+/// `.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md` §4.
+#[proc_macro_derive(Mutations, attributes(mutations))]
+pub fn derive_mutations(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = input.ident.clone();
+    let Data::Enum(data) = &input.data else {
+        return syn::Error::new_spanned(&input, "#[derive(Mutations)] only supports enums").to_compile_error().into();
+    };
+    let attrs = parse_mutations_attrs(&input);
+    let (Some(snapshot_ty), Some(diff_ty), Some(schema)) = (attrs.snapshot, attrs.diff, attrs.schema) else {
+        return syn::Error::new_spanned(
+            &input,
+            "#[derive(Mutations)] requires #[mutations(snapshot = YourSnapshot, diff = YourDiff, schema = \"your.doc.schema\")]",
+        )
+        .to_compile_error()
+        .into();
+    };
+
+    let mut diff_arms = Vec::new();
+    let mut inverse_arms = Vec::new();
+    let mut semantics_arms = Vec::new();
+    let mut label_arms = Vec::new();
+    let mut target_arms = Vec::new();
+    let mut kind_consts = Vec::new();
+    let mut const_asserts = Vec::new();
+    let mut register_calls = Vec::new();
+
+    for variant in &data.variants {
+        let variant_ident = &variant.ident;
+        let Fields::Unnamed(unnamed) = &variant.fields else {
+            return syn::Error::new_spanned(
+                variant,
+                "#[derive(Mutations)] requires every variant to be a single-field tuple wrapping a MutationKind payload struct, e.g. RenameWidget(rename_widget::RenameWidget)",
+            )
+            .to_compile_error()
+            .into();
+        };
+        if unnamed.unnamed.len() != 1 {
+            return syn::Error::new_spanned(variant, "#[derive(Mutations)] requires every variant to wrap exactly one MutationKind payload struct").to_compile_error().into();
+        }
+        let payload_ty = &unnamed.unnamed[0].ty;
+        let expected_kebab = to_kebab(&variant_ident.to_string());
+        let assert_kind_message = format!("#[derive(Mutations)]: {}::{}'s MutationKind::SEMANTICS.kind must equal \"{}\" (its own kebab form)", name, variant_ident, expected_kebab);
+        let assert_verb_message = format!("#[derive(Mutations)]: {}::{}'s MutationKind::SEMANTICS.verb must be one of protocol::APPROVED_VERBS", name, variant_ident);
+
+        diff_arms.push(quote! {
+            #name::#variant_ident(payload) => <#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::diff(payload, base)
+        });
+        inverse_arms.push(quote! {
+            #name::#variant_ident(payload) => <#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::inverse(payload, base)
+        });
+        semantics_arms.push(quote! {
+            #name::#variant_ident(_) => &<#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::SEMANTICS
+        });
+        label_arms.push(quote! {
+            #name::#variant_ident(payload) => <#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::label(payload)
+        });
+        target_arms.push(quote! {
+            #name::#variant_ident(payload) => <#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::target(payload)
+        });
+        kind_consts.push(quote! {
+            <#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::SEMANTICS
+        });
+        const_asserts.push(quote! {
+            const _: () = assert!(::protocol::str_eq(<#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::SEMANTICS.kind, #expected_kebab), #assert_kind_message);
+            const _: () = assert!(::protocol::is_approved_verb(<#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::SEMANTICS.verb), #assert_verb_message);
+        });
+        register_calls.push(quote! {
+            ::protocol::register_mutation_descriptor(
+                ::protocol::MutationDescriptor::new(
+                    ::protocol::SchemaId(format!("{}#{}", #schema, <#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::SEMANTICS.kind)),
+                    ::protocol::SchemaVersion(1),
+                    ::protocol::StateClass::Persistent,
+                    ::protocol::ConflictRule::Merge(::protocol::MergeStrategyKind::LwwRegister),
+                )
+                .with_semantics(&<#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::SEMANTICS),
+            );
+        });
+    }
+
+    let register_fn_ident = syn::Ident::new(&format!("register_{}_descriptors", to_kebab(&name.to_string()).replace('-', "_")), name.span());
+
+    let expanded = quote! {
+        #(#const_asserts)*
+
+        impl ::protocol::Mutation<#snapshot_ty> for #name {
+            type Diff = #diff_ty;
+            fn diff(&self, base: &#snapshot_ty) -> Self::Diff {
+                match self { #(#diff_arms),* }
+            }
+            fn inverse(&self, base: &#snapshot_ty) -> Vec<Self> {
+                match self { #(#inverse_arms),* }
+            }
+        }
+
+        impl ::protocol::SemanticMutation<#snapshot_ty> for #name {
+            fn kinds() -> &'static [::protocol::SemanticDescriptor] {
+                const KINDS: &[::protocol::SemanticDescriptor] = &[ #(#kind_consts),* ];
+                KINDS
+            }
+            fn semantics(&self) -> &'static ::protocol::SemanticDescriptor {
+                match self { #(#semantics_arms),* }
+            }
+            fn label(&self) -> String {
+                match self { #(#label_arms),* }
+            }
+            fn target(&self) -> Vec<String> {
+                match self { #(#target_arms),* }
+            }
+        }
+
+        /// 🪪️ Registers every variant's `::protocol::MutationDescriptor` — idempotent, safe to call
+        /// repeatedly; call once during host/plugin startup.
+        pub fn #register_fn_ident() {
+            #(#register_calls)*
+        }
+    };
+    expanded.into()
+}
+//#endregion 🔖️Mutations
+
 //#region 🔖️VariantHelpers
 /// @emoji 🔡️ Converts a Rust identifier (`PascalCase`/`camelCase`/`snake_case`, any mix) into
 /// lowercase `kebab-case` — the unified syntax law's key/keyword/tag convention. Falls back to

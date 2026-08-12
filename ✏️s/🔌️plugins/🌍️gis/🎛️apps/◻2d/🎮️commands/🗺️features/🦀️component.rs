@@ -2,10 +2,10 @@
 
 use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::artifacts::gismap::engine::{gis_map_document_from_descriptor_json, positions_operations};
+use crate::artifacts::gismap::mutations::replace_route_data;
 use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::{GisMapSnapshot, MapFeaturePatch};
+use crate::artifacts::gismap::GisMapSnapshot;
 use dsl::DslValue;
-use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -32,7 +32,7 @@ pub fn patch_routes_operations(document: &GisMapSnapshot, route_ids: &[String], 
             } else {
                 entries.push((field.to_string(), dsl_value.clone()));
             }
-            Some(GisMapMutation::Routes(CollectionMutation::Patch { id: route.id.clone(), patch: MapFeaturePatch { data: Some(data) } }))
+            Some(GisMapMutation::ReplaceRouteData(replace_route_data::mutation::ReplaceRouteData { id: route.id.clone(), new_data: data }))
         })
         .collect();
     Emit::mutations(operations)

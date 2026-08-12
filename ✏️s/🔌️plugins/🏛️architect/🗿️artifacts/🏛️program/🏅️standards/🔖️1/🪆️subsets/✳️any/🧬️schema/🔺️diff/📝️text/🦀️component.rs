@@ -444,7 +444,7 @@ impl ProgramDiff {
         }
         if let Some(delta) = &self.documents {
             apply_collection_delta(
-                &mut next.documents,
+                &mut next.artifacts,
                 &delta.added,
                 &delta.removed,
                 &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),

@@ -500,6 +500,65 @@ where
     assert_eq!(&parsed, op, "OpText::parse_op(op.print_op()) must recover an equal operation");
 }
 
+/// ✅️ LAW: `absorb(d1, d2).apply(base) == d2.apply(&d1.apply(base))` — the sequential-coalesce
+/// contract every `MutationDiff::absorb` impl must satisfy (`📡️spr/🎮️command/🦀️component.rs`'s
+/// `🔖️Mutation` region doc). Every `🧬️mutations/<kind>/🔺️diff` leaf's test region should call this
+/// with two diffs of its own artifact known to have been produced by sequential mutations.
+pub fn assert_mutation_diff_absorb_law<P, D>(base: &P, d1: D, d2: D)
+where
+    P: PartialEq + std::fmt::Debug,
+    D: crate::os_spr::MutationDiff<P> + Clone,
+{
+    let sequential = d2.apply(&d1.apply(base));
+    let mut absorbed = d1;
+    absorbed.absorb(d2);
+    let composed = absorbed.apply(base);
+    assert_eq!(composed, sequential, "absorb(d1, d2).apply(base) must equal d2.apply(&d1.apply(base))");
+}
+
+/// ✅️ LAW: applying `mutation`'s `Mutation::inverse(base)` (in reverse order, matching
+/// `ArtifactStore::replay_mutations`'s own `back.reverse()`) after `mutation` restores `base`. The
+/// per-`MutationKind` version of `.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md`'s
+/// core requirement: every handcrafted mutation implements a real inverse, not a sentinel.
+pub fn assert_mutation_inverse_law<P, Op>(base: &P, mutation: &Op)
+where
+    P: Clone + PartialEq + std::fmt::Debug,
+    Op: crate::os_spr::Mutation<P>,
+{
+    use crate::os_spr::MutationDiff;
+    let mut state = mutation.diff(base).apply(base);
+    let mut backward = mutation.inverse(base);
+    backward.reverse();
+    for undo in &backward {
+        state = undo.diff(&state).apply(&state);
+    }
+    assert_eq!(&state, base, "applying mutation.inverse(base) (reversed) after mutation must restore base");
+}
+
+/// ✅️ LAW: `D::between(a, b).apply(a) == b`, and `D::between(a, a).is_empty()` —
+/// [`crate::os_spr::DiffAlgebra`]'s state-delta contract.
+pub fn assert_diff_algebra_between_law<P, D>(a: &P, b: &P)
+where
+    P: Clone + PartialEq + std::fmt::Debug,
+    D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P>,
+{
+    let delta = D::between(a, b);
+    assert_eq!(&delta.apply(a), b, "DiffAlgebra::between(a, b).apply(a) must equal b");
+    assert!(D::between(a, a).is_empty(), "DiffAlgebra::between(a, a) must be empty");
+}
+
+/// ✅️ LAW: `d.inverse(base).apply(&d.apply(base)) == *base` — [`crate::os_spr::DiffAlgebra`]'s
+/// diff-level undo, independent of any `Mutation` that might have produced `d`.
+pub fn assert_diff_algebra_inverse_law<P, D>(base: &P, d: &D)
+where
+    P: Clone + PartialEq + std::fmt::Debug,
+    D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P>,
+{
+    let after = d.apply(base);
+    let restored = d.inverse(base).apply(&after);
+    assert_eq!(&restored, base, "d.inverse(base).apply(&d.apply(base)) must equal base");
+}
+
 fn fisher_yates_shuffle(rng: &mut SplitMix64, items: &mut [usize]) {
     for i in (1..items.len()).rev() {
         let j = rng.next_range(i as u64 + 1) as usize;
@@ -851,6 +910,18 @@ mod tests {
         }
     }
 
+    impl crate::os_spr::DiffAlgebra<i64> for AddDiff {
+        fn inverse(&self, _base: &i64) -> Self {
+            AddDiff { delta: -self.delta }
+        }
+        fn between(base: &i64, other: &i64) -> Self {
+            AddDiff { delta: other - base }
+        }
+        fn is_empty(&self) -> bool {
+            self.delta == 0
+        }
+    }
+
     // `RegisterDiff`: two independently-overwritable fields, used to demonstrate LwwRegister's
     // "discard the loser whole" behavior versus the semio_compose_rs strategies' "merge per field" behavior.
     #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -881,6 +952,8 @@ mod tests {
             timestamp: crate::os_spr::HybridLogicalTimestamp::new(actor, physical_ms),
             undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly,
             payload_hash: None,
+            semantic_kind: None,
+            label: None,
         }
     }
     //#endregion 🧸️Fixtures
@@ -901,6 +974,26 @@ mod tests {
         assert_eq!(forward, 15);
         let [undo] = <[AddOp; 1]>::try_from(op.inverse(&base)).unwrap();
         assert_eq!(undo.diff(&forward).apply(&forward), base);
+    }
+
+    #[test]
+    fn mutation_diff_absorb_law_holds_for_add() {
+        assert_mutation_diff_absorb_law(&10i64, AddDiff { delta: 3 }, AddDiff { delta: 4 });
+    }
+
+    #[test]
+    fn mutation_inverse_law_holds_for_add() {
+        assert_mutation_inverse_law(&10i64, &AddOp { delta: 5 });
+    }
+
+    #[test]
+    fn diff_algebra_between_law_holds_for_add() {
+        assert_diff_algebra_between_law::<i64, AddDiff>(&10, &17);
+    }
+
+    #[test]
+    fn diff_algebra_inverse_law_holds_for_add() {
+        assert_diff_algebra_inverse_law(&10i64, &AddDiff { delta: 5 });
     }
 
     #[test]

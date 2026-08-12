@@ -259,11 +259,19 @@ pub mod os_engine {
   pub use component::*;
 }
 
+#[path = "."]
+pub mod os_inference {
+  #[path = "../../🔨️modules/💡️inference/🦀️component.rs"]
+  mod component;
+  pub use component::*;
+}
+
 
 pub use crate::os_dsl::*;
 pub use crate::os_store::*;
 pub use crate::os_spr::*;
 pub use crate::os_pack::*;
+pub use crate::os_inference::*;
 #[path = "../../🔨️modules/🧬️semio/🦀️component.rs"]
 pub mod os_semio;
 

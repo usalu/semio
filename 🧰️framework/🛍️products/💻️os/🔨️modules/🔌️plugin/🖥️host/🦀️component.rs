@@ -539,8 +539,14 @@ impl WasmPluginRuntime {
         self.supervisor_state.lock().map(|state| *state).unwrap_or(ProgramSupervisorState::Crashed)
     }
 
+    /// ⛽️ Both `consume_fuel` and `epoch_interruption` are enabled on this runtime's `Engine`
+    /// (`build_engine`), so every store MUST have fuel + an epoch deadline set before its first wasm
+    /// call or wasmtime traps immediately (`all fuel consumed` / `interrupt`) — a fresh `Store`'s
+    /// fuel and epoch deadline both default to zero. Nothing in this runtime increments the engine's
+    /// epoch, so `u64::MAX` is effectively "never interrupt" rather than a real cooperative budget.
     fn prepare_call(store: &mut Store<HostState>) {
         store.set_fuel(PLUGIN_FUEL_BUDGET).ok();
+        store.set_epoch_deadline(u64::MAX);
     }
 
     pub fn manifest_json(&self) -> Result<String, PluginHostError> {
@@ -815,7 +821,9 @@ impl WasmPluginRuntime {
     fn read_manifest(engine: &Engine, component: &Component, linker: &Linker<HostState>) -> Result<PluginManifest, PluginHostError> {
         let manifest = PluginManifest { plugin_id: "unknown".into(), label: "Unknown".into(), version: "0.0.0".into(), apps: vec![], examples: vec![], capabilities: vec![], topic_contributions: vec![], commands: vec![], artifact_kinds: vec![] };
         let mut store = Store::new(engine, Self::host_state("bootstrap", &manifest));
+        Self::prepare_call(&mut store);
         let (bindings, _instance) = PluginWorld::instantiate(&mut store, component, linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::prepare_call(&mut store);
         let wire_bytes = bindings.semio_framework_plugin().call_manifest(&mut store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let value = store::pack_rt::decode_wire_value(&wire_bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
         let value = store::pack_rt::renormalize_whole_number_floats(value);
@@ -823,6 +831,7 @@ impl WasmPluginRuntime {
     }
 
     fn instantiate(mut store: Store<HostState>, component: &Component, linker: &Linker<HostState>) -> Result<(Store<HostState>, PluginWorld), PluginHostError> {
+        Self::prepare_call(&mut store);
         let (bindings, _instance) = PluginWorld::instantiate(&mut store, component, linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         Ok((store, bindings))
     }
@@ -1087,7 +1096,7 @@ mod tests {
 
     #[test]
     fn wasm_plugin_runtime_api_exists() {
-        let _ = std::mem::size_of::<WasmPluginRuntime>();
+        let _ = size_of::<WasmPluginRuntime>();
     }
 
     #[test]
@@ -1097,4 +1106,106 @@ mod tests {
         let error = runtime.extension_invoke("nonexistent", "noop", &[]).expect_err("unknown extension id must fault");
         assert_eq!(error.code.0, "extension.unknown");
     }
+
+    #[test]
+    fn wasm_plugin_runtime_loads_real_plugin_component_if_present() {
+        let path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/puzzle/semio_s_plugin_puzzle_component.core.wasm");
+        if path.exists() {
+            let runtime = WasmPluginRuntime::load(path).expect("WasmPluginRuntime::load should succeed without epoch/fuel trap");
+            assert!(!runtime.manifest.plugin_id.is_empty());
+        }
+    }
+
+    //#region 🔖️IoRouterE2e
+    /// 🌉️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W7: the
+    /// first real compile-and-run verification of the cross-plugin `IoRouter` wiring built across
+    /// W1/W3 — two REAL wasm components (`bun nx run @semio-tech/framework-os-dev:build -- stdio` /
+    /// `-- cad`), each loaded into its OWN native `WasmPluginRuntime`, both registered into one
+    /// shared `IoRouter` (mirrors exactly how `WasmtimeNodeHost::runtime_for` wires a real dev-boot).
+    ///
+    /// The routed key: cad's own composer (`🎹️composer/🦀️component.rs`, `EXPORT_STEP_DIALECT`
+    /// entry) registers `writes: s.stdio.step@ap214/*, reads: [s.cad@1/*]` — `register_composer_entries`
+    /// mirrors that into BOTH an Import (`step` reads from `cad`) and an Export (`cad` exports to
+    /// `step`) `IoKey`, and BOTH resolve, locally, only inside CAD's own registry (`s.stdio` never
+    /// registers anything naming `s.cad` — confirmed by inspection, not assumed). So asking the
+    /// shared `IoRouter` to compose this key with `calling_plugin_id = "stdio"` can only ever
+    /// succeed by crossing into CAD's separately-loaded wasm instance for real — the exact
+    /// `HostState::io_compose` -> `IoRouter::compose` -> owner-lookup -> `WasmPluginRuntime::
+    /// artifact_compose` path a genuine guest-triggered `host.io-compose` call would take.
+    #[test]
+    fn io_router_routes_a_real_cross_plugin_compose_between_two_loaded_wasm_plugins() {
+        let stdio_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/stdio/semio_s_plugin_stdio_component.core.wasm");
+        let cad_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/cad/semio_s_plugin_cad_component.core.wasm");
+        if !stdio_path.exists() || !cad_path.exists() {
+            // 🧊️ Same convention as `wasm_plugin_runtime_loads_real_plugin_component_if_present`
+            // above: this crate's own suite must stay green on a fresh clone / no-wasm-toolchain CI
+            // run — but wherever both real build artifacts DO exist, every assertion below is real.
+            return;
+        }
+        let stdio_runtime = Arc::new(WasmPluginRuntime::load(stdio_path).expect("load real stdio.wasm"));
+        let cad_runtime = Arc::new(WasmPluginRuntime::load(cad_path).expect("load real cad.wasm"));
+
+        let router = Arc::new(IoRouter::new());
+        stdio_runtime.register_host_io_router(Arc::clone(&router)).expect("register stdio io router");
+        cad_runtime.register_host_io_router(Arc::clone(&router)).expect("register cad io router");
+        router.register_plugin(&stdio_runtime.manifest.plugin_id, Arc::clone(&stdio_runtime)).expect("register stdio plugin");
+        router.register_plugin(&cad_runtime.manifest.plugin_id, Arc::clone(&cad_runtime)).expect("register cad plugin");
+
+        let (plugins, keys) = router.stats();
+        assert_eq!(plugins, 2, "both real plugins must be registered with the shared router");
+        assert!(keys > 0, "both plugins' real composer rosters must have produced at least one route");
+
+        let fixture_text = std::fs::read_to_string("✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio")
+            .expect("real cad demo fixture must be on disk");
+
+        // 🗝️ Owned ONLY by cad's registry (`s.cad` is never a dialect `stdio` registers) -- routing
+        // this with `calling_plugin_id = stdio` is the real cross-instance test: stdio's own guest
+        // has nothing locally for this key, so a genuine `host.io-compose` call from it could only
+        // ever be answered by hopping the host router into CAD's separately loaded instance.
+        let key = semio_framework::IoKey {
+            artifact_kind: "s.cad".to_string(),
+            standard: "1".to_string(),
+            subset: "*".to_string(),
+            direction: semio_framework::IoDirection::Export,
+            format_kind: "s.stdio.step".to_string(),
+            format_standard: "ap214".to_string(),
+            format_subset: "*".to_string(),
+        };
+        let key_bytes = serde_json::to_vec(&key).expect("encode io key");
+        let make_sources = |text: String| {
+            serde_json::to_vec(&vec![semio_framework::WireComposeSource {
+                dialect: semio_framework::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() },
+                payload: semio_framework::IoPayload::Text(text),
+            }])
+            .expect("encode compose sources")
+        };
+
+        // 🌉️ The real routed call: `IoRouter::compose` is the exact function `HostState::io_compose`
+        // (this file, `impl semio::framework::host::Host for HostState`) invokes for a genuine guest
+        // `host.io-compose` import call -- calling it here with a real "stdio" caller id against a
+        // cad-owned key exercises the identical host-side dispatch, landing on cad's real wasm.
+        let result_bytes = router.compose(&stdio_runtime.manifest.plugin_id, &key_bytes, &make_sources(fixture_text)).expect("routed cross-plugin compose must succeed, not error");
+        let composed: semio_framework::WireComposedArtifact = serde_json::from_slice(&result_bytes).expect("decode composed artifact wire bytes");
+        assert_eq!(composed.dialect.artifact_kind, "s.stdio.step");
+        let first_text = match composed.payload {
+            semio_framework::IoPayload::Text(text) => text,
+            semio_framework::IoPayload::Binary(bytes) => panic!("expected text payload, got {} binary bytes", bytes.len()),
+        };
+        assert!(!first_text.is_empty(), "composed result must carry real bytes, not an empty payload");
+        assert!(first_text.contains("cad.document"), "composed text must be a real re-print of the source document, not garbage: {first_text:?}");
+
+        // 🔁️ Idempotency: feed the composed output BACK in as a fresh `s.cad` source through the SAME
+        // routed key. print(parse(x)) is a fixpoint by construction for every other DSL type in this
+        // codebase (`assert_dsl_round_trip`'s law) -- getting byte-identical text back here is real,
+        // non-trivial evidence the routed call ran cad's genuine parse+print logic on both hops,
+        // not e.g. a stub that silently swallows an error into an empty "ok".
+        let second_result_bytes = router.compose(&stdio_runtime.manifest.plugin_id, &key_bytes, &make_sources(first_text.clone())).expect("second routed cross-plugin compose must succeed");
+        let second_composed: semio_framework::WireComposedArtifact = serde_json::from_slice(&second_result_bytes).expect("decode second composed artifact wire bytes");
+        let second_text = match second_composed.payload {
+            semio_framework::IoPayload::Text(text) => text,
+            semio_framework::IoPayload::Binary(bytes) => panic!("expected text payload, got {} binary bytes", bytes.len()),
+        };
+        assert_eq!(second_text, first_text, "print(parse(print(parse(x)))) must be a fixpoint -- proves real parse/print logic ran on both routed hops, not a stub");
+    }
+    //#endregion 🔖️IoRouterE2e
 }

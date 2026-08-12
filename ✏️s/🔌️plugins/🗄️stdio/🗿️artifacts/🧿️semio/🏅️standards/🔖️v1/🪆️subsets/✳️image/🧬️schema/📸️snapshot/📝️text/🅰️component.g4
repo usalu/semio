@@ -1,14 +1,33 @@
-// 🅰️ Real wire grammar for `s.stdio.semio.image`'s text (`ArtifactDsl`) form: a mandatory one-line
-// preamble (`store::semio_format::wrap_text`/`split_text_preamble`) followed by the snapshot's own
-// serde_json bytes, lowercase-hex encoded. Honest boundary: this subset is a NEUTRAL semio type
-// (not an on-disk file format), so its JSON shape IS the real payload — see the sibling JSON Schema
-// leaf (`🔣️component.json`, one level up) for that shape.
-grammar Semio_image_snapshot_text;
+// 🅰️ ANTLR mirror (descriptive, not test-parsed — the real recognizer is
+// ../📖️component.grammar.semio, walked by dsl::Recognizer) for s.stdio.semio.image's DSL text
+// representation (store::ArtifactDsl::parse_dsl/print_dsl, ../../🦀️component.rs's
+// print_image_snapshot_body/parse_image_snapshot_body). The `semio s.stdio.semio.image.dsl v1`
+// preamble line is stripped by store::semio_format::split_text_preamble before this grammar's
+// `document` production runs — `document` below matches the RECONSTRUCTED body (bare
+// `artifactMark` token standing in for the stripped preamble), same convention every other real
+// pilot's own `.g4` mirror uses.
+grammar Stdio_semio_image_snapshot;
 
-document : preamble NEWLINE hexBody NEWLINE? EOF ;
-preamble : 'semio' ' ' 's.stdio.semio.image.dsl' ' ' 'v' DIGIT+ ;
-hexBody  : HEXDIGIT* ;
+document        : artifactMark schemaLine widthLine heightLine colorspaceLine bitDepthLine iccLine framesLine metadataLine ;
+artifactMark    : 's.stdio.semio.image' ;
+schemaLine      : 'schema' '=' HEX ;
+widthLine       : 'width' '=' INT ;
+heightLine      : 'height' '=' INT ;
+colorspaceLine  : 'colorspace' '=' colorspace ;
+bitDepthLine    : 'bitDepth' '=' INT ;
+iccLine         : 'icc' '=' optionHex ;
 
-HEXDIGIT : [0-9a-f] ;
-DIGIT    : [0-9] ;
-NEWLINE  : '\r'? '\n' ;
+framesLine      : 'frames' '=' '[' frameList? ']' ;
+frameList       : frame (',' frame)* ;
+frame           : '[' INT ',' HEX ']' ;
+
+metadataLine    : 'metadata' '=' '[' entryList? ']' ;
+entryList       : entry (',' entry)* ;
+entry           : '[' HEX ',' HEX ']' ;
+
+colorspace      : 'r' | 'a' | 'g' | 'y' | 'i' ;
+optionHex       : '[' '0' ']' | '[' '1' ',' HEX ']' ;
+
+HEX   : [0-9a-f]* ;
+INT   : '-'? [0-9]+ ;
+WS    : [ \t\r\n]+ -> skip ;

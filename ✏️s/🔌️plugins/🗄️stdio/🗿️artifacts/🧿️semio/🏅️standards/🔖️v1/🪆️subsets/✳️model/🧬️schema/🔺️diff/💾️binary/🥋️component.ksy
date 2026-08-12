@@ -2,12 +2,15 @@ meta:
   id: stdio_semio_model_diff
   endian: le
 doc: |
-  Binary form of a `stdio.semio.model` diff: NO envelope framing (unlike the snapshot facet) --
-  `encode_diff` is exactly the UTF-8 bytes of the hand-rolled `print_diff()` one-line text (see
-  `../📝️text/📖️component.grammar.semio`'s `line` production for that grammar). Genuinely the
-  whole remaining stream, not a lazy scaffold catch-all: there is no trailing structure after it.
+  Real binary `SemioModelDiff` frame: `format` (1 byte) + `presence` bitmask (bit0=`spatial`
+  present, bit1=`elements` present, bit2=`relations` present), then 0-3 varint-length-prefixed
+  opaque blobs (the same `enc_spatial_diff`/`enc_elements_diff`/`enc_relations_diff` bracket/hex
+  text `print_diff` emits) — see the sibling `📡️component.protocol.semio`'s comment on the
+  `protocol-cond-cannot-chain` boundary.
 seq:
-  - id: line
-    size-eos:  true
-    type: str
-    encoding: UTF-8
+  - id: format
+    type: u1
+  - id: presence
+    type: u1
+  - id: payload
+    size-eos: true

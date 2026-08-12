@@ -1,7 +1,9 @@
 module Stdio_semio_model_diff;
 
-# No envelope: the binary form is exactly the UTF-8 bytes of the hand-rolled `print_diff()`
-# one-line text (same grammar as the sibling text facet).
+# `format` (1 byte) + `presence` bitmask, then an opaque `payload` tail (0-3 varint-length-prefixed
+# blobs) — see the sibling `📡️component.protocol.semio`'s comment.
 type Document = unit {
-    line: bytes &eod &convert=$$.decode("utf-8");
+    format: uint8;
+    presence: uint8;
+    payload: bytes &eod;
 };

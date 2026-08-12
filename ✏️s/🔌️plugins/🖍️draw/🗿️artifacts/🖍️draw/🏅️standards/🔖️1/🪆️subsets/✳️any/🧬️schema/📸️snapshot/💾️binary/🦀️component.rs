@@ -124,8 +124,8 @@ mod tests {
         let mut doc_store = store::ArtifactStore::new(envelope);
         let layer = create_draw_shape_layer_rect("Added Rect");
         let layer_id_value = layer_id(&layer).to_string();
-        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![DrawMutation::AddLayer { parent_id: None, index: None, layer: Box::new(layer) }], description: Some("add rect".into()) }).expect("apply add layer");
-        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![DrawMutation::SetLayerOpacity { layer_id: layer_id_value, opacity: 0.5 }], description: Some("set opacity".into()) }).expect("apply set opacity");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::artifacts::draw::mutations::create_layer(None, None, layer)], description: Some("add rect".into()) }).expect("apply add layer");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::artifacts::draw::mutations::set_layer_opacity(layer_id_value, 0.5)], description: Some("set opacity".into()) }).expect("apply set opacity");
         let edit: &Edit<DrawMutation> = doc_store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<DrawSnapshot, DrawMutation>(edit, &ArtifactId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone()));
     }

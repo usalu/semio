@@ -5,7 +5,7 @@ use crate::apps::draw::terminology::DrawPlayLabels;
 use crate::apps::draw::draw_play_action;
 use crate::artifacts::draw::engine::{draw_play_boolean_child_row_id, draw_play_layers_tree_row_id, find_draw_layer, layer_base};
 use crate::artifacts::draw::{DrawSnapshot, DrawLayerNode};
-use semio_framework_plugin::{tree_item, tree_item_with_action, tree_item_with_action_draggable, Label, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
+use semio_framework_plugin::{tree_item, tree_item_with_action, tree_item_with_action_draggable, Label, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use serde_json::json;
 
 pub const DRAW_PLAY_BODY_LAYERS: &str = "draw.play.layers";
@@ -13,7 +13,7 @@ pub const DRAW_LAYER_KIND_DRAG_MIME: &str = "application/x-semio-draw-layer-kind
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_DOCUMENT_ID.into()), label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(DRAW_PLAY_BODY_LAYERS.into()), children: Vec::new() }
+    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(DRAW_PLAY_BODY_LAYERS.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
@@ -81,7 +81,7 @@ pub fn render(document: &DrawSnapshot, interaction: &DrawConfig, labels: &DrawPl
     let selected_tree_ids: Vec<String> = interaction.selected_ids.iter().filter_map(|id| find_draw_layer(document, id).map(draw_play_layers_tree_row_id)).collect();
     let highlighted_ids: Vec<String> = interaction.hovered_id.as_ref().and_then(|id| find_draw_layer(document, id).map(draw_play_layers_tree_row_id)).into_iter().collect();
     let builder = PanelTreeBuilder::new("draw-play-layers")
-        .section("draw-play-layers", Some(Label::data(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)), true, action_items.into_iter().chain(layer_items).collect())
+        .section("draw-play-layers", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, action_items.into_iter().chain(layer_items).collect())
         .selected(selected_tree_ids)
         .selection_change(draw_play_action("setSelection", None));
     if highlighted_ids.is_empty() {

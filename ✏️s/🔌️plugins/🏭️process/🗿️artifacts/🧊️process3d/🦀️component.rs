@@ -557,13 +557,17 @@ mod tests {
         assert_eq!(parsed, solid);
     }
 
+    /// 🔤️ The legacy enum-typed `export_formats`/`import_formats` are retired in favor of the
+    /// string-id `export_stdio_kinds`/`import_stdio_kinds` peers below — both stay empty.
     #[test]
     fn artifact_kind_declares_the_expected_media_surface() {
         let kind = artifact_kind();
         assert_eq!(kind.id, "3d.process");
         assert_eq!(kind.schema, PROCESS_3D_SCHEMA);
-        assert_eq!(kind.export_formats.len(), 4);
-        assert_eq!(kind.import_formats.len(), 3);
+        assert!(kind.export_formats.is_empty());
+        assert!(kind.import_formats.is_empty());
+        assert_eq!(kind.export_stdio_kinds, kind.import_stdio_kinds);
+        assert_eq!(kind.export_stdio_kinds.len(), 8);
     }
 
     //#region 🔖️WorkshopTests

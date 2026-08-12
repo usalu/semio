@@ -1,0 +1,40 @@
+  --> ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs:30:27
+   |
+30 |     fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                           ^^^^^^^^^^^^^ expected lifetime parameter
+   |
+   = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+   = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+   |
+30 |     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+   |                                        ++++
+
+warning: unused doc comment
+   --> ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/././../../🎛️apps/📐️cad/🦀️component.rs:908:1
+    |
+908 | / /// 📐️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: unit-struct-shaped pure `ArtifactApp` — every former
+909 | | /// `CadPlayRuntime`/`self.runtime` field now lives in `CadConfig`, written through
+910 | | /// `CadConfigMutation`s (real `backwards`, no ad hoc `InverseAction`). `preview_seq` is the sole
+911 | | /// surviving interior-mutable field — it backs `gesture_preview`'s never-VCS'd, never-config'd live
+912 | | /// rubber-band tick counter, not app state.
+    | |_-------------------------------------------^
+    |   |
+    |   rustdoc does not generate documentation for macro invocations
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `artifact` is never read
+   --> ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/./././././../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:887:5
+    |
+886 | pub struct CadEngine {
+    |            --------- field in this struct
+887 |     artifact: crate::artifacts::cad::schema::CadArtifact,
+    |     ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-plugin-cad` (lib) generated 10 warnings (run `cargo fix --lib -p semio-s-plugin-cad` to apply 7 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 20.23s
+EXIT=0

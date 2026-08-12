@@ -299,7 +299,7 @@ fn commit_shape_drag(interaction: &mut DrawConfig, doc: &DrawSnapshot, utility: 
     });
     let select_id = layer_id(&layer).to_string();
     interaction.selected_ids = vec![select_id];
-    vec![DrawMutation::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
+    vec![crate::artifacts::draw::mutations::create_layer(None, Some(doc.layers.len()), layer)]
 }
 
 /// ✒️ Emits the operations that commit a freehand/polygon draft into a path or polygon layer and records it
@@ -327,7 +327,7 @@ fn commit_draft(interaction: &mut DrawConfig, doc: &DrawSnapshot, utility: &str,
     };
     let select_id = layer_id(&layer).to_string();
     interaction.selected_ids = vec![select_id];
-    vec![DrawMutation::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
+    vec![crate::artifacts::draw::mutations::create_layer(None, Some(doc.layers.len()), layer)]
 }
 
 /// 🖍️ Emits the operations that add a trace layer over the picked image (or first asset) and records it as
@@ -346,7 +346,7 @@ fn commit_trace_at(interaction: &mut DrawConfig, doc: &DrawSnapshot, world: [f64
     let layer = create_draw_trace_layer("Trace", &source_key);
     let select_id = layer_id(&layer).to_string();
     interaction.selected_ids = vec![select_id];
-    vec![DrawMutation::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
+    vec![crate::artifacts::draw::mutations::create_layer(None, Some(doc.layers.len()), layer)]
 }
 
 /// 🧰️ Wraps a committed gesture's `operations` as a single described edit plus the host effect that returns

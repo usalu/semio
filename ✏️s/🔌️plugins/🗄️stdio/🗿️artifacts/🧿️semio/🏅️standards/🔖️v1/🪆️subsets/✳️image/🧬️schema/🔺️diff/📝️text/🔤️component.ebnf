@@ -1,13 +1,38 @@
-(* Real wire grammar for `SemioImageDiff`'s hand-rolled `DiffCodec::print_diff`/`parse_diff`. *)
-line = [ token, { " ", token } ] ;
-token = scalar token | collection token ;
-scalar token = ( "width" | "height" | "bitDepth" ), "=", digit, { digit }
-             | "colorspace", "=", ( "r" | "a" | "g" | "y" | "i" )
-             | "icc", "=", option ;
-option = "[0]" | "[1,", { hex digit }, "]" ;
-collection token = ( "frames" | "metadata" ), "{", triple, "}" ;
-triple = "[", items, "]", ";", "[", items, "]", ";", "[", items, "]" ;
-items = [ item, { ",", item } ] ;
-item = digit, { digit }, ":", { hex digit } ;
-hex digit = digit | "a" | "b" | "c" | "d" | "e" | "f" ;
-digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+(* ISO/IEC 14977 EBNF mirror (descriptive, not test-parsed — the real recognizer is
+   ../📖️component.grammar.semio, walked by dsl::Recognizer) for `SemioImageDiff::print_diff`/
+   `parse_diff` (../../🦀️component.rs's `print_image_diff`/`parse_image_diff`). *)
+document        = [ width line ], [ height line ], [ colorspace line ], [ bit depth line ],
+                   [ icc line ], [ frames line ], [ metadata line ] ;
+width line      = "width", "=", digit sequence ;
+height line     = "height", "=", digit sequence ;
+colorspace line = "colorspace", "=", colorspace ;
+bit depth line  = "bitDepth", "=", digit sequence ;
+icc line        = "icc", "=", option hex ;
+
+frames line          = "frames", "{", frames triple, "}" ;
+frames triple        = "[", [ removed index list ], "]", ";", "[", [ frame modified list ], "]", ";", "[", [ frame added list ], "]" ;
+removed index list    = digit sequence, { ",", digit sequence } ;
+frame modified list  = frame modified, { ",", frame modified } ;
+frame modified       = digit sequence, ":", frame diff ;
+frame diff           = "[", [ frame diff entry list ], "]" ;
+frame diff entry list = frame diff entry, { ",", frame diff entry } ;
+frame diff entry     = "D", ":", digit sequence | "X", ":", hex ;
+frame added list     = frame added, { ",", frame added } ;
+frame added          = digit sequence, ":", frame ;
+frame                = "[", digit sequence, ",", hex, "]" ;
+
+metadata line          = "metadata", "{", metadata triple, "}" ;
+metadata triple        = "[", [ removed key list ], "]", ";", "[", [ metadata modified list ], "]", ";", "[", [ metadata added list ], "]" ;
+removed key list       = hex, { ",", hex } ;
+metadata modified list = metadata modified, { ",", metadata modified } ;
+metadata modified      = hex, ":", hex ;
+metadata added list    = entry, { ",", entry } ;
+entry                  = "[", hex, ",", hex, "]" ;
+
+colorspace = "r" | "a" | "g" | "y" | "i" ;
+option hex = "[", "0", "]" | "[", "1", ",", hex, "]" ;
+
+hex             = { hex digit } ;
+hex digit       = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" ;
+digit sequence  = [ "-" ], digit, { digit } ;
+digit           = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;

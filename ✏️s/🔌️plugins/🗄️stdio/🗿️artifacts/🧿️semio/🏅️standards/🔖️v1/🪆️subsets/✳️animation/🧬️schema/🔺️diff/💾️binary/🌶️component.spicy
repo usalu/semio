@@ -1,5 +1,10 @@
 module Stdio_semio_animation_diff;
+
+# Real binary diff frame: `format` (1 byte) + `presence` (1 byte, bit0=`timelines`), then one
+# opaque `payload` tail present only when `presence` bit0 is set — see the sibling
+# `📡️component.protocol.semio`'s comment.
 type Document = unit {
-    magic: bytes &size=1;
-    body: bytes &eod &convert=$$.decode() # hex-encoded JSON envelope body
+    format: uint8;
+    presence: uint8;
+    payload: bytes &eod;
 };

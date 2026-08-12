@@ -1,3 +1,7 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.semio.diff"
+; ABNF-style descriptive mirror of `stdio.semio`'s real `SemioDiff` binary frame (past the
+; `semio_format` envelope) -- see the authoritative `📡️component.protocol.semio` for the
+; conformance-tested version.
+document = format tag payload
+format   = %x01                  ; DIFF_BINARY_FORMAT
+tag      = OCTET                 ; diff variant ordinal (0=NoChange, 1-13=subset, 14=Replace)
+payload  = *OCTET                ; opaque tail: wrapped subset's own real encode_diff()/encode_pack() bytes

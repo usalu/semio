@@ -119,12 +119,48 @@ impl Default for SemioObjectSnapshot {
 }
 //#endregion 🔖️Snapshot
 
+//#region 🔖️SnapshotTextCodec
+/// 🌳️ `SemioObjectSnapshot`'s own real recursive text encoding — `[hex(schema),<value>,[<node>,...]]`
+/// — genuinely walked/parsed field-by-field (never a hex dump of a `serde_json` blob). Reuses the
+/// SAME tag-prefixed `SemioValue` grammar (`enc_semio_value`/`dec_semio_value`) the sibling
+/// `🔺️diff`/`🧬️mutations` facets already define for their own text codecs — this subset has no
+/// natural "on-disk file format" of its own the way `json`/`csv` do (`SemioObjectSnapshot` is a
+/// NEUTRAL semio type), so reusing one already-real, already-hand-rolled grammar as the single
+/// source of truth for every facet is the honest choice, not a shortcut (`json`'s own `JsonValue`
+/// text codec is likewise shared verbatim by its diff/mutations facets' `value=` token). Single
+/// source of truth: `🧬️mutations/🦀️component.rs`'s `SetSnapshot` argument encoding calls THESE
+/// functions directly rather than keeping its own second copy.
+pub(crate) fn enc_semio_object_snapshot(s: &SemioObjectSnapshot) -> String {
+    let objects = s.objects.iter().map(crate::artifacts::semio::standards::v1::subsets::object::schema::diff::enc_semio_object_node).collect::<Vec<_>>().join(",");
+    format!(
+        "[{},{},[{}]]",
+        crate::artifacts::semio::standards::v1::subsets::object::schema::diff::enc_str(&s.schema),
+        crate::artifacts::semio::standards::v1::subsets::object::schema::diff::enc_semio_value(&s.root),
+        objects
+    )
+}
+pub(crate) fn dec_semio_object_snapshot(s: &str) -> Result<SemioObjectSnapshot, String> {
+    use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+    use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::{dec_semio_object_node, dec_semio_value, dec_str};
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
+    let [schema_s, root_s, objects_s] = parts.as_slice() else {
+        return Err(format!("semio object snapshot: expected 3 top-level fields, got {}", parts.len()));
+    };
+    let objects_inner = strip_brackets(objects_s)?;
+    let objects = split_top_level(objects_inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_semio_object_node).collect::<Result<Vec<_>, String>>()?;
+    Ok(SemioObjectSnapshot { schema: dec_str(schema_s)?, root: dec_semio_value(root_s)?, objects })
+}
+//#endregion 🔖️SnapshotTextCodec
+
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🎁️ JSON-pack round trip (honest, genuinely working — not a per-format binary codec, since
-/// this subset's snapshot is a NEUTRAL semio type, not an on-disk file format). Wrapped in the
-/// same `store::semio_format` envelope every stdio artifact uses. `serde_json` here is a wire
-/// carrier for `SemioValue`'s OWN typed shape (Int/Float lexemes, Bytes, Ref) — not a
-/// `serde_json::Value` fallback; the model itself carries no untyped JSON.
+/// 🎁️ Real recursive text/binary round trip — NOT a per-on-disk-file-format codec (this subset's
+/// snapshot is a NEUTRAL semio type, like `json`'s own `JsonSnapshot`, not a real-world file
+/// format), so — mirroring `json`'s own text-native precedent exactly (`🔣️json/…/📸️snapshot/
+/// 🦀️component.rs`'s `ArtifactPack::encode_pack_with`: `write_json_text(&self.value).into_bytes()`
+/// passed straight to `wrap_binary`, no distinct "binary JsonValue" layout) — the PACK bytes are
+/// the SAME real compact text this facet's DSL emits, wrapped in the semio envelope. No
+/// `serde_json` anywhere in this impl block.
 impl store::ArtifactDsl for SemioObjectSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str { STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA }
@@ -134,24 +170,11 @@ impl store::ArtifactDsl for SemioObjectSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if hex.len() % 2 != 0 {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        let mut i = 0usize;
-        while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16)
-                .map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
-            bytes.push(byte);
-            i += 2;
-        }
-        serde_json::from_slice(&bytes).map_err(|e| store::TextError::new(format!("json decode: {e}"), dsl::TextSpan::at(1, 1)))
+        dec_semio_object_snapshot(body.trim()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = serde_json::to_vec(self).unwrap_or_default();
-        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+        let body = enc_semio_object_snapshot(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -164,7 +187,7 @@ impl store::ArtifactDsl for SemioObjectSnapshot {
 impl store::ArtifactPack for SemioObjectSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = serde_json::to_vec(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = enc_semio_object_snapshot(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -183,41 +206,50 @@ impl store::ArtifactPack for SemioObjectSnapshot {
             )));
         }
         let _ = options;
-        serde_json::from_slice(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
+        let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        dec_semio_object_snapshot(text).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
+
+//#region 🔖️Demo
+/// 📄️ The demo `stdio.semio.object` snapshot — exercises every `SemioValue` variant (`Null`/
+/// `Bool`/`Int`/`Float`/`Str`/`Bytes`/`List`/`Map`/`Ref`) at least once, plus a real `Ref` into
+/// `objects`. The single source of truth for
+/// `📚️examples/…/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally this
+/// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
+/// `🎹️composer/🦀️component.rs`) and for this file's own round-trip tests below — same convention
+/// `json`'s `demo_json_snapshot()`/`workflow`'s `demo_workflow_snapshot()` use.
+#[cfg(test)]
+pub(crate) fn demo_semio_object_snapshot() -> SemioObjectSnapshot {
+    SemioObjectSnapshot {
+        schema: STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA.into(),
+        root: SemioValue::Map {
+            entries: vec![
+                SemioObjectEntry { key: "name".into(), value: SemioValue::Str { value: "semio".into() } },
+                SemioObjectEntry { key: "count".into(), value: SemioValue::Int { lexeme: "42".into() } },
+                SemioObjectEntry { key: "ratio".into(), value: SemioValue::Float { lexeme: "3.500".into() } },
+                SemioObjectEntry { key: "blob".into(), value: SemioValue::Bytes { value: vec![0, 1, 2, 255] } },
+                SemioObjectEntry {
+                    key: "tags".into(),
+                    value: SemioValue::List { items: vec![SemioValue::Str { value: "a".into() }, SemioValue::Null] },
+                },
+                SemioObjectEntry { key: "linked".into(), value: SemioValue::Ref { id: ObjectId::new("n1") } },
+            ],
+        },
+        objects: vec![SemioObjectNode { id: ObjectId::new("n1"), value: SemioValue::Bool { value: true } }],
+    }
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    /// 🧪️ Exercises every `SemioValue` variant plus a real `Ref` into `objects` — the minimal
-    /// non-trivial fixture every other test module's `snap(...)` helper wraps.
-    fn sample_snapshot() -> SemioObjectSnapshot {
-        SemioObjectSnapshot {
-            schema: STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA.into(),
-            root: SemioValue::Map {
-                entries: vec![
-                    SemioObjectEntry { key: "name".into(), value: SemioValue::Str { value: "semio".into() } },
-                    SemioObjectEntry { key: "count".into(), value: SemioValue::Int { lexeme: "42".into() } },
-                    SemioObjectEntry { key: "ratio".into(), value: SemioValue::Float { lexeme: "3.500".into() } },
-                    SemioObjectEntry { key: "blob".into(), value: SemioValue::Bytes { value: vec![0, 1, 2, 255] } },
-                    SemioObjectEntry {
-                        key: "tags".into(),
-                        value: SemioValue::List { items: vec![SemioValue::Str { value: "a".into() }, SemioValue::Null] },
-                    },
-                    SemioObjectEntry { key: "linked".into(), value: SemioValue::Ref { id: ObjectId::new("n1") } },
-                ],
-            },
-            objects: vec![SemioObjectNode { id: ObjectId::new("n1"), value: SemioValue::Bool { value: true } }],
-        }
-    }
-
     #[test]
     fn json_pack_round_trips() {
-        let snap = sample_snapshot();
+        let snap = demo_semio_object_snapshot();
         let bytes = <SemioObjectSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioObjectSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
@@ -225,7 +257,7 @@ mod tests {
 
     #[test]
     fn dsl_text_round_trips() {
-        let snap = sample_snapshot();
+        let snap = demo_semio_object_snapshot();
         let text = <SemioObjectSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);

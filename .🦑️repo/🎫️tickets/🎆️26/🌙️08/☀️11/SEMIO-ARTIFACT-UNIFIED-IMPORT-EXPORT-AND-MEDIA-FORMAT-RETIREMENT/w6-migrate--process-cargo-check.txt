@@ -1,0 +1,30 @@
+  --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:10:16
+   |
+10 |         value: serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?,
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `JsonValue`, found `Value`
+   |
+   = note: `?` operator cannot convert from `serde_json::Value` to `JsonValue`
+
+error[E0308]: mismatched types
+    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:10:61
+     |
+  10 |     let mut out: Process3dSnapshot = serde_json::from_value(from.value.clone())
+     |                                      ---------------------- ^^^^^^^^^^^^^^^^^^ expected `Value`, found `JsonValue`
+     |                                      |
+     |                                      arguments to this function are incorrect
+     |
+note: function defined here
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/value/mod.rs:1037:8
+     |
+1037 | pub fn from_value<T>(value: Value) -> Result<T, Error>
+     |        ^^^^^^^^^^
+
+error[E0308]: mismatched types
+  --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:18:76
+   |
+18 |     deserialize(&JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
+   |                                                                            ^^^^^ expected `JsonValue`, found `Value`
+
+For more information about this error, try `rustc --explain E0308`.
+warning: `semio-s-plugin-process` (lib) generated 12 warnings
+error: could not compile `semio-s-plugin-process` (lib) due to 3 previous errors; 12 warnings emitted

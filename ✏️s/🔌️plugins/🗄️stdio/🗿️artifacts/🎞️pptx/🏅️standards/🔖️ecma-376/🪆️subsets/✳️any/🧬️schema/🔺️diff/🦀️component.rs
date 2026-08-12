@@ -1663,6 +1663,566 @@ fn dec_opc_diff(s: &str) -> Result<PptxOpcDiff, String> {
 }
 //#endregion 🔖️OpcDiffValueCodecs
 
+//#region 🔖️BinaryCodecs
+/// 🧪️ FG-wave: real recursive BINARY twins of every text-form codec above, backing the upgraded
+/// `DiffCodec::encode_diff`/`decode_diff` below (and, via re-export, `../🧬️mutations/🦀️component.rs`'s
+/// own upgraded `OpBinary`) — replaces F1's `print_diff().into_bytes()` text-as-binary shortcut.
+/// Real LEB128-varint-framed length-prefixed strings/bytes (`store::pack_rt::write_varint_u64` +
+/// `store::ByteReader`), fixed 8-byte little-endian `i64` fields (`PptxTransform`'s EMU
+/// coordinates — no signed-varint writer is exported from `store::pack_rt`, so these use the same
+/// fixed-width primitive `u16`/`u32` protocol fields already use, just wider), 1-byte tri-state
+/// presence tags, and 1-byte enum-variant tags — genuinely structured binary, never hex-ASCII text
+/// reused as "binary". Same shape `📜️docx/…/🔺️diff/🦀️component.rs`'s own `BinaryPrimitives`/
+/// `ValueBinaryCodecs`/`DiffValueBinaryCodecs` regions establish; duplicated here (not imported)
+/// per this repo's per-artifact hand-roll convention (no shared "hand-roll helpers" module exists
+/// yet, see this file's own `HandcraftedDiffCodec` doc comment).
+//#region 🔖️BinaryPrimitives
+pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+/// 🌱 `PptxTransform`'s four EMU coordinates are `i64` (theoretically signed, off-canvas shapes
+/// notwithstanding) — fixed 8-byte little-endian, same width class the protocol dialect's own
+/// `u64`/`i64` `Prim` already uses, just hand-rolled here since no signed-varint writer is
+/// exported from `store::pack_rt` (only `write_varint_u64`).
+pub(crate) fn write_i64_fixed(out: &mut Vec<u8>, v: i64) {
+    out.extend_from_slice(&v.to_le_bytes());
+}
+pub(crate) fn read_i64_fixed(reader: &mut store::ByteReader<'_>) -> Result<i64, String> {
+    let bytes = reader.read_bytes(8).map_err(|e| e.to_string())?;
+    let mut arr = [0u8; 8];
+    arr.copy_from_slice(bytes);
+    Ok(i64::from_le_bytes(arr))
+}
+//#endregion 🔖️BinaryPrimitives
+
+//#region 🔖️ValueBinaryCodecs
+/// 🌳️ Full-item (non-diff) binary codecs, mirrored one-for-one against `../🔖️PptxValueCodecs`'s
+/// text forms above. `pub(crate)` so `../🧬️mutations/🦀️component.rs` reuses these rather than
+/// re-deriving its own copies (same intra-artifact reuse pattern the text codecs already use).
+pub(crate) fn enc_transform_bin(t: &PptxTransform, out: &mut Vec<u8>) {
+    write_i64_fixed(out, t.x);
+    write_i64_fixed(out, t.y);
+    write_i64_fixed(out, t.cx);
+    write_i64_fixed(out, t.cy);
+}
+pub(crate) fn dec_transform_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxTransform, String> {
+    Ok(PptxTransform { x: read_i64_fixed(reader)?, y: read_i64_fixed(reader)?, cx: read_i64_fixed(reader)?, cy: read_i64_fixed(reader)? })
+}
+
+pub(crate) fn enc_run_bin(r: &PptxRun, out: &mut Vec<u8>) {
+    write_str_lp(out, &r.text);
+    out.push(r.bold as u8);
+    out.push(r.italic as u8);
+    out.push(if r.font_size.is_some() { 1 } else { 0 });
+    if let Some(sz) = r.font_size {
+        store::pack_rt::write_varint_u64(out, sz as u64);
+    }
+}
+pub(crate) fn dec_run_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxRun, String> {
+    let text = read_str_lp(reader)?;
+    let bold = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let italic = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let has_font_size = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let font_size = if has_font_size { Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32) } else { None };
+    Ok(PptxRun { text, bold, italic, font_size })
+}
+
+pub(crate) fn enc_paragraph_bin(p: &PptxParagraph, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, p.runs.len() as u64);
+    for r in &p.runs {
+        enc_run_bin(r, out);
+    }
+}
+pub(crate) fn dec_paragraph_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxParagraph, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut runs = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        runs.push(dec_run_bin(reader)?);
+    }
+    Ok(PptxParagraph { runs })
+}
+pub(crate) fn enc_paragraph_list_bin(ps: &[PptxParagraph], out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, ps.len() as u64);
+    for p in ps {
+        enc_paragraph_bin(p, out);
+    }
+}
+pub(crate) fn dec_paragraph_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<PptxParagraph>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut out = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        out.push(dec_paragraph_bin(reader)?);
+    }
+    Ok(out)
+}
+
+/// 🖼️ `PptxShape` (full item): `0`=TextBox, `1`=Picture, `2`=Placeholder, `3`=Other — same
+/// declaration order as the enum itself, tag-prefixed like `enc_xml_node_bin`'s own convention.
+pub(crate) fn enc_shape_bin(s: &PptxShape, out: &mut Vec<u8>) {
+    match s {
+        PptxShape::TextBox { text_frame, position } => {
+            out.push(0);
+            enc_paragraph_list_bin(text_frame, out);
+            enc_transform_bin(position, out);
+        }
+        PptxShape::Picture { blip_rel_id, position } => {
+            out.push(1);
+            write_str_lp(out, blip_rel_id);
+            enc_transform_bin(position, out);
+        }
+        PptxShape::Placeholder { kind, text_frame, position } => {
+            out.push(2);
+            write_str_lp(out, kind);
+            enc_paragraph_list_bin(text_frame, out);
+            enc_transform_bin(position, out);
+        }
+        PptxShape::Other { xml } => {
+            out.push(3);
+            write_str_lp(out, xml);
+        }
+    }
+}
+pub(crate) fn dec_shape_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxShape, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    match tag {
+        0 => Ok(PptxShape::TextBox { text_frame: dec_paragraph_list_bin(reader)?, position: dec_transform_bin(reader)? }),
+        1 => Ok(PptxShape::Picture { blip_rel_id: read_str_lp(reader)?, position: dec_transform_bin(reader)? }),
+        2 => Ok(PptxShape::Placeholder { kind: read_str_lp(reader)?, text_frame: dec_paragraph_list_bin(reader)?, position: dec_transform_bin(reader)? }),
+        3 => Ok(PptxShape::Other { xml: read_str_lp(reader)? }),
+        other => Err(format!("shape binary: unknown tag {other}")),
+    }
+}
+pub(crate) fn enc_slide_bin(s: &PptxSlide, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, s.shapes.len() as u64);
+    for sh in &s.shapes {
+        enc_shape_bin(sh, out);
+    }
+}
+pub(crate) fn dec_slide_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxSlide, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut shapes = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        shapes.push(dec_shape_bin(reader)?);
+    }
+    Ok(PptxSlide { shapes })
+}
+
+pub(crate) fn enc_target_mode_bin(m: &OpcTargetMode, out: &mut Vec<u8>) {
+    out.push(match m {
+        OpcTargetMode::Internal => 0,
+        OpcTargetMode::External => 1,
+    });
+}
+pub(crate) fn dec_target_mode_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcTargetMode, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(OpcTargetMode::Internal),
+        1 => Ok(OpcTargetMode::External),
+        other => Err(format!("target mode binary: bad value {other}")),
+    }
+}
+pub(crate) fn enc_part_bin(p: &OpcPart, out: &mut Vec<u8>) {
+    write_str_lp(out, &p.path);
+    write_str_lp(out, &p.content_type);
+    write_bytes_lp(out, &p.bytes);
+}
+pub(crate) fn dec_part_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPart, String> {
+    let path = read_str_lp(reader)?;
+    let content_type = read_str_lp(reader)?;
+    let bytes = read_bytes_lp(reader)?;
+    Ok(OpcPart { path, content_type, bytes })
+}
+pub(crate) fn enc_rel_bin(r: &OpcRelationship, out: &mut Vec<u8>) {
+    write_str_lp(out, &r.id);
+    write_str_lp(out, &r.rel_type);
+    write_str_lp(out, &r.target);
+    enc_target_mode_bin(&r.target_mode, out);
+}
+pub(crate) fn dec_rel_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcRelationship, String> {
+    let id = read_str_lp(reader)?;
+    let rel_type = read_str_lp(reader)?;
+    let target = read_str_lp(reader)?;
+    let target_mode = dec_target_mode_bin(reader)?;
+    Ok(OpcRelationship { id, rel_type, target, target_mode })
+}
+pub(crate) fn enc_ct_entry_bin(e: &(String, String), out: &mut Vec<u8>) {
+    write_str_lp(out, &e.0);
+    write_str_lp(out, &e.1);
+}
+pub(crate) fn dec_ct_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, String), String> {
+    Ok((read_str_lp(reader)?, read_str_lp(reader)?))
+}
+pub(crate) fn enc_owner_rels_bin(e: &(String, Vec<OpcRelationship>), out: &mut Vec<u8>) {
+    write_str_lp(out, &e.0);
+    store::pack_rt::write_varint_u64(out, e.1.len() as u64);
+    for r in &e.1 {
+        enc_rel_bin(r, out);
+    }
+}
+pub(crate) fn dec_owner_rels_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, Vec<OpcRelationship>), String> {
+    let owner = read_str_lp(reader)?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut list = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        list.push(dec_rel_bin(reader)?);
+    }
+    Ok((owner, list))
+}
+//#endregion 🔖️ValueBinaryCodecs
+
+//#region 🔖️GenericTripleBinaryCodecs
+/// 🌳️ Binary twin of `enc_indexed`/`dec_indexed` -- three varint-counted sections (removed
+/// indices / modified index+diff pairs / added index+item pairs), generic over `D`/`T`.
+fn enc_indexed_triple_bin<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
+    for i in &diff.removed {
+        store::pack_rt::write_varint_u64(out, *i as u64);
+    }
+    store::pack_rt::write_varint_u64(out, diff.modified.len() as u64);
+    for m in &diff.modified {
+        store::pack_rt::write_varint_u64(out, m.index as u64);
+        enc_d(&m.diff, out);
+    }
+    store::pack_rt::write_varint_u64(out, diff.added.len() as u64);
+    for a in &diff.added {
+        store::pack_rt::write_varint_u64(out, a.index as u64);
+        enc_t(&a.item, out);
+    }
+}
+fn dec_indexed_triple_bin<D, T>(
+    reader: &mut store::ByteReader<'_>,
+    dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
+    dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
+) -> Result<IndexedTripleDiff<D, T>, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(removed_count as usize);
+    for _ in 0..removed_count {
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+    }
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(modified_count as usize);
+    for _ in 0..modified_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let diff = dec_d(reader)?;
+        modified.push(IndexModified { index, diff });
+    }
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(added_count as usize);
+    for _ in 0..added_count {
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let item = dec_t(reader)?;
+        added.push(IndexAdded { index, item });
+    }
+    Ok(IndexedTripleDiff { removed, modified, added })
+}
+
+/// 🏷️ Binary twin of `enc_named`/`dec_named` -- three varint-counted sections (removed keys /
+/// modified key+diff pairs / added whole items), generic over `K`/`D`/`T`.
+fn enc_named_triple_bin<K, D, T>(
+    diff: &NamedTripleDiff<K, D, T>,
+    enc_k: impl Fn(&K, &mut Vec<u8>),
+    enc_d: impl Fn(&D, &mut Vec<u8>),
+    enc_t: impl Fn(&T, &mut Vec<u8>),
+    out: &mut Vec<u8>,
+) {
+    store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
+    for k in &diff.removed {
+        enc_k(k, out);
+    }
+    store::pack_rt::write_varint_u64(out, diff.modified.len() as u64);
+    for m in &diff.modified {
+        enc_k(&m.key, out);
+        enc_d(&m.diff, out);
+    }
+    store::pack_rt::write_varint_u64(out, diff.added.len() as u64);
+    for t in &diff.added {
+        enc_t(t, out);
+    }
+}
+fn dec_named_triple_bin<K, D, T>(
+    reader: &mut store::ByteReader<'_>,
+    dec_k: impl Fn(&mut store::ByteReader<'_>) -> Result<K, String>,
+    dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
+    dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
+) -> Result<NamedTripleDiff<K, D, T>, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut removed = Vec::with_capacity(removed_count as usize);
+    for _ in 0..removed_count {
+        removed.push(dec_k(reader)?);
+    }
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut modified = Vec::with_capacity(modified_count as usize);
+    for _ in 0..modified_count {
+        let key = dec_k(reader)?;
+        let diff = dec_d(reader)?;
+        modified.push(NamedModified { key, diff });
+    }
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut added = Vec::with_capacity(added_count as usize);
+    for _ in 0..added_count {
+        added.push(dec_t(reader)?);
+    }
+    Ok(NamedTripleDiff { removed, modified, added })
+}
+//#endregion 🔖️GenericTripleBinaryCodecs
+
+//#region 🔖️DiffValueBinaryCodecs
+fn enc_run_diff_bin(d: &PptxRunDiff, out: &mut Vec<u8>) {
+    out.push(if d.text.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.text {
+        write_str_lp(out, v);
+    }
+    out.push(if d.bold.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.bold {
+        out.push(*v as u8);
+    }
+    out.push(if d.italic.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.italic {
+        out.push(*v as u8);
+    }
+    // 🏳️ `font_size: Option<Option<u32>>` — doubly-nested tri-state, two presence bytes.
+    out.push(if d.font_size.is_some() { 1 } else { 0 });
+    if let Some(inner) = &d.font_size {
+        out.push(if inner.is_some() { 1 } else { 0 });
+        if let Some(sz) = inner {
+            store::pack_rt::write_varint_u64(out, *sz as u64);
+        }
+    }
+}
+fn dec_run_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxRunDiff, String> {
+    let text = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let bold = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
+    let italic = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
+    let font_size = if reader.read_u8().map_err(|e| e.to_string())? != 0 {
+        let inner = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32) } else { None };
+        Some(inner)
+    } else {
+        None
+    };
+    Ok(PptxRunDiff { text, bold, italic, font_size })
+}
+fn enc_runs_diff_bin(d: &PptxRunsDiff, out: &mut Vec<u8>) { enc_indexed_triple_bin(d, enc_run_diff_bin, enc_run_bin, out) }
+fn dec_runs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxRunsDiff, String> { dec_indexed_triple_bin(reader, dec_run_diff_bin, dec_run_bin) }
+
+fn enc_paragraph_diff_bin(d: &PptxParagraphDiff, out: &mut Vec<u8>) {
+    out.push(if d.runs.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.runs {
+        enc_runs_diff_bin(v, out);
+    }
+}
+fn dec_paragraph_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxParagraphDiff, String> {
+    let runs = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_runs_diff_bin(reader)?) } else { None };
+    Ok(PptxParagraphDiff { runs })
+}
+fn enc_paragraphs_diff_bin(d: &PptxParagraphsDiff, out: &mut Vec<u8>) { enc_indexed_triple_bin(d, enc_paragraph_diff_bin, enc_paragraph_bin, out) }
+fn dec_paragraphs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxParagraphsDiff, String> { dec_indexed_triple_bin(reader, dec_paragraph_diff_bin, dec_paragraph_bin) }
+
+/// 🌳️ `PptxShapeDiff` -- `0`=TextBox, `1`=Picture, `2`=Placeholder, `3`=Replace, same tag
+/// numbering `enc_shape_bin` uses for the full-item form (never mixed in the same binary stream).
+fn enc_shape_diff_bin(d: &PptxShapeDiff, out: &mut Vec<u8>) {
+    match d {
+        PptxShapeDiff::TextBox(td) => {
+            out.push(0);
+            out.push(if td.text_frame.is_some() { 1 } else { 0 });
+            if let Some(v) = &td.text_frame {
+                enc_paragraphs_diff_bin(v, out);
+            }
+            out.push(if td.position.is_some() { 1 } else { 0 });
+            if let Some(v) = &td.position {
+                enc_transform_bin(v, out);
+            }
+        }
+        PptxShapeDiff::Picture(pd) => {
+            out.push(1);
+            out.push(if pd.blip_rel_id.is_some() { 1 } else { 0 });
+            if let Some(v) = &pd.blip_rel_id {
+                write_str_lp(out, v);
+            }
+            out.push(if pd.position.is_some() { 1 } else { 0 });
+            if let Some(v) = &pd.position {
+                enc_transform_bin(v, out);
+            }
+        }
+        PptxShapeDiff::Placeholder(phd) => {
+            out.push(2);
+            out.push(if phd.kind.is_some() { 1 } else { 0 });
+            if let Some(v) = &phd.kind {
+                write_str_lp(out, v);
+            }
+            out.push(if phd.text_frame.is_some() { 1 } else { 0 });
+            if let Some(v) = &phd.text_frame {
+                enc_paragraphs_diff_bin(v, out);
+            }
+            out.push(if phd.position.is_some() { 1 } else { 0 });
+            if let Some(v) = &phd.position {
+                enc_transform_bin(v, out);
+            }
+        }
+        PptxShapeDiff::Replace { shape } => {
+            out.push(3);
+            enc_shape_bin(shape, out);
+        }
+    }
+}
+fn dec_shape_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxShapeDiff, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    match tag {
+        0 => {
+            let text_frame = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_paragraphs_diff_bin(reader)?) } else { None };
+            let position = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_transform_bin(reader)?) } else { None };
+            Ok(PptxShapeDiff::TextBox(PptxTextBoxDiff { text_frame, position }))
+        }
+        1 => {
+            let blip_rel_id = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+            let position = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_transform_bin(reader)?) } else { None };
+            Ok(PptxShapeDiff::Picture(PptxPictureDiff { blip_rel_id, position }))
+        }
+        2 => {
+            let kind = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+            let text_frame = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_paragraphs_diff_bin(reader)?) } else { None };
+            let position = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_transform_bin(reader)?) } else { None };
+            Ok(PptxShapeDiff::Placeholder(PptxPlaceholderDiff { kind, text_frame, position }))
+        }
+        3 => Ok(PptxShapeDiff::Replace { shape: dec_shape_bin(reader)? }),
+        other => Err(format!("shape diff binary: unknown tag {other}")),
+    }
+}
+fn enc_shapes_diff_bin(d: &PptxShapesDiff, out: &mut Vec<u8>) { enc_indexed_triple_bin(d, enc_shape_diff_bin, enc_shape_bin, out) }
+fn dec_shapes_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxShapesDiff, String> { dec_indexed_triple_bin(reader, dec_shape_diff_bin, dec_shape_bin) }
+
+fn enc_slide_diff_bin(d: &PptxSlideDiff, out: &mut Vec<u8>) {
+    out.push(if d.shapes.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.shapes {
+        enc_shapes_diff_bin(v, out);
+    }
+}
+fn dec_slide_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxSlideDiff, String> {
+    let shapes = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_shapes_diff_bin(reader)?) } else { None };
+    Ok(PptxSlideDiff { shapes })
+}
+fn enc_slides_diff_bin(d: &PptxSlidesDiff, out: &mut Vec<u8>) { enc_indexed_triple_bin(d, enc_slide_diff_bin, enc_slide_bin, out) }
+fn dec_slides_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxSlidesDiff, String> { dec_indexed_triple_bin(reader, dec_slide_diff_bin, dec_slide_bin) }
+
+fn enc_presentation_diff_bin(d: &PptxPresentationDiff, out: &mut Vec<u8>) {
+    out.push(if d.slides.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.slides {
+        enc_slides_diff_bin(v, out);
+    }
+}
+fn dec_presentation_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxPresentationDiff, String> {
+    let slides = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_slides_diff_bin(reader)?) } else { None };
+    Ok(PptxPresentationDiff { slides })
+}
+
+fn enc_part_diff_bin(d: &PptxOpcPartDiff, out: &mut Vec<u8>) {
+    out.push(if d.content_type.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.content_type {
+        write_str_lp(out, v);
+    }
+    out.push(if d.bytes.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.bytes {
+        write_bytes_lp(out, v);
+    }
+}
+fn dec_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxOpcPartDiff, String> {
+    let content_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let bytes = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
+    Ok(PptxOpcPartDiff { content_type, bytes })
+}
+
+fn enc_rel_diff_bin(d: &PptxOpcRelDiff, out: &mut Vec<u8>) {
+    out.push(if d.rel_type.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.rel_type {
+        write_str_lp(out, v);
+    }
+    out.push(if d.target.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.target {
+        write_str_lp(out, v);
+    }
+    out.push(if d.target_mode.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.target_mode {
+        enc_target_mode_bin(v, out);
+    }
+}
+fn dec_rel_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxOpcRelDiff, String> {
+    let rel_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let target = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let target_mode = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_target_mode_bin(reader)?) } else { None };
+    Ok(PptxOpcRelDiff { rel_type, target, target_mode })
+}
+
+fn enc_ct_entries_diff_bin(d: &PptxOpcCtEntriesDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), |v: &String, out| write_str_lp(out, v), enc_ct_entry_bin, out)
+}
+fn dec_ct_entries_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxOpcCtEntriesDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), |r| read_str_lp(r), dec_ct_entry_bin)
+}
+fn enc_content_types_diff_bin(d: &PptxOpcContentTypesDiff, out: &mut Vec<u8>) {
+    out.push(if d.defaults.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.defaults {
+        enc_ct_entries_diff_bin(v, out);
+    }
+    out.push(if d.overrides.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.overrides {
+        enc_ct_entries_diff_bin(v, out);
+    }
+}
+fn dec_content_types_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxOpcContentTypesDiff, String> {
+    let defaults = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
+    let overrides = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
+    Ok(PptxOpcContentTypesDiff { defaults, overrides })
+}
+fn enc_parts_diff_bin(d: &PptxOpcPartsDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_part_diff_bin, enc_part_bin, out)
+}
+fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxOpcPartsDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_part_diff_bin, dec_part_bin)
+}
+fn enc_rel_list_diff_bin(d: &PptxOpcRelListDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_diff_bin, enc_rel_bin, out)
+}
+fn dec_rel_list_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxOpcRelListDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_diff_bin, dec_rel_bin)
+}
+fn enc_relationships_diff_bin(d: &PptxOpcRelationshipsDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_list_diff_bin, enc_owner_rels_bin, out)
+}
+fn dec_relationships_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxOpcRelationshipsDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_list_diff_bin, dec_owner_rels_bin)
+}
+fn enc_opc_diff_bin(d: &PptxOpcDiff, out: &mut Vec<u8>) {
+    out.push(if d.content_types.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.content_types {
+        enc_content_types_diff_bin(v, out);
+    }
+    out.push(if d.parts.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.parts {
+        enc_parts_diff_bin(v, out);
+    }
+    out.push(if d.relationships.is_some() { 1 } else { 0 });
+    if let Some(v) = &d.relationships {
+        enc_relationships_diff_bin(v, out);
+    }
+}
+fn dec_opc_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxOpcDiff, String> {
+    let content_types = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_content_types_diff_bin(reader)?) } else { None };
+    let parts = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_parts_diff_bin(reader)?) } else { None };
+    let relationships = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_relationships_diff_bin(reader)?) } else { None };
+    Ok(PptxOpcDiff { content_types, parts, relationships })
+}
+//#endregion 🔖️DiffValueBinaryCodecs
+//#endregion 🔖️BinaryCodecs
+
 //#region 🔖️TopLevel
 fn print_pptx_diff(d: &PptxDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
@@ -1690,19 +2250,110 @@ impl protocol::DiffCodec for PptxDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_pptx_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`'s hand-rolled
-    /// codecs use (and the repo's only other hand-rolled `DiffCodec`, `WriterDiff`) — satisfies
-    /// every `DiffCodec` law without inventing a second wire format.
+    /// 🧪️ FG-wave: REAL binary frame (`format u8 | flags u8 | [opc][presentation]`), matching
+    /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape
+    /// — upgraded from F1's `print_diff().into_bytes()` text-as-binary shortcut (per this ticket's
+    /// own `📖️grammar-recipe.md` §4/§6 census, 100% of stdio's `DiffCodec` impls were still on
+    /// that shortcut before this pilot ladder). `flags` bits 0/1 mark `opc`/`presentation`
+    /// presence; each present field's own recursive binary payload follows in that fixed order
+    /// (see `🔖️BinaryCodecs` above).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        let mut flags: u8 = 0;
+        if self.opc.is_some() { flags |= 0b01; }
+        if self.presentation.is_some() { flags |= 0b10; }
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
+        if let Some(opc) = &self.opc {
+            enc_opc_diff_bin(opc, &mut out);
+        }
+        if let Some(presentation) = &self.presentation {
+            enc_presentation_diff_bin(presentation, &mut out);
+        }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let opc = if flags & 0b01 != 0 { Some(dec_opc_diff_bin(&mut reader).map_err(|e| malformed("diff opc", reader.position(), e))?) } else { None };
+        let presentation = if flags & 0b10 != 0 { Some(dec_presentation_diff_bin(&mut reader).map_err(|e| malformed("diff presentation", reader.position(), e))?) } else { None };
+        Ok(PptxDiff { opc, presentation })
     }
 }
 //#endregion 🔖️TopLevel
-//#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🔖️DemoCases
+/// 🧪️ FG-wave: representative `PptxDiff` values (both top-level fields, the `PptxShapeDiff` enum
+/// tree incl. `Replace`, the `font_size` tri-state, and the OPC layer's content-types/parts/
+/// relationships-by-owner triples) — the single source of truth reused by
+/// `diff_codec_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
+/// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests, same shape
+/// `📜️docx/…/🔺️diff/🦀️component.rs`'s own `demo_diff_cases()` establishes.
+pub(crate) fn demo_snapshot_a() -> PptxSnapshot {
+    let mut opc = OpcPackage::empty();
+    opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
+    opc.content_types.set_default("xml", "application/xml");
+    opc.set_part("ppt/presentation.xml", "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml", b"<p:presentation/>".to_vec());
+    opc.set_part("ppt/toRemove.xml", "application/xml", b"gone".to_vec());
+    opc.add_relationship("", "rId1", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT, "ppt/presentation.xml");
+    opc.relationships.insert(
+        "ppt/toRemove.xml".into(),
+        vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/gone".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }],
+    );
+
+    PptxSnapshot::from_parts(
+        opc,
+        PptxPresentation {
+            slides: vec![
+                PptxSlide {
+                    shapes: vec![
+                        PptxShape::TextBox {
+                            text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "old".into(), bold: false, italic: false, font_size: Some(10) }] }],
+                            position: PptxTransform { x: 1, y: 1, cx: 1, cy: 1 },
+                        },
+                        PptxShape::Picture { blip_rel_id: "rIdOld".into(), position: PptxTransform::default() },
+                    ],
+                },
+                PptxSlide { shapes: vec![PptxShape::Other { xml: "<p:graphicFrame/>".into() }] },
+            ],
+        },
+    )
+}
+
+pub(crate) fn demo_snapshot_b() -> PptxSnapshot {
+    let mut opc = OpcPackage::empty();
+    opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
+    opc.content_types.set_default("xml", "application/xml");
+    opc.content_types.set_default("added", "application/octet-stream");
+    opc.set_part("ppt/presentation.xml", "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml", b"<p:presentation/>changed".to_vec());
+    opc.set_part("ppt/added.xml", "application/xml", b"fresh".to_vec());
+    opc.add_relationship("", "rId1", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT, "ppt/presentation.xml");
+    opc.relationships.insert("ppt/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::External }]);
+
+    PptxSnapshot::from_parts(
+        opc,
+        PptxPresentation {
+            slides: vec![PptxSlide {
+                shapes: vec![
+                    PptxShape::TextBox {
+                        text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "new".into(), bold: true, italic: true, font_size: None }] }],
+                        position: PptxTransform { x: 9, y: 9, cx: 9, cy: 9 },
+                    },
+                    PptxShape::Placeholder { kind: "body".into(), text_frame: vec![PptxParagraph::text("ph")], position: PptxTransform::default() },
+                ],
+            }],
+        },
+    )
+}
+
+/// 🧪️ The demo cases proper — `default()` (empty diff) plus every real `between()` shape (both
+/// directions, and the trivially-empty self-diff).
+pub(crate) fn demo_diff_cases() -> Vec<PptxDiff> {
+    let a = demo_snapshot_a();
+    let b = demo_snapshot_b();
+    vec![PptxDiff::default(), PptxDiff::between(&a, &b), PptxDiff::between(&b, &a), PptxDiff::between(&a, &a)]
+}
+//#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
 #[cfg(test)]

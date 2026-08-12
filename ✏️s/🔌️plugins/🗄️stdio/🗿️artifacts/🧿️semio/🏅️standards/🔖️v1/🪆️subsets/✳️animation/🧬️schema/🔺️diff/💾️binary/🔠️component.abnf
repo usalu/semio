@@ -1,3 +1,6 @@
-; abnf stdio.semio.animation.diff
-document = body
-body = timelines_triple
+; ABNF-style descriptive mirror of `stdio.semio.animation`'s real binary diff frame -- see the
+; authoritative `📡️component.protocol.semio` for the conformance-tested version.
+document       = format presence payload
+format         = %x01                  ; DIFF_BINARY_FORMAT
+presence       = OCTET                 ; bit0 = timelines present
+payload        = *OCTET                ; opaque tail: enc_indexed_triple text, present iff bit0 set

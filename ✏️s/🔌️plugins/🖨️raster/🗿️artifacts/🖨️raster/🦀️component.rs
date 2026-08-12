@@ -215,10 +215,10 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Raster },
         schema: RASTER_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
-        import_formats: vec![semio_framework_plugin::MediaFormat::Svg, semio_framework_plugin::MediaFormat::Png],
-            export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
+        export_formats: vec![],
+        import_formats: vec![],
+            export_stdio_kinds: vec!["stdio.svg", "stdio.png"],
+        import_stdio_kinds: vec!["stdio.svg", "stdio.png"],
     }
 }
 //#endregion 🔖️ArtifactKind

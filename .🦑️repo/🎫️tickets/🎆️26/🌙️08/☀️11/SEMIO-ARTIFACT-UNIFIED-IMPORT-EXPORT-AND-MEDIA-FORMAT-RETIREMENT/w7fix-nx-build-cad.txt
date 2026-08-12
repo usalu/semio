@@ -1,0 +1,194 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-os-dev:build -- cad
+
+ NX   Running target build for project @semio-tech/framework-os-dev and 2 tasks it depends on:
+
+
+
+> nx run @semio-tech/assets:build  [local cache]
+
+
+> nx run @semio-tech/ui-react:build
+
+> bun ./📜️script.ts build
+
+
+[90m┌[39m  Building storybook v10.5.6
+[90m│[39m
+[32m◇[39m  Cleaning outputDir: [36mstorybook-static[39m
+[90m│[39m
+[32m◇[39m  Loading presets
+[90m│[39m
+[32m◇[39m  Building manager..
+[90m│[39m
+[34m●[39m  Building open services..
+[90m│[39m
+[34m●[39m  Building preview..
+[90m│[39m  [43mVite[49m [36mvite v7.3.6 [32mbuilding client environment for production...[36m[39m
+[90m│[39m  [43mVite[49m transforming...
+[90m│[39m
+[33m▲[39m  [43mVite[49m [33m[plugin vite:react-docgen-typescript] .storybook/preview.tsx:[39m
+[90m│[39m  [33mSkipping docgen for[39m
+[90m│[39m  [33m"/Users/ueli/Documents/semio/.storybook/preview.tsx" because it is not[39m
+[90m│[39m  [33mincluded in the active TypeScript project.[39m
+[90m│[39m  [43mVite[49m [32m✓[39m 80 modules transformed.
+[90m│[39m
+[31m■[39m  [43mVite[49m [31m✗[39m Build failed in 2.31s
+[90m│[39m
+[31m■[39m  Failed to build the preview
+[90m│[39m
+[31m■[39m  [31m[vite]: Rollup failed to resolve import[39m
+[90m│[39m  [31m"@semio-tech/coda-desktop/renderer" from[39m
+[90m│[39m  [31m"./.storybook/stories/ui/🌳OntologyTree.stories.tsx".
+[90m│[39m  This is most likely unintended because it can break your application
+[90m│[39m  at runtime.
+[90m│[39m  If you do want to externalize this module explicitly add it to
+[90m│[39m  `build.rollupOptions.external`[39m
+[90m│[39m  at viteLog
+[90m│[39m  (file://./node_modules/vite/dist/node/chunks/config.js:33715:57)
+[90m│[39m  at onRollupLog
+[90m│[39m  (file://./node_modules/vite/dist/node/chunks/config.js:33745:7)
+[90m│[39m  at onLog
+[90m│[39m  (file://./node_modules/vite/dist/node/chunks/config.js:33547:4)
+[90m│[39m  at file://./node_modules/rollup/dist/es/shared/node-entry.js:21200:32
+[90m│[39m  at Object.logger [as onLog]
+[90m│[39m  (file://./node_modules/rollup/dist/es/shared/node-entry.js:23185:9)
+[90m│[39m  at ModuleLoader.handleInvalidResolvedId
+[90m│[39m  (file://./node_modules/rollup/dist/es/shared/node-entry.js:21930:26)
+[90m│[39m  at file://./node_modules/rollup/dist/es/shared/node-entry.js:21888:26
+[90m│[39m
+[90m└[39m  Storybook exited with an error
+
+[0m[1m1385 |[0m  * throws on non-zero exit, signal, or budget exceed (the [0m[32m`[budget]`[0m line is printed
+[0m[1m1386 |[0m  * to stderr first so it survives a caller[0m[32m's try/catch, e.g. [[tryRun]]).[0m
+[0m[1m1387 |[0m  */
+[0m[1m1388 |[0m [0m[35mexport[0m [0m[35mfunction[0m runCmd(cmd: [0m[34mstring[0m, args: [0m[34mstring[0m[], opts: RunCmdOpts = {}): [0m[35mvoid[0m {
+[0m[1m1389 |[0m   [0m[35mconst[0m status = runCmdInternal(cmd, args, opts)[0m[2m;[0m
+[0m[1m1390 |[0m   [0m[35mif[0m (status !== [0m[33m0[0m) [0m[35mthrow[0m [0m[35mnew[0m [0m[1mError[0m([0m[32m`[0m${cmd}[0m[32m [0m${args[0m[3m[1m.join[0m([0m[32m" "[0m)}[0m[32m exited with status [0m${status}[0m[32m`[0m)[0m[2m;[0m
+                                     [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mbunx storybook build -c .storybook --output-dir storybook-static exited with status 1[0m
+[0m      [2mat [0m[0m[1m[3mrunCmd[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m1390[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m📜️script.ts[0m[2m:[0m[33m1142[0m[2m:[33m7[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m829[0m[2m:[33m71[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunWorkspaceScriptMain[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m864[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m📜️script.ts[0m[2m:[0m[33m10678[0m[2m:[33m11[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+[0m[1m1385 |[0m  * throws on non-zero exit, signal, or budget exceed (the [0m[32m`[budget]`[0m line is printed
+[0m[1m1386 |[0m  * to stderr first so it survives a caller[0m[32m's try/catch, e.g. [[tryRun]]).[0m
+[0m[1m1387 |[0m  */
+[0m[1m1388 |[0m [0m[35mexport[0m [0m[35mfunction[0m runCmd(cmd: [0m[34mstring[0m, args: [0m[34mstring[0m[], opts: RunCmdOpts = {}): [0m[35mvoid[0m {
+[0m[1m1389 |[0m   [0m[35mconst[0m status = runCmdInternal(cmd, args, opts)[0m[2m;[0m
+[0m[1m1390 |[0m   [0m[35mif[0m (status !== [0m[33m0[0m) [0m[35mthrow[0m [0m[35mnew[0m [0m[1mError[0m([0m[32m`[0m${cmd}[0m[32m [0m${args[0m[3m[1m.join[0m([0m[32m" "[0m)}[0m[32m exited with status [0m${status}[0m[32m`[0m)[0m[2m;[0m
+                                     [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mbun ./📜️script.ts build storybook exited with status 1[0m
+[0m      [2mat [0m[0m[1m[3mrunCmd[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m1390[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/[0m[36m📜️script.ts[0m[2m:[0m[33m40[0m[2m:[33m5[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m829[0m[2m:[33m71[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunBundleScriptMain[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m859[0m[2m:[33m16[0m[2m)[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+> bun ./📜️script.ts build
+
+
+[90m┌[39m  Building storybook v10.5.6
+[90m│[39m
+[32m◇[39m  Cleaning outputDir: [36mstorybook-static[39m
+[90m│[39m
+[32m◇[39m  Loading presets
+[90m│[39m
+[32m◇[39m  Building manager..
+[90m│[39m
+[34m●[39m  Building open services..
+[90m│[39m
+[34m●[39m  Building preview..
+[90m│[39m  [43mVite[49m [36mvite v7.3.6 [32mbuilding client environment for production...[36m[39m
+[90m│[39m  [43mVite[49m transforming...
+[90m│[39m
+[33m▲[39m  [43mVite[49m [33m[plugin vite:react-docgen-typescript] .storybook/preview.tsx:[39m
+[90m│[39m  [33mSkipping docgen for[39m
+[90m│[39m  [33m"/Users/ueli/Documents/semio/.storybook/preview.tsx" because it is not[39m
+[90m│[39m  [33mincluded in the active TypeScript project.[39m
+[90m│[39m  [43mVite[49m [32m✓[39m 80 modules transformed.
+[90m│[39m
+[31m■[39m  [43mVite[49m [31m✗[39m Build failed in 2.31s
+[90m│[39m
+[31m■[39m  Failed to build the preview
+[90m│[39m
+[31m■[39m  [31m[vite]: Rollup failed to resolve import[39m
+[90m│[39m  [31m"@semio-tech/coda-desktop/renderer" from[39m
+[90m│[39m  [31m"./.storybook/stories/ui/🌳OntologyTree.stories.tsx".
+[90m│[39m  This is most likely unintended because it can break your application
+[90m│[39m  at runtime.
+[90m│[39m  If you do want to externalize this module explicitly add it to
+[90m│[39m  `build.rollupOptions.external`[39m
+[90m│[39m  at viteLog
+[90m│[39m  (file://./node_modules/vite/dist/node/chunks/config.js:33715:57)
+[90m│[39m  at onRollupLog
+[90m│[39m  (file://./node_modules/vite/dist/node/chunks/config.js:33745:7)
+[90m│[39m  at onLog
+[90m│[39m  (file://./node_modules/vite/dist/node/chunks/config.js:33547:4)
+[90m│[39m  at file://./node_modules/rollup/dist/es/shared/node-entry.js:21200:32
+[90m│[39m  at Object.logger [as onLog]
+[90m│[39m  (file://./node_modules/rollup/dist/es/shared/node-entry.js:23185:9)
+[90m│[39m  at ModuleLoader.handleInvalidResolvedId
+[90m│[39m  (file://./node_modules/rollup/dist/es/shared/node-entry.js:21930:26)
+[90m│[39m  at file://./node_modules/rollup/dist/es/shared/node-entry.js:21888:26
+[90m│[39m
+[90m└[39m  Storybook exited with an error
+
+[0m[1m1385 |[0m  * throws on non-zero exit, signal, or budget exceed (the [0m[32m`[budget]`[0m line is printed
+[0m[1m1386 |[0m  * to stderr first so it survives a caller[0m[32m's try/catch, e.g. [[tryRun]]).[0m
+[0m[1m1387 |[0m  */
+[0m[1m1388 |[0m [0m[35mexport[0m [0m[35mfunction[0m runCmd(cmd: [0m[34mstring[0m, args: [0m[34mstring[0m[], opts: RunCmdOpts = {}): [0m[35mvoid[0m {
+[0m[1m1389 |[0m   [0m[35mconst[0m status = runCmdInternal(cmd, args, opts)[0m[2m;[0m
+[0m[1m1390 |[0m   [0m[35mif[0m (status !== [0m[33m0[0m) [0m[35mthrow[0m [0m[35mnew[0m [0m[1mError[0m([0m[32m`[0m${cmd}[0m[32m [0m${args[0m[3m[1m.join[0m([0m[32m" "[0m)}[0m[32m exited with status [0m${status}[0m[32m`[0m)[0m[2m;[0m
+                                     [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mbunx storybook build -c .storybook --output-dir storybook-static exited with status 1[0m
+[0m      [2mat [0m[0m[1m[3mrunCmd[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m1390[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m📜️script.ts[0m[2m:[0m[33m1142[0m[2m:[33m7[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m829[0m[2m:[33m71[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunWorkspaceScriptMain[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m864[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[36m[2m/Users/ueli/Documents/semio/[0m[36m📜️script.ts[0m[2m:[0m[33m10678[0m[2m:[33m11[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+[0m[1m1385 |[0m  * throws on non-zero exit, signal, or budget exceed (the [0m[32m`[budget]`[0m line is printed
+[0m[1m1386 |[0m  * to stderr first so it survives a caller[0m[32m's try/catch, e.g. [[tryRun]]).[0m
+[0m[1m1387 |[0m  */
+[0m[1m1388 |[0m [0m[35mexport[0m [0m[35mfunction[0m runCmd(cmd: [0m[34mstring[0m, args: [0m[34mstring[0m[], opts: RunCmdOpts = {}): [0m[35mvoid[0m {
+[0m[1m1389 |[0m   [0m[35mconst[0m status = runCmdInternal(cmd, args, opts)[0m[2m;[0m
+[0m[1m1390 |[0m   [0m[35mif[0m (status !== [0m[33m0[0m) [0m[35mthrow[0m [0m[35mnew[0m [0m[1mError[0m([0m[32m`[0m${cmd}[0m[32m [0m${args[0m[3m[1m.join[0m([0m[32m" "[0m)}[0m[32m exited with status [0m${status}[0m[32m`[0m)[0m[2m;[0m
+                                     [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mbun ./📜️script.ts build storybook exited with status 1[0m
+[0m      [2mat [0m[0m[1m[3mrunCmd[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m1390[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/[0m[36m📜️script.ts[0m[2m:[0m[33m40[0m[2m:[33m5[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m829[0m[2m:[33m71[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunBundleScriptMain[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m859[0m[2m:[33m16[0m[2m)[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+Warning: command "bun ./📜️script.ts build" exited with non-zero status code
+
+
+ NX   Running target build for project @semio-tech/framework-os-dev and 2 tasks it depends on failed
+
+Failed tasks:
+
+- @semio-tech/ui-react:build
+
+Hint: run the command with --verbose for more details.
+
+1385 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1386 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1387 |  */
+1388 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1389 |   const status = runCmdInternal(cmd, args, opts);
+1390 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/framework-os-dev:build -- cad exited with status 130
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1390:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:599:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:829:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:864:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:10678:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

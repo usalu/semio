@@ -1,10 +1,56 @@
-dialect grammar stdio.semio.mesh.snapshot
-root = document
-; preamble line + its trailing newline are stripped before this grammar runs
-; (store::semio_format::split_text_preamble). This subset's snapshot is a neutral semio type —
-; the DSL text is a whitespace-tolerant ASCII hex dump of SemioMeshSnapshot's real JSON bytes
-; (serde_json::to_vec); see ../💾️binary/🥋️component.ksy for the sibling binary envelope.
-document = hex_byte (WS hex_byte)*
-hex_byte = HEXDIG HEXDIG
-HEXDIG = %x30-39 / %x41-46 / %x61-66
-WS = *(%x20 / %x09 / %x0D / %x0A)
+dialect grammar
+grammar semio.mesh.snapshot
+extension semio
+start document
+
+# P2 mesh wave (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION). Real grammar for
+# `SemioMeshSnapshot::print_dsl`/`parse_dsl` (📸️snapshot/🦀️component.rs's `print_mesh_snapshot_body`/
+# `parse_mesh_snapshot_body`) — hand-rolled, NOT `#[derive(dsl::DslArtifact)]`: `SemioPrimitive`
+# holds `Vec<SemioPoint3>`/`Vec<SemioUv>`/`Vec<SemioRgba>` buffer fields nested two collections deep
+# (`meshes[].primitives[].positions[]`), a shape the derive macro's `Vec<Record>`/`#[dsl(table)]`
+# support does not cover, even now that the shared `⚙️engine/🧮️geometry` value types derive
+# `dsl::DslRecord` (see this wave's report `mechanism_gaps`). Same hex/bracket-encoded value
+# convention as this subset's own `🔺️diff`/`🧬️mutations` facet grammars.
+#
+# `document` matches the fixture-honesty harness's own reconstructed body shape (mandatory `semio
+# stdio.semio.mesh.dsl v1` preamble stripped and replaced with the bare `envelope_id()` token —
+# `artifact-mark` below — before recognition, same convention `json.snapshot`'s own grammar uses).
+artifact-mark = "stdio.semio.mesh"
+document = artifact-mark schema-line meshes-line materials-line textures-line
+
+schema-line = "schema" "=" hex
+
+meshes-line = "meshes" "=" "[" mesh-list? "]"
+mesh-list = mesh {"," mesh}*
+mesh = "[" hex "," "[" primitive-list? "]" "]"
+primitive-list = primitive {"," primitive}*
+primitive = "[" hex "," topology "," "[" point3-list? "]" "," "[" point3-list? "]" "," "[" uv-list? "]" "," "[" rgba-list? "]" "," "[" index-list? "]" "," option-hex "]"
+
+materials-line = "materials" "=" "[" material-list? "]"
+material-list = material {"," material}*
+material = "[" hex "," rgba "," number "," number "]"
+
+textures-line = "textures" "=" "[" texture-list? "]"
+texture-list = texture {"," texture}*
+texture = "[" hex "," hex "," hex "]"
+
+# `positions`/`normals` (both `Vec<SemioPoint3>`), `uvs` (`Vec<SemioUv>`), `colors`
+# (`Vec<SemioRgba>`) — plain bracketed number lists (recipe's own "your judgment" latitude for
+# geometry buffers), never hex — these are numeric, not string, payloads.
+point3-list = point3 {"," point3}*
+point3 = "[" number "," number "," number "]"
+uv-list = uv {"," uv}*
+uv = "[" number "," number "]"
+rgba-list = rgba {"," rgba}*
+rgba = "[" number "," number "," number "," number "]"
+index-list = INT {"," INT}*
+topology = "P" | "L" | "S" | "T" | "X" | "F"
+option-hex = "[" "0" "]" | "[" "1" "," hex "]"
+number = INT | FLOAT
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO (`📖️grammar/🦀️component.rs`'s `default_macros`) — every `id`/`mime` leaf string and
+# the raw texture `bytes` buffer is `enc_str`/`enc_bytes` (lowercase-hex). `Symbol::Ref`'s
+# production→macro fallback resolves bare `hex` automatically, with real backtracking — a
+# hand-rolled `{INT|IDENT}*` production would be wrong here (see the sibling `🔺️diff`/
+# `🧬️mutations` grammars' own `hex` doc comment for the two independent reasons why).

@@ -1,12 +1,15 @@
 meta:
-  id: semio_workflow_diff
+  id: stdio_semio_workflow_diff
   endian: le
 doc: |
-  `s.stdio.semio.workflow` diff BINARY wire format — the UTF-8 bytes of the diff TEXT wire format
-  verbatim (`SemioWorkflowDiff::encode_diff`/`decode_diff`, see 🔺️diff/🦀️component.rs's doc
-  comment: "Binary = the text bytes verbatim... satisfying every DiffCodec law without inventing a
-  second wire format"). See 🔺️diff/📝️text/📖️component.grammar.semio for the real token grammar.
+  Real binary `SemioWorkflowDiff` frame: `format` (1 byte) + `presence` bitmask (bit0=`nodes`
+  present, bit1=`edges` present), then 0-2 varint-length-prefixed opaque blobs (the same
+  `enc_nodes_diff`/`enc_edges_diff` bracket/hex text `print_diff` emits) — see the sibling
+  `📡️component.protocol.semio`'s comment on the `protocol-cond-cannot-chain` boundary.
 seq:
-  - id: diff_line_utf8
+  - id: format
+    type: u1
+  - id: presence
+    type: u1
+  - id: payload
     size-eos: true
-    doc: "UTF-8 bytes of the print_diff() text line"

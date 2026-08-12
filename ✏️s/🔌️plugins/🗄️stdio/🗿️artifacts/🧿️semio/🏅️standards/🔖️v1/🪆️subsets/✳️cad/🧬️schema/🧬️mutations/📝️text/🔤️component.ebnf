@@ -1,50 +1,54 @@
-(* protocol::OpText::print_op/parse_op wire grammar for SemioCadMutation -- NO semio envelope;
-   OpBinary is print_op().into_bytes() (byte-identical to ../💾️binary/🔠️component.abnf).
-   Grammar: "keyword arg=value ...". Value shapes mirror the diff facet's own
-   ../../🔺️diff/📝️text/🔤️component.ebnf entity/layer/block/point2/option productions verbatim;
-   each keyword's real arg list is documented in ../📖️component.grammar.semio (informative) and
-   authoritatively in 🦀️component.rs's print_cad_mutation. *)
-document = "no-mutation" | ( keyword, " ", args ) ;
-args = arg, { " ", arg } ;
-arg = key, "=", value ;
-keyword = "set-snapshot" | "add-layer" | "remove-layer" | "set-layer" | "add-block" | "remove-block"
-        | "set-block-base-point" | "add-entity" | "remove-entity" | "set-entity-layer"
-        | "set-entity-geometry" | "add-block-entity" | "remove-block-entity"
-        | "set-block-entity-layer" | "set-block-entity-geometry" ;
-key = { "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o"
-      | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "-" } ;
-value = cad snapshot | layer | block | entity record | entity | point2 | hexstr
-      | option i32 | option str | option bool ;
+(* ISO-14977-style EBNF for `stdio.semio.cad`'s real `OpText::print_op`/`parse_op` wire shape —
+   descriptive mirror of the authoritative `📖️component.grammar.semio` (same production names). *)
+op = no mutation | set snapshot | add layer | remove layer | set layer | add block | remove block
+   | set block base point | add entity | remove entity | set entity layer | set entity geometry
+   | add block entity | remove block entity | set block entity layer op | set block entity geometry ;
 
-cad snapshot = "[", hexstr, ",", layer list, ",", block list, ",", entity record list, "]" ;
-layer list = "[", [ layer, { ",", layer } ], "]" ;
-block list = "[", [ block, { ",", block } ], "]" ;
-entity record list = "[", [ entity record, { ",", entity record } ], "]" ;
+no mutation = 'no-mutation' ;
+set snapshot = 'set-snapshot', 'snapshot', '=', snapshot lit ;
+add layer = 'add-layer', 'layer', '=', layer ;
+remove layer = 'remove-layer', 'name', '=', hex ;
+set layer = 'set-layer', 'name', '=', hex, 'color-index', '=', option i32, 'line-type', '=', option hex, 'visible', '=', option bool ;
+add block = 'add-block', 'block', '=', block ;
+remove block = 'remove-block', 'name', '=', hex ;
+set block base point = 'set-block-base-point', 'name', '=', hex, 'base-point', '=', point2 ;
+add entity = 'add-entity', 'entity', '=', entity record ;
+remove entity = 'remove-entity', 'handle', '=', hex ;
+set entity layer = 'set-entity-layer', 'handle', '=', hex, 'layer', '=', hex ;
+set entity geometry = 'set-entity-geometry', 'handle', '=', hex, 'entity', '=', entity ;
+add block entity = 'add-block-entity', 'block-name', '=', hex, 'entity', '=', entity record ;
+remove block entity = 'remove-block-entity', 'block-name', '=', hex, 'handle', '=', hex ;
+set block entity layer op = 'set-block-entity-layer', 'block-name', '=', hex, 'handle', '=', hex, 'layer', '=', hex ;
+set block entity geometry = 'set-block-entity-geometry', 'block-name', '=', hex, 'handle', '=', hex, 'entity', '=', entity ;
 
-option i32 = "[0]" | ( "[1,", i32, "]" ) ;
-option str = "[0]" | ( "[1,", hexstr, "]" ) ;
-option bool = "[0]" | ( "[1,", bool01, "]" ) ;
+option i32 = ( '[0]' ) | ( '[1,', i32, ']' ) ;
+option hex = ( '[0]' ) | ( '[1,', hex, ']' ) ;
+option bool = ( '[0]' ) | ( '[1,', bool, ']' ) ;
 
-layer = "[", hexstr, ",", i32, ",", hexstr, ",", bool01, "]" ;
-entity record = "[", hexstr, ",", hexstr, ",", entity, "]" ;
-block = "[", hexstr, ",", point2, ",", entity record list, "]" ;
+snapshot lit = '[', hex, ',', '[', [ layer, { ',', layer } ], ']', ',', '[', [ block, { ',', block } ], ']', ',', '[', [ entity record, { ',', entity record } ], ']', ']' ;
 
-entity = line | arc | circle | ellipse | polyline | text entity | insert | solid | dimension ;
-line = "L[", point2, ",", point2, "]" ;
-arc = "A[", point2, ",", f64, ",", f64, ",", f64, "]" ;
-circle = "C[", point2, ",", f64, "]" ;
-ellipse = "E[", point2, ",", point2, ",", f64, ",", f64, ",", f64, "]" ;
-polyline = "P[", point2 list, ",", bool01, "]" ;
-point2 list = "[", [ point2, { ",", point2 } ], "]" ;
-text entity = "T[", point2, ",", f64, ",", f64, ",", hexstr, "]" ;
-insert = "I[", hexstr, ",", point2, ",", point2, ",", f64, "]" ;
-solid = "S[", point2, ",", point2, ",", point2, ",", point2, "]" ;
-dimension = "D[", point2, ",", point2, ",", f64, ",", hexstr, "]" ;
+layer = '[', hex, ',', i32, ',', hex, ',', bool, ']' ;
+entity record = '[', hex, ',', hex, ',', entity, ']' ;
+entity record list = '[', [ entity record, { ',', entity record } ], ']' ;
+block = '[', hex, ',', point2, ',', entity record list, ']' ;
 
-point2 = "[", f64, ",", f64, "]" ;
-hexstr = { hex digit } ;
-i32 = [ "-" ], digit, { digit } ;
-f64 = [ "-" ], digit, { digit }, [ ".", digit, { digit } ], [ ( "e" | "E" ), [ "+" | "-" ], digit, { digit } ] ;
-bool01 = "0" | "1" ;
-hex digit = digit | "a" | "b" | "c" | "d" | "e" | "f" | "A" | "B" | "C" | "D" | "E" | "F" ;
-digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+entity = ( 'L', '[', point2, ',', point2, ']' )
+       | ( 'A', '[', point2, ',', number, ',', number, ',', number, ']' )
+       | ( 'C', '[', point2, ',', number, ']' )
+       | ( 'E', '[', point2, ',', point2, ',', number, ',', number, ',', number, ']' )
+       | ( 'P', '[', point2 list, ',', bool, ']' )
+       | ( 'T', '[', point2, ',', number, ',', number, ',', hex, ']' )
+       | ( 'I', '[', hex, ',', point2, ',', point2, ',', number, ']' )
+       | ( 'S', '[', point2, ',', point2, ',', point2, ',', point2, ']' )
+       | ( 'D', '[', point2, ',', point2, ',', number, ',', hex, ']' ) ;
+
+point2 = '[', number, ',', number, ']' ;
+point2 list = '[', [ point2, { ',', point2 } ], ']' ;
+bool = '0' | '1' ;
+
+i32 = [ '-' ], digit, { digit } ;
+number = int | float ;
+int = [ '-' ], digit, { digit } ;
+float = [ '-' ], digit, { digit }, '.', digit, { digit } ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;

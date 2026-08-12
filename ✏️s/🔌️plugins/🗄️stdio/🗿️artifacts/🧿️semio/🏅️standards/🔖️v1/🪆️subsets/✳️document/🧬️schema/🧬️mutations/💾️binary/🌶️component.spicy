@@ -1,5 +1,10 @@
-module SemioDocumentMutation;
-# Binary op form = the text op's UTF-8 bytes verbatim (no separate binary framing).
+module Stdio_semio_document_mutations;
+
+# Real binary `SemioDocumentMutation` op frame: `format` (1 byte) + `tag` (1 byte, the variant
+# ordinal), then one opaque `payload` tail — see the sibling `📡️component.protocol.semio`'s
+# comment / `🧬️mutations/🦀️component.rs`'s `OP_KEYWORDS`.
 type Document = unit {
-    text_op_utf8: bytes &eod;
+    format: uint8;
+    tag: uint8;
+    payload: bytes &eod;
 };

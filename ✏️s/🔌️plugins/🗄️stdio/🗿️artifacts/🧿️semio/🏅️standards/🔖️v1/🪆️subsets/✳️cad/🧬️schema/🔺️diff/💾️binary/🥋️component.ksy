@@ -1,16 +1,18 @@
 meta:
-  id: semio_cad_diff
+  id: stdio_semio_cad_diff
+  endian: le
 doc: |
-  protocol::DiffCodec `encode_diff`/`decode_diff` payload for `s.stdio.semio.cad.diff` -- NO
-  semio envelope (unlike the snapshot facet): `encode_diff` is `print_diff().into_bytes()`
-  verbatim, ASCII text in the `../📝️text/📖️component.grammar.semio` bracket-triple grammar
-  (space-separated `layers=`/`blocks=`/`entities=` tokens, hex-encoded strings, single-letter
-  tagged `CadEntity` variants). Kaitai's byte-oriented model isn't a fit for hand-rolling that
-  recursive text grammar a second time here; the whole field is real, all-remaining-bytes ASCII
-  text by design (no length prefix, no fixed-width binary sub-fields to model).
+  Real binary `DiffCodec::encode_diff`/`decode_diff` frame for `SemioCadDiff` — no `semio_format`
+  envelope (this facet implements only `protocol::DiffCodec`, not `ArtifactDsl`/`ArtifactPack`).
+  A real fixed `format` byte + a real `presence` bitmask byte (bit0=`layers`, bit1=`blocks`,
+  bit2=`entities`), then one opaque `payload` tail holding 0-3 varint-length-prefixed text blobs
+  (one per present collection, each the same `[removed];[modified];[added]` bracket text
+  `print_diff` emits) — see the sibling `📡️component.protocol.semio`'s own comment on the
+  `protocol-cond-cannot-chain` boundary this opaque tail works around.
 seq:
+  - id: format
+    type: u1
+  - id: presence
+    type: u1
   - id: payload
-    size: _io.size - _io.pos
-    type: str
-    encoding: ASCII
-    doc: "print_diff() output -- see ../📝️text/📖️component.grammar.semio for the real grammar"
+    size-eos: true

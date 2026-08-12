@@ -1,3 +1,9 @@
-grammar Semio_semio_mutations;
-// 🚧 scaffolded by W1b — full production rules land in W2/W3. Top-level rule name only.
-ROOT: 'stdio.semio.mutations' ;
+// ANTLR4 grammar for `stdio.semio`'s real `SemioMutation::print_op` one-line wire shape —
+// descriptive mirror of the authoritative `📖️component.grammar.semio` (same production names).
+grammar Semio_any_mutations;
+
+op: 'noMutation' | taggedOp;
+taggedOp: tag ':' REST;
+tag: 'setSnapshot' | 'brep' | 'mesh' | 'model' | 'object' | 'document' | 'cad' | 'drawing' | 'image' | 'video' | 'audio' | 'animation' | 'presentation' | 'workflow';
+
+REST: .*? ;

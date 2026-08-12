@@ -1,9 +1,38 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioAnimationDiffEntry {
-  key: String!
-  value: String!
+# 🔺️ SemioAnimationDiff schema — real mirror of `🦀️component.rs` (the source of truth). No
+# `snapshot: SemioAnimationSnapshot` full-replace slot anywhere. Collections
+# (timelines/channels/keyframes) are index-keyed removed/modified/added triples
+# (`engine::triples::IndexedTripleDiff<D,T>`), monomorphized per nesting level since GraphQL has
+# no generics.
+
+type AnimKeyframeDiff {
+  t: Float
+  value: AnimValue
 }
+
+type KeyframeModified { index: Int! diff: AnimKeyframeDiff! }
+type KeyframeAdded { index: Int! item: AnimKeyframe! }
+type KeyframeTripleDiff { removed: [Int!]! modified: [KeyframeModified!]! added: [KeyframeAdded!]! }
+
+type AnimChannelDiff {
+  target: AnimTarget
+  interpolation: AnimInterpolation
+  keyframes: KeyframeTripleDiff
+}
+
+type ChannelModified { index: Int! diff: AnimChannelDiff! }
+type ChannelAdded { index: Int! item: AnimChannel! }
+type ChannelTripleDiff { removed: [Int!]! modified: [ChannelModified!]! added: [ChannelAdded!]! }
+
+type AnimTimelineDiff {
+  # 🏷️ Tri-state: absent = unchanged, null = name cleared, string = renamed.
+  name: String
+  channels: ChannelTripleDiff
+}
+
+type TimelineModified { index: Int! diff: AnimTimelineDiff! }
+type TimelineAdded { index: Int! item: AnimTimeline! }
+type TimelineTripleDiff { removed: [Int!]! modified: [TimelineModified!]! added: [TimelineAdded!]! }
+
 type SemioAnimationDiff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioAnimationDiffEntry!]! @state(class: PERSISTENT)
+  timelines: TimelineTripleDiff
 }

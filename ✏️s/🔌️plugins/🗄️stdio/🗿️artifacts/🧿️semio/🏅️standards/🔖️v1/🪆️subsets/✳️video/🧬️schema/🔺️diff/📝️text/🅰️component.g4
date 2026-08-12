@@ -1,5 +1,7 @@
 grammar Stdio_semio_video_diff;
-// One line, empty if unchanged: 'streams=' index-keyed triple, recursive at the samples level.
+// Video wave: one line, empty if unchanged. 'streams=' index-keyed triple, recursive at the
+// samples level. NOTE every option tag is THREE separate tokens ('[' '0' ']' / '[' '1' ',' ... ']')
+// — a combined '[0]' single token never matches since '[' and ']' tokenize separately.
 diff: (STREAMS_EQ triple)? EOF;
 triple: '[' indexList '];[' modifiedList '];[' addedList ']';
 indexList: (INDEX (',' INDEX)*)?;

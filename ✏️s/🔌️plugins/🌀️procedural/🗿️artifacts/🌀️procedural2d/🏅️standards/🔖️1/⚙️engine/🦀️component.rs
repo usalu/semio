@@ -222,16 +222,8 @@ pub fn empty_procedural2d_snapshot() -> Procedural2dSnapshot {
     Procedural2dSnapshot::default()
 }
 
-pub fn procedural2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    semio_framework_os::title_card_svg(value, "Procedural 2D", 1024, 768)
-}
-
-pub fn procedural2d_document_from_dwg(_drawing: &semio_framework::DwgDrawing) -> Result<Value, String> {
-    serde_json::to_value(default_snapshot()).map_err(|err| err.to_string())
-}
-
-/// 🔌️ Registers this artifact's plugin-level exports — pack<->dsl document codec, mesh/svg export
-/// bridges. Called once from the plugin-root `📦️glue.rs`'s `semio_plugin!` `setup:`.
+/// 🔌️ Registers this artifact's plugin-level exports — pack<->dsl document codec. Called once from
+/// the plugin-root `📦️glue.rs`'s `semio_plugin!` `setup:`.
 /// 📎 Registers the procedural2d artifact schema descriptor into the process-local registry.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::procedural2d::schema::procedural2d_artifact_schema_descriptor());
@@ -256,14 +248,6 @@ mod tests {
     #[test]
     fn default_snapshot_parses_the_bundled_example() {
         assert!(!default_snapshot().fixture.widgets.is_empty());
-    }
-
-    #[test]
-    fn document_from_dwg_returns_valid_default_snapshot() {
-        let drawing = semio_framework::DwgDrawing::default();
-        let document = procedural2d_document_from_dwg(&drawing).expect("dwg import document");
-        let projection: Procedural2dSnapshot = serde_json::from_value(document).expect("parseable projection");
-        assert_eq!(projection.fixture.schema, "flow.fixture");
     }
 
     #[test]

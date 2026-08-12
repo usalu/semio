@@ -1,6 +1,9 @@
-module Semio_workflow_mutations;
-# `s.stdio.semio.workflow` mutation BINARY wire format — UTF-8 bytes of the mutation TEXT wire
-# format verbatim (see the doc comment on 🧬️mutations/💾️binary/🥋️component.ksy).
+module Stdio_semio_workflow_mutations;
+
+# `format` (1 byte) + `tag` (1 byte, variant ordinal), then an opaque `payload` tail (the variant's
+# own `key=value ...` argument text) — see the sibling `📡️component.protocol.semio`'s comment.
 type Document = unit {
-    op_line_utf8: bytes &eod;
+    format: uint8;
+    tag: uint8;
+    payload: bytes &eod;
 };

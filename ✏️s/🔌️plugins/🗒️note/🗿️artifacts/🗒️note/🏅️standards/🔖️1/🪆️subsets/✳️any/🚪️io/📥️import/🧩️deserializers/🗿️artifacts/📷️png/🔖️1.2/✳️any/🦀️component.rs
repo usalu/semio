@@ -1,4 +1,7 @@
 //! note <- png
+//!
+//! 🩹️ `stdio_gap`/foreign-lag fix — see the paired export leaf's doc comment (same wave,
+//! `PngSnapshot`'s `RasterImage` wrapper -> direct `width`/`height`/`pixels` fields).
 use crate::artifacts::note::engine::{create_note_id, empty_note_snapshot};
 use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteSnapshot};
 use semio_s_plugin_stdio::artifacts::png::engine::encode_png;
@@ -28,9 +31,9 @@ pub fn deserialize(from: &PngSnapshot) -> Result<NoteSnapshot, String> {
     snap.id = create_note_id("png-import");
     snap.title = Some("Imported PNG".into());
     let mut assets = BTreeMap::new();
-    assets.insert(key.clone(), NoteImageAsset { mime: "image/png".into(), data: format!("data:image/png;base64,{}", b64(&bytes)), width: Some(from.image.width as f64), height: Some(from.image.height as f64) });
+    assets.insert(key.clone(), NoteImageAsset { mime: "image/png".into(), data: format!("data:image/png;base64,{}", b64(&bytes)), width: Some(from.width as f64), height: Some(from.height as f64) });
     snap.assets = assets;
-    snap.blocks.push(NoteBlockNode::Image { id: "png-image-1".into(), name: "PNG".into(), x: 0.0, y: 0.0, width: from.image.width.max(1) as f64, height: from.image.height.max(1) as f64, rotation: 0.0, visible: true, locked: false, image_key: key });
+    snap.blocks.push(NoteBlockNode::Image { id: "png-image-1".into(), name: "PNG".into(), x: 0.0, y: 0.0, width: from.width.max(1) as f64, height: from.height.max(1) as f64, rotation: 0.0, visible: true, locked: false, image_key: key });
     Ok(snap)
 }
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<NoteSnapshot, String> {

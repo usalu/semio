@@ -67,8 +67,8 @@ pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
                 multiplicity: semio_framework_plugin::PortMultiplicity::Many,
             },
         ],
-        export_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj, semio_framework_plugin::MediaFormat::Stl],
-        import_formats: vec![semio_framework_plugin::MediaFormat::Glb, semio_framework_plugin::MediaFormat::Obj],
+        export_formats: vec![],
+        import_formats: vec![],
         artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.lowpoly".into(), name: "3D Lowpoly".into(), dimension: "3d".into(), component_kind: "lowpoly".into() },
     }
 }

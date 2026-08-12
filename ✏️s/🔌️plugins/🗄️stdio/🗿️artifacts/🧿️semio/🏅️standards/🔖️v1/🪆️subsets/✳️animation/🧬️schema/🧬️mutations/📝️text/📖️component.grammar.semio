@@ -1,6 +1,61 @@
-dialect grammar stdio.semio.animation.mutations
-root = document
-document = header body
-header = 'schema' SP 'stdio.semio.animation.mutations' NL
-body = op
-op = 'N' / ('S:' hex) / ('IT:' index ',' timeline) / ('RT:' index) / ('TN:' index ',' option) / ('IC:' index ',' index ',' channel) / ('RC:' index ',' index) / ('CT:' index ',' index ',' target) / ('CI:' index ',' index ',' interpolation) / ('IK:' index ',' index ',' index ',' keyframe) / ('RK:' index ',' index ',' index) / ('KT:' index ',' index ',' index ',' f64) / ('KV:' index ',' index ',' index ',' value)
+dialect grammar
+grammar semio.animation.mutations
+extension semio
+start op
+
+# animation wave: real one-line `OpText::print_op`/`parse_op` shape ALREADY emitted (pre-wave) by
+# `🧬️mutations/🦀️component.rs` (`print_op`/`parse_op`) — `TAG:arg,arg,...` (`N` alone for
+# `NoMutation`), one clause per `SemioAnimationMutation` variant. Every tag/field grammar below is
+# copied verbatim from the real `format!(...)` call sites in that file's `print_op`, not invented.
+# `SetSnapshot`'s payload was the ONE genuine JSON-transfer-ban violation this wave found and fixed
+# (was hex-of-`serde_json`, now the real `snapshot-lit` production below, per
+# `enc_animation_snapshot`/`dec_animation_snapshot`).
+op = no-mutation | set-snapshot | insert-timeline | remove-timeline | set-timeline-name | insert-channel | remove-channel | set-channel-target | set-channel-interpolation | insert-keyframe | remove-keyframe | set-keyframe-time | set-keyframe-value
+
+no-mutation = "N"
+set-snapshot = "S" ":" snapshot-lit
+insert-timeline = "IT" ":" index "," timeline
+remove-timeline = "RT" ":" index
+set-timeline-name = "TN" ":" index "," option-name
+insert-channel = "IC" ":" index "," index "," channel
+remove-channel = "RC" ":" index "," index
+set-channel-target = "CT" ":" index "," index "," target
+set-channel-interpolation = "CI" ":" index "," index "," interpolation
+insert-keyframe = "IK" ":" index "," index "," index "," keyframe
+remove-keyframe = "RK" ":" index "," index "," index
+set-keyframe-time = "KT" ":" index "," index "," index "," number
+set-keyframe-value = "KV" ":" index "," index "," index "," value
+
+# `enc_animation_snapshot` — `[<hex schema>,[<timeline>,...]]`.
+snapshot-lit = "[" hex "," timeline-list "]"
+timeline-list = "[" timeline-items? "]"
+timeline-items = timeline {"," timeline}*
+
+# `enc_timeline`/`enc_channel`/`enc_keyframe`/`enc_target`/`enc_property`/`enc_interpolation`/
+# `enc_value` — the same full-VALUE codecs `📸️snapshot/📝️text/📖️component.grammar.semio` declares
+# (restated here so this leaf grammar is self-contained, matching the repo's existing per-facet
+# convention).
+timeline = "[" option-name "," channel-list "]"
+option-name = "[" "0" "]" | "[" "1" "," hex "]"
+channel-list = "[" channel-items? "]"
+channel-items = channel {"," channel}*
+channel = "[" target "," interpolation "," keyframe-list "]"
+keyframe-list = "[" keyframe-items? "]"
+keyframe-items = keyframe {"," keyframe}*
+keyframe = "[" number "," value "]"
+target = "[" hex "," property "]"
+property = "t" | "r" | "s" | "w" | "c" ":" hex
+interpolation = "l" | "s" | "c"
+value = "S" ":" number | "V" ":" point3 | "Q" ":" quat | "W" ":" number-list
+
+point3 = "[" number "," number "," number "]"
+quat = "[" number "," number "," number "," number "]"
+number-list = "[" number-items? "]"
+number-items = number {"," number}*
+
+index = INT
+number = INT | FLOAT
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — see the sibling `📸️snapshot/📝️text/📖️component.grammar.semio`'s own `hex` doc
+# comment for why a hand-rolled `{INT|IDENT}*` production would be wrong here.

@@ -26,8 +26,8 @@ pub mod export_media {
                 let schema = os_app_registration(&node.plugin_id, &node.app_id).map(|row| row.source_format).unwrap_or_default();
                 let document_json = materialize_os_app_instance_document_json(&json!({ "schema": schema }).to_string(), &node.id, &workflow_parameter_bindings_to_os(&projection.parameter_bindings), &workflow_parameters_to_os(&projection.parameters));
                 let document_value: Value = serde_json::from_str(&document_json).unwrap_or_else(|_| json!({}));
-                let format_kind = semio_framework::normalize_stdio_format_kind(&payload.format).unwrap_or(payload.format.as_str());
-                match semio_framework_os::export_os_app_instance_media_kind(node, &document_value, format_kind) {
+                let format_kind = semio_framework::format_descriptor(&payload.format).map(|d| d.short_id).unwrap_or_else(|| payload.format.clone());
+                match semio_framework_os::export_os_app_instance_media_kind(node, &document_value, &format_kind) {
                     Ok(result) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: result.file_name, mime_type: result.mime_type, data: result.data, encoding: result.encoding })),
                     Err(_) => Ok(Emit::default()),
                 }
@@ -51,11 +51,11 @@ pub mod import_media {
     }
 
     pub fn handle(payload: &ImportMedia, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        let format_kind = semio_framework::normalize_stdio_format_kind(&payload.format).unwrap_or(payload.format.as_str());
-        let accept = semio_framework_os::media_accept_filter_kinds(&[format_kind]);
+        let format_kind = semio_framework::format_descriptor(&payload.format).map(|d| d.short_id).unwrap_or_else(|| payload.format.clone());
+        let accept = semio_framework_os::media_accept_filter_kinds(&[format_kind.as_str()]);
         let accept = if accept.is_empty() { format!(".{format_kind}") } else { accept };
         Ok(Emit {
-            config_mutations: vec![SpaceConfigMutation::SetPendingImport { node_id: Some(payload.node_id.clone()), format: Some(format_kind.to_string()) }],
+            config_mutations: vec![SpaceConfigMutation::SetPendingImport { node_id: Some(payload.node_id.clone()), format: Some(format_kind.clone()) }],
             effects: vec![HostEffect::RequestFileOpen { accept, read_as: Some("dataUrl".into()), import_action: "importMediaPayload".into(), multiple: false }],
             ..Default::default()
         })
@@ -81,7 +81,7 @@ pub mod import_media_payload {
             let node_id = node_id.clone();
             let format_name = format_name.clone();
             config_mutations.push(SpaceConfigMutation::SetPendingImport { node_id: None, format: None });
-            let format_kind = semio_framework::normalize_stdio_format_kind(&format_name).unwrap_or(format_name.as_str());
+            let format_kind = semio_framework::format_descriptor(&format_name).map(|d| d.short_id).unwrap_or_else(|| format_name.clone());
             use base64::Engine;
             let base64_part = payload.payload.split_once(',').map_or(payload.payload.as_str(), |(_, data)| data);
             if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
@@ -90,7 +90,7 @@ pub mod import_media_payload {
                     // node's own document-ref document by the host (a cross-document operation the
                     // shell can't author from its own store), so this arm emits no studio document
                     // operation.
-                    let _ = semio_framework_os::import_os_app_instance_media_kind(node, &bytes, format_kind);
+                    let _ = semio_framework_os::import_os_app_instance_media_kind(node, &bytes, &format_kind);
                 }
             }
         }
@@ -106,7 +106,6 @@ mod tests {
     use crate::apps::space::testkit::{apply_config, studio_emit};
     use crate::apps::space::SpaceCommand;
     use crate::demo_space_projection;
-    use semio_framework::MediaFormat;
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
@@ -119,10 +118,10 @@ mod tests {
     fn export_media_emits_download_effect_and_import_requests_file_open() {
         use base64::Engine;
         crate::apps::space::testkit::seed_draw_plugin();
-        semio_framework_os::register_os_media_export_handler("2d.drawing", MediaFormat::Dwg, |_doc| {
+        semio_framework_os::workflow::register_os_media_export_handler_kind("2d.drawing", "dwg", |_doc| {
             let drawing = semio_framework_os::DwgDrawing::default();
             let bytes = semio_framework_os::dwg_to_bytes(&drawing)?;
-            Ok(semio_framework_os::OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: MediaFormat::Dwg.mime_type().into(), file_name: "draw.dwg".into(), encoding: Some("base64".into()) })
+            Ok(semio_framework_os::OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: "image/vnd.dwg".into(), file_name: "draw.dwg".into(), encoding: Some("base64".into()) })
         });
         semio_framework_os::register_dwg_import_handler("2d.drawing", |_drawing| Ok(json!({ "schema": "draw.document", "imported": true })));
 

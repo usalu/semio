@@ -1,14 +1,84 @@
-dialect grammar stdio.semio.mesh.diff
-root = document
-; REAL hand-rolled DiffCodec grammar (protocol::DiffCodec::print_diff/parse_diff), not a hex-JSON
-; envelope: space-separated `key=value` tokens, one per changed top-level field. Each value is a
-; bracket-depth-aware named triple `[removed];[modified];[added]`
-; (engine::triples::enc_named_triple/dec_named_triple, split_top_level/strip_brackets).
-document = (token (SP token)*)?
-token = "meshes=" triple / "materials=" triple / "textures=" triple
-triple = "[" list "]" ";" "[" list "]" ";" "[" list "]"
-list = (item ("," item)*)?
-item = HEXSTR (":" payload)?
-payload = *(%x00-2B / %x2D / %x2E-3A / %x3C-FF)   ; any octet except "," (0x2C) and ";" (0x3B) at this depth
-HEXSTR = *(%x30-39 / %x41-46 / %x61-66)
-SP = %x20
+dialect grammar
+grammar semio.mesh.diff
+extension semio
+start document
+
+# P2 mesh wave: real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `🔺️diff/🦀️component.rs` (`print_mesh_diff`/`parse_mesh_diff`) — token-per-nonempty-field,
+# space-separated (space is lexer trivia, irrelevant at this dialect level); each collection field
+# encodes as the shared `engine::triples::enc_named_triple`/`dec_named_triple`
+# `[removed];[modified];[added]` bracket-depth-aware triple (recipe's own collection-triple shape,
+# §1.4). All three top-level fields are optional (an unchanged diff prints as the empty string).
+# `added` entries are `index:item` pairs (`NamedAdded<T>`, this subset's own position-preserving
+# fix — see `🔺️diff/🦀️component.rs`'s module doc comment), NOT bare items.
+document = meshes-line? materials-line? textures-line?
+
+meshes-line = "meshes" "=" meshes-triple
+meshes-triple = "[" removed-list? "]" ";" "[" mesh-modified-list? "]" ";" "[" mesh-added-list? "]"
+mesh-modified-list = mesh-modified {"," mesh-modified}*
+mesh-modified = hex ":" mesh-item-diff
+mesh-added-list = mesh-added {"," mesh-added}*
+mesh-added = INT ":" mesh
+mesh-item-diff = "[" option-primitives-diff "]"
+option-primitives-diff = "[" "0" "]" | "[" "1" "," primitives-triple "]"
+primitives-triple = "[" removed-list? "]" ";" "[" primitive-modified-list? "]" ";" "[" primitive-added-list? "]"
+primitive-modified-list = primitive-modified {"," primitive-modified}*
+primitive-modified = hex ":" primitive-diff
+primitive-added-list = primitive-added {"," primitive-added}*
+primitive-added = INT ":" primitive
+primitive-diff = "[" option-topology "," option-point3-list "," option-point3-list "," option-uv-list "," option-rgba-list "," option-index-list "," option-option-hex "]"
+
+materials-line = "materials" "=" materials-triple
+materials-triple = "[" removed-list? "]" ";" "[" material-modified-list? "]" ";" "[" material-added-list? "]"
+material-modified-list = material-modified {"," material-modified}*
+material-modified = hex ":" material-diff
+material-added-list = material-added {"," material-added}*
+material-added = INT ":" material
+material-diff = "[" option-rgba "," option-number "," option-number "]"
+
+textures-line = "textures" "=" textures-triple
+textures-triple = "[" removed-list? "]" ";" "[" texture-modified-list? "]" ";" "[" texture-added-list? "]"
+texture-modified-list = texture-modified {"," texture-modified}*
+texture-modified = hex ":" texture-diff
+texture-added-list = texture-added {"," texture-added}*
+texture-added = INT ":" texture
+texture-diff = "[" option-hex "," option-hex "]"
+
+removed-list = hex {"," hex}*
+
+# `enc_mesh`/`enc_primitive`/`enc_material`/`enc_texture` — the same full-VALUE codecs
+# `📸️snapshot/🦀️component.rs`'s own text DSL grammar declares (restated here so this leaf grammar
+# is self-contained, matching the repo's existing per-facet convention).
+mesh = "[" hex "," "[" primitive-list? "]" "]"
+primitive-list = primitive {"," primitive}*
+primitive = "[" hex "," topology "," "[" point3-list? "]" "," "[" point3-list? "]" "," "[" uv-list? "]" "," "[" rgba-list? "]" "," "[" index-list? "]" "," option-hex "]"
+material = "[" hex "," rgba "," number "," number "]"
+texture = "[" hex "," hex "," hex "]"
+
+point3-list = point3 {"," point3}*
+point3 = "[" number "," number "," number "]"
+uv-list = uv {"," uv}*
+uv = "[" number "," number "]"
+rgba-list = rgba {"," rgba}*
+rgba = "[" number "," number "," number "," number "]"
+index-list = INT {"," INT}*
+topology = "P" | "L" | "S" | "T" | "X" | "F"
+number = INT | FLOAT
+
+# Tri-state (`Option<T>` diff field) tags — recipe §1.4's uniform `[0]` (unchanged) / `[1,<value>]`
+# (changed) pattern, one per diffable leaf type. `option-option-hex` is the DOUBLY-tri-state tag
+# `SemioPrimitiveDiff.material_id: Option<Option<String>>` needs (outer = "did this field change",
+# inner = "is the new value Some/None").
+option-hex = "[" "0" "]" | "[" "1" "," hex "]"
+option-topology = "[" "0" "]" | "[" "1" "," topology "]"
+option-point3-list = "[" "0" "]" | "[" "1" "," "[" point3-list? "]" "]"
+option-uv-list = "[" "0" "]" | "[" "1" "," "[" uv-list? "]" "]"
+option-rgba-list = "[" "0" "]" | "[" "1" "," "[" rgba-list? "]" "]"
+option-index-list = "[" "0" "]" | "[" "1" "," "[" index-list? "]" "]"
+option-option-hex = "[" "0" "]" | "[" "1" "," option-hex "]"
+option-rgba = "[" "0" "]" | "[" "1" "," rgba "]"
+option-number = "[" "0" "]" | "[" "1" "," number "]"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — see the sibling `📸️snapshot/📝️text/📖️component.grammar.semio`'s own `hex` doc
+# comment for why a hand-rolled `{INT|IDENT}*` production would be wrong here.

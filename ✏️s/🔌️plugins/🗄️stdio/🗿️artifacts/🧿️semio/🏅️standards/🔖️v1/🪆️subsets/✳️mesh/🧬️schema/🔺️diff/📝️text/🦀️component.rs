@@ -1,6 +1,3 @@
-//! 📝️ Text representation marker for `stdio.semio.mesh.diff` — the real grammar is
-//! `impl protocol::DiffCodec for SemioMeshDiff` (`../../🦀️component.rs`): space-separated
-//! `key=value` tokens (`meshes=`/`materials=`/`textures=`), each value a bracket-depth-aware
-//! `[removed];[modified];[added]` named triple built on `engine::triples::enc_named_triple`/
-//! `dec_named_triple`. See sibling `.g4`/`.ebnf`/`.grammar.semio` leaves for the formal grammar.
-pub const TEXT_MARKER: &str = "stdio.semio.mesh.diff";
+//! 📝️ Text representation codec surface for `s.stdio.semio.mesh` (diff) — grammar include.
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");

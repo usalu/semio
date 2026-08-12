@@ -1,0 +1,30 @@
+  |
+2 | #![feature(linkage)]
+  |            ^^^^^^^
+  |
+  = note: `#[warn(unused_features)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os` (lib) generated 10 warnings (run `cargo fix --lib -p semio-framework-os` to apply 8 suggestions)
+   Compiling semio-framework-os-run v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 7.25s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_framework_os_run-533368b8c726de04)
+
+running 15 tests
+test run_lib::tests::convert_media_is_identity_when_contract_has_no_conversion ... ok
+test run_lib::tests::validate_rejects_missing_required_input ... ok
+test run_lib::tests::rejects_incompatible_edge_media_types ... ok
+test run_lib::tests::topological_order_respects_edges ... ok
+test run_lib::tests::validate_rejects_multiplicity_one_input_with_two_incoming_edges ... ok
+test run_lib::tests::detects_cycles ... ok
+test run_lib::tests::first_run_recomputes_every_node_second_run_is_a_no_operation ... ok
+test run_lib::tests::editing_upstream_document_dirties_downstream_only_through_the_wire ... ok
+test run_lib::tests::changing_a_nodes_config_alone_dirties_it_without_touching_document_or_inputs ... ok
+test run_lib::tests::parameter_overlay_alone_dirties_its_bound_node_without_changing_raw_config_bytes ... ok
+test run_lib::tests::vector_to_raster_rejects_non_structured_payload ... ok
+test run_lib::tests::vector_to_raster_rasterizes_svg_to_a_2d_image_media ... ok
+test run_lib::tests::register_builtin_converters_wires_vector_to_raster_through_convert_media ... ok
+test run_lib::tests::validate_rejects_unregistered_conversion ... ok
+test run_lib::tests::media_converter_registry_applies_registered_converter ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

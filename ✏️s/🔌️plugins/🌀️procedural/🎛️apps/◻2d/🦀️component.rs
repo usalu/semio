@@ -508,14 +508,6 @@ mod tests {
     }
 
     #[test]
-    fn document_from_dwg_returns_valid_default_snapshot() {
-        let drawing = semio_framework::DwgDrawing::default();
-        let document = crate::artifacts::procedural2d::engine::procedural2d_document_from_dwg(&drawing).expect("dwg import document");
-        let projection: Procedural2dSnapshot = serde_json::from_value(document).expect("parseable projection");
-        assert_eq!(projection.fixture.schema, "flow.fixture");
-    }
-
-    #[test]
     fn two_instances_converge_disjoint_widget_moves() {
         let widgets: Vec<String> = app().snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::procedural2d::widget_id(widget).to_string()).collect();
         assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");

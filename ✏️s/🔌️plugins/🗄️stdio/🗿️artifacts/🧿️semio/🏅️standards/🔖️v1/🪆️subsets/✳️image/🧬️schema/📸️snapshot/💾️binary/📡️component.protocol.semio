@@ -1,13 +1,33 @@
 dialect protocol
-protocol s.stdio.semio.image.snapshot.binary
-start semio-binary
+protocol s.stdio.semio.image.snapshot
+version 1
+schema s.stdio.semio.image
+start body
+framing record
 
-semio-binary  = magic token-len token snapshot-json
-magic         = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A
-token-len     = u32le
-token         = *OCTET
-snapshot-json = *OCTET
+# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION image wave: REAL binary pack frame,
+# replacing the old `serde_json::to_vec`-in-envelope shortcut (`📸️snapshot/🦀️component.rs`'s old
+# `ArtifactPack::encode_pack_with`). `format u8` (real, fixed) then `schema_len`/`schema_bytes`
+# (real, varint-length-prefixed UTF-8 — matches `write_str_lp`'s own wire exactly, via the proven
+# BARE `segment <name> <type>` form: consecutive bare segment lines auto-merge into one segment),
+# then `width`/`height` (real fixed `u32` LE), `colorspace`/`bit_depth` (real fixed `u8`) are
+# genuinely, fully described. Past that, `icc` (an `Option<Vec<u8>>`) and `frames`/`metadata`
+# (HOMOGENEOUS but variable-length repeated records — the `protocol-array-of-records` gap: `repeat`'s
+# own arms are tag-dispatched, not "repeat N times, N from a count field", for an untagged
+# homogeneous record) are modeled as one opaque trailing `payload` chain, the same honest boundary
+# every P1-P3/W-S pilot's own nested/recursive payload uses. The real Rust
+# `encode_image_snapshot_binary`/`decode_image_snapshot_binary` (`../../🦀️component.rs`) stays
+# genuinely, fully structured (varint counts, per-field length-prefixes, real `u32` LE numeric
+# fields) — round-trip tested independently by this facet's own tests, only the protocol
+# DESCRIPTION stops at this boundary.
+header fixed 1
+field format u8
 
-; -- real wire shape (store::semio_format::wrap_binary/unwrap_binary). Honest boundary:
-; -- `snapshot-json` is this NEUTRAL semio subset's own serde_json bytes, not a format-specific
-; -- byte layout — see the JSON Schema sibling under 📸️snapshot for that shape.
+segment schema_len varint
+segment schema_bytes Array(u8, Field(schema_len))
+segment width u32
+segment height u32
+segment colorspace u8
+segment bit_depth u8
+
+chain payload bytes

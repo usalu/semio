@@ -195,6 +195,10 @@ pub enum StateClass {
     LocalUi,
     Preview,
     Effect,
+    /// @emoji 💡️ Derivable-from-snapshot state — never authored, never diffed/mutated, only
+    /// (optionally) cached. Used exclusively by `💡️inference` schema facets; a
+    /// `Mutation::state_class()` must never return this (see `📜️script.ts`'s `POLICY_INFERENCE_STATE`).
+    Inferred,
 }
 //#endregion 🔖️StateClass
 
@@ -267,6 +271,66 @@ pub fn with_kernel_artifact_schema_catalog<R>(visit: impl FnOnce(&[KernelArtifac
     visit(&entries)
 }
 //#endregion 🔖️ArtifactSchemaCatalog
+
+//#region 🔖️ArtifactInferenceCatalog
+/// 💡️ Registered descriptor for one artifact's 💡️inference schema facet — a SIBLING registry to
+/// [`KernelArtifactSchemaDescriptor`], not a field on it: the four-facet descriptor already has ~107
+/// handcrafted call sites across every migrated artifact, and none of them need to change as
+/// artifacts adopt inference one at a time (seed-then-shrink fan-out, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). `id` is the
+/// inference schema's own id (`"{artifact_id}.inference"`), matching how snapshot/diff already key
+/// their GraphQL SDL catalog entries off `{id}.snapshot`/`{id}.diff`.
+#[derive(Clone, Debug)]
+pub struct KernelArtifactInferenceDescriptor {
+    pub id: &'static str,
+    pub inference: KernelFacetLeaves,
+}
+
+struct KernelArtifactInferenceCatalog {
+    by_id: HashMap<&'static str, KernelArtifactInferenceDescriptor>,
+}
+
+static KERNEL_ARTIFACT_INFERENCE_CATALOG: OnceLock<Mutex<KernelArtifactInferenceCatalog>> = OnceLock::new();
+
+fn kernel_artifact_inference_catalog() -> &'static Mutex<KernelArtifactInferenceCatalog> {
+    KERNEL_ARTIFACT_INFERENCE_CATALOG.get_or_init(|| Mutex::new(KernelArtifactInferenceCatalog { by_id: HashMap::new() }))
+}
+
+/// 📎 Registers one artifact's handcrafted inference descriptor into the OS-wide catalog.
+pub fn register_kernel_artifact_inference_descriptor(descriptor: KernelArtifactInferenceDescriptor) {
+    kernel_artifact_inference_catalog()
+        .lock()
+        .expect("kernel artifact inference catalog lock")
+        .by_id
+        .insert(descriptor.id, descriptor);
+}
+
+/// 🔎 Whether `id` (the inference schema id, `"{artifact_id}.inference"`) is registered.
+pub fn kernel_artifact_inference_descriptor_registered(id: &str) -> bool {
+    kernel_artifact_inference_catalog()
+        .lock()
+        .expect("kernel artifact inference catalog lock")
+        .by_id
+        .contains_key(id)
+}
+
+/// 🔢 Count of registered artifact inference facets.
+pub fn kernel_artifact_inference_catalog_len() -> usize {
+    kernel_artifact_inference_catalog()
+        .lock()
+        .expect("kernel artifact inference catalog lock")
+        .by_id
+        .len()
+}
+
+/// 📚 Invokes `visit` with every registered kernel inference descriptor.
+pub fn with_kernel_artifact_inference_catalog<R>(visit: impl FnOnce(&[KernelArtifactInferenceDescriptor]) -> R) -> R {
+    let guard = kernel_artifact_inference_catalog().lock().expect("kernel artifact inference catalog lock");
+    let mut entries: Vec<KernelArtifactInferenceDescriptor> = guard.by_id.values().cloned().collect();
+    entries.sort_by_key(|entry| entry.id);
+    visit(&entries)
+}
+//#endregion 🔖️ArtifactInferenceCatalog
 
 //#region 🔖️AppSchemaCatalog
 /// 🧬️ Registered descriptor for one app owner's config + presence schema facets.
@@ -807,12 +871,34 @@ mod tests {
             let json = serde_json::to_string(&policy).unwrap();
             assert_eq!(serde_json::from_str::<UndoPolicy>(&json).unwrap(), policy);
         }
-        for class in [StateClass::Persistent, StateClass::SharedUi, StateClass::LocalUi, StateClass::Preview, StateClass::Effect] {
+        for class in [StateClass::Persistent, StateClass::SharedUi, StateClass::LocalUi, StateClass::Preview, StateClass::Effect, StateClass::Inferred] {
             let json = serde_json::to_string(&class).unwrap();
             assert_eq!(serde_json::from_str::<StateClass>(&json).unwrap(), class);
         }
     }
     //#endregion 🔖️Policies
+
+    //#region 🔖️ArtifactInferenceCatalog
+    fn empty_kernel_facet_leaves() -> KernelFacetLeaves {
+        KernelFacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" }
+    }
+
+    #[test]
+    fn kernel_artifact_inference_catalog_registers_independently_of_the_four_facet_descriptor() {
+        let before = kernel_artifact_inference_catalog_len();
+        register_kernel_artifact_inference_descriptor(KernelArtifactInferenceDescriptor {
+            id: "s.wave3.synthetic.inference",
+            inference: empty_kernel_facet_leaves(),
+        });
+        assert!(kernel_artifact_inference_descriptor_registered("s.wave3.synthetic.inference"));
+        assert_eq!(kernel_artifact_inference_catalog_len(), before.max(1));
+        let mut found = false;
+        with_kernel_artifact_inference_catalog(|entries| {
+            found = entries.iter().any(|entry| entry.id == "s.wave3.synthetic.inference");
+        });
+        assert!(found, "registered inference descriptor must be visible via with_kernel_artifact_inference_catalog");
+    }
+    //#endregion 🔖️ArtifactInferenceCatalog
 
     //#region 🔖️WireCodec
     #[test]

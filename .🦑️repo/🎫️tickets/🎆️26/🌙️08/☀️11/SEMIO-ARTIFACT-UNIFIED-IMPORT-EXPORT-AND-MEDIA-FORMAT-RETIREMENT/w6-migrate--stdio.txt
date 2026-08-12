@@ -1,0 +1,44 @@
+W6 migration — s/plugins/stdio — MediaFormat removal
+=====================================================
+
+Census input: 1 file in this plugin still referencing "MediaFormat":
+  - ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs
+  Notes given: "Comment-only hit (not real code usage): a doc comment on the gltf composer calls
+  MediaFormat 'the deprecated stringly one' and notes current stdio artifacts leave
+  export/import_formats empty."
+
+Verification before edit:
+  git status --short -- "✏️s/🔌️plugins/🗄️stdio/" -> showed unrelated concurrent activity (pptx,
+  html/epw/gif/mp3/mp4 example.pack.semio assets, etc from other live dev sessions) but nothing
+  touching the gltf composer file or its comment block. Safe to edit.
+
+  Read "🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs" was requested for variant-list confirmation,
+  but this plugin's only hit is a doc comment with zero code-level MediaFormat usage (no
+  Vec<MediaFormat> fields, no MediaWireFormat::Binary{format: MediaFormat}, no match arms, no
+  function signatures) -- there is nothing to map against enum variants for.
+
+Action taken:
+  Edited the doc comment on GltfComposer (lines ~11-14) to remove the dangling reference to the
+  MediaFormat type (which is being deleted repo-wide by a later closer step in this ticket), while
+  preserving the substantive claim that survives the deletion: there is no separate MIME registry
+  at this layer, and ArtifactKindSpec.{export,import}_formats is left empty on every current stdio
+  artifact including gltf. Old comment said "MediaFormat is the deprecated stringly one, see its
+  own doc comment" -- referencing a type slated for removal would leave a broken/stale doc pointer
+  once the framework's MediaFormat enum is gone, so the reference was dropped rather than kept.
+
+  No Vec<MediaFormat>, no MediaWireFormat::Binary{format}, no match arms, no function signatures
+  needed changing in this plugin -- W5's prior pass on stdio had already migrated all real code
+  usage; this file was the sole leftover, and it was comment-only.
+
+Exit checklist:
+  grep -c "MediaFormat" on the touched file -> 0
+  grep -rn "MediaFormat" across "✏️s/🔌️plugins/🗄️stdio/" -> no output (0 matches repo-plugin-wide)
+  cargo check -p semio-s-plugin-stdio -> Finished dev profile, 0 errors (485 pre-existing warnings,
+    unrelated dead-code/unused-field lints)
+  cargo test -p semio-s-plugin-stdio --lib -> test result: ok. 1896 passed; 0 failed; 3 ignored
+
+Files touched (write scope "✏️s/🔌️plugins/🗄️stdio/**" only, respected):
+  - ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🎹️composer/🦀️component.rs
+    (doc comment only, no functional/code change)
+
+No framework files edited. No git-mutating commands run.

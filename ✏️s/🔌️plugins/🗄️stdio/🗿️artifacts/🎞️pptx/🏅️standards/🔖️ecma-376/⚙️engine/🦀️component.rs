@@ -587,9 +587,78 @@ pub fn decode_pptx(data: &[u8]) -> Result<PptxSnapshot, PptxError> {
 
 pub fn empty_pptx_snapshot() -> PptxSnapshot { PptxSnapshot::default() }
 
+/// 📄️ FG-wave: the demo `stdio.pptx` presentation — a genuinely non-trivial `PptxSnapshot`
+/// exercising a title `Placeholder` (bold run), a `Picture`, a `TextBox` with mixed bold/italic
+/// runs across two paragraphs, and one raw-retained `Other` shape (`p:graphicFrame`, round-tripped
+/// verbatim), plus one unmodeled raw OPC part (`ppt/media/image1.png`, verbatim-retained). The
+/// single source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/
+/// `🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
+/// asserted equal by `fixture_honesty_law` below) — same shape `📜️docx/…/⚙️engine/🦀️component.rs`'s
+/// own `demo_docx_snapshot()` establishes.
+pub fn demo_pptx_snapshot() -> PptxSnapshot {
+    let presentation = PptxPresentation {
+        slides: vec![
+            PptxSlide {
+                shapes: vec![
+                    PptxShape::Placeholder {
+                        kind: "title".into(),
+                        text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "Semio Demo".into(), bold: true, italic: false, font_size: Some(44) }] }],
+                        position: PptxTransform { x: 685800, y: 457200, cx: 7772400, cy: 1143000 },
+                    },
+                    PptxShape::Picture { blip_rel_id: "rId2".into(), position: PptxTransform { x: 685800, y: 1600200, cx: 2286000, cy: 1714500 } },
+                ],
+            },
+            PptxSlide {
+                shapes: vec![
+                    PptxShape::TextBox {
+                        text_frame: vec![
+                            PptxParagraph {
+                                runs: vec![
+                                    PptxRun { text: "Bold and ".into(), bold: true, italic: false, font_size: None },
+                                    PptxRun { text: "italic".into(), bold: false, italic: true, font_size: None },
+                                ],
+                            },
+                            PptxParagraph::text("second paragraph"),
+                        ],
+                        position: PptxTransform { x: 685800, y: 457200, cx: 7772400, cy: 2286000 },
+                    },
+                    // 🩹 Deliberately no `<a:graphic/>` child here: an UNATTRIBUTED self-closing
+                    // element (real bytes `<a:graphic/>`, no space) would hit the SAME lexer
+                    // identifier-fusion property this file's own grammar documents for `p:nvPr`/
+                    // `p:grpSpPr`/etc (`"cNvGrpSpPr/"` fuses into ONE token) -- but the GENERIC
+                    // `x-elem` raw-retention fallback (unlike this artifact's own TYPED shape
+                    // productions, which model every real fused case with an explicit literal
+                    // token) has no way to disambiguate "bare self-close" from "open tag, more
+                    // content follows" using only same-shape `LT x-name GT` lookahead -- a
+                    // genuine, documented limitation of the x-elem restatement (same one docx's
+                    // own snapshot grammar's `x-elem` inherits), not something this demo fixture
+                    // should paper over by accident. Keeping every attr non-empty here keeps the
+                    // conformance law honest without exercising that known gap.
+                    PptxShape::Other { xml: r#"<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="9" name="Table 1"/></p:nvGraphicFramePr></p:graphicFrame>"#.into() },
+                ],
+            },
+        ],
+    };
+    let mut snap = build_minimal_pptx(presentation);
+    snap.opc.set_part("ppt/media/image1.png", "image/png", b"\x89PNG\r\n\x1a\n".to_vec());
+    // 🩹 Canonicalize `opc.parts` ORDER by round-tripping through one real encode/decode pass --
+    // `regenerate_presentation_parts` (invoked again inside `encode_pptx`) retains-away and
+    // re-appends `ppt/slides/*`/`ppt/presentation.xml` on EVERY call (see
+    // `double_regenerate_keeps_opc_parts_order_stable`'s own regression note above); since THIS
+    // demo snapshot manually appends an EXTRA raw part (`ppt/media/image1.png`) AFTER
+    // `build_minimal_pptx`'s own regen pass, a LATER `encode_pptx` call (invoked by `print_dsl`/
+    // `encode_pack`/every conformance law below) would otherwise reorder `opc.parts` differently
+    // from whatever order this function returns -- exactly the failure mode
+    // `fixture_honesty_law`'s `print_dsl`/`parse_dsl` round trip exists to catch. Round-tripping
+    // once here means every LATER `encode_pptx` call on this snapshot is a stable no-op reorder.
+    let canonical_bytes = encode_pptx(&snap).expect("encode demo pptx for order canonicalization");
+    decode_pptx(&canonical_bytes).expect("decode demo pptx for order canonicalization")
+}
+
 pub fn register() {
     crate::artifacts::pptx::composer::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::pptx::schema::pptx_artifact_schema_descriptor());
+    register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA));
     // 🛡️ D5's generic validate-on-build hook: registers the ✳️strict/✳️transitional subsets'
     // SubsetValidators so `io_dispatch`/`wire_artifact_compose` re-check them for free. Their
@@ -597,6 +666,65 @@ pub fn register() {
     // `composer::entries()` aggregation.
     crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::composer::register();
     crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::composer::register();
+}
+
+/// 📌️ FG-wave: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per
+/// `📷️png/…/⚙️engine/🦀️component.rs`'s own `register_pilot_languages` exemplar pattern —
+/// `stdio.pptx`/`.op`/`.diff`/`.pack`/`.spr`, all `dsl::passthrough_hooks`. `diff`'s `protocol`
+/// slot stays `None`, matching the exemplar's own shape exactly (the 5-role scheme has no
+/// dedicated "diff binary" role, even though `🔺️diff/💾️binary/📡️component.protocol.semio` is a
+/// real, conformance-tested file — its binary form is exercised directly by `protocol_walk_law`
+/// below), same precedent docx's own `register_pilot_languages` already established for this
+/// OPC-family shape.
+///
+/// `register_schema_spec` (P2-M3's `FullResolver` insertion API) is deliberately NOT called here —
+/// filed as this wave's own `mechanism_gaps` entry: it requires `fn() -> RecordSpec`, and
+/// `PptxSnapshot`/`PptxDiff`/`PptxMutation` have none (all three are hand-rolled — see
+/// `📸️snapshot/🦀️component.rs`'s `ArtifactDsl`/`ArtifactPack` and `🔺️diff/🦀️component.rs`/
+/// `🧬️mutations/🦀️component.rs`'s own F6-verification doc comments confirming
+/// `#[derive(dsl::Dsl*)]` fails to compile on every one of these types), same root cause docx's
+/// own `register_pilot_languages` doc comment already documents for the identical OPC shape.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.pptx", extension: Some("pptx"), role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::pptx::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::pptx::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::pptx::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::pptx::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.pptx"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.pptx.op", extension: None, role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::pptx::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::pptx::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::pptx::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::pptx::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.pptx.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.pptx.diff", extension: None, role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::pptx::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::pptx::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("stdio.pptx.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.pptx.pack", extension: None, role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::pptx::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::pptx::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.pptx.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.pptx.spr", extension: None, role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::pptx::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::pptx::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.pptx.spr"),
+    });
 }
 //#endregion 🔖️Codec
 
@@ -865,5 +993,164 @@ mod tests {
             }
         }
     }
+
+    //#region 🔖️ConformanceLaws
+    /// 🧪️ FG-wave: per-artifact conformance laws (`📖️grammar-recipe.md` §4's checklist item) --
+    /// grammar/protocol parseability, `Recognizer` against real fixtures AND real `print_op`/
+    /// `print_diff` output, `walk_protocol` against real `encode_pack`/`encode_op`/`encode_diff`
+    /// bytes, and the fixture-honesty round-trip. Lives here (the engine's own test region), not
+    /// any framework file -- same placement `📜️docx/…/⚙️engine/🦀️component.rs`'s own
+    /// `conformance_laws` module uses; these tests are this artifact's OWN early-warning, plus
+    /// direct coverage of the mutations/diff facets the framework's `m5` auto-discovery does not
+    /// reach at all.
+    mod conformance_laws {
+        use super::*;
+        use crate::artifacts::pptx::schema::{diff, mutations, snapshot};
+        use protocol::{DiffCodec, OpBinary, OpText};
+
+        /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
+        /// parse under the real dialect -- independent of, and cheaper than, the two
+        /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
+        /// message).
+        #[test]
+        fn committed_facet_files_parse() {
+            for (label, text) in [
+                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
+            ] {
+                let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+                assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+            }
+            for (label, text) in [
+                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
+            ] {
+                dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+            }
+        }
+
+        /// ✅️ `grammar_conformance_law`: the snapshot grammar models the real TEXT syntax of the
+        /// XML parts a pptx OPC package carries (`📸️snapshot/📝️text/📖️component.grammar.semio`'s
+        /// own doc comment explains why -- this artifact's `ArtifactDsl::print_dsl` hex-dumps the
+        /// WHOLE binary OPC package, matching this facet's SIBLING binary protocol, not this text
+        /// grammar; the two facets describe different LAYERS of the same real artifact, same as
+        /// every OPC-family member's own container/contained-parts split). So this law decodes the
+        /// REAL zip entries `encode_pptx` genuinely produces (via `zip::engine::decode_zip`, the
+        /// same real codec `opc::decode_opc` itself delegates to) and recognizes EACH real
+        /// modeled part's own text against the grammar -- direct proof the grammar matches this
+        /// artifact's own real per-part XML bytes, not an invented approximation.
+        #[test]
+        fn grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+
+            let demo = demo_pptx_snapshot();
+            let bytes = encode_pptx(&demo).expect("encode demo pptx");
+            let zip = crate::artifacts::zip::engine::decode_zip(&bytes).expect("decode zip");
+
+            let fixed_parts = ["[Content_Types].xml", "_rels/.rels", "ppt/presentation.xml"];
+            let mut checked = 0;
+            for entry in &zip.entries {
+                let is_slide = entry.name.starts_with("ppt/slides/slide") && entry.name.ends_with(".xml");
+                if !fixed_parts.contains(&entry.name.as_str()) && !is_slide {
+                    continue;
+                }
+                let text = String::from_utf8(entry.data.clone()).unwrap_or_else(|e| panic!("part {:?}: not valid utf-8: {e}", entry.name));
+                assert!(recognizer.recognize(&text).unwrap_or(false), "grammar did not recognize real part {:?}:\n{text}", entry.name);
+                checked += 1;
+            }
+            assert_eq!(checked, fixed_parts.len() + demo.presentation.slides.len(), "not every modeled part was present in the real zip entries");
+        }
+
+        /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
+        /// output for every `PptxMutation` variant (`mutations::demo_mutation_cases()`).
+        #[test]
+        fn ops_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for mutation in mutations::demo_mutation_cases() {
+                let printed = mutation.print_op();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
+            }
+        }
+
+        /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
+        /// for every representative `PptxDiff` (`diff::demo_diff_cases()`).
+        #[test]
+        fn diff_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for d in diff::demo_diff_cases() {
+                let printed = d.print_diff();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
+            }
+        }
+
+        /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets --
+        /// snapshot pack (`encode_pack`, envelope-unwrapped first, matching how
+        /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
+        /// mutation's `encode_op`, and every demo diff's `encode_diff`. The snapshot protocol
+        /// declares `backward`/`jump` (restated from zip's own real ZIP layout), so `walk_protocol`
+        /// correctly does NOT require landing on exactly `bytes.len()` (M2's own documented
+        /// exception, `📖️grammar-recipe.md` §2.3) -- assert a sane in-range `consumed` there
+        /// instead, same as zip's/docx's own `protocol_walk_law` does; the op/diff protocols have
+        /// no such exception and must consume every byte.
+        #[test]
+        fn protocol_walk_law() {
+            let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+            let demo = demo_pptx_snapshot();
+            let packed = store::ArtifactPack::encode_pack(&demo);
+            let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
+            let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+            assert!(trace.consumed > 0 && trace.consumed <= inner.len(), "pack walk consumed an out-of-range span");
+
+            let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+            for mutation in mutations::demo_mutation_cases() {
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
+            }
+
+            let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+            for d in diff::demo_diff_cases() {
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
+            }
+        }
+
+        #[test]
+        #[ignore]
+        fn zzz_generate_p2p1_fixtures() {
+            let demo = demo_pptx_snapshot();
+            let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🎞️pptx/📚️examples/🎬️demo/🖼️assets");
+            std::fs::write(dir.join("🗣️example.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).unwrap();
+            std::fs::write(dir.join("🎒️example.pack.semio"), store::ArtifactPack::encode_pack(&demo)).unwrap();
+        }
+
+        /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
+        /// `print_dsl`/`encode_pack` output of `demo_pptx_snapshot()` -- `parse_dsl(fixture) ==
+        /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin -- so the
+        /// fixtures can never silently drift back to a fake `"68656c6c6f"`-style placeholder again
+        /// (see this ticket's own recon note on the pre-FG-wave state of these two files).
+        #[test]
+        fn fixture_honesty_law() {
+            const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+
+            let demo = demo_pptx_snapshot();
+
+            let parsed = <PptxSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_pptx_snapshot()");
+            assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_pptx_snapshot()) drifted from the shipped .dsl.semio fixture");
+
+            let decoded = <PptxSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_pptx_snapshot()");
+            assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_pptx_snapshot()) drifted from the shipped .pack.semio fixture");
+        }
+    }
+    //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests

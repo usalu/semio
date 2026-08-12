@@ -1,4 +1,8 @@
-; stdio.semio.video diff binary layout: UTF-8 bytes of the text grammar (../📝️text) verbatim, no
-; separate binary framing — protocol::DiffCodec::encode_diff is documented to equal
-; print_diff().into_bytes() (matching GifDiff/SvgDiff/DocxDiff's own hand-rolled codecs).
-document = *(UTF8-OCTET)
+; ABNF mirror (descriptive, not test-parsed — the real byte-level walker is
+; ../📡️component.protocol.semio, walked by dsl::walk_protocol) for s.stdio.semio.video diff
+; (binary) — REAL binary diff frame (video wave, replacing the old print_diff().into_bytes()
+; text-as-binary shortcut).
+document  = format presence payload
+format    = OCTET      ; DIFF_BINARY_FORMAT, currently 1
+presence  = OCTET      ; bit0 = streams present
+payload   = *OCTET     ; present iff (presence & 1) != 0 — varint length + enc_streams_diff text, see ../🦀️component.rs

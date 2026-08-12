@@ -1,5 +1,6 @@
-(* stdio.semio.video diff text grammar — one line, empty if unchanged; see 📖️component.grammar.semio
-   for the fully-spelled-out ABNF-flavored version of this same shape. *)
+(* stdio.semio.video diff text grammar (video wave) — one line, empty if unchanged; see
+   📖️component.grammar.semio for the fully-spelled-out dialect-native version of this same shape,
+   incl. the three-separate-token option-tag detail. *)
 diff = [ "streams=", triple ] ;
 triple = "[", index list, "];[", modified list, "];[", added list, "]" ;
 index list = [ index, { ",", index } ] ;

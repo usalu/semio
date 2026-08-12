@@ -1,9 +1,10 @@
 module Stdio_semio_cad_diff;
 
-# protocol::DiffCodec encode_diff/decode_diff payload for s.stdio.semio.cad.diff -- NO semio
-# envelope (unlike the snapshot facet): encode_diff is print_diff().into_bytes() verbatim, ASCII
-# text in the ../📝️text/📖️component.grammar.semio bracket-triple grammar.
-
-public type Document = unit {
-    payload: bytes &eod;   # print_diff() output; see ../📝️text/📖️component.grammar.semio
+# Real binary `DiffCodec` frame: `format` (1 byte) + `presence` bitmask (1 byte,
+# bit0=layers/bit1=blocks/bit2=entities), then one opaque `payload` tail holding 0-3
+# varint-length-prefixed text blobs (see the sibling `📡️component.protocol.semio`'s comment).
+type Document = unit {
+    format: uint8;
+    presence: uint8;
+    payload: bytes &eod;
 };

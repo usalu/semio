@@ -184,6 +184,8 @@ mod tests {
             timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(actor, physical_ms),
             undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly,
             payload_hash: None,
+            semantic_kind: None,
+            label: None,
         }
     }
 

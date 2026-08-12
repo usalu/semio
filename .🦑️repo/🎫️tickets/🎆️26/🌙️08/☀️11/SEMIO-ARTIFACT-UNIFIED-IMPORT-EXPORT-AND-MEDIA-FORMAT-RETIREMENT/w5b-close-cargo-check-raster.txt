@@ -1,0 +1,20 @@
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `SEMIO_RASTER_EXAMPLE_TEXT` is never used
+  --> ✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/././././../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:17:7
+   |
+17 | const SEMIO_RASTER_EXAMPLE_TEXT: &str = crate::artifacts::raster::dsl::SEMIO_RASTER_EXAMPLE_TEXT;
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `artifact` is never read
+   --> ✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/././././../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:738:5
+    |
+737 | pub struct RasterEngine {
+    |            ------------ field in this struct
+738 |     artifact: crate::artifacts::raster::schema::RasterArtifact,
+    |     ^^^^^^^^
+
+warning: `semio-s-plugin-raster` (lib) generated 9 warnings (run `cargo fix --lib -p semio-s-plugin-raster` to apply 6 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 26.38s

@@ -1,59 +1,53 @@
-(* protocol::DiffCodec::print_diff/parse_diff grammar for SemioCadDiff -- NO semio envelope
-   (unlike the snapshot facet): encode_diff is simply print_diff().into_bytes(), so this text
-   grammar IS the binary grammar too (see ../💾️binary/🔠️component.abnf, byte-identical). *)
-document = [ token, { " ", token } ] ;
-token = ( "layers=", layers triple ) | ( "blocks=", blocks triple ) | ( "entities=", entities triple ) ;
+(* ISO-14977-style EBNF for `stdio.semio.cad`'s real `DiffCodec::print_diff`/`parse_diff` wire
+   shape — descriptive mirror of the authoritative `📖️component.grammar.semio` (same production
+   names). *)
+document = [ layers line ], [ blocks line ], [ entities line ] ;
 
-layers triple = "[", removed keys, "]", ";", "[", layers modified, "]", ";", "[", layers added, "]" ;
-layers modified = [ layer mod, { ",", layer mod } ] ;
-layer mod = hexstr, ":", layer diff ;
-layers added = [ layer, { ",", layer } ] ;
+layers line = 'layers', '=', layers triple ;
+layers triple = '[', [ hex, { ',', hex } ], ']', ';', '[', [ layer modified, { ',', layer modified } ], ']', ';', '[', [ layer, { ',', layer } ], ']' ;
+layer modified = hex, ':', layer diff ;
 
-blocks triple = "[", removed keys, "]", ";", "[", blocks modified, "]", ";", "[", blocks added, "]" ;
-blocks modified = [ block mod, { ",", block mod } ] ;
-block mod = hexstr, ":", block diff ;
-blocks added = [ block, { ",", block } ] ;
+blocks line = 'blocks', '=', blocks triple ;
+blocks triple = '[', [ hex, { ',', hex } ], ']', ';', '[', [ block modified, { ',', block modified } ], ']', ';', '[', [ block, { ',', block } ], ']' ;
+block modified = hex, ':', block diff ;
 
-entities triple = "[", removed keys, "]", ";", "[", entities modified, "]", ";", "[", entities added, "]" ;
-entities modified = [ entity record mod, { ",", entity record mod } ] ;
-entity record mod = hexstr, ":", entity record diff ;
-entities added = [ entity record, { ",", entity record } ] ;
+entities line = 'entities', '=', entities triple ;
+entities triple = '[', [ hex, { ',', hex } ], ']', ';', '[', [ entity record modified, { ',', entity record modified } ], ']', ';', '[', [ entity record, { ',', entity record } ], ']' ;
+entity record modified = hex, ':', entity record diff ;
 
-removed keys = [ hexstr, { ",", hexstr } ] ;
+layer diff = '[', option i32, ',', option hex, ',', option bool, ']' ;
+entity record diff = '[', option hex, ',', option entity, ']' ;
+block diff = '[', option point2, ',', option entities triple, ']' ;
 
-(* option / tri-state: "[0]" = None, "[1,<T>]" = Some(T) *)
-option i32 = "[0]" | ( "[1,", i32, "]" ) ;
-option str = "[0]" | ( "[1,", hexstr, "]" ) ;
-option bool = "[0]" | ( "[1,", bool01, "]" ) ;
-option point2 = "[0]" | ( "[1,", point2, "]" ) ;
-option entity = "[0]" | ( "[1,", entity, "]" ) ;
-option entities triple = "[0]" | ( "[1,", entities triple, "]" ) ;
+option i32 = ( '[0]' ) | ( '[1,', i32, ']' ) ;
+option hex = ( '[0]' ) | ( '[1,', hex, ']' ) ;
+option bool = ( '[0]' ) | ( '[1,', bool, ']' ) ;
+option point2 = ( '[0]' ) | ( '[1,', point2, ']' ) ;
+option entity = ( '[0]' ) | ( '[1,', entity, ']' ) ;
+option entities triple = ( '[0]' ) | ( '[1,', entities triple, ']' ) ;
 
-layer diff = "[", option i32, ",", option str, ",", option bool, "]" ;
-entity record diff = "[", option str, ",", option entity, "]" ;
-block diff = "[", option point2, ",", option entities triple, "]" ;
+layer = '[', hex, ',', i32, ',', hex, ',', bool, ']' ;
+entity record = '[', hex, ',', hex, ',', entity, ']' ;
+entity record list = '[', [ entity record, { ',', entity record } ], ']' ;
+block = '[', hex, ',', point2, ',', entity record list, ']' ;
 
-layer = "[", hexstr, ",", i32, ",", hexstr, ",", bool01, "]" ;
-entity record = "[", hexstr, ",", hexstr, ",", entity, "]" ;
-entity record list = "[", [ entity record, { ",", entity record } ], "]" ;
-block = "[", hexstr, ",", point2, ",", entity record list, "]" ;
+entity = ( 'L', '[', point2, ',', point2, ']' )
+       | ( 'A', '[', point2, ',', number, ',', number, ',', number, ']' )
+       | ( 'C', '[', point2, ',', number, ']' )
+       | ( 'E', '[', point2, ',', point2, ',', number, ',', number, ',', number, ']' )
+       | ( 'P', '[', point2 list, ',', bool, ']' )
+       | ( 'T', '[', point2, ',', number, ',', number, ',', hex, ']' )
+       | ( 'I', '[', hex, ',', point2, ',', point2, ',', number, ']' )
+       | ( 'S', '[', point2, ',', point2, ',', point2, ',', point2, ']' )
+       | ( 'D', '[', point2, ',', point2, ',', number, ',', hex, ']' ) ;
 
-entity = line | arc | circle | ellipse | polyline | text entity | insert | solid | dimension ;
-line = "L[", point2, ",", point2, "]" ;
-arc = "A[", point2, ",", f64, ",", f64, ",", f64, "]" ;
-circle = "C[", point2, ",", f64, "]" ;
-ellipse = "E[", point2, ",", point2, ",", f64, ",", f64, ",", f64, "]" ;
-polyline = "P[", point2 list, ",", bool01, "]" ;
-point2 list = "[", [ point2, { ",", point2 } ], "]" ;
-text entity = "T[", point2, ",", f64, ",", f64, ",", hexstr, "]" ;
-insert = "I[", hexstr, ",", point2, ",", point2, ",", f64, "]" ;
-solid = "S[", point2, ",", point2, ",", point2, ",", point2, "]" ;
-dimension = "D[", point2, ",", point2, ",", f64, ",", hexstr, "]" ;
+point2 = '[', number, ',', number, ']' ;
+point2 list = '[', [ point2, { ',', point2 } ], ']' ;
+bool = '0' | '1' ;
 
-point2 = "[", f64, ",", f64, "]" ;
-hexstr = { hex digit } ;
-i32 = [ "-" ], digit, { digit } ;
-f64 = [ "-" ], digit, { digit }, [ ".", digit, { digit } ], [ ( "e" | "E" ), [ "+" | "-" ], digit, { digit } ] ;
-bool01 = "0" | "1" ;
-hex digit = digit | "a" | "b" | "c" | "d" | "e" | "f" | "A" | "B" | "C" | "D" | "E" | "F" ;
-digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+i32 = [ '-' ], digit, { digit } ;
+number = int | float ;
+int = [ '-' ], digit, { digit } ;
+float = [ '-' ], digit, { digit }, '.', digit, { digit } ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;

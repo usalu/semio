@@ -1,6 +1,8 @@
-; stdio.semio.video snapshot binary layout: magic + version + u32le length + JSON body bytes.
-document = magic version length body
-magic = %x73.74.64.69.6f.2e.73.65.6d.69.6f.2e.76.69.64.65.6f ; "stdio.semio.video"
-version = OCTET
-length = 4OCTET ; u32, little-endian
-body = *OCTET ; JSON bytes, length octets long — structure normatively described by ../🔣️component.json
+; ABNF mirror (descriptive, not test-parsed — the real byte-level walker is
+; ../📡️component.protocol.semio, walked by dsl::walk_protocol) for s.stdio.semio.video snapshot
+; (binary), post-envelope-unwrap payload.
+document      = format schema-len schema-bytes payload
+format        = OCTET                 ; PACK_BINARY_FORMAT, currently 1
+schema-len    = 1*OCTET                ; LEB128 varint
+schema-bytes  = *OCTET                 ; UTF-8 schema id, e.g. stdio.semio.video
+payload       = *OCTET                 ; streams — see ../🦀️component.rs's encode_video_snapshot_binary; opaque here (protocol-array-of-records gap)

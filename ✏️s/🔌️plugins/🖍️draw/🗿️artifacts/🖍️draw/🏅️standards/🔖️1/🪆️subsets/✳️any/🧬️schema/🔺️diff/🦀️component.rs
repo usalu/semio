@@ -48,10 +48,23 @@ pub struct DrawStringList {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct DrawLayersDelta {
-    pub added: Vec<DrawLayerNode>,
+    pub added: Vec<DrawLayerAddition>,
     pub removed: Vec<String>,
     pub patched: Vec<DrawLayerPatchEntry>,
     pub reordered: Option<Vec<String>>,
+}
+
+/// ➕️ One inserted layer with its real target location (parent-aware — a bare `Vec<DrawLayerNode>`
+/// can only ever describe a root-level append, which silently dropped nested `create`/`reorder`
+/// targets into group children; `create-layer`/`reorder-layer`'s handcrafted diffs need the real
+/// address to stay sparse instead of falling back to a whole-snapshot capture).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DrawLayerAddition {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent_id: Option<String>,
+    pub index: usize,
+    pub layer: DrawLayerNode,
 }
 
 /// 🩹 One patched layer entry.

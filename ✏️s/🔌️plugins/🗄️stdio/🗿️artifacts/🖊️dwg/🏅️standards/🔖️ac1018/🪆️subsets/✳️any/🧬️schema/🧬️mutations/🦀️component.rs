@@ -170,7 +170,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<DwgMutation> {
         DwgMutation::NoMutation,
         DwgMutation::SetSnapshot {
             snapshot: DwgSnapshot {
-                schema: "stdio.dwg".into(),
+                schema: "stdio.dwg.ac1018".into(),
                 version: "AC1018".into(),
                 maintenance_version: 2,
                 codepage: 30,
@@ -201,7 +201,7 @@ mod tests {
         bytes[0x13] = 30;
         bytes[0x14] = 0;
         DwgSnapshot {
-            schema: "stdio.dwg".into(),
+            schema: "stdio.dwg.ac1018".into(),
             version: "AC1018".into(),
             maintenance_version: 2,
             codepage: 30,
@@ -362,7 +362,7 @@ mod tests {
         bytes[0x12] = 1;
         bytes[0x13] = 10;
         DwgSnapshot {
-            schema: "stdio.dwg".into(),
+            schema: "stdio.dwg.ac1018".into(),
             version: "AC1018".into(),
             maintenance_version: 1,
             codepage: 10,
@@ -376,7 +376,7 @@ mod tests {
         bytes[0x12] = 9;
         bytes[0x13] = 30;
         DwgSnapshot {
-            schema: "stdio.dwg".into(),
+            schema: "stdio.dwg.ac1018".into(),
             version: "AC1032".into(),
             maintenance_version: 9,
             codepage: 30,

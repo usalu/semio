@@ -1,4 +1,3 @@
-//! 📄️ Text representation marker for `s.stdio.semio.document.mutations`: `keyword arg=value ...`
-//! (space-separated) or the literal token `no-mutation` (see `print_document_mutation`/
-//! `parse_document_mutation` in `🧬️mutations/🦀️component.rs` for the real hand-rolled grammar).
-pub const TEXT_MARKER: &str = "s.stdio.semio.document.mutations";
+//! 📝️ Text representation codec surface for `s.stdio.semio.document.mutations` — grammar include.
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");

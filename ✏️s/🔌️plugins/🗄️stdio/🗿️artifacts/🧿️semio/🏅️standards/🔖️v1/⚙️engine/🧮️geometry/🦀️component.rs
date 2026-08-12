@@ -7,21 +7,21 @@
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Point
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct SemioPoint3 { pub x: f64, pub y: f64, pub z: f64 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct SemioPoint2 { pub x: f64, pub y: f64 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct SemioUv { pub u: f64, pub v: f64 }
 //#endregion 🔖️Point
 
 //#region 🔖️Color
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct SemioRgba { pub r: f32, pub g: f32, pub b: f32, pub a: f32 }
 //#endregion 🔖️Color
@@ -29,7 +29,7 @@ pub struct SemioRgba { pub r: f32, pub g: f32, pub b: f32, pub a: f32 }
 //#region 🔖️Transform
 /// 🧭️ Rotation as a NAMED quaternion struct — never a bare `[f64;4]`/tuple (see module doc
 /// comment). Defaults to the identity rotation `(0,0,0,1)`.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct SemioQuaternion { pub x: f64, pub y: f64, pub z: f64, pub w: f64 }
 
@@ -37,7 +37,7 @@ impl Default for SemioQuaternion {
     fn default() -> Self { Self { x: 0.0, y: 0.0, z: 0.0, w: 1.0 } }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct SemioTransform {
     pub translation: SemioPoint3,

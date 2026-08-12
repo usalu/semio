@@ -1,0 +1,20 @@
+   |                                        ++++
+
+warning: unused import: `crate::artifacts::draw::standards::v1::subsets::any::schema::diff::text::*`
+   --> ✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📦️glue.rs:416:32
+    |
+416 | ...   pub mod diff { pub use crate::artifacts::draw::standards::v1::subsets::any::schema::diff::text::*; pub use crate::artifacts::...
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `artifact` is never read
+    --> ✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/././././../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:1999:5
+     |
+1998 | pub struct DrawEngine {
+     |            ---------- field in this struct
+1999 |     artifact: crate::artifacts::draw::schema::DrawArtifact,
+     |     ^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-plugin-draw` (lib) generated 4 warnings (run `cargo fix --lib -p semio-s-plugin-draw` to apply 2 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 1m 02s

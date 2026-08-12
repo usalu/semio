@@ -5492,11 +5492,543 @@ function policyMutationEmojiUniquenessBreaches(repoRoot: string): BreachRecord[]
 }
 
 /**
- * 📏️Placeholder: dispatch-enum variant coverage vs mutation dirs (Wave 3 pilot will flesh this out).
- * Kept as a real policy function so Wave 6 can tighten without inventing a new export slot.
+ * 🔍️Every `🧬️mutations` facet dir anywhere under `✏️s` (the real taxonomy nests it under
+ * `🏅️standards/<slug>/🪆️subsets/<slug>/🧬️schema/🧬️mutations`, deeper than `policyListPluginArtifactDirs`'s
+ * `<artifact>/🧬️mutations` assumption — that shallower shape is `policyMutationTriadCompletenessBreaches`'s
+ * own pre-existing scope and is left untouched here) — shared by the SEMANTIC-MUTATIONS-OVERHAUL rules below.
  */
-function policyMutationDispatchCoverageBreaches(_repoRoot: string): BreachRecord[] {
-  return [];
+function policyFindAllMutationsDirs(repoRoot: string): string[] {
+  const found: string[] = [];
+  const walk = (relDir: string): void => {
+    for (const ent of policyReaddirSafe(repoRoot, relDir)) {
+      if (!ent.isDirectory || ent.name.startsWith(".")) continue;
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (ent.name === POLICY_MUTATIONS_FACET) {
+        found.push(childRel);
+        continue;
+      }
+      walk(childRel);
+    }
+  };
+  walk("✏️s");
+  return found.sort();
+}
+
+/**
+ * 📏️SEMANTIC-MUTATIONS-OVERHAUL rule 1 (`POLICY_SEMANTIC_VOCABULARY_ALLOWLIST`): every `.rs` file under a
+ * `🧬️mutations/` facet or a `🎮️commands/` app-command dir must not reference the banned generic mutation
+ * vocabulary the new `SemanticDescriptor`/`MutationKind`/`#[derive(dsl_derive::Mutations)]` mechanism
+ * (see `🧰️framework/…/📡️spr/🎮️command/🦀️component.rs`'s `🔖️Semantics` region) replaces: `SetSnapshot`
+ * (the whole-document escape hatch), `NoMutation` (the sentinel sibling), and `CollectionMutation<`/`::`
+ * (the generic collection wrapper, worst-offender count ~70 in one facet). `Set[A-Z]\w*` dispatch-enum
+ * variant names are additionally flagged at `"medium"` (unallowlisted advisory — 562 of these exist
+ * repo-wide today; only the three HIGH tokens above gate `bun policy`, so only those need seeding).
+ * Seeded with the exact repo-wide census at ticket time (342 files) via
+ * `grep -rlE "SetSnapshot|NoMutation|CollectionMutation(<|::)" ✏️s --include="*.rs" | grep -E "🧬️mutations|🎮️commands"`;
+ * later waves' handcrafted `rename`/`change`/`move`/… mutations shrink this file-by-file (see
+ * `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`).
+ */
+const POLICY_SEMANTIC_VOCABULARY_ALLOWLIST = new Set<string>([
+  "✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎮️commands/✍️text/🦀️component.rs",
+  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🕸️node-graph/🦀️component.rs",
+  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎮️commands/🗺️features/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🎮️commands/🖱️canvas/🦀️component.rs",
+  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/⌨️engagement/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/🀄️tile/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/👁️view/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/🖼️source/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🎥️camera/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/📦️asset/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/📷️shot/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🗃️fixture/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎥saved-cameras/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎥saved-cameras/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦assets/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦assets/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸shots/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸shots/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙no-mutation/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙no-mutation/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙no-mutation/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/📚️example/🦀️component.rs",
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/📚️example/🦀️component.rs",
+  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎮️commands/🏗️element/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎮️commands/📤️exchange/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎮️commands/🔬️analysis/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎮️commands/🕸️graph/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/📄️artifact/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/📤️media/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/🔎️inspector/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/🛠️workshop/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/🪜️step/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/🪵️stock/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋steps/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋steps/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️machines/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️machines/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/📄️fixture/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️objects-move/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️objects-move/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️objects-add/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️objects-add/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️objects-remove/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️objects-remove/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹objects-patch/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹objects-patch/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎮️commands/🧬️example/🦀️component.rs",
+  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎮️commands/✏️author/🦀️component.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🎮️commands/📥️io/🦀️component.rs",
+  "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🎮️commands/🗺️model-definition/🦀️component.rs",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📔️vdi3805/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📔️vdi3805/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📕️din4108/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📕️din4108/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📗️din16798/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📗️din16798/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1990/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1990/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1991/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1991/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1992/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1992/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1993/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1993/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1994/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1994/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1995/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1995/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1996/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1996/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1997/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1997/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1998/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1998/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1999/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1999/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📙️din18599/🎮️commands/📤️set-snapshot/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🎛️apps/📙️din18599/🎮️commands/🧮️evaluate/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🎮️commands/🔧️step/🦀️component.rs",
+  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎮️commands/🔧️nodes/🦀️component.rs",
+  "✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎮️commands/🕸️graph/🦀️component.rs",
+  "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️artifact/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️set-layer-transform/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️set-stroke/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️add-layer/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-layer/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️set-layer-opacity/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨set-fill/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️set-layer-name/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️set-layer-visible/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀set-boolean-operation/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-layer/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️set-layer-locked/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-trace-params/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧬️duplicate-layer/↩️inverse/🦀️component.rs",
+  "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗂️document/🦀️component.rs",
+  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️workflow/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗃️fixture/🦀️component.rs",
+  "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🎨️example/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🎨️example/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎮️commands/📄️artifact/🦀️component.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎮️commands/🧺️curation/🦀️component.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️set-snapshot/🦠️mutation/🦀️component.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+]);
+
+/**
+ * 🚫️High-priority banned generic-vocabulary tokens: the whole-document escape hatch, the sentinel, and the
+ * generic collection wrapper — every real occurrence must either be handcrafted away or cited in
+ * `POLICY_SEMANTIC_VOCABULARY_ALLOWLIST`. Deliberately substring (no `\b` word boundary) matching the
+ * seeding grep exactly, so derived type names like `SetSnapshotDiff`/`SetSnapshotMutation` still count —
+ * they're just as much banned vocabulary as the bare identifier.
+ */
+const POLICY_SEMANTIC_VOCABULARY_HIGH_TOKENS: readonly { label: string; re: RegExp }[] = [
+  { label: "SetSnapshot", re: /SetSnapshot/ },
+  { label: "NoMutation", re: /NoMutation/ },
+  { label: "CollectionMutation<...>", re: /CollectionMutation(<|::)/ },
+];
+
+/** 🏷️Every `.rs` file under a `🧬️mutations/` facet or a `🎮️commands/` app-command dir, repo-wide. */
+function policyListSemanticVocabularyScanFiles(repoRoot: string): string[] {
+  return policyWalkRelFiles(repoRoot, ["✏️s"], (relPath, name) => {
+    if (!name.endsWith(".rs")) return false;
+    const norm = relPath.replaceAll("\\", "/");
+    return norm.includes(`/${POLICY_MUTATIONS_FACET}/`) || norm.includes("/🎮️commands/");
+  });
+}
+
+function policySemanticVocabularyBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyListSemanticVocabularyScanFiles(repoRoot)) {
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const hitTokens = POLICY_SEMANTIC_VOCABULARY_HIGH_TOKENS.filter((t) => t.re.test(content)).map((t) => t.label);
+    const allowlisted = POLICY_SEMANTIC_VOCABULARY_ALLOWLIST.has(relPath);
+    if (hitTokens.length > 0) {
+      if (!allowlisted) {
+        breaches.push({
+          id: `semantic-vocabulary-banned-${relPath}`,
+          summary: `"${relPath}" references banned generic mutation vocabulary: ${hitTokens.join(", ")}`,
+          kind: "mutation-migration/semantic-vocabulary",
+          scope: relPath,
+          priority: "high",
+          reason: "SetSnapshot/NoMutation/CollectionMutation are the generic escape hatches the SemanticDescriptor/MutationKind/#[derive(dsl_derive::Mutations)] mechanism replaces with handcrafted rename/change/move/… mutations.",
+          solution: `Replace ${hitTokens.join(", ")} in ${relPath} with handcrafted semantic MutationKind payload(s), or if this facet hasn't been reached yet, add "${relPath}" to POLICY_SEMANTIC_VOCABULARY_ALLOWLIST citing this ticket.`,
+        });
+      }
+    } else if (allowlisted) {
+      breaches.push({
+        id: `semantic-vocabulary-stale-${relPath}`,
+        summary: `"${relPath}" is allowlisted in POLICY_SEMANTIC_VOCABULARY_ALLOWLIST but no longer references banned vocabulary`,
+        kind: "mutation-migration/semantic-vocabulary",
+        scope: relPath,
+        priority: "low",
+        reason: "Shrink-only allowlists must be pruned as soon as the underlying file is fixed.",
+        solution: `Remove "${relPath}" from POLICY_SEMANTIC_VOCABULARY_ALLOWLIST.`,
+      });
+    }
+    const bareSetVariants = [...new Set([...content.matchAll(/\bSet[A-Z]\w*/g)].map((m) => m[0]))].filter((name) => name !== "SetSnapshot");
+    if (bareSetVariants.length > 0) {
+      breaches.push({
+        id: `semantic-vocabulary-bare-set-${relPath}`,
+        summary: `"${relPath}" declares ${bareSetVariants.length} bare Set* identifier(s): ${bareSetVariants.slice(0, 6).join(", ")}${bareSetVariants.length > 6 ? ", …" : ""}`,
+        kind: "mutation-migration/semantic-vocabulary",
+        scope: relPath,
+        priority: "medium",
+        reason: "Set* is the generic verb this overhaul retires in favor of the closed APPROVED_VERBS vocabulary (rename/change/move/flatten/connect/group/…) — advisory (unallowlisted) until the fan-out wave rewrites dispatch enums.",
+        solution: `Rename the Set* variant(s) in ${relPath} to a semantic verb-entity name backed by a MutationKind payload.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️SEMANTIC-MUTATIONS-OVERHAUL rule 2 (`policyMutationDispatchCoverageBreaches`, formerly a Wave-3
+ * placeholder — this wave lands the real comparison): for every `🧬️mutations/🦀️component.rs` dispatch
+ * file, extracts its `pub enum \w*Mutation\w* { … }` variant names and compares them against the
+ * concrete triad-dir stems (`policyListMutationDirs`, kebab-case minus emoji, PascalCased) sitting
+ * beside it. Kept at `"medium"` (advisory) rather than `"high"` because zero facets have adopted the
+ * `#[derive(dsl_derive::Mutations)]` 1:1 variant-per-triad-dir shape yet (today's dispatch enums are
+ * still the generic `CollectionMutation<…>` shape `policySemanticVocabularyBreaches` flags separately) —
+ * this rule graduates to `"high"` once the fan-out wave lands real per-mutation triad wiring, mirroring
+ * `policyMutationImplPresenceBreaches`'s own "advisory while Wave 3 pilot lands" graduation comment.
+ */
+function policyMutationEnumVariantNames(content: string): string[] {
+  const enumMatch = content.match(/pub\s+enum\s+\w*Mutation\w*\s*\{/);
+  if (!enumMatch || enumMatch.index === undefined) return [];
+  let depth = 1;
+  let i = enumMatch.index + enumMatch[0].length;
+  for (; i < content.length && depth > 0; i++) {
+    if (content[i] === "{") depth++;
+    else if (content[i] === "}") depth--;
+  }
+  const body = content.slice(enumMatch.index + enumMatch[0].length, i - 1);
+  const names = new Set<string>();
+  for (const line of body.split("\n")) {
+    const variantMatch = line.match(/^\s{4}([A-Z]\w*)/);
+    if (variantMatch) names.add(variantMatch[1]!);
+  }
+  return [...names];
+}
+
+/** 🐫Kebab (minus emoji) → PascalCase, for comparing a triad-dir stem against a dispatch-enum variant name. */
+function policyKebabToPascal(slug: string): string {
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((seg) => seg.charAt(0).toUpperCase() + seg.slice(1))
+    .join("");
+}
+
+function policyMutationDispatchCoverageBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const mutationsRel of policyFindAllMutationsDirs(repoRoot)) {
+    const dispatchRel = `${mutationsRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+    if (!existsSync(join(repoRoot, dispatchRel))) continue;
+    const variantNames = new Set(policyMutationEnumVariantNames(readFileSync(join(repoRoot, dispatchRel), "utf8")));
+    if (variantNames.size === 0) continue;
+    const triadPascalNames = new Set(policyListMutationDirs(repoRoot, mutationsRel).map((dir) => policyKebabToPascal(policyStripEmoji(dir))));
+    const uncoveredVariants = [...variantNames].filter((v) => !triadPascalNames.has(v));
+    const orphanTriads = [...triadPascalNames].filter((t) => !variantNames.has(t));
+    if (uncoveredVariants.length === 0 && orphanTriads.length === 0) continue;
+    breaches.push({
+      id: `mutation-dispatch-coverage-${dispatchRel}`,
+      summary: `"${dispatchRel}" dispatch variants and ${mutationsRel} triad dirs disagree: ${uncoveredVariants.length} variant(s) with no triad dir, ${orphanTriads.length} triad dir(s) with no variant`,
+      kind: "mutation-migration/dispatch-coverage",
+      scope: mutationsRel,
+      priority: "medium",
+      reason: "Once the fan-out wave adopts #[derive(dsl_derive::Mutations)], every dispatch variant must be a single-field tuple wrapping exactly one triad dir's MutationKind payload — advisory until then.",
+      solution: `Reconcile ${dispatchRel}'s enum variants with the triad dirs under ${mutationsRel} (rename to match, or add/remove triad dirs).`,
+    });
+  }
+  return breaches;
+}
+
+/**
+ * 📏️SEMANTIC-MUTATIONS-OVERHAUL rule 3 (`policyMutationTsMirrorBreaches`): flags any `.ts` leaf anywhere
+ * under a `🧬️mutations/` facet whose content is trivially `export {};` (or empty) — near-universal today
+ * (triad `.ts` leaves were scaffolded as stubs, see `policyIsConstitutionalTsFacadePath`'s explicit tolerance for this exact shape),
+ * so this stays `"low"` advisory with no allowlist rather than seeding ~1000+ file paths for a finding that
+ * blocks nothing; it exists so a real TS mirror rollout has a tracked signal to burn down file-by-file.
+ */
+function policyMutationTsMirrorBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const tsFiles = policyWalkRelFiles(repoRoot, ["✏️s"], (relPath, name) => name === POLICY_TS_COMPONENT_LEAF && relPath.replaceAll("\\", "/").includes(`/${POLICY_MUTATIONS_FACET}/`));
+  for (const relPath of tsFiles) {
+    const stripped = readFileSync(join(repoRoot, relPath), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/.*$/gm, "")
+      .trim();
+    if (stripped !== "" && stripped !== "export {};") continue;
+    breaches.push({
+      id: `mutation-ts-mirror-stub-${relPath}`,
+      summary: `"${relPath}" is a trivial "export {};" stub with no real TS mirror`,
+      kind: "mutation-migration/ts-mirror",
+      scope: relPath,
+      priority: "low",
+      reason: "A triad leaf's TS mirror should eventually re-export the same MutationKind payload shape as its Rust sibling, not stay an empty stub.",
+      solution: `Give ${relPath} real content mirroring its 🦀️component.rs sibling once the DSL TS codegen for this triad lands.`,
+    });
+  }
+  return breaches;
 }
 
 /** ⚖️Aggregates Wave 2b mutation / ArtifactEngine / op-grammar scanners. */
@@ -5508,6 +6040,8 @@ function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] 
     ...policyOpGrammarStartMutationBreaches(repoRoot),
     ...policyMutationEmojiUniquenessBreaches(repoRoot),
     ...policyMutationDispatchCoverageBreaches(repoRoot),
+    ...policySemanticVocabularyBreaches(repoRoot),
+    ...policyMutationTsMirrorBreaches(repoRoot),
   ];
 }
 //#endregion 🔧️PolicyRuleMutationArtifactEngines
@@ -9212,6 +9746,11 @@ function policyGrammarHonestyBreaches(repoRoot: string): BreachRecord[] {
  * facet, the camelCased public field identifiers found in the Rust `.rs` leaf should also appear
  * (textually) in the sibling `.ts`/`.graphql`/`.json`/`.proto` leaves — textual heuristic (substring
  * presence), not a real cross-language type check, matching this repo's other facet-parity policies.
+ * Bidirectional: this also harvests each sibling leaf's OWN declared field names (interface members,
+ * GraphQL type/input fields, JSON Schema `properties` keys, proto message fields) and flags any that
+ * have no corresponding Rust field — this is what catches a sibling still shaped like the generic W1b
+ * scaffold (`entries: [{key, value}]`) sitting where real fields belong; the forward direction alone
+ * would pass that scaffold as long as it also happened to textually contain the real field names.
  * Seeded with the current census: ALL 93 checked (standard,facet) pairs drift today (31 standards × 3
  * facets — none of this program's facet mirrors have been rewritten yet; e.g. gif's TS mirror is
  * still literally zip's, per the master plan's own opening finding). F-wave agents shrink this to
@@ -9240,6 +9779,132 @@ function policyFacetRustFieldNames(content: string): string[] {
   }
   return [...names].map(policySnakeToCamel).filter(Boolean);
 }
+
+//#region 🔧️PolicyFacetMirrorDriftReverse
+const POLICY_FACET_MIRROR_DRIFT_TS_RE = /(?:^|[\s{;(])([A-Za-z_][A-Za-z0-9_]*)\??\s*:\s*[^;\n=]+[;\n]/gm;
+const POLICY_FACET_MIRROR_DRIFT_TS_KEYWORDS = new Set([
+  "interface", "type", "export", "import", "from", "extends", "implements", "class", "function", "const", "let", "var",
+  "namespace", "module", "declare", "readonly", "public", "private", "protected", "static", "abstract", "new", "this",
+  "super", "typeof", "keyof", "case", "default", "switch", "try", "catch", "finally", "throw", "async", "await", "yield",
+  "get", "set", "constructor", "void", "never", "unknown", "any", "undefined", "null", "true", "false", "satisfies",
+  "asserts", "is", "infer", "of", "in", "as", "if", "else", "for", "while", "return",
+]);
+const POLICY_FACET_MIRROR_DRIFT_GRAPHQL_RE = /^\s*([a-z][A-Za-z0-9_]*)\s*:/gm;
+const POLICY_FACET_MIRROR_DRIFT_PROTO_RE = /^\s*(?:optional\s+|repeated\s+)?(?:map\s*<[^>]+>|[\w.]+)\s+([a-z][a-z0-9_]*)\s*=\s*\d+\s*;/gm;
+const POLICY_FACET_MIRROR_DRIFT_PROTO_SKIP_RE = /^\s*(enum|oneof|message|package|syntax|import)\b/;
+const POLICY_FACET_MIRROR_DRIFT_SERDE_TAG_RE = /#\[serde\([^\]]*\btag\s*=\s*"([a-zA-Z_][a-zA-Z0-9_]*)"/g;
+/** ⚖️Below-which a sibling field name is too short to trust as a substring match against a real Rust field (avoids "id"/"at"-style accidental hits) — see `policyFacetMirrorDriftBreaches`'s extraFields step. */
+const POLICY_FACET_MIRROR_DRIFT_SUBSTRING_MIN_LEN = 4;
+
+/**
+ * 🔎️Serde internally-tagged-enum discriminant values (`#[serde(tag = "kind")]`) found in a schema
+ * facet's Rust leaf. These are real fields every non-Rust mirror must carry (GraphQL/JSON-Schema/
+ * proto have no native tagged-union sugar, so they always spell the discriminant out as an actual
+ * field) even though `policyFacetRustFieldNames` never sees them — there is no `kind: SomeType`
+ * struct-field declaration in the Rust source, just this attribute. Read raw (not comment/string
+ * stripped) since the tag value IS a string literal; the regex is narrow enough not to misfire
+ * inside a line or block comment in practice.
+ */
+function policyFacetRustTagFieldNames(content: string): string[] {
+  const names = new Set<string>();
+  POLICY_FACET_MIRROR_DRIFT_SERDE_TAG_RE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = POLICY_FACET_MIRROR_DRIFT_SERDE_TAG_RE.exec(content))) names.add(m[1]!);
+  return [...names];
+}
+
+const POLICY_FACET_MIRROR_DRIFT_VARIANT_RE = /^\s*([A-Z][A-Za-z0-9]*)\s*[{(]/gm;
+
+/**
+ * 🔎️PascalCase enum variant names declared in a schema facet's Rust leaf (e.g. `enum BmpMutation {
+ * SetHeaderFields { .. }, SetPixelData { .. }, .. }`, or a plain `Rgb { r, g, b }` color variant).
+ * `policyFacetRustFieldNames` only sees the FIELDS a struct/struct-variant declares, never the
+ * variant name itself — but externally-tagged (the serde default, no `#[serde(tag = "…")]`) or
+ * `oneof`-shaped mirrors spell the variant name out as a real field/message/oneof-arm identifier
+ * (proto's `SetHeaderFields set_header_fields = 3;`, a GraphQL union member, a JSON discriminant
+ * value, …), same problem `policyFacetRustTagFieldNames` solves for the internally-tagged case.
+ * Line-start heuristic (`PascalCaseIdent` immediately followed by `{`/`(`) — true parsing would
+ * need brace-tracked enum-body awareness this file's other policy rules don't attempt either; a
+ * stray match (an `Ok(`/`Some(`/struct-literal-construction hit) only ever ADDS a permitted name,
+ * never suppresses a real breach, so the cost of over-matching here is small.
+ */
+function policyFacetRustVariantFieldNames(content: string): string[] {
+  const stripped = policyStripRustCommentsAndStrings(content);
+  const names = new Set<string>();
+  POLICY_FACET_MIRROR_DRIFT_VARIANT_RE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = POLICY_FACET_MIRROR_DRIFT_VARIANT_RE.exec(stripped))) {
+    const n = m[1]!;
+    names.add(n.charAt(0).toLowerCase() + n.slice(1));
+  }
+  return [...names];
+}
+
+/** 🔎️Field names a `.ts` sibling mirror leaf itself declares (interface/type member lines), for the reverse extra-field drift check. */
+function policyFacetTsFieldNames(content: string): string[] {
+  const stripped = policyStripTsCommentsAndStrings(content);
+  const names = new Set<string>();
+  POLICY_FACET_MIRROR_DRIFT_TS_RE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = POLICY_FACET_MIRROR_DRIFT_TS_RE.exec(stripped))) {
+    const n = m[1]!;
+    if (POLICY_FACET_MIRROR_DRIFT_TS_KEYWORDS.has(n)) continue;
+    names.add(n);
+  }
+  return [...names].map(policySnakeToCamel).filter(Boolean);
+}
+
+/** 🔎️Field names a `.graphql` sibling mirror leaf itself declares (type/input field lines), for the reverse extra-field drift check. */
+function policyFacetGraphqlFieldNames(content: string): string[] {
+  const noComments = content.replace(/#.*$/gm, "");
+  const noArgs = noComments.replace(/\([^)]*\)/g, "");
+  const names = new Set<string>();
+  POLICY_FACET_MIRROR_DRIFT_GRAPHQL_RE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = POLICY_FACET_MIRROR_DRIFT_GRAPHQL_RE.exec(noArgs))) names.add(m[1]!);
+  return [...names].map(policySnakeToCamel).filter(Boolean);
+}
+
+/** 🔎️Field names a `.json` sibling mirror leaf itself declares (every key under any `properties` object, including nested under `definitions`/`$defs`), for the reverse extra-field drift check. Throws if the file isn't valid JSON — callers must treat that as its own breach, not a crash. */
+function policyFacetJsonFieldNames(content: string): string[] {
+  const root: unknown = JSON.parse(content);
+  const names = new Set<string>();
+  const visit = (node: unknown): void => {
+    if (!node || typeof node !== "object") return;
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item);
+      return;
+    }
+    const obj = node as Record<string, unknown>;
+    if (obj.properties && typeof obj.properties === "object" && !Array.isArray(obj.properties)) {
+      for (const key of Object.keys(obj.properties as Record<string, unknown>)) names.add(key);
+    }
+    for (const val of Object.values(obj)) visit(val);
+  };
+  visit(root);
+  return [...names].map(policySnakeToCamel).filter(Boolean);
+}
+
+/** 🔎️Field names a `.proto` sibling mirror leaf itself declares (numbered message fields, skipping enum/oneof/message/package/syntax/import lines), for the reverse extra-field drift check. */
+function policyFacetProtoFieldNames(content: string): string[] {
+  const bodyLines = content.split(/\r?\n/).filter((line) => !POLICY_FACET_MIRROR_DRIFT_PROTO_SKIP_RE.test(line));
+  const body = bodyLines.join("\n");
+  const names = new Set<string>();
+  POLICY_FACET_MIRROR_DRIFT_PROTO_RE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = POLICY_FACET_MIRROR_DRIFT_PROTO_RE.exec(body))) names.add(m[1]!);
+  return [...names].map(policySnakeToCamel).filter(Boolean);
+}
+
+/** 🔎️Dispatches to the right per-language harvester by the sibling's own filename suffix. Returns `[]` for a suffix none of the harvesters own (defensive; every current entry in `POLICY_FACET_MIRROR_DRIFT_SIBLINGS` is covered). */
+function policyFacetSiblingFieldNames(sib: string, content: string): string[] {
+  if (sib.endsWith(".ts")) return policyFacetTsFieldNames(content);
+  if (sib.endsWith(".graphql")) return policyFacetGraphqlFieldNames(content);
+  if (sib.endsWith(".json")) return policyFacetJsonFieldNames(content);
+  if (sib.endsWith(".proto")) return policyFacetProtoFieldNames(content);
+  return [];
+}
+//#endregion 🔧️PolicyFacetMirrorDriftReverse
 
 const POLICY_FACET_MIRROR_DRIFT_ALLOWLIST = new Set<string>([
   "stdio/bcf/standards#2.1-subsets-any-schema-diff-component",
@@ -9344,7 +10009,15 @@ function policyFacetMirrorDriftBreaches(repoRoot: string): BreachRecord[] {
       const facetRel = `${entry.subsetRel}/🧬️schema/${facet}`;
       const rustRel = `${facetRel}/🦀️component.rs`;
       if (!existsSync(join(repoRoot, rustRel))) continue;
-      const camelFields = policyFacetRustFieldNames(readFileSync(join(repoRoot, rustRel), "utf8"));
+      const rustContent = readFileSync(join(repoRoot, rustRel), "utf8");
+      const camelFields = policyFacetRustFieldNames(rustContent);
+      // 🩹 compareFields also folds in serde tag discriminants (`#[serde(tag = "kind")]`) and
+      // camelCased enum variant names — real fields every non-Rust mirror must spell out even
+      // though no Rust struct literally declares them as a named field (see
+      // policyFacetRustTagFieldNames's and policyFacetRustVariantFieldNames's docstrings;
+      // confirmed against stdio.json/png/bmp's real, handcrafted mirrors during this rule's own
+      // verification).
+      const compareFields = [...camelFields, ...policyFacetRustTagFieldNames(rustContent), ...policyFacetRustVariantFieldNames(rustContent)];
       const missingBySibling: string[] = [];
       for (const sib of POLICY_FACET_MIRROR_DRIFT_SIBLINGS) {
         const sibAbs = join(repoRoot, facetRel, sib);
@@ -9355,6 +10028,28 @@ function policyFacetMirrorDriftBreaches(repoRoot: string): BreachRecord[] {
         const sibContent = readFileSync(sibAbs, "utf8");
         const missingFields = camelFields.filter((f) => !sibContent.includes(f));
         if (missingFields.length > 0) missingBySibling.push(`${sib}:${missingFields.length}`);
+        let siblingFields: string[];
+        try {
+          siblingFields = policyFacetSiblingFieldNames(sib, sibContent);
+        } catch {
+          missingBySibling.push(`${sib}:PARSE_ERROR`);
+          continue;
+        }
+        // 🩹 A sibling field counts as "real" if it exactly matches a Rust/tag field, OR visibly
+        // CONTAINS one as a substring (e.g. GraphQL/proto disambiguate same-named enum-variant
+        // fields with a type prefix — stdio.json's real mirror spells Rust's plain `value` field
+        // as `boolValue`/`stringValue` per variant — mirroring the forward check's own substring
+        // leniency, just in the other direction). Case-INSENSITIVE on purpose: the disambiguating
+        // prefix capitalizes the embedded real field's first letter (`arrayItems`, not
+        // `arrayitems`), so a case-sensitive substring test would miss it entirely. The length
+        // floor keeps this from rubber-stamping every sibling field against a trivially short real
+        // field name.
+        const extraFields = siblingFields.filter((f) => {
+          if (f === "schema" || compareFields.includes(f)) return false;
+          const fLower = f.toLowerCase();
+          return !compareFields.some((cf) => cf.length >= POLICY_FACET_MIRROR_DRIFT_SUBSTRING_MIN_LEN && fLower.includes(cf.toLowerCase()));
+        });
+        if (extraFields.length > 0) missingBySibling.push(`${sib}:extra:${extraFields.length}`);
       }
       const normalized = policyNormalizeRelPath(rustRel);
       const allowlisted = POLICY_FACET_MIRROR_DRIFT_ALLOWLIST.has(normalized);
@@ -9362,12 +10057,12 @@ function policyFacetMirrorDriftBreaches(repoRoot: string): BreachRecord[] {
         if (allowlisted) continue;
         breaches.push({
           id: `facet-mirror-drift-${rustRel}`,
-          summary: `"${facetRel}" siblings drift from the Rust leaf's fields (${missingBySibling.join(", ")})`,
+          summary: `"${facetRel}" siblings drift from the Rust leaf's real fields — missing and/or extra (${missingBySibling.join(", ")})`,
           kind: "stdio-artifacts/facet-mirror-drift",
           scope: entry.artRel,
           priority: "low",
-          reason: "Every camelCased field the Rust leaf declares should also appear in its sibling .ts/.graphql/.json/.proto leaves — a stale/copy-pasted mirror silently drifts from the real shape otherwise (see the master plan's gif-TS-mirror-is-literally-zip's finding).",
-          solution: `Rewrite ${facetRel}'s sibling leaves to mirror the Rust leaf's real fields, or if this artifact/facet hasn't been reached yet, add "${normalized}" to POLICY_FACET_MIRROR_DRIFT_ALLOWLIST citing this ticket.`,
+          reason: "Every camelCased field the Rust leaf declares should also appear in its sibling .ts/.graphql/.json/.proto leaves, AND every field a sibling declares should correspond to a real Rust field — a stale/copy-pasted mirror (missing real fields) or a leftover generic scaffold (extra fields with no Rust counterpart, e.g. entries/key/value) both silently drift from the real shape otherwise (see the master plan's gif-TS-mirror-is-literally-zip's finding).",
+          solution: `Rewrite ${facetRel}'s sibling leaves to mirror the Rust leaf's real fields exactly (no missing, no extra), or if this artifact/facet hasn't been reached yet, add "${normalized}" to POLICY_FACET_MIRROR_DRIFT_ALLOWLIST citing this ticket.`,
         });
       } else if (allowlisted) {
         breaches.push({
@@ -9457,42 +10152,18 @@ const POLICY_GRAMMAR_PARSEABILITY_ALLOWLIST = new Set<string>([
   "stdio/avi/standards#1.0-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/avi/standards#1.0-subsets-any-schema-mutations-text-component.grammar.semio",
   "stdio/avi/standards#1.0-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/bcf/standards#2.1-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/bcf/standards#2.1-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/bcf/standards#2.1-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/docx/standards#ecma-376-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/docx/standards#ecma-376-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/docx/standards#ecma-376-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/dxf/standards#r12-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/dxf/standards#r12-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/dxf/standards#r12-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/epw/standards#energyplus-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/epw/standards#energyplus-subsets-any-schema-mutations-text-component.grammar.semio",
   "stdio/epw/standards#energyplus-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/html/standards#5-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/html/standards#5-subsets-any-schema-mutations-text-component.grammar.semio",
   "stdio/html/standards#5-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/ifc/standards#2x3-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/ifc/standards#2x3-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/ifc/standards#2x3-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/ifc/standards#4-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/ifc/standards#4-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/ifc/standards#4-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/md/standards#commonmark-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/md/standards#commonmark-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/md/standards#commonmark-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/mp3/standards#mpeg1-layer3-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/mp3/standards#mpeg1-layer3-subsets-any-schema-mutations-text-component.grammar.semio",
   "stdio/mp3/standards#mpeg1-layer3-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/mp4/standards#isobmff-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/mp4/standards#isobmff-subsets-any-schema-mutations-text-component.grammar.semio",
   "stdio/mp4/standards#isobmff-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/obj/standards#3.0-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/obj/standards#3.0-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/obj/standards#3.0-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/pptx/standards#ecma-376-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/pptx/standards#ecma-376-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/pptx/standards#ecma-376-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/semio/standards#v1-subsets-animation-schema-diff-text-component.grammar.semio",
   "stdio/semio/standards#v1-subsets-animation-schema-mutations-text-component.grammar.semio",
   "stdio/semio/standards#v1-subsets-animation-schema-snapshot-text-component.grammar.semio",
@@ -9532,24 +10203,12 @@ const POLICY_GRAMMAR_PARSEABILITY_ALLOWLIST = new Set<string>([
   "stdio/semio/standards#v1-subsets-workflow-schema-diff-text-component.grammar.semio",
   "stdio/semio/standards#v1-subsets-workflow-schema-mutations-text-component.grammar.semio",
   "stdio/semio/standards#v1-subsets-workflow-schema-snapshot-text-component.grammar.semio",
-  "stdio/step/standards#ap214-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/step/standards#ap214-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/step/standards#ap214-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/stl/standards#ascii-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/stl/standards#ascii-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/stl/standards#ascii-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/tsv/standards#iana-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/tsv/standards#iana-subsets-any-schema-mutations-text-component.grammar.semio",
   "stdio/tsv/standards#iana-subsets-any-schema-snapshot-text-component.grammar.semio",
   "stdio/wav/standards#riff-pcm-subsets-any-schema-diff-text-component.grammar.semio",
   "stdio/wav/standards#riff-pcm-subsets-any-schema-mutations-text-component.grammar.semio",
   "stdio/wav/standards#riff-pcm-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/xlsx/standards#ecma-376-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/xlsx/standards#ecma-376-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/xlsx/standards#ecma-376-subsets-any-schema-snapshot-text-component.grammar.semio",
-  "stdio/xml/standards#1.0-subsets-any-schema-diff-text-component.grammar.semio",
-  "stdio/xml/standards#1.0-subsets-any-schema-mutations-text-component.grammar.semio",
-  "stdio/xml/standards#1.0-subsets-any-schema-snapshot-text-component.grammar.semio",
 ]);
 
 function policyGrammarParseabilityBreaches(repoRoot: string): BreachRecord[] {
@@ -9598,42 +10257,18 @@ const POLICY_PROTOCOL_PARSEABILITY_ALLOWLIST = new Set<string>([
   "stdio/avi/standards#1.0-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/avi/standards#1.0-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/avi/standards#1.0-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/bcf/standards#2.1-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/bcf/standards#2.1-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/bcf/standards#2.1-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/docx/standards#ecma-376-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/docx/standards#ecma-376-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/docx/standards#ecma-376-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/dxf/standards#r12-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/dxf/standards#r12-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/dxf/standards#r12-subsets-any-schema-snapshot-binary-component.protocol.semio",
   "stdio/epw/standards#energyplus-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/epw/standards#energyplus-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/epw/standards#energyplus-subsets-any-schema-snapshot-binary-component.protocol.semio",
   "stdio/html/standards#5-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/html/standards#5-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/html/standards#5-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/ifc/standards#2x3-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/ifc/standards#2x3-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/ifc/standards#2x3-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/ifc/standards#4-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/ifc/standards#4-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/ifc/standards#4-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/md/standards#commonmark-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/md/standards#commonmark-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/md/standards#commonmark-subsets-any-schema-snapshot-binary-component.protocol.semio",
   "stdio/mp3/standards#mpeg1-layer3-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/mp3/standards#mpeg1-layer3-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/mp3/standards#mpeg1-layer3-subsets-any-schema-snapshot-binary-component.protocol.semio",
   "stdio/mp4/standards#isobmff-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/mp4/standards#isobmff-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/mp4/standards#isobmff-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/obj/standards#3.0-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/obj/standards#3.0-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/obj/standards#3.0-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/pptx/standards#ecma-376-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/pptx/standards#ecma-376-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/pptx/standards#ecma-376-subsets-any-schema-snapshot-binary-component.protocol.semio",
   "stdio/semio/standards#v1-subsets-animation-schema-diff-binary-component.protocol.semio",
   "stdio/semio/standards#v1-subsets-animation-schema-mutations-binary-component.protocol.semio",
   "stdio/semio/standards#v1-subsets-animation-schema-snapshot-binary-component.protocol.semio",
@@ -9673,24 +10308,12 @@ const POLICY_PROTOCOL_PARSEABILITY_ALLOWLIST = new Set<string>([
   "stdio/semio/standards#v1-subsets-workflow-schema-diff-binary-component.protocol.semio",
   "stdio/semio/standards#v1-subsets-workflow-schema-mutations-binary-component.protocol.semio",
   "stdio/semio/standards#v1-subsets-workflow-schema-snapshot-binary-component.protocol.semio",
-  "stdio/step/standards#ap214-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/step/standards#ap214-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/step/standards#ap214-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/stl/standards#ascii-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/stl/standards#ascii-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/stl/standards#ascii-subsets-any-schema-snapshot-binary-component.protocol.semio",
   "stdio/tsv/standards#iana-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/tsv/standards#iana-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/tsv/standards#iana-subsets-any-schema-snapshot-binary-component.protocol.semio",
   "stdio/wav/standards#riff-pcm-subsets-any-schema-diff-binary-component.protocol.semio",
   "stdio/wav/standards#riff-pcm-subsets-any-schema-mutations-binary-component.protocol.semio",
   "stdio/wav/standards#riff-pcm-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/xlsx/standards#ecma-376-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/xlsx/standards#ecma-376-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/xlsx/standards#ecma-376-subsets-any-schema-snapshot-binary-component.protocol.semio",
-  "stdio/xml/standards#1.0-subsets-any-schema-diff-binary-component.protocol.semio",
-  "stdio/xml/standards#1.0-subsets-any-schema-mutations-binary-component.protocol.semio",
-  "stdio/xml/standards#1.0-subsets-any-schema-snapshot-binary-component.protocol.semio",
 ]);
 
 function policyProtocolParseabilityBreaches(repoRoot: string): BreachRecord[] {
@@ -9742,25 +10365,14 @@ function policyProtocolParseabilityBreaches(repoRoot: string): BreachRecord[] {
  */
 const POLICY_FIXTURE_HONESTY_ALLOWLIST = new Set<string>([
   "stdio/avi",
-  "stdio/bcf",
-  "stdio/docx",
-  "stdio/dxf",
   "stdio/epw",
   "stdio/html",
-  "stdio/ifc",
-  "stdio/md",
   "stdio/mp3",
   "stdio/mp4",
-  "stdio/obj",
-  "stdio/pptx",
   "stdio/schema",
   "stdio/semio",
-  "stdio/step",
-  "stdio/stl",
   "stdio/tsv",
   "stdio/wav",
-  "stdio/xlsx",
-  "stdio/xml",
 ]);
 
 function policyStdioArtifactKey(artifactId: string): string {
@@ -9819,31 +10431,17 @@ function policyFixtureHonestyBreaches(repoRoot: string): BreachRecord[] {
 const POLICY_LANGUAGE_REGISTRATION_MIN_CALLS = 5;
 const POLICY_LANGUAGE_REGISTRATION_ALLOWLIST = new Set<string>([
   "stdio/avi/standards#1.0",
-  "stdio/bcf/standards#2.1",
-  "stdio/docx/standards#ecma-376",
-  "stdio/dxf/standards#r12",
   "stdio/epw/standards#energyplus",
   "stdio/html/standards#5",
-  "stdio/ifc/standards#2x3",
-  "stdio/ifc/standards#4",
-  // 🎓️ P2-FG2 closer: jpg/jfif-1.01 stays allowlisted — a real, still-open gap (0 of the required 5
-  // register_language calls exist anywhere in jpg's ⚙️engine, confirmed by both jpg's own fan-out
-  // report and the independent p2-fg2-verify-report.md), NOT stale. Every OTHER FG2 standard
-  // (bmp/deflate/dwg×2/gif×2/las/tiff) landed real 5-role registration this wave and was removed
-  // from this allowlist below — see p2-fg2-closer-report.md.
-  "stdio/jpg/standards#jfif-1.01",
-  "stdio/md/standards#commonmark",
+  // 🎓️ P2-PW: jpg/jfif-1.01's real gap (0 of 5 register_language calls, flagged by P2-FG2's closer)
+  // was fixed by the dedicated FG2-fix wave (p2-fg2-fix-jpg-report.md) — jpg now genuinely registers
+  // 5/5 languages, confirmed by direct grep. Removed below along with every other now-real FG-wave
+  // standard; kept here only as the historical pointer for why this allowlist once carried jpg.
   "stdio/mp3/standards#mpeg1-layer3",
   "stdio/mp4/standards#isobmff",
-  "stdio/obj/standards#3.0",
-  "stdio/pptx/standards#ecma-376",
   "stdio/semio/standards#v1",
-  "stdio/step/standards#ap214",
-  "stdio/stl/standards#ascii",
   "stdio/tsv/standards#iana",
   "stdio/wav/standards#riff-pcm",
-  "stdio/xlsx/standards#ecma-376",
-  "stdio/xml/standards#1.0",
 ]);
 
 function policyLanguageRegistrationBreaches(repoRoot: string): BreachRecord[] {
@@ -9919,8 +10517,15 @@ function policyStdioJsonTransferTraitHit(content: string): string | undefined {
 
 const POLICY_STDIO_JSON_TRANSFER_BAN_ALLOWLIST = new Set<string>([
   "stdio/avi/standards#1.0-subsets-any-schema-mutations-component",
+  // 🎓️ P2-PW: the live `serde_json::to_vec(&from.value)` transfer call this entry was seeded for was
+  // genuinely replaced by FG3 (reusing json's own real text codec, p2-fg3-closer-report.md) — direct
+  // read confirms zero live serde_json calls remain in this file. Stays allowlisted only because the
+  // checker's substring scan (by design, not stripping comments — see this rule's own doc comment)
+  // still matches the SAME string appearing inside this file's own historical doc comment describing
+  // what the old code used to do ("was a literal `serde_json::to_vec(&from.value)` JSON..."). A known
+  // checker limitation, not a real violation and not a rule-logic change; left in place rather than
+  // removed to avoid a false "medium" breach at the next policy run.
   "stdio/gltf/standards#2.0-subsets-any-io-import-deserializers-artifacts-json-rfc8259-any-component",
-  "stdio/ifc/standards#2x3-subsets-any-schema-mutations-component",
   "stdio/mp3/standards#mpeg1-layer3-subsets-any-schema-mutations-component",
   "stdio/mp4/standards#isobmff-subsets-any-schema-mutations-component",
   "stdio/semio/standards#v1-subsets-animation-schema-snapshot-component",
@@ -9941,7 +10546,6 @@ const POLICY_STDIO_JSON_TRANSFER_BAN_ALLOWLIST = new Set<string>([
   "stdio/semio/standards#v1-subsets-video-schema-snapshot-component",
   "stdio/semio/standards#v1-subsets-workflow-schema-snapshot-component",
   "stdio/wav/standards#riff-pcm-subsets-any-schema-mutations-component",
-  "stdio/xml/standards#1.0-subsets-any-schema-snapshot-component",
 ]);
 
 function policyStdioJsonTransferBanBreaches(repoRoot: string): BreachRecord[] {

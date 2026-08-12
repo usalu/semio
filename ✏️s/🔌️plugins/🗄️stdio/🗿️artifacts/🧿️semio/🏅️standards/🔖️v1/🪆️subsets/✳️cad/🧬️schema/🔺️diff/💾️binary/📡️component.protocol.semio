@@ -1,57 +1,21 @@
-dialect protocol stdio.semio.cad.diff
-; protocol::DiffCodec::print_diff/parse_diff wire grammar -- NO semio envelope (unlike the
-; snapshot facet): `encode_diff` is `print_diff().into_bytes()`, so this binary grammar is
-; byte-identical to ../📝️text/📖️component.grammar.semio, reproduced here verbatim.
-document = [ token *( SP token ) ]
-token = ("layers=" layers-triple) / ("blocks=" blocks-triple) / ("entities=" entities-triple)
+dialect protocol
+protocol stdio.semio.cad.diff
+version 1
+schema stdio.semio.cad
+start body
+framing record
 
-layers-triple = "[" removed-keys "]" ";" "[" layers-modified "]" ";" "[" layers-added "]"
-layers-modified = [ layer-mod *( "," layer-mod ) ]
-layer-mod = hexstr ":" layer-diff
-layers-added = [ layer *( "," layer ) ]
+# cad wave: REAL binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
+# shortcut (`🔺️diff/🦀️component.rs`'s old `DiffCodec::encode_diff`). `format u8` + `presence u8`
+# (bit0=`layers`, bit1=`blocks`, bit2=`entities`) are two REAL fixed fields; past that, 0-3
+# varint-length-prefixed opaque blobs follow (one per present collection) — modeled as one opaque
+# trailing `payload` chain rather than per-segment `Cond`-guarded fields because a SECOND
+# `if`-guard on a field that was itself only conditionally decoded hard-errors `eval_cond`
+# (`protocol-cond-cannot-chain`, per the recipe's own gap table). The real Rust `encode_diff`/
+# `decode_diff` stays genuinely, fully structured (`write_str_lp`/`read_str_lp`, `store::pack_rt`'s
+# real varint codec) — round-trip tested independently.
+header fixed 2
+field format u8
+field presence u8
 
-blocks-triple = "[" removed-keys "]" ";" "[" blocks-modified "]" ";" "[" blocks-added "]"
-blocks-modified = [ block-mod *( "," block-mod ) ]
-block-mod = hexstr ":" block-diff
-blocks-added = [ block *( "," block ) ]
-
-entities-triple = "[" removed-keys "]" ";" "[" entities-modified "]" ";" "[" entities-added "]"
-entities-modified = [ entity-record-mod *( "," entity-record-mod ) ]
-entity-record-mod = hexstr ":" entity-record-diff
-entities-added = [ entity-record *( "," entity-record ) ]
-
-removed-keys = [ hexstr *( "," hexstr ) ]
-
-option-i32 = "[0]" / ( "[1," i32 "]" )
-option-str = "[0]" / ( "[1," hexstr "]" )
-option-bool = "[0]" / ( "[1," bool01 "]" )
-option-point2 = "[0]" / ( "[1," point2 "]" )
-option-entity = "[0]" / ( "[1," entity "]" )
-option-entities-triple = "[0]" / ( "[1," entities-triple "]" )
-
-layer-diff = "[" option-i32 "," option-str "," option-bool "]"
-entity-record-diff = "[" option-str "," option-entity "]"
-block-diff = "[" option-point2 "," option-entities-triple "]"
-
-layer = "[" hexstr "," i32 "," hexstr "," bool01 "]"
-entity-record = "[" hexstr "," hexstr "," entity "]"
-entity-record-list = "[" [ entity-record *( "," entity-record ) ] "]"
-block = "[" hexstr "," point2 "," entity-record-list "]"
-
-entity = line / arc / circle / ellipse / polyline / text-entity / insert / solid / dimension
-line = "L[" point2 "," point2 "]"
-arc = "A[" point2 "," f64 "," f64 "," f64 "]"
-circle = "C[" point2 "," f64 "]"
-ellipse = "E[" point2 "," point2 "," f64 "," f64 "," f64 "]"
-polyline = "P[" point2-list "," bool01 "]"
-point2-list = "[" [ point2 *( "," point2 ) ] "]"
-text-entity = "T[" point2 "," f64 "," f64 "," hexstr "]"
-insert = "I[" hexstr "," point2 "," point2 "," f64 "]"
-solid = "S[" point2 "," point2 "," point2 "," point2 "]"
-dimension = "D[" point2 "," point2 "," f64 "," hexstr "]"
-
-point2 = "[" f64 "," f64 "]"
-hexstr = *HEXDIG
-i32 = ["-"] 1*DIGIT
-f64 = ["-"] 1*DIGIT ["." 1*DIGIT] [("e"/"E") ["+"/"-"] 1*DIGIT]
-bool01 = "0" / "1"
+chain payload bytes

@@ -1,0 +1,20 @@
+    |     ^^^^^^^^
+
+warning: function `example_fixture` is never used
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🎛️apps/◻2d/🦀️component.rs:98:4
+   |
+98 | fn example_fixture(json_text: &str) -> Value {
+   |    ^^^^^^^^^^^^^^^
+
+warning: field `artifact` is never read
+   --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:625:5
+    |
+624 | pub struct Puzzle3dEngine {
+    |            -------------- field in this struct
+625 |     artifact: crate::artifacts::puzzle3d::schema::Puzzle3dArtifact,
+    |     ^^^^^^^^
+
+warning: `semio-s-plugin-puzzle` (lib) generated 88 warnings (run `cargo fix --lib -p semio-s-plugin-puzzle` to apply 77 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 13.98s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 13`

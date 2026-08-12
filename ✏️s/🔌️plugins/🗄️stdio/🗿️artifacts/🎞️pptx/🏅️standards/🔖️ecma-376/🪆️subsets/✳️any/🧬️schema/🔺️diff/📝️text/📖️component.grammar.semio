@@ -1,6 +1,143 @@
-dialect grammar stdio.pptx.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.pptx' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.pptx.diff
+extension pptx
+start document
+comment none
+
+# FG-wave: real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `../../🦀️component.rs` (`print_pptx_diff`/`parse_pptx_diff`, ~L1667-1684), replacing the F1-era
+# `*OCTET` hex-dump placeholder. Every keyword/token below is copied verbatim from the real
+# `format!(...)`/`enc_*`/`dec_*` call sites (`../🦀️component.rs`), not invented -- this is the
+# SAME two-top-level-token shape (`opc=`/`presentation=`) docx's own diff grammar already
+# established (`opc=`/`document=` there), reusing the SAME `IndexedTripleDiff<D,T>`/
+# `NamedTripleDiff<K,D,T>` generic collection engine docx introduced (own per-artifact copy here,
+# per this ticket's ownership-boundary rule, `f5-pptx-report.md` §2/§7's `glue_followup` note).
+#
+# `hex` (bare `hex`, referenced but deliberately NOT defined as a production) is the framework's
+# built-in `hex` MACRO -- `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2.
+#
+# `[0]`/`[1,x]` is `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4);
+# `PptxRunDiff.font_size: Option<Option<u32>>` nests that shape twice (`opt-opt-int` below).
+document = opc-tok? presentation-tok?
+opc-tok = "opc" "=" opc-diff
+presentation-tok = "presentation" "=" presentation-diff
+
+# ── `PptxOpcDiff` -- `[opt(content_types),opt(parts),opt(relationships)]` (`enc_opc_diff`,
+# `../🦀️component.rs`:1647-1654) -- byte-for-byte the same shape docx's own `DocxOpcDiff` grammar
+# already restates (own copy per the ownership-boundary rule; not `use`d). ────────────────────────
+opc-diff = "[" opt-content-types-diff "," opt-parts-diff "," opt-relationships-diff "]"
+
+opt-content-types-diff = "[" "0" "]" | "[" "1" "," content-types-diff "]"
+content-types-diff = "[" opt-ct-entries-diff "," opt-ct-entries-diff "]"
+opt-ct-entries-diff = "[" "0" "]" | "[" "1" "," ct-entries-diff-body "]"
+ct-entries-diff-body = "[" ct-removed-list? "]" ";" "[" ct-modified-list? "]" ";" "[" ct-added-list? "]"
+ct-removed-list = hex {"," hex}*
+ct-modified-list = ct-modified-item {"," ct-modified-item}*
+ct-modified-item = hex ":" hex
+ct-added-list = ct-entry {"," ct-entry}*
+ct-entry = "[" hex "," hex "]"
+
+opt-parts-diff = "[" "0" "]" | "[" "1" "," parts-diff-body "]"
+parts-diff-body = "[" parts-removed-list? "]" ";" "[" parts-modified-list? "]" ";" "[" parts-added-list? "]"
+parts-removed-list = hex {"," hex}*
+parts-modified-list = parts-modified-item {"," parts-modified-item}*
+parts-modified-item = hex ":" opc-part-diff
+opc-part-diff = "[" opt-hex "," opt-hex "]"
+parts-added-list = opc-part {"," opc-part}*
+opc-part = "[" hex "," hex "," hex "]"
+
+opt-relationships-diff = "[" "0" "]" | "[" "1" "," relationships-diff-body "]"
+relationships-diff-body = "[" rel-owner-removed-list? "]" ";" "[" rel-owner-modified-list? "]" ";" "[" rel-owner-added-list? "]"
+rel-owner-removed-list = hex {"," hex}*
+rel-owner-modified-list = rel-owner-modified-item {"," rel-owner-modified-item}*
+rel-owner-modified-item = hex ":" rel-list-diff-body
+rel-owner-added-list = rel-owner-entry {"," rel-owner-entry}*
+rel-owner-entry = "[" hex "," "[" rel-list? "]" "]"
+rel-list = rel {"," rel}*
+rel = "[" hex "," hex "," hex "," target-mode "]"
+target-mode = "0" | "1"
+
+rel-list-diff-body = "[" rel-removed-list? "]" ";" "[" rel-modified-list? "]" ";" "[" rel-added-list? "]"
+rel-removed-list = hex {"," hex}*
+rel-modified-list = rel-modified-item {"," rel-modified-item}*
+rel-modified-item = hex ":" rel-diff
+rel-diff = "[" opt-hex "," opt-hex "," opt-target-mode "]"
+opt-target-mode = "[" "0" "]" | "[" "1" "," target-mode "]"
+rel-added-list = rel {"," rel}*
+
+# ── `PptxPresentationDiff` -- `opt(slides)` (`enc_presentation_diff`, `../🦀️component.rs`:1542-1547)
+# -- `PptxPresentation` has exactly ONE field, so it collapses straight to `slides`'s own
+# `encode_option`, unlike docx's `DocxDocumentDiff` (two fields, `body`+`styles`). ─────────────────
+presentation-diff = opt-slides-diff
+opt-slides-diff = "[" "0" "]" | "[" "1" "," slides-diff-body "]"
+slides-diff-body = "[" slides-removed-list? "]" ";" "[" slides-modified-list? "]" ";" "[" slides-added-list? "]"
+slides-removed-list = INT {"," INT}*
+slides-modified-list = slides-modified-item {"," slides-modified-item}*
+slides-modified-item = INT ":" slide-diff
+slides-added-list = slides-added-item {"," slides-added-item}*
+slides-added-item = INT ":" slide
+
+# `PptxSlideDiff` -- exactly one field (`shapes: Option<PptxShapesDiff>`, `enc_slide_diff`,
+# `../🦀️component.rs`:1528-1529) -- collapses to `shapes`'s own `encode_option`, same one-field
+# collapse `enc_paragraph`/`enc_slide` (the snapshot value forms, below) already use.
+slide-diff = opt-shapes-diff
+opt-shapes-diff = "[" "0" "]" | "[" "1" "," shapes-diff-body "]"
+shapes-diff-body = "[" shapes-removed-list? "]" ";" "[" shapes-modified-list? "]" ";" "[" shapes-added-list? "]"
+shapes-removed-list = INT {"," INT}*
+shapes-modified-list = shapes-modified-item {"," shapes-modified-item}*
+shapes-modified-item = INT ":" shape-diff
+shapes-added-list = shapes-added-item {"," shapes-added-item}*
+shapes-added-item = INT ":" shape
+
+# `PptxShapeDiff` -- `TextBox(PptxTextBoxDiff)`/`Picture(PptxPictureDiff)`/
+# `Placeholder(PptxPlaceholderDiff)`/`Replace{shape}` -- single-uppercase-tag prefix (`enc_shape_diff`,
+# `../🦀️component.rs`:1480-1492), same convention `enc_shape`'s own tags use below (`B`/`P`/`H`/`O`
+# reused unambiguously -- `enc_shape_diff` never appears in the same parse context as `enc_shape`).
+shape-diff = "B" "[" opt-paragraphs-diff "," opt-transform "]" | "P" "[" opt-hex "," opt-transform "]" | "H" "[" opt-hex "," opt-paragraphs-diff "," opt-transform "]" | "R" "[" shape "]"
+opt-transform = "[" "0" "]" | "[" "1" "," transform "]"
+transform = "[" INT "," INT "," INT "," INT "]"
+
+opt-paragraphs-diff = "[" "0" "]" | "[" "1" "," paragraphs-diff-body "]"
+paragraphs-diff-body = "[" paragraphs-removed-list? "]" ";" "[" paragraphs-modified-list? "]" ";" "[" paragraphs-added-list? "]"
+paragraphs-removed-list = INT {"," INT}*
+paragraphs-modified-list = paragraphs-modified-item {"," paragraphs-modified-item}*
+paragraphs-modified-item = INT ":" paragraph-diff
+paragraphs-added-list = paragraphs-added-item {"," paragraphs-added-item}*
+paragraphs-added-item = INT ":" paragraph
+
+# `PptxParagraphDiff` -- exactly one field (`runs: Option<PptxRunsDiff>`) -- same one-field
+# collapse.
+paragraph-diff = opt-runs-diff
+opt-runs-diff = "[" "0" "]" | "[" "1" "," runs-diff-body "]"
+runs-diff-body = "[" runs-removed-list? "]" ";" "[" runs-modified-list? "]" ";" "[" runs-added-list? "]"
+runs-removed-list = INT {"," INT}*
+runs-modified-list = runs-modified-item {"," runs-modified-item}*
+runs-modified-item = INT ":" run-diff
+runs-added-list = runs-added-item {"," runs-added-item}*
+runs-added-item = INT ":" run
+
+# `PptxRunDiff` -- `[opt(text),opt(bold),opt(italic),opt(opt(font_size))]` (`enc_run_diff`,
+# `../🦀️component.rs`:1438-1446) -- `font_size` is the ONLY doubly-nested tri-state field in this
+# artifact's own diff shape (`Option<Option<u32>>`, "unchanged"/"cleared"/"set").
+run-diff = "[" opt-hex "," opt-bool "," opt-bool "," opt-opt-int "]"
+opt-bool = "[" "0" "]" | "[" "1" "," bool-lit "]"
+bool-lit = "0" | "1"
+opt-opt-int = "[" "0" "]" | "[" "1" "," opt-int "]"
+opt-int = "[" "0" "]" | "[" "1" "," INT "]"
+opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
+
+# ── Restated (not `use`d) whole-item value shapes -- the exact payload every `added`/`Replace`
+# list above carries, mirrored from this file's own `../🦀️component.rs` `enc_shape`/`enc_slide`/
+# `enc_paragraph`/`enc_run` -- same per-facet self-containment convention docx's/xml's own diff
+# grammars document (each facet restates its sibling snapshot facet's value shapes locally). ─────
+# `PptxShape` -- single-uppercase-tag prefix: `B`=TextBox, `P`=Picture, `H`=Placeholder, `O`=Other.
+shape = "B" "[" paragraphs-list "," transform "]" | "P" "[" hex "," transform "]" | "H" "[" hex "," paragraphs-list "," transform "]" | "O" "[" hex "]"
+paragraphs-list = "[" paragraph-item* "]"
+paragraph-item = paragraph ","?
+paragraph = runs-list
+runs-list = "[" run-item* "]"
+run-item = run ","?
+run = "[" hex "," bool-lit "," bool-lit "," opt-int "]"
+slide = shapes-list
+shapes-list = "[" shape-item* "]"
+shape-item = shape ","?

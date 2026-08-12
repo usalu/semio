@@ -18,7 +18,8 @@ use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{
 };
 use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
-#[cfg(test)]
+/// 🔧️ Unconditional — `impl protocol::DiffCodec for SemioAudioDiff` below's `encode_diff`/
+/// `decode_diff` are now real production code (binary upgrade, this wave), not test-only.
 use protocol::DiffCodec;
 use serde::{Deserialize, Serialize};
 
@@ -529,24 +530,109 @@ fn parse_audio_diff(line: &str) -> Result<SemioAudioDiff, String> {
     Ok(d)
 }
 
+/// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
+/// `store::ByteReader`, same helpers this subset's own `📸️snapshot` facet's `ArtifactPack` uses)
+/// backing the real `DiffCodec::encode_diff`/`decode_diff` below.
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    store::pack_rt::write_varint_u64(out, s.len() as u64);
+    out.extend_from_slice(s.as_bytes());
+}
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec();
+    String::from_utf8(bytes).map_err(|e| e.to_string())
+}
+
 impl protocol::DiffCodec for SemioAudioDiff {
     fn print_diff(&self) -> String { print_audio_diff(self) }
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_audio_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim — the same simplification gif 89a's own hand-rolled
-    /// `DiffCodec` uses (see that module's doc comment): satisfies every `DiffCodec` law without a
-    /// second, denser wire format.
+    /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
+    /// shortcut. `format u8` + `presence u8` (bit0=`sample_rate` bit1=`format` bit2=`channels`
+    /// bit3=`tags`) are two REAL fixed fields; each present field then follows as its own
+    /// varint-length-prefixed opaque text blob (the same per-field `rate=`/`format=`/
+    /// `enc_indexed_triple`-based text `print_diff` already produces) — independently-delimited
+    /// segments rather than one bare trailing `bytes` because there can be 0-4 of them (chaining a
+    /// `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a second `if`-guard on a field
+    /// that was itself only conditionally decoded hard-errors `eval_cond` — see `✳️workflow`'s/
+    /// `✳️image`'s pilot reports).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        let mut presence = 0u8;
+        if self.sample_rate.is_some() { presence |= 0b0001; }
+        if self.format.is_some() { presence |= 0b0010; }
+        if self.channels.is_some() { presence |= 0b0100; }
+        if self.tags.is_some() { presence |= 0b1000; }
+        let mut out = vec![DIFF_BINARY_FORMAT, presence];
+        if let Some(v) = self.sample_rate { write_str_lp(&mut out, &v.to_string()); }
+        if let Some(v) = self.format { write_str_lp(&mut out, enc_format(v)); }
+        if let Some(v) = &self.channels { write_str_lp(&mut out, &triples::enc_indexed_triple(v, enc_channel_diff, enc_channel)); }
+        if let Some(v) = &self.tags { write_str_lp(&mut out, &triples::enc_indexed_triple(v, enc_tag, enc_tag)); }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
+        }
+        if bytes[0] != DIFF_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
+        }
+        let presence = bytes[1];
+        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let sample_rate = if presence & 0b0001 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate blob", offset: 2, detail: e })?;
+            Some(parse_u32(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate text", offset: 2, detail: e })?)
+        } else { None };
+        let format = if presence & 0b0010 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff format blob", offset: 2, detail: e })?;
+            Some(dec_format(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff format text", offset: 2, detail: e })?)
+        } else { None };
+        let channels = if presence & 0b0100 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff channels blob", offset: 2, detail: e })?;
+            Some(triples::dec_indexed_triple(&text, dec_channel_diff, dec_channel).map_err(|e| protocol::ProtocolError::Malformed { what: "diff channels text", offset: 2, detail: e })?)
+        } else { None };
+        let tags = if presence & 0b1000 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff tags blob", offset: 2, detail: e })?;
+            Some(triples::dec_indexed_triple(&text, dec_tag, dec_tag).map_err(|e| protocol::ProtocolError::Malformed { what: "diff tags text", offset: 2, detail: e })?)
+        } else { None };
+        Ok(SemioAudioDiff { sample_rate, format, channels, tags })
     }
 }
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🔖️Demo
+/// 🌱 Representative `SemioAudioDiff` cases (empty/no-op, a full field sweep both directions incl.
+/// both collection triples) — single source of truth for `diff_grammar_conformance_law`/
+/// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<SemioAudioDiff> {
+    fn channel(seed: f32, len: usize) -> SemioAudioChannel {
+        SemioAudioChannel { samples: (0..len).map(|i| seed + i as f32 * 0.1).collect() }
+    }
+    let a = SemioAudioSnapshot {
+        sample_rate: 44_100,
+        format: SemioAudioFormat::Pcm16,
+        channels: vec![channel(0.0, 4), channel(1.0, 4), channel(2.0, 4)],
+        tags: vec![SemioAudioTag { key: "title".into(), value: "one".into() }],
+        ..SemioAudioSnapshot::default()
+    };
+    let b = SemioAudioSnapshot {
+        sample_rate: 48_000,
+        format: SemioAudioFormat::Float32,
+        channels: vec![channel(9.0, 2), channel(1.0, 4)],
+        tags: vec![SemioAudioTag { key: "title".into(), value: "two".into() }, SemioAudioTag { key: "artist".into(), value: "someone".into() }],
+        ..SemioAudioSnapshot::default()
+    };
+    vec![
+        SemioAudioDiff::default(),
+        <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&a, &b),
+        <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&b, &a),
+    ]
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]

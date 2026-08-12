@@ -1,19 +1,49 @@
 dialect grammar
-grammar s.stdio.semio.image.diff.text
+grammar stdio.semio.image.diff
 extension semio
-start line
+start document
 
-line = [ token *( SP token ) ]
-token = scalar-token / collection-token
-scalar-token = ( "width" / "height" / "bitDepth" ) "=" 1*DIGIT
-             / "colorspace" "=" ( "r" / "a" / "g" / "y" / "i" )
-             / "icc" "=" option
-option = "[0]" / "[1," *HEXDIG "]"
-collection-token = ( "frames" / "metadata" ) "{" triple "}"
-triple = "[" items "]" ";" "[" items "]" ";" "[" items "]"
-items = [ item *( "," item ) ]
-item = 1*DIGIT ":" *HEXDIG
+# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION image wave: real one-line
+# `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by `🔺️diff/🦀️component.rs`
+# (`print_image_diff`/`parse_image_diff`) — token-per-nonempty-field, space-separated (space is
+# lexer trivia, irrelevant at this dialect level). Each collection field encodes as the shared
+# `engine::triples::enc_indexed_triple`/`enc_named_triple` `[removed];[modified];[added]`
+# bracket-depth-aware triple (recipe's own collection-triple shape, §1.4). Every top-level field is
+# optional (an unchanged diff prints as the empty string).
+document = width-line? height-line? colorspace-line? bit-depth-line? icc-line? frames-line? metadata-line?
 
-; -- real hand-rolled DiffCodec grammar (see the diff `🦀️component.rs` sibling's
-; -- `🔖️HandcraftedDiffCodec` region for the exact encoder/decoder this mirrors). `frames`/
-; -- `metadata` reuse the shared `engine::triples` `[removed];[modified];[added]` collection shape.
+width-line = "width" "=" INT
+height-line = "height" "=" INT
+colorspace-line = "colorspace" "=" colorspace
+bit-depth-line = "bitDepth" "=" INT
+icc-line = "icc" "=" option-hex
+
+frames-line = "frames" "{" frames-triple "}"
+frames-triple = "[" removed-index-list? "]" ";" "[" frame-modified-list? "]" ";" "[" frame-added-list? "]"
+removed-index-list = INT {"," INT}*
+frame-modified-list = frame-modified {"," frame-modified}*
+frame-modified = INT ":" frame-diff
+frame-diff = "[" frame-diff-entry-list? "]"
+frame-diff-entry-list = frame-diff-entry {"," frame-diff-entry}*
+frame-diff-entry = "D" ":" INT | "X" ":" hex
+frame-added-list = frame-added {"," frame-added}*
+frame-added = INT ":" frame
+frame = "[" INT "," hex "]"
+
+metadata-line = "metadata" "{" metadata-triple "}"
+metadata-triple = "[" removed-key-list? "]" ";" "[" metadata-modified-list? "]" ";" "[" metadata-added-list? "]"
+removed-key-list = hex {"," hex}*
+metadata-modified-list = metadata-modified {"," metadata-modified}*
+metadata-modified = hex ":" hex
+metadata-added-list = metadata-added {"," metadata-added}*
+metadata-added = entry
+entry = "[" hex "," hex "]"
+
+colorspace = "r" | "a" | "g" | "y" | "i"
+option-hex = "[" "0" "]" | "[" "1" "," hex "]"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — a run of lowercase hex digits, incl. the empty string. `Symbol::Ref` already falls
+# back from "no production of this name" to "macro of this name", so referencing `hex` with no
+# matching production routes here automatically (recipe pitfall #2 — a hand-rolled `{INT|IDENT}*`
+# production would silently swallow the next literal keyword token instead).

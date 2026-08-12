@@ -3,7 +3,9 @@
 ; hex-encoded strings/keys (every `id`/`String` field is UTF-8 hex, so `:`/`,`/`;`/`[`/`]` never
 ; appear unescaped inside a key). `split_top_level`/`strip_brackets` (🧰️triples) are
 ; bracket-depth-aware so a nested `[...]` payload (curve/surface control-point lists) never
-; confuses the outer split.
+; confuses the outer split. This text is what each `encode_diff` binary frame's opaque per-
+; collection payload blob carries verbatim -- see `component.rs` (frame = `format` byte +
+; `presence` bitmask byte + 0-6 varint-length-prefixed blobs of exactly this text).
 diff-line     = [token *(SP token)]
 token         = collection "=" named-triple
 collection    = "vertices" / "edges" / "loops" / "faces" / "shells" / "solids"

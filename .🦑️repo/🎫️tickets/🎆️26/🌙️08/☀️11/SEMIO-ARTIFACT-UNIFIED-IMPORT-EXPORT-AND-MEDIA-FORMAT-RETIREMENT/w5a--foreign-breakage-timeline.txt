@@ -1,0 +1,37 @@
+W5a (📐️cad) — foreign concurrent-session breakage encountered during verification, none touched.
+
+Confirmed via repeated `git status --porcelain` polling across this session (files stayed
+unstaged-modified/growing in scope throughout, never committed by the other session during this
+window):
+
+  🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs
+  🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🔀️crdt/🦀️component.rs
+  🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🔗️causal/🦀️component.rs
+  🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️component.rs
+  🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/benches/protocol.rs
+  🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs
+  🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️component.rs
+  🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs
+  🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️component.rs
+  🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs
+  🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️component.rs
+  (grew to 19 modified framework files at peak; scope not fully enumerated beyond confirming none
+  overlap ✏️s/🔌️plugins/📐️cad/**)
+
+Observed transient errors caused by this churn while polling for my own `cargo check`/`cargo test -p
+semio-s-plugin-cad`, none touched, none caused by my edits:
+
+1. `semio-framework-os-kernel-dsl-derive`: "functions tagged with #[proc_macro_derive] must currently
+   reside in the root of the crate" x7, in 🗣️dsl/✨️derive/🦀️component.rs (mid-refactor, moving derive
+   fns out of crate root).
+2. `semio-framework-os-kernel`: E0308 (`clone_via_patchable` expected `&(usize, V)` found `&V`) +
+   E0277 (`V: Clone` not satisfied) in 📡️spr/🎮️command/🦀️component.rs.
+3. `semio-framework-os-kernel`: E0277 x2 (`<F as InferredField<P>>::Key: Deserialize/Serialize` not
+   satisfied) — different file/area, same crate, later poll.
+
+Handling: never edited any of the above (all outside ✏️s/🔌️plugins/📐️cad/**, explicitly the closer's/
+other-session's territory per the ticket's hot-file and concurrency rules). Polled ~10 times over
+roughly an hour with escalating wait intervals (Monitor-based, not sleep-loop) rather than chasing;
+final successful `cargo check` (EXIT=0) and `cargo test --lib` (130 passed, 0 failed, EXIT=0) runs
+landed once that session's edits stabilized enough for the shared build graph to compile end to end.
+See `w5a--cargo-check.txt` / `w5a--cargo-test.txt` for the real, final, passing output.

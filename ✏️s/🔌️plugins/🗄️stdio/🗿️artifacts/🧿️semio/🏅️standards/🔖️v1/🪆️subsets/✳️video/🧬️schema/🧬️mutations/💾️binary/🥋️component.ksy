@@ -1,14 +1,21 @@
 meta:
-  id: semio_video_mutations
+  id: stdio_semio_video_mutations
   endian: le
 doc: |
-  stdio.semio.video mutations binary layout: UTF-8 bytes of the text op grammar (../📝️text)
-  verbatim — protocol::OpBinary::encode_op == print_op().into_bytes(), no separate binary framing
-  (matching DocxMutation's own hand-rolled codec).
+  Kaitai mirror (descriptive, not test-parsed — the real byte-level walker is
+  ../📡️component.protocol.semio, walked by dsl::walk_protocol) for the REAL binary op frame
+  (video wave, replacing the old print_op().into_bytes() text-as-binary shortcut). `format`/`tag`
+  (the SemioVideoMutation variant ordinal, see ../🦀️component.rs's OP_KEYWORDS) are real, fully
+  described fixed header fields; the variant's own `key=value ...` argument text follows as one
+  opaque trailing `payload` (reuses the already-real, already-tested print_semio_video_mutation
+  text codec).
 seq:
-  - id: text_utf8
-    type: str
-    encoding: UTF-8
-    consume: false
-    terminator: -1
-    doc: the keyword op grammar, see ../📝️text/📖️component.grammar.semio
+  - id: format
+    type: u1
+    doc: "OP_BINARY_FORMAT, currently 1"
+  - id: tag
+    type: u1
+    doc: "SemioVideoMutation variant ordinal, 0-8 — see ../🦀️component.rs's OP_KEYWORDS"
+  - id: payload
+    size-eos: true
+    doc: "the variant's own key=value ... argument text (UTF-8), empty for no-mutation"

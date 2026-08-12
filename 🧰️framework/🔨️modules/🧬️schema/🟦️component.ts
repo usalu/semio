@@ -8,19 +8,31 @@ export type FacetLeaves = {
   readonly proto: string;
 };
 
-/** 🧬️ Registered descriptor for one artifact's three schema facets. */
+/** 🧬️ Registered descriptor for one artifact's four schema facets. */
 export type ArtifactSchemaDescriptor = {
   readonly id: string;
   readonly artifact: FacetLeaves;
   readonly snapshot: FacetLeaves;
   readonly diff: FacetLeaves;
+  readonly mutations: FacetLeaves;
 };
 //#endregion 🔖️ArtifactSchemaDescriptor
+
+//#region 🔖️ArtifactInferenceDescriptor
+/** 💡️ Registered descriptor for one artifact's 💡️inference schema facet — a SIBLING to
+ * {@link ArtifactSchemaDescriptor}, not a field on it: adopted per-artifact independently
+ * (seed-then-shrink fan-out), so the four-facet descriptor never needs editing as artifacts gain
+ * inference one at a time. `id` is the inference schema's own id, `"{artifactId}.inference"`. */
+export type ArtifactInferenceDescriptor = {
+  readonly id: string;
+  readonly inference: FacetLeaves;
+};
+//#endregion 🔖️ArtifactInferenceDescriptor
 
 //#region 🔖️GraphQlStatePreamble
 /** 🔗 Shared GraphQL `@state` SDL preamble — declared once, never repeated per artifact. */
 export const GRAPHQL_STATE_PREAMBLE =
-  "enum StateClass { PERSISTENT SHARED_UI LOCAL_UI PREVIEW EFFECT }\n" +
+  "enum StateClass { PERSISTENT SHARED_UI LOCAL_UI PREVIEW EFFECT INFERRED }\n" +
   "directive @state(class: StateClass!) on FIELD_DEFINITION";
 //#endregion 🔖️GraphQlStatePreamble
 
@@ -45,6 +57,33 @@ export class ArtifactSchemaRegistry {
   }
 }
 //#endregion 🔖️ArtifactSchemaRegistry
+
+//#region 🔖️ArtifactInferenceRegistry
+/** 📚 Runtime registry of {@link ArtifactInferenceDescriptor} values — inference twin of {@link ArtifactSchemaRegistry}. */
+export class ArtifactInferenceRegistry {
+  readonly #byId = new Map<string, ArtifactInferenceDescriptor>();
+
+  /** 📎 Insert or replace a descriptor by inference schema id. */
+  register(descriptor: ArtifactInferenceDescriptor): void {
+    this.#byId.set(descriptor.id, descriptor);
+  }
+
+  /** 🔎 Lookup by inference schema id. */
+  get(id: string): ArtifactInferenceDescriptor | undefined {
+    return this.#byId.get(id);
+  }
+
+  /** 🚶 Walk every registered descriptor. */
+  *iter(): IterableIterator<ArtifactInferenceDescriptor> {
+    yield* this.#byId.values();
+  }
+
+  /** 🔢 Count of registered inference facets. */
+  get size(): number {
+    return this.#byId.size;
+  }
+}
+//#endregion 🔖️ArtifactInferenceRegistry
 
 //#region 🔖️AppSchemaDescriptor
 /** 🧬️ Registered descriptor for one app owner's config + presence schema facets. */

@@ -1,4 +1,3 @@
-//! 💾️ Binary representation marker for `s.stdio.semio.document.mutations`: `OpBinary::encode_op`
-//! is the `print_op()` text bytes verbatim (see `🧬️mutations/🦀️component.rs`'s `OpCodecs` region)
-//! — no separate binary framing.
-pub const BINARY_MAGIC: &str = "s.stdio.semio.document.mutations";
+//! 💾️ Binary representation codec surface for `s.stdio.semio.document.mutations` — protocol include.
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");

@@ -1167,6 +1167,27 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 }
 //#endregion 🔖️Primitives
 
+//#region 🔖️BinaryPrimitives
+/// 🧪️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION document wave: real LEB128-
+/// varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
+/// `store::ByteReader`, same helpers workflow/model/brep's own upgraded `DiffCodec`s reuse) backing
+/// the real `DiffCodec::encode_diff`/`decode_diff` below.
+pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+//#endregion 🔖️BinaryPrimitives
+
 //#region 🔖️ValueCodecs
 pub(crate) fn enc_run_style(s: &RunStyle) -> String {
     format!(
@@ -1485,54 +1506,129 @@ impl protocol::DiffCodec for SemioDocumentDiff {
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_document_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    /// ⚡️ Binary = the text bytes verbatim, same simplification `GifDiff`/`SvgDiff`/`DocxDiff`'s
-    /// hand-rolled codecs use — satisfies every `DiffCodec` law without inventing a second wire
-    /// format.
+    /// ⚡️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION document wave: real binary
+    /// diff frame, replacing the old `print_diff().into_bytes()` text-as-binary shortcut. `format
+    /// u8` + `presence u8` (bit0=`styles`, bit1=`images`, bit2=`blocks`) are two REAL fixed fields;
+    /// each present collection then follows as its own varint-length-prefixed opaque blob (the same
+    /// `enc_styles_diff`/`enc_images_diff`/`enc_blocks_diff` bracket/hex text `print_diff` already
+    /// produces) — one opaque blob per present collection rather than a per-segment `Cond` because a
+    /// SECOND `if`-guard on a field that's itself only conditionally decoded hard-errors `eval_cond`
+    /// (`protocol-cond-cannot-chain`, per the grammar recipe's own gap table; workflow's/model's own
+    /// diff binary upgrade hit the identical shape).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        let mut presence = 0u8;
+        if self.styles.is_some() {
+            presence |= 0b001;
+        }
+        if self.images.is_some() {
+            presence |= 0b010;
+        }
+        if self.blocks.is_some() {
+            presence |= 0b100;
+        }
+        let mut out = vec![DIFF_BINARY_FORMAT, presence];
+        if let Some(v) = &self.styles {
+            write_str_lp(&mut out, &enc_styles_diff(v));
+        }
+        if let Some(v) = &self.images {
+            write_str_lp(&mut out, &enc_images_diff(v));
+        }
+        if let Some(v) = &self.blocks {
+            write_str_lp(&mut out, &enc_blocks_diff(v));
+        }
+        Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        const DIFF_BINARY_FORMAT: u8 = 1;
+        if bytes.len() < 2 {
+            return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
+        }
+        if bytes[0] != DIFF_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
+        }
+        let presence = bytes[1];
+        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let styles = if presence & 0b001 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff styles blob", offset: 2, detail: e })?;
+            Some(dec_styles_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff styles text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        let images = if presence & 0b010 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff images blob", offset: 2, detail: e })?;
+            Some(dec_images_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff images text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        let blocks = if presence & 0b100 != 0 {
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks blob", offset: 2, detail: e })?;
+            Some(dec_blocks_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks text", offset: 2, detail: e })?)
+        } else {
+            None
+        };
+        Ok(SemioDocumentDiff { styles, images, blocks })
     }
 }
 //#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🔖️Demo
+/// 🌱 Representative `SemioDocumentDiff` cases (empty/no-op, a full styles+images+blocks sweep both
+/// directions, reusing `tests::snapshot_a`/`tests::snapshot_b`) — single source of truth for
+/// `grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`.
+#[cfg(test)]
+pub(crate) fn demo_diff_cases() -> Vec<SemioDocumentDiff> {
+    let a = snapshot_a();
+    let b = snapshot_b();
+    vec![
+        SemioDocumentDiff::default(),
+        <SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&a, &b),
+        <SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&b, &a),
+        <SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&a, &a),
+    ]
+}
+
+/// 🌱 Base fixture for `demo_diff_cases`/`diff_codec_text_binary_roundtrip_law` — module-scope
+/// (not `mod tests`-local) so both this facet's own tests and `demo_diff_cases` share one source of
+/// truth (model/workflow's own `sweep_a`/`sweep_b` promotion precedent).
+#[cfg(test)]
+pub(crate) fn snapshot_a() -> SemioDocumentSnapshot {
+    SemioDocumentSnapshot {
+        schema: "s.stdio.semio.document".into(),
+        styles: vec![
+            DocStyle { id: "keep".into(), name: "Keep".into(), based_on: Some("toRemove".into()) },
+            DocStyle { id: "toRemove".into(), name: "Gone".into(), based_on: None },
+        ],
+        images: vec![DocImage { id: "toRemove".into(), mime: "image/png".into(), bytes: vec![9, 9] }],
+        blocks: vec![
+            DocBlock::Paragraph { style_id: None, runs: vec![DocRun { text: "old".into(), style: RunStyle { bold: false, ..Default::default() } }] },
+            DocBlock::Table { rows: vec![DocTableRow { cells: vec![DocTableCell { blocks: vec![DocBlock::paragraph("cell")] }] }] },
+        ],
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn snapshot_b() -> SemioDocumentSnapshot {
+    SemioDocumentSnapshot {
+        schema: "s.stdio.semio.document".into(),
+        styles: vec![
+            DocStyle { id: "keep".into(), name: "Keep2".into(), based_on: None },
+            DocStyle { id: "added".into(), name: "Added".into(), based_on: None },
+        ],
+        images: vec![DocImage { id: "added".into(), mime: "image/jpeg".into(), bytes: vec![1] }],
+        blocks: vec![DocBlock::Paragraph {
+            style_id: Some("keep".into()),
+            runs: vec![DocRun { text: "new".into(), style: RunStyle { bold: true, italic: true, ..Default::default() } }, DocRun::plain("second")],
+        }],
+    }
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use protocol::DiffCodec;
-
-    fn snapshot_a() -> SemioDocumentSnapshot {
-        SemioDocumentSnapshot {
-            schema: "s.stdio.semio.document".into(),
-            styles: vec![
-                DocStyle { id: "keep".into(), name: "Keep".into(), based_on: Some("toRemove".into()) },
-                DocStyle { id: "toRemove".into(), name: "Gone".into(), based_on: None },
-            ],
-            images: vec![DocImage { id: "toRemove".into(), mime: "image/png".into(), bytes: vec![9, 9] }],
-            blocks: vec![
-                DocBlock::Paragraph { style_id: None, runs: vec![DocRun { text: "old".into(), style: RunStyle { bold: false, ..Default::default() } }] },
-                DocBlock::Table { rows: vec![DocTableRow { cells: vec![DocTableCell { blocks: vec![DocBlock::paragraph("cell")] }] }] },
-            ],
-        }
-    }
-
-    fn snapshot_b() -> SemioDocumentSnapshot {
-        SemioDocumentSnapshot {
-            schema: "s.stdio.semio.document".into(),
-            styles: vec![
-                DocStyle { id: "keep".into(), name: "Keep2".into(), based_on: None },
-                DocStyle { id: "added".into(), name: "Added".into(), based_on: None },
-            ],
-            images: vec![DocImage { id: "added".into(), mime: "image/jpeg".into(), bytes: vec![1] }],
-            blocks: vec![DocBlock::Paragraph {
-                style_id: Some("keep".into()),
-                runs: vec![DocRun { text: "new".into(), style: RunStyle { bold: true, italic: true, ..Default::default() } }, DocRun::plain("second")],
-            }],
-        }
-    }
 
     /// 🧪️ `DiffCodec` round-trip laws — exercises the recursive enum tree (`DocBlockDiff`'s
     /// Paragraph/Table variants, incl. a nested table-cell block list), tri-states, and every

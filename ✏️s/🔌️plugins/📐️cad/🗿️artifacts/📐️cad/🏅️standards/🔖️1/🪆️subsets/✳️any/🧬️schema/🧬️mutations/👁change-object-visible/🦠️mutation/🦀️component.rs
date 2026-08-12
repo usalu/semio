@@ -1,0 +1,34 @@
+//! 👁️ CAD mutation — `ChangeObjectVisible` payload + `MutationKind` impl.
+use crate::artifacts::cad::mutations::CadMutation;
+use crate::artifacts::cad::{CadPaneId, CadSnapshot};
+use protocol::{MutationKind, SemanticDescriptor};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Mutation
+/// 👁️ Change visibility of one object's `visible` field.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "change-object-visible")]
+pub struct ChangeObjectVisible {
+    pub pane: CadPaneId,
+    pub object_id: String,
+    pub new_visible: bool,
+}
+
+impl MutationKind<CadSnapshot, CadMutation> for ChangeObjectVisible {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "object", kind: "change-object-visible", record: "ChangedObjectVisible" };
+
+    fn diff(&self, base: &CadSnapshot) -> crate::artifacts::cad::diff::CadDiff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Change visibility of object \"{}\"", self.object_id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.object_id.clone()]
+    }
+}
+//#endregion 🔖️Mutation

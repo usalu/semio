@@ -1,14 +1,21 @@
-//! fem2d -> csv
+//! fem2d -> csv. `stdio.csv`'s real `CsvSnapshot` shape (`has_header` + `records: Vec<CsvRecord>`
+//! of `CsvField{value, quoted}`) landed after this leaf was first written — lagging call site
+//! fixed to match (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-
+//! RETIREMENT W5a), same single-blob-payload shape as before, just through the current fields.
 use crate::artifacts::fem2d::Fem2dSnapshot;
 use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
 
 pub fn register() {}
 
 pub fn serialize(snapshot: &Fem2dSnapshot) -> Result<CsvSnapshot, store::TextError> {
     Ok(CsvSnapshot {
         schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
-        headers: vec!["payload".into()],
-        rows: vec![vec![<Fem2dSnapshot as store::ArtifactDsl>::print_dsl(snapshot)]],
+        has_header: true,
+        records: vec![
+            CsvRecord { fields: vec![CsvField { value: "payload".into(), quoted: false }] },
+            CsvRecord { fields: vec![CsvField { value: <Fem2dSnapshot as store::ArtifactDsl>::print_dsl(snapshot), quoted: true }] },
+        ],
     })
 }
 

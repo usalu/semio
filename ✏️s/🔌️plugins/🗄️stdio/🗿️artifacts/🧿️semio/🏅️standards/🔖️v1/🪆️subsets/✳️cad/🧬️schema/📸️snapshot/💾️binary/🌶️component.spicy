@@ -1,13 +1,11 @@
 module Stdio_semio_cad_snapshot;
 
-# Shared `.semio` binary envelope wrapping a `s.stdio.semio.cad` snapshot payload -- a NEUTRAL
-# semio type, not an on-disk file format: the payload genuinely IS serde_json::to_vec(
-# SemioCadSnapshot) verbatim (store::ArtifactPack), so it is modeled as UTF-8 JSON text here
-# rather than a fabricated fixed binary schema; see ../🔣️component.json for the real payload shape.
-
-public type Envelope = unit {
-    magic: bytes &size=8;                                   # 0x89 "SEM" CR LF SUB LF
-    token_len: uint32 &byte-order=spicy::ByteOrder::Little;
-    token: bytes &size=self.token_len;                      # ASCII "semio.cad.pack v1"
-    payload: bytes &eod;                                    # UTF-8 JSON, see ../🔣️component.json
+# `pack` payload, past the `semio_format` envelope: real `format` (1 byte) + varint-length-prefixed
+# `schema` UTF-8 string, then one opaque `payload` tail (layers/blocks/entities — see the sibling
+# `📡️component.protocol.semio`'s comment on the `protocol-array-of-records` boundary).
+type Document = unit {
+    format: uint8;
+    schema_len: bytes &until=$$ ; # varint (LEB128) — Spicy has no native varint primitive; see
+                                   # 📸️snapshot/🦀️component.rs's real `store::pack_rt` varint reader.
+    payload: bytes &eod;
 };

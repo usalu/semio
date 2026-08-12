@@ -1,9 +1,6 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type SemioArtifactEntry {
-  key: String!
-  value: String!
-}
+# 🧬️ SemioArtifact schema — full artifact state, mirrors `SemioSnapshot` field for field (see the
+# `📸️snapshot/🔗️component.graphql` sibling for the real `SemioSubsetSnapshot` union shape).
 type SemioArtifact {
   schema: String! @state(class: PERSISTENT)
-  entries: [SemioArtifactEntry!]! @state(class: PERSISTENT)
+  subset: SemioSubsetSnapshot! @state(class: PERSISTENT)
 }

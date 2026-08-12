@@ -43,10 +43,26 @@ fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::art
 }
 
 const EXPORT_SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
+/// 🌉️ Builds a real `SemioDrawingSnapshot` from the rebuilt native snapshot and dispatches through
+/// stdio's real semio/drawing↔svg bridge (`io_dispatch`) — replaces the previous degenerate
+/// `📤️export/🧵️serializers/…/svg` leaf, which only ever wrapped this artifact's own DSL text
+/// disguised as SVG bytes.
 fn compose_export_svg(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
     let snapshot = rebuild_native_snapshot(sources)?;
-    let bytes = crate::artifacts::draw::io::export::serializers::artifacts::svg::v1_1::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-    Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+    let semio_drawing = crate::artifacts::draw::engine::draw_document_to_semio_drawing(&snapshot);
+    const SEMIO_DRAWING_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
+    let key = semio_framework_plugin::IoKey {
+        artifact_kind: SEMIO_DRAWING_DIALECT.artifact_kind.into(),
+        standard: SEMIO_DRAWING_DIALECT.standard.0.into(),
+        subset: SEMIO_DRAWING_DIALECT.subset.0.into(),
+        direction: semio_framework_plugin::IoDirection::Export,
+        format_kind: EXPORT_SVG_DIALECT.artifact_kind.into(),
+        format_standard: EXPORT_SVG_DIALECT.standard.0.into(),
+        format_subset: EXPORT_SVG_DIALECT.subset.0.into(),
+    };
+    let hub_source = ErasedComposeSource { dialect: SEMIO_DRAWING_DIALECT, payload: IoPayload::Binary(store::ArtifactPack::encode_pack(&semio_drawing)) };
+    let composed = semio_framework_plugin::io_dispatch(&key, std::slice::from_ref(&hub_source))?;
+    Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: composed.payload, diagnostics: composed.diagnostics, confidence: IoConfidence::Medium })
 }
 const EXPORT_PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
 fn compose_export_pdf(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {

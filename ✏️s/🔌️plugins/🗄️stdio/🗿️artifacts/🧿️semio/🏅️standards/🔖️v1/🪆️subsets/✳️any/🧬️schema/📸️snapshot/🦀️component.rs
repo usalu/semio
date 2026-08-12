@@ -73,10 +73,199 @@ impl Default for SemioSnapshot {
 }
 //#endregion 🔖️Snapshot
 
+//#region 🔖️SubsetDispatch
+/// 🏷️ The wire tag naming which of the 13 domain subsets is carried — shared by the text DSL's
+/// `subset=<tag>` header line and used to select which subset's own REAL codec to delegate to.
+fn subset_tag(s: &SemioSubsetSnapshot) -> &'static str {
+    match s {
+        SemioSubsetSnapshot::Brep(_) => "brep",
+        SemioSubsetSnapshot::Mesh(_) => "mesh",
+        SemioSubsetSnapshot::Model(_) => "model",
+        SemioSubsetSnapshot::Object(_) => "object",
+        SemioSubsetSnapshot::Document(_) => "document",
+        SemioSubsetSnapshot::Cad(_) => "cad",
+        SemioSubsetSnapshot::Drawing(_) => "drawing",
+        SemioSubsetSnapshot::Image(_) => "image",
+        SemioSubsetSnapshot::Video(_) => "video",
+        SemioSubsetSnapshot::Audio(_) => "audio",
+        SemioSubsetSnapshot::Animation(_) => "animation",
+        SemioSubsetSnapshot::Presentation(_) => "presentation",
+        SemioSubsetSnapshot::Workflow(_) => "workflow",
+    }
+}
+
+/// 🔢️ The binary sibling of [`subset_tag`] — a real, individually protocol-walkable `u8` ordinal
+/// (0-12, enum declaration order), used by the binary pack header instead of a length-prefixed name.
+pub(crate) fn subset_ordinal(s: &SemioSubsetSnapshot) -> u8 {
+    match s {
+        SemioSubsetSnapshot::Brep(_) => 0,
+        SemioSubsetSnapshot::Mesh(_) => 1,
+        SemioSubsetSnapshot::Model(_) => 2,
+        SemioSubsetSnapshot::Object(_) => 3,
+        SemioSubsetSnapshot::Document(_) => 4,
+        SemioSubsetSnapshot::Cad(_) => 5,
+        SemioSubsetSnapshot::Drawing(_) => 6,
+        SemioSubsetSnapshot::Image(_) => 7,
+        SemioSubsetSnapshot::Video(_) => 8,
+        SemioSubsetSnapshot::Audio(_) => 9,
+        SemioSubsetSnapshot::Animation(_) => 10,
+        SemioSubsetSnapshot::Presentation(_) => 11,
+        SemioSubsetSnapshot::Workflow(_) => 12,
+    }
+}
+//#endregion 🔖️SubsetDispatch
+
+//#region 🔖️TextPrimitives
+/// 🧪️ W-S closer (`any`): real delegating text DSL — NOT a re-derivation of any of the 13
+/// wrapped subsets' own hex/bracket/recursive grammars. The body is exactly 2 header lines
+/// (`subset=<tag>`, `schema=<hex>`) followed by the WRAPPED subset's own real `print_dsl()`
+/// output with ITS OWN preamble line stripped (this envelope already carries its own `semio
+/// stdio.semio.dsl v1` preamble via `store::semio_format::wrap_text` below — embedding a second
+/// preamble line would double up). `parse_dsl` hands the un-prefixed remainder straight to the
+/// matching subset's own real `parse_dsl` — every one of those already tolerates a missing
+/// preamble (falls back to treating the whole text as body), the same convention this envelope's
+/// own `parse_dsl` itself relies on one level up.
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+
+fn strip_inner_preamble(text: &str) -> &str {
+    match store::semio_format::split_text_preamble(text) {
+        Ok((_, rest)) => rest,
+        Err(_) => text,
+    }
+}
+
+fn enc_semio_snapshot_body(snap: &SemioSnapshot) -> String {
+    let tag = subset_tag(&snap.subset);
+    let inner_printed = match &snap.subset {
+        SemioSubsetSnapshot::Brep(s) => <SemioBrepSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Mesh(s) => <SemioMeshSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Model(s) => <SemioModelSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Object(s) => <SemioObjectSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Document(s) => <SemioDocumentSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Cad(s) => <SemioCadSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Drawing(s) => <SemioDrawingSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Image(s) => <SemioImageSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Video(s) => <SemioVideoSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Audio(s) => <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Animation(s) => <SemioAnimationSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Presentation(s) => <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Workflow(s) => <SemioWorkflowSnapshot as store::ArtifactDsl>::print_dsl(s),
+    };
+    let inner_body = strip_inner_preamble(&inner_printed);
+    format!("subset={tag}\nschema={}\n{inner_body}", hex_encode(snap.schema.as_bytes()))
+}
+
+fn dec_semio_snapshot_body(body: &str) -> Result<SemioSnapshot, String> {
+    let mut parts = body.splitn(3, '\n');
+    let subset_line = parts.next().ok_or_else(|| "semio snapshot: missing subset line".to_string())?.trim();
+    let tag = subset_line.strip_prefix("subset=").ok_or_else(|| format!("semio snapshot: expected subset= line, got {subset_line:?}"))?;
+    let schema_line = parts.next().ok_or_else(|| "semio snapshot: missing schema line".to_string())?.trim();
+    let schema_hex = schema_line.strip_prefix("schema=").ok_or_else(|| format!("semio snapshot: expected schema= line, got {schema_line:?}"))?;
+    let schema = String::from_utf8(hex_decode(schema_hex)?).map_err(|e| e.to_string())?;
+    let inner_body = parts.next().unwrap_or("");
+    let subset = match tag {
+        "brep" => SemioSubsetSnapshot::Brep(<SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "mesh" => SemioSubsetSnapshot::Mesh(<SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "model" => SemioSubsetSnapshot::Model(<SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "object" => SemioSubsetSnapshot::Object(<SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "document" => SemioSubsetSnapshot::Document(<SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "cad" => SemioSubsetSnapshot::Cad(<SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "drawing" => SemioSubsetSnapshot::Drawing(<SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "image" => SemioSubsetSnapshot::Image(<SemioImageSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "video" => SemioSubsetSnapshot::Video(<SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "audio" => SemioSubsetSnapshot::Audio(<SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "animation" => SemioSubsetSnapshot::Animation(<SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "presentation" => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "workflow" => SemioSubsetSnapshot::Workflow(<SemioWorkflowSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        other => return Err(format!("semio snapshot: unknown subset tag {other:?}")),
+    };
+    Ok(SemioSnapshot { schema, subset })
+}
+//#endregion 🔖️TextPrimitives
+
+//#region 🔖️BinaryPrimitives
+/// 🧪️ Real varint-length-prefixed binary envelope: `format u8` + `tag u8` (real
+/// [`subset_ordinal`]) + varint-length-prefixed `schema` UTF-8, then the WRAPPED subset's own
+/// full, already-real `ArtifactPack::encode_pack()` bytes as one opaque trailing payload — that
+/// call already applies THAT subset's own `semio_format` envelope internally, so this is a real,
+/// honest double-envelope (delegation, not a re-derivation of any subset's own binary layout).
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+
+const PACK_BINARY_FORMAT: u8 = 1;
+
+fn encode_semio_snapshot_binary(snap: &SemioSnapshot) -> Vec<u8> {
+    let mut out = Vec::new();
+    out.push(PACK_BINARY_FORMAT);
+    out.push(subset_ordinal(&snap.subset));
+    write_bytes_lp(&mut out, snap.schema.as_bytes());
+    let payload = match &snap.subset {
+        SemioSubsetSnapshot::Brep(s) => <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Mesh(s) => <SemioMeshSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Model(s) => <SemioModelSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Object(s) => <SemioObjectSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Document(s) => <SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Cad(s) => <SemioCadSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Drawing(s) => <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Image(s) => <SemioImageSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Video(s) => <SemioVideoSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Audio(s) => <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Animation(s) => <SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Presentation(s) => <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Workflow(s) => <SemioWorkflowSnapshot as store::ArtifactPack>::encode_pack(s),
+    };
+    out.extend_from_slice(&payload);
+    out
+}
+
+fn decode_semio_snapshot_binary(bytes: &[u8]) -> Result<SemioSnapshot, String> {
+    let mut reader = store::ByteReader::new(bytes);
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    if format != PACK_BINARY_FORMAT {
+        return Err(format!("unsupported pack format {format}"));
+    }
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let schema = String::from_utf8(read_bytes_lp(&mut reader)?).map_err(|e| e.to_string())?;
+    let payload = reader.read_bytes(reader.remaining()).map_err(|e| e.to_string())?;
+    let subset = match tag {
+        0 => SemioSubsetSnapshot::Brep(<SemioBrepSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        1 => SemioSubsetSnapshot::Mesh(<SemioMeshSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        2 => SemioSubsetSnapshot::Model(<SemioModelSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        3 => SemioSubsetSnapshot::Object(<SemioObjectSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        4 => SemioSubsetSnapshot::Document(<SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        5 => SemioSubsetSnapshot::Cad(<SemioCadSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        6 => SemioSubsetSnapshot::Drawing(<SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        7 => SemioSubsetSnapshot::Image(<SemioImageSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        8 => SemioSubsetSnapshot::Video(<SemioVideoSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        9 => SemioSubsetSnapshot::Audio(<SemioAudioSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        10 => SemioSubsetSnapshot::Animation(<SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        11 => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        12 => SemioSubsetSnapshot::Workflow(<SemioWorkflowSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        other => return Err(format!("semio snapshot: unknown subset tag {other}")),
+    };
+    Ok(SemioSnapshot { schema, subset })
+}
+//#endregion 🔖️BinaryPrimitives
+
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🚧 scaffolded by W1b: JSON-pack round trip (honest, genuinely working — not a per-format
-/// binary codec, since this subset's snapshot is a NEUTRAL semio type, not an on-disk file
-/// format). Wrapped in the same `store::semio_format` envelope every stdio artifact uses.
+/// 🎁 Real delegating text/binary codecs — replaces the old hex-of-`serde_json` scaffold. Every
+/// byte of the WRAPPED subset's own payload is produced/consumed by THAT subset's own real,
+/// already-conformance-tested `ArtifactDsl`/`ArtifactPack` impl; this envelope only adds the
+/// `subset`/`schema` header and the outer `store::semio_format` wrapping every stdio artifact uses.
 impl store::ArtifactDsl for SemioSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str { STDIO_SEMIO_DOCUMENT_SCHEMA }
@@ -86,24 +275,11 @@ impl store::ArtifactDsl for SemioSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if hex.len() % 2 != 0 {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        let mut i = 0usize;
-        while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16)
-                .map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
-            bytes.push(byte);
-            i += 2;
-        }
-        serde_json::from_slice(&bytes).map_err(|e| store::TextError::new(format!("json decode: {e}"), dsl::TextSpan::at(1, 1)))
+        dec_semio_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = serde_json::to_vec(self).unwrap_or_default();
-        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+        let body = enc_semio_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -116,7 +292,7 @@ impl store::ArtifactDsl for SemioSnapshot {
 impl store::ArtifactPack for SemioSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = serde_json::to_vec(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = encode_semio_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -135,10 +311,26 @@ impl store::ArtifactPack for SemioSnapshot {
             )));
         }
         let _ = options;
-        serde_json::from_slice(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
+        decode_semio_snapshot_binary(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
+
+//#region 🔖️Demo
+/// 🌱 The demo `s.stdio.semio` document — wraps `workflow`'s own real demo snapshot (2 nodes, 1
+/// edge, incl. a negative coordinate) so this facet's fixtures/conformance tests exercise a real,
+/// already-nontrivial nested payload rather than an all-default stub. Single source of truth for
+/// `📚️examples/🌐️envelope/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` and this facet's
+/// own conformance-law tests.
+#[cfg(test)]
+pub(crate) fn demo_semio_snapshot() -> SemioSnapshot {
+    use crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::demo_workflow_snapshot;
+    SemioSnapshot {
+        schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(),
+        subset: SemioSubsetSnapshot::Workflow(demo_workflow_snapshot()),
+    }
+}
+//#endregion 🔖️Demo
 
 //#region 🔖️Tests
 #[cfg(test)]
@@ -146,7 +338,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn json_pack_round_trips() {
+    fn pack_round_trips_default_subset() {
         let snap = SemioSnapshot::default();
         let bytes = <SemioSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <SemioSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -154,11 +346,52 @@ mod tests {
     }
 
     #[test]
-    fn dsl_text_round_trips() {
+    fn dsl_text_round_trips_default_subset() {
         let snap = SemioSnapshot::default();
         let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
+    }
+
+    /// 🧪️ Real delegation, non-default nested payload: the demo (workflow-wrapped) snapshot's
+    /// text/binary round trips must both hold, proving this isn't merely round-tripping an
+    /// all-zero stub.
+    #[test]
+    fn pack_and_dsl_round_trip_the_demo_snapshot() {
+        let snap = demo_semio_snapshot();
+        let bytes = <SemioSnapshot as store::ArtifactPack>::encode_pack(&snap);
+        assert_eq!(<SemioSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode"), snap);
+        let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(&snap);
+        assert_eq!(<SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse"), snap);
+    }
+
+    /// 🧪️ Every one of the 13 subset tags real-round-trips through both facets — proves the
+    /// dispatch tables (text AND binary) are wired correctly for every wrapped subset, not just
+    /// the one exercised by [`demo_semio_snapshot`].
+    #[test]
+    fn all_thirteen_subset_tags_round_trip_text_and_binary() {
+        let subsets: Vec<SemioSubsetSnapshot> = vec![
+            SemioSubsetSnapshot::Brep(Default::default()),
+            SemioSubsetSnapshot::Mesh(Default::default()),
+            SemioSubsetSnapshot::Model(Default::default()),
+            SemioSubsetSnapshot::Object(Default::default()),
+            SemioSubsetSnapshot::Document(Default::default()),
+            SemioSubsetSnapshot::Cad(Default::default()),
+            SemioSubsetSnapshot::Drawing(Default::default()),
+            SemioSubsetSnapshot::Image(Default::default()),
+            SemioSubsetSnapshot::Video(Default::default()),
+            SemioSubsetSnapshot::Audio(Default::default()),
+            SemioSubsetSnapshot::Animation(Default::default()),
+            SemioSubsetSnapshot::Presentation(Default::default()),
+            SemioSubsetSnapshot::Workflow(Default::default()),
+        ];
+        for subset in subsets {
+            let snap = SemioSnapshot { schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset };
+            let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(&snap);
+            assert_eq!(<SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap_or_else(|e| panic!("parse_dsl failed for {:?}: {e}", subset_tag(&snap.subset))), snap);
+            let bytes = <SemioSnapshot as store::ArtifactPack>::encode_pack(&snap);
+            assert_eq!(<SemioSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap_or_else(|e| panic!("decode_pack failed for {:?}: {e}", subset_tag(&snap.subset))), snap);
+        }
     }
 }
 //#endregion 🔖️Tests

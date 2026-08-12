@@ -1,10 +1,60 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.animation/snapshot.json",
   "title": "SemioAnimationSnapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "timelines -> channels{target{node,property}, interpolation, keyframes{t, value}}, informed by gltf's Animation/Channel/Sampler triad. Real mirror of the Rust snapshot.",
   "type": "object",
+  "definitions": {
+    "SemioPoint3": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } }, "required": ["x", "y", "z"] },
+    "SemioQuaternion": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" }, "w": { "type": "number" } }, "required": ["x", "y", "z", "w"] },
+    "AnimInterpolation": { "type": "string", "enum": ["linear", "step", "cubicSpline"] },
+    "AnimTargetProperty": {
+      "oneOf": [
+        { "type": "object", "properties": { "kind": { "const": "translation" } }, "required": ["kind"] },
+        { "type": "object", "properties": { "kind": { "const": "rotation" } }, "required": ["kind"] },
+        { "type": "object", "properties": { "kind": { "const": "scale" } }, "required": ["kind"] },
+        { "type": "object", "properties": { "kind": { "const": "weights" } }, "required": ["kind"] },
+        { "type": "object", "properties": { "kind": { "const": "custom" }, "name": { "type": "string" } }, "required": ["kind", "name"] }
+      ]
+    },
+    "AnimTarget": {
+      "type": "object",
+      "properties": { "node": { "type": "string" }, "property": { "$ref": "#/definitions/AnimTargetProperty" } },
+      "required": ["node", "property"]
+    },
+    "AnimValue": {
+      "oneOf": [
+        { "type": "object", "properties": { "kind": { "const": "scalar" }, "value": { "type": "number" } }, "required": ["kind", "value"] },
+        { "type": "object", "properties": { "kind": { "const": "vec3" }, "value": { "$ref": "#/definitions/SemioPoint3" } }, "required": ["kind", "value"] },
+        { "type": "object", "properties": { "kind": { "const": "quat" }, "value": { "$ref": "#/definitions/SemioQuaternion" } }, "required": ["kind", "value"] },
+        { "type": "object", "properties": { "kind": { "const": "weights" }, "values": { "type": "array", "items": { "type": "number" } } }, "required": ["kind", "values"] }
+      ]
+    },
+    "AnimKeyframe": {
+      "type": "object",
+      "properties": { "t": { "type": "number" }, "value": { "$ref": "#/definitions/AnimValue" } },
+      "required": ["t", "value"]
+    },
+    "AnimChannel": {
+      "type": "object",
+      "properties": {
+        "target": { "$ref": "#/definitions/AnimTarget" },
+        "interpolation": { "$ref": "#/definitions/AnimInterpolation" },
+        "keyframes": { "type": "array", "items": { "$ref": "#/definitions/AnimKeyframe" } }
+      },
+      "required": ["target", "interpolation", "keyframes"]
+    },
+    "AnimTimeline": {
+      "type": "object",
+      "properties": {
+        "name": { "type": ["string", "null"] },
+        "channels": { "type": "array", "items": { "$ref": "#/definitions/AnimChannel" } }
+      },
+      "required": ["channels"]
+    }
+  },
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
-  }
+    "timelines": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/AnimTimeline" } }
+  },
+  "required": ["schema", "timelines"]
 }

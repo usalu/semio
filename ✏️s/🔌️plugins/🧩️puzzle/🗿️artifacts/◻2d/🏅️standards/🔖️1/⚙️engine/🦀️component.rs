@@ -53,6 +53,7 @@ pub fn register() {
 
     register_pilot_languages();
     register_artifact_schemas();
+    register_artifact_inferences();
     register_app_schemas();
     crate::apps::puzzle2d::register_puzzle2d_exports();
     crate::apps::puzzle3d::register_puzzle3d_exports();
@@ -77,6 +78,16 @@ pub fn register_artifact_schemas() {
     );
     artifact_schema::register_artifact_schema_descriptor(
         crate::artifacts::puzzle5d::schema::puzzle5d_artifact_schema_descriptor(),
+    );
+}
+
+/// 💡️ Registers all puzzle artifact 💡️inference schema descriptors into the OS-wide inference
+/// catalog — sibling to `register_artifact_schemas()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Puzzle2d/5d have no
+/// InferredFields registered yet (fan-out follow-up).
+pub fn register_artifact_inferences() {
+    artifact_schema::register_artifact_inference_descriptor(
+        crate::artifacts::puzzle3d::standards::v1::subsets::any::schema::inference::puzzle3d_artifact_inference_descriptor(),
     );
 }
 

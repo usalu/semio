@@ -1,0 +1,20 @@
+   |                                        ++++
+
+warning: unused import: `crate::artifacts::shooting::standards::v1::subsets::any::schema::diff::text::*`
+   --> ✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/📦️glue.rs:473:114
+    |
+473 | ...schema::diff::*; pub use crate::artifacts::shooting::standards::v1::subsets::any::schema::diff::text::*; pub mod schema { pub us...
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `artifact` is never read
+   --> ✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/././././../../🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:522:5
+    |
+521 | pub struct ShootingEngine {
+    |            -------------- field in this struct
+522 |     artifact: crate::artifacts::shooting::schema::ShootingArtifact,
+    |     ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-plugin-shooting` (lib) generated 9 warnings (run `cargo fix --lib -p semio-s-plugin-shooting` to apply 7 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 1m 09s

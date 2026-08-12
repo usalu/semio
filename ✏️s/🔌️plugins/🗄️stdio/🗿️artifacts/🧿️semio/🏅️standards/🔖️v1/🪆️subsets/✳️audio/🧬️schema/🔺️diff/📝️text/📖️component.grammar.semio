@@ -1,6 +1,43 @@
-dialect grammar stdio.semio.audio.diff
-root = document
-document = header body
-header = 'schema' SP 'stdio.semio.audio' NL
-body = payload NL?
-payload = *OCTET
+dialect grammar
+grammar stdio.semio.audio.diff
+extension semio
+start document
+
+# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION audio wave: real one-line
+# `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by `🔺️diff/🦀️component.rs`
+# (`print_audio_diff`/`parse_audio_diff`) — token-per-nonempty-field, space-separated (space is
+# lexer trivia, irrelevant at this dialect level). Each collection field encodes as the shared
+# `engine::triples::enc_indexed_triple` `[removed];[modified];[added]` bracket-depth-aware triple
+# (recipe's own collection-triple shape, §1.4). Every top-level field is optional (an unchanged
+# diff prints as the empty string).
+document = rate-line? format-line? channels-line? tags-line?
+
+rate-line = "rate" "=" INT
+format-line = "format" "=" format
+
+channels-line = "channels" "{" channels-triple "}"
+channels-triple = "[" removed-index-list? "]" ";" "[" channel-modified-list? "]" ";" "[" channel-added-list? "]"
+removed-index-list = INT {"," INT}*
+channel-modified-list = channel-modified {"," channel-modified}*
+channel-modified = INT ":" channel-diff
+channel-diff = "[" "0" "]" | "[" "1" "," channel "]"
+channel-added-list = channel-added {"," channel-added}*
+channel-added = INT ":" channel
+channel = "[" sample-list? "]"
+sample-list = hex {"," hex}*
+
+tags-line = "tags" "{" tags-triple "}"
+tags-triple = "[" removed-index-list? "]" ";" "[" tag-modified-list? "]" ";" "[" tag-added-list? "]"
+tag-modified-list = tag-modified {"," tag-modified}*
+tag-modified = INT ":" tag
+tag-added-list = tag-added {"," tag-added}*
+tag-added = INT ":" tag
+tag = "[" hex "," hex "]"
+
+format = "pcm8" | "pcm16" | "pcm24" | "pcm32" | "f32" | "f64"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — a run of lowercase hex digits, incl. the empty string. `Symbol::Ref` already falls
+# back from "no production of this name" to "macro of this name", so referencing `hex` with no
+# matching production routes here automatically (recipe pitfall #2 — a hand-rolled `{INT|IDENT}*`
+# production would silently swallow the next literal keyword token instead).

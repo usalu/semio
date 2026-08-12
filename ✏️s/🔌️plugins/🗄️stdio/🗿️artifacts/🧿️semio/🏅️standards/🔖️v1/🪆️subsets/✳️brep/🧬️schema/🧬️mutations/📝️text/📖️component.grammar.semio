@@ -1,13 +1,87 @@
-dialect grammar stdio.semio.brep.mutations
-root = op-line
-; Real hand-rolled `SemioBrepMutation` op grammar (protocol::OpText/OpBinary): one line of
-; COMPACT serde_json for the tagged enum (tag field `mutation`, camelCase variant names) -- the
-; same "JSON-pack passthrough" honesty boundary the subset's own snapshot ArtifactPack impl uses
-; (see ../../📸️snapshot/🦀️component.rs doc comment). Not derived via dsl::DslOps (the
-; grammar/hand-rolled-op-triple path every other artifact's real mutation vocabulary uses) --
-; that path requires the embedded SemioBrepSnapshot to itself implement dsl::DslField, out of
-; this wave's scope (f6-final-summary.md §4 dsl-derive gaps).
-op-line = json-value
-json-value = json-object   ; RFC8259 JSON value grammar, tag-discriminated on "mutation"
-json-object = "{" [json-member *("," json-member)] "}"
-json-member = json-string ":" json-value
+dialect grammar
+grammar semio.brep.mutations
+extension semio
+start op
+
+# brep wave: real one-line `OpText::print_op`/`parse_op` shape emitted by
+# `🧬️mutations/🦀️component.rs` (`print_brep_mutation`/`parse_brep_mutation`) —
+# "keyword arg=value ..." (space-separated; space is lexer trivia at this dialect level). Every
+# keyword/field-name token below is copied verbatim from the real `format!(...)` call sites in that
+# file's `print_brep_mutation`, not invented. Replaces the old compact-RFC8259-JSON-per-line
+# shortcut this facet's `OpText` used before this wave.
+op = no-mutation | set-snapshot | add-vertex | remove-vertex | set-vertex-point | add-edge | remove-edge | set-edge-endpoints | set-edge-curve | add-loop | remove-loop | set-loop-edges | add-face | remove-face | set-face-surface | set-face-orientation | set-face-loops | add-shell | remove-shell | set-shell-faces | add-solid | remove-solid | set-solid-shells
+
+no-mutation = "no-mutation"
+set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
+add-vertex = "add-vertex" "vertex" "=" vertex
+remove-vertex = "remove-vertex" "id" "=" hex
+set-vertex-point = "set-vertex-point" "id" "=" hex "point" "=" point3
+add-edge = "add-edge" "edge" "=" edge
+remove-edge = "remove-edge" "id" "=" hex
+set-edge-endpoints = "set-edge-endpoints" "id" "=" hex "start" "=" hex "end" "=" hex
+set-edge-curve = "set-edge-curve" "id" "=" hex "curve" "=" curve
+add-loop = "add-loop" "loop" "=" brep-loop
+remove-loop = "remove-loop" "id" "=" hex
+set-loop-edges = "set-loop-edges" "id" "=" hex "edges" "=" loop-edge-list
+add-face = "add-face" "face" "=" face
+remove-face = "remove-face" "id" "=" hex
+set-face-surface = "set-face-surface" "id" "=" hex "surface" "=" surface
+set-face-orientation = "set-face-orientation" "id" "=" hex "orientation" "=" bool
+set-face-loops = "set-face-loops" "id" "=" hex "outer" "=" hex "inner" "=" hex-list
+add-shell = "add-shell" "shell" "=" shell
+remove-shell = "remove-shell" "id" "=" hex
+set-shell-faces = "set-shell-faces" "id" "=" hex "faces" "=" shell-face-list
+add-solid = "add-solid" "solid" "=" solid
+remove-solid = "remove-solid" "id" "=" hex
+set-solid-shells = "set-solid-shells" "id" "=" hex "shells" "=" solid-shell-list
+
+# `enc_brep_snapshot`/`dec_brep_snapshot` — `[hex(schema),[vertex,...],[edge,...],[loop,...],[face,...],[shell,...],[solid,...]]`.
+snapshot-lit = "[" hex "," "[" vertex-items? "]" "," "[" edge-items? "]" "," "[" brep-loop-items? "]" "," "[" face-items? "]" "," "[" shell-items? "]" "," "[" solid-items? "]" "]"
+vertex-items = vertex {"," vertex}*
+edge-items = edge {"," edge}*
+brep-loop-items = brep-loop {"," brep-loop}*
+face-items = face {"," face}*
+shell-items = shell {"," shell}*
+solid-items = solid {"," solid}*
+
+# `enc_vertex`/`enc_edge`/`enc_loop`/`enc_face`/`enc_shell`/`enc_solid`/`enc_curve`/`enc_surface` —
+# the same full-VALUE codecs `📸️snapshot/📝️text/📖️component.grammar.semio` declares (restated here
+# so this leaf grammar is self-contained, matching the repo's existing per-facet convention).
+vertex = "[" hex "," point3 "]"
+edge = "[" hex "," hex "," hex "," curve "]"
+brep-loop = "[" hex "," loop-edge-list "]"
+face = "[" hex "," hex "," hex-list "," surface "," bool "]"
+shell = "[" hex "," shell-face-list "]"
+solid = "[" hex "," solid-shell-list "]"
+
+loop-edge = "[" hex "," bool "]"
+loop-edge-list = "[" loop-edge-items? "]"
+loop-edge-items = loop-edge {"," loop-edge}*
+shell-face = "[" hex "," bool "]"
+shell-face-list = "[" shell-face-items? "]"
+shell-face-items = shell-face {"," shell-face}*
+solid-shell = "[" hex "," bool "]"
+solid-shell-list = "[" solid-shell-items? "]"
+solid-shell-items = solid-shell {"," solid-shell}*
+hex-list = "[" hex-items? "]"
+hex-items = hex {"," hex}*
+
+curve = "L" "[" point3 "," point3 "]" | "C" "[" point3 "," point3 "," number "]" | "E" "[" point3 "," point3 "," number "," number "]" | "N" "[" point3-list "," number-list "," number "," number-list "]"
+surface = "P" "[" point3 "," point3 "]" | "C" "[" point3 "," point3 "," number "]" | "O" "[" point3 "," point3 "," number "," number "]" | "S" "[" point3 "," number "]" | "T" "[" point3 "," point3 "," number "," number "]" | "N" "[" point3-list "," number-list "," number "," number "," number "," number "," number-list "," number-list "]"
+
+point3 = "[" number "," number "," number "]"
+point3-list = "[" point3-items? "]"
+point3-items = point3 {"," point3}*
+number-list = "[" number-items? "]"
+number-items = number {"," number}*
+bool = "0" | "1"
+
+number = INT | FLOAT
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — a run of lowercase hex digits (`enc_str`/`hex_encode`'s own alphabet), incl. the
+# empty string. `Symbol::Ref` already falls back from "no production of this name" to "macro of
+# this name", so referencing `hex` with no matching production routes here automatically. Using a
+# hand-rolled `{INT|IDENT}*` production instead would be wrong: it never backtracks and would
+# silently swallow the next literal keyword token (e.g. `id=<hex> point=<point3>` — the literal
+# `point` tokenizes as a plain `IDENT`, exactly like a stray hex letter run would).
