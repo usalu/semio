@@ -10,6 +10,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::block2d::diff::Block2dDiff;
 use crate::artifacts::block2d::Block2dSnapshot;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Store
@@ -135,7 +136,7 @@ mod tests {
     #[test]
     fn create_rename_delete_handle_kind_round_trip() {
         let base = empty_block2d_snapshot();
-        let handle_kind = crate::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() };
+        let handle_kind = crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() };
         let created = round_trip(&base, &create_handle_kind(handle_kind));
         assert_eq!(created.handle_kinds.len(), 1);
         let renamed = round_trip(&created, &rename_handle_kind("hk0".into(), "renamed".into()));
@@ -147,8 +148,8 @@ mod tests {
     #[test]
     fn create_move_delete_handle_round_trip() {
         let mut base = empty_block2d_snapshot();
-        base.handle_kinds.push(crate::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
-        let handle = crate::Block2dHandleTemplate { id: "h0".into(), handle_kind: "hk0".into(), angle: 0.0, radius: 0.3 };
+        base.handle_kinds.push(crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
+        let handle = crate::artifacts::block2d::Block2dHandleTemplate { id: "h0".into(), handle_kind: "hk0".into(), angle: 0.0, radius: 0.3 };
         let created = round_trip(&base, &create_handle(handle));
         assert_eq!(created.handles.len(), 1);
         let moved = round_trip(&created, &move_handle("h0".into(), 1.2, 0.5));
@@ -208,8 +209,8 @@ mod tests {
     #[test]
     fn every_mutation_kind_satisfies_the_inverse_law() {
         let mut base = empty_block2d_snapshot();
-        base.handle_kinds.push(crate::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
-        base.handles.push(crate::Block2dHandleTemplate { id: "h0".into(), handle_kind: "hk0".into(), angle: 0.2, radius: 0.3 });
+        base.handle_kinds.push(crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
+        base.handles.push(crate::artifacts::block2d::Block2dHandleTemplate { id: "h0".into(), handle_kind: "hk0".into(), angle: 0.2, radius: 0.3 });
         base.compatibility.push(BlockCompatibilityRule { id: "c0".into(), source: "a".into(), target: "b".into(), bidirectional: true });
         base.attributes.push(BlockAttribute { key: "material".into(), value: "concrete".into(), definition: None });
         base.authors.push(BlockAuthor { id: "a0".into(), name: "Ada".into(), email: None });
@@ -221,13 +222,13 @@ mod tests {
         assert_mutation_inverse_law(&base, &change_node_kind_icon(Some("i".into())));
         assert_mutation_inverse_law(&base, &change_node_kind_unit(Some("m".into())));
         assert_mutation_inverse_law(&base, &update_presentation(Some("s".into()), Some(1.0), None, None, None, None));
-        assert_mutation_inverse_law(&base, &create_handle_kind(crate::Block2dHandleKind { id: "hk1".into(), name: "hk1".into(), label: "HK1".into(), color: "#000".into(), default_wire_kind: "cable.link".into() }));
+        assert_mutation_inverse_law(&base, &create_handle_kind(crate::artifacts::block2d::Block2dHandleKind { id: "hk1".into(), name: "hk1".into(), label: "HK1".into(), color: "#000".into(), default_wire_kind: "cable.link".into() }));
         assert_mutation_inverse_law(&base, &delete_handle_kind("hk0".into()));
         assert_mutation_inverse_law(&base, &rename_handle_kind("hk0".into(), "renamed".into()));
         assert_mutation_inverse_law(&base, &change_handle_kind_label("hk0".into(), "Renamed".into()));
         assert_mutation_inverse_law(&base, &change_handle_kind_color("hk0".into(), "#fff".into()));
         assert_mutation_inverse_law(&base, &change_handle_kind_default_wire_kind("hk0".into(), "cable.power".into()));
-        assert_mutation_inverse_law(&base, &create_handle(crate::Block2dHandleTemplate { id: "h1".into(), handle_kind: "hk0".into(), angle: 0.1, radius: 0.2 }));
+        assert_mutation_inverse_law(&base, &create_handle(crate::artifacts::block2d::Block2dHandleTemplate { id: "h1".into(), handle_kind: "hk0".into(), angle: 0.1, radius: 0.2 }));
         assert_mutation_inverse_law(&base, &delete_handle("h0".into()));
         assert_mutation_inverse_law(&base, &move_handle("h0".into(), 1.5, 0.9));
         assert_mutation_inverse_law(&base, &change_handle_handle_kind("h0".into(), "hk0".into()));
@@ -254,8 +255,8 @@ mod tests {
     #[test]
     fn move_handle_diff_absorb_law() {
         let mut base = empty_block2d_snapshot();
-        base.handle_kinds.push(crate::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
-        base.handles.push(crate::Block2dHandleTemplate { id: "h0".into(), handle_kind: "hk0".into(), angle: 0.0, radius: 0.2 });
+        base.handle_kinds.push(crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
+        base.handles.push(crate::artifacts::block2d::Block2dHandleTemplate { id: "h0".into(), handle_kind: "hk0".into(), angle: 0.0, radius: 0.2 });
         let d1 = move_handle("h0".into(), 0.5, 0.3).diff(&base);
         let mid = d1.apply(&base);
         let d2 = move_handle("h0".into(), 1.1, 0.6).diff(&mid);

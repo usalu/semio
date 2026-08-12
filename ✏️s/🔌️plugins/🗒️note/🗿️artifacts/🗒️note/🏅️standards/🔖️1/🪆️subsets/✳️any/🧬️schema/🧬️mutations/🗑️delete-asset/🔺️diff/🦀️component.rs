@@ -5,7 +5,7 @@ use crate::artifacts::note::NoteSnapshot;
 use crate::artifacts::note::schema::diff::note_asset_removed_diff;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteAsset, base: &NoteSnapshot) -> NoteDiff {
+pub fn diff(payload: &DeleteAsset, _base: &NoteSnapshot) -> NoteDiff {
     note_asset_removed_diff(&payload.key)
 }
 //#endregion 🔖️Diff

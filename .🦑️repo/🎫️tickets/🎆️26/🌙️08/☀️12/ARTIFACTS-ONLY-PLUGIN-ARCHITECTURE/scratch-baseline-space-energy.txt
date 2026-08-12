@@ -1,0 +1,7 @@
+===== semio-s-plugin-space =====
+    Checking core-foundation-sys v0.8.7
+   Compiling heck v0.5.0
+    Checking bumpalo v3.20.2
+    Checking fax v0.2.7
+    Checking futures-core v0.3.32
+===== semio-s-plugin-energy =====

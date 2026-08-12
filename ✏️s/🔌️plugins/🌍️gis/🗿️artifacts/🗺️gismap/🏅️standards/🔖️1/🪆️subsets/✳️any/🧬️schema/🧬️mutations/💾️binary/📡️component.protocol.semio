@@ -1,16 +1,47 @@
 dialect protocol
-protocol gismap.mutations
+protocol gis.gismap.mutations
 version 1
-schema stdio.json
+schema gis.gismap
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+
+record CreatePosition tag 1
+  field index varint
+
+record DeletePosition tag 2
+  field id utf8
+
+record ReplacePositionData tag 3
+  field id utf8
+  field new_data bytes
+
+record ReorderPositions tag 4
+  field id utf8
+  field to_index varint
+
+record CreateRoute tag 5
+  field index varint
+
+record DeleteRoute tag 6
+  field id utf8
+
+record ReplaceRouteData tag 7
+  field id utf8
+  field new_data bytes
+
+record ReorderRoutes tag 8
+  field id utf8
+  field to_index varint
+
+record CreateRegion tag 9
+  field index varint
+
+record DeleteRegion tag 10
+  field id utf8
+
+record ReplaceRegionData tag 11
+  field id utf8
+  field new_data bytes
+
+record ReorderRegions tag 12
+  field id utf8
+  field to_index varint

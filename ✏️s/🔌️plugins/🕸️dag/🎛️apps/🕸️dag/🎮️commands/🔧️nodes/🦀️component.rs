@@ -7,11 +7,10 @@
 //! fixed here as part of the port, not a behavior change.
 
 use crate::artifacts::dag::engine;
+use crate::artifacts::dag::mutations::{change_node_name, create_node, rename_node, replace_node_kind, resize_node};
 use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
 use crate::apps::dag::config::{DagConfig, DagConfigMutation};
-use infinite_board_port_directed_dag::{DagFixtureEdge, DagNodeSpec};
-use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -32,7 +31,7 @@ pub mod add_node {
         let id = engine::next_node_id(document);
         let node = engine::default_node_for_kind(&payload.kind, &id, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0));
         Ok(Emit {
-            artifact_mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: document.nodes.len(), item: node })],
+            artifact_mutations: vec![create_node(node)],
             config_mutations: vec![DagConfigMutation::SetSelection { node_ids: vec![id] }],
             ..Default::default()
         })
@@ -80,21 +79,13 @@ pub mod rename_dag_node {
         if trimmed.is_empty() || trimmed == payload.old_id.as_str() || document.nodes.iter().any(|node| node.id == trimmed) {
             return Ok(Emit::default());
         }
-        let nodes: Vec<DagNodeSpec> = document.nodes.iter().map(|node| if node.id == payload.old_id { DagNodeSpec { id: trimmed.into(), ..node.clone() } } else { node.clone() }).collect();
-        let edges: Vec<DagFixtureEdge> = document
-            .edges
-            .iter()
-            .map(|edge| {
-                let (from_node, from_port) = engine::split_endpoint(&edge.source);
-                let (to_node, to_port) = engine::split_endpoint(&edge.target);
-                DagFixtureEdge {
-                    source: if from_node == payload.old_id { format!("{trimmed}@{from_port}") } else { edge.source.clone() },
-                    target: if to_node == payload.old_id { format!("{trimmed}@{to_port}") } else { edge.target.clone() },
-                    ..edge.clone()
-                }
-            })
-            .collect();
-        Ok(Emit { artifact_mutations: vec![DagMutation::SetNodes { nodes }, DagMutation::SetEdges { edges }], config_mutations: vec![DagConfigMutation::SetSelection { node_ids: vec![trimmed.to_string()] }], ..Default::default() })
+        // 🏷️ `rename-node` already cascades the id change to every edge endpoint string that
+        // referenced the old id — no manual node/edge rebuild needed here any more.
+        Ok(Emit {
+            artifact_mutations: vec![rename_node(payload.old_id.clone(), trimmed.to_string())],
+            config_mutations: vec![DagConfigMutation::SetSelection { node_ids: vec![trimmed.to_string()] }],
+            ..Default::default()
+        })
     }
 }
 //#endregion 🔖️RenameDagNode
@@ -113,11 +104,29 @@ pub mod patch_dag_nodes {
 
     pub fn handle(payload: &PatchDagNodes, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
+        // 🩹️ `node_patch_for_field` only ever fills `name` (a scalar rename) or `kind`+`width`+
+        // `height` together (a Slider's live-dragged value/min/max, which also refits the widget
+        // size) — re-expressed here as the matching targeted mutations instead of a generic patch.
         let operations: Vec<DagMutation> = document
             .nodes
             .iter()
             .filter(|node| payload.node_ids.contains(&node.id))
-            .filter_map(|node| engine::node_patch_for_field(node, &payload.field, Some(payload.value.as_str())).map(|patch| DagMutation::Nodes(CollectionMutation::Patch { id: node.id.clone(), patch })))
+            .flat_map(|node| {
+                let patch = engine::node_patch_for_field(node, &payload.field, Some(payload.value.as_str()));
+                let mut ops = Vec::new();
+                if let Some(patch) = patch {
+                    if let Some(name) = patch.name {
+                        ops.push(change_node_name(node.id.clone(), name));
+                    }
+                    if let Some(kind) = patch.kind {
+                        ops.push(replace_node_kind(node.id.clone(), kind));
+                    }
+                    if let (Some(width), Some(height)) = (patch.width, patch.height) {
+                        ops.push(resize_node(node.id.clone(), width, height));
+                    }
+                }
+                ops
+            })
             .collect();
         if operations.is_empty() {
             Ok(Emit::default())

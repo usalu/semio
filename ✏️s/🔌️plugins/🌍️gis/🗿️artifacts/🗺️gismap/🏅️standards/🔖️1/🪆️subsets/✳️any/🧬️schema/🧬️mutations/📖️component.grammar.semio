@@ -1,13 +1,36 @@
 dialect grammar
-grammar gis.gismap.op
-extension gismap
-use family-geo
-start mutation
+grammar gis.gismap.mutations
+extension gis
+start line
 
-artifact-mark = "gis.gismap-op"
-mutation = artifact-mark geo-op+
-geo-op = "set-crs" crs-field+ | "add-point" point-field+ | "tile-ref" tile-field+
-crs-field = "crs" "=" IDENT
-point-field = "lat" "=" FLOAT | "lon" "=" FLOAT | "alt" "=" FLOAT
-tile-field = "z" "=" INT | "x" "=" INT | "y" "=" INT
-point = FLOAT FLOAT FLOAT?
+line = create-position
+     / delete-position
+     / replace-position-data
+     / reorder-positions
+     / create-route
+     / delete-route
+     / replace-route-data
+     / reorder-routes
+     / create-region
+     / delete-region
+     / replace-region-data
+     / reorder-regions
+
+create-position = "create-position" SP number
+delete-position = "delete-position" SP id
+replace-position-data = "replace-position-data" SP id SP block
+reorder-positions = "reorder-positions" SP id SP number
+create-route = "create-route" SP number
+delete-route = "delete-route" SP id
+replace-route-data = "replace-route-data" SP id SP block
+reorder-routes = "reorder-routes" SP id SP number
+create-region = "create-region" SP number
+delete-region = "delete-region" SP id
+replace-region-data = "replace-region-data" SP id SP block
+reorder-regions = "reorder-regions" SP id SP number
+
+id = OCTET+
+number = OCTET+
+text = OCTET+
+boolean = "true" / "false"
+block = "{" NL OCTET+ "}"

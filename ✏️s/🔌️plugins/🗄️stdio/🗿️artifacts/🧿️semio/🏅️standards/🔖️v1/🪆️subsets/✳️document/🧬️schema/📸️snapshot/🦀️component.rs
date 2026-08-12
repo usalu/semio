@@ -206,7 +206,7 @@ impl Default for SemioDocumentSnapshot {
 //#region 🔖️TextCodec
 /// 🧪️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION document wave: real structured
 /// text body — `schema=<hex>` / `styles=[<style>,...]` / `images=[<image>,...]` /
-/// `blocks=[<block>,...]`, one line per top-level field, matching the workflow/model/brep pilots'
+/// `blocks=[<block>,...]`, one line per top-level field, matching the flow/model/brep pilots'
 /// own `print_*_snapshot_body` shape. Reuses `🔺️diff`'s ALREADY-real, already-tested
 /// `enc_str`/`enc_style`/`enc_image`/`enc_block` value codecs (established there pre-wave) rather
 /// than duplicating a third independent copy — this subset's own established convention (its
@@ -252,7 +252,7 @@ fn parse_document_snapshot_body(body: &str) -> Result<SemioDocumentSnapshot, Str
 
 //#region 🔖️BinaryCodec
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers workflow/model/brep's own upgraded `ArtifactPack`s use)
+/// `store::ByteReader`, same helpers flow/model/brep's own upgraded `ArtifactPack`s use)
 /// backing `encode_document_snapshot_binary`/`decode_document_snapshot_binary` below.
 fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);

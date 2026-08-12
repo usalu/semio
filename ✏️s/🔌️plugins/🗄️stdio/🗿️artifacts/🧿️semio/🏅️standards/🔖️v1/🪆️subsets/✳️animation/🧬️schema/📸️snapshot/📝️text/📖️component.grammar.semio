@@ -4,7 +4,7 @@ extension semio
 start document
 
 # ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION animation wave (following the
-# workflow pilot's proven template, `ws-codec-workflow-report.md`, and brep's/drawing's own
+# flow pilot's proven template, `ws-codec-workflow-report.md`, and brep's/drawing's own
 # generalization to data-carrying tagged enums, `ws-codec-brep-report.md`). Real grammar for
 # `SemioAnimationSnapshot::print_dsl`/`parse_dsl` (📸️snapshot/🦀️component.rs's
 # `print_animation_snapshot_body`/`parse_animation_snapshot_body`) — hand-rolled (`AnimTargetProperty`/

@@ -2,6 +2,7 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🎬scenarios` per Wave C.
 
 use super::mutation::ReplaceScenario;
+use protocol::Patchable;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramScenariosDelta, ProgramScenariosPatchEntry};

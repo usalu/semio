@@ -24,6 +24,7 @@ use crate::os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, Sch
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 
 // 🗃️ `store`'s facade over `vcs`'s version-graph algebra — apps that depend on `store` reach
@@ -91,6 +92,14 @@ pub struct ArtifactEnvelope<P, Mutation> {
     /// in `dialect`. Absent for every envelope that was never migrated.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub migrated_from: Option<MigrationProvenance>,
+    /// @emoji 🏠️ Present exactly when this envelope is a CHILD in a composition — the ownership
+    /// stamp naming which parent/slot/`child_id` created it (see `🔖️Composition` below). Placed on
+    /// the CHILD's own envelope (not only on the parent's `ArtifactChild` handle) so ownership is
+    /// queryable directly from the child side — e.g. "is this document embeddable standalone, or
+    /// does deleting it require going through its owner". Absent for every independent artifact
+    /// (the overwhelming majority) and for every envelope minted before this ticket.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub owner: Option<OwnerRef>,
 }
 
 /// @emoji 🧬️ Provenance stamp for an envelope produced by `migrate_document`: which prior document,
@@ -153,6 +162,413 @@ pub enum ArtifactCommand<Mutation> {
     PruneDrafts,
 }
 //#endregion 🔖️Schemas
+
+//#region 🔖️Composition
+//! 🧩️ Composable-vs-referenceable artifact primitives (ticket `26/08/12/UNIFIED-COMPOSABLE-
+//! ARTIFACT-SYSTEM` `📓️design-full-plan.md` §"1. Kernel primitives"). Two structurally distinct
+//! relationships between artifacts:
+//! - a **CHILD** (`ArtifactChild<S>` on the parent's snapshot / `OwnerRef` on the child's own
+//!   envelope): the parent creates and deletes it, it has exactly one owner, no pin, no
+//!   independent lifecycle, and nests inline in UI — but it is still its OWN `ArtifactEnvelope`
+//!   with its own `ArtifactVcs` history and store, never an inline subtree (this crate's own doc
+//!   comment / the design doc's "Child = own envelope" decision). Consequently a parent's diff
+//!   NEVER embeds a child diff.
+//! - a **LINK** (`ArtifactLink`/`LinkPin`): an independent lifecycle of its own, a PIN (so it can
+//!   be frozen to a specific `Head`/`Checkpoint`/content-addressed `Snapshot`), and renders as a
+//!   chip, never nested inline.
+//!
+//! `ArtifactRefs` lets a snapshot type declare its own children/links (defaulted to none, so a
+//! leaf artifact needs zero boilerplate); `LinkResolver`/`ChildStoreFactory` are the host-side
+//! seams that turn those declarations into real bytes/stores. `CompositionCoordinator` (its own
+//! `🔖️CompositionCoordinator` region, after `🔖️Space` below) orchestrates atomic multi-store
+//! dispatch across a parent and its children on top of these types.
+
+/// @emoji 🧸️ Ownership handle a parent SNAPSHOT embeds for one owned child slot (e.g. a plugin's
+/// generated field `mesh_child: ArtifactChild<MeshSnapshot>`). `S` is a compile-time-only phantom
+/// naming which snapshot type the child is expected to materialize as — it never appears on the
+/// wire and never constrains this type's own capabilities. `Clone`/`Debug`/`PartialEq` are
+/// hand-implemented below (not `#[derive(..)]`'d): deriving them on a `PhantomData<S>`-carrying
+/// struct adds an unwanted `S: Trait` bound to every impl even though `S` never appears in any
+/// stored/compared data, so those three derives would silently fail to work "for any `S`" (the
+/// task's own requirement) the moment a caller picked an `S` that itself didn't implement
+/// `Clone`/`Debug`/`PartialEq`. `Serialize`/`Deserialize` avoid the same trap via `#[serde(bound =
+/// "")]` instead of a hand impl — the standard serde idiom for a `PhantomData<S>` field, since
+/// serde's derive macro honors an explicit empty bound list rather than inferring one from `S`.
+/// No pin, no independent lifecycle: see the region doc's CHILD-vs-LINK split.
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", bound = "")]
+pub struct ArtifactChild<S> {
+    pub child_id: String,
+    pub target: crate::os_io::ArtifactRef,
+    #[serde(skip)]
+    _snapshot: PhantomData<S>,
+}
+
+impl<S> ArtifactChild<S> {
+    /// 🏗️ Constructs a handle, threading the phantom marker for the caller.
+    pub fn new(child_id: String, target: crate::os_io::ArtifactRef) -> Self {
+        Self { child_id, target, _snapshot: PhantomData }
+    }
+
+    /// 🪪️ Drops the compile-time-only `S` phantom, producing the type-erased projection
+    /// `ArtifactRefs::child_refs` returns.
+    pub fn to_child_ref(&self, slot: &str) -> ChildRef {
+        ChildRef { slot: slot.to_string(), child_id: self.child_id.clone(), target: self.target.clone() }
+    }
+}
+
+impl<S> Clone for ArtifactChild<S> {
+    fn clone(&self) -> Self {
+        Self { child_id: self.child_id.clone(), target: self.target.clone(), _snapshot: PhantomData }
+    }
+}
+
+impl<S> std::fmt::Debug for ArtifactChild<S> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ArtifactChild").field("child_id", &self.child_id).field("target", &self.target).finish()
+    }
+}
+
+impl<S> PartialEq for ArtifactChild<S> {
+    fn eq(&self, other: &Self) -> bool {
+        self.child_id == other.child_id && self.target == other.target
+    }
+}
+
+/// @emoji 🪪️ Type-erased projection of one `ArtifactChild<S>` field, dropping the compile-time-only
+/// `S` phantom so `ArtifactRefs::child_refs` can return a single homogeneous `Vec` across however
+/// many differently-`S`-typed child slots a snapshot declares.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChildRef {
+    pub slot: String,
+    pub child_id: String,
+    pub target: crate::os_io::ArtifactRef,
+}
+
+/// @emoji 🏠️ The ownership stamp placed on the CHILD's own `ArtifactEnvelope.owner` (not only on
+/// the parent's `ArtifactChild` handle), so ownership is queryable directly from the child side —
+/// e.g. "is this document embeddable standalone, or does deleting it require going through its
+/// owner". `child_id` matches the owning `ArtifactChild<S>.child_id`/`ChildRef.child_id` exactly.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OwnerRef {
+    pub parent: crate::os_io::ArtifactRef,
+    pub slot: String,
+    pub child_id: String,
+}
+
+/// @emoji 🔗️ An independent-lifecycle reference to another artifact: a PIN (so it can be frozen to
+/// a specific point in the target's history) plus a `role` (the named slot it fills on the
+/// referencing artifact, e.g. `"cover-image"`). Renders as a chip, never nests inline — the
+/// structural opposite of `ArtifactChild`; see the region doc's CHILD-vs-LINK split.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ArtifactLink {
+    pub target: crate::os_io::ArtifactRef,
+    pub pin: LinkPin,
+    pub role: String,
+}
+
+/// @emoji 📌️ What an `ArtifactLink` is frozen to: nothing (`Head`, always the target's live tip),
+/// a specific `Checkpoint`, or a content-addressed `Snapshot` blob (survives even the target
+/// document's own history being pruned/GC'd, since the bytes are escrowed independently).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum LinkPin {
+    Head,
+    Checkpoint { id: String },
+    Snapshot { blob: BlobRef },
+}
+
+/// @emoji 🌳️ Lets a snapshot type declare its own composed children / referenced links. Both
+/// methods default to empty, so a leaf artifact (the overwhelming majority) needs zero
+/// boilerplate — only a technology that actually embeds `ArtifactChild<S>`/`ArtifactLink` fields
+/// overrides them (typically derive-generated in a later wave, per the design doc's
+/// `ChildSlotSpec`/`LinkSlotSpec` schema facets).
+pub trait ArtifactRefs {
+    fn child_refs(&self) -> Vec<ChildRef> {
+        Vec::new()
+    }
+    fn links(&self) -> Vec<ArtifactLink> {
+        Vec::new()
+    }
+}
+
+/// @emoji 🔎️ What resolving one `ArtifactLink` found: the target materialized as real bytes, that
+/// it is simply absent, or (for a `LinkPin::Snapshot`) only the escrowed blob reference is known
+/// without the resolver having fetched its bytes yet.
+#[derive(Clone, Debug, PartialEq)]
+pub enum LinkState {
+    Resolved { pack_bytes: Vec<u8>, dialect: crate::os_io::ArtifactDialect },
+    Missing,
+    PinnedOnly { blob: BlobRef },
+}
+
+/// @emoji 🕵️ Host-side, LAZY link resolution — never called during `CompositionCoordinator`
+/// dispatch (links have no bearing on group-atomicity: unlike a child, a link's target is not part
+/// of this artifact's own document and dispatch never touches it). A UI/renderer calls this only
+/// when it actually needs to show/open the linked content.
+pub trait LinkResolver {
+    fn resolve(&self, link: &ArtifactLink) -> LinkState;
+}
+
+/// @emoji 🏭️ Type-erased per-artifact-kind child store constructor, the composition sibling of
+/// `ArtifactCodec`/`register_document_codec` above. `create` mints a brand-new child store from a
+/// freshly-baked initial pack (composition genesis, see `CompositionCoordinator::dispatch_group`);
+/// `open` reconstructs one from a previously-persisted full envelope pack (loading an
+/// already-existing child). Both return `Result` (unlike the task brief's bare `Box<dyn
+/// SpaceMember>` shorthand) because either can genuinely fail on malformed bytes — every other
+/// fallible construction seam in this file (`ArtifactCodec`'s `compile_dsl`/`print_mirror`,
+/// `ChildStoreFactory`'s neighbor) returns `Result` for the same reason.
+pub trait ChildStoreFactory: Send + Sync {
+    fn create(&self, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError>;
+    fn open(&self, envelope_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError>;
+}
+
+static CHILD_STORE_FACTORY_REGISTRY: std::sync::OnceLock<std::sync::RwLock<HashMap<String, Arc<dyn ChildStoreFactory>>>> = std::sync::OnceLock::new();
+
+fn child_store_factory_registry() -> &'static std::sync::RwLock<HashMap<String, Arc<dyn ChildStoreFactory>>> {
+    CHILD_STORE_FACTORY_REGISTRY.get_or_init(|| std::sync::RwLock::new(HashMap::new()))
+}
+
+/// @emoji 📝️ Registers (or overwrites) the `ChildStoreFactory` for `kind` — idempotent, mirrors
+/// `register_document_codec`'s call-once-at-init-time contract exactly.
+pub fn register_child_store_factory(kind: crate::os_io::ArtifactKindId, factory: Arc<dyn ChildStoreFactory>) {
+    let mut registry = child_store_factory_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner());
+    registry.insert(kind.as_str().to_string(), factory);
+}
+
+/// @emoji 🔎️ Looks up the `ChildStoreFactory` registered for `kind`, if any.
+pub fn child_store_factory(kind: &crate::os_io::ArtifactKindId) -> Option<Arc<dyn ChildStoreFactory>> {
+    let registry = child_store_factory_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner());
+    registry.get(kind.as_str()).cloned()
+}
+
+//#region 🔖️CompositionDsl
+/// 🧬️ Hand-crafted `crate::os_dsl::DslField` records for `ArtifactChild`/`OwnerRef`/`ArtifactLink`/
+/// `LinkPin` (P6 idiom, the same one `BackboneMessage`'s `OpText`/`OpBinary` impls near
+/// `🔖️Backbone` below use) — NOT new `Shape` variants: the design doc's deviation D1 deliberately
+/// keeps `Shape` closed (it is exhaustively matched in ~20 files) and represents every new value
+/// type here as an ordinary `Shape::Record`. `crate::os_io::ArtifactRef` fields encode as their
+/// `to_uri()` wire string (`Shape::Text`) rather than requiring `ArtifactRef: DslField` itself —
+/// same "own the codec at this edge, don't couple types across crates" reasoning `CompositionPin`
+/// (in `🌿️vcs`) already applies to the identical field shape.
+fn artifact_child_spec() -> crate::os_dsl::RecordSpec {
+    crate::os_dsl::RecordSpec::new(None, crate::os_dsl::RecordLayout::Inline, vec![crate::os_dsl::FieldSpec::new(0, "child_id", crate::os_dsl::Shape::Text), crate::os_dsl::FieldSpec::new(1, "target", crate::os_dsl::Shape::Text)])
+}
+
+fn artifact_child_to_record<S>(child: &ArtifactChild<S>) -> crate::os_dsl::RecordValue {
+    let mut record = crate::os_dsl::RecordValue::default();
+    record.fields.insert(0, crate::os_dsl::FieldValue::Text(child.child_id.clone()));
+    record.fields.insert(1, crate::os_dsl::FieldValue::Text(child.target.to_uri()));
+    record
+}
+
+fn artifact_child_from_record<S>(record: &crate::os_dsl::RecordValue) -> Result<ArtifactChild<S>, String> {
+    let child_id = match record.get(0) {
+        Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
+        other => return Err(format!("expected child_id, found {other:?}")),
+    };
+    let target = match record.get(1) {
+        Some(crate::os_dsl::FieldValue::Text(s)) => crate::os_io::ArtifactRef::parse_uri(s)?,
+        other => return Err(format!("expected target, found {other:?}")),
+    };
+    Ok(ArtifactChild::new(child_id, target))
+}
+
+impl<S> crate::os_dsl::DslField for ArtifactChild<S> {
+    fn shape() -> crate::os_dsl::Shape {
+        crate::os_dsl::Shape::Record(artifact_child_spec)
+    }
+    fn to_value(&self) -> crate::os_dsl::FieldValue {
+        crate::os_dsl::FieldValue::Record(artifact_child_to_record(self))
+    }
+    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            crate::os_dsl::FieldValue::Record(record) => artifact_child_from_record(record),
+            other => Err(format!("expected Record, found {other:?}")),
+        }
+    }
+}
+
+fn owner_ref_spec() -> crate::os_dsl::RecordSpec {
+    crate::os_dsl::RecordSpec::new(
+        None,
+        crate::os_dsl::RecordLayout::Inline,
+        vec![crate::os_dsl::FieldSpec::new(0, "parent", crate::os_dsl::Shape::Text), crate::os_dsl::FieldSpec::new(1, "slot", crate::os_dsl::Shape::Text), crate::os_dsl::FieldSpec::new(2, "child_id", crate::os_dsl::Shape::Text)],
+    )
+}
+
+fn owner_ref_to_record(owner: &OwnerRef) -> crate::os_dsl::RecordValue {
+    let mut record = crate::os_dsl::RecordValue::default();
+    record.fields.insert(0, crate::os_dsl::FieldValue::Text(owner.parent.to_uri()));
+    record.fields.insert(1, crate::os_dsl::FieldValue::Text(owner.slot.clone()));
+    record.fields.insert(2, crate::os_dsl::FieldValue::Text(owner.child_id.clone()));
+    record
+}
+
+fn owner_ref_from_record(record: &crate::os_dsl::RecordValue) -> Result<OwnerRef, String> {
+    let parent = match record.get(0) {
+        Some(crate::os_dsl::FieldValue::Text(s)) => crate::os_io::ArtifactRef::parse_uri(s)?,
+        other => return Err(format!("expected parent, found {other:?}")),
+    };
+    let slot = match record.get(1) {
+        Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
+        other => return Err(format!("expected slot, found {other:?}")),
+    };
+    let child_id = match record.get(2) {
+        Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
+        other => return Err(format!("expected child_id, found {other:?}")),
+    };
+    Ok(OwnerRef { parent, slot, child_id })
+}
+
+impl crate::os_dsl::DslField for OwnerRef {
+    fn shape() -> crate::os_dsl::Shape {
+        crate::os_dsl::Shape::Record(owner_ref_spec)
+    }
+    fn to_value(&self) -> crate::os_dsl::FieldValue {
+        crate::os_dsl::FieldValue::Record(owner_ref_to_record(self))
+    }
+    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            crate::os_dsl::FieldValue::Record(record) => owner_ref_from_record(record),
+            other => Err(format!("expected Record, found {other:?}")),
+        }
+    }
+}
+
+fn link_pin_spec() -> crate::os_dsl::RecordSpec {
+    crate::os_dsl::RecordSpec::new(
+        None,
+        crate::os_dsl::RecordLayout::Inline,
+        vec![
+            crate::os_dsl::FieldSpec::new(0, "kind", crate::os_dsl::Shape::Enum(vec![("head".to_string(), 0), ("checkpoint".to_string(), 1), ("snapshot".to_string(), 2)])),
+            crate::os_dsl::FieldSpec::new(1, "checkpoint_id", crate::os_dsl::Shape::Text).optional(),
+            crate::os_dsl::FieldSpec::new(2, "blob_hash", crate::os_dsl::Shape::Text).optional(),
+            crate::os_dsl::FieldSpec::new(3, "blob_size", crate::os_dsl::Shape::UInt).optional(),
+            crate::os_dsl::FieldSpec::new(4, "blob_media_type", crate::os_dsl::Shape::Text).optional(),
+        ],
+    )
+}
+
+fn link_pin_to_record(pin: &LinkPin) -> crate::os_dsl::RecordValue {
+    let mut record = crate::os_dsl::RecordValue::default();
+    match pin {
+        LinkPin::Head => {
+            record.fields.insert(0, crate::os_dsl::FieldValue::Enum(0));
+        }
+        LinkPin::Checkpoint { id } => {
+            record.fields.insert(0, crate::os_dsl::FieldValue::Enum(1));
+            record.fields.insert(1, crate::os_dsl::FieldValue::Text(id.clone()));
+        }
+        LinkPin::Snapshot { blob } => {
+            record.fields.insert(0, crate::os_dsl::FieldValue::Enum(2));
+            record.fields.insert(2, crate::os_dsl::FieldValue::Text(blob.hash.clone()));
+            record.fields.insert(3, crate::os_dsl::FieldValue::UInt(blob.size));
+            record.fields.insert(4, crate::os_dsl::FieldValue::Text(blob.media_type.clone()));
+        }
+    }
+    record
+}
+
+fn link_pin_from_record(record: &crate::os_dsl::RecordValue) -> Result<LinkPin, String> {
+    let ordinal = match record.get(0) {
+        Some(crate::os_dsl::FieldValue::Enum(n)) => *n,
+        other => return Err(format!("expected kind, found {other:?}")),
+    };
+    match ordinal {
+        0 => Ok(LinkPin::Head),
+        1 => {
+            let id = match record.get(1) {
+                Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
+                other => return Err(format!("expected checkpoint_id, found {other:?}")),
+            };
+            Ok(LinkPin::Checkpoint { id })
+        }
+        2 => {
+            let hash = match record.get(2) {
+                Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
+                other => return Err(format!("expected blob_hash, found {other:?}")),
+            };
+            let size = match record.get(3) {
+                Some(crate::os_dsl::FieldValue::UInt(n)) => *n,
+                other => return Err(format!("expected blob_size, found {other:?}")),
+            };
+            let media_type = match record.get(4) {
+                Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
+                other => return Err(format!("expected blob_media_type, found {other:?}")),
+            };
+            Ok(LinkPin::Snapshot { blob: BlobRef { hash, size, media_type } })
+        }
+        other => Err(format!("unknown link pin kind ordinal {other}")),
+    }
+}
+
+impl crate::os_dsl::DslField for LinkPin {
+    fn shape() -> crate::os_dsl::Shape {
+        crate::os_dsl::Shape::Record(link_pin_spec)
+    }
+    fn to_value(&self) -> crate::os_dsl::FieldValue {
+        crate::os_dsl::FieldValue::Record(link_pin_to_record(self))
+    }
+    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            crate::os_dsl::FieldValue::Record(record) => link_pin_from_record(record),
+            other => Err(format!("expected Record, found {other:?}")),
+        }
+    }
+}
+
+fn artifact_link_spec() -> crate::os_dsl::RecordSpec {
+    crate::os_dsl::RecordSpec::new(
+        None,
+        crate::os_dsl::RecordLayout::Inline,
+        vec![crate::os_dsl::FieldSpec::new(0, "target", crate::os_dsl::Shape::Text), crate::os_dsl::FieldSpec::new(1, "pin", crate::os_dsl::Shape::Record(link_pin_spec)), crate::os_dsl::FieldSpec::new(2, "role", crate::os_dsl::Shape::Text)],
+    )
+}
+
+fn artifact_link_to_record(link: &ArtifactLink) -> crate::os_dsl::RecordValue {
+    let mut record = crate::os_dsl::RecordValue::default();
+    record.fields.insert(0, crate::os_dsl::FieldValue::Text(link.target.to_uri()));
+    record.fields.insert(1, crate::os_dsl::FieldValue::Record(link_pin_to_record(&link.pin)));
+    record.fields.insert(2, crate::os_dsl::FieldValue::Text(link.role.clone()));
+    record
+}
+
+fn artifact_link_from_record(record: &crate::os_dsl::RecordValue) -> Result<ArtifactLink, String> {
+    let target = match record.get(0) {
+        Some(crate::os_dsl::FieldValue::Text(s)) => crate::os_io::ArtifactRef::parse_uri(s)?,
+        other => return Err(format!("expected target, found {other:?}")),
+    };
+    let pin = match record.get(1) {
+        Some(crate::os_dsl::FieldValue::Record(record)) => link_pin_from_record(record)?,
+        other => return Err(format!("expected pin, found {other:?}")),
+    };
+    let role = match record.get(2) {
+        Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
+        other => return Err(format!("expected role, found {other:?}")),
+    };
+    Ok(ArtifactLink { target, pin, role })
+}
+
+impl crate::os_dsl::DslField for ArtifactLink {
+    fn shape() -> crate::os_dsl::Shape {
+        crate::os_dsl::Shape::Record(artifact_link_spec)
+    }
+    fn to_value(&self) -> crate::os_dsl::FieldValue {
+        crate::os_dsl::FieldValue::Record(artifact_link_to_record(self))
+    }
+    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            crate::os_dsl::FieldValue::Record(record) => artifact_link_from_record(record),
+            other => Err(format!("expected Record, found {other:?}")),
+        }
+    }
+}
+//#endregion 🔖️CompositionDsl
+//#endregion 🔖️Composition
 
 //#region 🔖️Authority
 /// @emoji 🧾 Receipt from the sole store write gate (`dispatch` / `reset`).
@@ -790,7 +1206,7 @@ pub fn create_document_envelope<P, Mutation>(schema: &str, id: &str, initial_sna
 where
     P: Clone,
 {
-    ArtifactEnvelope { schema: schema.into(), id: id.into(), vcs: ArtifactVcs { initial_snapshot, edits: Vec::new(), changes: Vec::new(), checkpoints: Vec::new(), alternatives: Vec::new() }, backbone, active_alternative_id: None, cursor: None, dialect: None, migrated_from: None }
+    ArtifactEnvelope { schema: schema.into(), id: id.into(), vcs: ArtifactVcs { initial_snapshot, edits: Vec::new(), changes: Vec::new(), checkpoints: Vec::new(), alternatives: Vec::new() }, backbone, active_alternative_id: None, cursor: None, dialect: None, migrated_from: None, owner: None }
 }
 
 pub fn edit_ids_for_changes<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, change_ids: &[String]) -> Vec<String>
@@ -1389,6 +1805,11 @@ where
         cursor: cursor.clone(),
         dialect: None,
         migrated_from: None,
+        // 🎯️ `crate::os_spr::HistoryLog` (the `.spr` durable form) does not carry the owner stamp
+        // yet either — same in-memory-only deferral as `composition_pins` above (see
+        // `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b2-store-composition-report.md`
+        // sharedFileRequests) until a later wave threads `OwnerRef` through the history codec.
+        owner: None,
     };
 
     let snapshot = if let Some(cursor) = &cursor {
@@ -1546,7 +1967,11 @@ where
     }
     flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits, &mut snapshot)?;
 
-    let envelope = ArtifactEnvelope { schema, id, vcs: ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives }, backbone: None, active_alternative_id, cursor: cursor.clone(), dialect: None, migrated_from: None };
+    // 🎯️ `.ops` text format does not carry the owner stamp yet either — same in-memory-only
+    // deferral as `composition_pins` a few lines above (see
+    // `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b2-store-composition-report.md`
+    // sharedFileRequests) until a later wave threads `OwnerRef` through the text grammar.
+    let envelope = ArtifactEnvelope { schema, id, vcs: ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives }, backbone: None, active_alternative_id, cursor: cursor.clone(), dialect: None, migrated_from: None, owner: None };
     // 🎯️ W4: every edit is still folded above in file order (needed for correct inverse/meta —
     // an edit's inverse depends on the snapshot state at the time it was made, which requires
     // walking the FULL sequence regardless of undo/redo position). Only the RETURNED live
@@ -3487,6 +3912,64 @@ pub trait SpaceMember {
     /// technology-specific `Mutation`, which can't appear in this object-safe trait. `Self: 'static` is
     /// implied by every real `P`/`Mutation` pair, so this never fails for a genuine member.
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
+
+    // 🎯️ B2 `CompositionCoordinator` seam (`UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`, `🔖️CompositionCoordinator`
+    // region below `🔖️Space`): eight object-safe methods, in two groups. `validate_wire`/
+    // `dispatch_wire`/`tail_group_id` are the three the task brief named explicitly. The other five
+    // (`tail_edit_id`, `redo_tail`, `stamp_tail_group_id`, `set_owner`) are necessary, deliberate
+    // additions this wave makes beyond that literal list — see `📓️wave1-reports/
+    // b2-store-composition-report.md`'s "Design decisions" for why each is unavoidable given the
+    // object-safety constraint: `GroupReceipt`/`GroupUndoReport` need real edit ids (not just group
+    // membership), `dispatch_group`'s phase 2 needs a way to stamp a shared `group_id` onto a member
+    // AFTER an ordinary `Apply` already hard-codes `group_id: None`, and genesis needs a way to set
+    // `ArtifactEnvelope.owner` on a freshly-created child through the same type-erased interface.
+    /// @emoji 🧪️ Decodes `ops` as a sequence of individually-`OpBinary`-encoded `Mutation`s (the
+    /// SAME wire shape `ArtifactCommand::Apply.mutations` bundles — see `dispatch_wire`'s doc
+    /// comment) and runs `crate::os_spr::Mutation::validate` on each against a snapshot threaded
+    /// forward through the whole slice, so op `i` validates against the state ops `0..i` would
+    /// produce, never a stale base. Never applies anything. `Result<_, String>` (not `VcsError`)
+    /// because `Mutation::validate` itself returns `Result<(), String>` — a direct pass-through,
+    /// not a new error taxonomy.
+    fn validate_wire(&self, ops: &[Vec<u8>]) -> Result<(), String>;
+    /// @emoji 📡️ Decodes `cmd_bytes` as one binary `ArtifactCommand<Mutation>` and dispatches it via
+    /// `dispatch_binary`. `CompositionCoordinator` builds `cmd_bytes` from a member's
+    /// `ChildDispatch.ops`/`parent_ops` by replicating `write_command_ops`'s byte layout directly
+    /// (length-prefixed already-encoded op bytes) WITHOUT ever decoding an individual op — the
+    /// reason this whole family takes/returns bytes instead of a typed `ArtifactCommand<Mutation>`
+    /// is that `SpaceMember` itself must stay object-safe (no generic method can appear on a trait
+    /// object), so the coordinator stays fully agnostic of every member's concrete `Mutation` type.
+    fn dispatch_wire(&mut self, cmd_bytes: &[u8]) -> Result<CommandReceipt, VcsError>;
+    /// @emoji 🏷️ The `MutationMeta.group_id` recorded on this member's TAIL applied edit's last
+    /// operation, if any — lets `CompositionCoordinator::undo_group` recognize "does this member's
+    /// most recent edit belong to composite gesture X" without downcasting to a concrete
+    /// `ArtifactStore<P, Mutation>`.
+    fn tail_group_id(&self) -> Option<String>;
+    /// @emoji 🆔️ The id of this member's TAIL applied edit, if any — `tail_group_id`'s companion
+    /// getter, so `GroupReceipt`/`GroupUndoReport` can report WHICH edit a group touched/undid, not
+    /// only that group membership matched.
+    fn tail_edit_id(&self) -> Option<String>;
+    /// @emoji ↩️🏷️ `(tail_group_id, tail_edit_id)`'s REDO-direction mirror: the `(edit_id,
+    /// group_id)` of whatever edit sits at the top of this member's redo stack (the one a following
+    /// `redo()` would reapply), used by `CompositionCoordinator::redo_group` the way `tail_group_id`/
+    /// `tail_edit_id` are used by `undo_group`.
+    fn redo_tail(&self) -> Option<(String, Option<String>)>;
+    /// @emoji 🖋️ Stamps `group_id` onto every `MutationMeta` entry of this member's TAIL applied
+    /// edit — the mechanism `CompositionCoordinator::dispatch_group`'s phase 2 uses to give every
+    /// member of one composite gesture the SAME `MutationMeta.group_id` after dispatching each
+    /// member's own `Apply` independently (the ordinary `Apply` path has no way to accept an
+    /// externally-supplied group id — see `ArtifactStore::replay_mutations`, which always stamps
+    /// `group_id: None`). Errors with `VcsError::UnknownEdit` if this member has no applied edits at
+    /// all — never true on the path `dispatch_group` actually calls it from, since it always calls
+    /// this immediately after a successful `dispatch_wire`.
+    fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError>;
+    /// @emoji 🏠️ Sets (or clears) this member's own envelope `owner` stamp — the mechanism
+    /// `CompositionCoordinator::dispatch_group`'s phase 2 uses to record a freshly-`ChildGenesis`-
+    /// created child's `OwnerRef` directly on the child's own envelope (see
+    /// `ArtifactEnvelope.owner`'s doc comment for why ownership must be queryable from the child
+    /// side, not only from the parent's `ArtifactChild` handle). Not part of the ordinary
+    /// VCS/dispatch surface — no ordinary `Apply` mutation can reach envelope metadata — so it needs
+    /// its own object-safe setter.
+    fn set_owner(&mut self, owner: Option<OwnerRef>);
 }
 
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
@@ -3560,6 +4043,48 @@ where
 
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
+    }
+
+    fn validate_wire(&self, ops: &[Vec<u8>]) -> Result<(), String> {
+        let mut running = self.snapshot().map_err(|error| error.to_string())?;
+        for op in ops {
+            let mutation = <Mutation as OpBinary>::decode_op(op).map_err(|error| error.to_string())?;
+            mutation.validate(&running)?;
+            running = apply_mutation(&running, &mutation);
+        }
+        Ok(())
+    }
+
+    fn dispatch_wire(&mut self, cmd_bytes: &[u8]) -> Result<CommandReceipt, VcsError> {
+        self.dispatch_binary(cmd_bytes)
+    }
+
+    fn tail_group_id(&self) -> Option<String> {
+        let edit_id = self.applied_edit_ids().last()?;
+        self.envelope().vcs.edits.iter().find(|edit| edit.id == *edit_id)?.mutation_meta.last()?.group_id.clone()
+    }
+
+    fn tail_edit_id(&self) -> Option<String> {
+        self.applied_edit_ids().last().cloned()
+    }
+
+    fn redo_tail(&self) -> Option<(String, Option<String>)> {
+        let edit_id = self.redo_edit_ids().last()?.clone();
+        let group_id = self.envelope().vcs.edits.iter().find(|edit| edit.id == edit_id).and_then(|edit| edit.mutation_meta.last()).and_then(|meta| meta.group_id.clone());
+        Some((edit_id, group_id))
+    }
+
+    fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError> {
+        let edit_id = self.applied_edit_ids().last().cloned().ok_or(VcsError::NothingToUndo)?;
+        let edit = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+        for meta in edit.mutation_meta.iter_mut() {
+            meta.group_id = Some(group_id.to_string());
+        }
+        Ok(())
+    }
+
+    fn set_owner(&mut self, owner: Option<OwnerRef>) {
+        self.envelope.owner = owner;
     }
 }
 //#endregion SpaceMember
@@ -3965,6 +4490,517 @@ impl SpaceHost {
 }
 //#endregion SpaceHost
 //#endregion 🔖️Space
+
+//#region 🔖️CompositionCoordinator
+//! 🧩️ Atomic composite dispatch across a parent `SpaceMember` and N child `SpaceMember`s — the
+//! mechanism that makes ONE user gesture spanning a parent and several `🔖️Composition` children
+//! into ONE undo step, by orchestrating multi-store dispatch through the object-safe
+//! `SpaceMember::validate_wire`/`dispatch_wire`/`tail_group_id`/etc. seam (extended just above,
+//! `🔖️Space`'s `SpaceMember` region) rather than needing to know any member's concrete `P`/
+//! `Mutation`. Two-phase: `dispatch_group`'s phase 1 validates every op on every member against its
+//! CURRENT snapshot with zero side effects (any failure ⇒ nothing dispatched anywhere); phase 2
+//! applies in the fixed order child geneses → child edits → parent ops, stamping every resulting
+//! edit's `MutationMeta.group_id` with the same minted `invocation_id` — the shared stamp a later
+//! `undo_group`/`redo_group` call recognizes. `CompositionGraph` tracks the ownership forest/link
+//! DAG this all leans on for cycle/ownership validation.
+
+/// @emoji 📮️ One child's share of a composite dispatch: which child, its ops (each individually
+/// `crate::os_spr::OpBinary`-encoded — the SAME per-op wire shape `ArtifactCommand::Apply.mutations`
+/// bundles, see `SpaceMember::dispatch_wire`'s doc comment), the schema those ops decode against,
+/// and human-readable labels (one per op, forward-compat metadata for a future audit/diagnostic
+/// surface — `dispatch_group` does not interpret them itself, see this ticket's
+/// `📓️wave1-reports/b2-store-composition-report.md` for the scoping note).
+#[derive(Clone, Debug, PartialEq)]
+pub struct ChildDispatch {
+    pub child: crate::os_io::ArtifactRef,
+    pub ops: Vec<Vec<u8>>,
+    pub op_schema: SchemaId,
+    pub labels: Vec<String>,
+}
+
+/// @emoji 🌱️ One new child to create in this same composite gesture: which parent-relative `slot`,
+/// what dialect it materializes as, and its baked initial pack bytes (fed to the registered
+/// `ChildStoreFactory::create`). No `ops` — a freshly-created child has nothing to replay yet, only
+/// an initial snapshot.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ChildGenesis {
+    pub slot: String,
+    pub dialect: crate::os_io::ArtifactDialect,
+    pub initial_pack: Vec<u8>,
+}
+
+/// @emoji 🧾️ Receipt from a successful `CompositionCoordinator::dispatch_group`: the minted shared
+/// `MutationMeta.group_id` every touched member's tail edit now carries, one `(member, edit_id)`
+/// pair per member that actually got a new edit (parent included when `parent_ops` was non-empty;
+/// a child with empty `ops` contributes none), and every `ChildGenesis`-created member's live
+/// `Box<dyn SpaceMember>` — genesis has no pre-existing caller-held reference to hand back through
+/// (unlike `children`, which the caller already owns), so this is the only way a freshly-created
+/// child ever reaches the caller for registration (e.g. into a `SpaceHost`). No `Clone`/`Debug`/
+/// `PartialEq`: `Box<dyn SpaceMember>` supports none of them.
+pub struct GroupReceipt {
+    pub invocation_id: String,
+    pub member_edits: Vec<(crate::os_io::ArtifactRef, String)>,
+    pub created_children: Vec<(crate::os_io::ArtifactRef, Box<dyn SpaceMember>)>,
+}
+
+/// @emoji 🎛️ Cross-member metadata for one `dispatch_group` call. `description` becomes every
+/// dispatched member's own `ArtifactCommand::Apply.description`. `actor`/`coalesce_key` are
+/// accepted or forward-compat/audit purposes but NOT yet wired into dispatch — object-safe
+/// `SpaceMember` has no `set_local_actor_id`/`AmendLast` seam today (only `ArtifactStore`'s own
+/// inherent API does), so honoring them is deferred to whichever later wave extends that surface;
+/// see `📓️wave1-reports/b2-store-composition-report.md`'s scoping note.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct GroupMeta {
+    pub actor: Option<String>,
+    pub description: Option<String>,
+    pub coalesce_key: Option<String>,
+}
+
+/// @emoji 🧾️ Best-effort group undo/redo report: `undone` is every member that WAS rolled
+/// back/reapplied (with the edit id touched), `skipped` is every member whose tail didn't belong to
+/// the requested group, or whose own `undo()`/`redo()` itself failed — recorded as a diagnostic,
+/// never aborting the rest of the group. Generalizes the existing benign `NothingToUndo`/
+/// `ForeignEdit` collapse (`🔌️plugin/🦀️component.rs`'s `UndoWithPolicy` dispatch) to the
+/// multi-member case: one collaborator's foreign/failed child edit must never permanently freeze a
+/// parent's undo stack.
+#[derive(Debug, PartialEq)]
+pub struct GroupUndoReport {
+    pub undone: Vec<(crate::os_io::ArtifactRef, String)>,
+    pub skipped: Vec<(crate::os_io::ArtifactRef, VcsError)>,
+}
+
+/// @emoji 🕸️ Ownership forest (`Owns`, each child has AT MOST one owner, no cycles) + reference DAG
+/// (`Links`, acyclic) over artifact ids — the structure `CompositionCoordinator::dispatch_group`'s
+/// phase 1 consults for ownership/cycle validation, incrementally maintained (`sync_member`) rather
+/// than ever rebuilt from scratch on the hot path. A `CompositionCoordinator` owns one; a host that
+/// needs the graph without dispatching anything (e.g. a UI computing "would this drag-and-drop
+/// create a cycle") can also use a standalone `CompositionGraph` directly — every method here takes
+/// `&self`/`&mut self`, none require a live `CompositionCoordinator`.
+#[derive(Debug, Default)]
+pub struct CompositionGraph {
+    owns: HashMap<String, (String, String)>,
+    links: HashMap<String, HashSet<String>>,
+}
+
+impl CompositionGraph {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// 🔎️ The owning parent's artifact id, if `child_id` is currently tracked as owned.
+    pub fn owner_of(&self, child_id: &str) -> Option<&str> {
+        self.owns.get(child_id).map(|(parent_id, _slot)| parent_id.as_str())
+    }
+
+    /// 🔎️ The slot `child_id` currently occupies under its owner, if tracked.
+    pub fn slot_of(&self, child_id: &str) -> Option<&str> {
+        self.owns.get(child_id).map(|(_parent_id, slot)| slot.as_str())
+    }
+
+    /// ✅️ Whether owning `child_id` under `parent_id` would create a cycle — walks `parent_id`'s
+    /// OWN ancestor chain looking for `child_id`; finding it means `child_id` would become both an
+    /// ancestor and a (prospective) descendant of `parent_id`. Also true when `parent_id ==
+    /// child_id` (an artifact cannot own itself).
+    pub fn would_cycle_owns(&self, parent_id: &str, child_id: &str) -> bool {
+        if parent_id == child_id {
+            return true;
+        }
+        let mut current = parent_id.to_string();
+        let mut guard = 0usize;
+        while let Some((owner, _slot)) = self.owns.get(&current) {
+            if owner == child_id {
+                return true;
+            }
+            current = owner.clone();
+            guard += 1;
+            if guard > self.owns.len() + 1 {
+                break;
+            }
+        }
+        false
+    }
+
+    /// 🌱️ Records `child_id` as owned by `parent_id` in `slot`. Rejects (a) adopting a child
+    /// already owned by a DIFFERENT parent (single-ownership invariant) and (b) any edge that would
+    /// cycle (see `would_cycle_owns`) — re-owning by the SAME parent/slot is idempotent, not an error.
+    pub fn insert_owns(&mut self, parent_id: &str, slot: &str, child_id: &str) -> Result<(), String> {
+        if let Some((existing_owner, _existing_slot)) = self.owns.get(child_id) {
+            if existing_owner != parent_id {
+                return Err(format!("{child_id} is already owned by {existing_owner}, cannot also be owned by {parent_id}"));
+            }
+        }
+        if self.would_cycle_owns(parent_id, child_id) {
+            return Err(format!("owning {child_id} under {parent_id} would create a composition cycle"));
+        }
+        self.owns.insert(child_id.to_string(), (parent_id.to_string(), slot.to_string()));
+        Ok(())
+    }
+
+    /// ✂️ Removes `child_id`'s ownership edge (e.g. on `extract`/`delete`), returning
+    /// `(parent_id, slot)` if it was tracked.
+    pub fn remove_owns(&mut self, child_id: &str) -> Option<(String, String)> {
+        self.owns.remove(child_id)
+    }
+
+    /// ✅️ Whether linking `from -> to` would create a cycle — true when `to` can already reach
+    /// `from` (including `from == to`).
+    pub fn would_cycle_links(&self, from: &str, to: &str) -> bool {
+        if from == to {
+            return true;
+        }
+        let mut stack = vec![to.to_string()];
+        let mut seen: HashSet<String> = HashSet::new();
+        while let Some(node) = stack.pop() {
+            if node == from {
+                return true;
+            }
+            if !seen.insert(node.clone()) {
+                continue;
+            }
+            if let Some(targets) = self.links.get(&node) {
+                stack.extend(targets.iter().cloned());
+            }
+        }
+        false
+    }
+
+    /// 🔗️ Records a `from -> to` link edge. Rejects a cycle (see `would_cycle_links`); adding the
+    /// same edge twice is idempotent.
+    pub fn insert_link(&mut self, from: &str, to: &str) -> Result<(), String> {
+        if self.would_cycle_links(from, to) {
+            return Err(format!("linking {from} -> {to} would create a cycle"));
+        }
+        self.links.entry(from.to_string()).or_default().insert(to.to_string());
+        Ok(())
+    }
+
+    /// ✂️ Removes one `from -> to` link edge, if present.
+    pub fn remove_link(&mut self, from: &str, to: &str) {
+        if let Some(targets) = self.links.get_mut(from) {
+            targets.remove(to);
+        }
+    }
+
+    /// 🔎️ Every link target currently recorded FROM `from`.
+    pub fn links_from(&self, from: &str) -> Vec<String> {
+        self.links.get(from).map(|targets| targets.iter().cloned().collect()).unwrap_or_default()
+    }
+
+    /// 🔄️ Rebuilds `artifact_id`'s OWN outgoing edges (both `Owns`-as-parent and `Links`-as-source)
+    /// from its live `ArtifactRefs` projection — the incremental-maintenance seam a host (e.g.
+    /// `SpaceHost`) calls after every dispatch that might have changed `artifact_id`'s
+    /// children/links, instead of ever recomputing the whole graph from scratch. Never touches
+    /// edges where `artifact_id` is the TARGET (another artifact's own `sync_member` call owns those).
+    pub fn sync_member<P: ArtifactRefs>(&mut self, artifact_id: &str, snapshot: &P) -> Result<(), String> {
+        self.owns.retain(|_child_id, (parent_id, _slot)| parent_id != artifact_id);
+        for child in snapshot.child_refs() {
+            self.insert_owns(artifact_id, &child.slot, &child.child_id)?;
+        }
+        self.links.remove(artifact_id);
+        for link in snapshot.links() {
+            self.insert_link(artifact_id, &link.target.artifact_id)?;
+        }
+        Ok(())
+    }
+}
+
+/// @emoji 🧵️ Builds the exact `ArtifactCommand::<Mutation>::Apply` binary layout (see that impl's
+/// `OpBinary::encode_op` in `🔖️CommandFormat` above, ordinal-0 arm) directly from already-
+/// `OpBinary`-encoded op bytes, WITHOUT ever decoding them — this is how `CompositionCoordinator`
+/// stays fully generic over every technology's concrete `Mutation` type while still producing bytes
+/// `SpaceMember::dispatch_wire`'s blanket impl (which DOES know the concrete type, on the receiving
+/// member) can decode correctly via the ordinary `dispatch_binary` path. Must be kept byte-for-byte
+/// in sync with `write_command_ops`/`ArtifactCommand::encode_op`'s ordinal-0 (`Apply`) arm.
+fn build_apply_command_bytes(ops: &[Vec<u8>], description: Option<&str>) -> Vec<u8> {
+    let mut out = vec![COMMAND_BINARY_FORMAT];
+    crate::os_pack::write_varint_u64(&mut out, 0);
+    out.push(if description.is_some() { 0b01 } else { 0 });
+    if let Some(text) = description {
+        write_command_str(&mut out, text);
+    }
+    crate::os_pack::write_varint_u64(&mut out, ops.len() as u64);
+    for op in ops {
+        crate::os_pack::write_varint_u64(&mut out, op.len() as u64);
+        out.extend_from_slice(op);
+    }
+    out
+}
+
+/// @emoji 🧮️ Deterministic order-and-length-sensitive fingerprint of a raw op-bytes slice — the
+/// `parent_edit_fingerprint` ingredient `mint_child_id`/`mint_invocation_id` hash into a new id, so
+/// two replicas that receive the identical `parent_ops`/`ChildDispatch.ops` converge on identical
+/// ids without ever needing to actually apply anything first.
+fn concat_ops_fingerprint(ops: &[Vec<u8>]) -> Vec<u8> {
+    let mut buffer = Vec::new();
+    for op in ops {
+        buffer.extend_from_slice(&(op.len() as u64).to_le_bytes());
+        buffer.extend_from_slice(op);
+    }
+    buffer
+}
+
+/// @emoji 🆔️ Deterministic child envelope/handle id — design doc §1's "Child envelope ids are
+/// minted deterministically... `parent_id ++ slot ++ parent_edit_fingerprint ++ ordinal`" formula,
+/// using the SAME `content_addressed_entity_id` helper `🌿️vcs`'s other `mint_*_id` functions build
+/// on. This one id serves BOTH roles: it is the new child's `ArtifactRef.artifact_id` AND its
+/// `ArtifactChild<S>.child_id`/`OwnerRef.child_id` — a composition slot instance and the artifact
+/// envelope it points at share one identity, so there is nothing to keep in sync between them.
+pub fn mint_child_id(parent_id: &str, slot: &str, parent_edit_fingerprint: &[u8], ordinal: u32) -> String {
+    let mut payload = parent_id.as_bytes().to_vec();
+    payload.push(0);
+    payload.extend_from_slice(slot.as_bytes());
+    payload.push(0);
+    payload.extend_from_slice(parent_edit_fingerprint);
+    payload.push(0);
+    payload.extend_from_slice(&ordinal.to_le_bytes());
+    content_addressed_entity_id("child", &payload)
+}
+
+/// @emoji 🆔️ Deterministic group/invocation id: hashes the parent id, the parent ops' fingerprint,
+/// and every dispatched child's `(child_id, ops fingerprint)` pair (sorted by child id first, so
+/// caller-supplied `children` order never affects convergence) — two replicas performing the
+/// identical composite gesture (same parent, same ops everywhere) converge on the identical
+/// `GroupReceipt.invocation_id`/`MutationMeta.group_id` stamp without any coordination.
+fn mint_invocation_id(parent_id: &str, parent_edit_fingerprint: &[u8], child_fingerprints: &[(String, Vec<u8>)]) -> String {
+    let mut ordered: Vec<&(String, Vec<u8>)> = child_fingerprints.iter().collect();
+    ordered.sort_by(|(a, _), (b, _)| a.cmp(b));
+    let mut payload = parent_id.as_bytes().to_vec();
+    payload.push(0);
+    payload.extend_from_slice(parent_edit_fingerprint);
+    for (child_id, fingerprint) in ordered {
+        payload.push(0);
+        payload.extend_from_slice(child_id.as_bytes());
+        payload.push(0);
+        payload.extend_from_slice(fingerprint);
+    }
+    content_addressed_entity_id("invocation", &payload)
+}
+
+/// @emoji 🧯️ Folds a post-validation dispatch failure with its compensation report: if every
+/// already-applied member rolled back cleanly (`report.skipped` empty), the ORIGINAL error is
+/// returned unchanged (compensation is a transparent implementation detail on the success path);
+/// otherwise wraps both into `VcsError::CompensationFailed` so the caller sees the full picture —
+/// what failed AND what could not be rolled back — rather than either fact silently.
+fn fold_compensation_error(original: VcsError, report: GroupUndoReport) -> VcsError {
+    if report.skipped.is_empty() {
+        original
+    } else {
+        let skipped_desc: Vec<String> = report.skipped.iter().map(|(reference, error)| format!("{}: {error}", reference.to_uri())).collect();
+        VcsError::CompensationFailed(format!("original error: {original}; members that failed to roll back: [{}]", skipped_desc.join(", ")))
+    }
+}
+
+/// @emoji 🧩️ Atomic composite dispatch across a parent + N children — see this region's doc
+/// comment for the two-phase protocol. Holds a `CompositionGraph` incrementally maintained across
+/// calls (`graph`/`graph_mut` for a host to `sync_member` into, or to consult directly for UI-level
+/// "would this cycle" checks without dispatching anything).
+#[derive(Debug, Default)]
+pub struct CompositionCoordinator {
+    graph: CompositionGraph,
+}
+
+impl CompositionCoordinator {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn graph(&self) -> &CompositionGraph {
+        &self.graph
+    }
+
+    pub fn graph_mut(&mut self) -> &mut CompositionGraph {
+        &mut self.graph
+    }
+
+    /// ✂️ Undoes `undo`/re-dispatches `undo` on the applied-so-far members in REVERSE application
+    /// order (parent — if it was itself applied — first, then children in reverse dispatch order),
+    /// collecting a `GroupUndoReport` rather than propagating the first failure — see
+    /// `dispatch_group`'s doc comment for why every already-applied member must still get a
+    /// best-effort rollback attempt even if an earlier one in this same pass failed.
+    fn compensate(parent_ref: &crate::os_io::ArtifactRef, parent: &mut dyn SpaceMember, children: &mut [(&mut dyn SpaceMember, ChildDispatch)], applied_children: &[(usize, String)], parent_applied: Option<&str>) -> GroupUndoReport {
+        let mut undone = Vec::new();
+        let mut skipped = Vec::new();
+        if let Some(edit_id) = parent_applied {
+            match parent.undo() {
+                Ok(()) => undone.push((parent_ref.clone(), edit_id.to_string())),
+                Err(error) => skipped.push((parent_ref.clone(), error)),
+            }
+        }
+        for (index, edit_id) in applied_children.iter().rev() {
+            let (member, dispatch) = &mut children[*index];
+            match member.undo() {
+                Ok(()) => undone.push((dispatch.child.clone(), edit_id.clone())),
+                Err(error) => skipped.push((dispatch.child.clone(), error)),
+            }
+        }
+        GroupUndoReport { undone, skipped }
+    }
+
+    /// 🧩️ Dispatches one composite gesture spanning `parent` + `children` (+ any brand-new
+    /// `genesis` children) as a single atomic unit.
+    ///
+    /// **Phase 1 — validate-all, zero side effects.** Every non-empty op slice (`parent_ops`, each
+    /// `ChildDispatch.ops`) is checked via `SpaceMember::validate_wire` against that member's
+    /// CURRENT snapshot; every `children` entry's claimed ownership is checked against `self.graph`
+    /// (`VcsError::OwnershipViolation` if the graph does not currently track `parent_ref` as that
+    /// child's owner); every `genesis` slot's deterministic id is minted and checked for a cycle
+    /// (`VcsError::CompositionCycle`) and a registered `ChildStoreFactory`
+    /// (`VcsError::ValidationFailed` if none). Any failure here returns immediately — NOTHING has
+    /// been dispatched anywhere yet.
+    ///
+    /// **Phase 2 — apply in fixed order: child geneses → child edits → parent ops.** This order
+    /// guarantees a parent's own `Apply` (which typically ADDS the `ArtifactChild` handle pointing
+    /// at a just-created genesis child) never references a child that does not exist locally yet.
+    /// Every member that receives an `Apply` gets its tail edit's `MutationMeta.group_id` stamped
+    /// with the same minted `invocation_id` right after dispatching it.
+    ///
+    /// **Compensation.** A failure during phase 2 (a `dispatch_wire`/`stamp_tail_group_id` call
+    /// that phase 1's validation did not catch — e.g. a `Mutation::validate` that is not fully
+    /// exhaustive, or a genuinely unexpected `VcsError`) triggers `compensate`: `Undo` on every
+    /// already-applied member in reverse order. This is sound under `&mut` on every member for the
+    /// whole call (single-threaded per-app actor discipline) because each such member's group edit
+    /// IS its tail — exact-base undo is mechanical, never a mid-history removal. If compensation
+    /// itself fails to fully roll back, the returned error is `VcsError::CompensationFailed`
+    /// (`fold_compensation_error`) carrying both the original failure and which members could not
+    /// be rolled back, rather than silently leaving partial state unreported.
+    pub fn dispatch_group(&mut self, parent_ref: &crate::os_io::ArtifactRef, parent: &mut dyn SpaceMember, children: &mut [(&mut dyn SpaceMember, ChildDispatch)], parent_ops: Vec<Vec<u8>>, genesis: Vec<ChildGenesis>, meta: GroupMeta) -> Result<GroupReceipt, VcsError> {
+        //#region Phase1Validate
+        if !parent_ops.is_empty() {
+            parent.validate_wire(&parent_ops).map_err(VcsError::ValidationFailed)?;
+        }
+        for (member, dispatch) in children.iter() {
+            match self.graph.owner_of(&dispatch.child.artifact_id) {
+                Some(owner_id) if owner_id == parent_ref.artifact_id => {}
+                _ => return Err(VcsError::OwnershipViolation(format!("{} is not a currently-tracked owned child of {}", dispatch.child.artifact_id, parent_ref.artifact_id))),
+            }
+            if !dispatch.ops.is_empty() {
+                member.validate_wire(&dispatch.ops).map_err(VcsError::ValidationFailed)?;
+            }
+        }
+        let parent_edit_fingerprint = concat_ops_fingerprint(&parent_ops);
+        let mut minted_child_ids: Vec<String> = Vec::with_capacity(genesis.len());
+        for (ordinal, spec) in genesis.iter().enumerate() {
+            let child_id = mint_child_id(&parent_ref.artifact_id, &spec.slot, &parent_edit_fingerprint, ordinal as u32);
+            if self.graph.would_cycle_owns(&parent_ref.artifact_id, &child_id) {
+                return Err(VcsError::CompositionCycle(format!("creating child {child_id} in slot {} under {} would cycle", spec.slot, parent_ref.artifact_id)));
+            }
+            let kind = crate::os_io::ArtifactKindId::parse(&spec.dialect.artifact_kind).map_err(VcsError::ValidationFailed)?;
+            if child_store_factory(&kind).is_none() {
+                return Err(VcsError::ValidationFailed(format!("no ChildStoreFactory registered for kind {}", spec.dialect.artifact_kind)));
+            }
+            minted_child_ids.push(child_id);
+        }
+        //#endregion Phase1Validate
+
+        //#region Phase2Apply
+        let child_fingerprints: Vec<(String, Vec<u8>)> = children.iter().map(|(_, dispatch)| (dispatch.child.artifact_id.clone(), concat_ops_fingerprint(&dispatch.ops))).collect();
+        let invocation_id = mint_invocation_id(&parent_ref.artifact_id, &parent_edit_fingerprint, &child_fingerprints);
+
+        let mut created_children: Vec<(crate::os_io::ArtifactRef, Box<dyn SpaceMember>)> = Vec::with_capacity(genesis.len());
+        for (ordinal, spec) in genesis.into_iter().enumerate() {
+            let child_id = minted_child_ids[ordinal].clone();
+            let kind = crate::os_io::ArtifactKindId::parse(&spec.dialect.artifact_kind).expect("validated in phase 1");
+            let factory = child_store_factory(&kind).expect("validated in phase 1");
+            // 🎯️ Nothing to compensate on a genesis failure: no `dispatch_wire` has run yet in this
+            // call, and any earlier-succeeding genesis member in this same loop was never
+            // registered/dispatched to anywhere — it simply gets dropped along with this `Err`.
+            let mut member = factory.create(&child_id, &spec.dialect, &spec.initial_pack)?;
+            let target = crate::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect: spec.dialect.clone() };
+            member.set_owner(Some(OwnerRef { parent: parent_ref.clone(), slot: spec.slot.clone(), child_id: child_id.clone() }));
+            self.graph.insert_owns(&parent_ref.artifact_id, &spec.slot, &child_id).map_err(VcsError::OwnershipViolation)?;
+            created_children.push((target, member));
+        }
+
+        let mut applied_children: Vec<(usize, String)> = Vec::new();
+        for index in 0..children.len() {
+            if children[index].1.ops.is_empty() {
+                continue;
+            }
+            let command_bytes = build_apply_command_bytes(&children[index].1.ops, meta.description.as_deref());
+            let receipt = match children[index].0.dispatch_wire(&command_bytes) {
+                Ok(receipt) => receipt,
+                Err(error) => {
+                    let report = Self::compensate(parent_ref, parent, children, &applied_children, None);
+                    return Err(fold_compensation_error(error, report));
+                }
+            };
+            let edit_id = receipt.edit_ids.last().cloned().unwrap_or_default();
+            applied_children.push((index, edit_id));
+            if let Err(error) = children[index].0.stamp_tail_group_id(&invocation_id) {
+                let report = Self::compensate(parent_ref, parent, children, &applied_children, None);
+                return Err(fold_compensation_error(error, report));
+            }
+        }
+
+        let mut parent_edit_id: Option<String> = None;
+        if !parent_ops.is_empty() {
+            let command_bytes = build_apply_command_bytes(&parent_ops, meta.description.as_deref());
+            let receipt = match parent.dispatch_wire(&command_bytes) {
+                Ok(receipt) => receipt,
+                Err(error) => {
+                    let report = Self::compensate(parent_ref, parent, children, &applied_children, None);
+                    return Err(fold_compensation_error(error, report));
+                }
+            };
+            let edit_id = receipt.edit_ids.last().cloned().unwrap_or_default();
+            if let Err(error) = parent.stamp_tail_group_id(&invocation_id) {
+                let report = Self::compensate(parent_ref, parent, children, &applied_children, Some(&edit_id));
+                return Err(fold_compensation_error(error, report));
+            }
+            parent_edit_id = Some(edit_id);
+        }
+        //#endregion Phase2Apply
+
+        let mut member_edits: Vec<(crate::os_io::ArtifactRef, String)> = applied_children.iter().map(|(index, edit_id)| (children[*index].1.child.clone(), edit_id.clone())).collect();
+        if let Some(edit_id) = parent_edit_id {
+            member_edits.push((parent_ref.clone(), edit_id));
+        }
+        Ok(GroupReceipt { invocation_id, member_edits, created_children })
+    }
+
+    /// ↩️ Best-effort group undo: for every `(reference, member)` pair (caller-ordered — put the
+    /// parent first, matching `dispatch_group`'s own "undo parent-first then children" fixed
+    /// order), undoes it if and only if `member.tail_group_id() == Some(group_id)`; a member whose
+    /// tail belongs to a different (or no) group, or whose own `undo()` call errors, is SKIPPED and
+    /// recorded in the returned report rather than aborting the rest — see `GroupUndoReport`'s doc
+    /// comment for why abort-all would be actively harmful here.
+    pub fn undo_group(members: &mut [(&crate::os_io::ArtifactRef, &mut dyn SpaceMember)], group_id: &str) -> GroupUndoReport {
+        let mut undone = Vec::new();
+        let mut skipped = Vec::new();
+        for (reference, member) in members.iter_mut() {
+            let tail_group = member.tail_group_id();
+            if tail_group.as_deref() == Some(group_id) {
+                let edit_id = member.tail_edit_id().unwrap_or_default();
+                match member.undo() {
+                    Ok(()) => undone.push(((*reference).clone(), edit_id)),
+                    Err(error) => skipped.push(((*reference).clone(), error)),
+                }
+            } else {
+                skipped.push(((*reference).clone(), VcsError::ForeignEdit(member.document_id().to_string())));
+            }
+        }
+        GroupUndoReport { undone, skipped }
+    }
+
+    /// ↪️ `undo_group`'s redo-direction mirror: caller orders `members` children-first (matching
+    /// `dispatch_group`'s apply order, so redo re-establishes the group in the same order it was
+    /// originally applied), redoing each member whose `redo_tail()` group id matches.
+    pub fn redo_group(members: &mut [(&crate::os_io::ArtifactRef, &mut dyn SpaceMember)], group_id: &str) -> GroupUndoReport {
+        let mut undone = Vec::new();
+        let mut skipped = Vec::new();
+        for (reference, member) in members.iter_mut() {
+            match member.redo_tail() {
+                Some((edit_id, Some(tail_group))) if tail_group == group_id => match member.redo() {
+                    Ok(()) => undone.push(((*reference).clone(), edit_id)),
+                    Err(error) => skipped.push(((*reference).clone(), error)),
+                },
+                _ => skipped.push(((*reference).clone(), VcsError::NothingToRedo)),
+            }
+        }
+        GroupUndoReport { undone, skipped }
+    }
+}
+//#endregion 🔖️CompositionCoordinator
 
 //#region 🔖️TestSupport
 /// @emoji 🧪️ Round-trip assertions shared by every technology crate's `Mutation` test suite.

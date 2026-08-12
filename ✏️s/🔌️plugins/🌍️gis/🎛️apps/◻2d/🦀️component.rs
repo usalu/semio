@@ -357,8 +357,8 @@ pub fn create_gis2d_app() -> App {
             .panel_tab_def(inspection_panel::definition())
             // ✏️ Mutation actions — flow through the document store with true inverses. `setActiveExample`
             // replaces document content by diffing every collection into batched create/delete/
-            // replace-data operations (never a whole-document `SetSnapshot` — banned by the taxonomy),
-            // so it is a Mutation, not a View action.
+            // replace-data operations (never a whole-document snapshot swap — that vocabulary is
+            // retired by the taxonomy), so it is a Mutation, not a View action.
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("patchPositions", LocalizedLabel::native("Patch Positions", "Positionen aktualisieren"))
             .mutation("patchRoutes", LocalizedLabel::native("Patch Routes", "Routen aktualisieren"))

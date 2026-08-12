@@ -128,12 +128,12 @@ impl MutationDiff<RewriteSnapshot> for RewriteDiff {
         take!(before_fixture_json);
         take!(lhs_json);
         take!(rhs_json);
-        take!(parameter_bindings);
-        take!(rule_layout);
+        merge_map_delta(&mut self.parameter_bindings, other.parameter_bindings);
+        merge_map_delta(&mut self.rule_layout, other.rule_layout);
         take!(selected_node_ids);
         take!(active_hover_var);
         take!(active_select_var);
-        take!(lod_mode_by_window);
+        merge_map_delta(&mut self.lod_mode_by_window, other.lod_mode_by_window);
         take!(before_pane_camera);
         take!(reorganize_epoch);
         take!(hover_epoch);

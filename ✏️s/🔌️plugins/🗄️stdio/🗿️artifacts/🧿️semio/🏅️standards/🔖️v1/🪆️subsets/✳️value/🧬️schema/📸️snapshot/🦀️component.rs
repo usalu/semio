@@ -219,7 +219,7 @@ impl store::ArtifactPack for SemioValueSnapshot {
 /// `📚️examples/…/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally this
 /// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
 /// `🎹️composer/🦀️component.rs`) and for this file's own round-trip tests below — same convention
-/// `json`'s `demo_json_snapshot()`/`workflow`'s `demo_workflow_snapshot()` use.
+/// `json`'s `demo_json_snapshot()`/`flow`'s `demo_flow_snapshot()` use.
 #[cfg(test)]
 pub(crate) fn demo_semio_value_snapshot() -> SemioValueSnapshot {
     SemioValueSnapshot {

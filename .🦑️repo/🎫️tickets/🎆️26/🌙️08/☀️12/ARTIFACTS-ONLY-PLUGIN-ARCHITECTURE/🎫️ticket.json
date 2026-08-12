@@ -1,0 +1,13 @@
+{
+  "title": "Artifacts Only Plugin Architecture",
+  "emoji": "🗿️",
+  "status": "open",
+  "description": "Make artifacts the only mechanism for IO, state changes, registration and side effects in plugins. A plugin consists of exactly two things: apps and artifacts. Delete the 🛂️manifest/🎟️capabilities/🔧️setup facet dirs, replace the imperative .setup(fn) registration with declarative ArtifactDeclaration data walked by PluginBuilder::build, seal all global register_* registries behind a Registrar token mintable only by the framework, delete the semio_framework_os::register_mesh_*/solid_*/dwg_*/app_io escape-hatch family (named violation: ✏️s/🔌️plugins/💠️lowpoly/🔧️setup/🦀️component.rs), replace the SDK's blanket pub use glob re-exports with a curated list, purge semio-framework-os from plugin Cargo.tomls, make apps stateless (Draft lane replaces thread_local scratch, genesis() replaces seed(\u0026mut store)), gate every WIT host import and HostEffect variant on declared capabilities, relocate all non-app/non-artifact plugin dirs into artifact engines or app engines, and seal the whole thing with new taxonomy + policy lint rules in 📜️script.ts wired into verify gate. Executed by an Opus 5 coordinator dispatching Sonnet 5 workers across waves W0 recon, W1 framework mechanisms, W2 policy/taxonomy, W3 mass plugin migration, W4 framework deletions, W5 seal and verify.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2549"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪26b7191031154c8c86f89cf2c4408a13"
+  ]
+}

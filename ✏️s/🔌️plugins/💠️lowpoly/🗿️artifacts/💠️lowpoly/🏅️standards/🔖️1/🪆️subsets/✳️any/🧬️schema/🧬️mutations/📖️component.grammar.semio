@@ -4,21 +4,32 @@ extension lowpoly
 use family-scene
 start mutation
 
-mutation = objects-add | objects-remove | objects-move | objects-patch | add-paint-layer | remove-paint-layer | patch-paint-layer | paint-stroke | set-snapshot
-objects-add = "objects-add" {"index" "=" INT}? object-block
-objects-remove = "objects-remove" "id" "=" IDENT
-objects-move = "objects-move" "id" "=" IDENT "to-index" "=" INT
-objects-patch = "objects-patch" "id" "=" IDENT object-patch-block
-add-paint-layer = "add-paint-layer" "object-id" "=" IDENT {"index" "=" INT}? paint-layer-block
+mutation = create-object | delete-object | reorder-objects | rename-object | change-object-smooth-shading
+         | move-object | rotate-object | scale-object | replace-object-mesh
+         | insert-paint-layer | remove-paint-layer | rename-paint-layer
+         | change-paint-layer-visible | change-paint-layer-opacity | change-paint-layer-blend-mode
+         | edit-paint-layer
+
+create-object = "create-object" {"index" "=" INT}? object-block
+delete-object = "delete-object" "id" "=" IDENT
+reorder-objects = "reorder-objects" "id" "=" IDENT "to-index" "=" INT
+rename-object = "rename-object" "id" "=" IDENT "new-name" "=" TEXT
+change-object-smooth-shading = "change-object-smooth-shading" "id" "=" IDENT "new-smooth-shading" "=" BOOL
+move-object = "move-object" "id" "=" IDENT "new-position" "=" VEC3
+rotate-object = "rotate-object" "id" "=" IDENT "new-rotation" "=" VEC3
+scale-object = "scale-object" "id" "=" IDENT "new-scale" "=" VEC3
+replace-object-mesh = "replace-object-mesh" "id" "=" IDENT "new-mesh" mesh
+
+insert-paint-layer = "insert-paint-layer" "object-id" "=" IDENT "index" "=" INT paint-layer-block
 remove-paint-layer = "remove-paint-layer" "object-id" "=" IDENT "index" "=" INT
-patch-paint-layer = "patch-paint-layer" "object-id" "=" IDENT "index" "=" INT paint-layer-patch-block
-paint-stroke = "paint-stroke" "object-id" "=" IDENT "layer-index" "=" INT runs-table
-set-snapshot = "set-snapshot" snapshot-block
+rename-paint-layer = "rename-paint-layer" "object-id" "=" IDENT "index" "=" INT "new-name" "=" TEXT
+change-paint-layer-visible = "change-paint-layer-visible" "object-id" "=" IDENT "index" "=" INT "new-visible" "=" BOOL
+change-paint-layer-opacity = "change-paint-layer-opacity" "object-id" "=" IDENT "index" "=" INT "new-opacity" "=" FLOAT
+change-paint-layer-blend-mode = "change-paint-layer-blend-mode" "object-id" "=" IDENT "index" "=" INT "new-blend-mode" "=" IDENT
+edit-paint-layer = "edit-paint-layer" "object-id" "=" IDENT "layer-index" "=" INT runs-table
 
 object-block = "object" "{" object-field* "}"
 object-field = {"id" "=" IDENT} | {"name" "=" TEXT} | {"smooth-shading" "=" BOOL} | mesh | object-transform | paint-layers
-object-patch-block = "patch" "{" object-patch-field* "}"
-object-patch-field = {"name" "=" TEXT} | {"smooth-shading" "=" BOOL} | mesh | object-transform
 object-transform = "transform" "{" transform-field* "}"
 transform-field = {"position" "=" VEC3} | {"rotation" "=" VEC3} | {"scale" "=" VEC3}
 mesh = "mesh" "{" vertices halfedges faces "}"
@@ -32,12 +43,5 @@ paint-layers = "paint-layers" "=" "[" paint-layer* "]" | "paint-layers" "{" pain
 paint-layer = "{" paint-layer-field* "}"
 paint-layer-field = {"name" "=" TEXT} | {"visible" "=" BOOL} | {"opacity" "=" FLOAT} | {"blend-mode" "=" IDENT} | {"pixels" "=" TEXT}
 paint-layer-block = "paint-layer" "{" paint-layer-field* "}"
-paint-layer-patch-block = "patch" "{" paint-layer-patch-field* "}"
-paint-layer-patch-field = {"name" "=" TEXT} | {"visible" "=" BOOL} | {"opacity" "=" FLOAT} | {"blend-mode" "=" IDENT}
 runs-table = "runs" "{" run* "}"
 run = "run" "offset" "=" INT "bytes" "=" TEXT
-snapshot-block = "snapshot" "{" schema-line? objects-field? scene-compose? "}"
-schema-line = "schema" "=" IDENT
-objects-field = "objects" "=" "[" object* "]" | "objects" "=" object*
-object = "{" object-field* "}"
-scene-compose = "scene" "{" layer* "}"

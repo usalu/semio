@@ -146,7 +146,7 @@ impl Default for SemioDrawingSnapshot {
 
 //#region 🔖️TextPrimitives
 /// 🧪️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION drawing wave (following the
-/// workflow pilot's proven template, `ws-codec-workflow-report.md`, and brep's own tagged-enum
+/// flow pilot's proven template, `ws-codec-workflow-report.md`, and brep's own tagged-enum
 /// precedent, `ws-codec-brep-report.md`): real hex/bracket-encoded value primitives backing the
 /// hand-rolled `ArtifactDsl` below — replaces the old hex-of-`serde_json` passthrough.
 ///
@@ -410,7 +410,7 @@ fn parse_drawing_snapshot_body(body: &str) -> Result<SemioDrawingSnapshot, Strin
 
 //#region 🔖️BinaryPrimitives
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers `stdio.semio.workflow`'s/`stdio.semio.brep`'s upgraded
+/// `store::ByteReader`, same helpers `stdio.semio.flow`'s/`stdio.semio.brep`'s upgraded
 /// `ArtifactPack` reuse) backing the real `ArtifactPack` below — replaces the old
 /// `serde_json::to_vec`-in-envelope shortcut.
 fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
@@ -713,7 +713,7 @@ fn decode_drawing_snapshot_binary(bytes: &[u8]) -> Result<SemioDrawingSnapshot, 
 
 //#region 🔖️HandcraftedArtifactCodecs
 /// 🎁 Real structured text/binary codecs (drawing wave — off the old hex-dump-of-`serde_json`
-/// shortcut, following the workflow/brep waves' proven template). Wrapped in the repo-wide
+/// shortcut, following the flow/brep waves' proven template). Wrapped in the repo-wide
 /// `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioDrawingSnapshot {
     const EXTENSION: &'static str = "semio";

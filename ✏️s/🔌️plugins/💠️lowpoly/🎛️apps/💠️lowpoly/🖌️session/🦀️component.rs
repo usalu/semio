@@ -110,7 +110,10 @@ pub fn paint_uv_from_command(u: Option<f32>, v: Option<f32>, x: Option<f32>, y: 
     Some((u as f32, v as f32))
 }
 
-/// @emoji 🧮️ The changed-field patch turning `before` into `after`, for a mesh edit's `Objects(Patch)`.
+/// @emoji 🧮️ The changed-field patch turning `before` into `after` — an internal diff-fragment type
+/// (never a mutation payload itself, per `📓️taxonomy.md`'s option-bag rule), consumed by
+/// `semantic_mutation_for_patch` below to pick the one real semantic mutation kind a kernel edit or
+/// gumball drag actually touched.
 pub fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> LowpolyObjectPatch {
     LowpolyObjectPatch {
         name: (before.name != after.name).then(|| after.name.clone()),
@@ -118,6 +121,36 @@ pub fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> Lowpo
         transform: (before.transform != after.transform).then(|| after.transform.clone()),
         mesh_json: (before.mesh_json != after.mesh_json).then(|| after.mesh_json.clone()),
     }
+}
+
+/// @emoji 🎯️ Maps an `object_patch_diff` result to the one semantic `LowpolyMutation` it represents —
+/// a kernel mesh edit or gumball drag changes exactly one facet per commit (name XOR smooth-shading
+/// XOR one transform axis XOR mesh), never several at once, so the first populated field wins.
+/// Transform sub-field priority (position, then rotation, then scale) matches the gumball's own
+/// single-axis-per-drag gesture (`translate_selection`/`rotate_selection`/`scale_selection` each
+/// mutate exactly one `LowpolyTransform` field via `apply_transform`).
+pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::artifacts::lowpoly::LowpolyTransform, patch: &LowpolyObjectPatch) -> Option<LowpolyMutation> {
+    if let Some(new_name) = &patch.name {
+        return Some(LowpolyMutation::RenameObject(crate::artifacts::lowpoly::mutations::rename_object::mutation::RenameObject { id, new_name: new_name.clone() }));
+    }
+    if let Some(new_smooth_shading) = patch.smooth_shading {
+        return Some(LowpolyMutation::ChangeObjectSmoothShading(crate::artifacts::lowpoly::mutations::change_object_smooth_shading::mutation::ChangeObjectSmoothShading { id, new_smooth_shading }));
+    }
+    if let Some(transform) = &patch.transform {
+        if transform.position != before_transform.position {
+            return Some(LowpolyMutation::MoveObject(crate::artifacts::lowpoly::mutations::move_object::mutation::MoveObject { id, new_position: transform.position }));
+        }
+        if transform.rotation != before_transform.rotation {
+            return Some(LowpolyMutation::RotateObject(crate::artifacts::lowpoly::mutations::rotate_object::mutation::RotateObject { id, new_rotation: transform.rotation }));
+        }
+        if transform.scale != before_transform.scale {
+            return Some(LowpolyMutation::ScaleObject(crate::artifacts::lowpoly::mutations::scale_object::mutation::ScaleObject { id, new_scale: transform.scale }));
+        }
+    }
+    if let Some(new_mesh_json) = &patch.mesh_json {
+        return Some(LowpolyMutation::ReplaceObjectMesh(crate::artifacts::lowpoly::mutations::replace_object_mesh::mutation::ReplaceObjectMesh { id, new_mesh_json: new_mesh_json.clone() }));
+    }
+    None
 }
 
 fn encode_rgba_png(pixels: &[u8], width: u32, height: u32) -> Result<Vec<u8>, String> {
@@ -167,10 +200,10 @@ pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, edit: imp
         return Emit::default();
     };
     let patch = object_patch_diff(&before, &after);
-    if patch == LowpolyObjectPatch::default() {
-        return Emit::default();
+    match semantic_mutation_for_patch(object_id, &before.transform, &patch) {
+        Some(mutation) => Emit::mutations(vec![mutation]),
+        None => Emit::default(),
     }
-    Emit::mutations(vec![LowpolyMutation::ObjectsPatch { id: object_id, patch }])
 }
 //#endregion 🔖️Transform
 
@@ -298,7 +331,7 @@ impl LowpolyScratch {
         if runs.is_empty() {
             return Emit::default();
         }
-        Emit::commit(vec![LowpolyMutation::PaintStroke { object_id: session.object_id, layer_index: session.layer_index, runs }], "Paint stroke")
+        Emit::commit(vec![LowpolyMutation::EditPaintLayer(crate::artifacts::lowpoly::mutations::edit_paint_layer::mutation::EditPaintLayer { object_id: session.object_id, layer_index: session.layer_index, runs })], "Paint stroke")
     }
 
     /// @emoji 🖌️ One mid-drag paint tick: brush/eraser/fill mutate the stroke scratch, eyedropper samples
@@ -354,7 +387,7 @@ impl LowpolyScratch {
             return Emit::default();
         }
         self.stroke_dirty += 1;
-        Emit::commit(vec![LowpolyMutation::PaintStroke { object_id, layer_index, runs }], "Fill")
+        Emit::commit(vec![LowpolyMutation::EditPaintLayer(crate::artifacts::lowpoly::mutations::edit_paint_layer::mutation::EditPaintLayer { object_id, layer_index, runs })], "Fill")
     }
 
     /// @emoji 🧲️ Runs one gumball transform delta against a working scratch document. Mid-drag it emits
@@ -410,10 +443,10 @@ impl LowpolyScratch {
             return Emit::default();
         };
         let patch = object_patch_diff(&session.before, &after);
-        if patch == LowpolyObjectPatch::default() {
-            return Emit::default();
+        match semantic_mutation_for_patch(session.object_id, &session.before.transform, &patch) {
+            Some(mutation) => Emit::commit(vec![mutation], "Transform selection"),
+            None => Emit::default(),
         }
-        Emit::commit(vec![LowpolyMutation::ObjectsPatch { id: session.object_id, patch }], "Transform selection")
     }
 
     //#region 🔖️GesturePreview

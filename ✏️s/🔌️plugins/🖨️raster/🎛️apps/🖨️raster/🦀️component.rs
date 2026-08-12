@@ -100,8 +100,6 @@ semio_framework_plugin::app_commands! {
     /// `RasterPlayApp::command_id` match arms respectively. **Row order is the binary variant ordinal:
     /// appending is safe, reordering is a wire-format break.**
     pub enum RasterCommand for RasterSnapshot, RasterMutation, RasterConfig, RasterConfigMutation {
-        "setSnapshot" as "set-snapshot" => set_snapshot::SetSnapshot,
-        "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "addLayer" as "add-layer" => add_layer::AddLayer,
         "dropLayerKind" as "drop-layer-kind" => drop_layer_kind::DropLayerKind,
         "setLayerVisible" as "set-layer-visible" => set_layer_visible::SetLayerVisible,
@@ -128,7 +126,6 @@ semio_framework_plugin::app_commands! {
 // payload module is imported here under its own flat name.
 use crate::apps::raster::commands::brush::{set_brush_opacity, set_brush_size};
 use crate::apps::raster::commands::camera::{set_camera, set_camera_zoom, set_composite_viewport};
-use crate::apps::raster::commands::document::{set_active_example, set_snapshot};
 use crate::apps::raster::commands::layer::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
 use crate::apps::raster::commands::locale::set_locale;
 use crate::apps::raster::commands::selection::{select_all, set_hover, set_selection};
@@ -180,10 +177,11 @@ impl ArtifactApp for RasterPlayApp {
         }
     }
 
-    /// 🎞️ `image:in` inserts the incoming raster media as a new composited layer + embedded asset
-    /// (`raster_append_image_layer`) via a whole-document `ReplaceDocument` — `RasterMutation` has
-    /// no granular "add asset" step (see that function's doc). Falls through to the inherited
-    /// `document:in` default (base64 pack replace) for any other port.
+    /// 🎞️ `image:in` inserts the incoming raster media as a new composited layer + embedded asset —
+    /// two real semantic mutations (`add-layer-asset` then `create-layer`, in dependency order)
+    /// bundled in one `Emit`, never a whole-document replace (`RasterMutation` has no such variant
+    /// anymore). Falls through to the inherited `document:in` default (`MediaError::NotImplemented`,
+    /// since `whole_document_operation` is no longer overridden) for any other port.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RasterSnapshot>) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "image:in" {
             return Err(MediaError::NotImplemented);
@@ -191,12 +189,11 @@ impl ArtifactApp for RasterPlayApp {
         let MediaPayload::Structured { json: png_base64, .. } = &media.payload else {
             return Err(MediaError::Payload(port.to_string(), "image:in only accepts a Structured (base64 PNG) payload".into()));
         };
-        let next = crate::artifacts::raster::engine::raster_append_image_layer(doc.snapshot, png_base64);
-        Ok(Emit::mutations(vec![RasterMutation::SetSnapshot { snapshot: next }]))
-    }
-
-    fn whole_document_operation(snapshot: RasterSnapshot) -> Option<RasterMutation> {
-        Some(RasterMutation::SetSnapshot { snapshot })
+        let (asset_id, asset, layer) = crate::artifacts::raster::engine::raster_image_layer_and_asset(png_base64);
+        Ok(Emit::mutations(vec![
+            RasterMutation::AddLayerAsset(crate::artifacts::raster::mutations::add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
+            RasterMutation::CreateLayer(crate::artifacts::raster::mutations::create_layer::mutation::CreateLayer { parent_id: None, index: doc.snapshot.layers.len(), layer: Box::new(layer) }),
+        ]))
     }
 
     fn command_id(command: &RasterCommand) -> &'static str {
@@ -275,10 +272,10 @@ pub fn create_raster_app() -> App {
             .panel_tab_def(crate::apps::raster::panels::catalogue::definition())
             .panel_tab_def(crate::apps::raster::panels::masks::definition())
             .panel_tab_def(crate::apps::raster::panels::inspection::definition())
-            // ✏️ Palette-visible content operations.
+            // ✏️ Palette-visible content operations. Whole-document replace (`setSnapshot`,
+            // `setActiveExample`) is gone — file-open/load-example go through the `.example(...)`
+            // registration at the bottom of this builder, entirely outside `RasterMutation` history.
             .mutation("addLayer", LocalizedLabel::native("Add Layer", "Ebene hinzufügen"))
-            .mutation("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"))
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🔧️ Internal content operations — layer-tree / catalogue-drop / inspector bound.
             .action_with(raster_internal_action("setLayerVisible", LocalizedLabel::native("Set Layer Visible", "Ebenensichtbarkeit festlegen"), ActionKind::Mutation))
             .action_with(raster_internal_action("toggleLayerVisible", LocalizedLabel::native("Toggle Layer Visible", "Ebenensichtbarkeit umschalten"), ActionKind::Mutation))
@@ -305,9 +302,6 @@ pub fn create_raster_app() -> App {
                     ActionArgOption::new("group", LocalizedLabel::native("Group", "Gruppe")),
                     ActionArgOption::new("adjustment", LocalizedLabel::native("Adjustment", "Anpassung")),
                 ]).required().default_value("pixel"),
-            ])
-            .action_args("setSnapshot", vec![
-                ActionArgDef::text("document", LocalizedLabel::native(semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument")),
             ])
             // 🧰️ Composite-window utilities — one exclusive set, active utility host-owned (never a document operation).
             .utility(raster_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", "Select", UtilityCategory::Selection))
@@ -670,8 +664,6 @@ mod tests {
     /// permanent wire guard, feeding the round-trip/keyword-uniqueness/leading-token laws below.
     fn every_command() -> Vec<RasterCommand> {
         vec![
-            RasterCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: empty_raster_document() }),
-            RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "semio".into() }),
             RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() }),
             RasterCommand::DropLayerKind(drop_layer_kind::DropLayerKind { kind: "group".into() }),
             RasterCommand::SetLayerVisible(set_layer_visible::SetLayerVisible { layer_id: "l1".into(), visible: Some(true) }),
@@ -707,7 +699,7 @@ mod tests {
     #[test]
     fn command_wire_keywords_are_unique_across_every_row() {
         let commands = every_command();
-        assert_eq!(commands.len(), 21, "every RasterCommand row must be covered by every_command()");
+        assert_eq!(commands.len(), 19, "every RasterCommand row must be covered by every_command()");
         let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
         keywords.sort();
         keywords.dedup();
@@ -723,8 +715,6 @@ mod tests {
             .into_iter()
             .map(|command| {
                 let keyword: &'static str = match &command {
-                    RasterCommand::SetSnapshot(_) => "set-snapshot",
-                    RasterCommand::SetActiveExample(_) => "active-example",
                     RasterCommand::AddLayer(_) => "add-layer",
                     RasterCommand::DropLayerKind(_) => "drop-layer-kind",
                     RasterCommand::SetLayerVisible(_) => "set-layer-visible",

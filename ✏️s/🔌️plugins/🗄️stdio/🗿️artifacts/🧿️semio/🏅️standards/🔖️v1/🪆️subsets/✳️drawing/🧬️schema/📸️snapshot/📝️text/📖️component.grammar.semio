@@ -4,7 +4,7 @@ extension semio
 start document
 
 # ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION drawing wave (following the
-# workflow/brep waves' proven template). Real grammar for
+# flow/brep waves' proven template). Real grammar for
 # `SemioDrawingSnapshot::print_dsl`/`parse_dsl` (📸️snapshot/🦀️component.rs's
 # `print_drawing_snapshot_body`/`parse_drawing_snapshot_body`) — hand-rolled (`PathSegment`/
 # `DrawNode` are data-carrying tagged enums, `DrawNode` additionally RECURSIVE via

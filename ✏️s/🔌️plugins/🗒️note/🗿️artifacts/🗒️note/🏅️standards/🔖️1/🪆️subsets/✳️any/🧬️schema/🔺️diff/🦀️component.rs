@@ -63,9 +63,10 @@ pub struct NoteBlocksDelta {
 
 /// ➕ One added/reparented block: `parent_id` (`None` = document root) and `index` (`None` =
 /// append) place it — `create-block`/`duplicate-block(s)`/`move-block-to-container` all diff
-/// through this, never a whole-`blocks` vec swap.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+/// through this, never a whole-`blocks` vec swap. No `Default` derive: `NoteBlockNode` (a tagged
+/// enum) has no sensible default value, and every construction site fills all three fields anyway.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct NoteAddedBlockEntry {
     pub parent_id: Option<String>,
     pub index: Option<usize>,

@@ -1,5 +1,287 @@
 {
-  "$id": "https://semio.tech/schema/stdio.json/mutations/text.json",
-  "title": "JsonMutationsText",
-  "type": "object"
+  "$id": "https://semio.tech/schema/s.mathematical.mathematical/mutations/text.json",
+  "title": "MathematicalMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "title": "ChangeGraphDirected",
+      "properties": {
+        "kind": {
+          "const": "change-graph-directed"
+        },
+        "newDirected": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "newDirected"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "UpdateGraphAlgorithm",
+      "properties": {
+        "kind": {
+          "const": "update-graph-algorithm"
+        },
+        "newAlgorithm": {
+          "type": "string"
+        },
+        "newAlgorithmSeed": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "newAlgorithm"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ReplaceGraph",
+      "properties": {
+        "kind": {
+          "const": "replace-graph"
+        },
+        "graph": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "graph"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "CreateNode",
+      "properties": {
+        "kind": {
+          "const": "create-node"
+        },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "label",
+        "x",
+        "y"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "DeleteNode",
+      "properties": {
+        "kind": {
+          "const": "delete-node"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "DeleteNodes",
+      "properties": {
+        "kind": {
+          "const": "delete-nodes"
+        },
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "ids"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ChangeNodeLabel",
+      "properties": {
+        "kind": {
+          "const": "change-node-label"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newLabel": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "newLabel"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "MoveNode",
+      "properties": {
+        "kind": {
+          "const": "move-node"
+        },
+        "id": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "x",
+        "y"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ConnectNodes",
+      "properties": {
+        "kind": {
+          "const": "connect-nodes"
+        },
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "source",
+        "target"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "DisconnectNodes",
+      "properties": {
+        "kind": {
+          "const": "disconnect-nodes"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ReplacePoints",
+      "properties": {
+        "kind": {
+          "const": "replace-points"
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "points"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "InsertPoint",
+      "properties": {
+        "kind": {
+          "const": "insert-point"
+        },
+        "index": {
+          "type": "integer"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "index",
+        "x",
+        "y"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "RemovePoint",
+      "properties": {
+        "kind": {
+          "const": "remove-point"
+        },
+        "index": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "index"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "MovePoint",
+      "properties": {
+        "kind": {
+          "const": "move-point"
+        },
+        "index": {
+          "type": "integer"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "index",
+        "x",
+        "y"
+      ]
+    }
+  ]
 }

@@ -1,6 +1,6 @@
 //! ⚙️ Raster artifact — headless compute (constitutional: engine).
 
-use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterSnapshot, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode, RasterSnapshot, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use base64::Engine;
 use semio_framework::{io::io_compose_via, io_dispatch, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::png::PngSnapshot;
@@ -322,24 +322,6 @@ pub fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
     }
 }
 
-/// 🩹️ Builds a sparse {@link RasterLayerPatch} for a `patchLayer`/`patchLayers` field write.
-pub fn layer_patch_for_field(field: &str, value: &Value, prior: &RasterLayerNode) -> Option<RasterLayerPatch> {
-    let mut patch = RasterLayerPatch::default();
-    let opacity_of = layer_opacity(prior) as f64;
-    match field {
-        "name" => patch.name = Some(value.as_str().unwrap_or("").into()),
-        "visible" => patch.visible = Some(value.as_bool().unwrap_or_else(|| !layer_visible(prior))),
-        "opacity" => patch.opacity = Some(value.as_f64().unwrap_or(opacity_of) as f32),
-        "blendMode" => patch.blend_mode = Some(value.as_str().unwrap_or("normal").into()),
-        "transformX" => patch.transform_x = Some(value.as_f64().unwrap_or(0.0)),
-        "transformY" => patch.transform_y = Some(value.as_f64().unwrap_or(0.0)),
-        "width" => patch.width = Some(value.as_u64().unwrap_or(512) as u32),
-        "height" => patch.height = Some(value.as_u64().unwrap_or(512) as u32),
-        "adjustmentKind" => patch.adjustment_kind = Some(value.as_str().unwrap_or("brightnessContrast").into()),
-        _ => return None,
-    }
-    Some(patch)
-}
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️SemioBridge
@@ -580,18 +562,14 @@ pub fn raster_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -
     serde_json::to_value(&document).map_err(|error| error.to_string())
 }
 
-/// 📥️ Builds the whole-document replacement that appends the incoming `image:in` media as one new
-/// pixel layer + embedded asset — `RasterMutation` has no granular "add asset" step (assets are
-/// seeded with the document today), so this mirrors `raster_document_json_from_dwg`'s "compute the
-/// whole next document, then `ReplaceDocument`" shape rather than inventing a narrower op. `png_base64`
-/// is raw (unprefixed) base64 PNG bytes — the same convention `shooting_engine::shooting_photo_media`
-/// produces on `photos:out` and the Vector→Raster run-crate converter produces for a draw `vector:out`
-/// source. Real decode through `s.stdio.semio/v1/image` (`semio_image_from_png_bytes`) recovers the
-/// real width/height instead of leaving them unset, and re-encodes through the real serializer
-/// instead of storing the caller's bytes verbatim.
 /// 🎞️ Decodes an incoming `image:in` PNG payload into an `(asset_id, asset, layer)` triple, ready to
 /// be emitted as two real semantic mutations (`add-layer-asset` then `create-layer`) instead of a
-/// whole-document replace — no `RasterMutation::SetSnapshot` involved (that variant is gone).
+/// whole-document replace — the dispatch enum has no such variant anymore. `png_base64` is raw
+/// (unprefixed) base64 PNG bytes — the same convention `shooting_engine::shooting_photo_media`
+/// produces on `photos:out` and the Vector→Raster run-crate converter produces for a draw
+/// `vector:out` source. Real decode through `s.stdio.semio/v1/image` (`semio_image_from_png_bytes`)
+/// recovers the real width/height instead of leaving them unset, and re-encodes through the real
+/// serializer instead of storing the caller's bytes verbatim.
 pub fn raster_image_layer_and_asset(png_base64: &str) -> (String, RasterImageAsset, RasterLayerNode) {
     let asset_key = create_raster_id("image-in-asset");
     let raw_bytes = base64::engine::general_purpose::STANDARD.decode(png_base64.as_bytes()).unwrap_or_default();

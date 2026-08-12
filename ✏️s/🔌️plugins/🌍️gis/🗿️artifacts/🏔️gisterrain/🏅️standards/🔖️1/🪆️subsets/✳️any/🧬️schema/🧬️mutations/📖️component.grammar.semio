@@ -1,13 +1,16 @@
 dialect grammar
-grammar gis.gisterrain.op
-extension gisterrain
-use family-geo
-start mutation
+grammar gis.gisterrain.mutations
+extension gis
+start line
 
-artifact-mark = "gis.gisterrain-op"
-mutation = artifact-mark geo-op+
-geo-op = "set-crs" crs-field+ | "add-point" point-field+ | "tile-ref" tile-field+
-crs-field = "crs" "=" IDENT
-point-field = "lat" "=" FLOAT | "lon" "=" FLOAT | "alt" "=" FLOAT
-tile-field = "z" "=" INT | "x" "=" INT | "y" "=" INT
-point = FLOAT FLOAT FLOAT?
+line = change-exaggeration
+     / change-imported-features
+
+change-exaggeration = "change-exaggeration" SP number
+change-imported-features = "change-imported-features"
+
+id = OCTET+
+number = OCTET+
+text = OCTET+
+boolean = "true" / "false"
+block = "{" NL OCTET+ "}"

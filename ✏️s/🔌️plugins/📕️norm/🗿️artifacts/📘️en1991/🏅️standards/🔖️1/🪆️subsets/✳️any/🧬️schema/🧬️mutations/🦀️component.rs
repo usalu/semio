@@ -22,310 +22,52 @@
 //! rather than `change-en-v-b-m-s`; the payload's own `new_<field>` Rust field name and the diff/
 //! inverse bodies still address the exact snapshot field (`en_v_b_m_s`) regardless.
 //!
-//! Every triad leaf is self-wired directly below (`#[path]`, `🔖️LeafWiring` region) rather than in
-//! `📦️glue.rs` — this facet's fan-out (26/08/12/SEMANTIC-MUTATIONS-OVERHAUL) is scoped to files
-//! inside this artifact directory only; `📦️glue.rs` is plugin-shared and out of that scope. The old
-//! generic `📄set-snapshot` leaf stays physically present as an orphan stub (see its own doc
-//! comments) because `📦️glue.rs` still `#[path]`-wires it — cleanup tracked as a `sharedFileRequests`
-//! entry in this ticket's wave2 report.
+//! Every triad leaf is mounted directly as a `mutations`-sibling module in `📦️glue.rs` (this lane's
+//! agent owns `📦️glue.rs`, so no self-wiring `#[path = "."]` blocks are needed here — unlike the
+//! wave-2 precedent, whose orphaned `📄set-snapshot` stub is deleted along with its dangling glue
+//! mount). Each triad directory carries its own unique emoji prefix within this facet.
 
 use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️LeafWiring
-#[path = "."]
-pub mod change_area_m2 {
-    #[path = "📐change-area-m2/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📐change-area-m2/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📐change-area-m2/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_category {
-    #[path = "🏷️change-category/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🏷️change-category/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🏷️change-category/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_annex {
-    #[path = "📗change-annex/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📗change-annex/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📗change-annex/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_self_weight_material {
-    #[path = "🧱change-self-weight-material/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🧱change-self-weight-material/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🧱change-self-weight-material/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_self_weight_thickness_m {
-    #[path = "📏change-self-weight-thickness-m/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📏change-self-weight-thickness-m/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📏change-self-weight-thickness-m/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_assumed_gk_kn_m2 {
-    #[path = "⚖️change-assumed-gk-kn-m2/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "⚖️change-assumed-gk-kn-m2/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "⚖️change-assumed-gk-kn-m2/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_fire_curve {
-    #[path = "🔥change-fire-curve/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔥change-fire-curve/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔥change-fire-curve/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_fire_resistance_min {
-    #[path = "⏱️change-fire-resistance-min/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "⏱️change-fire-resistance-min/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "⏱️change-fire-resistance-min/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_fire_member_capacity_c {
-    #[path = "🧯change-fire-member-capacity-c/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🧯change-fire-member-capacity-c/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🧯change-fire-member-capacity-c/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_snow_zone {
-    #[path = "❄️change-snow-zone/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "❄️change-snow-zone/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "❄️change-snow-zone/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_snow_altitude_m {
-    #[path = "⛰️change-snow-altitude-m/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "⛰️change-snow-altitude-m/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "⛰️change-snow-altitude-m/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_en_sk_kn_m2 {
-    #[path = "☃️change-en-sk-kn-m2/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "☃️change-en-sk-kn-m2/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "☃️change-en-sk-kn-m2/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_wind_zone {
-    #[path = "🌬️change-wind-zone/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🌬️change-wind-zone/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🌬️change-wind-zone/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_en_vbms {
-    #[path = "💨change-en-vbms/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "💨change-en-vbms/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "💨change-en-vbms/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_delta_tk {
-    #[path = "🌡️change-delta-tk/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🌡️change-delta-tk/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🌡️change-delta-tk/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_construction_activity {
-    #[path = "🏗️change-construction-activity/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🏗️change-construction-activity/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🏗️change-construction-activity/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_accidental_mass_t {
-    #[path = "💥change-accidental-mass-t/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "💥change-accidental-mass-t/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "💥change-accidental-mass-t/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_accidental_speed_km_h {
-    #[path = "🚗change-accidental-speed-km-h/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🚗change-accidental-speed-km-h/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🚗change-accidental-speed-km-h/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_bridge_lane {
-    #[path = "🌉change-bridge-lane/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🌉change-bridge-lane/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🌉change-bridge-lane/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_bridge_span_m {
-    #[path = "🛣️change-bridge-span-m/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🛣️change-bridge-span-m/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🛣️change-bridge-span-m/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_bridge_lane_width_m {
-    #[path = "↔️change-bridge-lane-width-m/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "↔️change-bridge-lane-width-m/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "↔️change-bridge-lane-width-m/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_bridge_moment_resistance_knm {
-    #[path = "🔩change-bridge-moment-resistance-knm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔩change-bridge-moment-resistance-knm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔩change-bridge-moment-resistance-knm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_crane_class {
-    #[path = "🪝change-crane-class/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🪝change-crane-class/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🪝change-crane-class/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_hoist_class {
-    #[path = "⛓️change-hoist-class/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "⛓️change-hoist-class/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "⛓️change-hoist-class/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_hoisting_speed_ms {
-    #[path = "⬆️change-hoisting-speed-ms/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "⬆️change-hoisting-speed-ms/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "⬆️change-hoisting-speed-ms/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_silo_bulk_density_kn_m3 {
-    #[path = "🌾change-silo-bulk-density-kn-m3/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🌾change-silo-bulk-density-kn-m3/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🌾change-silo-bulk-density-kn-m3/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_silo_height_m {
-    #[path = "🗼change-silo-height-m/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗼change-silo-height-m/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗼change-silo-height-m/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_silo_hydraulic_radius_m {
-    #[path = "💧change-silo-hydraulic-radius-m/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "💧change-silo-hydraulic-radius-m/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "💧change-silo-hydraulic-radius-m/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_silo_mu {
-    #[path = "📉change-silo-mu/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📉change-silo-mu/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📉change-silo-mu/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_silo_k {
-    #[path = "🔢change-silo-k/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔢change-silo-k/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔢change-silo-k/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_cs {
-    #[path = "🌀change-cs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🌀change-cs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🌀change-cs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_cd {
-    #[path = "🌪️change-cd/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🌪️change-cd/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🌪️change-cd/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-//#endregion 🔖️LeafWiring
-
 //#region 🔖️Mutations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<En1991Snapshot, En1991Mutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️component.rs`.
+//#region 🔖️Leaves
+use super::change_area_m2;
+use super::change_category;
+use super::change_annex;
+use super::change_self_weight_material;
+use super::change_self_weight_thickness_m;
+use super::change_assumed_gk_kn_m2;
+use super::change_fire_curve;
+use super::change_fire_resistance_min;
+use super::change_fire_member_capacity_c;
+use super::change_snow_zone;
+use super::change_snow_altitude_m;
+use super::change_en_sk_kn_m2;
+use super::change_wind_zone;
+use super::change_en_vbms;
+use super::change_delta_tk;
+use super::change_construction_activity;
+use super::change_accidental_mass_t;
+use super::change_accidental_speed_km_h;
+use super::change_bridge_lane;
+use super::change_bridge_span_m;
+use super::change_bridge_lane_width_m;
+use super::change_bridge_moment_resistance_knm;
+use super::change_crane_class;
+use super::change_hoist_class;
+use super::change_hoisting_speed_ms;
+use super::change_silo_bulk_density_kn_m3;
+use super::change_silo_height_m;
+use super::change_silo_hydraulic_radius_m;
+use super::change_silo_mu;
+use super::change_silo_k;
+use super::change_cs;
+use super::change_cd;
+//#endregion 🔖️Leaves
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = En1991Snapshot, diff = En1991Diff, schema = "s.norm.en1991")]
 pub enum En1991Mutation {
@@ -363,6 +105,51 @@ pub enum En1991Mutation {
     ChangeCD(change_cd::mutation::ChangeCD),
 }
 //#endregion 🔖️Mutations
+
+//#region 🔖️FromSnapshot
+impl En1991Mutation {
+    /// 📤️ Decomposes a whole `En1991Snapshot` into one `change-<field>` mutation per
+    /// persistent field — the closed-vocabulary replacement for the banned whole-document-replace
+    /// variant, used by `import_media`'s `"model:in"` port and the `set-snapshot` app command to
+    /// bundle a bulk document replacement into a single atomic `Emit::commit`.
+    pub fn from_snapshot(snapshot: &En1991Snapshot) -> Vec<En1991Mutation> {
+        let mut mutations = Vec::with_capacity(32);
+        mutations.push(En1991Mutation::ChangeDeltaTK(change_delta_tk::mutation::ChangeDeltaTK { new_delta_t_k: snapshot.delta_t_k.clone() }));
+        mutations.push(En1991Mutation::ChangeBridgeLane(change_bridge_lane::mutation::ChangeBridgeLane { new_bridge_lane: snapshot.bridge_lane.clone() }));
+        mutations.push(En1991Mutation::ChangeSiloBulkDensityKnM3(change_silo_bulk_density_kn_m3::mutation::ChangeSiloBulkDensityKnM3 { new_silo_bulk_density_kn_m3: snapshot.silo_bulk_density_kn_m3.clone() }));
+        mutations.push(En1991Mutation::ChangeWindZone(change_wind_zone::mutation::ChangeWindZone { new_wind_zone: snapshot.wind_zone.clone() }));
+        mutations.push(En1991Mutation::ChangeSnowAltitudeM(change_snow_altitude_m::mutation::ChangeSnowAltitudeM { new_snow_altitude_m: snapshot.snow_altitude_m.clone() }));
+        mutations.push(En1991Mutation::ChangeHoistingSpeedMS(change_hoisting_speed_ms::mutation::ChangeHoistingSpeedMS { new_hoisting_speed_m_s: snapshot.hoisting_speed_m_s.clone() }));
+        mutations.push(En1991Mutation::ChangeAccidentalMassT(change_accidental_mass_t::mutation::ChangeAccidentalMassT { new_accidental_mass_t: snapshot.accidental_mass_t.clone() }));
+        mutations.push(En1991Mutation::ChangeSiloHeightM(change_silo_height_m::mutation::ChangeSiloHeightM { new_silo_height_m: snapshot.silo_height_m.clone() }));
+        mutations.push(En1991Mutation::ChangeAssumedGKKnM2(change_assumed_gk_kn_m2::mutation::ChangeAssumedGKKnM2 { new_assumed_g_k_kn_m2: snapshot.assumed_g_k_kn_m2.clone() }));
+        mutations.push(En1991Mutation::ChangeBridgeSpanM(change_bridge_span_m::mutation::ChangeBridgeSpanM { new_bridge_span_m: snapshot.bridge_span_m.clone() }));
+        mutations.push(En1991Mutation::ChangeEnSKKnM2(change_en_sk_kn_m2::mutation::ChangeEnSKKnM2 { new_en_s_k_kn_m2: snapshot.en_s_k_kn_m2.clone() }));
+        mutations.push(En1991Mutation::ChangeFireMemberCapacityC(change_fire_member_capacity_c::mutation::ChangeFireMemberCapacityC { new_fire_member_capacity_c: snapshot.fire_member_capacity_c.clone() }));
+        mutations.push(En1991Mutation::ChangeSelfWeightMaterial(change_self_weight_material::mutation::ChangeSelfWeightMaterial { new_self_weight_material: snapshot.self_weight_material.clone() }));
+        mutations.push(En1991Mutation::ChangeSnowZone(change_snow_zone::mutation::ChangeSnowZone { new_snow_zone: snapshot.snow_zone.clone() }));
+        mutations.push(En1991Mutation::ChangeEnVBMS(change_en_vbms::mutation::ChangeEnVBMS { new_en_v_b_m_s: snapshot.en_v_b_m_s.clone() }));
+        mutations.push(En1991Mutation::ChangeSiloMu(change_silo_mu::mutation::ChangeSiloMu { new_silo_mu: snapshot.silo_mu.clone() }));
+        mutations.push(En1991Mutation::ChangeSiloHydraulicRadiusM(change_silo_hydraulic_radius_m::mutation::ChangeSiloHydraulicRadiusM { new_silo_hydraulic_radius_m: snapshot.silo_hydraulic_radius_m.clone() }));
+        mutations.push(En1991Mutation::ChangeBridgeMomentResistanceKnm(change_bridge_moment_resistance_knm::mutation::ChangeBridgeMomentResistanceKnm { new_bridge_moment_resistance_knm: snapshot.bridge_moment_resistance_knm.clone() }));
+        mutations.push(En1991Mutation::ChangeCraneClass(change_crane_class::mutation::ChangeCraneClass { new_crane_class: snapshot.crane_class.clone() }));
+        mutations.push(En1991Mutation::ChangeCD(change_cd::mutation::ChangeCD { new_c_d: snapshot.c_d.clone() }));
+        mutations.push(En1991Mutation::ChangeCS(change_cs::mutation::ChangeCS { new_c_s: snapshot.c_s.clone() }));
+        mutations.push(En1991Mutation::ChangeSiloK(change_silo_k::mutation::ChangeSiloK { new_silo_k: snapshot.silo_k.clone() }));
+        mutations.push(En1991Mutation::ChangeFireCurve(change_fire_curve::mutation::ChangeFireCurve { new_fire_curve: snapshot.fire_curve.clone() }));
+        mutations.push(En1991Mutation::ChangeAccidentalSpeedKmH(change_accidental_speed_km_h::mutation::ChangeAccidentalSpeedKmH { new_accidental_speed_km_h: snapshot.accidental_speed_km_h.clone() }));
+        mutations.push(En1991Mutation::ChangeBridgeLaneWidthM(change_bridge_lane_width_m::mutation::ChangeBridgeLaneWidthM { new_bridge_lane_width_m: snapshot.bridge_lane_width_m.clone() }));
+        mutations.push(En1991Mutation::ChangeHoistClass(change_hoist_class::mutation::ChangeHoistClass { new_hoist_class: snapshot.hoist_class.clone() }));
+        mutations.push(En1991Mutation::ChangeAreaM2(change_area_m2::mutation::ChangeAreaM2 { new_area_m2: snapshot.area_m2.clone() }));
+        mutations.push(En1991Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: snapshot.annex.clone() }));
+        mutations.push(En1991Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: snapshot.category.clone() }));
+        mutations.push(En1991Mutation::ChangeSelfWeightThicknessM(change_self_weight_thickness_m::mutation::ChangeSelfWeightThicknessM { new_self_weight_thickness_m: snapshot.self_weight_thickness_m.clone() }));
+        mutations.push(En1991Mutation::ChangeFireResistanceMin(change_fire_resistance_min::mutation::ChangeFireResistanceMin { new_fire_resistance_min: snapshot.fire_resistance_min.clone() }));
+        mutations.push(En1991Mutation::ChangeConstructionActivity(change_construction_activity::mutation::ChangeConstructionActivity { new_construction_activity: snapshot.construction_activity.clone() }));
+        mutations
+    }
+}
+//#endregion 🔖️FromSnapshot
 
 //#region 🧪️Tests
 #[cfg(test)]

@@ -1,13 +1,410 @@
 dialect grammar
-grammar architect.program.op
+grammar program.mutations
 extension program
-use family-sheet
-start mutation
+start line
 
-artifact-mark = "architect.program-op"
-mutation = artifact-mark op-stmt+
-op-stmt = "set-field" field+ | "patch-field" field+ | "remove-field" field+
-field = ("architect.program-title" | "architect.program-clause" | "architect.program-quantity") "=" value
-value = TEXT | INT | FLOAT | BOOL | QUANTITY
-QUANTITY = FLOAT UNIT | INT UNIT
-UNIT = IDENT
+line = create-information-requirement / delete-information-requirement / rename-information-requirement / replace-information-requirement
+     / create-sustainability-requirement / delete-sustainability-requirement / rename-sustainability-requirement / replace-sustainability-requirement
+     / create-accessibility-requirement / delete-accessibility-requirement / rename-accessibility-requirement / replace-accessibility-requirement
+     / create-conflict / delete-conflict / rename-conflict / replace-conflict
+     / create-option-evaluation / delete-option-evaluation / rename-option-evaluation / replace-option-evaluation
+     / create-function / delete-function / rename-function / replace-function
+     / create-risk / delete-risk / rename-risk / replace-risk
+     / create-decision / delete-decision / rename-decision / replace-decision
+     / create-validation-record / delete-validation-record / rename-validation-record / replace-validation-record
+     / create-priority-record / delete-priority-record / rename-priority-record / replace-priority-record
+     / create-flow-requirement / delete-flow-requirement / rename-flow-requirement / replace-flow-requirement
+     / create-environmental-requirement / delete-environmental-requirement / rename-environmental-requirement / replace-environmental-requirement
+     / create-workshop / delete-workshop / rename-workshop / replace-workshop
+     / create-scenario / delete-scenario / rename-scenario / replace-scenario
+     / create-benchmark-record / delete-benchmark-record / rename-benchmark-record / replace-benchmark-record
+     / create-activity / delete-activity / rename-activity / replace-activity
+     / create-infrastructure-requirement / delete-infrastructure-requirement / rename-infrastructure-requirement / replace-infrastructure-requirement
+     / create-organizational-requirement / delete-organizational-requirement / rename-organizational-requirement / replace-organizational-requirement
+     / create-issue / delete-issue / rename-issue / replace-issue
+     / create-approval-record / delete-approval-record / rename-approval-record / replace-approval-record
+     / create-stakeholder / delete-stakeholder / rename-stakeholder / replace-stakeholder
+     / create-quality-record / delete-quality-record / rename-quality-record / replace-quality-record
+     / create-resilience-requirement / delete-resilience-requirement / rename-resilience-requirement / replace-resilience-requirement
+     / create-assumption / delete-assumption / rename-assumption / replace-assumption
+     / create-cost-requirement / delete-cost-requirement / rename-cost-requirement / replace-cost-requirement
+     / create-document / delete-document / rename-document / replace-document
+     / create-schedule-requirement / delete-schedule-requirement / rename-schedule-requirement / replace-schedule-requirement
+     / create-growth-plan / delete-growth-plan / rename-growth-plan / replace-growth-plan
+     / create-performance-criterion / delete-performance-criterion / rename-performance-criterion / replace-performance-criterion
+     / create-operational-requirement / delete-operational-requirement / rename-operational-requirement / replace-operational-requirement
+     / create-requirement / delete-requirement / rename-requirement / replace-requirement
+     / create-site-context / delete-site-context / rename-site-context / replace-site-context
+     / create-template-record / delete-template-record / rename-template-record / replace-template-record
+     / create-report-record / delete-report-record / rename-report-record / replace-report-record
+     / create-audit-event / delete-audit-event / rename-audit-event / replace-audit-event
+     / create-knowledge-record / delete-knowledge-record / rename-knowledge-record / replace-knowledge-record
+     / create-regulatory-requirement / delete-regulatory-requirement / rename-regulatory-requirement / replace-regulatory-requirement
+     / create-change-record / delete-change-record / rename-change-record / replace-change-record
+     / create-communication-requirement / delete-communication-requirement / rename-communication-requirement / replace-communication-requirement
+     / create-resource / delete-resource / rename-resource / replace-resource
+     / create-status-record / delete-status-record / rename-status-record / replace-status-record
+     / create-process / delete-process / rename-process / replace-process
+     / create-search-filter / delete-search-filter / rename-search-filter / replace-search-filter
+     / create-access-rule / delete-access-rule / rename-access-rule / replace-access-rule
+     / create-privacy-requirement / delete-privacy-requirement / rename-privacy-requirement / replace-privacy-requirement
+     / create-relationship / delete-relationship / rename-relationship / replace-relationship
+     / create-quantity-requirement / delete-quantity-requirement / rename-quantity-requirement / replace-quantity-requirement
+     / create-analysis-record / delete-analysis-record / rename-analysis-record / replace-analysis-record
+     / create-storage-requirement / delete-storage-requirement / rename-storage-requirement / replace-storage-requirement
+     / create-meeting-record / delete-meeting-record / rename-meeting-record / replace-meeting-record
+     / create-survey / delete-survey / rename-survey / replace-survey
+     / create-delivery-constraint / delete-delivery-constraint / rename-delivery-constraint / replace-delivery-constraint
+     / create-constraint-record / delete-constraint-record / rename-constraint-record / replace-constraint-record
+     / create-compliance-record / delete-compliance-record / rename-compliance-record / replace-compliance-record
+     / create-service-requirement / delete-service-requirement / rename-service-requirement / replace-service-requirement
+     / create-equipment / delete-equipment / rename-equipment / replace-equipment
+     / create-security-requirement / delete-security-requirement / rename-security-requirement / replace-security-requirement
+     / create-collaboration-record / delete-collaboration-record / rename-collaboration-record / replace-collaboration-record
+     / create-safety-requirement / delete-safety-requirement / rename-safety-requirement / replace-safety-requirement
+     / create-user-profile / delete-user-profile / rename-user-profile / replace-user-profile
+     / create-human-factor-requirement / delete-human-factor-requirement / rename-human-factor-requirement / replace-human-factor-requirement
+     / create-flexibility-requirement / delete-flexibility-requirement / rename-flexibility-requirement / replace-flexibility-requirement
+     / create-wayfinding-requirement / delete-wayfinding-requirement / rename-wayfinding-requirement / replace-wayfinding-requirement
+     / create-program-element / delete-program-element / rename-program-element / replace-program-element
+     / connect-adjacency / disconnect-adjacency / connect-trace / disconnect-trace
+     / rename-meta / replace-meta / rename-project / replace-project
+     / rename-governance / replace-governance
+
+create-information-requirement = "create-information-requirement" SP information-requirement-block
+delete-information-requirement = "delete-information-requirement" SP id
+rename-information-requirement = "rename-information-requirement" SP id SP text
+replace-information-requirement = "replace-information-requirement" SP information-requirement-block
+create-sustainability-requirement = "create-sustainability-requirement" SP sustainability-requirement-block
+delete-sustainability-requirement = "delete-sustainability-requirement" SP id
+rename-sustainability-requirement = "rename-sustainability-requirement" SP id SP text
+replace-sustainability-requirement = "replace-sustainability-requirement" SP sustainability-requirement-block
+create-accessibility-requirement = "create-accessibility-requirement" SP accessibility-requirement-block
+delete-accessibility-requirement = "delete-accessibility-requirement" SP id
+rename-accessibility-requirement = "rename-accessibility-requirement" SP id SP text
+replace-accessibility-requirement = "replace-accessibility-requirement" SP accessibility-requirement-block
+create-conflict = "create-conflict" SP conflict-block
+delete-conflict = "delete-conflict" SP id
+rename-conflict = "rename-conflict" SP id SP text
+replace-conflict = "replace-conflict" SP conflict-block
+create-option-evaluation = "create-option-evaluation" SP option-evaluation-block
+delete-option-evaluation = "delete-option-evaluation" SP id
+rename-option-evaluation = "rename-option-evaluation" SP id SP text
+replace-option-evaluation = "replace-option-evaluation" SP option-evaluation-block
+create-function = "create-function" SP function-block
+delete-function = "delete-function" SP id
+rename-function = "rename-function" SP id SP text
+replace-function = "replace-function" SP function-block
+create-risk = "create-risk" SP risk-block
+delete-risk = "delete-risk" SP id
+rename-risk = "rename-risk" SP id SP text
+replace-risk = "replace-risk" SP risk-block
+create-decision = "create-decision" SP decision-block
+delete-decision = "delete-decision" SP id
+rename-decision = "rename-decision" SP id SP text
+replace-decision = "replace-decision" SP decision-block
+create-validation-record = "create-validation-record" SP validation-record-block
+delete-validation-record = "delete-validation-record" SP id
+rename-validation-record = "rename-validation-record" SP id SP text
+replace-validation-record = "replace-validation-record" SP validation-record-block
+create-priority-record = "create-priority-record" SP priority-record-block
+delete-priority-record = "delete-priority-record" SP id
+rename-priority-record = "rename-priority-record" SP id SP text
+replace-priority-record = "replace-priority-record" SP priority-record-block
+create-flow-requirement = "create-flow-requirement" SP flow-requirement-block
+delete-flow-requirement = "delete-flow-requirement" SP id
+rename-flow-requirement = "rename-flow-requirement" SP id SP text
+replace-flow-requirement = "replace-flow-requirement" SP flow-requirement-block
+create-environmental-requirement = "create-environmental-requirement" SP environmental-requirement-block
+delete-environmental-requirement = "delete-environmental-requirement" SP id
+rename-environmental-requirement = "rename-environmental-requirement" SP id SP text
+replace-environmental-requirement = "replace-environmental-requirement" SP environmental-requirement-block
+create-workshop = "create-workshop" SP workshop-block
+delete-workshop = "delete-workshop" SP id
+rename-workshop = "rename-workshop" SP id SP text
+replace-workshop = "replace-workshop" SP workshop-block
+create-scenario = "create-scenario" SP scenario-block
+delete-scenario = "delete-scenario" SP id
+rename-scenario = "rename-scenario" SP id SP text
+replace-scenario = "replace-scenario" SP scenario-block
+create-benchmark-record = "create-benchmark-record" SP benchmark-record-block
+delete-benchmark-record = "delete-benchmark-record" SP id
+rename-benchmark-record = "rename-benchmark-record" SP id SP text
+replace-benchmark-record = "replace-benchmark-record" SP benchmark-record-block
+create-activity = "create-activity" SP activity-block
+delete-activity = "delete-activity" SP id
+rename-activity = "rename-activity" SP id SP text
+replace-activity = "replace-activity" SP activity-block
+create-infrastructure-requirement = "create-infrastructure-requirement" SP infrastructure-requirement-block
+delete-infrastructure-requirement = "delete-infrastructure-requirement" SP id
+rename-infrastructure-requirement = "rename-infrastructure-requirement" SP id SP text
+replace-infrastructure-requirement = "replace-infrastructure-requirement" SP infrastructure-requirement-block
+create-organizational-requirement = "create-organizational-requirement" SP organizational-requirement-block
+delete-organizational-requirement = "delete-organizational-requirement" SP id
+rename-organizational-requirement = "rename-organizational-requirement" SP id SP text
+replace-organizational-requirement = "replace-organizational-requirement" SP organizational-requirement-block
+create-issue = "create-issue" SP issue-block
+delete-issue = "delete-issue" SP id
+rename-issue = "rename-issue" SP id SP text
+replace-issue = "replace-issue" SP issue-block
+create-approval-record = "create-approval-record" SP approval-record-block
+delete-approval-record = "delete-approval-record" SP id
+rename-approval-record = "rename-approval-record" SP id SP text
+replace-approval-record = "replace-approval-record" SP approval-record-block
+create-stakeholder = "create-stakeholder" SP stakeholder-block
+delete-stakeholder = "delete-stakeholder" SP id
+rename-stakeholder = "rename-stakeholder" SP id SP text
+replace-stakeholder = "replace-stakeholder" SP stakeholder-block
+create-quality-record = "create-quality-record" SP quality-record-block
+delete-quality-record = "delete-quality-record" SP id
+rename-quality-record = "rename-quality-record" SP id SP text
+replace-quality-record = "replace-quality-record" SP quality-record-block
+create-resilience-requirement = "create-resilience-requirement" SP resilience-requirement-block
+delete-resilience-requirement = "delete-resilience-requirement" SP id
+rename-resilience-requirement = "rename-resilience-requirement" SP id SP text
+replace-resilience-requirement = "replace-resilience-requirement" SP resilience-requirement-block
+create-assumption = "create-assumption" SP assumption-block
+delete-assumption = "delete-assumption" SP id
+rename-assumption = "rename-assumption" SP id SP text
+replace-assumption = "replace-assumption" SP assumption-block
+create-cost-requirement = "create-cost-requirement" SP cost-requirement-block
+delete-cost-requirement = "delete-cost-requirement" SP id
+rename-cost-requirement = "rename-cost-requirement" SP id SP text
+replace-cost-requirement = "replace-cost-requirement" SP cost-requirement-block
+create-document = "create-document" SP document-block
+delete-document = "delete-document" SP id
+rename-document = "rename-document" SP id SP text
+replace-document = "replace-document" SP document-block
+create-schedule-requirement = "create-schedule-requirement" SP schedule-requirement-block
+delete-schedule-requirement = "delete-schedule-requirement" SP id
+rename-schedule-requirement = "rename-schedule-requirement" SP id SP text
+replace-schedule-requirement = "replace-schedule-requirement" SP schedule-requirement-block
+create-growth-plan = "create-growth-plan" SP growth-plan-block
+delete-growth-plan = "delete-growth-plan" SP id
+rename-growth-plan = "rename-growth-plan" SP id SP text
+replace-growth-plan = "replace-growth-plan" SP growth-plan-block
+create-performance-criterion = "create-performance-criterion" SP performance-criterion-block
+delete-performance-criterion = "delete-performance-criterion" SP id
+rename-performance-criterion = "rename-performance-criterion" SP id SP text
+replace-performance-criterion = "replace-performance-criterion" SP performance-criterion-block
+create-operational-requirement = "create-operational-requirement" SP operational-requirement-block
+delete-operational-requirement = "delete-operational-requirement" SP id
+rename-operational-requirement = "rename-operational-requirement" SP id SP text
+replace-operational-requirement = "replace-operational-requirement" SP operational-requirement-block
+create-requirement = "create-requirement" SP requirement-block
+delete-requirement = "delete-requirement" SP id
+rename-requirement = "rename-requirement" SP id SP text
+replace-requirement = "replace-requirement" SP requirement-block
+create-site-context = "create-site-context" SP site-context-block
+delete-site-context = "delete-site-context" SP id
+rename-site-context = "rename-site-context" SP id SP text
+replace-site-context = "replace-site-context" SP site-context-block
+create-template-record = "create-template-record" SP template-record-block
+delete-template-record = "delete-template-record" SP id
+rename-template-record = "rename-template-record" SP id SP text
+replace-template-record = "replace-template-record" SP template-record-block
+create-report-record = "create-report-record" SP report-record-block
+delete-report-record = "delete-report-record" SP id
+rename-report-record = "rename-report-record" SP id SP text
+replace-report-record = "replace-report-record" SP report-record-block
+create-audit-event = "create-audit-event" SP audit-event-block
+delete-audit-event = "delete-audit-event" SP id
+rename-audit-event = "rename-audit-event" SP id SP text
+replace-audit-event = "replace-audit-event" SP audit-event-block
+create-knowledge-record = "create-knowledge-record" SP knowledge-record-block
+delete-knowledge-record = "delete-knowledge-record" SP id
+rename-knowledge-record = "rename-knowledge-record" SP id SP text
+replace-knowledge-record = "replace-knowledge-record" SP knowledge-record-block
+create-regulatory-requirement = "create-regulatory-requirement" SP regulatory-requirement-block
+delete-regulatory-requirement = "delete-regulatory-requirement" SP id
+rename-regulatory-requirement = "rename-regulatory-requirement" SP id SP text
+replace-regulatory-requirement = "replace-regulatory-requirement" SP regulatory-requirement-block
+create-change-record = "create-change-record" SP change-record-block
+delete-change-record = "delete-change-record" SP id
+rename-change-record = "rename-change-record" SP id SP text
+replace-change-record = "replace-change-record" SP change-record-block
+create-communication-requirement = "create-communication-requirement" SP communication-requirement-block
+delete-communication-requirement = "delete-communication-requirement" SP id
+rename-communication-requirement = "rename-communication-requirement" SP id SP text
+replace-communication-requirement = "replace-communication-requirement" SP communication-requirement-block
+create-resource = "create-resource" SP resource-block
+delete-resource = "delete-resource" SP id
+rename-resource = "rename-resource" SP id SP text
+replace-resource = "replace-resource" SP resource-block
+create-status-record = "create-status-record" SP status-record-block
+delete-status-record = "delete-status-record" SP id
+rename-status-record = "rename-status-record" SP id SP text
+replace-status-record = "replace-status-record" SP status-record-block
+create-process = "create-process" SP process-block
+delete-process = "delete-process" SP id
+rename-process = "rename-process" SP id SP text
+replace-process = "replace-process" SP process-block
+create-search-filter = "create-search-filter" SP search-filter-block
+delete-search-filter = "delete-search-filter" SP id
+rename-search-filter = "rename-search-filter" SP id SP text
+replace-search-filter = "replace-search-filter" SP search-filter-block
+create-access-rule = "create-access-rule" SP access-rule-block
+delete-access-rule = "delete-access-rule" SP id
+rename-access-rule = "rename-access-rule" SP id SP text
+replace-access-rule = "replace-access-rule" SP access-rule-block
+create-privacy-requirement = "create-privacy-requirement" SP privacy-requirement-block
+delete-privacy-requirement = "delete-privacy-requirement" SP id
+rename-privacy-requirement = "rename-privacy-requirement" SP id SP text
+replace-privacy-requirement = "replace-privacy-requirement" SP privacy-requirement-block
+create-relationship = "create-relationship" SP relationship-block
+delete-relationship = "delete-relationship" SP id
+rename-relationship = "rename-relationship" SP id SP text
+replace-relationship = "replace-relationship" SP relationship-block
+create-quantity-requirement = "create-quantity-requirement" SP quantity-requirement-block
+delete-quantity-requirement = "delete-quantity-requirement" SP id
+rename-quantity-requirement = "rename-quantity-requirement" SP id SP text
+replace-quantity-requirement = "replace-quantity-requirement" SP quantity-requirement-block
+create-analysis-record = "create-analysis-record" SP analysis-record-block
+delete-analysis-record = "delete-analysis-record" SP id
+rename-analysis-record = "rename-analysis-record" SP id SP text
+replace-analysis-record = "replace-analysis-record" SP analysis-record-block
+create-storage-requirement = "create-storage-requirement" SP storage-requirement-block
+delete-storage-requirement = "delete-storage-requirement" SP id
+rename-storage-requirement = "rename-storage-requirement" SP id SP text
+replace-storage-requirement = "replace-storage-requirement" SP storage-requirement-block
+create-meeting-record = "create-meeting-record" SP meeting-record-block
+delete-meeting-record = "delete-meeting-record" SP id
+rename-meeting-record = "rename-meeting-record" SP id SP text
+replace-meeting-record = "replace-meeting-record" SP meeting-record-block
+create-survey = "create-survey" SP survey-block
+delete-survey = "delete-survey" SP id
+rename-survey = "rename-survey" SP id SP text
+replace-survey = "replace-survey" SP survey-block
+create-delivery-constraint = "create-delivery-constraint" SP delivery-constraint-block
+delete-delivery-constraint = "delete-delivery-constraint" SP id
+rename-delivery-constraint = "rename-delivery-constraint" SP id SP text
+replace-delivery-constraint = "replace-delivery-constraint" SP delivery-constraint-block
+create-constraint-record = "create-constraint-record" SP constraint-record-block
+delete-constraint-record = "delete-constraint-record" SP id
+rename-constraint-record = "rename-constraint-record" SP id SP text
+replace-constraint-record = "replace-constraint-record" SP constraint-record-block
+create-compliance-record = "create-compliance-record" SP compliance-record-block
+delete-compliance-record = "delete-compliance-record" SP id
+rename-compliance-record = "rename-compliance-record" SP id SP text
+replace-compliance-record = "replace-compliance-record" SP compliance-record-block
+create-service-requirement = "create-service-requirement" SP service-requirement-block
+delete-service-requirement = "delete-service-requirement" SP id
+rename-service-requirement = "rename-service-requirement" SP id SP text
+replace-service-requirement = "replace-service-requirement" SP service-requirement-block
+create-equipment = "create-equipment" SP equipment-block
+delete-equipment = "delete-equipment" SP id
+rename-equipment = "rename-equipment" SP id SP text
+replace-equipment = "replace-equipment" SP equipment-block
+create-security-requirement = "create-security-requirement" SP security-requirement-block
+delete-security-requirement = "delete-security-requirement" SP id
+rename-security-requirement = "rename-security-requirement" SP id SP text
+replace-security-requirement = "replace-security-requirement" SP security-requirement-block
+create-collaboration-record = "create-collaboration-record" SP collaboration-record-block
+delete-collaboration-record = "delete-collaboration-record" SP id
+rename-collaboration-record = "rename-collaboration-record" SP id SP text
+replace-collaboration-record = "replace-collaboration-record" SP collaboration-record-block
+create-safety-requirement = "create-safety-requirement" SP safety-requirement-block
+delete-safety-requirement = "delete-safety-requirement" SP id
+rename-safety-requirement = "rename-safety-requirement" SP id SP text
+replace-safety-requirement = "replace-safety-requirement" SP safety-requirement-block
+create-user-profile = "create-user-profile" SP user-profile-block
+delete-user-profile = "delete-user-profile" SP id
+rename-user-profile = "rename-user-profile" SP id SP text
+replace-user-profile = "replace-user-profile" SP user-profile-block
+create-human-factor-requirement = "create-human-factor-requirement" SP human-factor-requirement-block
+delete-human-factor-requirement = "delete-human-factor-requirement" SP id
+rename-human-factor-requirement = "rename-human-factor-requirement" SP id SP text
+replace-human-factor-requirement = "replace-human-factor-requirement" SP human-factor-requirement-block
+create-flexibility-requirement = "create-flexibility-requirement" SP flexibility-requirement-block
+delete-flexibility-requirement = "delete-flexibility-requirement" SP id
+rename-flexibility-requirement = "rename-flexibility-requirement" SP id SP text
+replace-flexibility-requirement = "replace-flexibility-requirement" SP flexibility-requirement-block
+create-wayfinding-requirement = "create-wayfinding-requirement" SP wayfinding-requirement-block
+delete-wayfinding-requirement = "delete-wayfinding-requirement" SP id
+rename-wayfinding-requirement = "rename-wayfinding-requirement" SP id SP text
+replace-wayfinding-requirement = "replace-wayfinding-requirement" SP wayfinding-requirement-block
+create-program-element = "create-program-element" SP program-element-block
+delete-program-element = "delete-program-element" SP id
+rename-program-element = "rename-program-element" SP id SP text
+replace-program-element = "replace-program-element" SP program-element-block
+connect-adjacency = "connect-adjacency" SP adjacency-block
+disconnect-adjacency = "disconnect-adjacency" SP id
+connect-trace = "connect-trace" SP trace-block
+disconnect-trace = "disconnect-trace" SP id
+rename-meta = "rename-meta" SP text
+replace-meta = "replace-meta" SP text
+rename-project = "rename-project" SP text
+replace-project = "replace-project" SP text
+rename-governance = "rename-governance" SP text
+replace-governance = "replace-governance" SP text
+
+access-rule-block = "{" NL OCTET+ "}"
+accessibility-requirement-block = "{" NL OCTET+ "}"
+activity-block = "{" NL OCTET+ "}"
+adjacency-block = "{" NL OCTET+ "}"
+analysis-record-block = "{" NL OCTET+ "}"
+approval-record-block = "{" NL OCTET+ "}"
+assumption-block = "{" NL OCTET+ "}"
+audit-event-block = "{" NL OCTET+ "}"
+benchmark-record-block = "{" NL OCTET+ "}"
+change-record-block = "{" NL OCTET+ "}"
+collaboration-record-block = "{" NL OCTET+ "}"
+communication-requirement-block = "{" NL OCTET+ "}"
+compliance-record-block = "{" NL OCTET+ "}"
+conflict-block = "{" NL OCTET+ "}"
+constraint-record-block = "{" NL OCTET+ "}"
+cost-requirement-block = "{" NL OCTET+ "}"
+decision-block = "{" NL OCTET+ "}"
+delivery-constraint-block = "{" NL OCTET+ "}"
+document-block = "{" NL OCTET+ "}"
+environmental-requirement-block = "{" NL OCTET+ "}"
+equipment-block = "{" NL OCTET+ "}"
+flexibility-requirement-block = "{" NL OCTET+ "}"
+flow-requirement-block = "{" NL OCTET+ "}"
+function-block = "{" NL OCTET+ "}"
+growth-plan-block = "{" NL OCTET+ "}"
+human-factor-requirement-block = "{" NL OCTET+ "}"
+information-requirement-block = "{" NL OCTET+ "}"
+infrastructure-requirement-block = "{" NL OCTET+ "}"
+issue-block = "{" NL OCTET+ "}"
+knowledge-record-block = "{" NL OCTET+ "}"
+meeting-record-block = "{" NL OCTET+ "}"
+operational-requirement-block = "{" NL OCTET+ "}"
+option-evaluation-block = "{" NL OCTET+ "}"
+organizational-requirement-block = "{" NL OCTET+ "}"
+performance-criterion-block = "{" NL OCTET+ "}"
+priority-record-block = "{" NL OCTET+ "}"
+privacy-requirement-block = "{" NL OCTET+ "}"
+process-block = "{" NL OCTET+ "}"
+program-element-block = "{" NL OCTET+ "}"
+quality-record-block = "{" NL OCTET+ "}"
+quantity-requirement-block = "{" NL OCTET+ "}"
+regulatory-requirement-block = "{" NL OCTET+ "}"
+relationship-block = "{" NL OCTET+ "}"
+report-record-block = "{" NL OCTET+ "}"
+requirement-block = "{" NL OCTET+ "}"
+resilience-requirement-block = "{" NL OCTET+ "}"
+resource-block = "{" NL OCTET+ "}"
+risk-block = "{" NL OCTET+ "}"
+safety-requirement-block = "{" NL OCTET+ "}"
+scenario-block = "{" NL OCTET+ "}"
+schedule-requirement-block = "{" NL OCTET+ "}"
+search-filter-block = "{" NL OCTET+ "}"
+security-requirement-block = "{" NL OCTET+ "}"
+service-requirement-block = "{" NL OCTET+ "}"
+site-context-block = "{" NL OCTET+ "}"
+stakeholder-block = "{" NL OCTET+ "}"
+status-record-block = "{" NL OCTET+ "}"
+storage-requirement-block = "{" NL OCTET+ "}"
+survey-block = "{" NL OCTET+ "}"
+sustainability-requirement-block = "{" NL OCTET+ "}"
+template-record-block = "{" NL OCTET+ "}"
+trace-block = "{" NL OCTET+ "}"
+user-profile-block = "{" NL OCTET+ "}"
+validation-record-block = "{" NL OCTET+ "}"
+wayfinding-requirement-block = "{" NL OCTET+ "}"
+workshop-block = "{" NL OCTET+ "}"
+id = OCTET+
+text = OCTET+
+number = OCTET+
+boolean = "true" / "false"

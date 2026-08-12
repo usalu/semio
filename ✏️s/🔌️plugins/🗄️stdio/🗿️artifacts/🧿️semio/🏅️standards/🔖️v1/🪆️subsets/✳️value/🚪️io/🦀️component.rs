@@ -144,7 +144,7 @@ pub mod derived_composition {
         /// fixture-honesty round-trip. Lives here (this subset's own `🎹️composer`, its closest
         /// "engine-equivalent" home — `value` has no per-subset `⚙️engine/` dir, only the SHARED
         /// 14-subset `🏅️standards/🔖️v1/⚙️engine/🦀️component.rs` aggregator, out of this subset's edit
-        /// scope), same convention `json`'s `⚙️engine/🦀️component.rs` and `workflow`'s own
+        /// scope), same convention `json`'s `⚙️engine/🦀️component.rs` and `flow`'s own
         /// `🎹️composer/🦀️component.rs` use.
         mod conformance_laws {
             use super::*;

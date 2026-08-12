@@ -1,5 +1,15 @@
-# 🧬️ JsonMutation
-type JsonMutation {
-  schema: String! @state(class: PERSISTENT)
-  value: String! @state(class: PERSISTENT)
-}
+# 🧬️ Playbook mutation schema — one variant per 🧬️mutations/<slug> triad leaf.
+union PlaybookMutation = AddStep | RemoveStep | MoveStep | AddBlock | RemoveBlock | MoveBlock | ReplaceBlock | UpdateStep | ChangeTitle
+
+type AddStep { step: PlaybookStep! index: Int }
+type RemoveStep { stepId: String! }
+type MoveStep { stepId: String! index: Int! }
+type AddBlock { stepId: String! block: PlaybookBlock! index: Int }
+type RemoveBlock { stepId: String! blockId: String! }
+type MoveBlock { blockId: String! fromStepId: String! toStepId: String! index: Int! }
+type ReplaceBlock { stepId: String! block: PlaybookBlock! }
+type UpdateStep { stepId: String! title: String! description: String }
+type ChangeTitle { newTitle: String }
+
+type PlaybookStep { id: String! title: String! description: String blocks: [PlaybookBlock!]! }
+type PlaybookBlock { id: String! label: String! kind: String! }

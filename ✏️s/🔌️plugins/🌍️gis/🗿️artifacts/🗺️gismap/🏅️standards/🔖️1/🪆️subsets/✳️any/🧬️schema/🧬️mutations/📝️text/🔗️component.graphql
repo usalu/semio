@@ -1,3 +1,17 @@
-# stdio.json mutations text grammar schema
+# gis.gismap mutations — one input type per semantic mutation slug (tags 1..12 match protocol.semio order).
 scalar Bytes
-type Document { schema: String! payload: String! }
+
+input CreatePosition { index: Float! }
+input DeletePosition { id: String! }
+input ReplacePositionData { id: String! newData: Bytes! }
+input ReorderPositions { id: String! toIndex: Float! }
+input CreateRoute { index: Float! }
+input DeleteRoute { id: String! }
+input ReplaceRouteData { id: String! newData: Bytes! }
+input ReorderRoutes { id: String! toIndex: Float! }
+input CreateRegion { index: Float! }
+input DeleteRegion { id: String! }
+input ReplaceRegionData { id: String! newData: Bytes! }
+input ReorderRegions { id: String! toIndex: Float! }
+
+union GismapMutation = CreatePosition | DeletePosition | ReplacePositionData | ReorderPositions | CreateRoute | DeleteRoute | ReplaceRouteData | ReorderRoutes | CreateRegion | DeleteRegion | ReplaceRegionData | ReorderRegions

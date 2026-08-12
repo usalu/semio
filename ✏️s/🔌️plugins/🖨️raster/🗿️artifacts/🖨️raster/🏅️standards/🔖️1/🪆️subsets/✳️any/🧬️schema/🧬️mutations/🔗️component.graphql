@@ -1,5 +1,77 @@
-# 🧬️ JsonMutation
-type JsonMutation {
-  schema: String! @state(class: PERSISTENT)
-  value: String! @state(class: PERSISTENT)
+# 🧬️ RasterMutation — closed semantic mutation vocabulary for the raster document.
+
+type CreateLayer {
+  parentId: String
+  index: Int!
+  layer: RasterLayerNode!
 }
+
+type DeleteLayer {
+  layerId: String!
+}
+
+type ReorderLayers {
+  layerId: String!
+  parentId: String
+  index: Int!
+}
+
+type RenameLayer {
+  layerId: String!
+  newName: String!
+}
+
+type ChangeLayerVisible {
+  layerId: String!
+  newVisible: Boolean!
+}
+
+type ChangeLayerOpacity {
+  layerId: String!
+  newOpacity: Float!
+}
+
+type ChangeLayerBlendMode {
+  layerId: String!
+  newBlendMode: String!
+}
+
+type MoveLayer {
+  layerId: String!
+  newX: Float!
+  newY: Float!
+}
+
+type ResizeLayer {
+  layerId: String!
+  newWidth: Int!
+  newHeight: Int!
+}
+
+type ChangeLayerAdjustmentKind {
+  layerId: String!
+  newAdjustmentKind: String!
+}
+
+type AddLayerAsset {
+  assetId: String!
+  asset: RasterImageAsset!
+}
+
+type RemoveLayerAsset {
+  assetId: String!
+}
+
+union RasterMutation =
+    CreateLayer
+  | DeleteLayer
+  | ReorderLayers
+  | RenameLayer
+  | ChangeLayerVisible
+  | ChangeLayerOpacity
+  | ChangeLayerBlendMode
+  | MoveLayer
+  | ResizeLayer
+  | ChangeLayerAdjustmentKind
+  | AddLayerAsset
+  | RemoveLayerAsset

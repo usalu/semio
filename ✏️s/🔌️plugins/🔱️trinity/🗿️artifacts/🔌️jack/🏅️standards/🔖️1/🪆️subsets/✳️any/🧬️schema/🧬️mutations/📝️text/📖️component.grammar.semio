@@ -1,9 +1,25 @@
 dialect grammar
 grammar jack.mutations
 extension jack
-start document
+start line
 
-document = header body
-header = "schema" SP "stdio.json" NL
-body = payload NL?
-payload = OCTET+
+line = create-node / delete-node / create-edge / delete-edge / rename-node / move-node / change-data-property / remove-data-property
+
+create-node = "create-node" SP id SP text SP text SP number SP number SP number SP number SP port-table
+delete-node = "delete-node" SP id
+create-edge = "create-edge" SP id SP text SP text SP text SP property-bag
+delete-edge = "delete-edge" SP id
+rename-node = "rename-node" SP id SP text
+move-node = "move-node" SP id SP number SP number
+change-data-property = "change-data-property" SP entity SP text SP value
+remove-data-property = "remove-data-property" SP entity SP text
+
+entity = "node" ":" id / "edge" ":" id
+port-table = "{" NL port-row* "}"
+port-row = OCTET+
+property-bag = "{" NL property-row* "}"
+property-row = OCTET+
+value = OCTET+
+id = OCTET+
+number = OCTET+
+text = OCTET+

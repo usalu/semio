@@ -8,7 +8,7 @@ pub fn register() {
     crate::artifacts::semio::standards::v1::subsets::brep::io::register();
     crate::artifacts::semio::standards::v1::subsets::mesh::io::register();
     crate::artifacts::semio::standards::v1::subsets::model::io::register();
-    crate::artifacts::semio::standards::v1::subsets::object::io::register();
+    crate::artifacts::semio::standards::v1::subsets::value::io::register();
     crate::artifacts::semio::standards::v1::subsets::document::io::register();
     crate::artifacts::semio::standards::v1::subsets::cad::io::register();
     crate::artifacts::semio::standards::v1::subsets::drawing::io::register();
@@ -17,7 +17,7 @@ pub fn register() {
     crate::artifacts::semio::standards::v1::subsets::audio::io::register();
     crate::artifacts::semio::standards::v1::subsets::animation::io::register();
     crate::artifacts::semio::standards::v1::subsets::presentation::io::register();
-    crate::artifacts::semio::standards::v1::subsets::workflow::io::register();
+    crate::artifacts::semio::standards::v1::subsets::flow::io::register();
     crate::artifacts::semio::standards::v1::subsets::any::io::register();
 }
 //#region 🚪️DerivedIoRegistry
@@ -27,7 +27,7 @@ pub mod io_registry {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::SemioBrepComposer;
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::SemioMeshComposer;
     use crate::artifacts::semio::standards::v1::subsets::model::schema::SemioModelComposer;
-    use crate::artifacts::semio::standards::v1::subsets::object::schema::SemioObjectComposer;
+    use crate::artifacts::semio::standards::v1::subsets::value::schema::SemioValueComposer;
     use crate::artifacts::semio::standards::v1::subsets::document::schema::SemioDocumentComposer;
     use crate::artifacts::semio::standards::v1::subsets::cad::schema::SemioCadComposer;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::SemioDrawingComposer;
@@ -36,7 +36,7 @@ pub mod io_registry {
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::SemioAudioComposer;
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::SemioAnimationComposer;
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::SemioPresentationComposer;
-    use crate::artifacts::semio::standards::v1::subsets::workflow::schema::SemioWorkflowComposer;
+    use crate::artifacts::semio::standards::v1::subsets::flow::schema::SemioFlowComposer;
     use crate::artifacts::semio::standards::v1::subsets::any::schema::SemioComposer as SemioRawAnyComposer;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -46,7 +46,7 @@ pub mod io_registry {
             composer_entry_of::<SemioBrepComposer>(),
             composer_entry_of::<SemioMeshComposer>(),
             composer_entry_of::<SemioModelComposer>(),
-            composer_entry_of::<SemioObjectComposer>(),
+            composer_entry_of::<SemioValueComposer>(),
             composer_entry_of::<SemioDocumentComposer>(),
             composer_entry_of::<SemioCadComposer>(),
             composer_entry_of::<SemioDrawingComposer>(),
@@ -55,7 +55,7 @@ pub mod io_registry {
             composer_entry_of::<SemioAudioComposer>(),
             composer_entry_of::<SemioAnimationComposer>(),
             composer_entry_of::<SemioPresentationComposer>(),
-            composer_entry_of::<SemioWorkflowComposer>(),
+            composer_entry_of::<SemioFlowComposer>(),
             composer_entry_of::<SemioRawAnyComposer>(),
         ]).as_slice()
     }

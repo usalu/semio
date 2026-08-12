@@ -8,125 +8,34 @@
 //! `remove-variable-action` (index addressing, insert=FINAL/remove=BASE per the taxonomy),
 //! `reorder-variable-actions`, and `change-variable-action-{category,value}` per remaining field.
 //!
-//! `SetSnapshot` — the pre-migration whole-document replace — is gone: banned outright per
+//! The pre-migration whole-document-replace variant is gone: banned outright per
 //! `📓️taxonomy.md`/`📓️derivation-rules.md` rule 6, with NO replacement mutation; file-open/import/
 //! load-example now goes through `store::ArtifactStore::reset`, entirely outside this enum.
 //!
-//! `📄set-snapshot` keeps its pre-migration directory name — `📦️glue.rs` path-includes that exact
-//! triad outside this facet's writable boundary, so it was repurposed in place (same path,
-//! rewritten `🦠️mutation`/`🔺️diff`/`↩️inverse` content) to hold `ChangeAnnex` instead of being
-//! renamed; see this ticket's wave2 report `sharedFileRequests` for the rename once a later pass
-//! can touch `📦️glue.rs`. The other nine triads have no pre-migration slot and are self-wired
-//! directly below via nested `#[path = "."] pub mod <name> { ... }` blocks (mirrors this ticket's
-//! `din16798`/`process3d` precedent — `#[path]` resolves per physical file, not per logical mod
-//! nesting, so this works without touching `📦️glue.rs`).
+//! All ten triads (including the repurposed `set_snapshot` slot, which still holds `ChangeAnnex`)
+//! are mounted directly as `mutations`-sibling modules in `📦️glue.rs` (this lane's agent owns
+//! `📦️glue.rs`, so no self-wiring `#[path = "."]` blocks are needed here).
 
 use crate::artifacts::en1990::diff::En1990Diff;
 use crate::artifacts::en1990::En1990Snapshot;
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️NewLeaves
-#[path = "."]
-pub mod change_permanent_action {
-    #[path = "🏛️change-permanent-action/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🏛️change-permanent-action/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🏛️change-permanent-action/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_resistance {
-    #[path = "🛡️change-resistance/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🛡️change-resistance/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🛡️change-resistance/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_consequence_class {
-    #[path = "🎯change-consequence-class/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🎯change-consequence-class/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🎯change-consequence-class/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_seismic_action {
-    #[path = "🌍change-seismic-action/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🌍change-seismic-action/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🌍change-seismic-action/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod insert_variable_action {
-    #[path = "➕insert-variable-action/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "➕insert-variable-action/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "➕insert-variable-action/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod remove_variable_action {
-    #[path = "➖remove-variable-action/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "➖remove-variable-action/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "➖remove-variable-action/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_variable_action_category {
-    #[path = "🏷️change-variable-action-category/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🏷️change-variable-action-category/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🏷️change-variable-action-category/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_variable_action_value {
-    #[path = "🔢change-variable-action-value/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔢change-variable-action-value/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔢change-variable-action-value/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod reorder_variable_actions {
-    #[path = "🔀reorder-variable-actions/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔀reorder-variable-actions/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔀reorder-variable-actions/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-//#endregion 🔖️NewLeaves
-
-//#region 🔖️RepurposedLeaves
-// 🌱️ `set_snapshot` is declared by `📦️glue.rs` as a sibling of `component` (this file) under
-// `pub mod mutations { ... }` — brought into this file's own scope the same way `din16798`'s
-// already-migrated `🧬️mutations/🦀️component.rs` reaches its own repurposed sibling.
-use super::set_snapshot;
-//#endregion 🔖️RepurposedLeaves
-
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the en1990 document, derived per
 /// `📓️derivation-rules.md` from `En1990Snapshot`'s flat scalar + `q_k` table shape.
+//#region 🔖️Leaves
+use super::set_snapshot;
+use super::change_permanent_action;
+use super::change_resistance;
+use super::change_consequence_class;
+use super::change_seismic_action;
+use super::insert_variable_action;
+use super::remove_variable_action;
+use super::change_variable_action_category;
+use super::change_variable_action_value;
+use super::reorder_variable_actions;
+//#endregion 🔖️Leaves
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = En1990Snapshot, diff = En1990Diff, schema = "s.norm.en1990")]
@@ -143,6 +52,33 @@ pub enum En1990Mutation {
     ReorderVariableActions(reorder_variable_actions::mutation::ReorderVariableActions),
 }
 //#endregion 🔖️Mutations
+
+//#region 🔖️FromSnapshot
+impl En1990Mutation {
+    /// 📤️ Decomposes a whole-document replacement into the closed semantic vocabulary — the
+    /// replacement for the banned whole-document-replace variant, used by `import_media`'s
+    /// `"model:in"` port and the `set-snapshot` app command. Unlike the other norm facets' single-arg
+    /// `from_snapshot`, this one also takes `base` (the pre-replacement document) because `q_k` is a
+    /// real ordered collection: every existing entry must be removed (highest index first, so
+    /// indices stay valid mid-sequence) before `target`'s entries are re-inserted in order — a plain
+    /// per-field decomposition can't express "replace the whole table" on its own.
+    pub fn from_snapshot(base: &En1990Snapshot, target: &En1990Snapshot) -> Vec<En1990Mutation> {
+        let mut mutations = Vec::with_capacity(5 + base.q_k.len() + target.q_k.len());
+        mutations.push(En1990Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: target.annex.clone() }));
+        mutations.push(En1990Mutation::ChangePermanentAction(change_permanent_action::mutation::ChangePermanentAction { new_g_k: target.g_k.clone() }));
+        mutations.push(En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: target.resistance_kn.clone() }));
+        mutations.push(En1990Mutation::ChangeConsequenceClass(change_consequence_class::mutation::ChangeConsequenceClass { new_consequence_class: target.consequence_class.clone() }));
+        mutations.push(En1990Mutation::ChangeSeismicAction(change_seismic_action::mutation::ChangeSeismicAction { new_seismic_a_ed_kn: target.seismic_a_ed_kn.clone() }));
+        for index in (0..base.q_k.len()).rev() {
+            mutations.push(En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index }));
+        }
+        for (index, entry) in target.q_k.iter().enumerate() {
+            mutations.push(En1990Mutation::InsertVariableAction(insert_variable_action::mutation::InsertVariableAction { index, category: entry.category.clone(), value: entry.value.clone() }));
+        }
+        mutations
+    }
+}
+//#endregion 🔖️FromSnapshot
 
 //#region 🧪️Tests
 #[cfg(test)]

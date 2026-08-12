@@ -1,3 +1,15 @@
 syntax = "proto3";
-package semio.stdio_json.mutations_text;
-message Artifact { string schema = 1; bytes payload = 2; }
+package semio.gis_gisterrain.mutations;
+
+message ChangeExaggeration {
+  double new_exaggeration = 1;
+}
+message ChangeImportedFeatures {
+}
+
+message GisterrainMutation {
+  oneof kind {
+    ChangeExaggeration change_exaggeration = 1;
+    ChangeImportedFeatures change_imported_features = 2;
+  }
+}

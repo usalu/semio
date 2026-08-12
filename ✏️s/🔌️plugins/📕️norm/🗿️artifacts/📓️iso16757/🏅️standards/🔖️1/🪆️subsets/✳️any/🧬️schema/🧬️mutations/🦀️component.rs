@@ -14,211 +14,40 @@
 //! `accessories`/`compositions` edges, dictionary `relationships`/`properties`/`controlled_lists`/
 //! `meta_subjects`, and `geometry` (objects + primitive registry) — see this ticket's wave2 report.
 //!
-//! Every triad leaf is self-wired directly below (`#[path]`, `🔖️LeafWiring` region) rather than in
-//! `📦️glue.rs` — this facet's fan-out (26/08/12/SEMANTIC-MUTATIONS-OVERHAUL) is scoped to files
-//! inside this artifact directory only; `📦️glue.rs` is plugin-shared and out of that scope. The old
-//! generic `📄set-snapshot` leaf stays physically present as an orphan stub (see its own doc
-//! comments) because `📦️glue.rs` still `#[path]`-wires it — cleanup tracked as a `sharedFileRequests`
-//! entry in this ticket's wave2 report.
+//! Every triad leaf is mounted directly as a `mutations`-sibling module in `📦️glue.rs` (this lane's
+//! agent owns `📦️glue.rs`, so no self-wiring `#[path = "."]` blocks are needed here — the orphaned
+//! `📄set-snapshot` stub is deleted along with its dangling glue mount).
 
 use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Snapshot};
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️LeafWiring
-#[path = "."]
-pub mod change_exchange_process {
-    #[path = "🔄️change-exchange-process/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔄️change-exchange-process/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔄️change-exchange-process/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_script_limits {
-    #[path = "🔧️update-script-limits/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧️update-script-limits/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧️update-script-limits/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod replace_part_number_rule {
-    #[path = "🔁️replace-part-number-rule/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔁️replace-part-number-rule/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔁️replace-part-number-rule/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_part_number_input {
-    #[path = "🔢️change-part-number-input/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔢️change-part-number-input/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔢️change-part-number-input/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod remove_part_number_input {
-    #[path = "➖️remove-part-number-input/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "➖️remove-part-number-input/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "➖️remove-part-number-input/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_selection_class {
-    #[path = "🎯️change-selection-class/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🎯️change-selection-class/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🎯️change-selection-class/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_selection_series {
-    #[path = "🧵️change-selection-series/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🧵️change-selection-series/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🧵️change-selection-series/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod add_selection_constraint {
-    #[path = "➕️add-selection-constraint/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "➕️add-selection-constraint/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "➕️add-selection-constraint/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod remove_selection_constraint {
-    #[path = "✂️remove-selection-constraint/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "✂️remove-selection-constraint/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "✂️remove-selection-constraint/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod rename_catalogue {
-    #[path = "🏷️rename-catalogue/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🏷️rename-catalogue/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🏷️rename-catalogue/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod rename_manufacturer {
-    #[path = "🏭️rename-manufacturer/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🏭️rename-manufacturer/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🏭️rename-manufacturer/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod create_product_group {
-    #[path = "🆕️create-product-group/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🆕️create-product-group/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🆕️create-product-group/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod delete_product_group {
-    #[path = "🗑️delete-product-group/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗑️delete-product-group/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗑️delete-product-group/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod rename_product_group {
-    #[path = "✏️rename-product-group/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "✏️rename-product-group/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "✏️rename-product-group/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod create_product {
-    #[path = "📦️create-product/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📦️create-product/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📦️create-product/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod delete_product {
-    #[path = "🗑️delete-product/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗑️delete-product/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗑️delete-product/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod rename_product {
-    #[path = "✏️rename-product/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "✏️rename-product/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "✏️rename-product/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod create_property_definition {
-    #[path = "🆕️create-property-definition/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🆕️create-property-definition/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🆕️create-property-definition/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod delete_property_definition {
-    #[path = "🗑️delete-property-definition/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗑️delete-property-definition/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗑️delete-property-definition/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod create_subject {
-    #[path = "🆕️create-subject/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🆕️create-subject/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🆕️create-subject/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod delete_subject {
-    #[path = "🗑️delete-subject/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗑️delete-subject/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗑️delete-subject/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-//#endregion 🔖️LeafWiring
-
 //#region 🔖️Mutations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️component.rs`.
+//#region 🔖️Leaves
+use super::change_exchange_process;
+use super::update_script_limits;
+use super::replace_part_number_rule;
+use super::change_part_number_input;
+use super::remove_part_number_input;
+use super::change_selection_class;
+use super::change_selection_series;
+use super::add_selection_constraint;
+use super::remove_selection_constraint;
+use super::rename_catalogue;
+use super::rename_manufacturer;
+use super::create_product_group;
+use super::delete_product_group;
+use super::rename_product_group;
+use super::create_product;
+use super::delete_product;
+use super::rename_product;
+use super::create_property_definition;
+use super::delete_property_definition;
+use super::create_subject;
+use super::delete_subject;
+//#endregion 🔖️Leaves
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = Iso16757Snapshot, diff = Iso16757Diff, schema = "s.norm.iso16757")]
 pub enum Iso16757Mutation {
@@ -245,6 +74,79 @@ pub enum Iso16757Mutation {
     DeleteSubject(delete_subject::mutation::DeleteSubject),
 }
 //#endregion 🔖️Mutations
+
+//#region 🔖️FromSnapshot
+impl Iso16757Mutation {
+    /// 📤️ Decomposes a whole-document replacement into the closed semantic vocabulary — the
+    /// replacement for the banned whole-document-replace variant, used by `import_media`'s
+    /// `"model:in"` port and the `set-snapshot` app command. Covers exactly this facet's migrated
+    /// vocabulary (document-root scalars, catalogue/manufacturer naming, `product_groups`/`products`/
+    /// `property_definitions`/`subjects` full CRUD, part-number inputs, selection constraints) — the
+    /// deliberately-deferred collections (`product_classes`, `product_series`, `product_indexes`,
+    /// `descriptive_objects`, dictionary `relationships`/`properties`/`controlled_lists`/
+    /// `meta_subjects`, `geometry`) documented at this file's top have no mutation to decompose into
+    /// and are therefore not represented by a whole-document replace either (same gap as `evaluate`/
+    /// direct editing already has for those fields). `base` is required because every id-keyed
+    /// collection here needs full remove/re-insert (highest BASE index first, so indices/positions
+    /// stay valid mid-sequence).
+    pub fn from_snapshot(base: &Iso16757Snapshot, target: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+        let mut mutations = Vec::new();
+        mutations.push(Iso16757Mutation::RenameCatalogue(rename_catalogue::mutation::RenameCatalogue { new_name: target.catalogue.metadata.names.preferred.text.clone() }));
+        mutations.push(Iso16757Mutation::RenameManufacturer(rename_manufacturer::mutation::RenameManufacturer { new_name: target.catalogue.manufacturer.names.preferred.text.clone() }));
+        mutations.push(Iso16757Mutation::ChangeExchangeProcess(change_exchange_process::mutation::ChangeExchangeProcess { new_exchange_process: target.exchange_process.clone() }));
+        mutations.push(Iso16757Mutation::UpdateScriptLimits(update_script_limits::mutation::UpdateScriptLimits { new_max_steps: target.script_limits.max_steps.clone(), new_max_recursion: target.script_limits.max_recursion.clone(), new_timeout_ms: target.script_limits.timeout_ms.clone() }));
+        mutations.push(Iso16757Mutation::ReplacePartNumberRule(replace_part_number_rule::mutation::ReplacePartNumberRule { new_rule: target.part_number_rule.clone() }));
+        mutations.push(Iso16757Mutation::ChangeSelectionClass(change_selection_class::mutation::ChangeSelectionClass { new_class_id: target.selection.class_id.clone() }));
+        mutations.push(Iso16757Mutation::ChangeSelectionSeries(change_selection_series::mutation::ChangeSelectionSeries { new_series_id: target.selection.series_id.clone() }));
+
+        for key in base.part_number_inputs.keys() {
+            if !target.part_number_inputs.contains_key(key) {
+                mutations.push(Iso16757Mutation::RemovePartNumberInput(remove_part_number_input::mutation::RemovePartNumberInput { key: key.clone() }));
+            }
+        }
+        for (key, value) in target.part_number_inputs.iter() {
+            mutations.push(Iso16757Mutation::ChangePartNumberInput(change_part_number_input::mutation::ChangePartNumberInput { key: key.clone(), new_value: value.clone() }));
+        }
+
+        for index in (0..base.selection.constraints.len()).rev() {
+            mutations.push(Iso16757Mutation::RemoveSelectionConstraint(remove_selection_constraint::mutation::RemoveSelectionConstraint { index }));
+        }
+        for constraint in target.selection.constraints.iter() {
+            mutations.push(Iso16757Mutation::AddSelectionConstraint(add_selection_constraint::mutation::AddSelectionConstraint { constraint: constraint.clone() }));
+        }
+
+        for group in base.catalogue.product_groups.iter() {
+            mutations.push(Iso16757Mutation::DeleteProductGroup(delete_product_group::mutation::DeleteProductGroup { id: group.id.clone() }));
+        }
+        for (index, group) in target.catalogue.product_groups.iter().enumerate() {
+            mutations.push(Iso16757Mutation::CreateProductGroup(create_product_group::mutation::CreateProductGroup { product_group: group.clone(), index: Some(index) }));
+        }
+
+        for product in base.catalogue.products.iter() {
+            mutations.push(Iso16757Mutation::DeleteProduct(delete_product::mutation::DeleteProduct { id: product.id.clone() }));
+        }
+        for (index, product) in target.catalogue.products.iter().enumerate() {
+            mutations.push(Iso16757Mutation::CreateProduct(create_product::mutation::CreateProduct { product: product.clone(), index: Some(index) }));
+        }
+
+        for definition in base.catalogue.property_definitions.iter() {
+            mutations.push(Iso16757Mutation::DeletePropertyDefinition(delete_property_definition::mutation::DeletePropertyDefinition { id: definition.id.clone() }));
+        }
+        for (index, definition) in target.catalogue.property_definitions.iter().enumerate() {
+            mutations.push(Iso16757Mutation::CreatePropertyDefinition(create_property_definition::mutation::CreatePropertyDefinition { property_definition: definition.clone(), index: Some(index) }));
+        }
+
+        for subject in base.dictionary.subjects.iter() {
+            mutations.push(Iso16757Mutation::DeleteSubject(delete_subject::mutation::DeleteSubject { id: subject.id.clone() }));
+        }
+        for (index, subject) in target.dictionary.subjects.iter().enumerate() {
+            mutations.push(Iso16757Mutation::CreateSubject(create_subject::mutation::CreateSubject { subject: subject.clone(), index: Some(index) }));
+        }
+
+        mutations
+    }
+}
+//#endregion 🔖️FromSnapshot
 
 //#region 🧪️Tests
 #[cfg(test)]

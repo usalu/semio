@@ -2,6 +2,7 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📈growth` per Wave C.
 
 use super::mutation::ReplaceGrowthPlan;
+use protocol::Patchable;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramGrowthDelta, ProgramGrowthPatchEntry};

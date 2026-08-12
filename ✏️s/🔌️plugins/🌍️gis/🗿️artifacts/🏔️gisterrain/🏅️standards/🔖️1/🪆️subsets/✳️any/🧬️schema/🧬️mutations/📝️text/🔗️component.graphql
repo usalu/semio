@@ -1,3 +1,7 @@
-# stdio.json mutations text grammar schema
+# gis.gisterrain mutations — one input type per semantic mutation slug (tags 1..2 match protocol.semio order).
 scalar Bytes
-type Document { schema: String! payload: String! }
+
+input ChangeExaggeration { newExaggeration: Float! }
+input ChangeImportedFeatures {  }
+
+union GisterrainMutation = ChangeExaggeration | ChangeImportedFeatures

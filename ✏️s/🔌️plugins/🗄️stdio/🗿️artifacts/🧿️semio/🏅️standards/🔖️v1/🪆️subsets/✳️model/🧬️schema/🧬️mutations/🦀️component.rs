@@ -17,7 +17,7 @@ use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{
 use protocol::Mutation;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioModelMutation` block below
 /// calls `Self::parse_op(...)` via trait method syntax, which needs `OpText` in scope in
-/// production code too, not merely under `#[cfg(test)]` (same fix `stdio.semio.workflow`'s own
+/// production code too, not merely under `#[cfg(test)]` (same fix `stdio.semio.flow`'s own
 /// mutations facet needed).
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
@@ -209,7 +209,7 @@ pub fn apply_semio_model_mutation(snapshot: &mut SemioModelSnapshot, mutation: &
 //#region 🔖️OpCodecs
 /// 🎙️ P2 pilot (model): hand-rolled `OpText`/`OpBinary` real structured codecs — replacing the old
 /// plain-`serde_json` passthrough. Grammar: `keyword arg=value ...` (space-separated), reusing
-/// `schema::diff`'s `pub(crate)` grammar primitives — same convention `stdio.semio.workflow`'s own
+/// `schema::diff`'s `pub(crate)` grammar primitives — same convention `stdio.semio.flow`'s own
 /// mutations facet uses. Deliberately NOT `#[derive(dsl::DslOps)]` + `#[dsl(block)]` — that path
 /// requires every nested type in the mutation's field tree to itself implement `dsl::DslField` (via
 /// `dsl::DslRecord`), a repo-wide framework capability this hand-rolled vocabulary does not depend

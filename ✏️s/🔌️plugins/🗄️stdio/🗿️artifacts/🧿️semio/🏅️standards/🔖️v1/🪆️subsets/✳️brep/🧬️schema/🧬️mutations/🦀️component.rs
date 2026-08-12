@@ -20,7 +20,7 @@ use protocol::command::DiffAlgebra;
 use protocol::Mutation;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioBrepMutation` block below
 /// calls `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope
-/// in production code too, not merely under `#[cfg(test)]` (same fix workflow's own mutations
+/// in production code too, not merely under `#[cfg(test)]` (same fix flow's own mutations
 /// facet needed).
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
@@ -190,7 +190,7 @@ pub fn apply_semio_brep_mutation(snapshot: &mut SemioBrepSnapshot, mutation: &Se
 /// `keyword arg=value ...` (space-separated), reusing the sibling `🔺️diff` facet's now-`pub(crate)`
 /// hex/value primitives (`enc_str`/`enc_point3`/`enc_curve`/`enc_surface`/`enc_vertex`/`enc_edge`/
 /// `enc_loop`/`enc_face`/`enc_shell`/`enc_solid`/`enc_list`/...) rather than re-deriving a second
-/// independent copy — one source of truth for the entity encoding, same convention workflow's own
+/// independent copy — one source of truth for the entity encoding, same convention flow's own
 /// mutations facet established (importing from its sibling `schema::diff`).
 fn enc_brep_snapshot(s: &SemioBrepSnapshot) -> String {
     format!(

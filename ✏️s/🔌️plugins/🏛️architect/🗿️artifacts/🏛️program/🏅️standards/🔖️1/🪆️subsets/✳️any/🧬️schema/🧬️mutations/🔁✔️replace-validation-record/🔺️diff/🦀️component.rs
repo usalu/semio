@@ -2,6 +2,7 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `✔️validations` per Wave C.
 
 use super::mutation::ReplaceValidationRecord;
+use protocol::Patchable;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramValidationsDelta, ProgramValidationsPatchEntry};

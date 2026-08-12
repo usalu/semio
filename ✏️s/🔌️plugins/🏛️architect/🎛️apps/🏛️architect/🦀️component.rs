@@ -39,8 +39,8 @@ pub fn architect_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 //#endregion 🔖️Constants
 
 //#region 🔖️ResetDocument
-/// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetSnapshot` — see
-/// `📓️taxonomy.md`'s forbidden vocabulary), so import/exchange flows build a
+/// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (the whole-document
+/// replace variant — see `📓️taxonomy.md`'s forbidden vocabulary), so import/exchange flows build a
 /// `HostEffect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry —
 /// same mechanism `✏️s/🔌️plugins/🗒️note`'s `reset_document_effect` already established.
 pub fn reset_document_effect(document: &ProgramSnapshot) -> semio_framework_plugin::HostEffect {

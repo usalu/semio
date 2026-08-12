@@ -225,7 +225,7 @@ pub mod derived_composition {
 
         //#region 🔖️ConformanceLaws
         /// 🧪️ Per-artifact conformance laws (grammar recipe §4 item 8) for `s.stdio.semio.model`'s
-        /// three facets — following `stdio.semio.workflow`'s proven P2 pilot pattern. Lives in this
+        /// three facets — following `stdio.semio.flow`'s proven P2 pilot pattern. Lives in this
         /// composer's own test region: `model` has no per-standard `⚙️engine` dir the way json/csv/zip/
         /// png do, and v1's SHARED `🏅️standards/🔖️v1/⚙️engine/🦀️component.rs` only aggregates all 14
         /// subsets' `register()` calls (no test module of its own, and out of this ticket's

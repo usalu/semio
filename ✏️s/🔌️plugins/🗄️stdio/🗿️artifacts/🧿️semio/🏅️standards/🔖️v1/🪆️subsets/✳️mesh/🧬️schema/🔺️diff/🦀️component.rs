@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 /// one) — `apply_named` could previously only ever append at the end, silently reordering the
 /// reconstructed snapshot whenever a remove+re-add happened together in the same `between()`.
 /// Fixed locally (shared `⚙️engine/🧰️triples` is out of this subset's write scope) — same fix,
-/// same shape, as `object`'s own `NamedAdded<T>` (`w2a-verify-report.md`'s mesh finding).
+/// same shape, as `value`'s own `NamedAdded<T>` (`w2a-verify-report.md`'s mesh finding).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NamedAdded<T> {
@@ -72,7 +72,7 @@ where
 
 /// ▶️ Apply semantics (normative, mirrors `IndexedTripleDiff`'s own `added` handling):
 /// `removed`/`modified` resolve by key; `added` entries carry their FINAL-state target position
-/// and are inserted ascending at `min(index, len)`, exactly like `object`'s `apply_map_diff`.
+/// and are inserted ascending at `min(index, len)`, exactly like `value`'s `apply_map_diff`.
 fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, NamedAdded<T>>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
 where
     K: PartialEq + Clone,
@@ -308,7 +308,7 @@ fn apply_texture(tex: &mut SemioTexture, diff: &SemioTextureDiff) {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioMeshSnapshot> for SemioMeshDiff {
-    /// 🔁️ Diff-level undo, derived generically from `between` (same accepted technique `object`'s
+    /// 🔁️ Diff-level undo, derived generically from `between` (same accepted technique `value`'s
     /// own `DiffAlgebra::inverse` uses — recomputing via a real `between()` call sidesteps having
     /// to hand-derive `NamedAdded<T>` position math for the undo direction): `mid = self.apply(base)`,
     /// then `between(mid, base)` is exactly the diff that restores `base` when applied to `mid`.
@@ -410,8 +410,8 @@ pub fn diff_set_snapshot(base: &SemioMeshSnapshot, snapshot: &SemioMeshSnapshot)
 /// `diff()` calls exactly one of these (never apply-and-capture). Mirrors docx's
 /// `diff_insert_block`/`diff_remove_block`/... precedent.
 /// ➕️ `base` supplies the real target position for the new entry's `NamedAdded<T>.index` (its
-/// natural append position — the current collection length — same convention `object`'s own
-/// `SetMapEntry`/`SetObject` diff constructors use).
+/// natural append position — the current collection length — same convention `value`'s own
+/// `SetMapEntry`/`SetNode` diff constructors use).
 pub fn diff_add_mesh(base: &SemioMeshSnapshot, mesh: SemioMesh) -> SemioMeshDiff {
     SemioMeshDiff { meshes: Some(SemioMeshesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.meshes.len(), item: mesh }] }), materials: None, textures: None }
 }
@@ -773,7 +773,7 @@ impl protocol::DiffCodec for SemioMeshDiff {
     /// `print_diff` already produces) — independently-delimited segments rather than one bare
     /// trailing `bytes` because there can be 0-3 of them (chaining a `Cond` per-segment hits the
     /// `protocol-cond-cannot-chain` gap: a second `if`-guard on a field that was itself only
-    /// conditionally decoded hard-errors `eval_cond` — see `✳️workflow`'s pilot report).
+    /// conditionally decoded hard-errors `eval_cond` — see `✳️flow`'s pilot report).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;

@@ -1,7 +1,7 @@
-//! 📚️ Example "graph" for `stdio.semio.object` — the first real, non-hex-of-JSON fixture for this
-//! subset (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION's object wave).
-//! `PRIMARY_TEXT` is the genuine `SemioObjectSnapshot::print_dsl` output for
-//! `snapshot::demo_semio_object_snapshot()` (`🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/📸️snapshot/
+//! 📚️ Example "graph" for `stdio.semio.value` — the first real, non-hex-of-JSON fixture for this
+//! subset (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION's value wave).
+//! `PRIMARY_TEXT` is the genuine `SemioValueSnapshot::print_dsl` output for
+//! `snapshot::demo_semio_value_snapshot()` (`🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/📸️snapshot/
 //! 🦀️component.rs`) — asserted byte-identical to it by that subset's own `fixture_honesty_law`
 //! (`🎹️composer/🦀️component.rs`), so this fixture can never silently drift back to a fake.
 

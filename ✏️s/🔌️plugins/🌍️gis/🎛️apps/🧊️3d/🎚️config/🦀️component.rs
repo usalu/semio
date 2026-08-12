@@ -105,16 +105,12 @@ store::impl_whole_record_config!(Gis3dConfig);
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
-/// 🧮️ `Gis3dConfig`'s operation enum — one variant per settled interaction, plus a generic `Snapshot`
-/// every variant's `backwards()` returns — mirrors `crate::apps::gis2d::config::Gis2dConfigMutation`'s
+/// 🧮️ `Gis3dConfig`'s operation enum — one variant per settled interaction; each variant's
+/// `backwards()` re-emits the SAME variant with the old field value read from `base` (no
+/// whole-config snapshot sentinel) — mirrors `crate::apps::gis2d::config::Gis2dConfigMutation`'s
 /// identical shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum Gis3dConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: Gis3dConfig,
-    },
     #[dsl(key = "camera")]
     SetCamera { camera_json: String },
     #[dsl(key = "selection")]
@@ -201,7 +197,6 @@ impl Mutation<Gis3dConfig> for Gis3dConfigMutation {
     fn diff(&self, base: &Gis3dConfig) -> Gis3dConfig {
         let mut next = base.clone();
         match self {
-            Gis3dConfigMutation::Snapshot { config } => return config.clone(),
             Gis3dConfigMutation::SetCamera { camera_json } => next.camera_json = camera_json.clone(),
             Gis3dConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
             Gis3dConfigMutation::SetLocale { value } => next.locale = value.clone(),
@@ -210,7 +205,11 @@ impl Mutation<Gis3dConfig> for Gis3dConfigMutation {
     }
 
     fn inverse(&self, base: &Gis3dConfig) -> Vec<Self> {
-        vec![Gis3dConfigMutation::Snapshot { config: base.clone() }]
+        match self {
+            Gis3dConfigMutation::SetCamera { .. } => vec![Gis3dConfigMutation::SetCamera { camera_json: base.camera_json.clone() }],
+            Gis3dConfigMutation::SetSelection { .. } => vec![Gis3dConfigMutation::SetSelection { ids: base.selected_ids.clone() }],
+            Gis3dConfigMutation::SetLocale { .. } => vec![Gis3dConfigMutation::SetLocale { value: base.locale.clone() }],
+        }
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -243,7 +242,7 @@ mod tests {
         let next = operation.diff(&base);
         assert_eq!(next.selected_ids, vec!["p1".to_string()]);
         let backwards = operation.inverse(&base);
-        assert_eq!(backwards, vec![Gis3dConfigMutation::Snapshot { config: base.clone() }]);
+        assert_eq!(backwards, vec![Gis3dConfigMutation::SetSelection { ids: Vec::new() }]);
         assert_eq!(backwards[0].diff(&next), base);
     }
 
@@ -252,7 +251,6 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() });
         store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetSelection { ids: vec!["p1".into()] });
         store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetLocale { value: "de-DE".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::Snapshot { config: Gis3dConfig::default() });
     }
 }
 //#endregion 🧪️Tests

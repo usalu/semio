@@ -1,16 +1,10 @@
 dialect protocol
-protocol gisterrain.mutations
+protocol gis.gisterrain.mutations
 version 1
-schema stdio.json
+schema gis.gisterrain
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+
+record ChangeExaggeration tag 1
+  field new_exaggeration f64
+
+record ChangeImportedFeatures tag 2

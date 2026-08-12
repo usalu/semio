@@ -38,6 +38,11 @@ def build_diff_rs(p):
     from migrate import filter_uses
     other = [t for t in p["_diff_uses"] if not t[0].startswith("use super::mutation::")]
     uses = filter_uses(other, p["diff_fn"])
+    # 🩹 `.diff_patch(` is a trait-method CALL (protocol::Patchable) — the trait's own name never
+    # appears as a bare word in the call site text, so the textual symbol-presence filter above
+    # can't detect it; force the import back in whenever the method call itself is present.
+    if ".diff_patch(" in p["diff_fn"] and not any(u == "use protocol::Patchable;" for u in uses):
+        uses.append("use protocol::Patchable;")
     uses = [f"use super::mutation::{p['struct_name']};"] + dedupe_keep_order(sorted(uses))
     header = f"//! 🔺️ Sparse diff construction for the `{p['kind_slug']}` mutation leaf — real handcrafted\n//! `ProgramDiff` builder, never apply-then-capture. Split from `{p['old_dir']}` per Wave C.\n\n"
     doc = (p["diff_doc"] + "\n") if p["diff_doc"] else ""

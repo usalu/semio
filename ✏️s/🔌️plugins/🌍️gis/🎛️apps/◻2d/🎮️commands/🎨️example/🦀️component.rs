@@ -11,9 +11,9 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️SetActiveExample
 /// ✏️ Replaces document content by diffing every collection (positions/routes/regions) into batched
 /// create/delete/replace-data operations, so this is an Operation action (not a View one) — an empty
-/// `example_id` clears the map, any other id loads the bundled reuse map and frames it. No whole-
-/// document `SetSnapshot`: banned by the taxonomy, and each batched operation still has a real
-/// per-mutation inverse, so undo restores the prior document exactly.
+/// `example_id` clears the map, any other id loads the bundled reuse map and frames it. Never a
+/// whole-document snapshot swap (that vocabulary is retired by the taxonomy): each batched operation
+/// still has a real per-mutation inverse, so undo restores the prior document exactly.
 pub mod set_active_example {
     use super::*;
 

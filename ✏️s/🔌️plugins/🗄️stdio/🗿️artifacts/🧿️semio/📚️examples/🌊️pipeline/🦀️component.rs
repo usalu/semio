@@ -1,7 +1,7 @@
-//! 📚️ Example "pipeline" for `stdio.semio.workflow` — the first real, non-hex-scaffold fixture for
-//! this subset (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION's workflow pilot).
-//! `PRIMARY_TEXT` is the genuine `SemioWorkflowSnapshot::print_dsl` output for
-//! `snapshot::demo_workflow_snapshot()` (`🏅️standards/🔖️v1/🪆️subsets/✳️workflow/🧬️schema/📸️snapshot/
+//! 📚️ Example "pipeline" for `stdio.semio.flow` — the first real, non-hex-scaffold fixture for
+//! this subset (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION's flow pilot).
+//! `PRIMARY_TEXT` is the genuine `SemioFlowSnapshot::print_dsl` output for
+//! `snapshot::demo_flow_snapshot()` (`🏅️standards/🔖️v1/🪆️subsets/✳️flow/🧬️schema/📸️snapshot/
 //! 🦀️component.rs`) — asserted byte-identical to it by that subset's own `fixture_honesty_law`
 //! (`🎹️composer/🦀️component.rs`), so this fixture can never silently drift back to a fake.
 

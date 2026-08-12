@@ -3,8 +3,11 @@
 //!
 //! `ImperativeMutation` has no shared kernel crate to implement `protocol::OpBinary` for it directly (see
 //! `🗿️artifacts/📜️imperative/🦀️component.rs`'s module doc), so this component owns the full mirror-struct
-//! machinery: `ImperativeMutationDsl` flattens `PathRef` into bare `owner`/`slot` fields and routes
-//! through `#[derive(dsl::DslEnum)]` for the actual text/binary codegen.
+//! machinery: `ImperativeMutationDsl` flattens `PathRef` into bare `owner`/`slot` fields (and the step
+//! payload through the existing `StepNodeDsl`/`ValueDsl` mirrors) and routes through
+//! `#[derive(dsl::DslEnum)]` for the actual text/binary codegen — `Step`/`Dictionary` are foreign kernel
+//! types with no `dsl::DslRecord` support, so `ImperativeMutation`'s own payload structs (see the
+//! `🧬️mutations/<slug>/🦠️mutation/` leaves) cannot derive it either.
 //!
 //! The app's typed `ImperativeCommand` enum — which used to share the old `📡️protocol` crate with this
 //! codec — is an APP concern, not an artifact one: it now lives in `🎛️apps/📜️imperative/🦀️component.rs`,
@@ -19,44 +22,45 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 
 use crate::artifacts::imperative::dsl::{dictionary_to_value_dsl_map, step_node_dsl_to_step, step_to_step_node_dsl, value_dsl_map_to_dictionary, StepNodeDsl, ValueDsl};
-use crate::artifacts::imperative::schema::mutations::ImperativeMutation;
+use crate::artifacts::imperative::mutations::{create_step, delete_step, edit_step_params, reorder_steps, ImperativeMutation};
 use crate::artifacts::imperative::PathRef;
 use protocol::OpBinary;
+use std::collections::BTreeMap;
 
 //#region 🔖️OpText
 /// ✂️ Local mirror of `ImperativeMutation` — flattens `PathRef` into bare `owner`/`slot`
 /// `Option<String>` fields (printed bare when the value lexes as a bare ident, per the engine's
 /// default `Shape::Text` behavior — no per-field opt-in needed) since a `store::Mutation` grammar is
 /// a genuinely tagged enum (`#[derive(dsl::DslEnum)]` requires an enum), not the single generic-struct
-/// shape `ImperativeMutation`/`protocol::CollectionMutation` use at the Rust level.
+/// shape the old `ImperativeMutation`/`protocol::CollectionMutation` pairing used.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum ImperativeMutationDsl {
-    Add {
+    CreateStep {
         owner: Option<String>,
         slot: Option<String>,
-        index: usize,
         #[dsl(statements)]
         item: Box<StepNodeDsl>,
     },
-    Remove {
+    DeleteStep {
         owner: Option<String>,
         slot: Option<String>,
         id: String,
     },
-    Move {
+    ReorderSteps {
         owner: Option<String>,
         slot: Option<String>,
         id: String,
         #[dsl(key = "to")]
         to_index: usize,
     },
-    Patch {
+    EditStepParams {
         owner: Option<String>,
         slot: Option<String>,
         id: String,
-        patch: std::collections::BTreeMap<String, ValueDsl>,
+        params: BTreeMap<String, ValueDsl>,
     },
 }
+
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for ImperativeMutationDsl {
@@ -97,28 +101,26 @@ impl protocol::OpBinary for ImperativeMutationDsl {
 
 
 fn imperative_operation_to_dsl(operation: &ImperativeMutation) -> ImperativeMutationDsl {
-    let owner = operation.path_ref.owner.clone();
-    let slot = operation.path_ref.slot.clone();
-    match &operation.collection {
-        // 🔒️ `id` is intentionally dropped in the DSL's `Add` shape (unchanged on-disk text
-        // format) — `Step.id` round-trips it losslessly, recovered on the reverse conversion below.
-        protocol::CollectionMutation::Add { index: at, item } => ImperativeMutationDsl::Add { owner, slot, index: *at, item: Box::new(step_to_step_node_dsl(item)) },
-        protocol::CollectionMutation::Remove { id } => ImperativeMutationDsl::Remove { owner, slot, id: id.clone() },
-        protocol::CollectionMutation::Move { id, to_index: to } => ImperativeMutationDsl::Move { owner, slot, id: id.clone(), to_index: *to },
-        protocol::CollectionMutation::Patch { id, patch } => ImperativeMutationDsl::Patch { owner, slot, id: id.clone(), patch: dictionary_to_value_dsl_map(patch) },
+    match operation {
+        ImperativeMutation::CreateStep(payload) => {
+            ImperativeMutationDsl::CreateStep { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), item: Box::new(step_to_step_node_dsl(&payload.step)) }
+        }
+        ImperativeMutation::DeleteStep(payload) => ImperativeMutationDsl::DeleteStep { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), id: payload.id.clone() },
+        ImperativeMutation::ReorderSteps(payload) => {
+            ImperativeMutationDsl::ReorderSteps { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), id: payload.id.clone(), to_index: payload.to_index }
+        }
+        ImperativeMutation::EditStepParams(payload) => {
+            ImperativeMutationDsl::EditStepParams { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), id: payload.id.clone(), params: dictionary_to_value_dsl_map(&payload.new_params) }
+        }
     }
 }
 
 fn imperative_operation_from_dsl(dsl_op: ImperativeMutationDsl) -> ImperativeMutation {
     match dsl_op {
-        ImperativeMutationDsl::Add { owner, slot, index, item } => {
-            let item = step_node_dsl_to_step(*item);
-            let id = item.id.clone();
-            ImperativeMutation { path_ref: PathRef { owner, slot }, collection: protocol::CollectionMutation::Add { index: index, item } }
-        }
-        ImperativeMutationDsl::Remove { owner, slot, id } => ImperativeMutation { path_ref: PathRef { owner, slot }, collection: protocol::CollectionMutation::Remove { id } },
-        ImperativeMutationDsl::Move { owner, slot, id, to_index } => ImperativeMutation { path_ref: PathRef { owner, slot }, collection: protocol::CollectionMutation::Move { id, to_index: to_index } },
-        ImperativeMutationDsl::Patch { owner, slot, id, patch } => ImperativeMutation { path_ref: PathRef { owner, slot }, collection: protocol::CollectionMutation::Patch { id, patch: value_dsl_map_to_dictionary(&patch) } },
+        ImperativeMutationDsl::CreateStep { owner, slot, item } => create_step(PathRef { owner, slot }, step_node_dsl_to_step(*item)),
+        ImperativeMutationDsl::DeleteStep { owner, slot, id } => delete_step(PathRef { owner, slot }, id),
+        ImperativeMutationDsl::ReorderSteps { owner, slot, id, to_index } => reorder_steps(PathRef { owner, slot }, id, to_index),
+        ImperativeMutationDsl::EditStepParams { owner, slot, id, params } => edit_step_params(PathRef { owner, slot }, id, value_dsl_map_to_dictionary(&params)),
     }
 }
 
@@ -165,7 +167,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = ImperativeMutation { path_ref: PathRef::default(), collection: protocol::CollectionMutation::Remove { id: "step-1".into() } };
+        let operation = delete_step(PathRef::default(), "step-1".into());
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -180,7 +182,7 @@ mod tests {
         let envelope = store::create_document_envelope::<ImperativeSnapshot, ImperativeMutation>("imperative.document/v1", "test", document, None);
         let mut doc_store = store::ArtifactStore::new(envelope);
         let step = Step { id: "step-x".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
-        let operation = ImperativeMutation { path_ref: PathRef::default(), collection: protocol::CollectionMutation::Add { index: 0, item: step } };
+        let operation = create_step(PathRef::default(), step);
         doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store);
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
@@ -193,14 +195,32 @@ mod tests {
     }
 
     #[test]
-    fn op_text_round_trips_add_with_owner_and_slot() {
+    fn op_text_round_trips_create_step_with_owner_and_slot() {
         use crate::artifacts::imperative::{Dictionary, Step};
         use std::collections::BTreeMap;
-        let item = Step { id: "step-nested".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
-        let operation = ImperativeMutation { path_ref: PathRef { owner: Some("step-if".into()), slot: Some("then".into()) }, collection: protocol::CollectionMutation::Add { index: 0, item } };
+        let step = Step { id: "step-nested".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
+        let operation = create_step(PathRef { owner: Some("step-if".into()), slot: Some("then".into()) }, step);
         let printed = <ImperativeMutation as protocol::OpText>::print_op(&operation);
         assert!(printed.contains("owner=step-if"), "printed: {printed}");
         assert!(printed.contains("slot=then"), "printed: {printed}");
+        let parsed = <ImperativeMutation as protocol::OpText>::parse_op(&printed).expect("round trips");
+        assert_eq!(parsed, operation);
+    }
+
+    #[test]
+    fn op_text_round_trips_reorder_steps() {
+        let operation = reorder_steps(PathRef::default(), "step-2".into(), 0);
+        let printed = <ImperativeMutation as protocol::OpText>::print_op(&operation);
+        let parsed = <ImperativeMutation as protocol::OpText>::parse_op(&printed).expect("round trips");
+        assert_eq!(parsed, operation);
+    }
+
+    #[test]
+    fn op_text_round_trips_edit_step_params() {
+        use crate::artifacts::imperative::Dictionary;
+        use neural_engine::{Atom, Value};
+        let operation = edit_step_params(PathRef::default(), "step-2".into(), Dictionary::new().insert("message", Value::Atom(Atom::String("hi".into()))));
+        let printed = <ImperativeMutation as protocol::OpText>::print_op(&operation);
         let parsed = <ImperativeMutation as protocol::OpText>::parse_op(&printed).expect("round trips");
         assert_eq!(parsed, operation);
     }

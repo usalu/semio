@@ -10,7 +10,7 @@ framing record
 # (bit0 = `streams` present) are two REAL fixed fields; when present, `streams` follows as one
 # varint-length-prefixed opaque blob (the same `enc_streams_diff` bracket/hex text `print_diff`
 # already emits) — modeled as one opaque trailing `payload` chain rather than a `Cond`-guarded
-# field for the `protocol-cond-cannot-chain` reason workflow's/mesh's own diff protocols document.
+# field for the `protocol-cond-cannot-chain` reason flow's/mesh's own diff protocols document.
 # The real Rust `encode_diff`/`decode_diff` stays genuinely, fully structured (`write_str_lp`/
 # `read_str_lp`, `store::pack_rt`'s real varint codec) — round-trip tested independently.
 header fixed 2

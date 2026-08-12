@@ -60,9 +60,16 @@ pub mod import_model_file {
         pub payload: String,
     }
 
+    /// 📤️ Importing a model file replaces the whole document (stock geometry + a cleared timeline),
+    /// which has no in-history mutation (see `📓️taxonomy.md`'s forbidden vocabulary), so this routes
+    /// through `apps::process3d::reset_process3d_document_effect` (a `HostEffect::LoadDocument`).
     pub fn handle(payload: &ImportModelFile, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         match import_process3d_model(&payload.name.to_ascii_lowercase(), &payload.payload) {
-            Some(snapshot) => Ok(Emit { artifact_mutations: vec![Process3dMutation::SetSnapshot { snapshot }], config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: None }], ..Default::default() }),
+            Some(snapshot) => Ok(Emit {
+                effects: vec![crate::apps::process3d::reset_process3d_document_effect(&snapshot)],
+                config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: None }],
+                ..Default::default()
+            }),
             None => Ok(Emit::default()),
         }
     }

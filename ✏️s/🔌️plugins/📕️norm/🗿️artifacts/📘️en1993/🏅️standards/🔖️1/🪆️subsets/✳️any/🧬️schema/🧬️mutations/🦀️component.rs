@@ -21,175 +21,36 @@
 //! `part_1_6` shell-buckling check and the `part_4` silo-wall check (same physical silo), so both
 //! live in one `update-silo-shell-inputs` group rather than being split or duplicated.
 //!
-//! Every triad leaf is self-wired directly below (`#[path]`, `🔖️LeafWiring` region) rather than in
-//! `📦️glue.rs` — this facet's fan-out (26/08/12/SEMANTIC-MUTATIONS-OVERHAUL) is scoped to files
-//! inside this artifact directory only; `📦️glue.rs` is plugin-shared and out of that scope. The old
-//! generic `📄set-snapshot` leaf stays physically present as an orphan stub (see its own doc
-//! comments) because `📦️glue.rs` still `#[path]`-wires it — cleanup tracked as a `sharedFileRequests`
-//! entry in this ticket's wave2 report.
+//! Every triad leaf is mounted directly as a `mutations`-sibling module in `📦️glue.rs` (this lane's
+//! agent owns `📦️glue.rs`, so no self-wiring `#[path = "."]` blocks are needed here — the orphaned
+//! `📄set-snapshot` stub is deleted along with its dangling glue mount).
 
 use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️LeafWiring
-#[path = "."]
-pub mod change_annex {
-    #[path = "🌍️change-annex/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🌍️change-annex/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🌍️change-annex/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_member_properties {
-    #[path = "🏗️update-member-properties/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🏗️update-member-properties/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🏗️update-member-properties/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_fire_inputs {
-    #[path = "🔥update-fire-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔥update-fire-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔥update-fire-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_cold_formed_inputs {
-    #[path = "📐update-cold-formed-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📐update-cold-formed-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📐update-cold-formed-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_stainless_inputs {
-    #[path = "🪞update-stainless-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🪞update-stainless-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🪞update-stainless-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_plated_inputs {
-    #[path = "🧱update-plated-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🧱update-plated-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🧱update-plated-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_silo_shell_inputs {
-    #[path = "🛢️update-silo-shell-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🛢️update-silo-shell-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🛢️update-silo-shell-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_bolt_inputs {
-    #[path = "🔩update-bolt-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔩update-bolt-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔩update-bolt-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_weld_inputs {
-    #[path = "⚡update-weld-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "⚡update-weld-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "⚡update-weld-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_fatigue_inputs {
-    #[path = "🔁update-fatigue-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔁update-fatigue-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔁update-fatigue-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_through_thickness_inputs {
-    #[path = "📏update-through-thickness-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📏update-through-thickness-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📏update-through-thickness-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_tension_component_inputs {
-    #[path = "🔗update-tension-component-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔗update-tension-component-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔗update-tension-component-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_hss_inputs {
-    #[path = "💪update-hss-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "💪update-hss-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "💪update-hss-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_bridge_inputs {
-    #[path = "🌉update-bridge-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🌉update-bridge-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🌉update-bridge-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_tower_inputs {
-    #[path = "🗼update-tower-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗼update-tower-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗼update-tower-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_pile_inputs {
-    #[path = "⚓update-pile-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "⚓update-pile-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "⚓update-pile-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_crane_inputs {
-    #[path = "🏭update-crane-inputs/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🏭update-crane-inputs/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🏭update-crane-inputs/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-//#endregion 🔖️LeafWiring
-
 //#region 🔖️Mutations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<En1993Snapshot, En1993Mutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️component.rs`.
+//#region 🔖️Leaves
+use super::change_annex;
+use super::update_member_properties;
+use super::update_fire_inputs;
+use super::update_cold_formed_inputs;
+use super::update_stainless_inputs;
+use super::update_plated_inputs;
+use super::update_silo_shell_inputs;
+use super::update_bolt_inputs;
+use super::update_weld_inputs;
+use super::update_fatigue_inputs;
+use super::update_through_thickness_inputs;
+use super::update_tension_component_inputs;
+use super::update_hss_inputs;
+use super::update_bridge_inputs;
+use super::update_tower_inputs;
+use super::update_pile_inputs;
+use super::update_crane_inputs;
+//#endregion 🔖️Leaves
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = En1993Snapshot, diff = En1993Diff, schema = "s.norm.en1993")]
 pub enum En1993Mutation {
@@ -212,6 +73,36 @@ pub enum En1993Mutation {
     UpdateCraneInputs(update_crane_inputs::mutation::UpdateCraneInputs),
 }
 //#endregion 🔖️Mutations
+
+//#region 🔖️FromSnapshot
+impl En1993Mutation {
+    /// 📤️ Decomposes a whole `En1993Snapshot` into one mutation per field-group — the
+    /// closed-vocabulary replacement for the banned whole-document-replace variant, used by
+    /// `import_media`'s `"model:in"` port and the `set-snapshot` app command to bundle a bulk
+    /// document replacement into a single atomic `Emit::commit`.
+    pub fn from_snapshot(snapshot: &En1993Snapshot) -> Vec<En1993Mutation> {
+        let mut mutations = Vec::with_capacity(17);
+        mutations.push(En1993Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: snapshot.annex.clone() }));
+        mutations.push(En1993Mutation::UpdatePileInputs(update_pile_inputs::mutation::UpdatePileInputs { new_pile_sigma_mpa: snapshot.pile_sigma_mpa.clone(), new_pile_k_red: snapshot.pile_k_red.clone(), new_pile_n_ed_kn: snapshot.pile_n_ed_kn.clone() }));
+        mutations.push(En1993Mutation::UpdateWeldInputs(update_weld_inputs::mutation::UpdateWeldInputs { new_weld_a_mm: snapshot.weld_a_mm.clone(), new_weld_l_mm: snapshot.weld_l_mm.clone(), new_weld_f_u_mpa: snapshot.weld_f_u_mpa.clone(), new_weld_steel_grade: snapshot.weld_steel_grade.clone(), new_weld_f_ed_kn: snapshot.weld_f_ed_kn.clone() }));
+        mutations.push(En1993Mutation::UpdateBridgeInputs(update_bridge_inputs::mutation::UpdateBridgeInputs { new_bridge_lambda: snapshot.bridge_lambda.clone(), new_bridge_phi_2: snapshot.bridge_phi_2.clone(), new_bridge_delta_sigma_p_mpa: snapshot.bridge_delta_sigma_p_mpa.clone() }));
+        mutations.push(En1993Mutation::UpdateMemberProperties(update_member_properties::mutation::UpdateMemberProperties { new_n_ed_kn: snapshot.n_ed_kn.clone(), new_m_ed_knm: snapshot.m_ed_knm.clone(), new_v_ed_kn: snapshot.v_ed_kn.clone(), new_a_mm2: snapshot.a_mm2.clone(), new_a_v_mm2: snapshot.a_v_mm2.clone(), new_w_pl_mm3: snapshot.w_pl_mm3.clone(), new_f_y_mpa: snapshot.f_y_mpa.clone(), new_f_u_mpa: snapshot.f_u_mpa.clone(), new_chi: snapshot.chi.clone(), new_a_net_mm2: snapshot.a_net_mm2.clone(), new_tension_n_ed_kn: snapshot.tension_n_ed_kn.clone() }));
+        mutations.push(En1993Mutation::UpdateCraneInputs(update_crane_inputs::mutation::UpdateCraneInputs { new_crane_f_z_ed_kn: snapshot.crane_f_z_ed_kn.clone(), new_crane_wheel_contact_length_mm: snapshot.crane_wheel_contact_length_mm.clone(), new_crane_dispersion_mm: snapshot.crane_dispersion_mm.clone(), new_crane_t_w_mm: snapshot.crane_t_w_mm.clone() }));
+        mutations.push(En1993Mutation::UpdateHssInputs(update_hss_inputs::mutation::UpdateHssInputs { new_hss_w_el_mm3: snapshot.hss_w_el_mm3.clone(), new_hss_f_y_mpa: snapshot.hss_f_y_mpa.clone(), new_hss_section_class: snapshot.hss_section_class.clone(), new_hss_m_ed_knm: snapshot.hss_m_ed_knm.clone() }));
+        mutations.push(En1993Mutation::UpdateThroughThicknessInputs(update_through_thickness_inputs::mutation::UpdateThroughThicknessInputs { new_t10_steel_subgrade: snapshot.t10_steel_subgrade.clone(), new_t10_actual_thickness_mm: snapshot.t10_actual_thickness_mm.clone(), new_t10_t_ed_c: snapshot.t10_t_ed_c.clone() }));
+        mutations.push(En1993Mutation::UpdateColdFormedInputs(update_cold_formed_inputs::mutation::UpdateColdFormedInputs { new_cf_b_bar_mm: snapshot.cf_b_bar_mm.clone(), new_cf_t_mm: snapshot.cf_t_mm.clone(), new_cf_k_sigma: snapshot.cf_k_sigma.clone(), new_cf_psi: snapshot.cf_psi.clone(), new_cf_n_ed_kn: snapshot.cf_n_ed_kn.clone(), new_cf_gross_resistance_kn: snapshot.cf_gross_resistance_kn.clone() }));
+        mutations.push(En1993Mutation::UpdateFatigueInputs(update_fatigue_inputs::mutation::UpdateFatigueInputs { new_delta_sigma_mpa: snapshot.delta_sigma_mpa.clone(), new_fatigue_category: snapshot.fatigue_category.clone(), new_fatigue_method: snapshot.fatigue_method.clone() }));
+        mutations.push(En1993Mutation::UpdateTensionComponentInputs(update_tension_component_inputs::mutation::UpdateTensionComponentInputs { new_tension_component_f_uk_kn: snapshot.tension_component_f_uk_kn.clone(), new_tension_component_f_k_kn: snapshot.tension_component_f_k_kn.clone(), new_tension_component_n_ed_kn: snapshot.tension_component_n_ed_kn.clone() }));
+        mutations.push(En1993Mutation::UpdateFireInputs(update_fire_inputs::mutation::UpdateFireInputs { new_fire_thickness_mm: snapshot.fire_thickness_mm.clone(), new_fire_rating: snapshot.fire_rating.clone(), new_fire_massivity: snapshot.fire_massivity.clone(), new_fire_mu_0: snapshot.fire_mu_0.clone(), new_fire_design_temperature_c: snapshot.fire_design_temperature_c.clone() }));
+        mutations.push(En1993Mutation::UpdateBoltInputs(update_bolt_inputs::mutation::UpdateBoltInputs { new_bolt_f_ed_kn: snapshot.bolt_f_ed_kn.clone(), new_bolt_n_bolts: snapshot.bolt_n_bolts.clone(), new_bolt_a_s_mm2: snapshot.bolt_a_s_mm2.clone(), new_bolt_e1_mm: snapshot.bolt_e1_mm.clone(), new_bolt_e2_mm: snapshot.bolt_e2_mm.clone(), new_bolt_d0_mm: snapshot.bolt_d0_mm.clone(), new_bolt_d_mm: snapshot.bolt_d_mm.clone(), new_bolt_t_mm: snapshot.bolt_t_mm.clone(), new_bolt_f_u_mpa: snapshot.bolt_f_u_mpa.clone(), new_bolt_f_ub_mpa: snapshot.bolt_f_ub_mpa.clone() }));
+        mutations.push(En1993Mutation::UpdateTowerInputs(update_tower_inputs::mutation::UpdateTowerInputs { new_tower_wind_factor: snapshot.tower_wind_factor.clone(), new_tower_n_ed_kn: snapshot.tower_n_ed_kn.clone() }));
+        mutations.push(En1993Mutation::UpdateSiloShellInputs(update_silo_shell_inputs::mutation::UpdateSiloShellInputs { new_silo_t_mm: snapshot.silo_t_mm.clone(), new_silo_r_mm: snapshot.silo_r_mm.clone(), new_shell_sigma_x_ed_mpa: snapshot.shell_sigma_x_ed_mpa.clone(), new_silo_k: snapshot.silo_k.clone(), new_silo_gamma_kn_m3: snapshot.silo_gamma_kn_m3.clone(), new_silo_depth_m: snapshot.silo_depth_m.clone() }));
+        mutations.push(En1993Mutation::UpdatePlatedInputs(update_plated_inputs::mutation::UpdatePlatedInputs { new_plated_lambda_p: snapshot.plated_lambda_p.clone(), new_plated_sigma_ed_mpa: snapshot.plated_sigma_ed_mpa.clone() }));
+        mutations.push(En1993Mutation::UpdateStainlessInputs(update_stainless_inputs::mutation::UpdateStainlessInputs { new_stainless_m_ed_knm: snapshot.stainless_m_ed_knm.clone(), new_stainless_w_pl_mm3: snapshot.stainless_w_pl_mm3.clone(), new_stainless_f_y_mpa: snapshot.stainless_f_y_mpa.clone() }));
+        mutations
+    }
+}
+//#endregion 🔖️FromSnapshot
 
 //#region 🧪️Tests
 #[cfg(test)]

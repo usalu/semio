@@ -627,7 +627,7 @@ fn parse_semio_animation_diff(line: &str) -> Result<SemioAnimationDiff, String> 
 /// header fields; when present, the SAME `enc_indexed_triple`-produced text this facet's own
 /// `print_diff` already emits follows as one opaque trailing byte chain (last field in the frame,
 /// so no length prefix is needed — matches the recipe's §2.5 "opaque payload LAST" rule). Only one
-/// collection exists here (unlike brep's 6/workflow's 2), so `presence` only ever uses bit0.
+/// collection exists here (unlike brep's 6/flow's 2), so `presence` only ever uses bit0.
 const DIFF_BINARY_FORMAT: u8 = 1;
 
 impl protocol::DiffCodec for SemioAnimationDiff {

@@ -3,7 +3,7 @@ grammar semio.brep.snapshot
 extension semio
 start document
 
-# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION brep wave (following the workflow
+# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION brep wave (following the flow
 # pilot's proven template, `ws-codec-workflow-report.md`). Real grammar for
 # `SemioBrepSnapshot::print_dsl`/`parse_dsl` (📸️snapshot/🦀️component.rs's `print_brep_snapshot_body`/
 # `parse_brep_snapshot_body`) — hand-rolled (curve/surface are data-carrying tagged enums; a

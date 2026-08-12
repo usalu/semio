@@ -2,6 +2,7 @@
 //! live document AND its own view-only camera/LOD state, so — like `block`/`cad`'s app-level
 //! `world.rs` precedent — this lives at app level rather than in the artifact's `⚙️engine`).
 
+use crate::artifacts::jack::mutations::move_node;
 use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::{port_key, Graph, JackSnapshot, Node, PortDirection};
 use crate::artifacts::rewrite::engine::{ApplyRuleResult, Rule};
@@ -261,7 +262,7 @@ fn force_layout_reposition_operations(fixture: &JackSnapshot) -> Result<Vec<Trin
             continue;
         };
         if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
-            operations.push(TrinityGraphMutation::Reposition { id: node.id.clone(), x: node.x, y: node.y });
+            operations.push(move_node(node.id.clone(), node.x, node.y));
         }
     }
     Ok(operations)
@@ -553,7 +554,7 @@ impl TrinityBridge {
                 continue;
             };
             if (fixture_node.x - engine_node.center.x).abs() > 1e-6 || (fixture_node.y - engine_node.center.y).abs() > 1e-6 {
-                operations.push(TrinityGraphMutation::Reposition { id: widget_id.clone(), x: engine_node.center.x, y: engine_node.center.y });
+                operations.push(move_node(widget_id.clone(), engine_node.center.x, engine_node.center.y));
             }
         }
         if operations.is_empty() {
@@ -1112,7 +1113,7 @@ mod tests {
         let fixture = nakagin_graph().to_fixture();
         let operations = force_layout_reposition_operations(&fixture).unwrap();
         assert!(!operations.is_empty());
-        assert!(operations.iter().all(|op| matches!(op, TrinityGraphMutation::Reposition { .. })));
+        assert!(operations.iter().all(|op| matches!(op, TrinityGraphMutation::MoveNode(_))));
     }
 
     #[test]

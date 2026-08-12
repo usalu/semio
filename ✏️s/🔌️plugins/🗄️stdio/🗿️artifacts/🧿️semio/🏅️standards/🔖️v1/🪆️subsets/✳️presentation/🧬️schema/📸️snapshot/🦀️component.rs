@@ -175,7 +175,7 @@ impl Default for SemioPresentationSnapshot {
 //#region 🔖️TextCodec
 /// 🧪️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION presentation wave: real
 /// structured text body — `schema=<hex>` / `masters=[<master>,...]` / `layouts=[<layout>,...]` /
-/// `slides=[<slide>,...]`, one line per top-level field, matching the workflow/model/brep/document
+/// `slides=[<slide>,...]`, one line per top-level field, matching the flow/model/brep/document
 /// pilots' own `print_*_snapshot_body` shape. Reuses `🔺️diff`'s ALREADY-real, already-tested
 /// `enc_str`/`enc_master`/`enc_layout`/`enc_slide` value codecs (which themselves reuse document's
 /// real `enc_block` for every `blocks`/`notes` leaf) rather than duplicating a third independent

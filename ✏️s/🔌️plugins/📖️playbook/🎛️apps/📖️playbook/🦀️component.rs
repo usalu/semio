@@ -12,7 +12,7 @@ use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::apps::playbook::modes::builder;
 use crate::apps::playbook::modes::builder::windows::builder as builder_window;
 use crate::artifacts::playbook::engine::{default_block, flatten_playbook_blocks, playbook_io, PlaybookChapterPayload};
-use crate::artifacts::playbook::op::PlaybookMutation;
+use crate::artifacts::playbook::op::{AddBlock, AddStep, PlaybookMutation};
 use crate::artifacts::playbook::{artifact_kind, PlaybookSnapshot, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
 use store::EngineHandles;
@@ -111,7 +111,7 @@ impl ArtifactApp for PlaybookPlayApp {
         let spec = doc.snapshot;
         let mut operations = Vec::new();
         if !spec.steps.iter().any(|step| step.id == PLAYBOOK_IMPORTED_STEP_ID) {
-            operations.push(PlaybookMutation::AddStep { step: PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() }, index: None });
+            operations.push(PlaybookMutation::AddStep(AddStep { step: PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() }, index: None }));
         }
         let block_id = format!("chapter-{}", flatten_playbook_blocks(spec).len() + 1);
         let mut block = default_block(block_id, "note");
@@ -346,9 +346,9 @@ mod tests {
         let media = chapter_media("MATCH (a) RETURN a", "Jack Query");
         let emit = PlaybookPlayApp::import_media("chapters:in", &media, &doc_view).expect("import chapters:in");
         assert_eq!(emit.artifact_mutations.len(), 2, "creates the imported step, then the note block");
-        assert!(matches!(&emit.artifact_mutations[0], PlaybookMutation::AddStep { step, .. } if step.id == PLAYBOOK_IMPORTED_STEP_ID));
+        assert!(matches!(&emit.artifact_mutations[0], PlaybookMutation::AddStep(payload) if payload.step.id == PLAYBOOK_IMPORTED_STEP_ID));
         match &emit.artifact_mutations[1] {
-            PlaybookMutation::AddBlock { step_id, block, .. } => {
+            PlaybookMutation::AddBlock(AddBlock { step_id, block, .. }) => {
                 assert_eq!(step_id, PLAYBOOK_IMPORTED_STEP_ID);
                 assert_eq!(block.kind, "note");
                 assert_eq!(block.label, "Jack Query");
@@ -368,7 +368,7 @@ mod tests {
         let media = chapter_media("second chapter", "Second");
         let emit = PlaybookPlayApp::import_media("chapters:in", &media, &doc_view).expect("import chapters:in");
         assert_eq!(emit.artifact_mutations.len(), 1, "the imported step already exists, only the block is added");
-        assert!(matches!(&emit.artifact_mutations[0], PlaybookMutation::AddBlock { step_id, .. } if step_id == PLAYBOOK_IMPORTED_STEP_ID));
+        assert!(matches!(&emit.artifact_mutations[0], PlaybookMutation::AddBlock(payload) if payload.step_id == PLAYBOOK_IMPORTED_STEP_ID));
     }
 
     #[test]

@@ -102,16 +102,12 @@ store::impl_whole_record_config!(PresentConfig);
 
 //#region 🔖️ConfigMutations
 /// 🧮️ B1: `PresentConfig`'s operation enum — one variant per settled interaction (mirrors the pre-B1
-/// `AnimatePresentPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()`
-/// returns — same "whole-config snapshot is the simplest correct inverse" shape as
-/// `shooting_op::ShootingConfigMutation`.
+/// `AnimatePresentPlayRuntime` field writes). Every field already carries its own setter, so
+/// `backwards()` returns the SAME variant re-addressed at `base`'s old value — a targeted, in-kind
+/// inverse per this ticket's ban on whole-record replace, rather than a generic whole-config
+/// snapshot.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum PresentConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: PresentConfig,
-    },
     #[dsl(key = "selection")]
     SetSelectedIds { ids: Vec<String> },
     #[dsl(key = "engagement-input")]
@@ -198,7 +194,6 @@ impl Mutation<PresentConfig> for PresentConfigMutation {
     fn diff(&self, base: &PresentConfig) -> PresentConfig {
         let mut next = base.clone();
         match self {
-            PresentConfigMutation::Snapshot { config } => return config.clone(),
             PresentConfigMutation::SetSelectedIds { ids } => next.selected_ids = ids.clone(),
             PresentConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
             PresentConfigMutation::SetLocale { value } => next.locale = value.clone(),
@@ -207,7 +202,11 @@ impl Mutation<PresentConfig> for PresentConfigMutation {
     }
 
     fn inverse(&self, base: &PresentConfig) -> Vec<Self> {
-        vec![PresentConfigMutation::Snapshot { config: base.clone() }]
+        match self {
+            PresentConfigMutation::SetSelectedIds { .. } => vec![PresentConfigMutation::SetSelectedIds { ids: base.selected_ids.clone() }],
+            PresentConfigMutation::SetEngagementInput { .. } => vec![PresentConfigMutation::SetEngagementInput { value: base.engagement_input.clone() }],
+            PresentConfigMutation::SetLocale { .. } => vec![PresentConfigMutation::SetLocale { value: base.locale.clone() }],
+        }
     }
 }
 //#endregion 🔖️ConfigMutations
@@ -274,7 +273,6 @@ mod tests {
 
     #[test]
     fn config_op_text_round_trips_every_variant() {
-        store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::Snapshot { config: PresentConfig::default() });
         store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetSelectedIds { ids: vec!["t1".into(), "t2".into()] });
         store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetEngagementInput { value: "add".into() });
         store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetLocale { value: "en-US".into() });

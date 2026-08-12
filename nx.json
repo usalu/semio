@@ -101,15 +101,16 @@
   },
   "pluginsConfig": {
     "@nx/js": {
-      "analyzePackageJson": true,
-      "analyzeSourceFiles": false
+      "analyzePackageJson": false,
+      "analyzeSourceFiles": false,
+      "analyzeLockfile": false
     }
   },
   "plugins": [
     {
       "plugin": "@nx/js",
       "options": {
-        "analyzePackageJson": true,
+        "analyzePackageJson": false,
         "analyzeSourceFiles": false
       }
     },

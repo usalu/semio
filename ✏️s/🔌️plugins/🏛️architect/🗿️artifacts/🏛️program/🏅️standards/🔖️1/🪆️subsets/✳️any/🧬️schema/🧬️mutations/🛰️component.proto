@@ -1,147 +1,1403 @@
 syntax = "proto3";
 package semio.s.architect.program.mutation;
 
-// 🧬️ Program mutation schema
+// 🧬️ Program mutation schema — one real message per semantic mutation kind (Wave C rewrite;
+// supersedes the pre-migration whole-snapshot-shaped generic message).
 message ProgramMutation {
-  // @state persistent
-  string schema = 1;
-  // @state persistent
-  ProgramMeta meta = 2;
-  // @state persistent
-  ProjectDefinition project = 3;
-  // @state persistent
-  repeated Stakeholder stakeholders = 4;
-  // @state persistent
-  repeated UserProfile users = 5;
-  // @state persistent
-  repeated Activity activities = 6;
-  // @state persistent
-  repeated Function functions = 7;
-  // @state persistent
-  repeated ProgramElement elements = 8;
-  // @state persistent
-  repeated QuantityRequirement quantities = 9;
-  // @state persistent
-  repeated Relationship relationships = 10;
-  // @state persistent
-  repeated Adjacency adjacencies = 11;
-  // @state persistent
-  repeated Process processes = 12;
-  // @state persistent
-  repeated FlowRequirement flows = 13;
-  // @state persistent
-  repeated AccessRule access_rules = 14;
-  // @state persistent
-  repeated OperationalRequirement operations = 15;
-  // @state persistent
-  repeated Equipment equipment = 16;
-  // @state persistent
-  repeated Resource resources = 17;
-  // @state persistent
-  repeated StorageRequirement storage = 18;
-  // @state persistent
-  repeated EnvironmentalRequirement environmental = 19;
-  // @state persistent
-  repeated HumanFactorRequirement human_factors = 20;
-  // @state persistent
-  repeated AccessibilityRequirement accessibility = 21;
-  // @state persistent
-  repeated PrivacyRequirement privacy = 22;
-  // @state persistent
-  repeated SafetyRequirement safety = 23;
-  // @state persistent
-  repeated SecurityRequirement security = 24;
-  // @state persistent
-  repeated RegulatoryRequirement regulatory = 25;
-  // @state persistent
-  repeated SiteContext site_context = 26;
-  // @state persistent
-  repeated OrganizationalRequirement organizational = 27;
-  // @state persistent
-  repeated ServiceRequirement services = 28;
-  // @state persistent
-  repeated InfrastructureRequirement infrastructure = 29;
-  // @state persistent
-  repeated InformationRequirement information = 30;
-  // @state persistent
-  repeated CommunicationRequirement communication = 31;
-  // @state persistent
-  repeated WayfindingRequirement wayfinding = 32;
-  // @state persistent
-  repeated ScheduleRequirement schedules = 33;
-  // @state persistent
-  repeated FlexibilityRequirement flexibility = 34;
-  // @state persistent
-  repeated GrowthPlan growth = 35;
-  // @state persistent
-  repeated SustainabilityRequirement sustainability = 36;
-  // @state persistent
-  repeated ResilienceRequirement resilience = 37;
-  // @state persistent
-  repeated CostRequirement costs = 38;
-  // @state persistent
-  repeated DeliveryConstraint delivery = 39;
-  // @state persistent
-  repeated Risk risks = 40;
-  // @state persistent
-  repeated Conflict conflicts = 41;
-  // @state persistent
-  repeated Requirement requirements = 42;
-  // @state persistent
-  repeated PriorityRecord priorities = 43;
-  // @state persistent
-  repeated Scenario scenarios = 44;
-  // @state persistent
-  repeated OptionEvaluation options = 45;
-  // @state persistent
-  repeated Decision decisions = 46;
-  // @state persistent
-  repeated ValidationRecord validations = 47;
-  // @state persistent
-  repeated PerformanceCriterion performance = 48;
-  // @state persistent
-  repeated QualityRecord quality = 49;
-  // @state persistent
-  repeated DocumentRecord documents = 50;
-  // @state persistent
-  repeated Assumption assumptions = 51;
-  // @state persistent
-  repeated ConstraintRecord constraints = 52;
-  // @state persistent
-  repeated ComplianceRecord compliance_records = 53;
-  // @state persistent
-  repeated ApprovalRecord approvals = 54;
-  // @state persistent
-  repeated MeetingRecord meetings = 55;
-  // @state persistent
-  repeated ChangeRecord changes = 56;
-  // @state persistent
-  repeated CollaborationRecord collaboration = 57;
-  // @state persistent
-  repeated AnalysisRecord analyses = 58;
-  // @state persistent
-  repeated ReportRecord reports = 59;
-  // @state persistent
-  repeated SearchFilter search_filters = 60;
-  // @state persistent
-  repeated StatusRecord status_records = 61;
-  // @state persistent
-  repeated Workshop workshops = 62;
-  // @state persistent
-  repeated Survey surveys = 63;
-  // @state persistent
-  repeated Issue issues = 64;
-  // @state persistent
-  repeated AuditEvent audit_events = 65;
-  // @state persistent
-  repeated TemplateRecord templates = 66;
-  // @state persistent
-  repeated KnowledgeRecord knowledge = 67;
-  // @state persistent
-  repeated BenchmarkRecord benchmarks = 68;
-  // @state persistent
-  repeated TraceLink traces = 69;
-  // @state persistent
-  Governance governance = 70;
+  oneof mutation {
+    CreateInformationRequirement createInformationRequirement = 1;
+    DeleteInformationRequirement deleteInformationRequirement = 2;
+    RenameInformationRequirement renameInformationRequirement = 3;
+    ReplaceInformationRequirement replaceInformationRequirement = 4;
+    CreateSustainabilityRequirement createSustainabilityRequirement = 5;
+    DeleteSustainabilityRequirement deleteSustainabilityRequirement = 6;
+    RenameSustainabilityRequirement renameSustainabilityRequirement = 7;
+    ReplaceSustainabilityRequirement replaceSustainabilityRequirement = 8;
+    CreateAccessibilityRequirement createAccessibilityRequirement = 9;
+    DeleteAccessibilityRequirement deleteAccessibilityRequirement = 10;
+    RenameAccessibilityRequirement renameAccessibilityRequirement = 11;
+    ReplaceAccessibilityRequirement replaceAccessibilityRequirement = 12;
+    CreateConflict createConflict = 13;
+    DeleteConflict deleteConflict = 14;
+    RenameConflict renameConflict = 15;
+    ReplaceConflict replaceConflict = 16;
+    CreateOptionEvaluation createOptionEvaluation = 17;
+    DeleteOptionEvaluation deleteOptionEvaluation = 18;
+    RenameOptionEvaluation renameOptionEvaluation = 19;
+    ReplaceOptionEvaluation replaceOptionEvaluation = 20;
+    CreateFunction createFunction = 21;
+    DeleteFunction deleteFunction = 22;
+    RenameFunction renameFunction = 23;
+    ReplaceFunction replaceFunction = 24;
+    CreateRisk createRisk = 25;
+    DeleteRisk deleteRisk = 26;
+    RenameRisk renameRisk = 27;
+    ReplaceRisk replaceRisk = 28;
+    CreateDecision createDecision = 29;
+    DeleteDecision deleteDecision = 30;
+    RenameDecision renameDecision = 31;
+    ReplaceDecision replaceDecision = 32;
+    CreateValidationRecord createValidationRecord = 33;
+    DeleteValidationRecord deleteValidationRecord = 34;
+    RenameValidationRecord renameValidationRecord = 35;
+    ReplaceValidationRecord replaceValidationRecord = 36;
+    CreatePriorityRecord createPriorityRecord = 37;
+    DeletePriorityRecord deletePriorityRecord = 38;
+    RenamePriorityRecord renamePriorityRecord = 39;
+    ReplacePriorityRecord replacePriorityRecord = 40;
+    CreateFlowRequirement createFlowRequirement = 41;
+    DeleteFlowRequirement deleteFlowRequirement = 42;
+    RenameFlowRequirement renameFlowRequirement = 43;
+    ReplaceFlowRequirement replaceFlowRequirement = 44;
+    CreateEnvironmentalRequirement createEnvironmentalRequirement = 45;
+    DeleteEnvironmentalRequirement deleteEnvironmentalRequirement = 46;
+    RenameEnvironmentalRequirement renameEnvironmentalRequirement = 47;
+    ReplaceEnvironmentalRequirement replaceEnvironmentalRequirement = 48;
+    CreateWorkshop createWorkshop = 49;
+    DeleteWorkshop deleteWorkshop = 50;
+    RenameWorkshop renameWorkshop = 51;
+    ReplaceWorkshop replaceWorkshop = 52;
+    CreateScenario createScenario = 53;
+    DeleteScenario deleteScenario = 54;
+    RenameScenario renameScenario = 55;
+    ReplaceScenario replaceScenario = 56;
+    CreateBenchmarkRecord createBenchmarkRecord = 57;
+    DeleteBenchmarkRecord deleteBenchmarkRecord = 58;
+    RenameBenchmarkRecord renameBenchmarkRecord = 59;
+    ReplaceBenchmarkRecord replaceBenchmarkRecord = 60;
+    CreateActivity createActivity = 61;
+    DeleteActivity deleteActivity = 62;
+    RenameActivity renameActivity = 63;
+    ReplaceActivity replaceActivity = 64;
+    CreateInfrastructureRequirement createInfrastructureRequirement = 65;
+    DeleteInfrastructureRequirement deleteInfrastructureRequirement = 66;
+    RenameInfrastructureRequirement renameInfrastructureRequirement = 67;
+    ReplaceInfrastructureRequirement replaceInfrastructureRequirement = 68;
+    CreateOrganizationalRequirement createOrganizationalRequirement = 69;
+    DeleteOrganizationalRequirement deleteOrganizationalRequirement = 70;
+    RenameOrganizationalRequirement renameOrganizationalRequirement = 71;
+    ReplaceOrganizationalRequirement replaceOrganizationalRequirement = 72;
+    CreateIssue createIssue = 73;
+    DeleteIssue deleteIssue = 74;
+    RenameIssue renameIssue = 75;
+    ReplaceIssue replaceIssue = 76;
+    CreateApprovalRecord createApprovalRecord = 77;
+    DeleteApprovalRecord deleteApprovalRecord = 78;
+    RenameApprovalRecord renameApprovalRecord = 79;
+    ReplaceApprovalRecord replaceApprovalRecord = 80;
+    CreateStakeholder createStakeholder = 81;
+    DeleteStakeholder deleteStakeholder = 82;
+    RenameStakeholder renameStakeholder = 83;
+    ReplaceStakeholder replaceStakeholder = 84;
+    CreateQualityRecord createQualityRecord = 85;
+    DeleteQualityRecord deleteQualityRecord = 86;
+    RenameQualityRecord renameQualityRecord = 87;
+    ReplaceQualityRecord replaceQualityRecord = 88;
+    CreateResilienceRequirement createResilienceRequirement = 89;
+    DeleteResilienceRequirement deleteResilienceRequirement = 90;
+    RenameResilienceRequirement renameResilienceRequirement = 91;
+    ReplaceResilienceRequirement replaceResilienceRequirement = 92;
+    CreateAssumption createAssumption = 93;
+    DeleteAssumption deleteAssumption = 94;
+    RenameAssumption renameAssumption = 95;
+    ReplaceAssumption replaceAssumption = 96;
+    CreateCostRequirement createCostRequirement = 97;
+    DeleteCostRequirement deleteCostRequirement = 98;
+    RenameCostRequirement renameCostRequirement = 99;
+    ReplaceCostRequirement replaceCostRequirement = 100;
+    CreateDocument createDocument = 101;
+    DeleteDocument deleteDocument = 102;
+    RenameDocument renameDocument = 103;
+    ReplaceDocument replaceDocument = 104;
+    CreateScheduleRequirement createScheduleRequirement = 105;
+    DeleteScheduleRequirement deleteScheduleRequirement = 106;
+    RenameScheduleRequirement renameScheduleRequirement = 107;
+    ReplaceScheduleRequirement replaceScheduleRequirement = 108;
+    CreateGrowthPlan createGrowthPlan = 109;
+    DeleteGrowthPlan deleteGrowthPlan = 110;
+    RenameGrowthPlan renameGrowthPlan = 111;
+    ReplaceGrowthPlan replaceGrowthPlan = 112;
+    CreatePerformanceCriterion createPerformanceCriterion = 113;
+    DeletePerformanceCriterion deletePerformanceCriterion = 114;
+    RenamePerformanceCriterion renamePerformanceCriterion = 115;
+    ReplacePerformanceCriterion replacePerformanceCriterion = 116;
+    CreateOperationalRequirement createOperationalRequirement = 117;
+    DeleteOperationalRequirement deleteOperationalRequirement = 118;
+    RenameOperationalRequirement renameOperationalRequirement = 119;
+    ReplaceOperationalRequirement replaceOperationalRequirement = 120;
+    CreateRequirement createRequirement = 121;
+    DeleteRequirement deleteRequirement = 122;
+    RenameRequirement renameRequirement = 123;
+    ReplaceRequirement replaceRequirement = 124;
+    CreateSiteContext createSiteContext = 125;
+    DeleteSiteContext deleteSiteContext = 126;
+    RenameSiteContext renameSiteContext = 127;
+    ReplaceSiteContext replaceSiteContext = 128;
+    CreateTemplateRecord createTemplateRecord = 129;
+    DeleteTemplateRecord deleteTemplateRecord = 130;
+    RenameTemplateRecord renameTemplateRecord = 131;
+    ReplaceTemplateRecord replaceTemplateRecord = 132;
+    CreateReportRecord createReportRecord = 133;
+    DeleteReportRecord deleteReportRecord = 134;
+    RenameReportRecord renameReportRecord = 135;
+    ReplaceReportRecord replaceReportRecord = 136;
+    CreateAuditEvent createAuditEvent = 137;
+    DeleteAuditEvent deleteAuditEvent = 138;
+    RenameAuditEvent renameAuditEvent = 139;
+    ReplaceAuditEvent replaceAuditEvent = 140;
+    CreateKnowledgeRecord createKnowledgeRecord = 141;
+    DeleteKnowledgeRecord deleteKnowledgeRecord = 142;
+    RenameKnowledgeRecord renameKnowledgeRecord = 143;
+    ReplaceKnowledgeRecord replaceKnowledgeRecord = 144;
+    CreateRegulatoryRequirement createRegulatoryRequirement = 145;
+    DeleteRegulatoryRequirement deleteRegulatoryRequirement = 146;
+    RenameRegulatoryRequirement renameRegulatoryRequirement = 147;
+    ReplaceRegulatoryRequirement replaceRegulatoryRequirement = 148;
+    CreateChangeRecord createChangeRecord = 149;
+    DeleteChangeRecord deleteChangeRecord = 150;
+    RenameChangeRecord renameChangeRecord = 151;
+    ReplaceChangeRecord replaceChangeRecord = 152;
+    CreateCommunicationRequirement createCommunicationRequirement = 153;
+    DeleteCommunicationRequirement deleteCommunicationRequirement = 154;
+    RenameCommunicationRequirement renameCommunicationRequirement = 155;
+    ReplaceCommunicationRequirement replaceCommunicationRequirement = 156;
+    CreateResource createResource = 157;
+    DeleteResource deleteResource = 158;
+    RenameResource renameResource = 159;
+    ReplaceResource replaceResource = 160;
+    CreateStatusRecord createStatusRecord = 161;
+    DeleteStatusRecord deleteStatusRecord = 162;
+    RenameStatusRecord renameStatusRecord = 163;
+    ReplaceStatusRecord replaceStatusRecord = 164;
+    CreateProcess createProcess = 165;
+    DeleteProcess deleteProcess = 166;
+    RenameProcess renameProcess = 167;
+    ReplaceProcess replaceProcess = 168;
+    CreateSearchFilter createSearchFilter = 169;
+    DeleteSearchFilter deleteSearchFilter = 170;
+    RenameSearchFilter renameSearchFilter = 171;
+    ReplaceSearchFilter replaceSearchFilter = 172;
+    CreateAccessRule createAccessRule = 173;
+    DeleteAccessRule deleteAccessRule = 174;
+    RenameAccessRule renameAccessRule = 175;
+    ReplaceAccessRule replaceAccessRule = 176;
+    CreatePrivacyRequirement createPrivacyRequirement = 177;
+    DeletePrivacyRequirement deletePrivacyRequirement = 178;
+    RenamePrivacyRequirement renamePrivacyRequirement = 179;
+    ReplacePrivacyRequirement replacePrivacyRequirement = 180;
+    CreateRelationship createRelationship = 181;
+    DeleteRelationship deleteRelationship = 182;
+    RenameRelationship renameRelationship = 183;
+    ReplaceRelationship replaceRelationship = 184;
+    CreateQuantityRequirement createQuantityRequirement = 185;
+    DeleteQuantityRequirement deleteQuantityRequirement = 186;
+    RenameQuantityRequirement renameQuantityRequirement = 187;
+    ReplaceQuantityRequirement replaceQuantityRequirement = 188;
+    CreateAnalysisRecord createAnalysisRecord = 189;
+    DeleteAnalysisRecord deleteAnalysisRecord = 190;
+    RenameAnalysisRecord renameAnalysisRecord = 191;
+    ReplaceAnalysisRecord replaceAnalysisRecord = 192;
+    CreateStorageRequirement createStorageRequirement = 193;
+    DeleteStorageRequirement deleteStorageRequirement = 194;
+    RenameStorageRequirement renameStorageRequirement = 195;
+    ReplaceStorageRequirement replaceStorageRequirement = 196;
+    CreateMeetingRecord createMeetingRecord = 197;
+    DeleteMeetingRecord deleteMeetingRecord = 198;
+    RenameMeetingRecord renameMeetingRecord = 199;
+    ReplaceMeetingRecord replaceMeetingRecord = 200;
+    CreateSurvey createSurvey = 201;
+    DeleteSurvey deleteSurvey = 202;
+    RenameSurvey renameSurvey = 203;
+    ReplaceSurvey replaceSurvey = 204;
+    CreateDeliveryConstraint createDeliveryConstraint = 205;
+    DeleteDeliveryConstraint deleteDeliveryConstraint = 206;
+    RenameDeliveryConstraint renameDeliveryConstraint = 207;
+    ReplaceDeliveryConstraint replaceDeliveryConstraint = 208;
+    CreateConstraintRecord createConstraintRecord = 209;
+    DeleteConstraintRecord deleteConstraintRecord = 210;
+    RenameConstraintRecord renameConstraintRecord = 211;
+    ReplaceConstraintRecord replaceConstraintRecord = 212;
+    CreateComplianceRecord createComplianceRecord = 213;
+    DeleteComplianceRecord deleteComplianceRecord = 214;
+    RenameComplianceRecord renameComplianceRecord = 215;
+    ReplaceComplianceRecord replaceComplianceRecord = 216;
+    CreateServiceRequirement createServiceRequirement = 217;
+    DeleteServiceRequirement deleteServiceRequirement = 218;
+    RenameServiceRequirement renameServiceRequirement = 219;
+    ReplaceServiceRequirement replaceServiceRequirement = 220;
+    CreateEquipment createEquipment = 221;
+    DeleteEquipment deleteEquipment = 222;
+    RenameEquipment renameEquipment = 223;
+    ReplaceEquipment replaceEquipment = 224;
+    CreateSecurityRequirement createSecurityRequirement = 225;
+    DeleteSecurityRequirement deleteSecurityRequirement = 226;
+    RenameSecurityRequirement renameSecurityRequirement = 227;
+    ReplaceSecurityRequirement replaceSecurityRequirement = 228;
+    CreateCollaborationRecord createCollaborationRecord = 229;
+    DeleteCollaborationRecord deleteCollaborationRecord = 230;
+    RenameCollaborationRecord renameCollaborationRecord = 231;
+    ReplaceCollaborationRecord replaceCollaborationRecord = 232;
+    CreateSafetyRequirement createSafetyRequirement = 233;
+    DeleteSafetyRequirement deleteSafetyRequirement = 234;
+    RenameSafetyRequirement renameSafetyRequirement = 235;
+    ReplaceSafetyRequirement replaceSafetyRequirement = 236;
+    CreateUserProfile createUserProfile = 237;
+    DeleteUserProfile deleteUserProfile = 238;
+    RenameUserProfile renameUserProfile = 239;
+    ReplaceUserProfile replaceUserProfile = 240;
+    CreateHumanFactorRequirement createHumanFactorRequirement = 241;
+    DeleteHumanFactorRequirement deleteHumanFactorRequirement = 242;
+    RenameHumanFactorRequirement renameHumanFactorRequirement = 243;
+    ReplaceHumanFactorRequirement replaceHumanFactorRequirement = 244;
+    CreateFlexibilityRequirement createFlexibilityRequirement = 245;
+    DeleteFlexibilityRequirement deleteFlexibilityRequirement = 246;
+    RenameFlexibilityRequirement renameFlexibilityRequirement = 247;
+    ReplaceFlexibilityRequirement replaceFlexibilityRequirement = 248;
+    CreateWayfindingRequirement createWayfindingRequirement = 249;
+    DeleteWayfindingRequirement deleteWayfindingRequirement = 250;
+    RenameWayfindingRequirement renameWayfindingRequirement = 251;
+    ReplaceWayfindingRequirement replaceWayfindingRequirement = 252;
+    CreateProgramElement createProgramElement = 253;
+    DeleteProgramElement deleteProgramElement = 254;
+    RenameProgramElement renameProgramElement = 255;
+    ReplaceProgramElement replaceProgramElement = 256;
+    ConnectAdjacency connectAdjacency = 257;
+    DisconnectAdjacency disconnectAdjacency = 258;
+    ConnectTrace connectTrace = 259;
+    DisconnectTrace disconnectTrace = 260;
+    RenameMeta renameMeta = 261;
+    ReplaceMeta replaceMeta = 262;
+    RenameProject renameProject = 263;
+    ReplaceProject replaceProject = 264;
+    RenameGovernance renameGovernance = 265;
+    ReplaceGovernance replaceGovernance = 266;
+  }
 }
 
+message CreateInformationRequirement {
+  bytes information_requirement = 1;
+}
+
+message DeleteInformationRequirement {
+  string id = 1;
+}
+
+message RenameInformationRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceInformationRequirement {
+  bytes information_requirement = 1;
+}
+
+message CreateSustainabilityRequirement {
+  bytes sustainability_requirement = 1;
+}
+
+message DeleteSustainabilityRequirement {
+  string id = 1;
+}
+
+message RenameSustainabilityRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceSustainabilityRequirement {
+  bytes sustainability_requirement = 1;
+}
+
+message CreateAccessibilityRequirement {
+  bytes accessibility_requirement = 1;
+}
+
+message DeleteAccessibilityRequirement {
+  string id = 1;
+}
+
+message RenameAccessibilityRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceAccessibilityRequirement {
+  bytes accessibility_requirement = 1;
+}
+
+message CreateConflict {
+  bytes conflict = 1;
+}
+
+message DeleteConflict {
+  string id = 1;
+}
+
+message RenameConflict {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceConflict {
+  bytes conflict = 1;
+}
+
+message CreateOptionEvaluation {
+  bytes option_evaluation = 1;
+}
+
+message DeleteOptionEvaluation {
+  string id = 1;
+}
+
+message RenameOptionEvaluation {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceOptionEvaluation {
+  bytes option_evaluation = 1;
+}
+
+message CreateFunction {
+  bytes function = 1;
+}
+
+message DeleteFunction {
+  string id = 1;
+}
+
+message RenameFunction {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceFunction {
+  bytes function = 1;
+}
+
+message CreateRisk {
+  bytes risk = 1;
+}
+
+message DeleteRisk {
+  string id = 1;
+}
+
+message RenameRisk {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceRisk {
+  bytes risk = 1;
+}
+
+message CreateDecision {
+  bytes decision = 1;
+}
+
+message DeleteDecision {
+  string id = 1;
+}
+
+message RenameDecision {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceDecision {
+  bytes decision = 1;
+}
+
+message CreateValidationRecord {
+  bytes validation_record = 1;
+}
+
+message DeleteValidationRecord {
+  string id = 1;
+}
+
+message RenameValidationRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceValidationRecord {
+  bytes validation_record = 1;
+}
+
+message CreatePriorityRecord {
+  bytes priority_record = 1;
+}
+
+message DeletePriorityRecord {
+  string id = 1;
+}
+
+message RenamePriorityRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplacePriorityRecord {
+  bytes priority_record = 1;
+}
+
+message CreateFlowRequirement {
+  bytes flow_requirement = 1;
+}
+
+message DeleteFlowRequirement {
+  string id = 1;
+}
+
+message RenameFlowRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceFlowRequirement {
+  bytes flow_requirement = 1;
+}
+
+message CreateEnvironmentalRequirement {
+  bytes environmental_requirement = 1;
+}
+
+message DeleteEnvironmentalRequirement {
+  string id = 1;
+}
+
+message RenameEnvironmentalRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceEnvironmentalRequirement {
+  bytes environmental_requirement = 1;
+}
+
+message CreateWorkshop {
+  bytes workshop = 1;
+}
+
+message DeleteWorkshop {
+  string id = 1;
+}
+
+message RenameWorkshop {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceWorkshop {
+  bytes workshop = 1;
+}
+
+message CreateScenario {
+  bytes scenario = 1;
+}
+
+message DeleteScenario {
+  string id = 1;
+}
+
+message RenameScenario {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceScenario {
+  bytes scenario = 1;
+}
+
+message CreateBenchmarkRecord {
+  bytes benchmark_record = 1;
+}
+
+message DeleteBenchmarkRecord {
+  string id = 1;
+}
+
+message RenameBenchmarkRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceBenchmarkRecord {
+  bytes benchmark_record = 1;
+}
+
+message CreateActivity {
+  bytes activity = 1;
+}
+
+message DeleteActivity {
+  string id = 1;
+}
+
+message RenameActivity {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceActivity {
+  bytes activity = 1;
+}
+
+message CreateInfrastructureRequirement {
+  bytes infrastructure_requirement = 1;
+}
+
+message DeleteInfrastructureRequirement {
+  string id = 1;
+}
+
+message RenameInfrastructureRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceInfrastructureRequirement {
+  bytes infrastructure_requirement = 1;
+}
+
+message CreateOrganizationalRequirement {
+  bytes organizational_requirement = 1;
+}
+
+message DeleteOrganizationalRequirement {
+  string id = 1;
+}
+
+message RenameOrganizationalRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceOrganizationalRequirement {
+  bytes organizational_requirement = 1;
+}
+
+message CreateIssue {
+  bytes issue = 1;
+}
+
+message DeleteIssue {
+  string id = 1;
+}
+
+message RenameIssue {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceIssue {
+  bytes issue = 1;
+}
+
+message CreateApprovalRecord {
+  bytes approval_record = 1;
+}
+
+message DeleteApprovalRecord {
+  string id = 1;
+}
+
+message RenameApprovalRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceApprovalRecord {
+  bytes approval_record = 1;
+}
+
+message CreateStakeholder {
+  bytes stakeholder = 1;
+}
+
+message DeleteStakeholder {
+  string id = 1;
+}
+
+message RenameStakeholder {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceStakeholder {
+  bytes stakeholder = 1;
+}
+
+message CreateQualityRecord {
+  bytes quality_record = 1;
+}
+
+message DeleteQualityRecord {
+  string id = 1;
+}
+
+message RenameQualityRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceQualityRecord {
+  bytes quality_record = 1;
+}
+
+message CreateResilienceRequirement {
+  bytes resilience_requirement = 1;
+}
+
+message DeleteResilienceRequirement {
+  string id = 1;
+}
+
+message RenameResilienceRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceResilienceRequirement {
+  bytes resilience_requirement = 1;
+}
+
+message CreateAssumption {
+  bytes assumption = 1;
+}
+
+message DeleteAssumption {
+  string id = 1;
+}
+
+message RenameAssumption {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceAssumption {
+  bytes assumption = 1;
+}
+
+message CreateCostRequirement {
+  bytes cost_requirement = 1;
+}
+
+message DeleteCostRequirement {
+  string id = 1;
+}
+
+message RenameCostRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceCostRequirement {
+  bytes cost_requirement = 1;
+}
+
+message CreateDocument {
+  bytes document = 1;
+}
+
+message DeleteDocument {
+  string id = 1;
+}
+
+message RenameDocument {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceDocument {
+  bytes document = 1;
+}
+
+message CreateScheduleRequirement {
+  bytes schedule_requirement = 1;
+}
+
+message DeleteScheduleRequirement {
+  string id = 1;
+}
+
+message RenameScheduleRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceScheduleRequirement {
+  bytes schedule_requirement = 1;
+}
+
+message CreateGrowthPlan {
+  bytes growth_plan = 1;
+}
+
+message DeleteGrowthPlan {
+  string id = 1;
+}
+
+message RenameGrowthPlan {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceGrowthPlan {
+  bytes growth_plan = 1;
+}
+
+message CreatePerformanceCriterion {
+  bytes performance_criterion = 1;
+}
+
+message DeletePerformanceCriterion {
+  string id = 1;
+}
+
+message RenamePerformanceCriterion {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplacePerformanceCriterion {
+  bytes performance_criterion = 1;
+}
+
+message CreateOperationalRequirement {
+  bytes operational_requirement = 1;
+}
+
+message DeleteOperationalRequirement {
+  string id = 1;
+}
+
+message RenameOperationalRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceOperationalRequirement {
+  bytes operational_requirement = 1;
+}
+
+message CreateRequirement {
+  bytes requirement = 1;
+}
+
+message DeleteRequirement {
+  string id = 1;
+}
+
+message RenameRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceRequirement {
+  bytes requirement = 1;
+}
+
+message CreateSiteContext {
+  bytes site_context = 1;
+}
+
+message DeleteSiteContext {
+  string id = 1;
+}
+
+message RenameSiteContext {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceSiteContext {
+  bytes site_context = 1;
+}
+
+message CreateTemplateRecord {
+  bytes template_record = 1;
+}
+
+message DeleteTemplateRecord {
+  string id = 1;
+}
+
+message RenameTemplateRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceTemplateRecord {
+  bytes template_record = 1;
+}
+
+message CreateReportRecord {
+  bytes report_record = 1;
+}
+
+message DeleteReportRecord {
+  string id = 1;
+}
+
+message RenameReportRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceReportRecord {
+  bytes report_record = 1;
+}
+
+message CreateAuditEvent {
+  bytes audit_event = 1;
+}
+
+message DeleteAuditEvent {
+  string id = 1;
+}
+
+message RenameAuditEvent {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceAuditEvent {
+  bytes audit_event = 1;
+}
+
+message CreateKnowledgeRecord {
+  bytes knowledge_record = 1;
+}
+
+message DeleteKnowledgeRecord {
+  string id = 1;
+}
+
+message RenameKnowledgeRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceKnowledgeRecord {
+  bytes knowledge_record = 1;
+}
+
+message CreateRegulatoryRequirement {
+  bytes regulatory_requirement = 1;
+}
+
+message DeleteRegulatoryRequirement {
+  string id = 1;
+}
+
+message RenameRegulatoryRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceRegulatoryRequirement {
+  bytes regulatory_requirement = 1;
+}
+
+message CreateChangeRecord {
+  bytes change_record = 1;
+}
+
+message DeleteChangeRecord {
+  string id = 1;
+}
+
+message RenameChangeRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceChangeRecord {
+  bytes change_record = 1;
+}
+
+message CreateCommunicationRequirement {
+  bytes communication_requirement = 1;
+}
+
+message DeleteCommunicationRequirement {
+  string id = 1;
+}
+
+message RenameCommunicationRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceCommunicationRequirement {
+  bytes communication_requirement = 1;
+}
+
+message CreateResource {
+  bytes resource = 1;
+}
+
+message DeleteResource {
+  string id = 1;
+}
+
+message RenameResource {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceResource {
+  bytes resource = 1;
+}
+
+message CreateStatusRecord {
+  bytes status_record = 1;
+}
+
+message DeleteStatusRecord {
+  string id = 1;
+}
+
+message RenameStatusRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceStatusRecord {
+  bytes status_record = 1;
+}
+
+message CreateProcess {
+  bytes process = 1;
+}
+
+message DeleteProcess {
+  string id = 1;
+}
+
+message RenameProcess {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceProcess {
+  bytes process = 1;
+}
+
+message CreateSearchFilter {
+  bytes search_filter = 1;
+}
+
+message DeleteSearchFilter {
+  string id = 1;
+}
+
+message RenameSearchFilter {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceSearchFilter {
+  bytes search_filter = 1;
+}
+
+message CreateAccessRule {
+  bytes access_rule = 1;
+}
+
+message DeleteAccessRule {
+  string id = 1;
+}
+
+message RenameAccessRule {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceAccessRule {
+  bytes access_rule = 1;
+}
+
+message CreatePrivacyRequirement {
+  bytes privacy_requirement = 1;
+}
+
+message DeletePrivacyRequirement {
+  string id = 1;
+}
+
+message RenamePrivacyRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplacePrivacyRequirement {
+  bytes privacy_requirement = 1;
+}
+
+message CreateRelationship {
+  bytes relationship = 1;
+}
+
+message DeleteRelationship {
+  string id = 1;
+}
+
+message RenameRelationship {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceRelationship {
+  bytes relationship = 1;
+}
+
+message CreateQuantityRequirement {
+  bytes quantity_requirement = 1;
+}
+
+message DeleteQuantityRequirement {
+  string id = 1;
+}
+
+message RenameQuantityRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceQuantityRequirement {
+  bytes quantity_requirement = 1;
+}
+
+message CreateAnalysisRecord {
+  bytes analysis_record = 1;
+}
+
+message DeleteAnalysisRecord {
+  string id = 1;
+}
+
+message RenameAnalysisRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceAnalysisRecord {
+  bytes analysis_record = 1;
+}
+
+message CreateStorageRequirement {
+  bytes storage_requirement = 1;
+}
+
+message DeleteStorageRequirement {
+  string id = 1;
+}
+
+message RenameStorageRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceStorageRequirement {
+  bytes storage_requirement = 1;
+}
+
+message CreateMeetingRecord {
+  bytes meeting_record = 1;
+}
+
+message DeleteMeetingRecord {
+  string id = 1;
+}
+
+message RenameMeetingRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceMeetingRecord {
+  bytes meeting_record = 1;
+}
+
+message CreateSurvey {
+  bytes survey = 1;
+}
+
+message DeleteSurvey {
+  string id = 1;
+}
+
+message RenameSurvey {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceSurvey {
+  bytes survey = 1;
+}
+
+message CreateDeliveryConstraint {
+  bytes delivery_constraint = 1;
+}
+
+message DeleteDeliveryConstraint {
+  string id = 1;
+}
+
+message RenameDeliveryConstraint {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceDeliveryConstraint {
+  bytes delivery_constraint = 1;
+}
+
+message CreateConstraintRecord {
+  bytes constraint_record = 1;
+}
+
+message DeleteConstraintRecord {
+  string id = 1;
+}
+
+message RenameConstraintRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceConstraintRecord {
+  bytes constraint_record = 1;
+}
+
+message CreateComplianceRecord {
+  bytes compliance_record = 1;
+}
+
+message DeleteComplianceRecord {
+  string id = 1;
+}
+
+message RenameComplianceRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceComplianceRecord {
+  bytes compliance_record = 1;
+}
+
+message CreateServiceRequirement {
+  bytes service_requirement = 1;
+}
+
+message DeleteServiceRequirement {
+  string id = 1;
+}
+
+message RenameServiceRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceServiceRequirement {
+  bytes service_requirement = 1;
+}
+
+message CreateEquipment {
+  bytes equipment = 1;
+}
+
+message DeleteEquipment {
+  string id = 1;
+}
+
+message RenameEquipment {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceEquipment {
+  bytes equipment = 1;
+}
+
+message CreateSecurityRequirement {
+  bytes security_requirement = 1;
+}
+
+message DeleteSecurityRequirement {
+  string id = 1;
+}
+
+message RenameSecurityRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceSecurityRequirement {
+  bytes security_requirement = 1;
+}
+
+message CreateCollaborationRecord {
+  bytes collaboration_record = 1;
+}
+
+message DeleteCollaborationRecord {
+  string id = 1;
+}
+
+message RenameCollaborationRecord {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceCollaborationRecord {
+  bytes collaboration_record = 1;
+}
+
+message CreateSafetyRequirement {
+  bytes safety_requirement = 1;
+}
+
+message DeleteSafetyRequirement {
+  string id = 1;
+}
+
+message RenameSafetyRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceSafetyRequirement {
+  bytes safety_requirement = 1;
+}
+
+message CreateUserProfile {
+  bytes user_profile = 1;
+}
+
+message DeleteUserProfile {
+  string id = 1;
+}
+
+message RenameUserProfile {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceUserProfile {
+  bytes user_profile = 1;
+}
+
+message CreateHumanFactorRequirement {
+  bytes human_factor_requirement = 1;
+}
+
+message DeleteHumanFactorRequirement {
+  string id = 1;
+}
+
+message RenameHumanFactorRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceHumanFactorRequirement {
+  bytes human_factor_requirement = 1;
+}
+
+message CreateFlexibilityRequirement {
+  bytes flexibility_requirement = 1;
+}
+
+message DeleteFlexibilityRequirement {
+  string id = 1;
+}
+
+message RenameFlexibilityRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceFlexibilityRequirement {
+  bytes flexibility_requirement = 1;
+}
+
+message CreateWayfindingRequirement {
+  bytes wayfinding_requirement = 1;
+}
+
+message DeleteWayfindingRequirement {
+  string id = 1;
+}
+
+message RenameWayfindingRequirement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceWayfindingRequirement {
+  bytes wayfinding_requirement = 1;
+}
+
+message CreateProgramElement {
+  bytes program_element = 1;
+}
+
+message DeleteProgramElement {
+  string id = 1;
+}
+
+message RenameProgramElement {
+  string id = 1;
+  string new_name = 2;
+}
+
+message ReplaceProgramElement {
+  bytes program_element = 1;
+}
+
+message ConnectAdjacency {
+  bytes adjacency = 1;
+}
+
+message DisconnectAdjacency {
+  string id = 1;
+}
+
+message ConnectTrace {
+  bytes trace = 1;
+}
+
+message DisconnectTrace {
+  string id = 1;
+}
+
+message RenameMeta {
+  string new_title = 1;
+}
+
+message ReplaceMeta {
+  bytes new_meta = 1;
+}
+
+message RenameProject {
+  string new_code = 1;
+}
+
+message ReplaceProject {
+  bytes new_project = 1;
+}
+
+message RenameGovernance {
+  string new_framework = 1;
+}
+
+message ReplaceGovernance {
+  bytes new_governance = 1;
+}

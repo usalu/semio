@@ -10,11 +10,11 @@ Everything end to end.
 
 ---
 
-Use a single Fable agent for creating the plan, a single Opus 5 agent for main plan coordination, multiple Sonnet 5 agents for task execution.
+Use a single Fable agent for creating the plan, a single Opus 5 agent for main plan coordination, multiple Sonnet 5 agents for task execution, multiple Haiku 4.5 agents for read-only exploration.
 
 ---
 
-Use a single Opus 5 agent for creating the plan, a single Cursor Grok 4.5 High agent for main plan coordination, multiple Composer 2.5 agents for task execution.
+Use a single Opus 5 agent for creating the plan, a single Cursor Grok 4.5 High agent for main plan coordination, multiple Composer 2.5 agents for task execution, multiple Composer 2.5 agents for read-only exploration.
 
 ---
 
@@ -373,7 +373,9 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
-Dissolve all kernels, modules, etc into artifacts with schema, snapshot, diff, mutations, inferences, etc.
+Dissolve and unify all kernels, modules, etc into artifacts with schema, snapshot, diff, mutations, inferences, etc.
+e.g. 2d, mesh, brep, etc
+No regular, CRUD-based implementation must remain, only CQRS event-sourced implementations over schema, snapshot, diff, mutations, inferences, etc.
 
 
 ---

@@ -1,0 +1,7 @@
+{
+  "title": "Dashboard Tui Workforce",
+  "emoji": "\ud83c\udfab\ufe0f",
+  "status": "open",
+  "description": "Turn semio into a detachable PTY-multiplexed dashboard daemon+client and workforce control plane.",
+  "goal": "\ud83c\udfaf\ufe0faioptimizedrepo\ud83c\udfaf\ufe0frepoclient\ud83c\udfaf\ufe0frepobinary\ud83c\udfaf\ufe0frepocli"
+}

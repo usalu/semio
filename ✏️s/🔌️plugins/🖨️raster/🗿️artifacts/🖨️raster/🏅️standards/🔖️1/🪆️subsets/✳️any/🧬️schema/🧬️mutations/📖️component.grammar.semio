@@ -1,0 +1,26 @@
+dialect grammar
+grammar raster.raster-op
+extension raster
+use family-sheet
+start mutation
+
+artifact-mark = "raster.raster-op"
+mutation = artifact-mark op-stmt+
+op-stmt = create-layer | delete-layer | reorder-layers | rename-layer | change-layer-visible
+        | change-layer-opacity | change-layer-blend-mode | move-layer | resize-layer
+        | change-layer-adjustment-kind | add-layer-asset | remove-layer-asset
+
+create-layer = "create-layer" "parent" "=" value? "index" "=" INT statements
+delete-layer = "delete-layer" "id" "=" value
+reorder-layers = "reorder-layers" "id" "=" value "parent" "=" value? "index" "=" INT
+rename-layer = "rename-layer" "id" "=" value "new-name" "=" value
+change-layer-visible = "change-layer-visible" "id" "=" value "new-visible" "=" BOOL
+change-layer-opacity = "change-layer-opacity" "id" "=" value "new-opacity" "=" FLOAT
+change-layer-blend-mode = "change-layer-blend-mode" "id" "=" value "new-blend-mode" "=" value
+move-layer = "move-layer" "id" "=" value "new-x" "=" FLOAT "new-y" "=" FLOAT
+resize-layer = "resize-layer" "id" "=" value "new-width" "=" INT "new-height" "=" INT
+change-layer-adjustment-kind = "change-layer-adjustment-kind" "id" "=" value "new-adjustment-kind" "=" value
+add-layer-asset = "add-layer-asset" "id" "=" value block
+remove-layer-asset = "remove-layer-asset" "id" "=" value
+
+value = TEXT | INT | FLOAT | BOOL

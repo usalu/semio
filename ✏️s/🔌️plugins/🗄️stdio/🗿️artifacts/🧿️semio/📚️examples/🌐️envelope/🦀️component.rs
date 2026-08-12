@@ -3,7 +3,7 @@
 //! (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION's `any` closer wave).
 //! `PRIMARY_TEXT` is the genuine `SemioSnapshot::print_dsl` output for
 //! `snapshot::demo_semio_snapshot()` (`🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/
-//! 🦀️component.rs`, itself wrapping `workflow`'s own real demo snapshot) — asserted byte-identical
+//! 🦀️component.rs`, itself wrapping `flow`'s own real demo snapshot) — asserted byte-identical
 //! to it by that subset's own `fixture_honesty_law` (`🎹️composer/🦀️component.rs`), so this fixture
 //! can never silently drift back to a fake.
 

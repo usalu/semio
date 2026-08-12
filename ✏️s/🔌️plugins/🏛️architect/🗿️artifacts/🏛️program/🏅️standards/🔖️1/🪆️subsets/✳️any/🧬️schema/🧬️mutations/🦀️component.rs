@@ -1,13 +1,14 @@
 //! 🧬️ Architect program artifact — document mutation dispatch enum.
 //!
-//! Semantic vocabulary derived from `🗄️registers/🦀️component.rs`'s ~65 `CollectionMutation<EntityId,
-//! T, TPatch>` registers plus the three document-level meta facets, per
+//! Semantic vocabulary derived from `🗄️registers/🦀️component.rs`'s ~65 generic per-collection
+//! add/remove/patch registers plus the three document-level meta facets, per
 //! `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️taxonomy.md`/`📓️derivation-rules.md`:
 //! each header-shaped id-keyed register (rule 2) becomes `create`/`delete`/`rename`/`replace`;
 //! the two edge-shaped registers (`adjacencies`, `traces` — rule 4) become `connect`/`disconnect`;
 //! the three document-level scalar facets (`meta`/`project`/`governance` — rule 1) become
-//! `rename`/`replace`. `SetSnapshot` is deleted outright (banned per taxonomy — whole-document
-//! replace is not an in-history mutation; it goes through `ArtifactStore::reset`).
+//! `rename`/`replace`. The old whole-document-replace variant is deleted outright (banned per
+//! taxonomy — whole-document replace is not an in-history mutation; it goes through
+//! `ArtifactStore::reset`).
 //!
 //! `#[derive(dsl::Mutations)]` generates `impl protocol::Mutation<ProgramSnapshot>` and
 //! `impl protocol::SemanticMutation<ProgramSnapshot>` for `ProgramMutation` by delegating each
@@ -16,16 +17,15 @@
 //! the old hand-written `apply_program_mutation`/`inverse_program_mutation`/`impl Mutation` are
 //! deleted, replaced by the derive.
 //!
-//! Physical directory layout note (same precedent as the shooting/playground facets migrated in
-//! this same overhaul): `📦️glue.rs` (outside this facet's package boundary) `#[path]`-wires
-//! exactly the pre-migration set of triad directories, one per register NOUN (e.g. `👥stakeholders`,
-//! `ℹ️information`) — so each such directory now hosts EVERY semantic mutation kind derived from
-//! that register (`👥stakeholders` hosts `CreateStakeholder`/`DeleteStakeholder`/`RenameStakeholder`/
-//! `ReplaceStakeholder`) rather than one-triad-dir-per-verb. Renaming directories to verb-first
-//! slugs and re-wiring `glue.rs` is a later pass, tracked via this ticket's wave2 report
-//! `sharedFileRequests`. Two directories are now orphan stubs kept only because `glue.rs` still
-//! `#[path]`-wires them: `🔀adjacencies` (superseded by `connect`/`disconnect-adjacency` in
-//! `🗺️set-adjacency`/`🧹clear-adjacency`) and `🖼️set-snapshot` (banned outright, no replacement).
+//! Physical directory layout: Wave C (this overhaul's directory-restructure pass) split the
+//! wave-2 pass's 72 pre-migration noun-keyed triad directories (one dir hosting all 4 verbs of a
+//! register, e.g. `👥stakeholders` hosting `CreateStakeholder`/`DeleteStakeholder`/
+//! `RenameStakeholder`/`ReplaceStakeholder` together) into 266 one-triad-dir-per-variant
+//! directories (e.g. `🌱👥create-stakeholder`, `🗑️👥delete-stakeholder`, …), each
+//! `#[path]`-mounted individually in `📦️glue.rs`, satisfying the dispatch-coverage policy rule's
+//! 1:1 variant-to-triad-dir comparison in both directions. The two orphan stub directories the
+//! wave-2 pass could not remove (`🔀adjacencies`, `🖼️set-snapshot` — kept alive only because
+//! `glue.rs` still wired them) are deleted along with their `glue.rs` mounts.
 
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;

@@ -2982,7 +2982,7 @@ mod tests {
 
         let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None));
         let object = TypedObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Puzzle3dMutation::SetObject { index: 0, object }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle3d::mutations::create_object(object, None)], description: None }).expect("apply");
         let edit: &Edit<Puzzle3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
@@ -4066,7 +4066,7 @@ mod tests {
     fn set_hover_is_a_view_action_with_no_ops_after_document_mutation() {
         // 🖱️ After a real document edit the live store holds an artifact-shaped projection
         // (skip_serializing_if-elided optional fields). Hover must still round-trip as View-kind with
-        // zero operations — not fall into a spurious SetSnapshot from serde shape noise.
+        // zero operations — not fall into a spurious whole-document replace from serde shape noise.
         let mut app = app_with_registry();
         dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 2.0, 3.0] })), None).expect("addObjectKind");
         let object_id = projection_of(&app).get("objects").and_then(Value::as_array).and_then(|objects| objects.last()).and_then(|object| object.get("id")).and_then(Value::as_str).expect("added object id").to_string();

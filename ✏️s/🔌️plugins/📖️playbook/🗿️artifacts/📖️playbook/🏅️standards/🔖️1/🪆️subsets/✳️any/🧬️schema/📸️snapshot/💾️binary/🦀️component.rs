@@ -48,12 +48,12 @@ mod tests {
 
   #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::playbook::op::{update_playbook_title_operation, PlaybookMutation};
+        use crate::artifacts::playbook::op::{change_title_operation, PlaybookMutation};
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let mut store: ArtifactStore<PlaybookSnapshot, PlaybookMutation> = ArtifactStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook-demo", empty_playbook_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![update_playbook_title_operation(Some("Recipe".into()))], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![change_title_operation(Some("Recipe".into()))], description: None }).expect("apply");
         let edit: &Edit<PlaybookMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<PlaybookSnapshot, PlaybookMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }

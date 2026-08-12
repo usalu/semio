@@ -66,7 +66,7 @@ pub(crate) fn set_active_example(example_id: &str) -> Result<Emit<TrinityGraphMu
             let query = preset_query(example_id).to_string();
             let (result_json, _) = run_jack_query(&next, &query);
             Ok(Emit {
-                artifact_mutations: vec![TrinityGraphMutation::SetFixture { fixture: next.clone() }],
+                effects: vec![crate::apps::jack::reset_document_effect(&next)],
                 config_mutations: vec![
                     JackConfigMutation::SetActiveFixture { value: example_id.to_string() },
                     JackConfigMutation::SetCamera { camera: next.camera },

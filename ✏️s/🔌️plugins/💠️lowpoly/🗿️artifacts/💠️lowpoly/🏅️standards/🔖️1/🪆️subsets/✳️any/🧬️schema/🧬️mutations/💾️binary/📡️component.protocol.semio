@@ -7,12 +7,19 @@ framing record
 header fixed 16
 field format u8
 field ordinal varint
-record ObjectsAdd tag 1
-record ObjectsRemove tag 2
-record ObjectsMove tag 3
-record ObjectsPatch tag 4
-record AddPaintLayer tag 5
-record RemovePaintLayer tag 6
-record PatchPaintLayer tag 7
-record PaintStroke tag 8
-record SetSnapshot tag 9
+record CreateObject tag 1
+record DeleteObject tag 2
+record ReorderObjects tag 3
+record RenameObject tag 4
+record ChangeObjectSmoothShading tag 5
+record MoveObject tag 6
+record RotateObject tag 7
+record ScaleObject tag 8
+record ReplaceObjectMesh tag 9
+record InsertPaintLayer tag 10
+record RemovePaintLayer tag 11
+record RenamePaintLayer tag 12
+record ChangePaintLayerVisible tag 13
+record ChangePaintLayerOpacity tag 14
+record ChangePaintLayerBlendMode tag 15
+record EditPaintLayer tag 16

@@ -1,3 +1,19 @@
-# stdio.json mutations text grammar schema
+# s.mathematical.mathematical mutations — one input type per semantic mutation slug (tags 1..14 match protocol.semio order).
 scalar Bytes
-type Document { schema: String! payload: String! }
+
+input ChangeGraphDirected { newDirected: Boolean! }
+input UpdateGraphAlgorithm { newAlgorithm: String! newAlgorithmSeed: String }
+input ReplaceGraph { graph: Bytes! }
+input CreateNode { id: String! label: String! x: Float! y: Float! }
+input DeleteNode { id: String! }
+input DeleteNodes { ids: Bytes! }
+input ChangeNodeLabel { id: String! newLabel: String! }
+input MoveNode { id: String! x: Float! y: Float! }
+input ConnectNodes { id: String! source: String! target: String! }
+input DisconnectNodes { id: String! }
+input ReplacePoints { points: Bytes! }
+input InsertPoint { index: Float! x: Float! y: Float! }
+input RemovePoint { index: Float! }
+input MovePoint { index: Float! x: Float! y: Float! }
+
+union MathematicalMutation = ChangeGraphDirected | UpdateGraphAlgorithm | ReplaceGraph | CreateNode | DeleteNode | DeleteNodes | ChangeNodeLabel | MoveNode | ConnectNodes | DisconnectNodes | ReplacePoints | InsertPoint | RemovePoint | MovePoint

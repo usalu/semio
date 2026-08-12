@@ -1,3 +1,62 @@
 syntax = "proto3";
-package semio.stdio_json.mutations_text;
-message Artifact { string schema = 1; bytes payload = 2; }
+package semio.gis_gismap.mutations;
+
+message CreatePosition {
+  uint32 index = 1;
+}
+message DeletePosition {
+  string id = 1;
+}
+message ReplacePositionData {
+  string id = 1;
+  bytes new_data = 2;
+}
+message ReorderPositions {
+  string id = 1;
+  uint32 to_index = 2;
+}
+message CreateRoute {
+  uint32 index = 1;
+}
+message DeleteRoute {
+  string id = 1;
+}
+message ReplaceRouteData {
+  string id = 1;
+  bytes new_data = 2;
+}
+message ReorderRoutes {
+  string id = 1;
+  uint32 to_index = 2;
+}
+message CreateRegion {
+  uint32 index = 1;
+}
+message DeleteRegion {
+  string id = 1;
+}
+message ReplaceRegionData {
+  string id = 1;
+  bytes new_data = 2;
+}
+message ReorderRegions {
+  string id = 1;
+  uint32 to_index = 2;
+}
+
+message GismapMutation {
+  oneof kind {
+    CreatePosition create_position = 1;
+    DeletePosition delete_position = 2;
+    ReplacePositionData replace_position_data = 3;
+    ReorderPositions reorder_positions = 4;
+    CreateRoute create_route = 5;
+    DeleteRoute delete_route = 6;
+    ReplaceRouteData replace_route_data = 7;
+    ReorderRoutes reorder_routes = 8;
+    CreateRegion create_region = 9;
+    DeleteRegion delete_region = 10;
+    ReplaceRegionData replace_region_data = 11;
+    ReorderRegions reorder_regions = 12;
+  }
+}

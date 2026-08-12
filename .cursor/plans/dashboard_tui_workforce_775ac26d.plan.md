@@ -4,13 +4,13 @@ overview: Turn the `semio` binary into a detachable, PTY-multiplexed dashboard d
 todos:
   - id: w0-unblock
     content: "W0: fix the four stale ⚡️implementations paths in .vscode/🧩️launch.seed.jsonc, regenerate launch.json, fix settings.json:30, and fix the NFC/NFD duplicate project breaking bunx nx show projects"
-    status: in_progress
+    status: completed
   - id: w1-vt
     content: "W1a: add the Vt region to 🖱️ui/⌨️tui/🦀️component.rs (VtScreen + VtParser: CSI/SGR/OSC/DCS, alt screen, scroll region, scrollback, resize) with a conformance test suite"
-    status: pending
+    status: in_progress
   - id: w1-pty
     content: "W1b: add the Pty region (libc openpty + pre_exec on unix, ConPTY on windows), extend windows-sys features with Win32_System_Pipes and Win32_Security, add spawn/resize/wait tests"
-    status: pending
+    status: in_progress
   - id: w2-widget
     content: "W2a: add WidgetState::Terminal wrapping VtScreen, and extend Layout/Chrome with split, resize, move, zoom and per-stack tab strips"
     status: pending

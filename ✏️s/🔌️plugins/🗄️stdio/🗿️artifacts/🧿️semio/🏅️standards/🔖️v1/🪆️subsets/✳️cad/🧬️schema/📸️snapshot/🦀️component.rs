@@ -120,7 +120,7 @@ impl Default for SemioCadSnapshot {
 
 //#region 🔖️TextPrimitives
 /// 🧪️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION cad wave (following the
-/// workflow/brep pilots' proven template, `ws-codec-workflow-report.md`/`ws-codec-brep-report.md`):
+/// flow/brep pilots' proven template, `ws-codec-workflow-report.md`/`ws-codec-brep-report.md`):
 /// real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same
 /// style as this subset's own `🔺️diff`/`🧬️mutations` facets, duplicated here (not imported from
 /// `schema::diff`) to keep `snapshot` — the base type `diff`/`mutations` both depend ON — free of a
@@ -308,7 +308,7 @@ fn parse_cad_snapshot_body(body: &str) -> Result<SemioCadSnapshot, String> {
 
 //#region 🔖️BinaryPrimitives
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers `stdio.semio.workflow`/`stdio.semio.brep`'s upgraded
+/// `store::ByteReader`, same helpers `stdio.semio.flow`/`stdio.semio.brep`'s upgraded
 /// `OpBinary`/`DiffCodec` reuse) backing the real `ArtifactPack` below — replaces the old
 /// `serde_json::to_vec`-in-envelope shortcut.
 fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
@@ -551,7 +551,7 @@ fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<SemioCadSnapshot, String> 
 
 //#region 🔖️HandcraftedArtifactCodecs
 /// 🎁 Real structured text/binary codecs (cad wave — off the old hex-dump-of-`serde_json`
-/// shortcut, following the workflow/brep pilots' proven template). Wrapped in the repo-wide
+/// shortcut, following the flow/brep pilots' proven template). Wrapped in the repo-wide
 /// `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioCadSnapshot {
     const EXTENSION: &'static str = "semio";

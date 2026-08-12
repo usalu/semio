@@ -15,7 +15,7 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::{
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology};
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioMeshMutation` block below
 /// calls `self.print_op()` via method syntax, which needs `OpText` in scope in production code
-/// too, not merely under `#[cfg(test)]` (same fix `✳️workflow`'s own pilot documents).
+/// too, not merely under `#[cfg(test)]` (same fix `✳️flow`'s own pilot documents).
 use protocol::{Mutation, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -171,7 +171,7 @@ impl Mutation<SemioMeshSnapshot> for SemioMeshMutation {
             // whenever other meshes originally followed it — restore exact position by first
             // removing every mesh that originally followed `id`, then re-adding `id` and each of
             // them back in original order (every re-add is an append, landing them exactly where
-            // they started). Same shape `object`'s `RemoveMapEntry` inverse documents.
+            // they started). Same shape `value`'s `RemoveMapEntry` inverse documents.
             SemioMeshMutation::RemoveMesh { id } => match base.meshes.iter().position(|m| &m.id == id) {
                 Some(pos) => {
                     let tail: Vec<SemioMesh> = base.meshes[pos + 1..].to_vec();

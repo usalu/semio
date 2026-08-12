@@ -112,7 +112,7 @@ impl Default for SemioImageSnapshot {
 /// style as this subset's own `🔺️diff`/`🧬️mutations` facets (`GifDiff`/`SvgDiff`/`DocxDiff`'s
 /// established hand-rolled convention), duplicated here (not imported from `schema::diff`) to keep
 /// `snapshot` — the base type `diff`/`mutations` both depend ON — free of a reverse dependency on
-/// either sibling facet (same rationale `✳️workflow`'s/`✳️mesh`'s own pilots document).
+/// either sibling facet (same rationale `✳️flow`'s/`✳️mesh`'s own pilots document).
 ///
 /// 🧩️ The `#[derive(dsl::DslArtifact)]` path was tried first per this ticket's brief. It is
 /// blocked here: `SemioImageSnapshot.icc: Option<Vec<u8>>` is a BARE `Option<T>` field directly on
@@ -266,7 +266,7 @@ fn parse_image_snapshot_body(body: &str) -> Result<SemioImageSnapshot, String> {
 
 //#region 🔖️BinaryPrimitives
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers `✳️workflow`'s/`✳️mesh`'s own upgraded `ArtifactPack` uses)
+/// `store::ByteReader`, same helpers `✳️flow`'s/`✳️mesh`'s own upgraded `ArtifactPack` uses)
 /// backing the real `ArtifactPack` below — replaces the old `serde_json::to_vec`-in-envelope
 /// shortcut.
 fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {

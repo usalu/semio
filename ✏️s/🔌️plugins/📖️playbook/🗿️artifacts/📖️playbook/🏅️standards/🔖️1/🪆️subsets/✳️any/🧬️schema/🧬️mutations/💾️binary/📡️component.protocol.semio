@@ -1,18 +1,42 @@
 dialect protocol
-protocol playbook.spr
+protocol playbook.mutations
 version 1
-schema playbook.program.mutation
+schema playbook.playbook
 start record
 framing record
-record playbook.playbook-add-layer tag 1
+record playbook-add-step tag 1
 field format u8
 field ordinal varint
 field body bytes
-record playbook.playbook-set-stroke tag 2
+record playbook-remove-step tag 2
 field format u8
 field ordinal varint
 field body bytes
-record playbook.playbook-move-layer tag 3
+record playbook-move-step tag 3
+field format u8
+field ordinal varint
+field body bytes
+record playbook-add-block tag 4
+field format u8
+field ordinal varint
+field body bytes
+record playbook-remove-block tag 5
+field format u8
+field ordinal varint
+field body bytes
+record playbook-move-block tag 6
+field format u8
+field ordinal varint
+field body bytes
+record playbook-replace-block tag 7
+field format u8
+field ordinal varint
+field body bytes
+record playbook-update-step tag 8
+field format u8
+field ordinal varint
+field body bytes
+record playbook-change-title tag 9
 field format u8
 field ordinal varint
 field body bytes

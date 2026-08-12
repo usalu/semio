@@ -245,7 +245,7 @@ pub mod derived_composition {
         /// three facets. Lives in this composer's own test region: video has no per-standard `⚙️engine`
         /// dir the way json/csv/zip/png do, and v1's SHARED `🏅️standards/🔖️v1/⚙️engine/🦀️component.rs`
         /// only aggregates all 14 subsets' `register()` calls (no test module of its own, and out of
-        /// this ticket's `✳️video/`-only edit scope anyway) — same home workflow's/mesh's/image's own
+        /// this ticket's `✳️video/`-only edit scope anyway) — same home flow's/mesh's/image's own
         /// waves establish.
         mod conformance_laws {
             use super::*;

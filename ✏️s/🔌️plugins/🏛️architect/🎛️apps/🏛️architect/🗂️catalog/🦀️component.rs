@@ -19,6 +19,7 @@ use crate::artifacts::program::schema::mutations as leaves;
 use crate::artifacts::program::{EntityHeader, EntityId, ProgramSnapshot, TextField, TraceKind, TraceLink};
 use semio_framework_plugin::{ActionArgOption, LocalizedLabel};
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use serde_json::{json, Value};
 
 pub const REGISTER_IDS: &[&str] = &[

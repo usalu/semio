@@ -204,7 +204,7 @@ impl Default for SemioModelSnapshot {
 /// (`GifDiff`/`SvgDiff`/`DocxDiff`'s established hand-rolled convention), duplicated here (not
 /// imported from `schema::diff`) to keep `snapshot` — the base type `diff`/`mutations` both depend
 /// ON — free of a reverse dependency on either sibling facet (same rationale
-/// `stdio.semio.workflow`'s own snapshot module documents).
+/// `stdio.semio.flow`'s own snapshot module documents).
 fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
@@ -444,7 +444,7 @@ fn parse_semio_model_snapshot_body(body: &str) -> Result<SemioModelSnapshot, Str
 
 //#region 🔖️BinaryPrimitives
 /// 🧪️ P2 pilot (model): real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::
-/// write_varint_u64` / `store::ByteReader`, same helpers `stdio.semio.workflow`'s upgraded
+/// write_varint_u64` / `store::ByteReader`, same helpers `stdio.semio.flow`'s upgraded
 /// `ArtifactPack` reuses) backing the real `ArtifactPack` below — replaces the old
 /// `serde_json::to_vec`-in-envelope shortcut entirely.
 fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
@@ -708,7 +708,7 @@ fn decode_model_snapshot_binary(bytes: &[u8]) -> Result<SemioModelSnapshot, Stri
 
 //#region 🔖️HandcraftedArtifactCodecs
 /// 🎁 Real structured text/binary codecs (P2 pilot — model subset upgraded off the old
-/// hex-dump-of-`serde_json` shortcut, following `stdio.semio.workflow`'s proven pattern). Wrapped
+/// hex-dump-of-`serde_json` shortcut, following `stdio.semio.flow`'s proven pattern). Wrapped
 /// in the repo-wide `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioModelSnapshot {
     const EXTENSION: &'static str = "semio";

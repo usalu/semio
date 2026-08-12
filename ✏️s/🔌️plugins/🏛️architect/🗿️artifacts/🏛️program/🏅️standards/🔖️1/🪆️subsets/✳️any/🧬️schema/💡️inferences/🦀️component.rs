@@ -30,7 +30,7 @@ pub struct ProgramInference {
     pub topology: ProgramTopology,
 }
 
-impl protocol::Inference<ProgramSnapshot> for ProgramInference {
+impl Inference<ProgramSnapshot> for ProgramInference {
     fn infer(snapshot: &ProgramSnapshot) -> Self {
         Self { topology: compute_topology(&snapshot.elements) }
     }
@@ -75,7 +75,7 @@ impl ArtifactInferrer for crate::artifacts::program::standards::v1::subsets::any
     /// `outline`/`bounds`-style facets).
     fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
         let _ = (cache, session);
-        <ProgramInference as protocol::Inference<ProgramSnapshot>>::infer(snapshot)
+        <ProgramInference as Inference<ProgramSnapshot>>::infer(snapshot)
     }
 }
 //#endregion 🔖️ArtifactInferrer
@@ -101,7 +101,6 @@ pub fn program_artifact_inference_descriptor() -> schema::ArtifactInferenceDescr
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use protocol::Inference;
 
     //#region 🧪️InferenceLaws
     #[test]

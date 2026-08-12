@@ -9,227 +9,46 @@
 //! grouping exception (each check input is independently measured/entered in the host UI, never
 //! validated as an atomic multi-field bundle — mirrors the `en1992`/`en1994` precedent, not
 //! `en1993`'s per-part grouping, because `⚙️engine/🦀️component.rs`'s EN 1995 checks read this
-//! snapshot as one flat bag of fields, not as named per-part sub-structs). `SetSnapshot` — the
-//! pre-migration whole-document replace — is gone: banned outright per `📓️taxonomy.md`/
+//! snapshot as one flat bag of fields, not as named per-part sub-structs). The pre-migration
+//! whole-document-replace variant is gone: banned outright per `📓️taxonomy.md`/
 //! `📓️derivation-rules.md` rule 6, with NO replacement mutation; file-open/import/load-example now
 //! goes through `store::ArtifactStore::reset`, entirely outside this enum.
 //!
-//! `📄set-snapshot` keeps its pre-migration directory name — `📦️glue.rs` path-includes that exact
-//! triad outside this facet's writable boundary, so it was repurposed in place (same path,
-//! rewritten `🦠️mutation`/`🔺️diff`/`↩️inverse` content) to hold `ChangeAnnex` instead of being
-//! renamed; see this ticket's wave2 report `sharedFileRequests` for the rename once a later pass
-//! can touch `📦️glue.rs` (mirrors the `en1990`/`en1992` precedent). The other nineteen triads have
-//! no pre-migration slot and are self-wired directly below via nested `#[path = "."] pub mod
-//! <name> { ... }` blocks — `#[path]` resolves per physical file, not per logical mod nesting, so
-//! this works without touching `📦️glue.rs`.
+//! All twenty triads (including the repurposed `set_snapshot` slot, which still holds `ChangeAnnex`)
+//! are mounted directly as `mutations`-sibling modules in `📦️glue.rs` (this lane's agent owns
+//! `📦️glue.rs`, so no self-wiring `#[path = "."]` blocks are needed here).
 
 use crate::artifacts::en1995::diff::En1995Diff;
 use crate::artifacts::en1995::En1995Snapshot;
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️NewLeaves
-#[path = "."]
-pub mod change_m_ed_knm {
-    #[path = "🔧change-m-ed-knm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-m-ed-knm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-m-ed-knm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_n_ed_kn {
-    #[path = "🔧change-n-ed-kn/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-n-ed-kn/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-n-ed-kn/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_v_ed_kn {
-    #[path = "🔧change-v-ed-kn/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-v-ed-kn/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-v-ed-kn/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_w_mm3 {
-    #[path = "🔧change-w-mm3/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-w-mm3/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-w-mm3/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_a_mm2 {
-    #[path = "🔧change-a-mm2/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-a-mm2/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-a-mm2/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_b_mm {
-    #[path = "🔧change-b-mm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-b-mm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-b-mm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_h_mm {
-    #[path = "🔧change-h-mm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-h-mm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-h-mm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_f_m_k {
-    #[path = "🔧change-f-m-k/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-f-m-k/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-f-m-k/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_f_c_0_k {
-    #[path = "🔧change-f-c-0-k/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-f-c-0-k/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-f-c-0-k/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_service_class {
-    #[path = "🔧change-service-class/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-service-class/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-service-class/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_load_duration {
-    #[path = "🔧change-load-duration/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-load-duration/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-load-duration/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_m_crit_knm {
-    #[path = "🔧change-m-crit-knm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-m-crit-knm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-m-crit-knm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_f_ed_kn {
-    #[path = "🔧change-f-ed-kn/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-f-ed-kn/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-f-ed-kn/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_a_ef_mm2 {
-    #[path = "🔧change-a-ef-mm2/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-a-ef-mm2/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-a-ef-mm2/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_f_v_k {
-    #[path = "🔧change-f-v-k/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-f-v-k/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-f-v-k/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_fire_duration_min {
-    #[path = "🔧change-fire-duration-min/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-fire-duration-min/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-fire-duration-min/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_section_depth_mm {
-    #[path = "🔧change-section-depth-mm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-section-depth-mm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-section-depth-mm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_a_vert_m_s2 {
-    #[path = "🔧change-a-vert-m-s2/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-a-vert-m-s2/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-a-vert-m-s2/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_n_cycles_bridge {
-    #[path = "🔧change-n-cycles-bridge/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-n-cycles-bridge/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-n-cycles-bridge/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-//#endregion 🔖️NewLeaves
-
-//#region 🔖️RepurposedLeaves
-// 🌱️ `set_snapshot` is declared by `📦️glue.rs` as a sibling of `component` (this file) under
-// `pub mod mutations { ... }` — brought into this file's own scope the same way this ticket's
-// `en1990`/`en1992` precedent reaches its own repurposed `set_snapshot` sibling.
-use super::set_snapshot;
-//#endregion 🔖️RepurposedLeaves
-
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the En1995 document, derived per
 /// `📓️derivation-rules.md` from `En1995Snapshot`'s flat scalar shape. `impl protocol::Mutation`/
 /// `SemanticMutation` below are generated by `#[derive(dsl::Mutations)]` — never hand-written.
+//#region 🔖️Leaves
+use super::set_snapshot;
+use super::change_m_ed_knm;
+use super::change_n_ed_kn;
+use super::change_v_ed_kn;
+use super::change_w_mm3;
+use super::change_a_mm2;
+use super::change_b_mm;
+use super::change_h_mm;
+use super::change_f_m_k;
+use super::change_f_c_0_k;
+use super::change_service_class;
+use super::change_load_duration;
+use super::change_m_crit_knm;
+use super::change_f_ed_kn;
+use super::change_a_ef_mm2;
+use super::change_f_v_k;
+use super::change_fire_duration_min;
+use super::change_section_depth_mm;
+use super::change_a_vert_m_s2;
+use super::change_n_cycles_bridge;
+//#endregion 🔖️Leaves
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = En1995Snapshot, diff = En1995Diff, schema = "s.norm.en1995")]
 pub enum En1995Mutation {
@@ -255,6 +74,71 @@ pub enum En1995Mutation {
     ChangeNCyclesBridge(change_n_cycles_bridge::mutation::ChangeNCyclesBridge),
 }
 //#endregion 🔖️Mutations
+
+//#region 🔖️FromSnapshot
+impl En1995Mutation {
+    /// 📤️ Decomposes a whole `En1995Snapshot` into one `change-<field>` mutation per
+    /// persistent field — the closed-vocabulary replacement for the banned whole-document-replace
+    /// variant, used by `import_media`'s `"model:in"` port and the `set-snapshot` app command to
+    /// bundle a bulk document replacement into a single atomic `Emit::commit`.
+    pub fn from_snapshot(snapshot: &En1995Snapshot) -> Vec<En1995Mutation> {
+        let mut mutations = Vec::with_capacity(20);
+        mutations.push(En1995Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: snapshot.annex.clone() }));
+        mutations.push(En1995Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm.clone() }));
+        mutations.push(En1995Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: snapshot.n_ed_kn.clone() }));
+        mutations.push(En1995Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn.clone() }));
+        mutations.push(En1995Mutation::ChangeWMm3(change_w_mm3::mutation::ChangeWMm3 { new_w_mm3: snapshot.w_mm3.clone() }));
+        mutations.push(En1995Mutation::ChangeAMm2(change_a_mm2::mutation::ChangeAMm2 { new_a_mm2: snapshot.a_mm2.clone() }));
+        mutations.push(En1995Mutation::ChangeBMm(change_b_mm::mutation::ChangeBMm { new_b_mm: snapshot.b_mm.clone() }));
+        mutations.push(En1995Mutation::ChangeHMm(change_h_mm::mutation::ChangeHMm { new_h_mm: snapshot.h_mm.clone() }));
+        mutations.push(En1995Mutation::ChangeFMK(change_f_m_k::mutation::ChangeFMK { new_f_m_k: snapshot.f_m_k.clone() }));
+        mutations.push(En1995Mutation::ChangeFC0K(change_f_c_0_k::mutation::ChangeFC0K { new_f_c_0_k: snapshot.f_c_0_k.clone() }));
+        mutations.push(En1995Mutation::ChangeServiceClass(change_service_class::mutation::ChangeServiceClass { new_service_class: snapshot.service_class.clone() }));
+        mutations.push(En1995Mutation::ChangeLoadDuration(change_load_duration::mutation::ChangeLoadDuration { new_load_duration: snapshot.load_duration.clone() }));
+        mutations.push(En1995Mutation::ChangeMCritKnm(change_m_crit_knm::mutation::ChangeMCritKnm { new_m_crit_knm: snapshot.m_crit_knm.clone() }));
+        mutations.push(En1995Mutation::ChangeFEdKn(change_f_ed_kn::mutation::ChangeFEdKn { new_f_ed_kn: snapshot.f_ed_kn.clone() }));
+        mutations.push(En1995Mutation::ChangeAEfMm2(change_a_ef_mm2::mutation::ChangeAEfMm2 { new_a_ef_mm2: snapshot.a_ef_mm2.clone() }));
+        mutations.push(En1995Mutation::ChangeFVK(change_f_v_k::mutation::ChangeFVK { new_f_v_k: snapshot.f_v_k.clone() }));
+        mutations.push(En1995Mutation::ChangeFireDurationMin(change_fire_duration_min::mutation::ChangeFireDurationMin { new_fire_duration_min: snapshot.fire_duration_min.clone() }));
+        mutations.push(En1995Mutation::ChangeSectionDepthMm(change_section_depth_mm::mutation::ChangeSectionDepthMm { new_section_depth_mm: snapshot.section_depth_mm.clone() }));
+        mutations.push(En1995Mutation::ChangeAVertMS2(change_a_vert_m_s2::mutation::ChangeAVertMS2 { new_a_vert_m_s2: snapshot.a_vert_m_s2.clone() }));
+        mutations.push(En1995Mutation::ChangeNCyclesBridge(change_n_cycles_bridge::mutation::ChangeNCyclesBridge { new_n_cycles_bridge: snapshot.n_cycles_bridge.clone() }));
+        mutations
+    }
+}
+//#endregion 🔖️FromSnapshot
+
+//#region 🔖️FromSnapshot
+impl En1995Mutation {
+    /// 📤️ Decomposes a whole `En1995Snapshot` into one `change-<field>` mutation per
+    /// persistent field — the closed-vocabulary replacement for the banned whole-document-replace
+    /// variant, used by `import_media`'s `"model:in"` port and the `set-snapshot` app command to
+    /// bundle a bulk document replacement into a single atomic `Emit::commit`.
+    pub fn from_snapshot(snapshot: &En1995Snapshot) -> Vec<En1995Mutation> {
+        let mut mutations = Vec::with_capacity(19);
+        mutations.push(En1995Mutation::ChangeAEfMm2(change_a_ef_mm2::mutation::ChangeAEfMm2 { new_a_ef_mm2: snapshot.a_ef_mm2.clone() }));
+        mutations.push(En1995Mutation::ChangeAMm2(change_a_mm2::mutation::ChangeAMm2 { new_a_mm2: snapshot.a_mm2.clone() }));
+        mutations.push(En1995Mutation::ChangeAVertMS2(change_a_vert_m_s2::mutation::ChangeAVertMS2 { new_a_vert_m_s2: snapshot.a_vert_m_s2.clone() }));
+        mutations.push(En1995Mutation::ChangeBMm(change_b_mm::mutation::ChangeBMm { new_b_mm: snapshot.b_mm.clone() }));
+        mutations.push(En1995Mutation::ChangeFEdKn(change_f_ed_kn::mutation::ChangeFEdKn { new_f_ed_kn: snapshot.f_ed_kn.clone() }));
+        mutations.push(En1995Mutation::ChangeFC0K(change_f_c_0_k::mutation::ChangeFC0K { new_f_c_0_k: snapshot.f_c_0_k.clone() }));
+        mutations.push(En1995Mutation::ChangeFireDurationMin(change_fire_duration_min::mutation::ChangeFireDurationMin { new_fire_duration_min: snapshot.fire_duration_min.clone() }));
+        mutations.push(En1995Mutation::ChangeFMK(change_f_m_k::mutation::ChangeFMK { new_f_m_k: snapshot.f_m_k.clone() }));
+        mutations.push(En1995Mutation::ChangeFVK(change_f_v_k::mutation::ChangeFVK { new_f_v_k: snapshot.f_v_k.clone() }));
+        mutations.push(En1995Mutation::ChangeHMm(change_h_mm::mutation::ChangeHMm { new_h_mm: snapshot.h_mm.clone() }));
+        mutations.push(En1995Mutation::ChangeLoadDuration(change_load_duration::mutation::ChangeLoadDuration { new_load_duration: snapshot.load_duration.clone() }));
+        mutations.push(En1995Mutation::ChangeMCritKnm(change_m_crit_knm::mutation::ChangeMCritKnm { new_m_crit_knm: snapshot.m_crit_knm.clone() }));
+        mutations.push(En1995Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm.clone() }));
+        mutations.push(En1995Mutation::ChangeNCyclesBridge(change_n_cycles_bridge::mutation::ChangeNCyclesBridge { new_n_cycles_bridge: snapshot.n_cycles_bridge.clone() }));
+        mutations.push(En1995Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: snapshot.n_ed_kn.clone() }));
+        mutations.push(En1995Mutation::ChangeSectionDepthMm(change_section_depth_mm::mutation::ChangeSectionDepthMm { new_section_depth_mm: snapshot.section_depth_mm.clone() }));
+        mutations.push(En1995Mutation::ChangeServiceClass(change_service_class::mutation::ChangeServiceClass { new_service_class: snapshot.service_class.clone() }));
+        mutations.push(En1995Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn.clone() }));
+        mutations.push(En1995Mutation::ChangeWMm3(change_w_mm3::mutation::ChangeWMm3 { new_w_mm3: snapshot.w_mm3.clone() }));
+        mutations
+    }
+}
+//#endregion 🔖️FromSnapshot
 
 //#region 🧪️Tests
 #[cfg(test)]

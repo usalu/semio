@@ -3,6 +3,7 @@
 
 use crate::apps::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use crate::artifacts::mathematical::op::MathematicalMutation;
+use crate::artifacts::mathematical::schema::mutations::replace_graph::mutation::ReplaceGraph;
 use crate::artifacts::mathematical::{MathematicalCamera, MathematicalEdge, MathematicalNode, MathematicalSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -21,7 +22,7 @@ pub mod set_algorithm {
         let mut graph = doc.snapshot.graph.clone();
         graph.algorithm = payload.algorithm.clone();
         graph.algorithm_seed = payload.seed.clone();
-        Ok(Emit::commit(vec![MathematicalMutation::SetGraph { graph }], "setAlgorithm"))
+        Ok(Emit::commit(vec![MathematicalMutation::ReplaceGraph(ReplaceGraph { graph })], "setAlgorithm"))
     }
 }
 //#endregion 🔖️SetAlgorithm
@@ -39,7 +40,7 @@ pub mod set_directed {
     pub fn handle(payload: &SetDirected, doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
         let mut graph = doc.snapshot.graph.clone();
         graph.directed = payload.directed;
-        Ok(Emit::mutations(vec![MathematicalMutation::SetGraph { graph }]))
+        Ok(Emit::mutations(vec![MathematicalMutation::ReplaceGraph(ReplaceGraph { graph })]))
     }
 }
 //#endregion 🔖️SetDirected
@@ -100,7 +101,7 @@ pub mod node_graph_edit {
             }
         }
         if changed {
-            Ok(Emit::mutations(vec![MathematicalMutation::SetGraph { graph }]))
+            Ok(Emit::mutations(vec![MathematicalMutation::ReplaceGraph(ReplaceGraph { graph })]))
         } else {
             Ok(Emit::default())
         }

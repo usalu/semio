@@ -76,7 +76,7 @@ fn json_value_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>,
                 .iter()
                 .map(|e| Ok(JsonMember { key: e.key.clone(), value: json_value_from_semio(&e.value, nodes, visiting)? }))
                 .collect::<Result<Vec<_>, store::PackError>>()?;
-            Ok(JsonValue::Value { members })
+            Ok(JsonValue::Object { members })
         }
         SemioValue::Ref { id } => {
             if !visiting.insert(id.clone()) {
@@ -149,7 +149,7 @@ mod tests {
     /// separately above).
     #[test]
     fn json_to_value_to_json_to_value_round_trips() {
-        let json = JsonValue::Value {
+        let json = JsonValue::Object {
             members: vec![
                 JsonMember { key: "name".into(), value: JsonValue::String { value: "semio".into() } },
                 JsonMember { key: "count".into(), value: JsonValue::Number { lexeme: "42".into() } },
@@ -173,7 +173,7 @@ mod tests {
         };
         let json_x = SemioValueToJson::serialize(&s1).expect("serialize");
         match &json_x.value {
-            JsonValue::Value { members } => {
+            JsonValue::Object { members } => {
                 assert_eq!(members[0].key, "linked");
                 assert_eq!(members[0].value, JsonValue::Number { lexeme: "7".into() }, "Ref dereferenced inline since json has no graph");
             }

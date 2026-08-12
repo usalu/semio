@@ -12,10 +12,10 @@
 
 use crate::apps::dag::config::{dag_config_camera, DagConfig, DagConfigMutation};
 use crate::artifacts::dag::engine;
+use crate::artifacts::dag::mutations::{connect_nodes, dag_snapshot_mutations, disconnect_nodes, move_node};
 use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
-use infinite_board_port_directed_dag::{dag_document_from_fixture, dag_fixture_from_document, DagFixture, DagHost, DagLayoutOptions, DagNodePatch};
-use protocol::CollectionMutation;
+use infinite_board_port_directed_dag::{dag_document_from_fixture, dag_fixture_from_document, DagFixture, DagHost, DagLayoutOptions};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -89,7 +89,7 @@ pub mod node_graph_edit {
                 DagNodeGraphEditOp::SetFixture { fixture_json } => {
                     if let Ok(fixture) = serde_json::from_str::<DagFixture>(fixture_json) {
                         config_mutations.push(DagConfigMutation::SetCamera { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom });
-                        artifact_mutations.push(DagMutation::SetSnapshot { snapshot: dag_document_from_fixture(&fixture).into() });
+                        artifact_mutations.extend(dag_snapshot_mutations(document, &dag_document_from_fixture(&fixture).into()));
                     }
                 }
                 DagNodeGraphEditOp::DeleteSelection => {
@@ -100,7 +100,7 @@ pub mod node_graph_edit {
                 }
                 DagNodeGraphEditOp::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
                     if let Ok(edge) = engine::connect_edge(document, source_node_id, source_port_id, target_node_id, target_port_id) {
-                        artifact_mutations.push(DagMutation::Edges(CollectionMutation::Add { index: document.edges.len(), item: edge }));
+                        artifact_mutations.push(connect_nodes(edge.id, edge.source, edge.target, edge.route_style, edge.properties));
                     }
                 }
             }
@@ -126,7 +126,7 @@ pub mod connect_media_ports {
     pub fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
         match engine::connect_edge(document, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id) {
-            Ok(edge) => Ok(Emit::mutations(vec![DagMutation::Edges(CollectionMutation::Add { index: document.edges.len(), item: edge })])),
+            Ok(edge) => Ok(Emit::mutations(vec![connect_nodes(edge.id, edge.source, edge.target, edge.route_style, edge.properties)])),
             Err(_) => Ok(Emit::default()),
         }
     }
@@ -146,7 +146,7 @@ pub mod disconnect {
     pub fn handle(payload: &Disconnect, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
         if document.edges.iter().any(|edge| edge.id == payload.edge_id) {
-            Ok(Emit::mutations(vec![DagMutation::Edges(CollectionMutation::Remove { id: payload.edge_id.clone() })]))
+            Ok(Emit::mutations(vec![disconnect_nodes(payload.edge_id.clone())]))
         } else {
             Ok(Emit::default())
         }
@@ -169,7 +169,7 @@ pub mod move_media_node {
     pub fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
         if document.nodes.iter().any(|node| node.id == payload.node_id) {
-            Ok(Emit::amend(vec![DagMutation::Nodes(CollectionMutation::Patch { id: payload.node_id.clone(), patch: DagNodePatch { x: Some(payload.x), y: Some(payload.y), ..Default::default() } })], format!("move-{}", payload.node_id)))
+            Ok(Emit::amend(vec![move_node(payload.node_id.clone(), payload.x, payload.y)], format!("move-{}", payload.node_id)))
         } else {
             Ok(Emit::default())
         }
@@ -193,7 +193,11 @@ pub mod reorganize {
             let _ = host.reorganize(&DagLayoutOptions::default());
             if let Ok(json) = host.fixture_json() {
                 if let Ok(fixture) = serde_json::from_str::<DagFixture>(&json) {
-                    return Ok(Emit::mutations(vec![DagMutation::SetNodes { nodes: fixture.nodes }]));
+                    // 🎯️ Reorganize only ever moves EXISTING nodes (same ids/edges) — the generic
+                    // differ correctly narrows that down to a `move-node` per node whose position
+                    // actually changed, never a whole-collection replace.
+                    let recomputed = DagSnapshot { nodes: fixture.nodes, ..document.clone() };
+                    return Ok(Emit::mutations(dag_snapshot_mutations(document, &recomputed)));
                 }
             }
         }

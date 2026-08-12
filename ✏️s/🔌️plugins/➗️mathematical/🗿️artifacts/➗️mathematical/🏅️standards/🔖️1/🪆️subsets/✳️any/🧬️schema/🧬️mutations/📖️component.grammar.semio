@@ -1,35 +1,40 @@
 dialect grammar
-grammar mathematical.mutation
-extension mathematical
-use family-embed
-start mutation
+grammar s.mathematical.mathematical.mutations
+extension s
+start line
 
-mutation = "change-graph-directed" directed-field
-         | "update-graph-algorithm" algorithm-field seed-field
-         | "replace-graph" graph-field
-         | "create-node" id-field label-field x-field y-field
-         | "delete-node" id-field
-         | "delete-nodes" ids-field
-         | "change-node-label" id-field new-label-field
-         | "move-node" id-field x-field y-field
-         | "connect-nodes" id-field source-field target-field
-         | "disconnect-nodes" id-field
-         | "replace-points" points-field
-         | "insert-point" index-field x-field y-field
-         | "remove-point" index-field
-         | "move-point" index-field x-field y-field
+line = change-graph-directed
+     / update-graph-algorithm
+     / replace-graph
+     / create-node
+     / delete-node
+     / delete-nodes
+     / change-node-label
+     / move-node
+     / connect-nodes
+     / disconnect-nodes
+     / replace-points
+     / insert-point
+     / remove-point
+     / move-point
 
-directed-field = "new-directed" "=" BOOL
-algorithm-field = "new-algorithm" "=" TEXT
-seed-field = "new-algorithm-seed" "=" TEXT
-graph-field = "graph" "=" TEXT
-id-field = "id" "=" TEXT
-label-field = "label" "=" TEXT
-new-label-field = "new-label" "=" TEXT
-ids-field = "ids" "=" TEXT
-source-field = "source" "=" TEXT
-target-field = "target" "=" TEXT
-points-field = "points" "=" TEXT
-index-field = "index" "=" INT
-x-field = "x" "=" FLOAT
-y-field = "y" "=" FLOAT
+change-graph-directed = "change-graph-directed" SP boolean
+update-graph-algorithm = "update-graph-algorithm" SP text SP text?
+replace-graph = "replace-graph" SP block
+create-node = "create-node" SP id SP text SP number SP number
+delete-node = "delete-node" SP id
+delete-nodes = "delete-nodes" SP block
+change-node-label = "change-node-label" SP id SP text
+move-node = "move-node" SP id SP number SP number
+connect-nodes = "connect-nodes" SP id SP text SP text
+disconnect-nodes = "disconnect-nodes" SP id
+replace-points = "replace-points" SP block
+insert-point = "insert-point" SP number SP number SP number
+remove-point = "remove-point" SP number
+move-point = "move-point" SP number SP number SP number
+
+id = OCTET+
+number = OCTET+
+text = OCTET+
+boolean = "true" / "false"
+block = "{" NL OCTET+ "}"

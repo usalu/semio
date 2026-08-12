@@ -11,7 +11,7 @@ framing record
 # two REAL fixed fields; past that, 0-3 varint-length-prefixed opaque blobs follow (one per present
 # collection) — modeled as one opaque trailing `payload` chain rather than per-segment
 # `Cond`-guarded fields because a SECOND `if`-guard on a field that was itself only conditionally
-# decoded hard-errors `eval_cond` (`protocol-cond-cannot-chain`, same gap `stdio.semio.workflow`'s
+# decoded hard-errors `eval_cond` (`protocol-cond-cannot-chain`, same gap `stdio.semio.flow`'s
 # own diff facet hit first — see this wave's report). The real Rust `encode_diff`/`decode_diff`
 # stays genuinely, fully structured (`write_str_lp`/`read_str_lp`, `store::pack_rt`'s real varint
 # codec) — round-trip tested independently.

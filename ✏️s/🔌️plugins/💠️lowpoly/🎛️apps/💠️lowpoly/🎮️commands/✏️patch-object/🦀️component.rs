@@ -5,7 +5,9 @@
 use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::{LowpolyObjectPatch, LowpolySnapshot};
+use crate::artifacts::lowpoly::LowpolySnapshot;
+use crate::artifacts::lowpoly::mutations::change_object_smooth_shading::mutation::ChangeObjectSmoothShading;
+use crate::artifacts::lowpoly::mutations::rename_object::mutation::RenameObject;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -23,15 +25,18 @@ pub fn handle(payload: &PatchObject, doc: &ArtifactView<'_, LowpolySnapshot>, _c
     let projection = doc.snapshot;
     let value = payload.value_json.as_deref().and_then(|json| serde_json::from_str::<Value>(json).ok());
     let Some(object) = projection.objects.iter().find(|object| object.id == payload.object_id) else { return Ok(Emit::default()) };
-    let patch = match payload.field.as_str() {
-        "name" => LowpolyObjectPatch { name: value.as_ref().and_then(|entry| entry.as_str()).map(str::to_string), ..Default::default() },
-        "smoothShading" => LowpolyObjectPatch { smooth_shading: Some(value.as_ref().and_then(|entry| entry.as_bool()).unwrap_or(!object.smooth_shading)), ..Default::default() },
-        _ => LowpolyObjectPatch::default(),
+    let mutation = match payload.field.as_str() {
+        "name" => value.as_ref().and_then(|entry| entry.as_str()).map(|new_name| LowpolyMutation::RenameObject(RenameObject { id: payload.object_id.clone(), new_name: new_name.to_string() })),
+        "smoothShading" => {
+            let new_smooth_shading = value.as_ref().and_then(|entry| entry.as_bool()).unwrap_or(!object.smooth_shading);
+            Some(LowpolyMutation::ChangeObjectSmoothShading(ChangeObjectSmoothShading { id: payload.object_id.clone(), new_smooth_shading }))
+        }
+        _ => None,
     };
-    if patch == LowpolyObjectPatch::default() {
-        return Ok(Emit::default());
+    match mutation {
+        Some(mutation) => Ok(Emit::mutations(vec![mutation])),
+        None => Ok(Emit::default()),
     }
-    Ok(Emit::mutations(vec![LowpolyMutation::ObjectsPatch { id: payload.object_id.clone(), patch }]))
 }
 //#endregion 🔖️PatchObject
 

@@ -65,10 +65,10 @@ mod tests {
         let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_snapshot(), None));
         store
             .dispatch(ArtifactCommand::Apply {
-                mutations: vec![Puzzle3dMutation::SetObject {
-                    index: 0,
-                    object: Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false },
-                }],
+                mutations: vec![crate::artifacts::puzzle3d::mutations::create_object(
+                    Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false },
+                    None,
+                )],
                 description: None,
             })
             .expect("apply");
@@ -160,32 +160,25 @@ mod tests {
 //#region 🔒️WireFormatGuard
 #[cfg(test)]
 mod wire_format_guard {
-    //! 🔒️ The permanent byte-level regression guard for this artifact's spr codec, frozen from the
-    //! pre-consolidation `📡️protocol` crate (master ticket
-    //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, TEMPLATE.md §0.4/§7).
+    //! 🔒️ Byte-level `OpBinary` round-trip guard for the semantic-mutations-overhaul document
+    //! vocabulary (ticket `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`) plus the (unrelated, unchanged)
+    //! frozen headless-engine-command wire below. The pre-overhaul whole-record-upsert /
+    //! whole-document-replace wire bytes this guard used to freeze for `Puzzle3dMutation` no
+    //! longer exist — that vocabulary is banned outright, not preserved — so the document-mutation
+    //! half now asserts the NEW operations' `OpText`/`OpBinary` round-trip instead of pinning byte
+    //! literals for a wire shape this ticket deliberately changed.
     use super::*;
     use crate::artifacts::puzzle3d as puzzle_3d;
+    use crate::artifacts::puzzle3d::mutations::{change_object_anchor, connect_vortices, create_object, delete_object};
     use protocol::OpText;
-    use serde_json::json;
 
     fn ops() -> Vec<Puzzle3dMutation> {
-        let object: puzzle_3d::Puzzle3dObject = serde_json::from_value(json!({"id":"o1","label":"L","objectKind":"Capsule","anchor":"fixed","origin":[1.0,2.0,3.0],"orientation":[0.0,0.0,0.0,1.0],"scale":[2.0,3.0,4.0],"meshUrl":"/m.glb","vortices":[{"id":"v0","vortexKind":"k","position":[0.0,0.0,0.0],"direction":[0.0,0.0,1.0],"radius":3.0,"hidden":false,"locked":false}],"hidden":false,"locked":true})).unwrap();
-        let attraction: puzzle_3d::Puzzle3dAttraction = serde_json::from_value(json!({"id":"a1","attracting":"o1:v0","attracted":"o2:v0","gap":1.0,"shift":2.0,"rise":3.0,"rotation":4.0,"turn":5.0,"tilt":6.0,"x":7.0,"y":8.0})).unwrap();
-        let target_volume: puzzle_3d::Puzzle3dTargetVolume = serde_json::from_value(json!({"id":"t1","origin":[0.0,1.0,2.0],"orientation":[0.0,0.0,0.0,1.0],"scale":5.0,"hidden":false,"locked":false})).unwrap();
-        let reference: puzzle_3d::Puzzle3dReference = serde_json::from_value(json!({"id":"r1","source":{"url":"/u.png","mediaKind":"image"},"origin":[0.0,0.0,0.0],"widthWorld":4.0,"locked":false,"hidden":false})).unwrap();
-        let meta: puzzle_3d::Puzzle3dMeta = serde_json::from_value(json!({"kindCompatibility":[{"source":"a","target":"b","bidirectional":true,"important":false,"specificity":"vortex"}]})).unwrap();
-        let document = Puzzle3dSnapshot::default();
+        let object = puzzle_3d::Puzzle3dObject { id: "o1".into(), label: Some("L".into()), object_kind: Some("Capsule".into()), anchor: puzzle_3d::Puzzle3dObjectAnchor::Fixed, origin: [1.0, 2.0, 3.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: Some(puzzle_3d::Puzzle3dScale::Vec3([2.0, 3.0, 4.0])), mesh_url: Some("/m.glb".into()), vortices: Vec::new(), hidden: false, locked: true };
         vec![
-            Puzzle3dMutation::SetObject { index: 0, object },
-            Puzzle3dMutation::RemoveObject { id: "o1".into() },
-            Puzzle3dMutation::SetAttraction { index: 1, attraction },
-            Puzzle3dMutation::RemoveAttraction { id: "a1".into() },
-            Puzzle3dMutation::SetTargetVolume { index: 2, target_volume },
-            Puzzle3dMutation::RemoveTargetVolume { id: "t1".into() },
-            Puzzle3dMutation::SetReference { index: 3, reference },
-            Puzzle3dMutation::RemoveReference { id: "r1".into() },
-            Puzzle3dMutation::SetMeta { meta },
-            Puzzle3dMutation::SetSnapshot { snapshot: document },
+            create_object(object, Some(0)),
+            change_object_anchor("o1".into(), puzzle_3d::Puzzle3dObjectAnchor::Derived),
+            delete_object("o1".into()),
+            connect_vortices("a1".into(), "o1:v0".into(), "o2:v0".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0),
         ]
     }
 
@@ -200,23 +193,6 @@ mod wire_format_guard {
         ]
     }
 
-    /// 🔒️ The exact `print_op | byte-length | hex` of every operation row, captured from the
-    /// pre-consolidation `📡️protocol` crate BEFORE this plugin was merged into one crate. A
-    /// round-trip law is self-consistent and would happily pass on a silently changed format;
-    /// only these frozen bytes prove the wire did not move.
-    const PRE_MIGRATION_OPERATION_WIRE: &[&str] = &[
-        "setObject index=0 object { id=o1 label=L object-kind=Capsule origin=@1,2,3 orientation=0,0,0,1 mesh-url=\"/m.glb\" hidden=false locked=true scale=[ 2 3 4 ] vortices=[ id=v0 vortex-kind=k position=@0,0,0 direction=^0,0,1 radius=3 hidden=false locked=false ] } | 220 | 010006062f6d2e676c620743617073756c65014c016b026f3102763002000400010e0d0a000604010602020601031503000000000000f03f00000000000000400000000000000840041504000000000000000000000000000000000000000000000000000000000000f03f051503000000000000004000000000000008400000000000001040060600070c010d0700060501060303150300000000000000000000000000000000000000000000000004150300000000000000000000000000000000000000000000f03f050500000000000008400601070108010902",
-        "removeObject id=o1 | 10 | 010101026f3101000600",
-        "setAttraction index=1 attraction { id=a1 attracting=\"o1:v0\" attracted=\"o2:v0\" gap=1 shift=2 rise=3 rotation=4 turn=5 tilt=6 } | 95 | 010203026131056f313a7630056f323a763002000401010e0d090006000106010206020305000000000000f03f0405000000000000004005050000000000000840060500000000000010400705000000000000144008050000000000001840",
-        "removeAttraction id=a1 | 10 | 01030102613101000600",
-        "setTargetVolume index=2 target-volume { id=t1 origin=@0,1,2 orientation=0,0,0,1 hidden=false locked=false scale=[ 5 ] } | 94 | 01040102743102000402010e0d060006000115030000000000000000000000000000f03f0000000000000040021504000000000000000000000000000000000000000000000000000000000000f03f031501000000000000144004010501",
-        "removeTargetVolume id=t1 | 10 | 01050102743101000600",
-        "setReference index=3 reference { id=r1 origin=@0,0,0 width-world=4m locked=false hidden=false source=url=\"/u.png\" media-kind=image } | 80 | 010603062f752e706e6705696d61676502723102000403010e0d06000602010d020006000106010215030000000000000000000000000000000000000000000000000305000000000000104004010501",
-        "removeReference id=r1 | 10 | 01070102723101000600",
-        "setMeta meta { kind-compatibility [source:REF target:REF bidirectional:BOOL important:BOOL specificity:TEXT] { a b true false vortex } } | 43 | 0108030161016206766f7274657801000e0d01011401050000050001000501020001010300010004000502",
-        "setSnapshot snapshot { schema=puzzle.3d domain=architecture meta { kind-compatibility [source:REF target:REF bidirectional:BOOL important:BOOL specificity:TEXT] { } } objects [id:TEXT label:TEXT object-kind:REF origin:CRD orientation:TUPLE scale:LIST mesh-url:TEXT vortices:LIST hidden:BOOL locked:BOOL] { } attractions [id:TEXT attracting:TEXT attracted:TEXT gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM] { } target-volumes [id:TEXT origin:CRD orientation:TUPLE scale:LIST hidden:BOOL locked:BOOL] { } references [id:TEXT source:REC origin:CRD width-world:QTY locked:BOOL hidden:BOOL] { } } | 169 | 0109020c6172636869746563747572650970757a7a6c652e336401000e0d07000601010600020e0d01011400050000050100050200010300010400050314000a000005010005020005030000040000050000060005070000080001090001041400090000050100050200050300040400040500040600040700040800040514000600000501000002000003000004000105000106140006000005010000020000030004040001050001",
-    ];
-
     /// 🔒️ Same frozen capture for the headless engine-command codec.
     const PRE_MIGRATION_ENGINE_COMMAND_WIRE: &[&str] = &[
         "apply-fill-count count=7 | 7 | 01020001000407",
@@ -225,29 +201,30 @@ mod wire_format_guard {
         "brush-preview vortex-full-id=\"host:v0\" candidate-index=2 | 18 | 01050107686f73743a763002000600010402",
     ];
 
-    /// ⚖️ Design-parity intentionally moved the document-mutation wire (anchor + attraction x/y +
-    /// typed specificity). Keep self-consistent text/binary round-trips for every mutation row.
+    /// ⚖️ Every document-mutation operation prints, parses, encodes, and decodes back to an equal
+    /// value.
     #[test]
-    fn operation_rows_round_trip_after_design_parity_wire_move() {
+    fn operations_round_trip_text_and_binary() {
         let operations = ops();
-        assert_eq!(operations.len(), PRE_MIGRATION_OPERATION_WIRE.len(), "every operation variant must stay covered");
+        assert!(!operations.is_empty());
         for operation in &operations {
             semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(operation);
+            let line = operation.print_op();
+            assert_eq!(&Puzzle3dMutation::parse_op(&line).expect("parse_op"), operation);
             let bytes = encode_op(operation).expect("encode");
             assert_eq!(&decode_op(&bytes).expect("decode"), operation);
-            assert!(!operation.print_op().is_empty());
         }
-        let attraction = operations.iter().find_map(|op| match op {
-            Puzzle3dMutation::SetAttraction { attraction, .. } => Some(attraction),
+        let created = operations.iter().find_map(|op| match op {
+            Puzzle3dMutation::CreateObject(payload) => Some(payload),
             _ => None,
-        }).expect("setAttraction covered");
-        assert_eq!(attraction.x, 7.0);
-        assert_eq!(attraction.y, 8.0);
-        let object = operations.iter().find_map(|op| match op {
-            Puzzle3dMutation::SetObject { object, .. } => Some(object),
+        }).expect("create-object covered");
+        assert_eq!(created.object.anchor, puzzle_3d::Puzzle3dObjectAnchor::Fixed);
+        let connected = operations.iter().find_map(|op| match op {
+            Puzzle3dMutation::ConnectVortices(payload) => Some(payload),
             _ => None,
-        }).expect("setObject covered");
-        assert_eq!(object.anchor, puzzle_3d::Puzzle3dObjectAnchor::Fixed);
+        }).expect("connect-vortices covered");
+        assert_eq!(connected.x, 7.0);
+        assert_eq!(connected.y, 8.0);
     }
 
     /// ⚖️ Same law for the engine-command codec.

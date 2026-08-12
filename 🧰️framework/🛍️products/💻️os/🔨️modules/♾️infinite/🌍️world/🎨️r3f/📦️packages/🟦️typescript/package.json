@@ -31,6 +31,7 @@
   },
   "bundleKind": "library",
   "nx": {
-    "includedScripts": []
+    "includedScripts": [],
+    "name": "@semio-tech/infinite-world-r3f-pkg"
   }
 }

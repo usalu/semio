@@ -11,8 +11,8 @@ use crate::apps::jack::config::{JackConfig, JackConfigMutation};
 use crate::apps::jack::presence::{JackPresence, JackPresenceMutation};
 use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::{JackSnapshot, Node, PortDirection, TRINITY_GRAPH_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, App, AppActionRegistry, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass,
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, App, AppActionRegistry, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaClass,
     MediaError, MediaForm, MediaPayload, MediaType, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphViewport, PanelGroup, SurfaceKind, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -54,6 +54,16 @@ pub(crate) fn default_fixture() -> JackSnapshot {
 fn seeded_jack_config(fixture: &JackSnapshot) -> JackConfig {
     let (result_json, _) = crate::apps::jack::commands::query::run_jack_query(fixture, TRINITY_JACK_DEFAULT_QUERY);
     JackConfig { camera: fixture.camera.clone(), active_fixture_id: "nakagin".into(), jack_query: TRINITY_JACK_DEFAULT_QUERY.into(), jack_result_json: result_json, ..JackConfig::default() }
+}
+
+/// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetFixture` — see
+/// `📓️taxonomy.md`'s forbidden vocabulary), so `setActiveExample`/`setFixtureJson` build a
+/// `HostEffect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry.
+pub(crate) fn reset_document_effect(fixture: &JackSnapshot) -> HostEffect {
+    let pack = <JackSnapshot as store::ArtifactPack>::encode_pack(fixture);
+    let envelope = store::create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "jack", fixture.clone(), None);
+    let spr = store::print_document_spr(&envelope).expect("jack document spr encode is infallible for a fresh, edit-free envelope");
+    HostEffect::LoadDocument { pack, spr }
 }
 
 pub(crate) fn jack_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
@@ -284,9 +294,12 @@ impl ArtifactApp for TrinityJackPlayApp {
         Some(jack_io())
     }
 
-    fn whole_document_operation(snapshot: JackSnapshot) -> Option<TrinityGraphMutation> {
-        Some(TrinityGraphMutation::SetFixture { fixture: snapshot })
-    }
+    // 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetFixture` — see
+    // `📓️taxonomy.md`'s forbidden vocabulary), so this intentionally falls back to the trait
+    // default (`None`) rather than overriding — the `"document:in"` media port therefore reports
+    // `MediaError::NotImplemented`; a real whole-fixture load goes through `reset_document_effect`
+    // (`HostEffect::LoadDocument`, outside undo history), see `apps::jack::commands::query::set_active_example`
+    // and `apps::jack::commands::fixture::set_fixture_json`.
 
     /// 🔌️ `"graph:out"` fans the live query-graph projection out to other graph-consuming workflow
     /// nodes, in addition to the implicit `"document:out"` — both encode the same `JackSnapshot` pack.

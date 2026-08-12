@@ -276,7 +276,7 @@ fn print_semio_video_mutation_args(m: &SemioVideoMutation) -> String {
 }
 
 /// ⚡️ Real binary op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut
-/// (same treatment workflow's/mesh's own upgraded mutations facets use). `format u8`
+/// (same treatment flow's/mesh's own upgraded mutations facets use). `format u8`
 /// (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see [`OP_KEYWORDS`]) are two
 /// REAL fixed fields; the variant's own `key=value ...` argument payload follows as one opaque
 /// trailing `bytes` chain — reusing the already-real, already-tested `print_semio_video_mutation`/
@@ -308,7 +308,7 @@ impl protocol::OpBinary for SemioVideoMutation {
 //#region 🔖️Demo
 /// 🌱 Representative `SemioVideoMutation` cases (one per variant, `pub(crate)` module-scope) for
 /// the conformance-law tests — delegates to the existing test module's own `sample_mutations()`
-/// (byte-identical) rather than keep an independent copy, same dedupe workflow's/mesh's own waves
+/// (byte-identical) rather than keep an independent copy, same dedupe flow's/mesh's own waves
 /// perform.
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<SemioVideoMutation> {

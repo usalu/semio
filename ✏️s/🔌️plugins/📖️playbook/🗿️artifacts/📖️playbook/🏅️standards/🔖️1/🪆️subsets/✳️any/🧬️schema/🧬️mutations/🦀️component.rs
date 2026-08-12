@@ -1,33 +1,195 @@
-//! 🧬️ playbook artifact — kernel `PlaybookMutation` facet with plugin snapshot typing.
-pub use crate::playbook::{
-    add_block_operation, add_step_operation, apply_playbook_edit_mutation, move_block_operation,
-    move_step_operation, remove_block_operation, remove_step_operation, update_playbook_title_operation,
-    PlaybookMutation,
-};
+//! 🧬️ playbook artifact — semantic document mutation dispatch enum. Every variant is a
+//! single-field tuple wrapping a handcrafted `protocol::MutationKind` payload (see the
+//! `🧬️mutations/<slug>/` triad leaves); `#[derive(dsl::Mutations)]` generates
+//! `impl protocol::Mutation<PlaybookSnapshot>` and `impl protocol::SemanticMutation<PlaybookSnapshot>`
+//! from those payloads — no hand-written apply/diff/inverse dispatch here.
+//!
+//! Moved from the framework kernel module
+//! (`🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🦀️component.rs`) by ticket
+//! `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s playbook design decision: the dispatch enum cannot stay
+//! in the framework and wrap plugin-local payload structs (crate dependency direction — the
+//! framework cannot depend on a plugin), so it moves here, matching the other 106 mutation facets.
+//! Domain types (`PlaybookStep`/`PlaybookBlock`/`PlaybookExpr`), validation, `generation_forms`, and
+//! `builder_kit`'s rendering half stay in the framework kernel (`crate::playbook::*`) — only the
+//! mutation vocabulary moved.
 
-use crate::artifacts::playbook::schema::diff::text::playbook_diff_from_mutation;
-use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
-use protocol::{Mutation, MutationDiff};
+use crate::artifacts::playbook::{PlaybookBlock, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
+use serde::{Deserialize, Serialize};
 
-/// 🔄 Applies a kernel mutation onto a plugin snapshot.
+//#region 🔖️Mutations
+/// 🧮️ Semantic playbook document mutation vocabulary: id-keyed step/block add/remove/move, a
+/// whole-block replace, a step-header update, and the playbook's own title scalar.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+#[serde(tag = "mutation", rename_all = "camelCase")]
+#[mutations(snapshot = PlaybookSnapshot, diff = PlaybookDiff, schema = "playbook.playbook")]
+pub enum PlaybookMutation {
+    AddStep(AddStep),
+    RemoveStep(RemoveStep),
+    MoveStep(MoveStep),
+    AddBlock(AddBlock),
+    RemoveBlock(RemoveBlock),
+    MoveBlock(MoveBlock),
+    ReplaceBlock(ReplaceBlock),
+    UpdateStep(UpdateStep),
+    ChangeTitle(ChangeTitle),
+}
+//#endregion 🔖️Mutations
+
+pub use super::add_block::mutation::{add_block_operation, AddBlock};
+pub use super::add_step::mutation::{add_step_operation, AddStep};
+pub use super::change_title::mutation::{change_title_operation, ChangeTitle};
+pub use super::move_block::mutation::{move_block_operation, MoveBlock};
+pub use super::move_step::mutation::{move_step_operation, MoveStep};
+pub use super::remove_block::mutation::{remove_block_operation, RemoveBlock};
+pub use super::remove_step::mutation::{remove_step_operation, RemoveStep};
+pub use super::replace_block::mutation::{replace_block_operation, ReplaceBlock};
+pub use super::update_step::mutation::{update_step_operation, UpdateStep};
+
+/// ▶️ Applies `mutation` via its diff. External call site: `derived_construction`'s
+/// `ArtifactBuilder::mutate` (`../🦀️component.rs`).
 pub fn apply_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> PlaybookSnapshot {
-  PlaybookDiff::apply(&playbook_diff_from_mutation(mutation, snapshot), snapshot)
+    protocol::MutationDiff::apply(&protocol::Mutation::diff(mutation, snapshot), snapshot)
 }
 
+/// ↩️ Computes `mutation`'s inverse from the pre-state `snapshot`.
 pub fn inverse_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> Vec<PlaybookMutation> {
-    let kernel = snapshot.as_kernel();
-    <PlaybookMutation as Mutation<crate::playbook::PlaybookSpec>>::inverse(mutation, &kernel)
+    protocol::Mutation::inverse(mutation, snapshot)
 }
 
-impl Mutation<PlaybookSnapshot> for PlaybookMutation {
-    type Diff = crate::artifacts::playbook::PlaybookDiff;
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use protocol::{Mutation, MutationKind};
+    use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
-    fn diff(&self, base: &PlaybookSnapshot) -> Self::Diff {
-        playbook_diff_from_mutation(self, base)
+    fn sample_block(id: &str, kind: &str, label: &str) -> PlaybookBlock {
+        PlaybookBlock {
+            id: id.into(),
+            label: label.into(),
+            kind: kind.into(),
+            description: None,
+            required: None,
+            placeholder: None,
+            default: None,
+            min: None,
+            max: None,
+            step: None,
+            unit: None,
+            text: None,
+            options: None,
+            fields: None,
+            schema: None,
+            src: None,
+            accept: None,
+            fixture_slug: None,
+            params: None,
+            condition: None,
+        }
     }
 
-    fn inverse(&self, base: &PlaybookSnapshot) -> Vec<Self> {
-        inverse_playbook_mutation(base, self)
+    fn sample_snapshot() -> PlaybookSnapshot {
+        let mut snapshot = PlaybookSnapshot::default();
+        snapshot.steps.push(PlaybookStep { id: "s2".into(), title: "Review".into(), description: None, blocks: vec![sample_block("b1", "number", "Team size")] });
+        snapshot
     }
+
+    //#region 🔖️MutationLaws
+    #[test]
+    fn add_step_inverse_law() {
+        let base = sample_snapshot();
+        let step = PlaybookStep { id: "s3".into(), title: "New".into(), description: None, blocks: Vec::new() };
+        assert_mutation_inverse_law(&base, &PlaybookMutation::AddStep(AddStep { step, index: None }));
+    }
+
+    #[test]
+    fn remove_step_inverse_law() {
+        let base = sample_snapshot();
+        assert_mutation_inverse_law(&base, &PlaybookMutation::RemoveStep(RemoveStep { step_id: "s2".into() }));
+    }
+
+    #[test]
+    fn move_step_inverse_law() {
+        let base = sample_snapshot();
+        assert_mutation_inverse_law(&base, &PlaybookMutation::MoveStep(MoveStep { step_id: "s2".into(), index: 0 }));
+    }
+
+    #[test]
+    fn add_block_inverse_law() {
+        let base = sample_snapshot();
+        let block = sample_block("b2", "text", "New");
+        assert_mutation_inverse_law(&base, &PlaybookMutation::AddBlock(AddBlock { step_id: "s2".into(), block, index: None }));
+    }
+
+    #[test]
+    fn remove_block_inverse_law() {
+        let base = sample_snapshot();
+        assert_mutation_inverse_law(&base, &PlaybookMutation::RemoveBlock(RemoveBlock { step_id: "s2".into(), block_id: "b1".into() }));
+    }
+
+    #[test]
+    fn move_block_same_step_inverse_law() {
+        let mut base = sample_snapshot();
+        base.steps[1].blocks.push(sample_block("b2", "text", "Other"));
+        assert_mutation_inverse_law(&base, &PlaybookMutation::MoveBlock(MoveBlock { block_id: "b1".into(), from_step_id: "s2".into(), to_step_id: "s2".into(), index: 1 }));
+    }
+
+    #[test]
+    fn move_block_cross_step_inverse_law() {
+        let base = sample_snapshot();
+        assert_mutation_inverse_law(&base, &PlaybookMutation::MoveBlock(MoveBlock { block_id: "b1".into(), from_step_id: "s2".into(), to_step_id: "s".into(), index: 0 }));
+    }
+
+    #[test]
+    fn replace_block_inverse_law() {
+        let base = sample_snapshot();
+        let mut block = sample_block("b1", "number", "Team size (people)");
+        block.required = Some(true);
+        block.min = Some(1.0);
+        block.max = Some(80.0);
+        block.unit = Some("people".into());
+        assert_mutation_inverse_law(&base, &PlaybookMutation::ReplaceBlock(ReplaceBlock { step_id: "s2".into(), block }));
+    }
+
+    #[test]
+    fn update_step_inverse_law() {
+        let base = sample_snapshot();
+        assert_mutation_inverse_law(&base, &PlaybookMutation::UpdateStep(UpdateStep { step_id: "s2".into(), title: "Review carefully".into(), description: Some("d".into()) }));
+    }
+
+    #[test]
+    fn change_title_inverse_law() {
+        let base = sample_snapshot();
+        assert_mutation_inverse_law(&base, &PlaybookMutation::ChangeTitle(ChangeTitle { new_title: Some("Recipe".into()) }));
+    }
+
+    #[test]
+    fn move_step_diff_absorb_law() {
+        let base = sample_snapshot();
+        let d1 = MoveStep { step_id: "s2".into(), index: 0 }.diff(&base);
+        let mid = protocol::MutationDiff::apply(&d1, &base);
+        let d2 = MoveStep { step_id: "s".into(), index: 0 }.diff(&mid);
+        assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+
+    #[test]
+    fn move_block_cross_step_diff_never_falls_back_to_a_whole_artifact_replacement() {
+        let base = sample_snapshot();
+        let diff = MoveBlock { block_id: "b1".into(), from_step_id: "s2".into(), to_step_id: "s".into(), index: 0 }.diff(&base);
+        assert!(diff.artifact.is_none(), "cross-step MoveBlock diff must be a real per-field replacement, not the old whole-artifact fallback");
+        let after = protocol::MutationDiff::apply(&diff, &base);
+        assert!(after.steps[0].blocks.iter().any(|block| block.id == "b1"));
+        assert!(!after.steps[1].blocks.iter().any(|block| block.id == "b1"));
+    }
+
+    #[test]
+    fn dispatch_registers_semantic_descriptors() {
+        register_playbook_mutation_descriptors();
+        for kind in PlaybookMutation::kinds() {
+            assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
+        }
+        assert_eq!(PlaybookMutation::kinds().len(), 9);
+    }
+    //#endregion 🔖️MutationLaws
 }
-
+//#endregion 🧪️Tests

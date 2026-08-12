@@ -68,8 +68,8 @@ mod tests {
     /// `WiresMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this
     /// file's existing pack round-trip law (same pattern as `dag`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`). Uses `create-node`
-    /// deliberately, not a whole-document replace — `SetSnapshot` is banned vocabulary and no
-    /// longer exists on `WiresMutation` (see `📓️taxonomy.md`).
+    /// deliberately, not a whole-document replace — a whole-snapshot variant is banned vocabulary
+    /// and no longer exists on `WiresMutation` (see `📓️taxonomy.md`).
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};

@@ -1,5 +1,222 @@
 {
-  "$id": "https://semio.tech/schema/stdio.json/mutations/text.json",
-  "title": "JsonMutationsText",
-  "type": "object"
+  "$id": "https://semio.tech/schema/gis.gismap/mutations/text.json",
+  "title": "GismapMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "title": "CreatePosition",
+      "properties": {
+        "kind": {
+          "const": "create-position"
+        },
+        "index": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "index"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "DeletePosition",
+      "properties": {
+        "kind": {
+          "const": "delete-position"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ReplacePositionData",
+      "properties": {
+        "kind": {
+          "const": "replace-position-data"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newData": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "newData"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ReorderPositions",
+      "properties": {
+        "kind": {
+          "const": "reorder-positions"
+        },
+        "id": {
+          "type": "string"
+        },
+        "toIndex": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "toIndex"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "CreateRoute",
+      "properties": {
+        "kind": {
+          "const": "create-route"
+        },
+        "index": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "index"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "DeleteRoute",
+      "properties": {
+        "kind": {
+          "const": "delete-route"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ReplaceRouteData",
+      "properties": {
+        "kind": {
+          "const": "replace-route-data"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newData": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "newData"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ReorderRoutes",
+      "properties": {
+        "kind": {
+          "const": "reorder-routes"
+        },
+        "id": {
+          "type": "string"
+        },
+        "toIndex": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "toIndex"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "CreateRegion",
+      "properties": {
+        "kind": {
+          "const": "create-region"
+        },
+        "index": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "index"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "DeleteRegion",
+      "properties": {
+        "kind": {
+          "const": "delete-region"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ReplaceRegionData",
+      "properties": {
+        "kind": {
+          "const": "replace-region-data"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newData": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "newData"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ReorderRegions",
+      "properties": {
+        "kind": {
+          "const": "reorder-regions"
+        },
+        "id": {
+          "type": "string"
+        },
+        "toIndex": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "toIndex"
+      ]
+    }
+  ]
 }

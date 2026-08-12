@@ -1,8 +1,10 @@
-//! ➕add-step `PlaybookMutation` inverse leaf.
-use crate::artifacts::playbook::PlaybookSnapshot;
+//! ↩️ Inverse for `AddStep` — always a `remove-step` of the id it created (the payload carries the
+//! id, so no BASE lookup is needed to know what to undo).
 use crate::artifacts::playbook::mutations::PlaybookMutation;
-use protocol::Mutation;
+use crate::artifacts::playbook::PlaybookSnapshot;
 
-pub fn inverse(base: &PlaybookSnapshot, mutation: &PlaybookMutation) -> Vec<PlaybookMutation> {
-    <PlaybookMutation as Mutation<PlaybookSnapshot>>::inverse(mutation, base)
+//#region 🔖️Inverse
+pub fn inverse(payload: &super::mutation::AddStep, _base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
+    vec![crate::artifacts::playbook::mutations::remove_step::mutation::remove_step_operation(&payload.step.id)]
 }
+//#endregion 🔖️Inverse

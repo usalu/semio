@@ -2,6 +2,7 @@
 //! `patchNodes`, `reorganize`) — dispatched as VCS operations with a true inverse.
 
 use crate::apps::jack::config::JackConfigMutation;
+use crate::artifacts::jack::mutations::{delete_node, move_node, rename_node};
 use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::JackSnapshot;
 use semio_framework_plugin::{Emit, Fault};
@@ -43,7 +44,7 @@ fn reposition_operations(before: &JackSnapshot, after: &JackSnapshot) -> Vec<Tri
         .filter_map(|node| {
             let prev = before.nodes.iter().find(|entry| entry.id == node.id)?;
             if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
-                Some(TrinityGraphMutation::Reposition { id: node.id.clone(), x: node.x, y: node.y })
+                Some(move_node(node.id.clone(), node.x, node.y))
             } else {
                 None
             }
@@ -53,13 +54,13 @@ fn reposition_operations(before: &JackSnapshot, after: &JackSnapshot) -> Vec<Tri
 
 pub(crate) fn set_fixture_json(json: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
     match JackSnapshot::from_json(json) {
-        Ok(next) => Ok(Emit::mutations(vec![TrinityGraphMutation::SetFixture { fixture: next }])),
+        Ok(next) => Ok(Emit { effects: vec![crate::apps::jack::reset_document_effect(&next)], ..Default::default() }),
         Err(_) => Ok(Emit::default()),
     }
 }
 
 pub(crate) fn delete_selection(fixture: &JackSnapshot, selected_node_ids: &[String]) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
-    let deletes: Vec<TrinityGraphMutation> = selected_node_ids.iter().filter(|id| fixture.nodes.iter().any(|node| &node.id == *id)).map(|id| TrinityGraphMutation::DeleteNode { id: id.clone() }).collect();
+    let deletes: Vec<TrinityGraphMutation> = selected_node_ids.iter().filter(|id| fixture.nodes.iter().any(|node| &node.id == *id)).map(|id| delete_node(id.clone())).collect();
     if deletes.is_empty() {
         Ok(Emit::default())
     } else {
@@ -69,7 +70,7 @@ pub(crate) fn delete_selection(fixture: &JackSnapshot, selected_node_ids: &[Stri
 
 pub(crate) fn patch_nodes(fixture: &JackSnapshot, node_ids: &[String], field: &str, value: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
     if field == "name" && !node_ids.is_empty() && !value.trim().is_empty() {
-        let operations: Vec<TrinityGraphMutation> = node_ids.iter().filter(|id| fixture.nodes.iter().any(|node| &node.id == *id)).map(|id| TrinityGraphMutation::Rename { id: id.clone(), name: value.trim().into() }).collect();
+        let operations: Vec<TrinityGraphMutation> = node_ids.iter().filter(|id| fixture.nodes.iter().any(|node| &node.id == *id)).map(|id| rename_node(id.clone(), value.trim().into())).collect();
         Ok(Emit::mutations(operations))
     } else {
         Ok(Emit::default())

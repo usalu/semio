@@ -1,0 +1,258 @@
+=== HostEffect::OpenWindow ===
+
+=== HostEffect::CloseWindow ===
+
+=== HostEffect::Notify ===
+✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎮️commands/📥️ingest/🦀️component.rs:246:            Err(error) => return Ok(Emit::effect(HostEffect::Notify { message: format!("Could not probe video: {error}") })),
+✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎮️commands/📥️ingest/🦀️component.rs:254:            Err(error) => return Ok(Emit::effect(HostEffect::Notify { message: format!("Unsupported video codec ({codec:?}): {error} - probed {container} {width}x{height}") })),
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🦀️component.rs:62:    crate::apps::space::engine::negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id).map_err(|reason| HostEffect::Notify { message: reason })
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/🔗️connections/🦀️component.rs:105:        assert!(matches!(emit.effects.first(), Some(semio_framework_plugin::HostEffect::Notify { .. })), "an incompatible connect must surface a Notify effect instead");
+
+=== HostEffect::ClipboardWrite ===
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🦀️component.rs:2223:        let HostEffect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🦀️component.rs:2261:        let HostEffect::ClipboardWrite { fragment } = &copy_result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
+
+=== HostEffect::RequestSync ===
+
+=== HostEffect::Navigate ===
+✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:39:        Emit { artifact_mutations: vec![change_catalog_generation(catalog_generation + 1)], effects: vec![HostEffect::Navigate { uri: format!("/spaces/{space_id}") }], ..Default::default() }
+✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:158:        Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{}", payload.space_id) }))
+✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:199:        assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
+✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:209:                HostEffect::Navigate { uri } => Some(uri.as_str()),
+✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎮️commands/🗂️vfs/🦀️component.rs:25:        Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") }))
+✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎮️commands/🗂️vfs/🦀️component.rs:67:        Ok(Emit::effect(HostEffect::Navigate { uri: "/".into() }))
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/🧭️navigation/🦀️component.rs:35:        Ok(Emit::effect(HostEffect::Navigate { uri: "/".into() }))
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/🧭️navigation/🦀️component.rs:52:        Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{}", payload.space_id) }))
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:23:            Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{}", payload.example_id) }))
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:223:        assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:273:                HostEffect::Navigate { uri } => Some(uri.trim_start_matches("/spaces/").to_string()),
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:302:                HostEffect::Navigate { uri } => Some(uri.as_str()),
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:323:        assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
+
+=== HostEffect::LoadDocument ===
+✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🦀️component.rs:61:/// `HostEffect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry.
+✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🦀️component.rs:66:    HostEffect::LoadDocument { pack, spr }
+✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🦀️component.rs:301:    // (`HostEffect::LoadDocument`, outside undo history), see `apps::jack::commands::query::set_active_example`
+✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:7://! preset/import routes through `HostEffect::LoadDocument` (see `apps::jack::reset_document_effect`),
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🦀️component.rs:71:/// 🔁️ Builds a `HostEffect::LoadDocument` for `document` — the sanctioned non-history "replace the
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🦀️component.rs:80:    HostEffect::LoadDocument { pack, spr }
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🦀️component.rs:208:    /// instead, a `HostEffect::LoadDocument`).
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🦀️component.rs:211:    /// `HostEffect::LoadDocument` (whole-document replace has no in-history mutation); the inherited
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🦀️component.rs:723:    /// `HostEffect::LoadDocument` rather than an `artifact_mutations` entry — `dispatch`'s in-process
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🦀️component.rs:730:        let HostEffect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setStock must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🦀️component.rs:782:    /// 🧹️ `SetStock` now replaces the whole document via a `HostEffect::LoadDocument` (see
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/🪵️stock/🦀️component.rs:22:    /// `apps::process3d::reset_process3d_document_effect` (a `HostEffect::LoadDocument`) instead.
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/📤️media/🦀️component.rs:65:    /// through `apps::process3d::reset_process3d_document_effect` (a `HostEffect::LoadDocument`).
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/📄️artifact/🦀️component.rs:15:    /// `apps::process3d::reset_process3d_document_effect` (a `HostEffect::LoadDocument`, outside undo
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/📄️artifact/🦀️component.rs:39:    /// `apps::process3d::reset_process3d_document_effect` (a `HostEffect::LoadDocument`) rather than
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🦀️component.rs:594:/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE history —
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🦀️component.rs:604:    HostEffect::LoadDocument { pack, spr }
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🦀️component.rs:2408:        // `HostEffect::LoadDocument` carrying the replacement document's pack bytes.
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🦀️component.rs:2409:        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("importCadFile must emit a LoadDocument effect for a spatial JSON string payload") else {
+✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🦀️component.rs:46:/// 🔁️ Builds a `HostEffect::LoadDocument` for `document` — the sanctioned non-history "replace the
+✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🦀️component.rs:54:    HostEffect::LoadDocument { pack, spr }
+✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎮️commands/🧬️example/🦀️component.rs:26:    /// `apps::wires::reset_wires_document_effect` (a `HostEffect::LoadDocument`, outside undo history)
+✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎮️commands/🧬️example/🦀️component.rs:48:    /// outright), so `setActiveExample` now surfaces as a `HostEffect::LoadDocument` carrying the
+✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎮️commands/🧬️example/🦀️component.rs:58:        let HostEffect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎮️commands/🧬️example/🦀️component.rs:70:        let HostEffect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs:83:/// 🔁️ Builds a `HostEffect::LoadDocument` for `document` — the sanctioned non-history "reset the
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs:91:    HostEffect::LoadDocument { pack, spr }
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs:169:    /// decision — see `🎮️commands/🖼️source::set_active_example`'s `HostEffect::LoadDocument` instead).
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/🖼️source/🦀️component.rs:66:    /// `apps::present::reset_present_document_effect` (a `HostEffect::LoadDocument`, outside undo
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/🖼️source/🦀️component.rs:126:    /// `setActiveExample` now surfaces as a `HostEffect::LoadDocument` carrying the default document's
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/🖼️source/🦀️component.rs:141:        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/🌐️grid/🦀️component.rs:82:    /// `setActiveExample` now surfaces as a `HostEffect::LoadDocument` carrying the default document's
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/🌐️grid/🦀️component.rs:102:        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🦀️component.rs:167:/// @emoji 📦️ Pack+spr bytes for `HostEffect::LoadDocument` / host `loadAppArtifactPack`.
+✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🦀️component.rs:244:/// `HostEffect::LoadDocument` / host `loadAppArtifactPack`, sized to what `apps::space`'s
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:180:                Ok(Emit { config_mutations, effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() })
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:222:        assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })));
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:239:                HostEffect::LoadDocument { pack, spr } => Some((pack.as_slice(), spr.as_slice())),
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:322:        assert!(open.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })), "openSpace must load the created studio");
+✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🦀️component.rs:126:    /// `HostEffect::LoadDocument` via `reset_document_effect`, outside undo history.
+✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🦀️component.rs:167:/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `document` OUTSIDE undo
+✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🦀️component.rs:179:    semio_framework::kernel::HostEffect::LoadDocument { pack, spr }
+✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎮️commands/📄️artifact/🦀️component.rs:7://! `crate::apps::curate::reset_document_effect` (a `HostEffect::LoadDocument`, outside undo history)
+✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎮️commands/📄️artifact/🦀️component.rs:98:    /// 🧬️ Decodes the `HostEffect::LoadDocument` an `Emit` carries — every command in this file
+✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎮️commands/📄️artifact/🦀️component.rs:101:        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("expected a LoadDocument effect") else {
+✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎮️commands/📄️artifact/🦀️component.rs:108:    /// variant is banned outright — see `📓️taxonomy.md`'s forbidden vocabulary), so this now surfaces as a `HostEffect::LoadDocument`
+✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎮️commands/📄️artifact/🦀️component.rs:118:        let HostEffect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🦀️component.rs:49:/// `HostEffect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry.
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🦀️component.rs:54:    semio_framework::kernel::HostEffect::LoadDocument { pack, spr }
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗃️fixture/🦀️component.rs:67:    /// itself, mirroring `fem2d`'s `set_active_example` test of the same `HostEffect::LoadDocument`
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗃️fixture/🦀️component.rs:81:        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setFixtureJson must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗃️fixture/🦀️component.rs:96:        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗃️fixture/🦀️component.rs:103:        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:23:/// `HostEffect::LoadDocument` outside undo history.
+✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🦀️component.rs:44:/// `HostEffect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry —
+✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🦀️component.rs:50:    semio_framework_plugin::HostEffect::LoadDocument { pack, spr }
+✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🦀️component.rs:612:        assert!(matches!(emit.effects.first(), Some(semio_framework_plugin::HostEffect::LoadDocument { .. })), "importRegistersCsv must emit a LoadDocument effect");
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🦀️component.rs:262:/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🦀️component.rs:274:    semio_framework_plugin::HostEffect::LoadDocument { pack, spr }
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🗃️fixture/🦀️component.rs:109:    /// 🧬️ `reset_snapshot::handle` emits a `HostEffect::LoadDocument` (outside undo history), not an
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🗃️fixture/🦀️component.rs:125:        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("resetSnapshot must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🦀️component.rs:183:    /// `HostEffect::LoadDocument`, the sanctioned non-history whole-doc-replace path — see
+✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🦀️component.rs:248:/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
+✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🦀️component.rs:259:    semio_framework::kernel::HostEffect::LoadDocument { pack, spr }
+✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/📚️example/🦀️component.rs:27:    /// (a `HostEffect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
+✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/📚️example/🦀️component.rs:51:    /// see `📓️taxonomy.md`'s forbidden vocabulary), so this now surfaces as a `HostEffect::LoadDocument`
+✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/📚️example/🦀️component.rs:63:        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/📚️example/🦀️component.rs:70:    /// 🧬️ `setActiveExample` replaces document content via a `HostEffect::LoadDocument`, so it MUST be
+✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/📚️example/🦀️component.rs:88:        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🦀️component.rs:200:    /// `HostEffect::LoadDocument`, the sanctioned non-history whole-doc-replace path — see
+✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🦀️component.rs:264:/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
+✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🦀️component.rs:275:    semio_framework::kernel::HostEffect::LoadDocument { pack, spr }
+✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🦀️component.rs:607:    /// `HostEffect::LoadDocument` carrying the replacement document's pack bytes, not an
+✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🦀️component.rs:623:        let semio_framework::kernel::HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("document:in must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/📚️example/🦀️component.rs:26:    /// (a `HostEffect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
+✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/📚️example/🦀️component.rs:56:        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/📚️example/🦀️component.rs:71:        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/📚️example/🦀️component.rs:78:    /// 🧬️ `setActiveExample` replaces document content via a `HostEffect::LoadDocument`, so it MUST be
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:26:/// `HostEffect::LoadDocument`, see `Fem3dPlayApp::whole_document_operation` returning `None` now and
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:25:/// replace is not an in-history mutation at all (routed through `HostEffect::LoadDocument`, see
+✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🦀️component.rs:155:    // `set_active_example` commands, which now emit `HostEffect::LoadDocument` (the sanctioned
+✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️artifact/🦀️component.rs:18:/// an `ArtifactApp::handle` this reaches via `HostEffect::LoadDocument` (pack+spr bytes) — the same
+✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️artifact/🦀️component.rs:32:        Ok(files) => Emit { effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() },
+✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🦀️component.rs:279:    /// `reset_document_effect` (a `HostEffect::LoadDocument`, outside undo history) instead.
+✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🦀️component.rs:384:/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
+✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🦀️component.rs:396:    semio_framework_plugin::HostEffect::LoadDocument { pack, spr }
+✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🦀️component.rs:721:    /// `HostEffect::LoadDocument`, outside undo history) — `SetSnapshot` has no replacement
+✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🦀️component.rs:734:        let semio_framework_plugin::HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("mesh:in must emit a LoadDocument effect") else {
+✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/📄️fixture/🦀️component.rs:3://! via `reset_document_effect` (a `HostEffect::LoadDocument`) — per `📓️taxonomy.md`, whole-document
+✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/📄️fixture/🦀️component.rs:61:    /// 🧬️ `importSnapshotJson`/`setFixtureJson` emit a `HostEffect::LoadDocument` (outside undo
+✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/📄️fixture/🦀️component.rs:76:        let semio_framework_plugin::HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("importSnapshotJson must emit a LoadDocument effect") else {
+
+=== HostEffect::OpenExternalUrl ===
+✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎮️commands/🌐️shell/🦀️component.rs:25:            Some(url) => Ok(Emit::effect(HostEffect::OpenExternalUrl { url })),
+✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎮️commands/🌐️shell/🦀️component.rs:44:        assert!(!result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::OpenExternalUrl { .. })));
+
+=== HostEffect::SetPanel ===
+
+=== HostEffect::DownloadMediaExport ===
+✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎮️commands/🐚️shell/🦀️component.rs:69:            Some(qc) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "remodel-qc-report.ops".into(), mime_type: "text/plain".into(), data: serde_json::to_string_pretty(qc).unwrap_or_default(), encoding: None })),
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/📤️media/🦀️component.rs:23:            Some(export) => Ok(Emit::effect(HostEffect::DownloadMediaExport {
+✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:559:/// 📤️ A pending native-geometry export ready to become a `HostEffect::DownloadMediaExport`.
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🦀️component.rs:453:    HostEffect::DownloadMediaExport { filename: export.filename, mime_type: export.mime_type, data, encoding: export.encoding }
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🦀️component.rs:458:    HostEffect::DownloadMediaExport { filename: filename.into(), mime_type: "text/plain".into(), data: serde_json::to_string(value).unwrap_or_default(), encoding: None }
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🦀️component.rs:2214:            HostEffect::DownloadMediaExport { filename, data, .. } => {
+✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:383:/// @emoji 📤️ A native-geometry export ready to be wrapped into a `HostEffect::DownloadMediaExport`.
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/🐚️shell/🦀️component.rs:45:            Ok(bundles) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "animate-video-export.ops".into(), mime_type: "text/plain".into(), data: serde_json::to_string_pretty(&bundles).unwrap_or_else(|_| "[]".into()), encoding: None })),
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/🐚️shell/🦀️component.rs:46:            Err(error) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "animate-video-export-error.txt".into(), mime_type: "text/plain".into(), data: error.to_string(), encoding: None })),
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/🐚️shell/🦀️component.rs:66:        assert!(matches!(result.requested_effects.as_slice(), [HostEffect::DownloadMediaExport { mime_type, .. }] if mime_type == "text/markdown"), "copyPrompt emits exactly one media-export host effect carrying the morph prompt");
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/🐚️shell/🦀️component.rs:74:            [HostEffect::DownloadMediaExport { filename, mime_type, data, .. }] => {
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs:80:    HostEffect::DownloadMediaExport { filename: "tile-morph-prompt.md".into(), mime_type: "text/markdown".into(), data: build_tile_morph_prompt(&deck.source, &deck.tiles), encoding: None }
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/⌨️engagement/🦀️component.rs:101:        assert!(matches!(copy_result.requested_effects.as_slice(), [HostEffect::DownloadMediaExport { .. }]));
+✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:200:        assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })), "ephemeral create must not download");
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:46:                            HostEffect::DownloadMediaExport { filename: format!("{space_id}.pack"), mime_type: "application/octet-stream".into(), data: base64::engine::general_purpose::STANDARD.encode(&pack_files.pack), encoding: Some("base64".into()) },
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:47:                            HostEffect::DownloadMediaExport { filename: format!("{space_id}.ops"), mime_type: "text/plain".into(), data: pack_files.ops, encoding: None },
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:73:                Ok(text_files) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{space_id}.os"), mime_type: "text/plain".into(), data: text_files.dsl, encoding: None })),
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:297:        assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })), "create must not download a file");
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:324:        assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })));
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/🖼️media/🦀️component.rs:31:                    Ok(result) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: result.file_name, mime_type: result.mime_type, data: result.data, encoding: result.encoding })),
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/🖼️media/🦀️component.rs:137:                HostEffect::DownloadMediaExport { data, encoding, .. } => Some((data.clone(), encoding.clone())),
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🐚️export/🦀️component.rs:19:        Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "🗒️semio.note.dsl".into(), mime_type: "text/plain".into(), data, encoding: None }))
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🐚️export/🦀️component.rs:50:        assert!(matches!(save.requested_effects.first(), Some(HostEffect::DownloadMediaExport { filename, .. }) if filename == "🗒️semio.note.dsl"), "saveDownload must request a media export: {:?}", save.requested_effects);
+✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📤️export/🦀️component.rs:23:        Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{}.forms.dsl", spec.id), mime_type: "text/plain".into(), data, encoding: None }))
+✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎮️commands/📤️exchange/🦀️component.rs:19:        Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{}.registers.csv", program.meta.document_id), mime_type: "text/csv".into(), data: csv, encoding: None }))
+✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎮️commands/📤️exchange/🦀️component.rs:66:        Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{}.architect.dsl", program.meta.document_id), mime_type: "text/plain".into(), data: dsl_text, encoding: None }))
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🦀️component.rs:653:            HostEffect::DownloadMediaExport { filename, data, .. } => {
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🗃️fixture/🦀️component.rs:81:            Ok(fixture_text) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "shooting.shooting.ops".into(), mime_type: "text/plain".into(), data: fixture_text, encoding: None })),
+✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎮️commands/🐚️export/🦀️component.rs:29:            Ok(bytes) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.png"), mime_type: "image/png".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) })),
+✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎮️commands/🐚️export/🦀️component.rs:49:            Ok(svg) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.svg"), mime_type: "image/svg+xml".into(), data: svg, encoding: None })),
+✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎮️commands/🐚️export/🦀️component.rs:69:            Ok(bytes) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.pdf"), mime_type: "application/pdf".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) })),
+✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎮️commands/🐚️export/🦀️component.rs:89:            Ok(bytes) => Ok(Emit::effect(HostEffect::DownloadMediaExport {
+✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎮️commands/🐚️export/🦀️component.rs:150:                Some(HostEffect::DownloadMediaExport { mime_type: mime, data, .. }) => {
+✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎮️commands/🐚️export/🦀️component.rs:163:        assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
+✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎮️commands/🐚️export/🦀️component.rs:172:        assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
+✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎮️commands/🐚️export/🦀️component.rs:182:        assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
+
+=== HostEffect::IconRenderExport ===
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🖨️export/🦀️component.rs:40:                return Ok(Emit::effect(HostEffect::IconRenderExport { items }));
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🖨️export/🦀️component.rs:61:            HostEffect::IconRenderExport { items } => {
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🖨️export/🦀️component.rs:74:            HostEffect::IconRenderExport { items } => assert_eq!(items.len(), 2),
+
+=== HostEffect::RequestFileOpen ===
+✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎮️commands/🐚️shell/🦀️component.rs:26:        Ok(Emit::effect(HostEffect::RequestFileOpen { accept: REMODEL_MEDIA_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true }))
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/📤️media/🦀️component.rs:47:        Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false }))
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🦀️component.rs:2227:            HostEffect::RequestFileOpen { import_action, read_as, .. } => {
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🎮️commands/📥️io/🦀️component.rs:124:        Ok(Emit::effect(HostEffect::RequestFileOpen {
+✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:139:            None => Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".os".into(), read_as: None, import_action: "importSpace".into(), multiple: false })),
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/🖼️media/🦀️component.rs:59:            effects: vec![HostEffect::RequestFileOpen { accept, read_as: Some("dataUrl".into()), import_action: "importMediaPayload".into(), multiple: false }],
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/🖼️media/🦀️component.rs:145:        assert!(import.effects.iter().any(|effect| matches!(effect, HostEffect::RequestFileOpen { import_action, accept, .. } if import_action == "importMediaPayload" && accept.contains(".dwg"))));
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:92:        Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".pack".into(), read_as: Some("dataUrl".into()), import_action: "importSpacePackPayload".into(), multiple: false }))
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🐚️export/🦀️component.rs:33:        Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".dsl,.note.dsl,.spk,.ops,application/octet-stream,text/plain".into(), read_as: None, import_action: "setFixtureJson".into(), multiple: false }))
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🐚️export/🦀️component.rs:53:        assert!(matches!(load.requested_effects.first(), Some(HostEffect::RequestFileOpen { import_action, .. }) if import_action == "setFixtureJson"), "loadRequest must request a file open: {:?}", load.requested_effects);
+✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎮️commands/📤️exchange/🦀️component.rs:82:        Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".dsl,.architect.dsl,.spk,.ops,application/octet-stream,text/plain".into(), read_as: None, import_action: "importProgram".into(), multiple: false }))
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🦀️component.rs:648:            HostEffect::RequestFileOpen { import_action, .. } => assert_eq!(import_action, "importSnapshotJson"),
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/📦️asset/🦀️component.rs:125:        Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false }))
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/📦️asset/🦀️component.rs:163:            HostEffect::RequestFileOpen { read_as, import_action, .. } => {
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🗃️fixture/🦀️component.rs:97:        Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".ops,.dsl,.spk,application/octet-stream,text/plain".into(), read_as: None, import_action: "importSnapshotJson".into(), multiple: false }))
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🗃️fixture/🦀️component.rs:138:            HostEffect::RequestFileOpen { import_action, .. } => assert_eq!(import_action, "importSnapshotJson"),
+
+=== HostEffect::RequestMediaFrames ===
+✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎮️commands/🐚️shell/🦀️component.rs:43:        Ok(Emit::effect(HostEffect::RequestMediaFrames {
+
+=== HostEffect::SpawnPluginInstance ===
+
+=== HostEffect::OpenPluginInstance ===
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/🔍️instance-nav/🦀️component.rs:27:                    effects: vec![HostEffect::OpenPluginInstance { plugin_id: node.plugin_id.clone(), app_id: node.app_id.clone(), os_instance_id: Some(node.id.clone()) }],
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎮️commands/🔍️instance-nav/🦀️component.rs:79:                HostEffect::OpenPluginInstance { plugin_id, app_id, os_instance_id } => Some((plugin_id.clone(), app_id.clone(), os_instance_id.clone())),
+
+=== HostEffect::SetActiveUtility ===
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🦀️component.rs:62:    HostEffect::SetActiveUtility { window_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), utility_id: utility.into() }
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🦀️component.rs:765:            result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::SetActiveUtility { utility_id, .. } if utility_id == "select")),
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:2127:            effects.push(HostEffect::SetActiveUtility { window_id: wid, utility_id: next_active_utility });
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:3301:            result.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })),
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:3335:        assert!(result.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })), "accept must not switch utility/tool: {:?}", result.requested_effects);
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:3391:            result.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })),
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:3443:        assert!(open.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })), "opening suggestions must not emit utility/tool switches: {:?}", open.requested_effects);
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:3450:        assert!(accept.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })), "accepting suggestions must not emit utility/tool switches: {:?}", accept.requested_effects);
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🦀️component.rs:1503:            PUZZLE5D_PLAY_WINDOWS.iter().map(|window| HostEffect::SetActiveUtility { window_id: (*window).into(), utility_id: next_active_utility.clone() }).collect()
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🦀️component.rs:2500:                HostEffect::SetActiveUtility { window_id, utility_id } if utility_id == "brush" => Some(window_id.as_str()),
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🤝️engagement/🦀️component.rs:28:            // for the pane via `HostEffect::SetActiveUtility`.
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🤝️engagement/🦀️component.rs:30:            ctx.effects.push(HostEffect::SetActiveUtility { window_id: pane.clone(), utility_id: value.clone() });
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🤝️engagement/🦀️component.rs:68:        ctx.effects.push(HostEffect::SetActiveUtility { window_id: pane.to_string(), utility_id: select::UTILITY_ID.into() });
+✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🦀️component.rs:532:                [HostEffect::SetActiveUtility { window_id, utility_id }] if window_id == DRAW_PLAY_WINDOW_CANVAS && utility_id == "selectDirect"
+✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🦀️component.rs:548:        assert!(matches!(result.requested_effects.as_slice(), [HostEffect::SetActiveUtility { utility_id, .. }] if utility_id == "selectDirect"));
+✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas/🦀️component.rs:359:    emit.effects.push(semio_framework_plugin::kernel::HostEffect::SetActiveUtility { window_id: crate::apps::draw::DRAW_PLAY_WINDOW_CANVAS.into(), utility_id: crate::apps::draw::DRAW_DEFAULT_UTILITY.into() });
+
+=== HostEffect::SetActiveTool ===
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:2124:            effects.push(HostEffect::SetActiveTool { tool_id: if next_is_fill_tool { fill_tool::TOOL_ID.into() } else { String::new() } });
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:3301:            result.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })),
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:3335:        assert!(result.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })), "accept must not switch utility/tool: {:?}", result.requested_effects);
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:3391:            result.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })),
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:3443:        assert!(open.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })), "opening suggestions must not emit utility/tool switches: {:?}", open.requested_effects);
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:3450:        assert!(accept.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })), "accepting suggestions must not emit utility/tool switches: {:?}", accept.requested_effects);
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🤝️engagement/🦀️component.rs:35:            // `HostEffect::SetActiveTool`, leaving this window's active utility untouched.
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🤝️engagement/🦀️component.rs:36:            ctx.effects.push(HostEffect::SetActiveTool { tool_id: fill::TOOL_ID.into() });
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️brush/🦀️component.rs:165:    ctx.effects.push(HostEffect::SetActiveTool { tool_id: fill::TOOL_ID.into() });
+
+=== HostEffect::OpenDialog ===
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:2048:            return Emit::effect(HostEffect::OpenDialog { dialog_id: "addObject".into(), args: None });
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:2932:            matches!(result.requested_effects.as_slice(), [HostEffect::OpenDialog { dialog_id, args }] if dialog_id == "addObject" && args.is_none()),
+
+=== HostEffect::DispatchAction ===
+✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧮️eval/🦀️component.rs:4://! `HostEffect::DispatchAction` until the fixture's dirty set is empty; `flowEvalResolve` feeds a
+✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:161:    HostEffect::DispatchAction { action: FLOW_EVAL_TICK_ACTION.into(), args: None, delay_ms: 0 }
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🦀️component.rs:309:                vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🦀️component.rs:497:            if !result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == "flowEvalTick")) {
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🦀️component.rs:685:        assert!(effects.iter().any(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == "flowEvalTick")));
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧮️eval/🦀️component.rs:22:        let mut effects = if more { vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧮️eval/🦀️component.rs:60:        Ok(Emit { effects: vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }], ..Default::default() })
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🦀️component.rs:190:                vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧮️eval/🦀️component.rs:39:        let mut effects = if more { vec![semio_framework::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:3694:            !tick.requested_effects.iter().any(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == "setFillCount")),
+
+=== HostEffect::ReplayShellCommand ===
+
+=== HostEffect::PatchWorld3dChrome ===
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:1621:    HostEffect::PatchWorld3dChrome {
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:4085:        assert!(result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::PatchWorld3dChrome { .. })));
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:4094:        assert!(result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::PatchWorld3dChrome { .. })));
+
+=== HostEffect::InvokeExtension ===
+✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧮️eval/🦀️component.rs:59:            effects.push(HostEffect::InvokeExtension {
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧮️eval/🦀️component.rs:29:            effects.push(HostEffect::InvokeExtension {
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧮️eval/🦀️component.rs:46:            effects.push(semio_framework::kernel::HostEffect::InvokeExtension {
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs:439:            effects.push(semio_framework_plugin::HostEffect::InvokeExtension {
+

@@ -10,8 +10,8 @@ use crate::artifacts::process3d::schema::diff::*;
 
 
 use crate::artifacts::process3d::schema::Process3dArtifact;
-use crate::artifacts::process3d::{ProcessStep, Process3dSnapshot, Workshop};
-use protocol::{CollectionMutation, MutationDiff, Patchable};
+use crate::artifacts::process3d::{ProcessStep, Process3dSnapshot};
+use protocol::{MutationDiff, Patchable};
 
 //#region 🔖️Apply
 /// 🧩 Applies an identified-collection delta to a step list.
@@ -180,16 +180,6 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-/// 🏭️ Applies a machines collection mutation onto a workshop clone.
-pub fn workshop_after_machines_mutation(
-    workshop: &Workshop,
-    op: &CollectionMutation<String, crate::artifacts::process3d::WorkshopMachine, crate::artifacts::process3d::WorkshopMachinePatch>,
-) -> Workshop {
-    let mut next = workshop.clone();
-    protocol::apply_collection_mutation(&mut next.machines, op);
-    next
-}
-
 /// 📸️ Whole-snapshot replacement diff.
 pub fn diff_set_snapshot(snapshot: &Process3dSnapshot) -> Process3dDiff {
     Process3dDiff {

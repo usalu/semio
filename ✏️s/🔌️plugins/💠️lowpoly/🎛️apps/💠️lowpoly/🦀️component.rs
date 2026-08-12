@@ -191,7 +191,7 @@ semio_framework_plugin::app_commands! {
         "paintFill" as "paint-fill" => paint_fill::PaintFill,
         "fillBucket" as "fill-bucket" => fill_bucket::FillBucket,
         "transformEnd" as "transform-end" => transform_end::TransformEnd,
-        "setSnapshotJson" as "set-snapshot-json" => set_snapshot_json::SetSnapshotJson,
+        "importSnapshotJson" as "import-snapshot-json" => set_snapshot_json::ImportSnapshotJson,
         "setFixtureJson" as "set-fixture-json" => set_fixture_json::SetFixtureJson,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
         "setActiveObject" as "set-active-object" => set_active_object::SetActiveObject,
@@ -273,10 +273,11 @@ impl ArtifactApp for LowpolyPlayApp {
         Some(crate::artifacts::lowpoly::engine::lowpoly_io())
     }
 
-    fn whole_document_operation(snapshot: LowpolySnapshot) -> Option<LowpolyMutation> {
-        Some(LowpolyMutation::SetSnapshot { snapshot })
-    }
-
+    /// 🧬️ No `whole_document_operation` override — per `📓️taxonomy.md`, whole-document replace
+    /// (the retired whole-document-replace variant) is banned outright with NO replacement mutation, so this falls back to the
+    /// trait's own default (`None`); `import_media`'s `"mesh:in"`/`"document:in"` arms below build
+    /// `reset_document_effect` (a `HostEffect::LoadDocument`, outside undo history) instead.
+    ///
     /// 🎞️ `mesh:out` plus the inherited `document:out` default (the pack of `doc.snapshot`, replicated
     /// inline — overriding `export_media` shadows the trait's provided body for every port on this app,
     /// not just the new one).
@@ -298,7 +299,7 @@ impl ArtifactApp for LowpolyPlayApp {
         }
     }
 
-    /// 🎞️ `mesh:in` round-trips a `mesh.document` payload into a `SetSnapshot` op; `document:in`
+    /// 🎞️ `mesh:in` round-trips a `mesh.document` payload into a `reset_document_effect`; `document:in`
     /// replicates the trait's default whole-pack import inline (overriding `import_media` shadows the
     /// default for every port on this app, not just the new one).
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, LowpolySnapshot>) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, MediaError> {
@@ -311,7 +312,7 @@ impl ArtifactApp for LowpolyPlayApp {
                 let mesh = crate::artifacts::lowpoly::engine::mesh_from_mesh_document(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let projection_json = crate::artifacts::lowpoly::engine::lowpoly_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let snapshot: LowpolySnapshot = serde_json::from_value(projection_json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-                Ok(Emit::mutations(vec![LowpolyMutation::SetSnapshot { snapshot }]))
+                Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
             }
             "document:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -319,10 +320,7 @@ impl ArtifactApp for LowpolyPlayApp {
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 let projection = <LowpolySnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-                match Self::whole_document_operation(projection) {
-                    Some(operation) => Ok(Emit::mutations(vec![operation])),
-                    None => Err(MediaError::NotImplemented),
-                }
+                Ok(Emit { effects: vec![reset_document_effect(&projection)], ..Default::default() })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -381,6 +379,23 @@ impl ArtifactApp for LowpolyPlayApp {
     }
 }
 //#endregion 🔖️LowpolyPlayApp
+
+//#region 🔖️ResetDocument
+/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
+/// history — the sanctioned non-mutation path for a whole-document replace (mesh import, file
+/// open, dev fixture load). Per `📓️taxonomy.md`, whole-document replace is banned outright with NO
+/// replacement mutation: whole-document replace is not expressible as an in-history `Mutation` at
+/// all. Every former "replace the whole document" gesture in this package (`import_media`'s
+/// `"mesh:in"`/`"document:in"` above, `commands::fixture::{set_snapshot_json,set_fixture_json}`)
+/// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
+/// for `scene` — a genesis envelope with no history to encode.
+pub fn reset_document_effect(scene: &LowpolySnapshot) -> semio_framework_plugin::HostEffect {
+    let pack = <LowpolySnapshot as store::ArtifactPack>::encode_pack(scene);
+    let envelope = store::create_document_envelope::<LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "lowpoly", scene.clone(), None);
+    let spr = store::print_document_spr(&envelope).expect("lowpoly document spr encode is infallible for a fresh, edit-free envelope");
+    semio_framework_plugin::HostEffect::LoadDocument { pack, spr }
+}
+//#endregion 🔖️ResetDocument
 
 //#region 🔖️Manifest
 /// 🧰️ One transform/paint utility declaration (id/label/icon reused verbatim from the retired
@@ -615,7 +630,7 @@ mod tests {
             LowpolyCommand::PaintFill(paint_fill::PaintFill { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None }),
             LowpolyCommand::FillBucket(fill_bucket::FillBucket { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None }),
             LowpolyCommand::TransformEnd(transform_end::TransformEnd {}),
-            LowpolyCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "{}".into() }),
+            LowpolyCommand::ImportSnapshotJson(set_snapshot_json::ImportSnapshotJson { json: "{}".into() }),
             LowpolyCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() }),
             LowpolyCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("extrude".into()) }),
             LowpolyCommand::SetActiveObject(set_active_object::SetActiveObject { object_id: "obj-1".into() }),
@@ -702,22 +717,25 @@ mod tests {
         }
     }
 
+    /// 🧬️ `"mesh:in"` replaces the whole document via `reset_document_effect` (a
+    /// `HostEffect::LoadDocument`, outside undo history) — whole-document replace has no replacement
+    /// mutation per `📓️taxonomy.md`, so this is an effect, not an `artifact_mutations` entry.
     #[test]
-    fn import_media_mesh_in_round_trips_into_set_snapshot() {
+    fn import_media_mesh_in_round_trips_into_a_reset_document_effect() {
         let mesh = semio_framework_plugin::mesh_from_kind("box");
         let mesh_document = crate::artifacts::lowpoly::engine::mesh_document_from_mesh(&mesh).expect("mesh document");
         let json = serde_json::to_string(&mesh_document).expect("mesh document json");
         let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } };
-        let lowpoly_app = LowpolyPlayApp::default();
         let projection = crate::artifacts::lowpoly::engine::default_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView { snapshot: &projection, history: &history };
         let emit = LowpolyPlayApp::import_media("mesh:in", &media, &doc).expect("import mesh:in");
-        assert_eq!(emit.artifact_mutations.len(), 1);
-        match &emit.artifact_mutations[0] {
-            LowpolyMutation::SetSnapshot { snapshot } => assert_eq!(projection.objects.len(), 1),
-            other => panic!("expected SetSnapshot, got {other:?}"),
-        }
+        assert!(emit.artifact_mutations.is_empty(), "whole-document replace is an effect, not a mutation");
+        let semio_framework_plugin::HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("mesh:in must emit a LoadDocument effect") else {
+            panic!("expected a LoadDocument effect");
+        };
+        let loaded = <LowpolySnapshot as ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        assert_eq!(loaded.objects.len(), 1);
     }
     //#endregion 🔖️MediaPorts
 

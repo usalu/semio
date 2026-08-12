@@ -1,8 +1,13 @@
-//! ↔️move-step `PlaybookMutation` inverse leaf.
-use crate::artifacts::playbook::PlaybookSnapshot;
+//! ↩️ Inverse for `MoveStep` — moves the step back to its BASE-state position. Missing target ⇒
+//! `Vec::new()`.
 use crate::artifacts::playbook::mutations::PlaybookMutation;
-use protocol::Mutation;
+use crate::artifacts::playbook::PlaybookSnapshot;
 
-pub fn inverse(base: &PlaybookSnapshot, mutation: &PlaybookMutation) -> Vec<PlaybookMutation> {
-    <PlaybookMutation as Mutation<PlaybookSnapshot>>::inverse(mutation, base)
+//#region 🔖️Inverse
+pub fn inverse(payload: &super::mutation::MoveStep, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
+    let Some(position) = base.steps.iter().position(|step| step.id == payload.step_id) else {
+        return Vec::new();
+    };
+    vec![crate::artifacts::playbook::mutations::move_step::mutation::move_step_operation(&payload.step_id, position)]
 }
+//#endregion 🔖️Inverse

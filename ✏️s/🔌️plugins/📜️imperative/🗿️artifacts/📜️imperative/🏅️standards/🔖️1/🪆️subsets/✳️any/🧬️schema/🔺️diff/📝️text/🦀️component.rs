@@ -1,11 +1,9 @@
 //! 🔺️ Imperative artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::imperative::schema::diff::{
-    ImperativeDiff, ImperativePathDelta, ImperativeStepPatchEntry, ImperativeStepsDelta, ImperativeStringList,
-};
+use crate::artifacts::imperative::schema::diff::{ImperativeDiff, ImperativePathDelta, ImperativeStepsDelta, ImperativeStringList};
 use crate::artifacts::imperative::schema::ImperativeArtifact;
 use crate::artifacts::imperative::{Dictionary, ImperativeSnapshot, Path, PathRef, Step};
-use protocol::{CollectionMutation, Identified, MutationDiff};
+use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -176,42 +174,6 @@ impl MutationDiff<ImperativeSnapshot> for ImperativeDiff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-/// 🧩 Builds a step-collection delta from a [`CollectionMutation`].
-pub fn steps_delta_from_collection_mutation(
-    base: &[Step],
-    op: &CollectionMutation<String, Step, Dictionary>,
-) -> ImperativeStepsDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => ImperativeStepsDelta {
-            added: vec![item.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Remove { id } => ImperativeStepsDelta {
-            removed: vec![id.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Patch { id, patch } => ImperativeStepsDelta {
-            patched: vec![ImperativeStepPatchEntry {
-                id: id.clone(),
-                patch: patch.clone(),
-            }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(Identified::id).cloned().collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            ImperativeStepsDelta {
-                reordered: Some(ids),
-                ..Default::default()
-            }
-        }
-    }
-}
-
 /// 📸️ Whole-snapshot replacement diff.
 pub fn diff_set_snapshot(snapshot: ImperativeSnapshot) -> ImperativeDiff {
     ImperativeDiff {

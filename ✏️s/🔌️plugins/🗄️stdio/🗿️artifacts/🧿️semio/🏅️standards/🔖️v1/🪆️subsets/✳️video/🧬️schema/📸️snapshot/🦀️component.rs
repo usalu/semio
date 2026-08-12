@@ -107,7 +107,7 @@ impl Default for SemioVideoSnapshot {
 /// style as this subset's own `🔺️diff`/`🧬️mutations` facets (`GifDiff`/`SvgDiff`/`DocxDiff`'s
 /// established hand-rolled convention). Duplicated here (not imported from `schema::diff`) to keep
 /// `snapshot` — the base type `diff`/`mutations` both depend ON — free of a reverse dependency on
-/// either sibling facet (same convention `workflow`'s own pilot established).
+/// either sibling facet (same convention `flow`'s own pilot established).
 fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
@@ -214,7 +214,7 @@ fn parse_video_snapshot_body(body: &str) -> Result<SemioVideoSnapshot, String> {
 
 //#region 🔖️BinaryPrimitives
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers workflow's/mesh's upgraded facets reuse) backing the real
+/// `store::ByteReader`, same helpers flow's/mesh's upgraded facets reuse) backing the real
 /// `ArtifactPack` below — replaces the old `serde_json::to_vec`-in-envelope shortcut.
 fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
@@ -301,7 +301,7 @@ fn decode_video_snapshot_binary(bytes: &[u8]) -> Result<SemioVideoSnapshot, Stri
 
 //#region 🔖️HandcraftedArtifactCodecs
 /// 🎁 Real structured text/binary codecs (video wave — off the old hex-dump-of-`serde_json`
-/// shortcut, following workflow's/mesh's/image's proven pattern). Wrapped in the repo-wide
+/// shortcut, following flow's/mesh's/image's proven pattern). Wrapped in the repo-wide
 /// `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioVideoSnapshot {
     const EXTENSION: &'static str = "semio";

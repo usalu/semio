@@ -19,7 +19,7 @@ use protocol::command::DiffAlgebra;
 use protocol::Mutation;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioDrawingMutation` block below
 /// calls `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope
-/// in production code too, not merely under `#[cfg(test)]` (same fix workflow's/brep's own
+/// in production code too, not merely under `#[cfg(test)]` (same fix flow's/brep's own
 /// mutations facet needed).
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};

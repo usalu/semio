@@ -1,0 +1,1050 @@
+3280|        let root = scene.root();
+3281|        scene.node_mut(root).set_constraint(Constraint { direction: Direction::Row, gap: 1, padding: [1, 1, 1, 1], ..Default::default() });
+3282|        let a = scene.add(root, Node::new(NodeContent::Box));
+3283|        let b = scene.add(root, Node::new(NodeContent::Box));
+3284|        scene.node_mut(a).set_constraint(Constraint { width: Dimension::Cells(2), ..Default::default() });
+3285|        scene.node_mut(b).set_constraint(Constraint { width: Dimension::Cells(2), ..Default::default() });
+3286|        solve(&mut scene, Rect::new(0, 0, 20, 10));
+3287|        assert_eq!(scene.rect(a).x, 1);
+3288|        assert_eq!(scene.rect(b).x, 4);
+3289|        assert_eq!(scene.rect(root).height, 10);
+3290|        assert_eq!(scene.rect(a).height, 8);
+3291|    }
+3292|
+3293|    #[test]
+3294|    fn window_layout_row_of_stacks_tiles_without_gaps() {
+3295|        let layout = create_default_layout(&["a".to_string(), "b".to_string()], "row", Some(&[1.0, 1.0]), None);
+3296|        let measures = solve_window_layout(&layout, Rect::new(0, 0, 100, 10));
+3297|        assert_eq!(measures.len(), 2);
+3298|        assert_eq!(measures[0].rect.width + measures[1].rect.width, 100);
+3299|        assert_eq!(measures[0].rect.x, 0);
+3300|        assert_eq!(measures[1].rect.x, measures[0].rect.width);
+3301|    }
+3302|
+3303|    #[test]
+3304|    fn window_layout_stack_exposes_tabs() {
+3305|        let layout = WindowLayout {
+3306|            root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
+3307|                size: None,
+3308|                active_window_kind_id: Some("b".into()),
+3309|                children: vec![WindowLayoutWindowNode { window_kind_id: "a".into(), title: None }, WindowLayoutWindowNode { window_kind_id: "b".into(), title: None }],
+3310|            }),
+3311|        };
+3312|        let measures = solve_window_layout(&layout, Rect::new(0, 0, 40, 10));
+3313|        assert_eq!(measures.len(), 1);
+3314|        assert_eq!(measures[0].window_kind_id, "b");
+3315|        assert_eq!(measures[0].stack_tabs, vec!["a", "b"]);
+3316|    }
+3317|
+3318|    #[test]
+3319|    fn window_chrome_recesses_tabs_into_the_top_corners_of_a_closed_shape() {
+3320|        let theme = Theme::new(AppearanceName::Dark);
+3321|        let rect = Rect::new(0, 0, 40, 5);
+3322|        let mut buf = CellBuffer::new(Size { width: 40, height: 5 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+3323|        let mut w = WindowState::new("Puzzle 3D");
+3324|        w.focused = true;
+3325|        ChromeState::Window(w).paint(&theme, rect, &mut buf);
+3326|
+3327|        // exact shape: both tabs are real 2-row boxes sharing the window's own left/right wall, each
+3328|        // bending its short inner wall down into the main body's top edge one row below
+3329|        assert_eq!(row_text(&buf, 0), "┌️─️─️─️─️─️─️─️─️─️─️─️┐️                    ┌️─️─️─️─️─️┐️");
+3330|        assert_eq!(row_text(&buf, 1), "│️ Puzzle 3D │️                    │️ ⤢ ✕️ │️");
+3331|        assert_eq!(row_text(&buf, 2), "│️           └️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️┘️     │️");
+3332|        assert_eq!(row_text(&buf, 3), "│️                                      │️");
+3333|        assert_eq!(row_text(&buf, 4), "└️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️┘️");
+3334|
+3335|        let title_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == 'P').expect("title text rendered");
+3336|        assert_eq!(buf.get(title_x, 1).unwrap().fg, theme.role(Role::Accent));
+3337|    }
+3338|
+3339|    #[test]
+3340|    fn window_chrome_flattens_the_right_side_when_no_controls_tab_is_wanted() {
+3341|        let theme = Theme::new(AppearanceName::Dark);
+3342|        let rect = Rect::new(0, 0, 40, 6);
+3343|        let mut buf = CellBuffer::new(Size { width: 40, height: 6 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+3344|        let mut w = WindowState::new("Log");
+3345|        w.closable = false;
+3346|        w.maximizable = false;
+3347|        ChromeState::Window(w).paint(&theme, rect, &mut buf);
+3348|
+3349|        // the title tab still rises, but the right side has no tab: its corner sits flat at the
+3350|        // main body's top row instead of rising — the window stays one closed shape either way
+3351|        assert_eq!(row_text(&buf, 0), "\u{250c}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2510}                                 ");
+3352|        assert_eq!(row_text(&buf, 1), "\u{2502} Log \u{2502}                                 ");
+3353|        assert_eq!(row_text(&buf, 2), "\u{2502}     \u{2514}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2510}");
+3354|        assert_eq!(row_text(&buf, 3), "\u{2502}                                      \u{2502}");
+3355|        assert_eq!(row_text(&buf, 4), "\u{2502}                                      \u{2502}");
+3356|        assert_eq!(row_text(&buf, 5), "\u{2514}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2518}");
+3357|        assert!(!row_text(&buf, 0).contains('\u{2922}') && !row_text(&buf, 1).contains('\u{2922}'), "no controls tab was requested");
+3358|    }
+3359|
+3360|    #[test]
+3361|    fn window_chrome_hides_both_tabs_when_too_narrow_for_even_the_title() {
+3362|        let theme = Theme::new(AppearanceName::Dark);
+3363|        let rect = Rect::new(0, 0, 10, 5);
+3364|        let mut buf = CellBuffer::new(Size { width: 10, height: 5 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+3365|        let window = ChromeState::Window(WindowState::new("X"));
+3366|        window.paint(&theme, rect, &mut buf);
+3367|        // plain flat box: a single top row, no raised tabs at all
+3368|        assert_eq!(row_text(&buf, 0), "\u{250c}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2510}");
+3369|        assert_eq!(window.window_control_at(rect, Pos { x: 5, y: 0 }), None);
+3370|        assert_eq!(window.window_control_at(rect, Pos { x: 5, y: 1 }), None);
+3371|    }
+3372|
+3373|    #[test]
+3374|    fn window_control_clicks_resolve_to_close_and_maximize_signals() {
+3375|        let theme = Theme::new(AppearanceName::Dark);
+3376|        let rect = Rect::new(0, 0, 40, 5);
+3377|        let mut buf = CellBuffer::new(Size { width: 40, height: 5 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+3378|        let window = ChromeState::Window(WindowState::new("Plugins"));
+3379|        window.paint(&theme, rect, &mut buf);
+3380|        let maximize_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == '\u{2922}').expect("maximize glyph rendered");
+3381|        let close_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == '\u{2715}').expect("close glyph rendered");
+3382|        assert_eq!(window.window_control_at(rect, Pos { x: maximize_x, y: 1 }), Some(WidgetSignal::WindowMaximize));
+3383|        assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 1 }), Some(WidgetSignal::WindowClose));
+3384|        assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 0 }), None, "clicks on the tab's own top edge must not trigger a control");
+3385|        assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 2 }), None, "clicks below the tab row must not trigger a control");
+3386|    }
+3387|
+3388|    #[test]
+3389|    fn tui_dispatch_emits_window_close_signal_on_click() {
+3390|        let mut tui = crate::tui::engine::Tui::new(Size { width: 40, height: 12 }, Theme::new(AppearanceName::Dark));
+3391|        let navbar = NavbarState { left: vec![], center: vec![], right: vec![] };
+3392|        let footer = FooterState { hints: vec![], status: String::new() };
+3393|        let layout = even_window_layout(&["plugins".to_string()]);
+3394|        let built = shell(&mut tui.scene, navbar, footer, &layout);
+3395|        tui.render_full();
+3396|        let (_, window_id) = built.windows[0].clone();
+3397|        let rect = tui.scene.rect(window_id);
+3398|        let mut buf = CellBuffer::new(Size { width: rect.width, height: rect.height }, Cell::blank([0, 0, 0], [0, 0, 0]));
+3399|        ChromeState::Window(WindowState::new("plugins")).paint(&Theme::new(AppearanceName::Dark), Rect::new(0, 0, rect.width, rect.height), &mut buf);
+3400|        let close_x = (0..rect.width).find(|&x| buf.get(x, 1).unwrap().ch == '\u{2715}').expect("close glyph rendered");
+3401|        let signals = tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Down(0), pos: Pos { x: rect.x + close_x, y: rect.y + 1 }, mods: 0 }));
+3402|        assert_eq!(signals, vec![(window_id, WidgetSignal::WindowClose)]);
+3403|    }
+3404|
+3405|    fn sample_table() -> TableState {
+3406|        let columns = vec![TableColumn::new("Plugin / App", 0, TableAlign::Left), TableColumn::new("React", 6, TableAlign::Right)];
+3407|        let rows = vec![
+3408|            TableRow::parent("puzzle", vec!["puzzle".into(), "".into()]),
+3409|            TableRow::child("puzzle2d", vec!["puzzle2d".into(), "6012".into()], 1),
+3410|            TableRow::child("puzzle3d", vec!["puzzle3d".into(), "6013".into()], 1),
+3411|            TableRow::parent("draw", vec!["draw".into(), "".into()]),
+3412|            TableRow::child("draw", vec!["draw".into(), "6064".into()], 1),
+3413|        ];
+3414|        TableState::new(columns, rows)
+3415|    }
+3416|
+3417|    #[test]
+3418|    fn table_header_is_bold_muted_with_a_hairline_underline_and_row_separators() {
+3419|        let theme = Theme::new(AppearanceName::Dark);
+3420|        let table = sample_table();
+3421|        let rect = Rect::new(0, 0, 40, 12);
+3422|        let mut buf = CellBuffer::new(Size { width: 40, height: 12 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+3423|        WidgetState::Table(table).paint(&theme, rect, &mut buf, false);
+3424|
+3425|        assert_eq!(row_text(&buf, 0).trim_end(), "Plugin / App                       React");
+3426|        assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::MutedForeground));
+3427|        assert_eq!(buf.get(0, 0).unwrap().attrs & attr::BOLD, attr::BOLD, "header must be bold");
+3428|        assert_eq!(row_text(&buf, 1), "\u{2500}".repeat(40), "hairline underline missing below the header");
+3429|        // no vertical rules anywhere in the header/underline rows
+3430|        assert!(!row_text(&buf, 0).contains('\u{2502}'));
+3431|
+3432|        assert_eq!(row_text(&buf, 2).trim_end(), "\u{25be} puzzle");
+3433|        assert_eq!(row_text(&buf, 3), "\u{2500}".repeat(40), "row separator missing after the first row");
+3434|        assert_eq!(row_text(&buf, 4).trim_end(), "    puzzle2d                        6012");
+3435|    }
+3436|
+3437|    #[test]
+3438|    fn table_visible_indices_skips_children_of_a_collapsed_parent() {
+3439|        let mut table = sample_table();
+3440|        assert_eq!(table.visible_indices(), vec![0, 1, 2, 3, 4]);
+3441|        table.rows[0].expanded = false;
+3442|        assert_eq!(table.visible_indices(), vec![0, 3, 4], "puzzle's children must be hidden while collapsed");
+3443|    }
+3444|
+3445|    #[test]
+3446|    fn table_on_key_navigates_visible_rows_toggles_and_activates_leaves() {
+3447|        let mut table = sample_table();
+3448|        table.rows[0].expanded = false;
+3449|        table.selected = 0;
+3450|        let mut widget = WidgetState::Table(table);
+3451|        // Down should skip the hidden puzzle2d/puzzle3d children and land on "draw"
+3452|        let down = KeyEvent { key: Key::Down, mods: 0 };
+3453|        assert_eq!(widget.on_key(&down), Some(WidgetSignal::SelectionChanged(3)));
+3454|        let WidgetState::Table(table) = &mut widget else { unreachable!() };
+3455|        assert_eq!(table.selected, 3);
+3456|        table.selected = 0;
+3457|
+3458|        let enter = KeyEvent { key: Key::Enter, mods: 0 };
+3459|        assert_eq!(widget.on_key(&enter), Some(WidgetSignal::SelectionChanged(0)));
+3460|        let WidgetState::Table(table) = &mut widget else { unreachable!() };
+3461|        assert!(table.rows[0].expanded, "Enter on a collapsed parent should expand it");
+3462|        table.selected = 1;
+3463|
+3464|        assert_eq!(widget.on_key(&enter), Some(WidgetSignal::Activated(1)), "Enter on a leaf should activate it");
+3465|    }
+3466|
+3467|    #[test]
+3468|    fn table_selected_row_uses_active_base_only_when_focused() {
+3469|        let theme = Theme::new(AppearanceName::Dark);
+3470|        let mut table = sample_table();
+3471|        table.selected = 1;
+3472|        let rect = Rect::new(0, 0, 40, 12);
+3473|
+3474|        let mut unfocused = CellBuffer::new(Size { width: 40, height: 12 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+3475|        WidgetState::Table(TableState::new(std::mem::take(&mut table.columns), std::mem::take(&mut table.rows))).paint(&theme, rect, &mut unfocused, false);
+3476|        assert_ne!(unfocused.get(4, 4).unwrap().bg, theme.role(Role::ActiveBase), "unfocused selection must not fill with the accent");
+3477|
+3478|        let mut table2 = sample_table();
+3479|        table2.selected = 1;
+3480|        let mut focused = CellBuffer::new(Size { width: 40, height: 12 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+3481|        WidgetState::Table(table2).paint(&theme, rect, &mut focused, true);
+3482|        assert_eq!(focused.get(4, 4).unwrap().bg, theme.role(Role::ActiveBase));
+3483|        assert_eq!(focused.get(4, 4).unwrap().fg, theme.role(Role::ActiveForeground));
+3484|    }
+3485|
+3486|    #[test]
+3487|    fn table_flex_column_fills_remaining_width_and_right_aligns_numeric_column() {
+3488|        let theme = Theme::new(AppearanceName::Dark);
+3489|        let table = sample_table();
+3490|        let rect = Rect::new(0, 0, 20, 6);
+3491|        let mut buf = CellBuffer::new(Size { width: 20, height: 6 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+3492|        WidgetState::Table(table).paint(&theme, rect, &mut buf, false);
+3493|        let header = row_text(&buf, 0);
+3494|        assert_eq!(header.len(), 20);
+3495|        assert!(header.trim_end().ends_with("React"), "the fixed-width numeric column should sit right-aligned at the row's end: {header:?}");
+3496|        let _ = theme.surface(Surface::Window);
+3497|    }
+3498|
+3499|    #[test]
+3500|    fn diff_emits_minimal_runs() {
+3501|        let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
+3502|        let prev = CellBuffer::new(Size { width: 10, height: 2 }, blank);
+3503|        let mut next = prev.clone();
+3504|        next.put(3, 0, Cell { ch: 'x', ..blank });
+3505|        let runs = diff(&prev, &next);
+3506|        assert_eq!(runs.len(), 1);
+3507|        assert_eq!(runs[0], crate::tui::cell::DiffRun { y: 0, x: 3, len: 1 });
+3508|    }
+3509|
+3510|    #[test]
+3511|    fn diff_merges_nearby_runs() {
+3512|        let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
+3513|        let prev = CellBuffer::new(Size { width: 20, height: 1 }, blank);
+3514|        let mut next = prev.clone();
+3515|        next.put(0, 0, Cell { ch: 'a', ..blank });
+3516|        next.put(3, 0, Cell { ch: 'b', ..blank });
+3517|        let runs = diff(&prev, &next);
+3518|        assert_eq!(runs.len(), 1);
+3519|        assert_eq!(runs[0].len, 4);
+3520|    }
+3521|
+3522|    #[test]
+3523|    fn parser_roundtrip_arrow_keys_with_modifiers() {
+3524|        let mut parser = AnsiParser::new();
+3525|        let mut events = Vec::new();
+3526|        parser.feed(b"\x1b[1;5C", &mut events);
+3527|        assert_eq!(events.len(), 1);
+3528|        match &events[0] {
+3529|            Event::Key(k) => {
+3530|                assert_eq!(k.key, Key::Right);
+3531|                assert_eq!(k.mods, crate::tui::event::mods::CTRL);
+3532|            }
+3533|            _ => panic!("expected key event"),
+3534|        }
+3535|    }
+3536|
+3537|    #[test]
+3538|    fn parser_sgr_mouse_click() {
+3539|        let mut parser = AnsiParser::new();
+3540|        let mut events = Vec::new();
+3541|        parser.feed(b"\x1b[<0;10;5M", &mut events);
+3542|        assert_eq!(events.len(), 1);
+3543|        match &events[0] {
+3544|            Event::Mouse(m) => {
+3545|                assert_eq!(m.pos.x, 9);
+3546|                assert_eq!(m.pos.y, 4);
+3547|            }
+3548|            _ => panic!("expected mouse event"),
+3549|        }
+3550|    }
+3551|
+3552|    #[test]
+3553|    fn parser_bracketed_paste() {
+3554|        let mut parser = AnsiParser::new();
+3555|        let mut events = Vec::new();
+3556|        parser.feed(b"\x1b[200~hello\x1b[201~", &mut events);
+3557|        assert_eq!(events, vec![Event::Paste("hello".to_string())]);
+3558|    }
+3559|
+3560|    #[test]
+3561|    fn parser_lone_esc_flushes_on_timeout() {
+3562|        let mut parser = AnsiParser::new();
+3563|        let mut events = Vec::new();
+3564|        parser.feed(b"\x1b", &mut events);
+3565|        assert!(events.is_empty());
+3566|        parser.flush_escape(&mut events);
+3567|        assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Esc, mods: 0 })]);
+3568|    }
+3569|
+3570|    #[test]
+3571|    fn parser_split_utf8_across_feeds() {
+3572|        let mut parser = AnsiParser::new();
+3573|        let mut events = Vec::new();
+3574|        let bytes = "ü".as_bytes();
+3575|        parser.feed(&bytes[..1], &mut events);
+3576|        assert!(events.is_empty());
+3577|        parser.feed(&bytes[1..], &mut events);
+3578|        assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Char('ü'), mods: 0 })]);
+3579|    }
+3580|
+3581|    #[test]
+3582|    fn text_display_width_and_truncate() {
+3583|        assert_eq!(display_width("abc"), 3);
+3584|        let (s, w) = truncate_to("abcdef", 3);
+3585|        assert_eq!(s, "abc");
+3586|        assert_eq!(w, 3);
+3587|    }
+3588|
+3589|    #[test]
+3590|    fn theme_light_and_dark_differ() {
+3591|        use crate::tui::theme::{Role, Surface};
+3592|        let light = Theme::new(AppearanceName::Light);
+3593|        let dark = Theme::new(AppearanceName::Dark);
+3594|        assert_ne!(light.surface(Surface::Base), dark.surface(Surface::Base));
+3595|        for surface in [Surface::Base, Surface::Window, Surface::Pane, Surface::Panel, Surface::Dialog, Surface::Menu] {
+3596|            let _ = light.surface(surface);
+3597|            let _ = dark.surface(surface);
+3598|        }
+3599|        assert_ne!(light.surface(Surface::Base), light.surface(Surface::Menu));
+3600|        let _ = light.role(Role::HoverInteractive);
+3601|    }
+3602|
+3603|    #[test]
+3604|    fn wasm_host_feed_and_render_smoke() {
+3605|        let mut host = crate::tui::host::WasmHost::new(40, 10, true);
+3606|        host.feed(b"\r");
+3607|        let patch = host.render();
+3608|        assert!(!patch.is_empty());
+3609|    }
+3610|
+3611|    //#region 🔖️Geometry
+3612|    #[test]
+3613|    fn rect_contains_checks_boundaries() {
+3614|        let r = Rect::new(2, 2, 3, 3);
+3615|        assert!(r.contains(Pos { x: 2, y: 2 }));
+3616|        assert!(r.contains(Pos { x: 4, y: 4 }));
+3617|        assert!(!r.contains(Pos { x: 5, y: 4 }), "the right edge is exclusive");
+3618|        assert!(!r.contains(Pos { x: 1, y: 2 }), "left of the rect is outside");
+3619|    }
+3620|
+3621|    #[test]
+3622|    fn rect_intersect_returns_overlap_or_default_on_miss() {
+3623|        let a = Rect::new(0, 0, 10, 10);
+3624|        let b = Rect::new(5, 5, 10, 10);
+3625|        assert_eq!(a.intersect(b), Rect::new(5, 5, 5, 5));
+3626|        let miss = Rect::new(20, 20, 5, 5);
+3627|        assert_eq!(a.intersect(miss), Rect::default());
+3628|    }
+3629|
+3630|    #[test]
+3631|    fn rect_inset_shrinks_and_clamps_when_margin_exceeds_size() {
+3632|        let r = Rect::new(0, 0, 10, 10);
+3633|        assert_eq!(r.inset(2), Rect::new(2, 2, 6, 6));
+3634|        let small = Rect::new(0, 0, 3, 3);
+3635|        let shrunk = small.inset(5);
+3636|        assert_eq!(shrunk, Rect { x: 3, y: 3, width: 0, height: 0 }, "an oversized margin clamps size to zero but the origin still shifts by min(margin, size)");
+3637|    }
+3638|
+3639|    #[test]
+3640|    fn rect_split_top_and_split_bottom_partition_rect() {
+3641|        let r = Rect::new(1, 1, 10, 10);
+3642|        let (top, rest) = r.split_top(3);
+3643|        assert_eq!(top, Rect::new(1, 1, 10, 3));
+3644|        assert_eq!(rest, Rect::new(1, 4, 10, 7));
+3645|        let (rest2, bottom) = r.split_bottom(4);
+3646|        assert_eq!(bottom, Rect::new(1, 7, 10, 4));
+3647|        assert_eq!(rest2, Rect::new(1, 1, 10, 6));
+3648|        let (top2, rest3) = r.split_top(50);
+3649|        assert_eq!(top2.height, 10, "rows beyond the rect's height clamp to the full height");
+3650|        assert_eq!(rest3.height, 0);
+3651|    }
+3652|    //#endregion 🔖️Geometry
+3653|
+3654|    //#region 🔖️Text
+3655|    #[test]
+3656|    fn text_char_cells_zero_and_wide() {
+3657|        assert_eq!(crate::tui::text::char_cells('a'), 1);
+3658|        assert_eq!(crate::tui::text::char_cells('世'), 2);
+3659|        assert_eq!(crate::tui::text::char_cells('\u{200b}'), 0, "a zero-width space occupies no cells");
+3660|    }
+3661|
+3662|    #[test]
+3663|    fn truncate_to_stops_before_splitting_a_wide_char() {
+3664|        let (s, w) = truncate_to("a世b", 2);
+3665|        assert_eq!(s, "a", "the wide char doesn't fit in the remaining 1 cell, so it's dropped whole");
+3666|        assert_eq!(w, 1);
+3667|        let (s2, w2) = truncate_to("世", 2);
+3668|        assert_eq!(s2, "世");
+3669|        assert_eq!(w2, 2);
+3670|    }
+3671|    //#endregion 🔖️Text
+3672|
+3673|    //#region 🔖️Cell
+3674|    #[test]
+3675|    fn cell_buffer_get_returns_none_out_of_bounds() {
+3676|        let buf = CellBuffer::new(Size { width: 3, height: 3 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+3677|        assert!(buf.get(3, 0).is_none());
+3678|        assert!(buf.get(0, 3).is_none());
+3679|        assert!(buf.get(2, 2).is_some());
+3680|    }
+3681|
+3682|    #[test]
+3683|    fn cell_buffer_put_pairs_and_orphans_wide_char_continuations() {
+3684|        let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
+3685|        let mut buf = CellBuffer::new(Size { width: 5, height: 1 }, blank);
+3686|        buf.put(1, 0, Cell { ch: '世', width: 2, ..blank });
+3687|        assert_eq!(buf.get(1, 0).unwrap().width, 2);
+3688|        assert_eq!(buf.get(2, 0).unwrap().width, 0, "the wide char auto-populates its continuation cell");
+3689|
+3690|        buf.put(2, 0, Cell { ch: '\0', width: 0, ..blank });
+3691|        assert_eq!(buf.get(2, 0).unwrap().width, 0, "a width-0 write next to a wide lead stays paired");
+3692|
+3693|        buf.put(0, 0, Cell { ch: '\0', width: 0, ..blank });
+3694|        assert_eq!(buf.get(0, 0).unwrap().width, 0, "column 0 has no left neighbor to check, so width is left untouched");
+3695|    }
+3696|
+3697|    #[test]
+3698|    fn cell_buffer_put_clamps_wide_char_at_right_edge() {
+3699|        let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
+3700|        let mut buf = CellBuffer::new(Size { width: 3, height: 1 }, blank);
+3701|        buf.put(2, 0, Cell { ch: '世', width: 2, ..blank });
+3702|        assert_eq!(buf.get(2, 0).unwrap().width, 1, "a wide char at the last column clamps to width 1 instead of overflowing");
+3703|    }
+3704|
+3705|    #[test]
+3706|    fn cell_buffer_put_str_counts_clipped_cells_but_only_draws_inside_clip() {
+3707|        let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
+3708|        let mut buf = CellBuffer::new(Size { width: 10, height: 1 }, blank);
+3709|        let clip = Rect::new(2, 0, 4, 1);
+3710|        let written = buf.put_str(Pos { x: 0, y: 0 }, "abcdefgh", [1, 1, 1], [2, 2, 2], 0, clip);
+3711|        assert_eq!(written, 6, "cells advance past the clip's left edge even though nothing is drawn there");
+3712|        assert_eq!(buf.get(0, 0).unwrap().ch, ' ', "cells left of the clip stay untouched");
+3713|        assert_eq!(buf.get(2, 0).unwrap().ch, 'c');
+3714|        assert_eq!(buf.get(5, 0).unwrap().ch, 'f');
+3715|        assert_eq!(buf.get(6, 0).unwrap().ch, ' ', "cells right of the clip stay untouched");
+3716|
+3717|        let out_of_row = buf.put_str(Pos { x: 2, y: 1 }, "zzz", [0, 0, 0], [0, 0, 0], 0, clip);
+3718|        assert_eq!(out_of_row, 0, "a row outside the clip's y-range writes nothing");
+3719|    }
+3720|
+3721|    #[test]
+3722|    fn cell_buffer_fill_rect_clips_to_buffer_bounds() {
+3723|        let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
+3724|        let mut buf = CellBuffer::new(Size { width: 4, height: 4 }, blank);
+3725|        buf.fill_rect(Rect::new(2, 2, 10, 10), Cell { ch: '#', ..blank });
+3726|        assert_eq!(buf.get(2, 2).unwrap().ch, '#');
+3727|        assert_eq!(buf.get(3, 3).unwrap().ch, '#');
+3728|    }
+3729|
+3730|    #[test]
+3731|    fn cell_buffer_hline_and_vline_paint_expected_cells() {
+3732|        let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
+3733|        let mut buf = CellBuffer::new(Size { width: 5, height: 5 }, blank);
+3734|        buf.hline(Pos { x: 1, y: 1 }, 3, '-', [1, 1, 1], [2, 2, 2]);
+3735|        assert_eq!(buf.get(1, 1).unwrap().ch, '-');
+3736|        assert_eq!(buf.get(3, 1).unwrap().ch, '-');
+3737|        assert_eq!(buf.get(0, 1).unwrap().ch, ' ');
+3738|        assert_eq!(buf.get(4, 1).unwrap().ch, ' ');
+3739|
+3740|        buf.vline(Pos { x: 2, y: 0 }, 3, '|', [1, 1, 1], [2, 2, 2]);
+3741|        assert_eq!(buf.get(2, 0).unwrap().ch, '|');
+3742|        assert_eq!(buf.get(2, 2).unwrap().ch, '|');
+3743|        assert_eq!(buf.get(2, 3).unwrap().ch, ' ');
+3744|    }
+3745|
+3746|    #[test]
+3747|    fn diff_full_redraw_when_sizes_differ() {
+3748|        let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
+3749|        let a = CellBuffer::new(Size { width: 5, height: 5 }, blank);
+3750|        let b = CellBuffer::new(Size { width: 6, height: 5 }, blank);
+3751|        let runs = diff(&a, &b);
+3752|        assert_eq!(runs, vec![DiffRun { y: 0, x: 0, len: 30 }]);
+3753|    }
+3754|    //#endregion 🔖️Cell
+3755|
+3756|    //#region 🔖️Ansi
+3757|    #[test]
+3758|    fn emit_runs_writes_cursor_move_and_truecolor_sgr() {
+3759|        let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
+3760|        let mut buf = CellBuffer::new(Size { width: 5, height: 1 }, blank);
+3761|        buf.put(2, 0, Cell { ch: 'Q', fg: [10, 20, 30], bg: [40, 50, 60], attrs: attr::BOLD, width: 1 });
+3762|        let runs = vec![DiffRun { y: 0, x: 2, len: 1 }];
+3763|        let mut patch = AnsiPatch::default();
+3764|        emit_runs(&buf, &runs, &mut patch);
+3765|        assert!(patch.0.contains("\x1b[1;3H"), "cursor moves to the 1-indexed row/col");
+3766|        assert!(patch.0.contains(";38;2;10;20;30"), "foreground truecolor sgr");
+3767|        assert!(patch.0.contains(";48;2;40;50;60"), "background truecolor sgr");
+3768|        assert!(patch.0.contains(";1"), "bold attribute sgr");
+3769|        assert!(patch.0.ends_with('Q'));
+3770|    }
+3771|
+3772|    #[test]
+3773|    fn ansi_setup_and_teardown_sequences_contain_expected_escapes() {
+3774|        assert!(setup_sequence().contains("\x1b[?1049h"), "enters the alternate screen");
+3775|        assert!(setup_sequence().contains("\x1b[?25l"), "hides the cursor");
+3776|        assert!(teardown_sequence().contains("\x1b[?1049l"), "restores the primary screen");
+3777|        assert!(teardown_sequence().contains("\x1b[?25h"), "shows the cursor");
+3778|    }
+3779|
+3780|    #[test]
+3781|    fn parser_ctrl_char_maps_to_char_with_ctrl_mod() {
+3782|        let mut parser = AnsiParser::new();
+3783|        let mut events = Vec::new();
+3784|        parser.feed(&[0x01, 0x03], &mut events);
+3785|        assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Char('a'), mods: crate::tui::event::mods::CTRL }), Event::Key(KeyEvent { key: Key::Char('c'), mods: crate::tui::event::mods::CTRL })]);
+3786|    }
+3787|
+3788|    #[test]
+3789|    fn parser_alt_prefixed_char_sets_alt_mod() {
+3790|        let mut parser = AnsiParser::new();
+3791|        let mut events = Vec::new();
+3792|        parser.feed(b"\x1bj", &mut events);
+3793|        assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Char('j'), mods: crate::tui::event::mods::ALT })]);
+3794|    }
+3795|
+3796|    #[test]
+3797|    fn parser_backtab_and_focus_gained_lost() {
+3798|        let mut parser = AnsiParser::new();
+3799|        let mut events = Vec::new();
+3800|        parser.feed(b"\x1b[Z\x1b[I\x1b[O", &mut events);
+3801|        assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::BackTab, mods: 0 }), Event::FocusGained, Event::FocusLost]);
+3802|    }
+3803|
+3804|    #[test]
+3805|    fn parser_tilde_navigation_and_function_keys() {
+3806|        let mut parser = AnsiParser::new();
+3807|        let mut events = Vec::new();
+3808|        parser.feed(b"\x1b[3~\x1b[15~", &mut events);
+3809|        assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Delete, mods: 0 }), Event::Key(KeyEvent { key: Key::F(5), mods: 0 })]);
+3810|    }
+3811|
+3812|    #[test]
+3813|    fn parser_ss3_function_keys() {
+3814|        let mut parser = AnsiParser::new();
+3815|        let mut events = Vec::new();
+3816|        parser.feed(b"\x1bOP\x1bOQ", &mut events);
+3817|        assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::F(1), mods: 0 }), Event::Key(KeyEvent { key: Key::F(2), mods: 0 })]);
+3818|    }
+3819|
+3820|    #[test]
+3821|    fn parser_mouse_scroll_drag_and_release_kinds() {
+3822|        let mut parser = AnsiParser::new();
+3823|        let mut events = Vec::new();
+3824|        parser.feed(b"\x1b[<64;5;5M\x1b[<97;5;5M\x1b[<32;5;5M\x1b[<0;5;5m", &mut events);
+3825|        let kinds: Vec<MouseKind> = events
+3826|            .iter()
+3827|            .map(|e| match e {
+3828|                Event::Mouse(m) => m.kind,
+3829|                _ => panic!("expected mouse event"),
+3830|            })
+3831|            .collect();
+3832|        assert_eq!(kinds, vec![MouseKind::ScrollUp, MouseKind::ScrollDown, MouseKind::Drag(0), MouseKind::Up(0)]);
+3833|    }
+3834|
+3835|    #[test]
+3836|    fn parser_control_keys_enter_tab_backspace() {
+3837|        let mut parser = AnsiParser::new();
+3838|        let mut events = Vec::new();
+3839|        parser.feed(&[0x0d, 0x0a, 0x09, 0x7f, 0x08], &mut events);
+3840|        assert_eq!(
+3841|            events,
+3842|            vec![
+3843|                Event::Key(KeyEvent { key: Key::Enter, mods: 0 }),
+3844|                Event::Key(KeyEvent { key: Key::Enter, mods: 0 }),
+3845|                Event::Key(KeyEvent { key: Key::Tab, mods: 0 }),
+3846|                Event::Key(KeyEvent { key: Key::Backspace, mods: 0 }),
+3847|                Event::Key(KeyEvent { key: Key::Backspace, mods: 0 }),
+3848|            ]
+3849|        );
+3850|    }
+3851|    //#endregion 🔖️Ansi
+3852|
+3853|    //#region 🔖️Scene
+3854|    #[test]
+3855|    fn scene_node_mut_setters_update_content_and_visibility() {
+3856|        let mut scene = Scene::new();
+3857|        let root = scene.root();
+3858|        let id = scene.add(root, Node::new(NodeContent::Box));
+3859|        scene.node_mut(id).set_text("hi");
+3860|        match &scene.node(id).content {
+3861|            NodeContent::Text(s) => assert_eq!(s, "hi"),
+3862|            _ => panic!("expected text content"),
+3863|        }
+3864|        scene.node_mut(id).set_visible(false);
+3865|        assert!(!scene.node(id).visible);
+3866|    }
+3867|
+3868|    #[test]
+3869|    fn scene_widget_and_chrome_return_none_for_mismatched_content() {
+3870|        let mut scene = Scene::new();
+3871|        let root = scene.root();
+3872|        let id = scene.add(root, Node::new(NodeContent::Box));
+3873|        assert!(scene.node_mut(id).widget().is_none());
+3874|        assert!(scene.node_mut(id).chrome().is_none());
+3875|    }
+3876|
+3877|    #[test]
+3878|    fn scene_hit_finds_deepest_visible_node_topmost_child_wins() {
+3879|        let mut scene = Scene::new();
+3880|        let root = scene.root();
+3881|        scene.node_mut(root).set_constraint(Constraint { direction: Direction::Stack, ..Default::default() });
+3882|        let a = scene.add(root, Node::new(NodeContent::Box));
+3883|        let b = scene.add(root, Node::new(NodeContent::Box));
+3884|        solve(&mut scene, Rect::new(0, 0, 10, 10));
+3885|        assert_eq!(scene.hit(Pos { x: 5, y: 5 }), Some(b), "the last-added, topmost child wins on overlap");
+3886|        scene.node_mut(b).set_visible(false);
+3887|        assert_eq!(scene.hit(Pos { x: 5, y: 5 }), Some(a), "an invisible node is skipped by hit-testing");
+3888|        assert_eq!(scene.hit(Pos { x: 20, y: 20 }), None, "outside every rect");
+3889|    }
+3890|
+3891|    #[test]
+3892|    fn scene_remove_detaches_subtree_from_parent() {
+3893|        let mut scene = Scene::new();
+3894|        let root = scene.root();
+3895|        let a = scene.add(root, Node::new(NodeContent::Box));
+3896|        scene.add(a, Node::new(NodeContent::Box));
+3897|        scene.remove(a);
+3898|        assert!(!scene.node(root).children().contains(&a));
+3899|    }
+3900|
+3901|    #[test]
+3902|    #[should_panic(expected = "stale NodeId")]
+3903|    fn scene_node_panics_after_its_id_is_removed() {
+3904|        let mut scene = Scene::new();
+3905|        let root = scene.root();
+3906|        let a = scene.add(root, Node::new(NodeContent::Box));
+3907|        scene.remove(a);
+3908|        scene.node(a);
+3909|    }
+3910|    //#endregion 🔖️Scene
+3911|
+3912|    //#region 🔖️Layout
+3913|    #[test]
+3914|    fn layout_column_direction_stacks_children_vertically() {
+3915|        let mut scene = Scene::new();
+3916|        let root = scene.root();
+3917|        scene.node_mut(root).set_constraint(Constraint { direction: Direction::Column, ..Default::default() });
+3918|        let a = scene.add(root, Node::new(NodeContent::Box));
+3919|        let b = scene.add(root, Node::new(NodeContent::Box));
+3920|        scene.node_mut(a).set_constraint(Constraint { height: Dimension::Cells(3), ..Default::default() });
+3921|        scene.node_mut(b).set_constraint(Constraint { height: Dimension::Weight(1), ..Default::default() });
+3922|        solve(&mut scene, Rect::new(0, 0, 10, 10));
+3923|        assert_eq!(scene.rect(a), Rect::new(0, 0, 10, 3));
+3924|        assert_eq!(scene.rect(b), Rect::new(0, 3, 10, 7));
+3925|    }
+3926|
+3927|    #[test]
+3928|    fn layout_distribute_weight_remainder_goes_to_earliest_child_on_ties() {
+3929|        let mut scene = Scene::new();
+3930|        let root = scene.root();
+3931|        scene.node_mut(root).set_constraint(Constraint { direction: Direction::Row, ..Default::default() });
+3932|        let a = scene.add(root, Node::new(NodeContent::Box));
+3933|        let b = scene.add(root, Node::new(NodeContent::Box));
+3934|        let c = scene.add(root, Node::new(NodeContent::Box));
+3935|        for id in [a, b, c] {
+3936|            scene.node_mut(id).set_constraint(Constraint { width: Dimension::Weight(1), ..Default::default() });
+3937|        }
+3938|        solve(&mut scene, Rect::new(0, 0, 10, 5));
+3939|        let widths = [scene.rect(a).width, scene.rect(b).width, scene.rect(c).width];
+3940|        assert_eq!(widths.iter().sum::<u16>(), 10);
+3941|        assert_eq!(widths[0], 4, "equal fractional remainders are broken by original order");
+3942|    }
+3943|    //#endregion 🔖️Layout
+3944|
+3945|    //#region 🔖️Widget
+3946|    #[test]
+3947|    fn list_on_key_boundaries_toggle_and_activate() {
+3948|        let mut widget = WidgetState::List(ListState::new(vec!["a".to_string(), "b".to_string()]));
+3949|        let up = KeyEvent { key: Key::Up, mods: 0 };
+3950|        assert_eq!(widget.on_key(&up), None, "already at the top");
+3951|        let down = KeyEvent { key: Key::Down, mods: 0 };
+3952|        assert_eq!(widget.on_key(&down), Some(WidgetSignal::SelectionChanged(1)));
+3953|        assert_eq!(widget.on_key(&down), None, "already at the bottom");
+3954|        let space = KeyEvent { key: Key::Char(' '), mods: 0 };
+3955|        assert_eq!(widget.on_key(&space), Some(WidgetSignal::Toggled(true)));
+3956|        assert_eq!(widget.on_key(&space), Some(WidgetSignal::Toggled(false)));
+3957|        let enter = KeyEvent { key: Key::Enter, mods: 0 };
+3958|        assert_eq!(widget.on_key(&enter), Some(WidgetSignal::Activated(1)));
+3959|
+3960|        let mut empty_widget = WidgetState::List(ListState::new(vec![]));
+3961|        assert_eq!(empty_widget.on_key(&space), None, "toggling with no items is a no-op");
+3962|    }
+3963|
+3964|    #[test]
+3965|    fn select_on_key_wraps_and_ignores_empty_options() {
+3966|        let mut widget = WidgetState::Select(SelectState { label: "L".to_string(), options: vec!["x".to_string(), "y".to_string()], index: 0 });
+3967|        let left = KeyEvent { key: Key::Left, mods: 0 };
+3968|        assert_eq!(widget.on_key(&left), Some(WidgetSignal::SelectionChanged(1)), "Left from index 0 wraps to the last option");
+3969|        let right = KeyEvent { key: Key::Right, mods: 0 };
+3970|        assert_eq!(widget.on_key(&right), Some(WidgetSignal::SelectionChanged(0)));
+3971|
+3972|        let mut empty_widget = WidgetState::Select(SelectState { label: "L".to_string(), options: vec![], index: 0 });
+3973|        assert_eq!(empty_widget.on_key(&right), None);
+3974|    }
+3975|
+3976|    #[test]
+3977|    fn tabs_on_key_wraps_and_ignores_empty_tabs() {
+3978|        let mut widget = WidgetState::Tabs(TabsState { tabs: vec!["one".to_string(), "two".to_string()], active: 0 });
+3979|        let left = KeyEvent { key: Key::Left, mods: 0 };
+3980|        assert_eq!(widget.on_key(&left), Some(WidgetSignal::TabChanged(1)), "Left from index 0 wraps to the last tab");
+3981|        let right = KeyEvent { key: Key::Right, mods: 0 };
+3982|        assert_eq!(widget.on_key(&right), Some(WidgetSignal::TabChanged(0)));
+3983|
+3984|        let mut empty_widget = WidgetState::Tabs(TabsState { tabs: vec![], active: 0 });
+3985|        assert_eq!(empty_widget.on_key(&right), None);
+3986|    }
+3987|
+3988|    #[test]
+3989|    fn input_on_key_inserts_utf8_and_respects_cursor_bounds() {
+3990|        let mut widget = WidgetState::Input(InputState { value: String::new(), cursor: 0, placeholder: "ph".to_string() });
+3991|        let type_u = KeyEvent { key: Key::Char('ü'), mods: 0 };
+3992|        assert_eq!(widget.on_key(&type_u), Some(WidgetSignal::ValueChanged("ü".to_string())));
+3993|        let cursor_after_insert = match &widget {
+3994|            WidgetState::Input(i) => i.cursor,
+3995|            _ => unreachable!(),
+3996|        };
+3997|        assert_eq!(cursor_after_insert, 'ü'.len_utf8());
+3998|
+3999|        let left = KeyEvent { key: Key::Left, mods: 0 };
+4000|        assert_eq!(widget.on_key(&left), None);
+4001|        let cursor_after_left = match &widget {
+4002|            WidgetState::Input(i) => i.cursor,
+4003|            _ => unreachable!(),
+4004|        };
+4005|        assert_eq!(cursor_after_left, 1, "Left steps by one byte, not a full UTF-8 char boundary");
+4006|        assert_eq!(widget.on_key(&left), None);
+4007|        let cursor_after_second_left = match &widget {
+4008|            WidgetState::Input(i) => i.cursor,
+4009|            _ => unreachable!(),
+4010|        };
+4011|        assert_eq!(cursor_after_second_left, 0);
+4012|        assert_eq!(widget.on_key(&left), None, "already at cursor 0");
+4013|
+4014|        let backspace = KeyEvent { key: Key::Backspace, mods: 0 };
+4015|        assert_eq!(widget.on_key(&backspace), None, "nothing before the cursor to delete");
+4016|
+4017|        let right = KeyEvent { key: Key::Right, mods: 0 };
+4018|        assert_eq!(widget.on_key(&right), None);
+4019|        assert_eq!(widget.on_key(&right), None);
+4020|        assert_eq!(widget.on_key(&right), None, "already at the end");
+4021|
+4022|        assert_eq!(widget.on_key(&backspace), Some(WidgetSignal::ValueChanged(String::new())), "backspace at the end removes the multi-byte char");
+4023|    }
+4024|
+4025|    #[test]
+4026|    fn log_state_push_evicts_oldest_beyond_capacity() {
+4027|        let mut log = LogState::new(3);
+4028|        log.push("a");
+4029|        log.push("b");
+4030|        log.push("c");
+4031|        log.push("d");
+4032|        assert_eq!(log.lines().len(), 3);
+4033|        assert_eq!(log.lines().front(), Some(&"b".to_string()), "the oldest line is evicted once capacity is exceeded");
+4034|        log.clear();
+4035|        assert!(log.lines().is_empty());
+4036|        assert_eq!(log.scroll, LogScroll::Follow, "clearing resets scroll to Follow");
+4037|    }
+4038|
+4039|    #[test]
+4040|    fn log_on_key_page_and_home_end_scroll_states() {
+4041|        let mut log = LogState::new(20);
+4042|        for i in 0..20 {
+4043|            log.push(&format!("l{i}"));
+4044|        }
+4045|        let mut widget = WidgetState::Log(log);
+4046|
+4047|        let page_down = KeyEvent { key: Key::PageDown, mods: 0 };
+4048|        widget.on_key(&page_down);
+4049|        assert_eq!(log_scroll(&widget), LogScroll::Follow, "PageDown while already following is a no-op");
+4050|
+4051|        let home = KeyEvent { key: Key::Home, mods: 0 };
+4052|        widget.on_key(&home);
+4053|        assert_eq!(log_scroll(&widget), LogScroll::At(0));
+4054|
+4055|        widget.on_key(&page_down);
+4056|        assert_eq!(log_scroll(&widget), LogScroll::At(10), "PageDown short of the end scrolls forward by 10");
+4057|
+4058|        widget.on_key(&page_down);
+4059|        assert_eq!(log_scroll(&widget), LogScroll::Follow, "PageDown past the end resumes following");
+4060|
+4061|        let page_up = KeyEvent { key: Key::PageUp, mods: 0 };
+4062|        widget.on_key(&page_up);
+4063|        assert_eq!(log_scroll(&widget), LogScroll::At(19), "PageUp from Follow jumps to the last line");
+4064|
+4065|        widget.on_key(&page_up);
+4066|        assert_eq!(log_scroll(&widget), LogScroll::At(9), "a second PageUp scrolls back 10 more lines");
+4067|
+4068|        let end = KeyEvent { key: Key::End, mods: 0 };
+4069|        widget.on_key(&end);
+4070|        assert_eq!(log_scroll(&widget), LogScroll::Follow);
+4071|    }
+4072|
+4073|    fn log_scroll(widget: &WidgetState) -> LogScroll {
+4074|        match widget {
+4075|            WidgetState::Log(l) => l.scroll,
+4076|            _ => unreachable!(),
+4077|        }
+4078|    }
+4079|
+4080|    #[test]
+4081|    fn table_on_key_left_right_expand_collapse_and_boundaries() {
+4082|        let mut table = sample_table();
+4083|        table.selected = 0;
+4084|        let mut widget = WidgetState::Table(table);
+4085|        let up = KeyEvent { key: Key::Up, mods: 0 };
+4086|        assert_eq!(widget.on_key(&up), None, "already at the first visible row");
+4087|
+4088|        let left = KeyEvent { key: Key::Left, mods: 0 };
+4089|        assert_eq!(widget.on_key(&left), Some(WidgetSignal::SelectionChanged(0)), "Left on an expanded parent collapses it");
+4090|        assert_eq!(widget.on_key(&left), None, "Left on an already-collapsed parent is a no-op");
+4091|
+4092|        let right = KeyEvent { key: Key::Right, mods: 0 };
+4093|        assert_eq!(widget.on_key(&right), Some(WidgetSignal::SelectionChanged(0)));
+4094|        assert_eq!(widget.on_key(&right), None, "Right on an already-expanded parent is a no-op");
+4095|
+4096|        let WidgetState::Table(t) = &mut widget else { unreachable!() };
+4097|        t.selected = 1;
+4098|        assert_eq!(widget.on_key(&left), None, "Left on a leaf row is a no-op");
+4099|        assert_eq!(widget.on_key(&right), None, "Right on a leaf row is a no-op");
+4100|
+4101|        let mut empty_widget = WidgetState::Table(TableState::new(vec![], vec![]));
+4102|        assert_eq!(empty_widget.on_key(&up), None, "no rows at all means every key is a no-op");
+4103|    }
+4104|
+4105|    #[test]
+4106|    fn widget_preferred_size_for_label_select_chip_and_divider() {
+4107|        let label = WidgetState::Label(LabelState { text: "hello".to_string(), align: Align::Left, role: Role::Foreground });
+4108|        assert_eq!(label.preferred_size(), Size { width: 5, height: 1 });
+4109|
+4110|        let select = WidgetState::Select(SelectState { label: "L".to_string(), options: vec!["opt".to_string()], index: 0 });
+4111|        let expected = display_width("L \u{2039} opt \u{203a}");
+4112|        assert_eq!(select.preferred_size(), Size { width: expected, height: 1 });
+4113|
+4114|        let chip = WidgetState::Chip(ChipState { label: "tag".to_string(), on: true });
+4115|        assert_eq!(chip.preferred_size(), Size { width: 5, height: 1 });
+4116|
+4117|        let divider = WidgetState::Divider(DividerState::default());
+4118|        assert_eq!(divider.preferred_size(), Size { width: 1, height: 1 });
+4119|
+4120|        let list = WidgetState::List(ListState::new(vec!["x".to_string()]));
+4121|        assert_eq!(list.preferred_size(), Size { width: 0, height: 0 }, "list has no measured preferred size");
+4122|    }
+4123|
+4124|    #[test]
+4125|    fn paint_list_highlights_selected_row_only_when_focused() {
+4126|        let theme = Theme::new(AppearanceName::Dark);
+4127|        let list = ListState { items: vec!["a".to_string(), "b".to_string()], selected: 1, offset: 0, marks: vec![false, true] };
+4128|        let rect = Rect::new(0, 0, 10, 2);
+4129|        let mut buf = CellBuffer::new(Size { width: 10, height: 2 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+4130|        WidgetState::List(list).paint(&theme, rect, &mut buf, true);
+4131|        assert_eq!(buf.get(0, 1).unwrap().bg, theme.role(Role::ActiveBase));
+4132|        assert_ne!(buf.get(0, 0).unwrap().bg, theme.role(Role::ActiveBase));
+4133|        assert!(row_text(&buf, 1).starts_with('\u{2713}'), "a marked row shows a check prefix");
+4134|        assert!(row_text(&buf, 0).starts_with(' '), "an unmarked row has a blank prefix");
+4135|    }
+4136|
+4137|    #[test]
+4138|    fn paint_select_renders_label_and_current_option() {
+4139|        let theme = Theme::new(AppearanceName::Dark);
+4140|        let select = SelectState { label: "Mode".to_string(), options: vec!["A".to_string(), "B".to_string()], index: 1 };
+4141|        let rect = Rect::new(0, 0, 20, 1);
+4142|        let mut buf = CellBuffer::new(Size { width: 20, height: 1 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+4143|        WidgetState::Select(select).paint(&theme, rect, &mut buf, true);
+4144|        assert_eq!(row_text(&buf, 0).trim_end(), "Mode: \u{2039} B \u{203a}");
+4145|        assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::Accent), "a focused select uses the accent color");
+4146|    }
+4147|
+4148|    #[test]
+4149|    fn paint_tabs_bolds_the_active_tab() {
+4150|        let theme = Theme::new(AppearanceName::Dark);
+4151|        let tabs = TabsState { tabs: vec!["One".to_string(), "Two".to_string()], active: 1 };
+4152|        let rect = Rect::new(0, 0, 20, 1);
+4153|        let mut buf = CellBuffer::new(Size { width: 20, height: 1 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+4154|        WidgetState::Tabs(tabs).paint(&theme, rect, &mut buf, false);
+4155|        let t_x = (0..20).find(|&x| buf.get(x, 0).unwrap().ch == 'T').expect("active tab rendered");
+4156|        assert_eq!(buf.get(t_x, 0).unwrap().attrs & attr::BOLD, attr::BOLD);
+4157|        let o_x = (0..20).find(|&x| buf.get(x, 0).unwrap().ch == 'O').expect("inactive tab rendered");
+4158|        assert_eq!(buf.get(o_x, 0).unwrap().attrs & attr::BOLD, 0, "inactive tab is not bold");
+4159|    }
+4160|
+4161|    #[test]
+4162|    fn paint_log_shows_the_tail_when_following() {
+4163|        let theme = Theme::new(AppearanceName::Dark);
+4164|        let mut log = LogState::new(10);
+4165|        for i in 0..5 {
+4166|            log.push(&format!("line{i}"));
+4167|        }
+4168|        let rect = Rect::new(0, 0, 10, 3);
+4169|        let mut buf = CellBuffer::new(Size { width: 10, height: 3 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+4170|        WidgetState::Log(log).paint(&theme, rect, &mut buf, false);
+4171|        assert_eq!(row_text(&buf, 0).trim_end(), "line2");
+4172|        assert_eq!(row_text(&buf, 1).trim_end(), "line3");
+4173|        assert_eq!(row_text(&buf, 2).trim_end(), "line4");
+4174|    }
+4175|
+4176|    #[test]
+4177|    fn paint_input_shows_placeholder_and_draws_cursor_when_focused() {
+4178|        let theme = Theme::new(AppearanceName::Dark);
+4179|        let rect = Rect::new(0, 0, 20, 1);
+4180|        let empty_input = InputState { value: String::new(), cursor: 0, placeholder: "type here".to_string() };
+4181|        let mut buf = CellBuffer::new(Size { width: 20, height: 1 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+4182|        WidgetState::Input(empty_input).paint(&theme, rect, &mut buf, false);
+4183|        assert_eq!(row_text(&buf, 0).trim_end(), "type here");
+4184|        assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::MutedForeground));
+4185|
+4186|        let filled = InputState { value: "hi".to_string(), cursor: 2, placeholder: "ph".to_string() };
+4187|        let mut buf2 = CellBuffer::new(Size { width: 20, height: 1 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+4188|        WidgetState::Input(filled).paint(&theme, rect, &mut buf2, true);
+4189|        assert_eq!(buf2.get(2, 0).unwrap().ch, '\u{2588}', "a focused input draws a cursor block at the caret position");
+4190|    }
+4191|
+4192|    #[test]
+4193|    fn paint_divider_centers_its_label() {
+4194|        let theme = Theme::new(AppearanceName::Dark);
+4195|        let divider = DividerState { label: Some("Hi".to_string()) };
+4196|        let rect = Rect::new(0, 0, 10, 1);
+4197|        let mut buf = CellBuffer::new(Size { width: 10, height: 1 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+4198|        WidgetState::Divider(divider).paint(&theme, rect, &mut buf, false);
+4199|        let row = row_text(&buf, 0);
+4200|        assert!(row.contains("Hi"));
+4201|        assert_eq!(row.chars().next().unwrap(), '\u{2500}', "the hairline still draws under the label");
+4202|    }
+4203|
+4204|    #[test]
+4205|    fn paint_chip_reflects_on_and_off_colors() {
+4206|        let theme = Theme::new(AppearanceName::Dark);
+4207|        let rect = Rect::new(0, 0, 10, 1);
+4208|        let on = ChipState { label: "x".to_string(), on: true };
+4209|        let mut buf_on = CellBuffer::new(Size { width: 10, height: 1 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+4210|        WidgetState::Chip(on).paint(&theme, rect, &mut buf_on, false);
+4211|        assert_eq!(buf_on.get(0, 0).unwrap().bg, theme.role(Role::Accent));
+4212|
+4213|        let off = ChipState { label: "x".to_string(), on: false };
+4214|        let mut buf_off = CellBuffer::new(Size { width: 10, height: 1 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+4215|        WidgetState::Chip(off).paint(&theme, rect, &mut buf_off, false);
+4216|        assert_eq!(buf_off.get(0, 0).unwrap().bg, theme.surface(Surface::Panel));
+4217|    }
+4218|    //#endregion 🔖️Widget
+4219|
+4220|    //#region 🔖️Chrome
+4221|    #[test]
+4222|    fn paint_navbar_places_left_center_and_right_items() {
+4223|        let theme = Theme::new(AppearanceName::Dark);
+4224|        let rect = Rect::new(0, 0, 30, 2);
+4225|        let mut buf = CellBuffer::new(Size { width: 30, height: 2 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+4226|        let navbar = NavbarState {
+4227|            left: vec![NavItem { id: "l".to_string(), label: "L".to_string(), active: false }],
+4228|            center: vec![NavItem { id: "c".to_string(), label: "C".to_string(), active: false }],
+4229|            right: vec![NavItem { id: "r".to_string(), label: "R".to_string(), active: true }],
+4230|        };
+4231|        ChromeState::Navbar(navbar).paint(&theme, rect, &mut buf);
+4232|        let row = row_text(&buf, 0);
+4233|        assert!(row.trim_start().starts_with('L'));
+4234|        assert!(row.contains('C'));
+4235|        assert!(row.trim_end().ends_with('R'));
+4236|        assert_eq!(row_text(&buf, 1), "\u{2500}".repeat(30), "hairline drawn below the navbar");
+4237|        let right_x = (0..30).find(|&x| buf.get(x, 0).unwrap().ch == 'R').expect("right item rendered");
+4238|        assert_eq!(buf.get(right_x, 0).unwrap().fg, theme.role(Role::Accent), "the active item uses the accent color");
+4239|    }
+4240|
+4241|    #[test]
+4242|    fn paint_footer_renders_hints_then_status() {
+4243|        let theme = Theme::new(AppearanceName::Dark);
+4244|        let rect = Rect::new(0, 0, 30, 2);
+4245|        let mut buf = CellBuffer::new(Size { width: 30, height: 2 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+4246|        let footer = FooterState { hints: vec![KeyHint { key: "q".to_string(), label: "quit".to_string() }], status: "OK".to_string() };
+4247|        ChromeState::Footer(footer).paint(&theme, rect, &mut buf);
+4248|        assert_eq!(row_text(&buf, 0), "\u{2500}".repeat(30), "hairline drawn above the footer");
+4249|        let row1 = row_text(&buf, 1);
+4250|        assert!(row1.contains('q'));
+4251|        assert!(row1.contains("quit"));
+4252|        assert!(row1.trim_end().ends_with("OK"));
+4253|    }
+4254|    //#endregion 🔖️Chrome
+4255|
+4256|    //#region 🔖️Engine
+4257|    #[test]
+4258|    fn tui_focus_next_and_prev_cycle_through_focusables() {
+4259|        let mut tui = crate::tui::engine::Tui::new(Size { width: 20, height: 5 }, Theme::new(AppearanceName::Dark));
+4260|        let root = tui.scene.root();
+4261|        let a = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "a".to_string(), align: Align::Left, role: Role::Foreground }))));
+4262|        let b = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "b".to_string(), align: Align::Left, role: Role::Foreground }))));
+4263|        assert_eq!(tui.focus(), None);
+4264|        tui.focus_next();
+4265|        assert_eq!(tui.focus(), Some(a));
+4266|        tui.focus_next();
+4267|        assert_eq!(tui.focus(), Some(b));
+4268|        tui.focus_next();
+4269|        assert_eq!(tui.focus(), Some(a), "focus wraps back to the first focusable");
+4270|        tui.focus_prev();
+4271|        assert_eq!(tui.focus(), Some(b), "focus wraps backward past the first focusable");
+4272|    }
+4273|
+4274|    #[test]
+4275|    fn tui_dispatch_tab_and_backtab_move_focus() {
+4276|        let mut tui = crate::tui::engine::Tui::new(Size { width: 20, height: 5 }, Theme::new(AppearanceName::Dark));
+4277|        let root = tui.scene.root();
+4278|        let a = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "a".to_string(), align: Align::Left, role: Role::Foreground }))));
+4279|        let b = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "b".to_string(), align: Align::Left, role: Role::Foreground }))));
+4280|        let tab_ev = Event::Key(KeyEvent { key: Key::Tab, mods: 0 });
+4281|        assert_eq!(tui.dispatch(&tab_ev), vec![]);
+4282|        assert_eq!(tui.focus(), Some(a));
+4283|        let backtab_ev = Event::Key(KeyEvent { key: Key::BackTab, mods: 0 });
+4284|        tui.dispatch(&backtab_ev);
+4285|        assert_eq!(tui.focus(), Some(b));
+4286|    }
+4287|
+4288|    #[test]
+4289|    fn tui_render_skips_repaint_when_nothing_dirty() {
+4290|        let mut tui = crate::tui::engine::Tui::new(Size { width: 10, height: 3 }, Theme::new(AppearanceName::Dark));
+4291|        let first = tui.render_full();
+4292|        assert!(!first.0.is_empty());
+4293|        let second = tui.render();
+4294|        assert!(second.0.is_empty(), "no dirty state and no forced redraw emits nothing");
+4295|    }
+4296|
+4297|    #[test]
+4298|    fn tui_set_appearance_and_resize_force_full_redraw() {
+4299|        let mut tui = crate::tui::engine::Tui::new(Size { width: 10, height: 3 }, Theme::new(AppearanceName::Dark));
+4300|        tui.render_full();
+4301|        tui.set_appearance(AppearanceName::Light);
+4302|        let patch = tui.render();
+4303|        assert!(!patch.0.is_empty(), "set_appearance forces a full repaint even with no dirty nodes");
+4304|        tui.render();
+4305|        tui.resize(Size { width: 12, height: 4 });
+4306|        let patch2 = tui.render();
+4307|        assert!(!patch2.0.is_empty(), "resize forces a full repaint too");
+4308|    }
+4309|    //#endregion 🔖️Engine
+4310|
+4311|    //#region 🔖️WasmHost
+4312|    #[test]
+4313|    fn wasm_host_setup_and_teardown_match_ansi_sequences() {
+4314|        let host = crate::tui::host::WasmHost::new(10, 5, true);
+4315|        assert_eq!(host.setup(), setup_sequence());
+4316|        assert_eq!(host.teardown(), teardown_sequence());
+4317|    }
+4318|
+4319|    #[test]
+4320|    fn wasm_host_resize_updates_engine_size() {
+4321|        let mut host = crate::tui::host::WasmHost::new(10, 5, true);
+4322|        host.render();
+4323|        host.resize(20, 8);
+4324|        let patch = host.render();
+4325|        assert!(!patch.is_empty(), "resizing triggers a full repaint on the next render");
+4326|    }
+4327|    //#endregion 🔖️WasmHost
+4328|}
+4329|// #endregion 🔖️Tests

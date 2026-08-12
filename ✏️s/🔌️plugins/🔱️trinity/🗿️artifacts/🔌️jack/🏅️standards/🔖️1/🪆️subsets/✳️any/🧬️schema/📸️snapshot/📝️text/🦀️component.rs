@@ -193,7 +193,9 @@ fn jack_snapshot_dsl_to_jack_snapshot(parsed: JackSnapshotDsl) -> Result<JackSna
 /// 📜️ `.trinity` textual notation for a whole [`JackSnapshot`] (`store::ArtifactDsl`), delegating to
 /// the derive-generated `JackSnapshotDsl` mirror. Also hand-implements `dsl::DslField` (normally
 /// auto-emitted alongside `#[derive(dsl::DslRecord)]`) so `JackSnapshot` can be nested as an
-/// ordinary field too — `TrinityGraphMutation::SetFixture` embeds a whole fixture snapshot.
+/// ordinary field too — used wherever a whole fixture snapshot needs to embed as a typed field
+/// (e.g. builder/composer machinery), never as a `TrinityGraphMutation` payload (whole-document
+/// replace is banned from that enum outright).
 impl ArtifactDsl for JackSnapshot {
     const EXTENSION: &'static str = "trinity";
     fn envelope_id() -> &'static str { "trinity.jack" }

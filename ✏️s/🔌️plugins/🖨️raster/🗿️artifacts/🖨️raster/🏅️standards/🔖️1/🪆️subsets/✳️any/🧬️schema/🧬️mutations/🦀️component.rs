@@ -1,12 +1,13 @@
 //! 🧬️ Raster artifact — closed semantic mutation dispatch enum (constitutional: op). Derived from
 //! `RasterSnapshot`'s recursive layer-tree shape per `📓️derivation-rules.md`: the five old
-//! option-bag/whole-tree variants (`AddLayer`, `RemoveLayer`, `PatchLayer`, `MoveLayer`,
-//! `SetSnapshot`) are gone, replaced by ten real verbs (`create-layer`, `delete-layer`,
+//! option-bag/whole-tree variants (`AddLayer`, `RemoveLayer`, `PatchLayer`, `MoveLayer`, and the old
+//! whole-document-replace variant) are gone, replaced by ten real verbs (`create-layer`, `delete-layer`,
 //! `reorder-layers`, `rename-layer`, `change-layer-visible`, `change-layer-opacity`,
 //! `change-layer-blend-mode`, `move-layer`, `resize-layer`, `change-layer-adjustment-kind`) plus two
 //! justified additions for the `assets` id-keyed root collection (`add-layer-asset`,
-//! `remove-layer-asset` — see that leaf's docstring). `SetSnapshot` dies with NO replacement:
-//! whole-document replace goes through `store::ArtifactStore::reset`, entirely outside this enum.
+//! `remove-layer-asset` — see that leaf's docstring). The old whole-document-replace variant dies
+//! with NO replacement: whole-document replace goes through `store::ArtifactStore::reset`, entirely
+//! outside this enum.
 //!
 //! All twelve triads are mounted directly as `mutations`-sibling modules in `📦️glue.rs`, each with
 //! its own unique emoji-prefixed directory — no inline `#[path = "."]` self-wiring.

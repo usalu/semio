@@ -2,6 +2,7 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🗺️set-adjacency` per Wave C.
 
 use super::mutation::ConnectAdjacency;
+use protocol::Patchable;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramAdjacenciesDelta, ProgramAdjacenciesPatchEntry};

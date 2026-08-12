@@ -232,7 +232,7 @@ pub mod derived_composition {
         //#region 🔖️ConformanceLaws
         /// 🧪️ Per-artifact conformance laws (grammar recipe §4 item 8) for `s.stdio.semio.presentation`'s
         /// three facets — ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION presentation
-        /// wave, following the workflow/model/brep/drawing/document pilots' proven pattern. Lives in
+        /// wave, following the flow/model/brep/drawing/document pilots' proven pattern. Lives in
         /// this composer's own test region: presentation has no per-standard `⚙️engine` dir the way
         /// json/csv/zip/png do (only `📸️snapshot`/`🔺️diff`/`🧬️mutations`/`🎹️composer`/`🏗️builder`/
         /// `🚪️io`/`🧐️analyzer`), and v1's SHARED `🏅️standards/🔖️v1/⚙️engine/🦀️component.rs` only

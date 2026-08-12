@@ -1,8 +1,45 @@
-# 📸️ DAG mutation schema.
-type DagMutation {
-  schema: String! @state(class: PERSISTENT)
-  nodes: [DagNodeSpec!]! @state(class: PERSISTENT)
-  edges: [DagFixtureEdge!]! @state(class: PERSISTENT)
+# 📸️ DAG mutation schema — one type per semantic mutation kind, no leftover whole-collection shape.
+union DagMutation =
+    CreateNode
+  | DeleteNode
+  | RenameNode
+  | ChangeNodeName
+  | MoveNode
+  | ResizeNode
+  | ChangeNodeIcon
+  | ChangeNodeAbbreviation
+  | ChangeNodeOperatorKind
+  | ReplaceNodeKind
+  | ReplaceNodeProperties
+  | ReorderNodes
+  | ConnectNodes
+  | DisconnectNodes
+
+type CreateNode { node: DagNodeSpec! }
+type DeleteNode { id: String! }
+type RenameNode { id: String! newId: String! }
+type ChangeNodeName { id: String! newName: String! }
+type MoveNode { id: String! x: Float! y: Float! }
+type ResizeNode { id: String! width: Float! height: Float! }
+type ChangeNodeIcon { id: String! newIcon: String! }
+type ChangeNodeAbbreviation { id: String! newAbbreviation: String! }
+type ChangeNodeOperatorKind { id: String! newOperatorKind: String }
+type ReplaceNodeKind { id: String! newKindJson: String! }
+type ReplaceNodeProperties { id: String! newPropertiesJson: String! }
+type ReorderNodes { order: [String!]! }
+type ConnectNodes { id: String! source: String! target: String! routeStyle: String! propertiesJson: String! }
+type DisconnectNodes { id: String! }
+
+type DagNodeSpec {
+  id: String!
+  name: String!
+  abbreviation: String!
+  icon: String!
+  x: Float!
+  y: Float!
+  width: Float!
+  height: Float!
+  operatorKind: String
+  kindJson: String!
+  propertiesJson: String!
 }
-type DagNodeSpec { id: String! }
-type DagFixtureEdge { id: String! source: String! target: String! }

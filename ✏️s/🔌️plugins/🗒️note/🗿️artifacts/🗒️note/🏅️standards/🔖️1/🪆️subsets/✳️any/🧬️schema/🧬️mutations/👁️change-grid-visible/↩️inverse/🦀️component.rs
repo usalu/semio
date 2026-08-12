@@ -4,7 +4,7 @@ use crate::artifacts::note::schema::mutations::NoteMutation;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeGridVisible, base: &NoteSnapshot) -> Vec<NoteMutation> {
+pub fn inverse(_payload: &ChangeGridVisible, base: &NoteSnapshot) -> Vec<NoteMutation> {
     vec![NoteMutation::ChangeGridVisible(ChangeGridVisible { new_visible: base.grid_visible })]
 }
 //#endregion 🔖️Inverse

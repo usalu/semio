@@ -1,34 +1,61 @@
 {
   "$id": "https://semio.tech/schema/s/dag/dag/mutation.json",
   "title": "DagMutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["schema", "nodes", "edges"],
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "nodes": { "type": "array", "items": { "$ref": "#/$defs/DagNodeSpec" }, "x-semio-state": "persistent" },
-    "edges": { "type": "array", "items": { "$ref": "#/$defs/DagFixtureEdge" }, "x-semio-state": "persistent" }
-  },
+  "oneOf": [
+    { "$ref": "#/$defs/CreateNode" },
+    { "$ref": "#/$defs/DeleteNode" },
+    { "$ref": "#/$defs/RenameNode" },
+    { "$ref": "#/$defs/ChangeNodeName" },
+    { "$ref": "#/$defs/MoveNode" },
+    { "$ref": "#/$defs/ResizeNode" },
+    { "$ref": "#/$defs/ChangeNodeIcon" },
+    { "$ref": "#/$defs/ChangeNodeAbbreviation" },
+    { "$ref": "#/$defs/ChangeNodeOperatorKind" },
+    { "$ref": "#/$defs/ReplaceNodeKind" },
+    { "$ref": "#/$defs/ReplaceNodeProperties" },
+    { "$ref": "#/$defs/ReorderNodes" },
+    { "$ref": "#/$defs/ConnectNodes" },
+    { "$ref": "#/$defs/DisconnectNodes" }
+  ],
   "$defs": {
     "DagNodeSpec": {
       "title": "DagNodeSpec",
       "type": "object",
-      "additionalProperties": true,
-      "required": ["id"],
-      "properties": {
-        "id": { "type": "string" }
-      }
-    },
-    "DagFixtureEdge": {
-      "title": "DagFixtureEdge",
-      "type": "object",
       "additionalProperties": false,
-      "required": ["id", "source", "target"],
+      "required": ["id", "name", "abbreviation", "icon", "x", "y", "width", "height", "kindJson", "propertiesJson"],
       "properties": {
         "id": { "type": "string" },
-        "source": { "type": "string" },
-        "target": { "type": "string" }
+        "name": { "type": "string" },
+        "abbreviation": { "type": "string" },
+        "icon": { "type": "string" },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "width": { "type": "number" },
+        "height": { "type": "number" },
+        "operatorKind": { "type": "string" },
+        "kindJson": { "type": "string", "description": "Opaque serde_json-encoded DagNodeKind." },
+        "propertiesJson": { "type": "string", "description": "Opaque serde_json-encoded PropertyBag." }
       }
-    }
+    },
+    "CreateNode": { "title": "CreateNode", "type": "object", "additionalProperties": false, "required": ["mutation", "node"], "properties": { "mutation": { "const": "create-node" }, "node": { "$ref": "#/$defs/DagNodeSpec" } } },
+    "DeleteNode": { "title": "DeleteNode", "type": "object", "additionalProperties": false, "required": ["mutation", "id"], "properties": { "mutation": { "const": "delete-node" }, "id": { "type": "string" } } },
+    "RenameNode": { "title": "RenameNode", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "newId"], "properties": { "mutation": { "const": "rename-node" }, "id": { "type": "string" }, "newId": { "type": "string" } } },
+    "ChangeNodeName": { "title": "ChangeNodeName", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "newName"], "properties": { "mutation": { "const": "change-node-name" }, "id": { "type": "string" }, "newName": { "type": "string" } } },
+    "MoveNode": { "title": "MoveNode", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "x", "y"], "properties": { "mutation": { "const": "move-node" }, "id": { "type": "string" }, "x": { "type": "number" }, "y": { "type": "number" } } },
+    "ResizeNode": { "title": "ResizeNode", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "width", "height"], "properties": { "mutation": { "const": "resize-node" }, "id": { "type": "string" }, "width": { "type": "number" }, "height": { "type": "number" } } },
+    "ChangeNodeIcon": { "title": "ChangeNodeIcon", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "newIcon"], "properties": { "mutation": { "const": "change-node-icon" }, "id": { "type": "string" }, "newIcon": { "type": "string" } } },
+    "ChangeNodeAbbreviation": { "title": "ChangeNodeAbbreviation", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "newAbbreviation"], "properties": { "mutation": { "const": "change-node-abbreviation" }, "id": { "type": "string" }, "newAbbreviation": { "type": "string" } } },
+    "ChangeNodeOperatorKind": { "title": "ChangeNodeOperatorKind", "type": "object", "additionalProperties": false, "required": ["mutation", "id"], "properties": { "mutation": { "const": "change-node-operator-kind" }, "id": { "type": "string" }, "newOperatorKind": { "type": "string" } } },
+    "ReplaceNodeKind": { "title": "ReplaceNodeKind", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "newKindJson"], "properties": { "mutation": { "const": "replace-node-kind" }, "id": { "type": "string" }, "newKindJson": { "type": "string" } } },
+    "ReplaceNodeProperties": { "title": "ReplaceNodeProperties", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "newPropertiesJson"], "properties": { "mutation": { "const": "replace-node-properties" }, "id": { "type": "string" }, "newPropertiesJson": { "type": "string" } } },
+    "ReorderNodes": { "title": "ReorderNodes", "type": "object", "additionalProperties": false, "required": ["mutation", "order"], "properties": { "mutation": { "const": "reorder-nodes" }, "order": { "type": "array", "items": { "type": "string" } } } },
+    "ConnectNodes": {
+      "title": "ConnectNodes",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation", "id", "source", "target", "routeStyle", "propertiesJson"],
+      "properties": { "mutation": { "const": "connect-nodes" }, "id": { "type": "string" }, "source": { "type": "string" }, "target": { "type": "string" }, "routeStyle": { "enum": ["bezier", "sharpSz"] }, "propertiesJson": { "type": "string" } }
+    },
+    "DisconnectNodes": { "title": "DisconnectNodes", "type": "object", "additionalProperties": false, "required": ["mutation", "id"], "properties": { "mutation": { "const": "disconnect-nodes" }, "id": { "type": "string" } } }
   }
 }

@@ -25,6 +25,7 @@ use crate::apps::wires::modes::edit;
 use crate::apps::wires::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
+use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ui_text, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
@@ -40,6 +41,17 @@ pub use inspection_panel::WIRES_PLAY_BODY_PROPERTIES;
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
 pub fn wires_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(WIRES_PLAY_APP_ID).action(action, args)
+}
+
+/// 🔁️ Builds a `HostEffect::LoadDocument` for `document` — the sanctioned non-history "replace the
+/// whole document" gesture (`ArtifactStore::reset`, applied host-side) that
+/// `🎮️commands/🧬️example::set_active_example` uses instead of a banned whole-snapshot mutation. The
+/// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
+pub fn reset_wires_document_effect(document: &WiresSnapshot) -> HostEffect {
+    let pack = <WiresSnapshot as store::ArtifactPack>::encode_pack(document);
+    let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document.clone(), None);
+    let spr = store::print_document_spr(&envelope).expect("wires document spr encode is infallible for a fresh, edit-free envelope");
+    HostEffect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Constants
 

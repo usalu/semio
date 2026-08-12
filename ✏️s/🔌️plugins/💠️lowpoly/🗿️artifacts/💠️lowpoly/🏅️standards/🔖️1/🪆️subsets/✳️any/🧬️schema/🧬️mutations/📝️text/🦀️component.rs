@@ -74,7 +74,7 @@ mod tests {
             LowpolyMutation::ScaleObject(crate::artifacts::lowpoly::mutations::scale_object::mutation::ScaleObject { id: object_id.clone(), new_scale: [2.0, 2.0, 2.0] }),
             LowpolyMutation::ReplaceObjectMesh(crate::artifacts::lowpoly::mutations::replace_object_mesh::mutation::ReplaceObjectMesh { id: object_id.clone(), new_mesh_json: tiny_mesh_json() }),
             LowpolyMutation::InsertPaintLayer(insert_paint_layer::mutation::InsertPaintLayer { object_id: object_id.clone(), index: 1, layer: crate::artifacts::lowpoly::LowpolyPaintLayer::new("Detail") }),
-            LowpolyMutation::RemovePaintLayer(crate::artifacts::lowpoly::mutations::remove_paint_layer_mutation::mutation::RemovePaintLayer { object_id: object_id.clone(), index: 0 }),
+            LowpolyMutation::RemovePaintLayer(crate::artifacts::lowpoly::mutations::remove_paint_layer::mutation::RemovePaintLayer { object_id: object_id.clone(), index: 0 }),
             LowpolyMutation::RenamePaintLayer(crate::artifacts::lowpoly::mutations::rename_paint_layer::mutation::RenamePaintLayer { object_id: object_id.clone(), index: 0, new_name: "Top".into() }),
             LowpolyMutation::ChangePaintLayerVisible(crate::artifacts::lowpoly::mutations::change_paint_layer_visible::mutation::ChangePaintLayerVisible { object_id: object_id.clone(), index: 0, new_visible: false }),
             LowpolyMutation::ChangePaintLayerOpacity(crate::artifacts::lowpoly::mutations::change_paint_layer_opacity::mutation::ChangePaintLayerOpacity { object_id: object_id.clone(), index: 0, new_opacity: 0.5 }),

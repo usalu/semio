@@ -1,6 +1,7 @@
 //! ↩️ Inverse for `InsertTableColumn`.
 use super::mutation::InsertTableColumn;
 use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::artifacts::note::schema::mutations::RemoveTableColumn;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Inverse

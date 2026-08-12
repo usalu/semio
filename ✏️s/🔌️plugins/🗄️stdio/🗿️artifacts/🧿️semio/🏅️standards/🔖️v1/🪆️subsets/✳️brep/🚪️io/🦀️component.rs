@@ -217,7 +217,7 @@ pub mod derived_composition {
         //#region 🔖️ConformanceLaws
         /// 🧪️ Per-artifact conformance laws (grammar recipe §4 item 8) for `s.stdio.semio.brep`'s three
         /// facets — following the ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION
-        /// workflow pilot's proven template (`ws-codec-workflow-report.md`). Lives in this composer's
+        /// flow pilot's proven template (`ws-codec-workflow-report.md`). Lives in this composer's
         /// own test region: brep has no per-standard `⚙️engine` dir the way json/csv/zip/png do, and
         /// v1's SHARED `🏅️standards/🔖️v1/⚙️engine/🦀️component.rs` only aggregates all 14 subsets'
         /// `register()` calls (no test module of its own, and out of this ticket's `✳️brep/`-only edit

@@ -4,9 +4,8 @@
 
 use crate::apps::imperative::config::{ImperativeConfig, ImperativeConfigMutation};
 use crate::artifacts::imperative::dsl::ValueDsl;
-use crate::artifacts::imperative::mutations::ImperativeMutation;
+use crate::artifacts::imperative::mutations::{create_step, delete_step, edit_step_params, reorder_steps, ImperativeMutation};
 use crate::artifacts::imperative::{Dictionary, ImperativeSnapshot, PathRef, Step};
-use protocol::CollectionMutation;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -68,8 +67,14 @@ pub mod add_step {
         let document = doc.snapshot;
         let id = next_step_id(document);
         let step = Step { id: id.clone(), kind: payload.kind.clone(), params: Dictionary::new(), bodies: BTreeMap::new() };
+        // 🪆️ `create-step` is append-only (no index field, matching `apply_steps_delta`'s `added`
+        // handling); a requested `index` is honored as a follow-up reorder.
+        let mut mutations = vec![create_step(PathRef::default(), step)];
+        if let Some(index) = payload.index {
+            mutations.push(reorder_steps(PathRef::default(), id.clone(), index));
+        }
         Ok(Emit {
-            artifact_mutations: vec![ImperativeMutation { path_ref: PathRef::default(), collection: CollectionMutation::Add { index: payload.index.unwrap_or(usize::MAX), item: step } }],
+            artifact_mutations: mutations,
             config_mutations: vec![ImperativeConfigMutation::SetSelectedSteps { ids: vec![id] }],
             ..Default::default()
         })
@@ -95,8 +100,12 @@ pub mod add_step_at {
         let path_ref = path_ref_from(payload.owner.as_deref(), payload.slot.as_deref(), document);
         let id = next_step_id(document);
         let step = Step { id: id.clone(), kind: payload.kind.clone(), params: Dictionary::new(), bodies: BTreeMap::new() };
+        let mut mutations = vec![create_step(path_ref.clone(), step)];
+        if let Some(index) = payload.index {
+            mutations.push(reorder_steps(path_ref, id.clone(), index));
+        }
         Ok(Emit {
-            artifact_mutations: vec![ImperativeMutation { path_ref, collection: CollectionMutation::Add { index: payload.index.unwrap_or(usize::MAX), item: step } }],
+            artifact_mutations: mutations,
             config_mutations: vec![ImperativeConfigMutation::SetSelectedSteps { ids: vec![id] }],
             ..Default::default()
         })
@@ -121,7 +130,7 @@ pub mod remove_step {
             let mut ids = config.selected_step_ids.clone();
             ids.retain(|step_id| step_id != &payload.id);
             Ok(Emit {
-                artifact_mutations: vec![ImperativeMutation { path_ref: PathRef::default(), collection: CollectionMutation::Remove { id: payload.id.clone() } }],
+                artifact_mutations: vec![delete_step(PathRef::default(), payload.id.clone())],
                 config_mutations: vec![ImperativeConfigMutation::SetSelectedSteps { ids }],
                 ..Default::default()
             })
@@ -152,7 +161,7 @@ pub mod remove_step_at {
             let mut ids = config.selected_step_ids.clone();
             ids.retain(|step_id| step_id != &payload.id);
             Ok(Emit {
-                artifact_mutations: vec![ImperativeMutation { path_ref, collection: CollectionMutation::Remove { id: payload.id.clone() } }],
+                artifact_mutations: vec![delete_step(path_ref, payload.id.clone())],
                 config_mutations: vec![ImperativeConfigMutation::SetSelectedSteps { ids }],
                 ..Default::default()
             })
@@ -177,7 +186,7 @@ pub mod move_step {
     pub fn handle(payload: &MoveStep, doc: &ArtifactView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
         let document = doc.snapshot;
         if resolve_contains(document, None, None, &payload.id) {
-            Ok(Emit::mutations(vec![ImperativeMutation { path_ref: PathRef::default(), collection: CollectionMutation::Move { id: payload.id.clone(), to_index: payload.index } }]))
+            Ok(Emit::mutations(vec![reorder_steps(PathRef::default(), payload.id.clone(), payload.index)]))
         } else {
             Ok(Emit::default())
         }

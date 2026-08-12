@@ -5,14 +5,11 @@
 //! apply/diff/inverse dispatch here (the old `impl Mutation for WiresMutation` + free
 //! `apply_wires_mutation`/`inverse_wires_mutation` functions are gone).
 //!
-//! The ten leaves below are self-wired directly (`#[path]`, `🔖️LeafWiring` region) rather than in
-//! `📦️glue.rs` — this facet's fan-out (ticket 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL) is scoped to
-//! files inside this artifact directory only; `📦️glue.rs` is plugin-shared and out of that scope
-//! (same precedent as the already-migrated `🎪️demonstrator/🎪️playground` facet). The six old
-//! generic leaves (`➕add-node`, `➖remove-node`, `✂️remove-edge`, `➕add-relationship`,
-//! `🖼️set-snapshot`, `🩹patch-node`) stay physically present as orphan stubs (see their own doc
-//! comments) because `📦️glue.rs` still `#[path]`-wires them as `pub mod` submodules — cleanup
-//! tracked as a `sharedFileRequests` entry in this ticket's wave2 report.
+//! The ten leaves below are `#[path]`-mounted as siblings of this dispatch file directly in the
+//! plugin's `📦️glue.rs` (this facet's fan-out ticket, SEMANTIC-MUTATIONS-OVERHAUL wave-C, owns
+//! `📦️glue.rs` for this plugin); the six old generic leaves (`➕add-node`, `➖remove-node`,
+//! `✂️remove-edge`, `➕add-relationship`, `🖼️set-snapshot`, `🩹patch-node`) and their `📦️glue.rs`
+//! mounts were deleted as part of that same trueing pass.
 
 use crate::artifacts::wires::diff::WiresDiff;
 use crate::artifacts::wires::engine::{array_mut, entity_id};
@@ -41,98 +38,18 @@ pub fn set_node_field(board: &mut DslValue, node_id: &str, key: &str, value: Dsl
 }
 //#endregion 🔖️NodeFieldHelpers
 
-//#region 🔖️LeafWiring
-#[path = "."]
-pub mod create_node {
-    #[path = "🌱create-node/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🌱create-node/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🌱create-node/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod delete_node {
-    #[path = "🗑️delete-node/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗑️delete-node/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗑️delete-node/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod move_node {
-    #[path = "🧭move-node/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🧭move-node/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🧭move-node/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod resize_node {
-    #[path = "📐resize-node/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📐resize-node/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📐resize-node/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_node_kind {
-    #[path = "🏷️change-node-kind/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🏷️change-node-kind/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🏷️change-node-kind/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_node_shape {
-    #[path = "🔷change-node-shape/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔷change-node-shape/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔷change-node-shape/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod edit_node_text {
-    #[path = "✏️edit-node-text/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "✏️edit-node-text/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "✏️edit-node-text/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod set_node_root {
-    #[path = "🚩set-node-root/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🚩set-node-root/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🚩set-node-root/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod connect_nodes {
-    #[path = "🔗connect-nodes/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔗connect-nodes/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔗connect-nodes/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod disconnect_nodes {
-    #[path = "✂️disconnect-nodes/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "✂️disconnect-nodes/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "✂️disconnect-nodes/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-//#endregion 🔖️LeafWiring
+//#region 🔖️MutationLeaves
+use super::create_node;
+use super::delete_node;
+use super::move_node;
+use super::resize_node;
+use super::change_node_kind;
+use super::change_node_shape;
+use super::edit_node_text;
+use super::set_node_root;
+use super::connect_nodes;
+use super::disconnect_nodes;
+//#endregion 🔖️MutationLeaves
 
 //#region 🔖️Mutations
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]

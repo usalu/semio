@@ -105,22 +105,14 @@ store::impl_whole_record_config!(WiresConfig);
 
 //#region 🔖️ConfigOperations
 /// 🧮️ [`WiresConfig`]'s operation enum — one variant per settled interaction (mirrors the pre-B1
-/// `WiresPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()` returns —
-/// mirrors `shooting_op::ShootingConfigMutation`'s identical "undo is the whole-config snapshot from
-/// just before this tick" shape: since a config-only dispatch is a plain `Apply` (not an `AmendLast`,
-/// except when explicitly coalesced via `Emit::amend`/`Emit::amend_config` — see
-/// `crate::apps::wires::commands::pointer`), each tick is its own distinct, real config edit, and the
-/// simplest correct inverse needs no per-field reverse-patch bookkeeping. `Mutation::Diff` is the WHOLE
-/// `WiresConfig` (not a granular patch type): `diff()` returns "the full config after this op", and
-/// `store::impl_whole_record_config!` supplies the `MutationDiff<WiresConfig>` that returns that
-/// snapshot verbatim, ignoring `base`.
+/// `WiresPlayRuntime` field writes). Every field already carries its own setter, so `backwards()`
+/// returns the SAME variant re-addressed at `base`'s old value — a targeted, in-kind inverse per
+/// this ticket's ban on whole-record replace, rather than a generic whole-config snapshot.
+/// `Mutation::Diff` is the WHOLE `WiresConfig` (not a granular patch type): `diff()` returns "the
+/// full config after this op", and `store::impl_whole_record_config!` supplies the
+/// `MutationDiff<WiresConfig>` that returns that snapshot verbatim, ignoring `base`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum WiresConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: WiresConfig,
-    },
     #[dsl(key = "selection")]
     SetSelection { ids: Vec<String> },
     #[dsl(key = "drag")]
@@ -207,7 +199,6 @@ impl Mutation<WiresConfig> for WiresConfigMutation {
     fn diff(&self, base: &WiresConfig) -> WiresConfig {
         let mut next = base.clone();
         match self {
-            WiresConfigMutation::Snapshot { config } => return config.clone(),
             WiresConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
             WiresConfigMutation::SetDrag { node_id, last_x, last_y } => {
                 next.drag_node_id = node_id.clone();
@@ -220,7 +211,11 @@ impl Mutation<WiresConfig> for WiresConfigMutation {
     }
 
     fn inverse(&self, base: &WiresConfig) -> Vec<Self> {
-        vec![WiresConfigMutation::Snapshot { config: base.clone() }]
+        match self {
+            WiresConfigMutation::SetSelection { .. } => vec![WiresConfigMutation::SetSelection { ids: base.selected_ids.clone() }],
+            WiresConfigMutation::SetDrag { .. } => vec![WiresConfigMutation::SetDrag { node_id: base.drag_node_id.clone(), last_x: base.drag_last_x, last_y: base.drag_last_y }],
+            WiresConfigMutation::SetLocale { .. } => vec![WiresConfigMutation::SetLocale { value: base.locale.clone() }],
+        }
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -249,8 +244,7 @@ mod tests {
 
     //#region 🔖️ConfigOperationTests
     #[test]
-    fn config_snapshot_and_selection_op_text_round_trip() {
-        store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::Snapshot { config: WiresConfig::default() });
+    fn config_selection_op_text_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetSelection { ids: vec!["node-1".into(), "edge-1".into()] });
     }
 
@@ -265,15 +259,14 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
-    /// ⏪️ `backwards()` always returns a single whole-config `Snapshot` of the pre-op state, regardless
-    /// of which field the forward op touched — the same "undo restores the prior snapshot" law
-    /// `shooting_op::ShootingConfigMutation` establishes.
+    /// ⏪️ `backwards()` returns the SAME variant re-addressed at the pre-op field value — a targeted,
+    /// in-kind inverse, not a whole-config replace.
     #[test]
-    fn config_backwards_always_snapshots_the_base() {
+    fn config_backwards_restores_the_same_field_from_base() {
         let base = WiresConfig { selected_ids: vec!["node-1".into()], ..Default::default() };
         let forward = WiresConfigMutation::SetSelection { ids: vec!["node-2".into()] };
         let inverse = forward.inverse(&base);
-        assert_eq!(inverse, vec![WiresConfigMutation::Snapshot { config: base.clone() }]);
+        assert_eq!(inverse, vec![WiresConfigMutation::SetSelection { ids: base.selected_ids.clone() }]);
         assert_eq!(forward.diff(&base), WiresConfig { selected_ids: vec!["node-2".into()], ..base });
     }
     //#endregion 🔖️ConfigOperationTests

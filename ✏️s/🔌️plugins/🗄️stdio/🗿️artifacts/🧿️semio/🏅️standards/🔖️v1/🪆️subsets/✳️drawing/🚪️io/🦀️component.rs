@@ -184,7 +184,7 @@ pub mod derived_composition {
         //#region 🔖️ConformanceLaws
         /// 🧪️ Per-artifact conformance laws (grammar recipe §4 item 8) for `s.stdio.semio.drawing`'s
         /// three facets — following the ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION
-        /// workflow/brep waves' proven template. Lives in this composer's own test region: drawing has
+        /// flow/brep waves' proven template. Lives in this composer's own test region: drawing has
         /// no per-standard `⚙️engine` dir the way json/csv/zip/png do, and v1's SHARED
         /// `🏅️standards/🔖️v1/⚙️engine/🦀️component.rs` only aggregates all 14 subsets' `register()` calls
         /// (no test module of its own, and out of this ticket's `✳️drawing/`-only edit scope anyway).

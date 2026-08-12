@@ -36,7 +36,7 @@ semio_framework_plugin::app_commands! {
     /// id and the kebab `#[dsl(key)]` wire keyword respectively — both copied verbatim off the
     /// pre-migration enum, never derived from one another.
     pub enum En1994Command for En1994Snapshot, En1994Mutation, NormConfig, NormConfigMutation {
-        "setSnapshot" as "set-snapshot" => set_snapshot::SetSnapshot,
+        "setSnapshot" as "set-snapshot" => set_snapshot::ReplaceSnapshot,
         "evaluate" as "evaluate" => evaluate::Evaluate,
         "setSelectedCheckIndex" as "selected-check" => selected_check::SetSelectedCheckIndex,
     }
@@ -104,7 +104,7 @@ impl ArtifactApp for En1994PlayApp {
 
     /// 🎞️ `"model:in"`/`"document:in"` — see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, En1994Snapshot>) -> Result<Emit<En1994Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
-        crate::app_surface::import_media(port, media, |snapshot| vec![En1994Mutation::SetSnapshot { snapshot }])
+        crate::app_surface::import_media(port, media, |snapshot: En1994Snapshot| En1994Mutation::from_snapshot(&snapshot))
     }
     //#endregion 🔖️MediaPorts
 }
@@ -175,7 +175,7 @@ mod tests {
     /// that is not listed here fails `command_ids_cover_every_row`.
     fn every_command() -> Vec<En1994Command> {
         vec![
-            En1994Command::SetSnapshot(set_snapshot::SetSnapshot { snapshot: En1994Snapshot::default() }),
+            En1994Command::SetSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1994Snapshot::default() }),
             En1994Command::Evaluate(evaluate::Evaluate {}),
             En1994Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
         ]
@@ -260,7 +260,7 @@ mod tests {
     #[test]
     fn set_snapshot_commits_a_host_backed_report() {
         let mut app = testkit::new_app();
-        testkit::dispatch(&mut app, En1994Command::SetSnapshot(set_snapshot::SetSnapshot { snapshot: En1994Snapshot::default() }));
+        testkit::dispatch(&mut app, En1994Command::SetSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1994Snapshot::default() }));
         let host = NormHost::<En1994Family>::from_document(app.snapshot().expect("projection"));
         assert!(!host.report().checks.is_empty());
     }
@@ -295,7 +295,7 @@ mod tests {
     #[test]
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = testkit::new_app();
-        testkit::dispatch(&mut app, En1994Command::SetSnapshot(set_snapshot::SetSnapshot { snapshot: En1994Snapshot::default() }));
+        testkit::dispatch(&mut app, En1994Command::SetSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1994Snapshot::default() }));
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
         assert_eq!(app.snapshot().expect("projection"), En1994Snapshot::default());

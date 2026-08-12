@@ -3,6 +3,10 @@
 //! 📌️ The payload's `#[dsl(keyword)]` MUST equal the `app_commands!` row's `as` literal: a single-field
 //! tuple variant delegates its whole `RecordSpec` to the inner type, whose keyword otherwise defaults to
 //! `None` and would print with no leading keyword at all.
+//!
+//! 🧩️ The whole-document-replace mutation is banned with no 1:1 replacement (`📓️taxonomy.md`), so the
+//! payload decomposes into one `change-<field>` mutation per persistent field via
+//! `En1995Mutation::from_snapshot`, bundled into a single atomic edit.
 
 use crate::artifacts::en1995::op::En1995Mutation;
 use crate::artifacts::en1995::En1995Snapshot;
@@ -13,15 +17,15 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "set-snapshot")]
-pub struct SetSnapshot {
+pub struct ReplaceSnapshot {
     #[dsl(block)]
     pub snapshot: En1995Snapshot,
 }
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &SetSnapshot, _doc: &ArtifactView<'_, En1995Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1995Mutation, NormConfigMutation>, Fault> {
-    crate::app_surface::commit_snapshot(En1995Mutation::SetSnapshot { snapshot: payload.snapshot.clone() }, "setSnapshot")
+pub fn handle(payload: &ReplaceSnapshot, _doc: &ArtifactView<'_, En1995Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1995Mutation, NormConfigMutation>, Fault> {
+    crate::app_surface::commit_snapshot_fields(En1995Mutation::from_snapshot(&payload.snapshot), "setSnapshot")
 }
 //#endregion 🔖️Handler
 
@@ -37,12 +41,12 @@ mod tests {
         let projection = En1995Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(
-            &SetSnapshot { snapshot: En1995Snapshot::default() },
+            &ReplaceSnapshot { snapshot: En1995Snapshot::default() },
             &ArtifactView { snapshot: &projection, history: &HistoryView::empty() },
             &ConfigView { snapshot: &config },
         )
         .expect("handle");
-        assert_eq!(emit.artifact_mutations, vec![En1995Mutation::SetSnapshot { snapshot: En1995Snapshot::default() }]);
+        assert_eq!(emit.artifact_mutations, En1995Mutation::from_snapshot(&En1995Snapshot::default()));
         assert_eq!(emit.description.as_deref(), Some("setSnapshot"));
         assert!(emit.config_mutations.is_empty());
     }

@@ -23,345 +23,39 @@ use crate::artifacts::en1992::En1992Snapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️NewLeaves
-#[path = "."]
-pub mod change_m_ed_knm {
-    #[path = "🔧change-m-ed-knm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-m-ed-knm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-m-ed-knm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_v_ed_kn {
-    #[path = "🔧change-v-ed-kn/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-v-ed-kn/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-v-ed-kn/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_f_ck {
-    #[path = "🔧change-f-ck/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-f-ck/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-f-ck/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_b_mm {
-    #[path = "🔧change-b-mm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-b-mm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-b-mm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_d_mm {
-    #[path = "🔧change-d-mm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-d-mm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-d-mm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_a_s_mm2 {
-    #[path = "🔧change-as-mm2/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-as-mm2/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-as-mm2/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_f_yk {
-    #[path = "🔧change-f-yk/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-f-yk/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-f-yk/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_rho_l {
-    #[path = "🔧change-rho-l/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-rho-l/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-rho-l/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_n_ed_kn {
-    #[path = "🔧change-n-ed-kn/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-n-ed-kn/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-n-ed-kn/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_p_kn {
-    #[path = "🔧change-p-kn/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-p-kn/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-p-kn/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_a_c_mm2 {
-    #[path = "🔧change-ac-mm2/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-ac-mm2/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-ac-mm2/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_use_fem {
-    #[path = "🔧change-use-fem/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-use-fem/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-use-fem/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_span_m {
-    #[path = "🔧change-span-m/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-span-m/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-span-m/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_udl_kn_m {
-    #[path = "🔧change-udl-kn-m/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-udl-kn-m/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-udl-kn-m/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_fire_rating {
-    #[path = "🔧change-fire-rating/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-fire-rating/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-fire-rating/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_provided_axis_distance_mm {
-    #[path = "🔧change-provided-axis-distance-mm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-provided-axis-distance-mm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-provided-axis-distance-mm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_bridge_sigma_c_mpa {
-    #[path = "🔧change-bridge-sigma-c-mpa/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-bridge-sigma-c-mpa/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-bridge-sigma-c-mpa/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_bridge_delta_sigma_s_mpa {
-    #[path = "🔧change-bridge-delta-sigma-s-mpa/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-bridge-delta-sigma-s-mpa/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-bridge-delta-sigma-s-mpa/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_tightness_class {
-    #[path = "🔧change-tightness-class/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-tightness-class/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-tightness-class/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_hd_over_h {
-    #[path = "🔧change-hd-over-h/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-hd-over-h/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-hd-over-h/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_liquid_sigma_s_mpa {
-    #[path = "🔧change-liquid-sigma-s-mpa/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-liquid-sigma-s-mpa/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-liquid-sigma-s-mpa/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_liquid_rho_p_eff {
-    #[path = "🔧change-liquid-rho-p-eff/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-liquid-rho-p-eff/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-liquid-rho-p-eff/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_liquid_f_ct_eff_mpa {
-    #[path = "🔧change-liquid-f-ct-eff-mpa/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-liquid-f-ct-eff-mpa/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-liquid-f-ct-eff-mpa/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_liquid_e_s_mpa {
-    #[path = "🔧change-liquid-es-mpa/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-liquid-es-mpa/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-liquid-es-mpa/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_liquid_s_r_max_mm {
-    #[path = "🔧change-liquid-sr-max-mm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-liquid-sr-max-mm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-liquid-sr-max-mm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_anchor_h_ef_mm {
-    #[path = "🔧change-anchor-h-ef-mm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-anchor-h-ef-mm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-anchor-h-ef-mm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_anchor_cracked {
-    #[path = "🔧change-anchor-cracked/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-anchor-cracked/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-anchor-cracked/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_anchor_f_uk_mpa {
-    #[path = "🔧change-anchor-f-uk-mpa/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-anchor-f-uk-mpa/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-anchor-f-uk-mpa/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_anchor_f_yk_mpa {
-    #[path = "🔧change-anchor-f-yk-mpa/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-anchor-f-yk-mpa/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-anchor-f-yk-mpa/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_anchor_a_s_mm2 {
-    #[path = "🔧change-anchor-as-mm2/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-anchor-as-mm2/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-anchor-as-mm2/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_anchor_d_mm {
-    #[path = "🔧change-anchor-d-mm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-anchor-d-mm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-anchor-d-mm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_anchor_c1_mm {
-    #[path = "🔧change-anchor-c1-mm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-anchor-c1-mm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-anchor-c1-mm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_anchor_n_ed_kn {
-    #[path = "🔧change-anchor-n-ed-kn/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-anchor-n-ed-kn/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-anchor-n-ed-kn/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 
-#[path = "."]
-pub mod change_anchor_v_ed_kn {
-    #[path = "🔧change-anchor-v-ed-kn/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-anchor-v-ed-kn/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-anchor-v-ed-kn/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
 //#endregion 🔖️NewLeaves
 
 //#region 🔖️RepurposedLeaves
@@ -375,6 +69,44 @@ use super::set_snapshot;
 /// 🧬️ Closed semantic mutation vocabulary for the En1992 document, derived per
 /// `📓️derivation-rules.md` from `En1992Snapshot`'s flat scalar shape. `impl protocol::Mutation`/
 /// `SemanticMutation` below are generated by `#[derive(dsl::Mutations)]` — never hand-written.
+//#region 🔖️Leaves
+use super::set_snapshot;
+use super::change_m_ed_knm;
+use super::change_v_ed_kn;
+use super::change_f_ck;
+use super::change_b_mm;
+use super::change_d_mm;
+use super::change_a_s_mm2;
+use super::change_f_yk;
+use super::change_rho_l;
+use super::change_n_ed_kn;
+use super::change_p_kn;
+use super::change_a_c_mm2;
+use super::change_use_fem;
+use super::change_span_m;
+use super::change_udl_kn_m;
+use super::change_fire_rating;
+use super::change_provided_axis_distance_mm;
+use super::change_bridge_sigma_c_mpa;
+use super::change_bridge_delta_sigma_s_mpa;
+use super::change_tightness_class;
+use super::change_hd_over_h;
+use super::change_liquid_sigma_s_mpa;
+use super::change_liquid_rho_p_eff;
+use super::change_liquid_f_ct_eff_mpa;
+use super::change_liquid_e_s_mpa;
+use super::change_liquid_s_r_max_mm;
+use super::change_anchor_h_ef_mm;
+use super::change_anchor_cracked;
+use super::change_anchor_f_uk_mpa;
+use super::change_anchor_f_yk_mpa;
+use super::change_anchor_a_s_mm2;
+use super::change_anchor_d_mm;
+use super::change_anchor_c1_mm;
+use super::change_anchor_n_ed_kn;
+use super::change_anchor_v_ed_kn;
+//#endregion 🔖️Leaves
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = En1992Snapshot, diff = En1992Diff, schema = "s.norm.en1992")]
 pub enum En1992Mutation {
@@ -415,6 +147,54 @@ pub enum En1992Mutation {
     ChangeAnchorVEdKn(change_anchor_v_ed_kn::mutation::ChangeAnchorVEdKn),
 }
 //#endregion 🔖️Mutations
+
+//#region 🔖️FromSnapshot
+impl En1992Mutation {
+    /// 📤️ Decomposes a whole `En1992Snapshot` into one `change-<field>` mutation per
+    /// persistent field — the closed-vocabulary replacement for the banned whole-document-replace
+    /// variant, used by `import_media`'s `"model:in"` port and the `set-snapshot` app command to
+    /// bundle a bulk document replacement into a single atomic `Emit::commit`.
+    pub fn from_snapshot(snapshot: &En1992Snapshot) -> Vec<En1992Mutation> {
+        let mut mutations = Vec::with_capacity(35);
+        mutations.push(En1992Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: snapshot.annex.clone() }));
+        mutations.push(En1992Mutation::ChangeACMm2(change_a_c_mm2::mutation::ChangeACMm2 { new_a_c_mm2: snapshot.a_c_mm2.clone() }));
+        mutations.push(En1992Mutation::ChangeAnchorASMm2(change_anchor_a_s_mm2::mutation::ChangeAnchorASMm2 { new_anchor_a_s_mm2: snapshot.anchor_a_s_mm2.clone() }));
+        mutations.push(En1992Mutation::ChangeAnchorC1Mm(change_anchor_c1_mm::mutation::ChangeAnchorC1Mm { new_anchor_c1_mm: snapshot.anchor_c1_mm.clone() }));
+        mutations.push(En1992Mutation::ChangeAnchorCracked(change_anchor_cracked::mutation::ChangeAnchorCracked { new_anchor_cracked: snapshot.anchor_cracked.clone() }));
+        mutations.push(En1992Mutation::ChangeAnchorDMm(change_anchor_d_mm::mutation::ChangeAnchorDMm { new_anchor_d_mm: snapshot.anchor_d_mm.clone() }));
+        mutations.push(En1992Mutation::ChangeAnchorFUkMpa(change_anchor_f_uk_mpa::mutation::ChangeAnchorFUkMpa { new_anchor_f_uk_mpa: snapshot.anchor_f_uk_mpa.clone() }));
+        mutations.push(En1992Mutation::ChangeAnchorFYkMpa(change_anchor_f_yk_mpa::mutation::ChangeAnchorFYkMpa { new_anchor_f_yk_mpa: snapshot.anchor_f_yk_mpa.clone() }));
+        mutations.push(En1992Mutation::ChangeAnchorHEfMm(change_anchor_h_ef_mm::mutation::ChangeAnchorHEfMm { new_anchor_h_ef_mm: snapshot.anchor_h_ef_mm.clone() }));
+        mutations.push(En1992Mutation::ChangeAnchorNEdKn(change_anchor_n_ed_kn::mutation::ChangeAnchorNEdKn { new_anchor_n_ed_kn: snapshot.anchor_n_ed_kn.clone() }));
+        mutations.push(En1992Mutation::ChangeAnchorVEdKn(change_anchor_v_ed_kn::mutation::ChangeAnchorVEdKn { new_anchor_v_ed_kn: snapshot.anchor_v_ed_kn.clone() }));
+        mutations.push(En1992Mutation::ChangeASMm2(change_a_s_mm2::mutation::ChangeASMm2 { new_a_s_mm2: snapshot.a_s_mm2.clone() }));
+        mutations.push(En1992Mutation::ChangeBMm(change_b_mm::mutation::ChangeBMm { new_b_mm: snapshot.b_mm.clone() }));
+        mutations.push(En1992Mutation::ChangeBridgeDeltaSigmaSMpa(change_bridge_delta_sigma_s_mpa::mutation::ChangeBridgeDeltaSigmaSMpa { new_bridge_delta_sigma_s_mpa: snapshot.bridge_delta_sigma_s_mpa.clone() }));
+        mutations.push(En1992Mutation::ChangeBridgeSigmaCMpa(change_bridge_sigma_c_mpa::mutation::ChangeBridgeSigmaCMpa { new_bridge_sigma_c_mpa: snapshot.bridge_sigma_c_mpa.clone() }));
+        mutations.push(En1992Mutation::ChangeDMm(change_d_mm::mutation::ChangeDMm { new_d_mm: snapshot.d_mm.clone() }));
+        mutations.push(En1992Mutation::ChangeFCk(change_f_ck::mutation::ChangeFCk { new_f_ck: snapshot.f_ck.clone() }));
+        mutations.push(En1992Mutation::ChangeFYk(change_f_yk::mutation::ChangeFYk { new_f_yk: snapshot.f_yk.clone() }));
+        mutations.push(En1992Mutation::ChangeFireRating(change_fire_rating::mutation::ChangeFireRating { new_fire_rating: snapshot.fire_rating.clone() }));
+        mutations.push(En1992Mutation::ChangeHdOverH(change_hd_over_h::mutation::ChangeHdOverH { new_hd_over_h: snapshot.hd_over_h.clone() }));
+        mutations.push(En1992Mutation::ChangeLiquidESMpa(change_liquid_e_s_mpa::mutation::ChangeLiquidESMpa { new_liquid_e_s_mpa: snapshot.liquid_e_s_mpa.clone() }));
+        mutations.push(En1992Mutation::ChangeLiquidFCtEffMpa(change_liquid_f_ct_eff_mpa::mutation::ChangeLiquidFCtEffMpa { new_liquid_f_ct_eff_mpa: snapshot.liquid_f_ct_eff_mpa.clone() }));
+        mutations.push(En1992Mutation::ChangeLiquidRhoPEff(change_liquid_rho_p_eff::mutation::ChangeLiquidRhoPEff { new_liquid_rho_p_eff: snapshot.liquid_rho_p_eff.clone() }));
+        mutations.push(En1992Mutation::ChangeLiquidSigmaSMpa(change_liquid_sigma_s_mpa::mutation::ChangeLiquidSigmaSMpa { new_liquid_sigma_s_mpa: snapshot.liquid_sigma_s_mpa.clone() }));
+        mutations.push(En1992Mutation::ChangeLiquidSRMaxMm(change_liquid_s_r_max_mm::mutation::ChangeLiquidSRMaxMm { new_liquid_s_r_max_mm: snapshot.liquid_s_r_max_mm.clone() }));
+        mutations.push(En1992Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm.clone() }));
+        mutations.push(En1992Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: snapshot.n_ed_kn.clone() }));
+        mutations.push(En1992Mutation::ChangePKn(change_p_kn::mutation::ChangePKn { new_p_kn: snapshot.p_kn.clone() }));
+        mutations.push(En1992Mutation::ChangeProvidedAxisDistanceMm(change_provided_axis_distance_mm::mutation::ChangeProvidedAxisDistanceMm { new_provided_axis_distance_mm: snapshot.provided_axis_distance_mm.clone() }));
+        mutations.push(En1992Mutation::ChangeRhoL(change_rho_l::mutation::ChangeRhoL { new_rho_l: snapshot.rho_l.clone() }));
+        mutations.push(En1992Mutation::ChangeSpanM(change_span_m::mutation::ChangeSpanM { new_span_m: snapshot.span_m.clone() }));
+        mutations.push(En1992Mutation::ChangeTightnessClass(change_tightness_class::mutation::ChangeTightnessClass { new_tightness_class: snapshot.tightness_class.clone() }));
+        mutations.push(En1992Mutation::ChangeUdlKnM(change_udl_kn_m::mutation::ChangeUdlKnM { new_udl_kn_m: snapshot.udl_kn_m.clone() }));
+        mutations.push(En1992Mutation::ChangeUseFem(change_use_fem::mutation::ChangeUseFem { new_use_fem: snapshot.use_fem.clone() }));
+        mutations.push(En1992Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn.clone() }));
+        mutations
+    }
+}
+//#endregion 🔖️FromSnapshot
 
 //#region 🧪️Tests
 #[cfg(test)]

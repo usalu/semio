@@ -1,5 +1,34 @@
 {
-  "$id": "https://semio.tech/schema/stdio.json/mutations/text.json",
-  "title": "JsonMutationsText",
-  "type": "object"
+  "$id": "https://semio.tech/schema/gis.gisterrain/mutations/text.json",
+  "title": "GisterrainMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "title": "ChangeExaggeration",
+      "properties": {
+        "kind": {
+          "const": "change-exaggeration"
+        },
+        "newExaggeration": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "newExaggeration"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ChangeImportedFeatures",
+      "properties": {
+        "kind": {
+          "const": "change-imported-features"
+        }
+      },
+      "required": [
+        "kind"
+      ]
+    }
+  ]
 }

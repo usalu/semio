@@ -4,7 +4,7 @@ use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangePencilWidth, base: &NoteSnapshot) -> NoteDiff {
+pub fn diff(payload: &ChangePencilWidth, _base: &NoteSnapshot) -> NoteDiff {
     NoteDiff { pencil_width: Some(payload.new_width), ..Default::default() }
 }
 //#endregion 🔖️Diff

@@ -145,7 +145,7 @@ impl Default for SemioAnimationSnapshot {
 
 //#region 🔖️TextPrimitives
 /// 🧪️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION animation wave (following the
-/// workflow pilot's proven template, `ws-codec-workflow-report.md`, and brep's/drawing's own
+/// flow pilot's proven template, `ws-codec-workflow-report.md`, and brep's/drawing's own
 /// generalization to data-carrying tagged enums, `ws-codec-brep-report.md`): real hex/bracket-
 /// encoded value primitives backing the hand-rolled `ArtifactDsl` below, replacing the old
 /// hex-of-`serde_json` passthrough. Duplicated here (not imported from `schema::diff`, which
@@ -557,7 +557,7 @@ fn decode_animation_snapshot_binary(bytes: &[u8]) -> Result<SemioAnimationSnapsh
 
 //#region 🔖️HandcraftedArtifactCodecs
 /// 🎁 Real structured text/binary codecs (animation wave — off the old hex-dump-of-`serde_json`
-/// shortcut, following the workflow pilot's proven template). Wrapped in the repo-wide
+/// shortcut, following the flow pilot's proven template). Wrapped in the repo-wide
 /// `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioAnimationSnapshot {
     const EXTENSION: &'static str = "semio";

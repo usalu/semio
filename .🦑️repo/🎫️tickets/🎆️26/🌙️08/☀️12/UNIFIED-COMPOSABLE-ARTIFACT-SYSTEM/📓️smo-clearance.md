@@ -1,3 +1,9 @@
+> ⚠️ **SUPERSEDED — DO NOT DISPATCH FROM THIS FILE.** The report-existence oracle below was proven
+> unreliable in both directions (see `📌️important.md` rule 1). `demonstrator` appears CLEAR here but
+> SMO has a live lane on it; `energy` appears NOT CLEAR but SMO released it. Kept only as a record of
+> what was believed at W0. **The valid oracle is an explicit per-plugin handshake with the owning
+> session** (SMO `semio-9f`, APA `semio-52`) immediately before dispatch.
+
 # SMO Clearance Snapshot (computed 2026-08-12 at ticket-open, W0)
 
 Source: `../SEMANTIC-MUTATIONS-OVERHAUL/📓️wave1-reports/` (5 files: cad, draw, fem-3d, gismap, gisterrain) + `📓️wave2-reports/` (25 files, listed in that ticket's folder). A plugin is CLEAR only when every one of its artifact dirs has a report. **Re-check before every W4 dispatch — this goes stale fast, SMO is running concurrently.**

@@ -652,7 +652,7 @@ fn parse_semio_video_diff(line: &str) -> Result<SemioVideoDiff, String> {
 }
 
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers workflow's/mesh's upgraded diff facets reuse) backing the
+/// `store::ByteReader`, same helpers flow's/mesh's upgraded diff facets reuse) backing the
 /// real `DiffCodec::encode_diff`/`decode_diff` below.
 fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
@@ -671,11 +671,11 @@ impl protocol::DiffCodec for SemioVideoDiff {
         parse_semio_video_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
-    /// shortcut (same treatment workflow's/mesh's own upgraded diff facets use). `format u8` +
+    /// shortcut (same treatment flow's/mesh's own upgraded diff facets use). `format u8` +
     /// `presence u8` (bit0 = `streams` present) are two REAL fixed fields; when present, `streams`
     /// follows as one varint-length-prefixed opaque blob (the same `enc_streams_diff` bracket/hex
     /// text `print_diff` already emits) — a length-prefixed segment rather than a bare trailing
-    /// `bytes` chain so the shape stays uniform with workflow's/mesh's multi-field diff frames
+    /// `bytes` chain so the shape stays uniform with flow's/mesh's multi-field diff frames
     /// (`protocol-cond-cannot-chain`: a second `if`-guard on a field that's itself only
     /// conditionally decoded hard-errors `eval_cond` — see this wave's report).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -712,7 +712,7 @@ impl protocol::DiffCodec for SemioVideoDiff {
 /// `snapshot_a()`/`snapshot_b()` — covering `streams.removed`/`.modified`/`.added` AND, within a
 /// modified stream, nested `samples.removed`/`.modified`/`.added` (both directions combined).
 /// `pub(crate)` module-scope so `🎹️composer/🦀️component.rs`'s conformance-law tests can reuse it —
-/// same convention workflow's/mesh's own `demo_diff_cases()` use.
+/// same convention flow's/mesh's own `demo_diff_cases()` use.
 #[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<SemioVideoDiff> {
     let a = handcrafted_diff_codec_tests::snapshot_a();

@@ -13,7 +13,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 pub use crate::artifacts::din18599::schema::mutations::Din18599Mutation;
 use crate::artifacts::din18599::schema::mutations::{change_use_class, change_heated_area_m2, change_occupants, change_h_t, change_h_v, change_internal_gains_w_m2, change_solar_gains_kwh, change_system_losses_kwh, change_renewable_kwh, change_annual_limit_kwh, change_energy_carrier, change_reference_q_p_kwh, update_climate};
-use crate::artifacts::din18599::MonthlyClimate;
+use crate::artifacts::din18599::{MonthlyClimate, UseClass};
 use protocol::OpText;
 
 //#region 🔖️OpText

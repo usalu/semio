@@ -1,75 +1,1133 @@
-# 🧬️ Program mutation schema — persistent fields only.
+# 🧬️ Program mutation schema — one real type per semantic mutation kind (Wave C rewrite;
+# supersedes the pre-migration whole-snapshot-shaped generic type).
+scalar JSON
 
-type ProgramMutation {
-  schema: String! @state(class: PERSISTENT)
-  meta: ProgramMeta! @state(class: PERSISTENT)
-  project: ProjectDefinition! @state(class: PERSISTENT)
-  stakeholders: [Stakeholder!]! @state(class: PERSISTENT)
-  users: [UserProfile!]! @state(class: PERSISTENT)
-  activities: [Activity!]! @state(class: PERSISTENT)
-  functions: [Function!]! @state(class: PERSISTENT)
-  elements: [ProgramElement!]! @state(class: PERSISTENT)
-  quantities: [QuantityRequirement!]! @state(class: PERSISTENT)
-  relationships: [Relationship!]! @state(class: PERSISTENT)
-  adjacencies: [Adjacency!]! @state(class: PERSISTENT)
-  processes: [Process!]! @state(class: PERSISTENT)
-  flows: [FlowRequirement!]! @state(class: PERSISTENT)
-  accessRules: [AccessRule!]! @state(class: PERSISTENT)
-  operations: [OperationalRequirement!]! @state(class: PERSISTENT)
-  equipment: [Equipment!]! @state(class: PERSISTENT)
-  resources: [Resource!]! @state(class: PERSISTENT)
-  storage: [StorageRequirement!]! @state(class: PERSISTENT)
-  environmental: [EnvironmentalRequirement!]! @state(class: PERSISTENT)
-  humanFactors: [HumanFactorRequirement!]! @state(class: PERSISTENT)
-  accessibility: [AccessibilityRequirement!]! @state(class: PERSISTENT)
-  privacy: [PrivacyRequirement!]! @state(class: PERSISTENT)
-  safety: [SafetyRequirement!]! @state(class: PERSISTENT)
-  security: [SecurityRequirement!]! @state(class: PERSISTENT)
-  regulatory: [RegulatoryRequirement!]! @state(class: PERSISTENT)
-  siteContext: [SiteContext!]! @state(class: PERSISTENT)
-  organizational: [OrganizationalRequirement!]! @state(class: PERSISTENT)
-  services: [ServiceRequirement!]! @state(class: PERSISTENT)
-  infrastructure: [InfrastructureRequirement!]! @state(class: PERSISTENT)
-  information: [InformationRequirement!]! @state(class: PERSISTENT)
-  communication: [CommunicationRequirement!]! @state(class: PERSISTENT)
-  wayfinding: [WayfindingRequirement!]! @state(class: PERSISTENT)
-  schedules: [ScheduleRequirement!]! @state(class: PERSISTENT)
-  flexibility: [FlexibilityRequirement!]! @state(class: PERSISTENT)
-  growth: [GrowthPlan!]! @state(class: PERSISTENT)
-  sustainability: [SustainabilityRequirement!]! @state(class: PERSISTENT)
-  resilience: [ResilienceRequirement!]! @state(class: PERSISTENT)
-  costs: [CostRequirement!]! @state(class: PERSISTENT)
-  delivery: [DeliveryConstraint!]! @state(class: PERSISTENT)
-  risks: [Risk!]! @state(class: PERSISTENT)
-  conflicts: [Conflict!]! @state(class: PERSISTENT)
-  requirements: [Requirement!]! @state(class: PERSISTENT)
-  priorities: [PriorityRecord!]! @state(class: PERSISTENT)
-  scenarios: [Scenario!]! @state(class: PERSISTENT)
-  options: [OptionEvaluation!]! @state(class: PERSISTENT)
-  decisions: [Decision!]! @state(class: PERSISTENT)
-  validations: [ValidationRecord!]! @state(class: PERSISTENT)
-  performance: [PerformanceCriterion!]! @state(class: PERSISTENT)
-  quality: [QualityRecord!]! @state(class: PERSISTENT)
-  documents: [DocumentRecord!]! @state(class: PERSISTENT)
-  assumptions: [Assumption!]! @state(class: PERSISTENT)
-  constraints: [ConstraintRecord!]! @state(class: PERSISTENT)
-  complianceRecords: [ComplianceRecord!]! @state(class: PERSISTENT)
-  approvals: [ApprovalRecord!]! @state(class: PERSISTENT)
-  meetings: [MeetingRecord!]! @state(class: PERSISTENT)
-  changes: [ChangeRecord!]! @state(class: PERSISTENT)
-  collaboration: [CollaborationRecord!]! @state(class: PERSISTENT)
-  analyses: [AnalysisRecord!]! @state(class: PERSISTENT)
-  reports: [ReportRecord!]! @state(class: PERSISTENT)
-  searchFilters: [SearchFilter!]! @state(class: PERSISTENT)
-  statusRecords: [StatusRecord!]! @state(class: PERSISTENT)
-  workshops: [Workshop!]! @state(class: PERSISTENT)
-  surveys: [Survey!]! @state(class: PERSISTENT)
-  issues: [Issue!]! @state(class: PERSISTENT)
-  auditEvents: [AuditEvent!]! @state(class: PERSISTENT)
-  templates: [TemplateRecord!]! @state(class: PERSISTENT)
-  knowledge: [KnowledgeRecord!]! @state(class: PERSISTENT)
-  benchmarks: [BenchmarkRecord!]! @state(class: PERSISTENT)
-  traces: [TraceLink!]! @state(class: PERSISTENT)
-  governance: Governance! @state(class: PERSISTENT)
+union ProgramMutation = CreateInformationRequirement | DeleteInformationRequirement | RenameInformationRequirement | ReplaceInformationRequirement | CreateSustainabilityRequirement | DeleteSustainabilityRequirement | RenameSustainabilityRequirement | ReplaceSustainabilityRequirement | CreateAccessibilityRequirement | DeleteAccessibilityRequirement | RenameAccessibilityRequirement | ReplaceAccessibilityRequirement | CreateConflict | DeleteConflict | RenameConflict | ReplaceConflict | CreateOptionEvaluation | DeleteOptionEvaluation | RenameOptionEvaluation | ReplaceOptionEvaluation | CreateFunction | DeleteFunction | RenameFunction | ReplaceFunction | CreateRisk | DeleteRisk | RenameRisk | ReplaceRisk | CreateDecision | DeleteDecision | RenameDecision | ReplaceDecision | CreateValidationRecord | DeleteValidationRecord | RenameValidationRecord | ReplaceValidationRecord | CreatePriorityRecord | DeletePriorityRecord | RenamePriorityRecord | ReplacePriorityRecord | CreateFlowRequirement | DeleteFlowRequirement | RenameFlowRequirement | ReplaceFlowRequirement | CreateEnvironmentalRequirement | DeleteEnvironmentalRequirement | RenameEnvironmentalRequirement | ReplaceEnvironmentalRequirement | CreateWorkshop | DeleteWorkshop | RenameWorkshop | ReplaceWorkshop | CreateScenario | DeleteScenario | RenameScenario | ReplaceScenario | CreateBenchmarkRecord | DeleteBenchmarkRecord | RenameBenchmarkRecord | ReplaceBenchmarkRecord | CreateActivity | DeleteActivity | RenameActivity | ReplaceActivity | CreateInfrastructureRequirement | DeleteInfrastructureRequirement | RenameInfrastructureRequirement | ReplaceInfrastructureRequirement | CreateOrganizationalRequirement | DeleteOrganizationalRequirement | RenameOrganizationalRequirement | ReplaceOrganizationalRequirement | CreateIssue | DeleteIssue | RenameIssue | ReplaceIssue | CreateApprovalRecord | DeleteApprovalRecord | RenameApprovalRecord | ReplaceApprovalRecord | CreateStakeholder | DeleteStakeholder | RenameStakeholder | ReplaceStakeholder | CreateQualityRecord | DeleteQualityRecord | RenameQualityRecord | ReplaceQualityRecord | CreateResilienceRequirement | DeleteResilienceRequirement | RenameResilienceRequirement | ReplaceResilienceRequirement | CreateAssumption | DeleteAssumption | RenameAssumption | ReplaceAssumption | CreateCostRequirement | DeleteCostRequirement | RenameCostRequirement | ReplaceCostRequirement | CreateDocument | DeleteDocument | RenameDocument | ReplaceDocument | CreateScheduleRequirement | DeleteScheduleRequirement | RenameScheduleRequirement | ReplaceScheduleRequirement | CreateGrowthPlan | DeleteGrowthPlan | RenameGrowthPlan | ReplaceGrowthPlan | CreatePerformanceCriterion | DeletePerformanceCriterion | RenamePerformanceCriterion | ReplacePerformanceCriterion | CreateOperationalRequirement | DeleteOperationalRequirement | RenameOperationalRequirement | ReplaceOperationalRequirement | CreateRequirement | DeleteRequirement | RenameRequirement | ReplaceRequirement | CreateSiteContext | DeleteSiteContext | RenameSiteContext | ReplaceSiteContext | CreateTemplateRecord | DeleteTemplateRecord | RenameTemplateRecord | ReplaceTemplateRecord | CreateReportRecord | DeleteReportRecord | RenameReportRecord | ReplaceReportRecord | CreateAuditEvent | DeleteAuditEvent | RenameAuditEvent | ReplaceAuditEvent | CreateKnowledgeRecord | DeleteKnowledgeRecord | RenameKnowledgeRecord | ReplaceKnowledgeRecord | CreateRegulatoryRequirement | DeleteRegulatoryRequirement | RenameRegulatoryRequirement | ReplaceRegulatoryRequirement | CreateChangeRecord | DeleteChangeRecord | RenameChangeRecord | ReplaceChangeRecord | CreateCommunicationRequirement | DeleteCommunicationRequirement | RenameCommunicationRequirement | ReplaceCommunicationRequirement | CreateResource | DeleteResource | RenameResource | ReplaceResource | CreateStatusRecord | DeleteStatusRecord | RenameStatusRecord | ReplaceStatusRecord | CreateProcess | DeleteProcess | RenameProcess | ReplaceProcess | CreateSearchFilter | DeleteSearchFilter | RenameSearchFilter | ReplaceSearchFilter | CreateAccessRule | DeleteAccessRule | RenameAccessRule | ReplaceAccessRule | CreatePrivacyRequirement | DeletePrivacyRequirement | RenamePrivacyRequirement | ReplacePrivacyRequirement | CreateRelationship | DeleteRelationship | RenameRelationship | ReplaceRelationship | CreateQuantityRequirement | DeleteQuantityRequirement | RenameQuantityRequirement | ReplaceQuantityRequirement | CreateAnalysisRecord | DeleteAnalysisRecord | RenameAnalysisRecord | ReplaceAnalysisRecord | CreateStorageRequirement | DeleteStorageRequirement | RenameStorageRequirement | ReplaceStorageRequirement | CreateMeetingRecord | DeleteMeetingRecord | RenameMeetingRecord | ReplaceMeetingRecord | CreateSurvey | DeleteSurvey | RenameSurvey | ReplaceSurvey | CreateDeliveryConstraint | DeleteDeliveryConstraint | RenameDeliveryConstraint | ReplaceDeliveryConstraint | CreateConstraintRecord | DeleteConstraintRecord | RenameConstraintRecord | ReplaceConstraintRecord | CreateComplianceRecord | DeleteComplianceRecord | RenameComplianceRecord | ReplaceComplianceRecord | CreateServiceRequirement | DeleteServiceRequirement | RenameServiceRequirement | ReplaceServiceRequirement | CreateEquipment | DeleteEquipment | RenameEquipment | ReplaceEquipment | CreateSecurityRequirement | DeleteSecurityRequirement | RenameSecurityRequirement | ReplaceSecurityRequirement | CreateCollaborationRecord | DeleteCollaborationRecord | RenameCollaborationRecord | ReplaceCollaborationRecord | CreateSafetyRequirement | DeleteSafetyRequirement | RenameSafetyRequirement | ReplaceSafetyRequirement | CreateUserProfile | DeleteUserProfile | RenameUserProfile | ReplaceUserProfile | CreateHumanFactorRequirement | DeleteHumanFactorRequirement | RenameHumanFactorRequirement | ReplaceHumanFactorRequirement | CreateFlexibilityRequirement | DeleteFlexibilityRequirement | RenameFlexibilityRequirement | ReplaceFlexibilityRequirement | CreateWayfindingRequirement | DeleteWayfindingRequirement | RenameWayfindingRequirement | ReplaceWayfindingRequirement | CreateProgramElement | DeleteProgramElement | RenameProgramElement | ReplaceProgramElement | ConnectAdjacency | DisconnectAdjacency | ConnectTrace | DisconnectTrace | RenameMeta | ReplaceMeta | RenameProject | ReplaceProject | RenameGovernance | ReplaceGovernance
+
+type CreateInformationRequirement {
+  informationRequirement: JSON!
 }
 
+type DeleteInformationRequirement {
+  id: ID!
+}
+
+type RenameInformationRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceInformationRequirement {
+  informationRequirement: JSON!
+}
+
+type CreateSustainabilityRequirement {
+  sustainabilityRequirement: JSON!
+}
+
+type DeleteSustainabilityRequirement {
+  id: ID!
+}
+
+type RenameSustainabilityRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceSustainabilityRequirement {
+  sustainabilityRequirement: JSON!
+}
+
+type CreateAccessibilityRequirement {
+  accessibilityRequirement: JSON!
+}
+
+type DeleteAccessibilityRequirement {
+  id: ID!
+}
+
+type RenameAccessibilityRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceAccessibilityRequirement {
+  accessibilityRequirement: JSON!
+}
+
+type CreateConflict {
+  conflict: JSON!
+}
+
+type DeleteConflict {
+  id: ID!
+}
+
+type RenameConflict {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceConflict {
+  conflict: JSON!
+}
+
+type CreateOptionEvaluation {
+  optionEvaluation: JSON!
+}
+
+type DeleteOptionEvaluation {
+  id: ID!
+}
+
+type RenameOptionEvaluation {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceOptionEvaluation {
+  optionEvaluation: JSON!
+}
+
+type CreateFunction {
+  function: JSON!
+}
+
+type DeleteFunction {
+  id: ID!
+}
+
+type RenameFunction {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceFunction {
+  function: JSON!
+}
+
+type CreateRisk {
+  risk: JSON!
+}
+
+type DeleteRisk {
+  id: ID!
+}
+
+type RenameRisk {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceRisk {
+  risk: JSON!
+}
+
+type CreateDecision {
+  decision: JSON!
+}
+
+type DeleteDecision {
+  id: ID!
+}
+
+type RenameDecision {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceDecision {
+  decision: JSON!
+}
+
+type CreateValidationRecord {
+  validationRecord: JSON!
+}
+
+type DeleteValidationRecord {
+  id: ID!
+}
+
+type RenameValidationRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceValidationRecord {
+  validationRecord: JSON!
+}
+
+type CreatePriorityRecord {
+  priorityRecord: JSON!
+}
+
+type DeletePriorityRecord {
+  id: ID!
+}
+
+type RenamePriorityRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplacePriorityRecord {
+  priorityRecord: JSON!
+}
+
+type CreateFlowRequirement {
+  flowRequirement: JSON!
+}
+
+type DeleteFlowRequirement {
+  id: ID!
+}
+
+type RenameFlowRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceFlowRequirement {
+  flowRequirement: JSON!
+}
+
+type CreateEnvironmentalRequirement {
+  environmentalRequirement: JSON!
+}
+
+type DeleteEnvironmentalRequirement {
+  id: ID!
+}
+
+type RenameEnvironmentalRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceEnvironmentalRequirement {
+  environmentalRequirement: JSON!
+}
+
+type CreateWorkshop {
+  workshop: JSON!
+}
+
+type DeleteWorkshop {
+  id: ID!
+}
+
+type RenameWorkshop {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceWorkshop {
+  workshop: JSON!
+}
+
+type CreateScenario {
+  scenario: JSON!
+}
+
+type DeleteScenario {
+  id: ID!
+}
+
+type RenameScenario {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceScenario {
+  scenario: JSON!
+}
+
+type CreateBenchmarkRecord {
+  benchmarkRecord: JSON!
+}
+
+type DeleteBenchmarkRecord {
+  id: ID!
+}
+
+type RenameBenchmarkRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceBenchmarkRecord {
+  benchmarkRecord: JSON!
+}
+
+type CreateActivity {
+  activity: JSON!
+}
+
+type DeleteActivity {
+  id: ID!
+}
+
+type RenameActivity {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceActivity {
+  activity: JSON!
+}
+
+type CreateInfrastructureRequirement {
+  infrastructureRequirement: JSON!
+}
+
+type DeleteInfrastructureRequirement {
+  id: ID!
+}
+
+type RenameInfrastructureRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceInfrastructureRequirement {
+  infrastructureRequirement: JSON!
+}
+
+type CreateOrganizationalRequirement {
+  organizationalRequirement: JSON!
+}
+
+type DeleteOrganizationalRequirement {
+  id: ID!
+}
+
+type RenameOrganizationalRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceOrganizationalRequirement {
+  organizationalRequirement: JSON!
+}
+
+type CreateIssue {
+  issue: JSON!
+}
+
+type DeleteIssue {
+  id: ID!
+}
+
+type RenameIssue {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceIssue {
+  issue: JSON!
+}
+
+type CreateApprovalRecord {
+  approvalRecord: JSON!
+}
+
+type DeleteApprovalRecord {
+  id: ID!
+}
+
+type RenameApprovalRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceApprovalRecord {
+  approvalRecord: JSON!
+}
+
+type CreateStakeholder {
+  stakeholder: JSON!
+}
+
+type DeleteStakeholder {
+  id: ID!
+}
+
+type RenameStakeholder {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceStakeholder {
+  stakeholder: JSON!
+}
+
+type CreateQualityRecord {
+  qualityRecord: JSON!
+}
+
+type DeleteQualityRecord {
+  id: ID!
+}
+
+type RenameQualityRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceQualityRecord {
+  qualityRecord: JSON!
+}
+
+type CreateResilienceRequirement {
+  resilienceRequirement: JSON!
+}
+
+type DeleteResilienceRequirement {
+  id: ID!
+}
+
+type RenameResilienceRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceResilienceRequirement {
+  resilienceRequirement: JSON!
+}
+
+type CreateAssumption {
+  assumption: JSON!
+}
+
+type DeleteAssumption {
+  id: ID!
+}
+
+type RenameAssumption {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceAssumption {
+  assumption: JSON!
+}
+
+type CreateCostRequirement {
+  costRequirement: JSON!
+}
+
+type DeleteCostRequirement {
+  id: ID!
+}
+
+type RenameCostRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceCostRequirement {
+  costRequirement: JSON!
+}
+
+type CreateDocument {
+  document: JSON!
+}
+
+type DeleteDocument {
+  id: ID!
+}
+
+type RenameDocument {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceDocument {
+  document: JSON!
+}
+
+type CreateScheduleRequirement {
+  scheduleRequirement: JSON!
+}
+
+type DeleteScheduleRequirement {
+  id: ID!
+}
+
+type RenameScheduleRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceScheduleRequirement {
+  scheduleRequirement: JSON!
+}
+
+type CreateGrowthPlan {
+  growthPlan: JSON!
+}
+
+type DeleteGrowthPlan {
+  id: ID!
+}
+
+type RenameGrowthPlan {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceGrowthPlan {
+  growthPlan: JSON!
+}
+
+type CreatePerformanceCriterion {
+  performanceCriterion: JSON!
+}
+
+type DeletePerformanceCriterion {
+  id: ID!
+}
+
+type RenamePerformanceCriterion {
+  id: ID!
+  newName: String!
+}
+
+type ReplacePerformanceCriterion {
+  performanceCriterion: JSON!
+}
+
+type CreateOperationalRequirement {
+  operationalRequirement: JSON!
+}
+
+type DeleteOperationalRequirement {
+  id: ID!
+}
+
+type RenameOperationalRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceOperationalRequirement {
+  operationalRequirement: JSON!
+}
+
+type CreateRequirement {
+  requirement: JSON!
+}
+
+type DeleteRequirement {
+  id: ID!
+}
+
+type RenameRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceRequirement {
+  requirement: JSON!
+}
+
+type CreateSiteContext {
+  siteContext: JSON!
+}
+
+type DeleteSiteContext {
+  id: ID!
+}
+
+type RenameSiteContext {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceSiteContext {
+  siteContext: JSON!
+}
+
+type CreateTemplateRecord {
+  templateRecord: JSON!
+}
+
+type DeleteTemplateRecord {
+  id: ID!
+}
+
+type RenameTemplateRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceTemplateRecord {
+  templateRecord: JSON!
+}
+
+type CreateReportRecord {
+  reportRecord: JSON!
+}
+
+type DeleteReportRecord {
+  id: ID!
+}
+
+type RenameReportRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceReportRecord {
+  reportRecord: JSON!
+}
+
+type CreateAuditEvent {
+  auditEvent: JSON!
+}
+
+type DeleteAuditEvent {
+  id: ID!
+}
+
+type RenameAuditEvent {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceAuditEvent {
+  auditEvent: JSON!
+}
+
+type CreateKnowledgeRecord {
+  knowledgeRecord: JSON!
+}
+
+type DeleteKnowledgeRecord {
+  id: ID!
+}
+
+type RenameKnowledgeRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceKnowledgeRecord {
+  knowledgeRecord: JSON!
+}
+
+type CreateRegulatoryRequirement {
+  regulatoryRequirement: JSON!
+}
+
+type DeleteRegulatoryRequirement {
+  id: ID!
+}
+
+type RenameRegulatoryRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceRegulatoryRequirement {
+  regulatoryRequirement: JSON!
+}
+
+type CreateChangeRecord {
+  changeRecord: JSON!
+}
+
+type DeleteChangeRecord {
+  id: ID!
+}
+
+type RenameChangeRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceChangeRecord {
+  changeRecord: JSON!
+}
+
+type CreateCommunicationRequirement {
+  communicationRequirement: JSON!
+}
+
+type DeleteCommunicationRequirement {
+  id: ID!
+}
+
+type RenameCommunicationRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceCommunicationRequirement {
+  communicationRequirement: JSON!
+}
+
+type CreateResource {
+  resource: JSON!
+}
+
+type DeleteResource {
+  id: ID!
+}
+
+type RenameResource {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceResource {
+  resource: JSON!
+}
+
+type CreateStatusRecord {
+  statusRecord: JSON!
+}
+
+type DeleteStatusRecord {
+  id: ID!
+}
+
+type RenameStatusRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceStatusRecord {
+  statusRecord: JSON!
+}
+
+type CreateProcess {
+  process: JSON!
+}
+
+type DeleteProcess {
+  id: ID!
+}
+
+type RenameProcess {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceProcess {
+  process: JSON!
+}
+
+type CreateSearchFilter {
+  searchFilter: JSON!
+}
+
+type DeleteSearchFilter {
+  id: ID!
+}
+
+type RenameSearchFilter {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceSearchFilter {
+  searchFilter: JSON!
+}
+
+type CreateAccessRule {
+  accessRule: JSON!
+}
+
+type DeleteAccessRule {
+  id: ID!
+}
+
+type RenameAccessRule {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceAccessRule {
+  accessRule: JSON!
+}
+
+type CreatePrivacyRequirement {
+  privacyRequirement: JSON!
+}
+
+type DeletePrivacyRequirement {
+  id: ID!
+}
+
+type RenamePrivacyRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplacePrivacyRequirement {
+  privacyRequirement: JSON!
+}
+
+type CreateRelationship {
+  relationship: JSON!
+}
+
+type DeleteRelationship {
+  id: ID!
+}
+
+type RenameRelationship {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceRelationship {
+  relationship: JSON!
+}
+
+type CreateQuantityRequirement {
+  quantityRequirement: JSON!
+}
+
+type DeleteQuantityRequirement {
+  id: ID!
+}
+
+type RenameQuantityRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceQuantityRequirement {
+  quantityRequirement: JSON!
+}
+
+type CreateAnalysisRecord {
+  analysisRecord: JSON!
+}
+
+type DeleteAnalysisRecord {
+  id: ID!
+}
+
+type RenameAnalysisRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceAnalysisRecord {
+  analysisRecord: JSON!
+}
+
+type CreateStorageRequirement {
+  storageRequirement: JSON!
+}
+
+type DeleteStorageRequirement {
+  id: ID!
+}
+
+type RenameStorageRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceStorageRequirement {
+  storageRequirement: JSON!
+}
+
+type CreateMeetingRecord {
+  meetingRecord: JSON!
+}
+
+type DeleteMeetingRecord {
+  id: ID!
+}
+
+type RenameMeetingRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceMeetingRecord {
+  meetingRecord: JSON!
+}
+
+type CreateSurvey {
+  survey: JSON!
+}
+
+type DeleteSurvey {
+  id: ID!
+}
+
+type RenameSurvey {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceSurvey {
+  survey: JSON!
+}
+
+type CreateDeliveryConstraint {
+  deliveryConstraint: JSON!
+}
+
+type DeleteDeliveryConstraint {
+  id: ID!
+}
+
+type RenameDeliveryConstraint {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceDeliveryConstraint {
+  deliveryConstraint: JSON!
+}
+
+type CreateConstraintRecord {
+  constraintRecord: JSON!
+}
+
+type DeleteConstraintRecord {
+  id: ID!
+}
+
+type RenameConstraintRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceConstraintRecord {
+  constraintRecord: JSON!
+}
+
+type CreateComplianceRecord {
+  complianceRecord: JSON!
+}
+
+type DeleteComplianceRecord {
+  id: ID!
+}
+
+type RenameComplianceRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceComplianceRecord {
+  complianceRecord: JSON!
+}
+
+type CreateServiceRequirement {
+  serviceRequirement: JSON!
+}
+
+type DeleteServiceRequirement {
+  id: ID!
+}
+
+type RenameServiceRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceServiceRequirement {
+  serviceRequirement: JSON!
+}
+
+type CreateEquipment {
+  equipment: JSON!
+}
+
+type DeleteEquipment {
+  id: ID!
+}
+
+type RenameEquipment {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceEquipment {
+  equipment: JSON!
+}
+
+type CreateSecurityRequirement {
+  securityRequirement: JSON!
+}
+
+type DeleteSecurityRequirement {
+  id: ID!
+}
+
+type RenameSecurityRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceSecurityRequirement {
+  securityRequirement: JSON!
+}
+
+type CreateCollaborationRecord {
+  collaborationRecord: JSON!
+}
+
+type DeleteCollaborationRecord {
+  id: ID!
+}
+
+type RenameCollaborationRecord {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceCollaborationRecord {
+  collaborationRecord: JSON!
+}
+
+type CreateSafetyRequirement {
+  safetyRequirement: JSON!
+}
+
+type DeleteSafetyRequirement {
+  id: ID!
+}
+
+type RenameSafetyRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceSafetyRequirement {
+  safetyRequirement: JSON!
+}
+
+type CreateUserProfile {
+  userProfile: JSON!
+}
+
+type DeleteUserProfile {
+  id: ID!
+}
+
+type RenameUserProfile {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceUserProfile {
+  userProfile: JSON!
+}
+
+type CreateHumanFactorRequirement {
+  humanFactorRequirement: JSON!
+}
+
+type DeleteHumanFactorRequirement {
+  id: ID!
+}
+
+type RenameHumanFactorRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceHumanFactorRequirement {
+  humanFactorRequirement: JSON!
+}
+
+type CreateFlexibilityRequirement {
+  flexibilityRequirement: JSON!
+}
+
+type DeleteFlexibilityRequirement {
+  id: ID!
+}
+
+type RenameFlexibilityRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceFlexibilityRequirement {
+  flexibilityRequirement: JSON!
+}
+
+type CreateWayfindingRequirement {
+  wayfindingRequirement: JSON!
+}
+
+type DeleteWayfindingRequirement {
+  id: ID!
+}
+
+type RenameWayfindingRequirement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceWayfindingRequirement {
+  wayfindingRequirement: JSON!
+}
+
+type CreateProgramElement {
+  programElement: JSON!
+}
+
+type DeleteProgramElement {
+  id: ID!
+}
+
+type RenameProgramElement {
+  id: ID!
+  newName: String!
+}
+
+type ReplaceProgramElement {
+  programElement: JSON!
+}
+
+type ConnectAdjacency {
+  adjacency: JSON!
+}
+
+type DisconnectAdjacency {
+  id: ID!
+}
+
+type ConnectTrace {
+  trace: JSON!
+}
+
+type DisconnectTrace {
+  id: ID!
+}
+
+type RenameMeta {
+  newTitle: String!
+}
+
+type ReplaceMeta {
+  newMeta: JSON!
+}
+
+type RenameProject {
+  newCode: String!
+}
+
+type ReplaceProject {
+  newProject: JSON!
+}
+
+type RenameGovernance {
+  newFramework: String!
+}
+
+type ReplaceGovernance {
+  newGovernance: JSON!
+}

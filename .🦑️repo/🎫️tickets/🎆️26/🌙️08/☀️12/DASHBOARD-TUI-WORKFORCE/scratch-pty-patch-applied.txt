@@ -1,0 +1,3 @@
+comp=/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️component.rs
+lines=5021
+cargo_pipes=True

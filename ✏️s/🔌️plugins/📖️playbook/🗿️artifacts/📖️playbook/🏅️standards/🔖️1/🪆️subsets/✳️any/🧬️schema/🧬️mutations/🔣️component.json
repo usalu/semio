@@ -1,15 +1,26 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.json/mutation.json",
-  "title": "JsonMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "value": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    }
+  "$id": "https://semio.tech/schema/s/playbook/playbook/mutation.json",
+  "title": "PlaybookMutation",
+  "oneOf": [
+    { "$ref": "#/$defs/AddStep" },
+    { "$ref": "#/$defs/RemoveStep" },
+    { "$ref": "#/$defs/MoveStep" },
+    { "$ref": "#/$defs/AddBlock" },
+    { "$ref": "#/$defs/RemoveBlock" },
+    { "$ref": "#/$defs/MoveBlock" },
+    { "$ref": "#/$defs/ReplaceBlock" },
+    { "$ref": "#/$defs/UpdateStep" },
+    { "$ref": "#/$defs/ChangeTitle" }
+  ],
+  "$defs": {
+    "AddStep": { "title": "AddStep", "type": "object", "required": ["mutation", "step"], "properties": { "mutation": { "const": "addStep" }, "step": { "type": "object" }, "index": { "type": "integer" } } },
+    "RemoveStep": { "title": "RemoveStep", "type": "object", "required": ["mutation", "stepId"], "properties": { "mutation": { "const": "removeStep" }, "stepId": { "type": "string" } } },
+    "MoveStep": { "title": "MoveStep", "type": "object", "required": ["mutation", "stepId", "index"], "properties": { "mutation": { "const": "moveStep" }, "stepId": { "type": "string" }, "index": { "type": "integer" } } },
+    "AddBlock": { "title": "AddBlock", "type": "object", "required": ["mutation", "stepId", "block"], "properties": { "mutation": { "const": "addBlock" }, "stepId": { "type": "string" }, "block": { "type": "object" }, "index": { "type": "integer" } } },
+    "RemoveBlock": { "title": "RemoveBlock", "type": "object", "required": ["mutation", "stepId", "blockId"], "properties": { "mutation": { "const": "removeBlock" }, "stepId": { "type": "string" }, "blockId": { "type": "string" } } },
+    "MoveBlock": { "title": "MoveBlock", "type": "object", "required": ["mutation", "blockId", "fromStepId", "toStepId", "index"], "properties": { "mutation": { "const": "moveBlock" }, "blockId": { "type": "string" }, "fromStepId": { "type": "string" }, "toStepId": { "type": "string" }, "index": { "type": "integer" } } },
+    "ReplaceBlock": { "title": "ReplaceBlock", "type": "object", "required": ["mutation", "stepId", "block"], "properties": { "mutation": { "const": "replaceBlock" }, "stepId": { "type": "string" }, "block": { "type": "object" } } },
+    "UpdateStep": { "title": "UpdateStep", "type": "object", "required": ["mutation", "stepId", "title"], "properties": { "mutation": { "const": "updateStep" }, "stepId": { "type": "string" }, "title": { "type": "string" }, "description": { "type": "string" } } },
+    "ChangeTitle": { "title": "ChangeTitle", "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "changeTitle" }, "newTitle": { "type": "string" } } }
   }
 }

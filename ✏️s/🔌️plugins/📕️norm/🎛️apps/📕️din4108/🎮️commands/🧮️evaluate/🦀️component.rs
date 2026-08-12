@@ -1,8 +1,10 @@
 //! 🧮️ DIN 4108 play app command — recompute the compliance report in place.
 //!
-//! 📌️ Recommitting the current projection is what forces `NormHost` to re-evaluate: the report is not
-//! document state, it is derived on every read, so a no-op whole-document commit is the honest way to
-//! record "the user asked for a fresh evaluation" in the command log.
+//! 📌️ The report is not document state, it is derived on every read (`NormHost::from_document`
+//! re-evaluates unconditionally) — so this command genuinely mutates nothing. The pre-migration
+//! version recommitted the whole document as a no-op whole-document-replace mutation purely to leave
+//! a command-log entry; now that whole-document replace has no vocabulary equivalent, the honest
+//! fix is to emit zero mutations (`Emit::default()`) rather than inventing a fake semantic edit.
 
 use crate::artifacts::din4108::op::Din4108Mutation;
 use crate::artifacts::din4108::Din4108Snapshot;
@@ -19,8 +21,8 @@ pub struct Evaluate {}
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(_payload: &Evaluate, doc: &ArtifactView<'_, Din4108Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din4108Mutation, NormConfigMutation>, Fault> {
-    crate::app_surface::commit_snapshot(Din4108Mutation::SetSnapshot { snapshot: doc.snapshot.clone() }, "evaluate")
+pub fn handle(_payload: &Evaluate, _doc: &ArtifactView<'_, Din4108Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din4108Mutation, NormConfigMutation>, Fault> {
+    Ok(Emit::default())
 }
 //#endregion 🔖️Handler
 
@@ -28,15 +30,15 @@ pub fn handle(_payload: &Evaluate, doc: &ArtifactView<'_, Din4108Snapshot>, _cfg
 #[cfg(test)]
 mod tests {
     use super::*;
-        use semio_framework_plugin::HistoryView;
+    use semio_framework_plugin::HistoryView;
 
     #[test]
-    fn handle_recommits_the_current_projection_under_its_action_id() {
+    fn handle_emits_no_mutation_since_the_report_is_always_recomputed() {
         let projection = Din4108Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(&Evaluate {}, &ArtifactView { snapshot: &projection, history: &HistoryView::empty() }, &ConfigView { snapshot: &config }).expect("handle");
-        assert_eq!(emit.artifact_mutations, vec![Din4108Mutation::SetSnapshot { snapshot: Din4108Snapshot::default() }]);
-        assert_eq!(emit.description.as_deref(), Some("evaluate"));
+        assert!(emit.artifact_mutations.is_empty());
+        assert!(emit.config_mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

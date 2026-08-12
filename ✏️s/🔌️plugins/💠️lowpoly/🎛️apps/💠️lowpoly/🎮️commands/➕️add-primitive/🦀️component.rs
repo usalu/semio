@@ -30,7 +30,7 @@ pub fn handle(payload: &AddPrimitive, doc: &ArtifactView<'_, LowpolySnapshot>, c
     };
     let index = projection.objects.len();
     Ok(Emit {
-        artifact_mutations: vec![LowpolyMutation::ObjectsAdd { index, item: new_object }],
+        artifact_mutations: vec![LowpolyMutation::CreateObject(crate::artifacts::lowpoly::mutations::create_object::mutation::CreateObject { index, object: new_object })],
         config_mutations: vec![
             LowpolyConfigMutation::SetActiveObject { object_id: new_id },
             LowpolyConfigMutation::SetSelectionTargets { mesh: true, vertex: false, edge: false, face: false },

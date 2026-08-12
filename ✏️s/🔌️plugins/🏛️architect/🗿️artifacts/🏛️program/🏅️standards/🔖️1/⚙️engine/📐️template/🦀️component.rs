@@ -62,7 +62,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     communication_channels: Vec::new(),
                     success_metrics: Vec::new(),
                 };
-                operations.push(ProgramMutation::CreateStakeholder(leaves::stakeholders::mutation::CreateStakeholder { stakeholder: item.clone() }));
+                operations.push(ProgramMutation::CreateStakeholder(leaves::create_stakeholder::mutation::CreateStakeholder { stakeholder: item.clone() }));
                 program.stakeholders.push(item);
             }
             "user" => {
@@ -93,7 +93,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     validated: false,
                     stakeholder_ids: Vec::new(),
                 };
-                operations.push(ProgramMutation::CreateUserProfile(leaves::users::mutation::CreateUserProfile { user_profile: item.clone() }));
+                operations.push(ProgramMutation::CreateUserProfile(leaves::create_user_profile::mutation::CreateUserProfile { user_profile: item.clone() }));
                 program.users.push(item);
             }
             "activity" => {
@@ -124,7 +124,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     temporal_pattern: None,
                     supervision_level: None,
                 };
-                operations.push(ProgramMutation::CreateActivity(leaves::activities::mutation::CreateActivity { activity: item.clone() }));
+                operations.push(ProgramMutation::CreateActivity(leaves::create_activity::mutation::CreateActivity { activity: item.clone() }));
                 program.activities.push(item);
             }
             "function" => {
@@ -153,7 +153,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     hierarchy_parent_id: None,
                     conflict_ids: Vec::new(),
                 };
-                operations.push(ProgramMutation::CreateFunction(leaves::functions::mutation::CreateFunction { function: item.clone() }));
+                operations.push(ProgramMutation::CreateFunction(leaves::create_function::mutation::CreateFunction { function: item.clone() }));
                 program.functions.push(item);
             }
             "element" | "room" => {
@@ -185,7 +185,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     adjacency_preferences: Vec::new(),
                     environmental_zone: None,
                 };
-                operations.push(ProgramMutation::CreateProgramElement(leaves::elements::mutation::CreateProgramElement { program_element: item.clone() }));
+                operations.push(ProgramMutation::CreateProgramElement(leaves::create_program_element::mutation::CreateProgramElement { program_element: item.clone() }));
                 program.elements.push(item);
                 element_ids.push(id.clone());
             }
@@ -213,7 +213,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     trace_links: Vec::new(),
                     superseded_by: None,
                 };
-                operations.push(ProgramMutation::CreateRequirement(leaves::requirements::mutation::CreateRequirement { requirement: item.clone() }));
+                operations.push(ProgramMutation::CreateRequirement(leaves::create_requirement::mutation::CreateRequirement { requirement: item.clone() }));
                 program.requirements.push(item);
             }
             "risk" => {
@@ -239,7 +239,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     escalation_path: Vec::new(),
                     monitoring_plan: None,
                 };
-                operations.push(ProgramMutation::CreateRisk(leaves::risks::mutation::CreateRisk { risk: item.clone() }));
+                operations.push(ProgramMutation::CreateRisk(leaves::create_risk::mutation::CreateRisk { risk: item.clone() }));
                 program.risks.push(item);
             }
             "process" => {
@@ -269,7 +269,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     handoff_points: Vec::new(),
                     quality_gates: Vec::new(),
                 };
-                operations.push(ProgramMutation::CreateProcess(leaves::processes::mutation::CreateProcess { process: item.clone() }));
+                operations.push(ProgramMutation::CreateProcess(leaves::create_process::mutation::CreateProcess { process: item.clone() }));
                 program.processes.push(item);
             }
             "equipment" => {
@@ -300,7 +300,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     commissioning_notes: Vec::new(),
                     spare_parts: Vec::new(),
                 };
-                operations.push(ProgramMutation::CreateEquipment(leaves::equipment::mutation::CreateEquipment { equipment: item.clone() }));
+                operations.push(ProgramMutation::CreateEquipment(leaves::create_equipment::mutation::CreateEquipment { equipment: item.clone() }));
                 program.equipment.push(item);
             }
             "adjacency" | "adjacency_bundle" if element_ids.len() >= 2 => {
@@ -328,7 +328,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     source_relationship_id: None,
                     internal_external_access: None,
                 };
-                operations.push(ProgramMutation::ConnectAdjacency(leaves::set_adjacency::mutation::ConnectAdjacency { adjacency: adjacency.clone() }));
+                operations.push(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::mutation::ConnectAdjacency { adjacency: adjacency.clone() }));
                 set_adjacency(program, adjacency);
             }
             _ => {}

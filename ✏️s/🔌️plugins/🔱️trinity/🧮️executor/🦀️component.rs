@@ -1,7 +1,7 @@
 //! 🧮️ Trinity jack query executor.
 #![allow(dead_code)]
 
-use crate::artifacts::jack::mutations::{apply_trinity_graph_mutations, TrinityGraphMutation};
+use crate::artifacts::jack::mutations::{apply_trinity_graph_mutations, change_data_property, create_edge, create_node, delete_node, move_node, rename_node, TrinityGraphMutation};
 use crate::artifacts::jack::{port_key, Camera, Edge, EntityRef, Graph, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -44,7 +44,7 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<Trinity
             Clause::Delete(vars) => {
                 for var in vars {
                     if let Some(id) = bindings.first().and_then(|b| b.nodes.get(var).cloned()) {
-                        let operation = TrinityGraphMutation::DeleteNode { id };
+                        let operation = delete_node(id);
                         operations.push(operation.clone());
                         fixture = apply_trinity_graph_mutations(fixture, std::slice::from_ref(&operation)).map_err(|e| e.to_string())?;
                         view = Graph::from_fixture(fixture.clone()).map_err(|e| e.to_string())?;
@@ -250,17 +250,17 @@ fn emit_set_operation(fixture: &JackSnapshot, node_id: &str, prop: &str, value: 
             let PropertyValue::String(name) = value else {
                 return Err(format!("node {node_id}.name expects string value"));
             };
-            Ok(TrinityGraphMutation::Rename { id: node_id.to_string(), name })
+            Ok(rename_node(node_id.to_string(), name))
         }
         "x" => {
             let x = value.as_f64().ok_or_else(|| format!("node {node_id}.x expects number value"))?;
-            Ok(TrinityGraphMutation::Reposition { id: node_id.to_string(), x, y: node.y })
+            Ok(move_node(node_id.to_string(), x, node.y))
         }
         "y" => {
             let y = value.as_f64().ok_or_else(|| format!("node {node_id}.y expects number value"))?;
-            Ok(TrinityGraphMutation::Reposition { id: node_id.to_string(), x: node.x, y })
+            Ok(move_node(node_id.to_string(), node.x, y))
         }
-        _ => Ok(TrinityGraphMutation::SetDataProperty { entity: EntityRef::Node(node_id.to_string()), key: prop.to_string(), value }),
+        _ => Ok(change_data_property(EntityRef::Node(node_id.to_string()), prop.to_string(), value)),
     }
 }
 
@@ -272,10 +272,10 @@ fn emit_create_operations(fixture: &JackSnapshot, pattern: &Pattern) -> Result<V
     if pattern.edge.is_some() {
         left_ports.push(Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() });
     }
-    operations.push(TrinityGraphMutation::CreateNode { id: left_id.clone(), kind: left.kind.clone(), name: left.var.clone(), x: fixture.nodes.len() as f64 * 120.0, y: 0.0, width: 80.0, height: 40.0, ports: left_ports });
+    operations.push(create_node(Node { id: left_id.clone(), kind: left.kind.clone(), name: left.var.clone(), x: fixture.nodes.len() as f64 * 120.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: left_ports }));
     if let Some(edge_pat) = &pattern.edge {
         let right_id = format!("{}-{}", edge_pat.right.var, fixture.nodes.len() + 1);
-        operations.push(TrinityGraphMutation::CreateNode {
+        operations.push(create_node(Node {
             id: right_id.clone(),
             kind: edge_pat.right.kind.clone(),
             name: edge_pat.right.var.clone(),
@@ -283,15 +283,16 @@ fn emit_create_operations(fixture: &JackSnapshot, pattern: &Pattern) -> Result<V
             y: 80.0,
             width: 80.0,
             height: 40.0,
+            properties: PropertyBag::new(),
             ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
-        });
-        operations.push(TrinityGraphMutation::CreateEdge {
+        }));
+        operations.push(create_edge(Edge {
             id: format!("e-{}", fixture.edges.len()),
             kind: edge_pat.kind.clone().unwrap_or_else(|| "Connection".into()),
             source: port_key(&left_id, "out"),
             target: port_key(&right_id, "in"),
             properties: PropertyBag::new(),
-        });
+        }));
     }
     Ok(operations)
 }

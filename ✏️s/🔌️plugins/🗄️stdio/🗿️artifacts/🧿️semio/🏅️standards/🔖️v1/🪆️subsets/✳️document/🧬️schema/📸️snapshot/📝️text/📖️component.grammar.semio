@@ -4,7 +4,7 @@ extension semio
 start document
 
 # ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION document wave (following the
-# workflow/model/brep pilots' proven template, `ws-codec-workflow-report.md`). Real grammar for
+# flow/model/brep pilots' proven template, `ws-codec-workflow-report.md`). Real grammar for
 # `SemioDocumentSnapshot::print_dsl`/`parse_dsl` (📸️snapshot/🦀️component.rs's
 # `print_document_snapshot_body`/`parse_document_snapshot_body`) — hand-rolled (`DocBlock` is a
 # data-carrying tagged enum with heterogeneous per-variant field sets; no `dsl::DslField`/`DslEnum`

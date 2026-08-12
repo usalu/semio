@@ -26,8 +26,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<ProgramMutation, protocol::ProtocolErro
 /// 🧷️ The pre-migration `operation_rows_keep_their_pre_migration_bytes` pinned-hex test is
 /// deliberately not carried forward: it existed to catch an ACCIDENTAL serde-shape drift on
 /// `ProgramMutation`, but the semantic-mutations overhaul is a deliberate, comprehensive vocabulary
-/// replacement (`ClearAdjacency`/`Elements(CollectionMutation::..)` no longer exist), so pinning the
-/// old bytes would just assert the migration didn't happen. Round-trip coverage below stands in.
+/// replacement (the old generic per-collection wrap variants no longer exist), so pinning the old
+/// bytes would just assert the migration didn't happen. Round-trip coverage below stands in.
 #[cfg(test)]
 mod tests {
     use super::*;

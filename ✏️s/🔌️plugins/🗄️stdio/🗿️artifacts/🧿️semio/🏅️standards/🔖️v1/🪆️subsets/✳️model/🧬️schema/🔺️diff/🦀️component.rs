@@ -415,7 +415,7 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 }
 
 /// 🧪️ P2 pilot (model): real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::
-/// write_varint_u64` / `store::ByteReader`, same helpers `stdio.workflow`'s upgraded `DiffCodec`
+/// write_varint_u64` / `store::ByteReader`, same helpers `stdio.flow`'s upgraded `DiffCodec`
 /// reuses) backing the real `DiffCodec::encode_diff`/`decode_diff` below.
 pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
@@ -679,7 +679,7 @@ impl protocol::DiffCodec for SemioModelDiff {
     /// independently-delimited segments rather than one bare trailing `bytes` because there can be
     /// 0-3 of them (chaining a `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a
     /// second `if`-guard on a field that was itself only conditionally decoded hard-errors
-    /// `eval_cond` — same gap `stdio.semio.workflow`'s own diff facet hit first).
+    /// `eval_cond` — same gap `stdio.semio.flow`'s own diff facet hit first).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
@@ -732,7 +732,7 @@ impl protocol::DiffCodec for SemioModelDiff {
 /// the `Some(None)` tri-state transition; `keep-element`'s `spatial_id` starts `None` so `sweep_b`
 /// exercises the opposite transition (None -> Some). Module-scope (not nested in `mod tests`) so
 /// `demo_diff_cases` below and the composer's `conformance_laws` can both reuse it — single source
-/// of truth, same convention `stdio.semio.workflow`'s own diff facet demo cases use.
+/// of truth, same convention `stdio.semio.flow`'s own diff facet demo cases use.
 #[cfg(test)]
 pub(crate) fn moved_transform(x: f64) -> SemioTransform {
     SemioTransform { translation: SemioPoint3 { x, y: 0.0, z: 0.0 }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }

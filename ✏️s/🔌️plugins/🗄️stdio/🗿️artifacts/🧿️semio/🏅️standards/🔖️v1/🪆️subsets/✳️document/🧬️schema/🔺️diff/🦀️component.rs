@@ -1170,7 +1170,7 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 //#region 🔖️BinaryPrimitives
 /// 🧪️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION document wave: real LEB128-
 /// varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers workflow/model/brep's own upgraded `DiffCodec`s reuse) backing
+/// `store::ByteReader`, same helpers flow/model/brep's own upgraded `DiffCodec`s reuse) backing
 /// the real `DiffCodec::encode_diff`/`decode_diff` below.
 pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
@@ -1513,7 +1513,7 @@ impl protocol::DiffCodec for SemioDocumentDiff {
     /// `enc_styles_diff`/`enc_images_diff`/`enc_blocks_diff` bracket/hex text `print_diff` already
     /// produces) — one opaque blob per present collection rather than a per-segment `Cond` because a
     /// SECOND `if`-guard on a field that's itself only conditionally decoded hard-errors `eval_cond`
-    /// (`protocol-cond-cannot-chain`, per the grammar recipe's own gap table; workflow's/model's own
+    /// (`protocol-cond-cannot-chain`, per the grammar recipe's own gap table; flow's/model's own
     /// diff binary upgrade hit the identical shape).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
@@ -1590,7 +1590,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioDocumentDiff> {
 
 /// 🌱 Base fixture for `demo_diff_cases`/`diff_codec_text_binary_roundtrip_law` — module-scope
 /// (not `mod tests`-local) so both this facet's own tests and `demo_diff_cases` share one source of
-/// truth (model/workflow's own `sweep_a`/`sweep_b` promotion precedent).
+/// truth (model/flow's own `sweep_a`/`sweep_b` promotion precedent).
 #[cfg(test)]
 pub(crate) fn snapshot_a() -> SemioDocumentSnapshot {
     SemioDocumentSnapshot {

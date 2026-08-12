@@ -1,6 +1,7 @@
 //! ↩️ Inverse for `InsertTableRow`.
 use super::mutation::InsertTableRow;
 use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::artifacts::note::schema::mutations::RemoveTableRow;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Inverse

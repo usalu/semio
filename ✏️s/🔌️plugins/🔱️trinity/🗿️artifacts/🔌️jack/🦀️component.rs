@@ -439,7 +439,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jack::op::{dispatch_trinity_graph_mutations, validate_trinity_graph_operation, TrinityGraphMutation};
+    use crate::artifacts::jack::mutations::{change_data_property, create_edge, create_node};
+    use crate::artifacts::jack::op::{dispatch_trinity_graph_mutations, validate_trinity_graph_operation};
     use store::ArtifactCommand;
 
     fn mini_fixture() -> JackSnapshot {
@@ -641,7 +642,7 @@ mod tests {
     fn graph_op_create_node_and_undo() {
         let fixture = mini_fixture();
         let mut store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("test", fixture));
-        dispatch_trinity_graph_mutations(&mut store, vec![TrinityGraphMutation::CreateNode { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, ports: vec![] }]).expect("create");
+        dispatch_trinity_graph_mutations(&mut store, vec![create_node(Node { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] })]).expect("create");
         assert_eq!(store.snapshot().expect("projection").nodes.len(), 3);
         store.dispatch(ArtifactCommand::Undo).expect("undo");
         assert_eq!(store.snapshot().expect("projection").nodes.len(), 2);
@@ -657,7 +658,7 @@ mod tests {
         dispatch_trinity_graph_mutations(
             &mut store,
             vec![
-                TrinityGraphMutation::CreateNode {
+                create_node(Node {
                     id: "x-9".into(),
                     kind: "Piece".into(),
                     name: "x".into(),
@@ -665,9 +666,10 @@ mod tests {
                     y: 0.0,
                     width: 80.0,
                     height: 40.0,
+                    properties: PropertyBag::new(),
                     ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
-                },
-                TrinityGraphMutation::CreateNode {
+                }),
+                create_node(Node {
                     id: "y-10".into(),
                     kind: "Piece".into(),
                     name: "y".into(),
@@ -675,9 +677,10 @@ mod tests {
                     y: 80.0,
                     width: 80.0,
                     height: 40.0,
+                    properties: PropertyBag::new(),
                     ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
-                },
-                TrinityGraphMutation::CreateEdge { id: "e-batch".into(), kind: "Connection".into(), source: port_key("x-9", "out"), target: port_key("y-10", "in"), properties: PropertyBag::new() },
+                }),
+                create_edge(Edge { id: "e-batch".into(), kind: "Connection".into(), source: port_key("x-9", "out"), target: port_key("y-10", "in"), properties: PropertyBag::new() }),
             ],
         )
         .expect("batch create edge");
@@ -689,14 +692,14 @@ mod tests {
     #[test]
     fn graph_op_rejects_unknown_node_kind() {
         let fixture = mini_fixture();
-        let err = validate_trinity_graph_operation(&TrinityGraphMutation::CreateNode { id: "new".into(), kind: "Piece2".into(), name: "x".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, ports: vec![] }, &fixture).expect_err("unknown kind");
+        let err = validate_trinity_graph_operation(&create_node(Node { id: "new".into(), kind: "Piece2".into(), name: "x".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] }), &fixture).expect_err("unknown kind");
         assert!(err.to_string().contains("unknown node kind"));
     }
 
     #[test]
     fn graph_op_rejects_derived_property_set() {
         let fixture = mini_fixture();
-        let err = validate_trinity_graph_operation(&TrinityGraphMutation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "flatPosition".into(), value: PropertyValue::Null }, &fixture).expect_err("derived");
+        let err = validate_trinity_graph_operation(&change_data_property(EntityRef::Node("root".into()), "flatPosition".into(), PropertyValue::Null), &fixture).expect_err("derived");
         assert!(err.to_string().contains("derived"));
     }
 

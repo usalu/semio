@@ -6,10 +6,10 @@
 //! constructs `DagMutation` values from config state (`remove_nodes_operations`) stays at app level,
 //! which already depends on both this module and `crate::artifacts::dag::op`.
 
+use crate::artifacts::dag::mutations::delete_node;
 use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::{DagSnapshot, DAG_DOCUMENT_SCHEMA};
 use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
-use protocol::CollectionMutation;
 use std::collections::BTreeSet;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
@@ -277,24 +277,14 @@ pub fn node_patch_for_field(node: &DagNodeSpec, field: &str, raw_value: Option<&
     }
 }
 
-/// 🗑️ Operations removing `node_ids` and every edge touching them, for delete-node / delete-selection.
-/// Two app-level consumers (`🎮️commands/🔧️nodes::remove_node` and `🎮️commands/🕸️graph::{delete_selection,
-/// node_graph_edit}`) — takes only `DagSnapshot`, no app-only config type, so per the DocumentHelpers
-/// placement rule it lives here rather than being duplicated per consumer.
+/// 🗑️ Operations removing `node_ids`, for delete-node / delete-selection. Two app-level consumers
+/// (`🎮️commands/🔧️nodes::remove_node` and `🎮️commands/🕸️graph::{delete_selection, node_graph_edit}`)
+/// — takes only `DagSnapshot`, no app-only config type, so per the DocumentHelpers placement rule it
+/// lives here rather than being duplicated per consumer. `delete-node`'s own diff/inverse already
+/// captures the cascade (every edge touching the node), so this is one mutation per node, not one
+/// per node PLUS one per severed edge.
 pub fn remove_nodes_operations(document: &DagSnapshot, node_ids: &[String]) -> Vec<DagMutation> {
-    let mut operations: Vec<DagMutation> = document.nodes.iter().filter(|node| node_ids.contains(&node.id)).map(|node| DagMutation::Nodes(CollectionMutation::Remove { id: node.id.clone() })).collect();
-    operations.extend(
-        document
-            .edges
-            .iter()
-            .filter(|edge| {
-                let (from, _) = split_endpoint(&edge.source);
-                let (to, _) = split_endpoint(&edge.target);
-                node_ids.iter().any(|id| id == &from || id == &to)
-            })
-            .map(|edge| DagMutation::Edges(CollectionMutation::Remove { id: edge.id.clone() })),
-    );
-    operations
+    document.nodes.iter().filter(|node| node_ids.contains(&node.id)).map(|node| delete_node(node.id.clone())).collect()
 }
 //#endregion 🔖️DocumentHelpers
 

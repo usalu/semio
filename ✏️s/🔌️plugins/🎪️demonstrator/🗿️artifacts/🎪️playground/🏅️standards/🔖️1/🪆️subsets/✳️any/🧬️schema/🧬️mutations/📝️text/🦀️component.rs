@@ -1,5 +1,5 @@
 //! ⚡️ Playground artifact — hand-rolled `OpText`/`OpBinary` for `PlaygroundMutation`.
-//! `#[derive(dsl_derive::Mutations)]` only generates `Mutation`/`SemanticMutation` (see
+//! `#[derive(dsl::Mutations)]` only generates `Mutation`/`SemanticMutation` (see
 //! `../🦀️component.rs`'s `🔖️Mutations` region) — the wire-text/wire-binary codecs stay handcrafted
 //! here, one keyword per semantic verb, grammar `keyword key1=value1 ...`.
 

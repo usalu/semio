@@ -3,6 +3,7 @@
 
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::apps::process3d::set_active_utility_effect;
+use crate::artifacts::process3d::mutations::change_cursor::mutation::ChangeCursor;
 use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -26,9 +27,9 @@ pub mod engagement_submit {
             Some("cut") => Ok(Emit { config_mutations: vec![clear_input], effects: vec![set_active_utility_effect("cut")], ..Default::default() }),
             Some("drill") => Ok(Emit { config_mutations: vec![clear_input], effects: vec![set_active_utility_effect("drill")], ..Default::default() }),
             Some("attach") => Ok(Emit { config_mutations: vec![clear_input], effects: vec![set_active_utility_effect("attach")], ..Default::default() }),
-            Some("back") => Ok(Emit { artifact_mutations: vec![Process3dMutation::SetCursor { resolved_up_to: Some(current.saturating_sub(1)) }], config_mutations: vec![clear_input], ..Default::default() }),
-            Some("forward") => Ok(Emit { artifact_mutations: vec![Process3dMutation::SetCursor { resolved_up_to: Some((current + 1).min(len)) }], config_mutations: vec![clear_input], ..Default::default() }),
-            Some("all") => Ok(Emit { artifact_mutations: vec![Process3dMutation::SetCursor { resolved_up_to: None }], config_mutations: vec![clear_input], ..Default::default() }),
+            Some("back") => Ok(Emit { artifact_mutations: vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(current.saturating_sub(1)) })], config_mutations: vec![clear_input], ..Default::default() }),
+            Some("forward") => Ok(Emit { artifact_mutations: vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some((current + 1).min(len)) })], config_mutations: vec![clear_input], ..Default::default() }),
+            Some("all") => Ok(Emit { artifact_mutations: vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: None })], config_mutations: vec![clear_input], ..Default::default() }),
             _ => Ok(Emit::config(vec![clear_input])),
         }
     }

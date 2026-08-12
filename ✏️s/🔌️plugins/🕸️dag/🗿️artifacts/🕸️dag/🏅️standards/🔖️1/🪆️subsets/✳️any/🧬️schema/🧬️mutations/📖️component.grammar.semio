@@ -1,40 +1,30 @@
 dialect grammar
-grammar dag.op
+grammar dag.mutation
 extension dag
 use family-graph
 start mutation
 
 mutation = op-line+
-op-line = nodes-add | nodes-remove | nodes-move | nodes-patch | edges-add | edges-remove | edges-move | edges-patch | set-nodes | set-edges | set-snapshot
-nodes-add = "nodes-add" "index" "=" INT node-block
-nodes-remove = "nodes-remove" "id" "=" IDENT
-nodes-move = "nodes-move" "id" "=" IDENT "to" "=" INT
-nodes-patch = "nodes-patch" "id" "=" IDENT node-patch-block
-edges-add = "edges-add" "index" "=" INT edge-block
-edges-remove = "edges-remove" "id" "=" IDENT
-edges-move = "edges-move" "id" "=" IDENT "to" "=" INT
-edges-patch = "edges-patch" "id" "=" IDENT edge-patch-block
-set-nodes = "set-nodes" nodes-table
-set-edges = "set-edges" edges-table
-set-snapshot = "set-snapshot" snapshot-block
-node-block = "node" node-kind
-node-patch-block = "patch" node-patch-fields
-node-patch-fields = ("name" "=" TEXT)? ("x" "=" FLOAT)? ("y" "=" FLOAT)? ("width" "=" FLOAT)? ("height" "=" FLOAT)?
-edge-block = "edge" "id" "=" IDENT "source" "=" wire-endpoint "target" "=" wire-endpoint route-style edge-props?
-edge-patch-block = "patch" edge-patch-fields
-edge-patch-fields = ("source" "=" wire-endpoint)? ("target" "=" wire-endpoint)?
-document-block = "document" schema-line nodes-table edges-table
-nodes-table = "nodes" node-table
-edges-table = "edges" edge-table
-schema-line = "schema=" IDENT
-node-table = "[" node-columns "]" "{" node-row* "}"
-edge-table = "[" edge-columns "]" "{" edge-row* "}"
-node-columns = column+
-edge-columns = column+
-column = IDENT ":" IDENT
-node-row = IDENT
-edge-row = IDENT TEXT TEXT route-style edge-props?
+op-line = create-node | delete-node | rename-node | change-node-name | move-node | resize-node
+        | change-node-icon | change-node-abbreviation | change-node-operator-kind
+        | replace-node-kind | replace-node-properties | reorder-nodes | connect-nodes | disconnect-nodes
+
+create-node = "create-node" "node" "=" JSON
+delete-node = "delete-node" "id" "=" IDENT
+rename-node = "rename-node" "id" "=" IDENT "new-id" "=" IDENT
+change-node-name = "change-node-name" "id" "=" IDENT "new-name" "=" TEXT
+move-node = "move-node" "id" "=" IDENT "x" "=" FLOAT "y" "=" FLOAT
+resize-node = "resize-node" "id" "=" IDENT "width" "=" FLOAT "height" "=" FLOAT
+change-node-icon = "change-node-icon" "id" "=" IDENT "new-icon" "=" TEXT
+change-node-abbreviation = "change-node-abbreviation" "id" "=" IDENT "new-abbreviation" "=" TEXT
+change-node-operator-kind = "change-node-operator-kind" "id" "=" IDENT ("new-operator-kind" "=" TEXT)?
+replace-node-kind = "replace-node-kind" "id" "=" IDENT "new-kind" "=" JSON
+replace-node-properties = "replace-node-properties" "id" "=" IDENT "new-properties" "=" JSON
+reorder-nodes = "reorder-nodes" "order" "=" "[" IDENT* "]"
+connect-nodes = "connect-nodes" "id" "=" IDENT "source" "=" wire-endpoint "target" "=" wire-endpoint route-style edge-props?
+disconnect-nodes = "disconnect-nodes" "id" "=" IDENT
+
+wire-endpoint = IDENT
 route-style = IDENT
 edge-props = "{" edge-field* "}"
 edge-field = "weight" "=" (FLOAT | INT) | "kind" "=" (TEXT | IDENT) | "label" "=" TEXT | "id" "=" IDENT
-chain = wire-endpoint {ARROW wire-endpoint}+ | wire-endpoint {DASHARROW wire-endpoint}+

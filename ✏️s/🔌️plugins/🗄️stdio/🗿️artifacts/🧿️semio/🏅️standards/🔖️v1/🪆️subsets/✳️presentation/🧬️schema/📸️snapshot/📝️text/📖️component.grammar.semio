@@ -4,7 +4,7 @@ extension semio
 start document
 
 # ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION presentation wave (following the
-# workflow/model/brep/drawing/document pilots' proven template, `ws-codec-workflow-report.md` /
+# flow/model/brep/drawing/document pilots' proven template, `ws-codec-workflow-report.md` /
 # `ws-codec-document-report.md`). Real grammar for `SemioPresentationSnapshot::print_dsl`/
 # `parse_dsl` (📸️snapshot/🦀️component.rs's `print_presentation_snapshot_body`/
 # `parse_presentation_snapshot_body`) — hand-rolled (`SlideShape`/`PlaceholderKind` are data-

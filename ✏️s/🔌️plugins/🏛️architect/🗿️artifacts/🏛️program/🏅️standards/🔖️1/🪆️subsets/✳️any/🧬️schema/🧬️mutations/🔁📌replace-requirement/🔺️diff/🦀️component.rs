@@ -2,6 +2,7 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📌requirements` per Wave C.
 
 use super::mutation::ReplaceRequirement;
+use protocol::Patchable;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramRequirementsDelta, ProgramRequirementsPatchEntry};

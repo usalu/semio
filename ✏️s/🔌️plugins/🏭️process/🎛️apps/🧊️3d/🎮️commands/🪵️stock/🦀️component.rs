@@ -16,6 +16,10 @@ pub mod set_stock {
         pub kind: String,
     }
 
+    /// 🪵️ Swapping the stock kind resets the whole process timeline (steps + cursor), which is a
+    /// whole-document replace, not a targeted edit — no in-history mutation exists for that (see
+    /// `📓️taxonomy.md`'s forbidden vocabulary), so this routes through
+    /// `apps::process3d::reset_process3d_document_effect` (a `HostEffect::LoadDocument`) instead.
     pub fn handle(payload: &SetStock, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
@@ -26,7 +30,11 @@ pub mod set_stock {
         };
         let stock = Stock { id: fixture.stock.id.clone(), label: process3d_labels(config).stock.into(), solid, pose: Pose::default() };
         let snapshot = Process3dSnapshot { workshop: fixture.workshop.clone(), stock, steps: Vec::new(), resolved_up_to: None };
-        Ok(Emit { artifact_mutations: vec![Process3dMutation::SetSnapshot { snapshot }], config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: None }], ..Default::default() })
+        Ok(Emit {
+            effects: vec![crate::apps::process3d::reset_process3d_document_effect(&snapshot)],
+            config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: None }],
+            ..Default::default()
+        })
     }
 }
 //#endregion 🔖️SetStock

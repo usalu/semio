@@ -103,7 +103,7 @@ impl Default for SemioAudioSnapshot {
 /// style as this subset's own `🔺️diff`/`🧬️mutations` facets (`GifDiff`/`SvgDiff`/`DocxDiff`'s
 /// established hand-rolled convention), duplicated here (not imported from `schema::diff`) to keep
 /// `snapshot` — the base type `diff`/`mutations` both depend ON — free of a reverse dependency on
-/// either sibling facet (same rationale `✳️workflow`'s/`✳️image`'s own pilots document).
+/// either sibling facet (same rationale `✳️flow`'s/`✳️image`'s own pilots document).
 ///
 /// 🧩️ The `#[derive(dsl::DslArtifact)]` path was tried first per this ticket's brief. It is
 /// blocked here for the SAME reason `✳️image`'s own pilot documents: even though NO field here is a
@@ -114,7 +114,7 @@ impl Default for SemioAudioSnapshot {
 /// and per the ticket's blanket instruction ("hand-roll all diff/op codecs — do not fight the
 /// derive"), keeping the snapshot on the SAME hand-rolled hex/bracket convention as its sibling
 /// facets (rather than a derive-based codec that would print/parse a structurally different wire
-/// shape) is the honest, single-source-of-truth choice — same boundary `✳️workflow`'s/`✳️mesh`'s/
+/// shape) is the honest, single-source-of-truth choice — same boundary `✳️flow`'s/`✳️mesh`'s/
 /// `✳️image`'s own pilots each independently reached for their own shape.
 fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
@@ -234,7 +234,7 @@ fn parse_audio_snapshot_body(body: &str) -> Result<SemioAudioSnapshot, String> {
 
 //#region 🔖️BinaryPrimitives
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers `✳️workflow`'s/`✳️mesh`'s/`✳️image`'s own upgraded
+/// `store::ByteReader`, same helpers `✳️flow`'s/`✳️mesh`'s/`✳️image`'s own upgraded
 /// `ArtifactPack` uses) backing the real `ArtifactPack` below — replaces the old
 /// `serde_json::to_vec`-in-envelope shortcut.
 fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {

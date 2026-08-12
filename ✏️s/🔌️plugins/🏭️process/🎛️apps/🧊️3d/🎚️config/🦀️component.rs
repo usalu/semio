@@ -159,40 +159,15 @@ impl Process3dConfig {
 }
 
 store::impl_whole_record_config!(Process3dConfig);
-
-/// 🪆️ `Box<Process3dConfig>` needs its own `dsl::DslField` binding for
-/// `Process3dConfigMutation::Snapshot` (boxed to fix clippy's `large_enum_variant` — the snapshot
-/// variant was ~5x every other row's size) — `Box` is `#[fundamental]` in `std`, so implementing a
-/// foreign trait (`dsl::DslField`) for `Box<Process3dConfig>` (a local type inside the foreign,
-/// fundamental `Box` wrapper) is permitted by the orphan rules; this delegates entirely to
-/// `Process3dConfig`'s own derive-generated `DslField` impl (from `DslArtifact`), mirroring `cad`'s
-/// identical `Box<CadSnapshot>` binding.
-impl dsl::DslField for Box<Process3dConfig> {
-    fn shape() -> dsl::Shape {
-        <Process3dConfig as dsl::DslField>::shape()
-    }
-    fn to_value(&self) -> dsl::FieldValue {
-        <Process3dConfig as dsl::DslField>::to_value(self)
-    }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        <Process3dConfig as dsl::DslField>::from_value(value).map(Box::new)
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
 /// 🧮️ [`Process3dConfig`]'s operation enum — one variant per settled interaction (mirrors the pre-B1
-/// `Process3dRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()` returns —
-/// mirrors `shooting_op::ShootingConfigOperation`/`lowpoly_op::LowpolyConfigOperation`'s identical
-/// pattern: a config-only dispatch is always a plain `Apply` (never `AmendLast`), so "undo this tick" =
-/// "restore the whole-config snapshot from just before it", the simplest correct inverse.
+/// `Process3dRuntime` field writes). Every field already carries its own setter, so `backwards()`
+/// returns the SAME variant re-addressed at `base`'s old value — a targeted, in-kind inverse per
+/// this ticket's ban on whole-record replace, rather than a generic whole-config snapshot.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum Process3dConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: Box<Process3dConfig>,
-    },
     #[dsl(key = "selected-id")]
     SetSelectedId { value: Option<String> },
     #[dsl(key = "hovered-id")]
@@ -297,7 +272,6 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
     fn diff(&self, base: &Process3dConfig) -> Process3dConfig {
         let mut next = base.clone();
         match self {
-            Process3dConfigMutation::Snapshot { config } => return config.as_ref().clone(),
             Process3dConfigMutation::SetSelectedId { value } => next.selected_id = value.clone(),
             Process3dConfigMutation::SetHoveredId { value } => next.hovered_id = value.clone(),
             Process3dConfigMutation::SetSelectedFaceId { value } => next.selected_face_id = *value,
@@ -325,7 +299,25 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
     }
 
     fn inverse(&self, base: &Process3dConfig) -> Vec<Self> {
-        vec![Process3dConfigMutation::Snapshot { config: Box::new(base.clone()) }]
+        match self {
+            Process3dConfigMutation::SetSelectedId { .. } => vec![Process3dConfigMutation::SetSelectedId { value: base.selected_id.clone() }],
+            Process3dConfigMutation::SetHoveredId { .. } => vec![Process3dConfigMutation::SetHoveredId { value: base.hovered_id.clone() }],
+            Process3dConfigMutation::SetSelectedFaceId { .. } => vec![Process3dConfigMutation::SetSelectedFaceId { value: base.selected_face_id }],
+            Process3dConfigMutation::SetEngagementInput { .. } => vec![Process3dConfigMutation::SetEngagementInput { value: base.engagement_input.clone() }],
+            Process3dConfigMutation::SetCamera { .. } => {
+                vec![Process3dConfigMutation::SetCamera { position: base.camera_position, target: base.camera_target, fov: base.camera_fov }]
+            }
+            Process3dConfigMutation::SetSun { .. } => vec![Process3dConfigMutation::SetSun {
+                enabled: base.sun_enabled,
+                azimuth: base.sun_azimuth,
+                elevation: base.sun_elevation,
+                intensity: base.sun_intensity,
+                color: base.sun_color.clone(),
+            }],
+            Process3dConfigMutation::SetActiveUtility { .. } => vec![Process3dConfigMutation::SetActiveUtility { utility_id: base.active_utility_id.clone() }],
+            Process3dConfigMutation::SetLocale { .. } => vec![Process3dConfigMutation::SetLocale { value: base.locale.clone() }],
+            Process3dConfigMutation::SetContributions { .. } => vec![Process3dConfigMutation::SetContributions { json: base.contributions_json.clone() }],
+        }
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -345,11 +337,11 @@ mod tests {
     }
 
     #[test]
-    fn process3d_config_operation_backwards_is_always_a_snapshot_of_base() {
+    fn process3d_config_operation_backwards_restores_the_same_field_from_base() {
         let base = Process3dConfig::default();
         let operation = Process3dConfigMutation::SetSelectedId { value: Some("step-0".into()) };
         let inverse = operation.inverse(&base);
-        assert_eq!(inverse, vec![Process3dConfigMutation::Snapshot { config: Box::new(base) }]);
+        assert_eq!(inverse, vec![Process3dConfigMutation::SetSelectedId { value: base.selected_id }]);
     }
 
     #[test]
@@ -370,8 +362,6 @@ mod tests {
 
     #[test]
     fn process3d_config_op_text_round_trips_every_variant() {
-        let config = Process3dConfig { selected_id: Some("stock".into()), hovered_id: Some("step-0".into()), selected_face_id: Some(2), active_utility_id: "cut".into(), ..Process3dConfig::default() };
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::Snapshot { config: Box::new(config) });
         store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedId { value: Some("stock".into()) });
         store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedId { value: None });
         store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetHoveredId { value: Some("step-0".into()) });

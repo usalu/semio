@@ -1,9 +1,50 @@
 syntax = "proto3";
 package semio.s.dag.dag.mutation;
-message DagMutation {
-  string schema = 1; // @state persistent
-  repeated DagNodeSpec nodes = 2; // @state persistent
-  repeated DagFixtureEdge edges = 3; // @state persistent
+
+message DagNodeSpec {
+  string id = 1;
+  string name = 2;
+  string abbreviation = 3;
+  string icon = 4;
+  double x = 5;
+  double y = 6;
+  double width = 7;
+  double height = 8;
+  optional string operator_kind = 9;
+  string kind_json = 10;
+  string properties_json = 11;
 }
-message DagNodeSpec { string id = 1; }
-message DagFixtureEdge { string id = 1; string source = 2; string target = 3; }
+
+message CreateNode { DagNodeSpec node = 1; }
+message DeleteNode { string id = 1; }
+message RenameNode { string id = 1; string new_id = 2; }
+message ChangeNodeName { string id = 1; string new_name = 2; }
+message MoveNode { string id = 1; double x = 2; double y = 3; }
+message ResizeNode { string id = 1; double width = 2; double height = 3; }
+message ChangeNodeIcon { string id = 1; string new_icon = 2; }
+message ChangeNodeAbbreviation { string id = 1; string new_abbreviation = 2; }
+message ChangeNodeOperatorKind { string id = 1; optional string new_operator_kind = 2; }
+message ReplaceNodeKind { string id = 1; string new_kind_json = 2; }
+message ReplaceNodeProperties { string id = 1; string new_properties_json = 2; }
+message ReorderNodes { repeated string order = 1; }
+message ConnectNodes { string id = 1; string source = 2; string target = 3; string route_style = 4; string properties_json = 5; }
+message DisconnectNodes { string id = 1; }
+
+message DagMutation {
+  oneof kind {
+    CreateNode create_node = 1;
+    DeleteNode delete_node = 2;
+    RenameNode rename_node = 3;
+    ChangeNodeName change_node_name = 4;
+    MoveNode move_node = 5;
+    ResizeNode resize_node = 6;
+    ChangeNodeIcon change_node_icon = 7;
+    ChangeNodeAbbreviation change_node_abbreviation = 8;
+    ChangeNodeOperatorKind change_node_operator_kind = 9;
+    ReplaceNodeKind replace_node_kind = 10;
+    ReplaceNodeProperties replace_node_properties = 11;
+    ReorderNodes reorder_nodes = 12;
+    ConnectNodes connect_nodes = 13;
+    DisconnectNodes disconnect_nodes = 14;
+  }
+}

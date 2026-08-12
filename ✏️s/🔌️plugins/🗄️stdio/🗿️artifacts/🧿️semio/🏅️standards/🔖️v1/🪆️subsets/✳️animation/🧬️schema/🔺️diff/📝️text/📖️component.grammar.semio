@@ -9,7 +9,7 @@ start document
 # string), the recipe's own index-keyed collection-triple shape (§1.4), verbatim from
 # `engine::triples::enc_indexed_triple`/`dec_indexed_triple`'s real `[r];[m];[a]` wire shape.
 #
-# UNLIKE the flat one-field-per-line shape workflow/brep/drawing's own diff grammars use, this
+# UNLIKE the flat one-field-per-line shape flow/brep/drawing's own diff grammars use, this
 # facet's per-item diffs (`AnimTimelineDiff`/`AnimChannelDiff`/`AnimKeyframeDiff`) are SPARSE
 # tag-lists — only the fields that actually changed are printed, each as a `TAG:value` entry inside
 # a bracket-wrapped, comma-joined list (`enc_timeline_diff`/`enc_channel_diff`/`enc_keyframe_diff`)

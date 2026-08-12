@@ -67,6 +67,18 @@ pub fn set_active_utility_effect(utility: &str) -> HostEffect {
 pub fn iconed_tree_item_with_action(id: impl Into<String>, label: impl Into<Label>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None, ..semio_framework_plugin::tree_item_with_action(id, label, None, action) }
 }
+
+/// 🔁️ Builds a `HostEffect::LoadDocument` for `document` — the sanctioned non-history "replace the
+/// whole document" gesture (`ArtifactStore::reset`, applied host-side) every wholesale document-swap
+/// command (`🎮️commands/📄️artifact`, `🎮️commands/🪵️stock`, `🎮️commands/📤️media`, `import_media`'s
+/// `geometry:in`) uses instead of the banned whole-snapshot mutation. The spr is a fresh, edit-free
+/// op-log — a genesis envelope with no history to encode.
+pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> HostEffect {
+    let pack = <Process3dSnapshot as store::ArtifactPack>::encode_pack(document);
+    let envelope = store::create_document_envelope::<Process3dSnapshot, Process3dMutation>(crate::artifacts::process3d::PROCESS_3D_SCHEMA, "process3d", document.clone(), None);
+    let spr = store::print_document_spr(&envelope).expect("process3d document spr encode is infallible for a fresh, edit-free envelope");
+    HostEffect::LoadDocument { pack, spr }
+}
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
@@ -602,7 +614,7 @@ mod tests {
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
     pub(super) fn every_command() -> Vec<Process3dCommand> {
         vec![
-            Process3dCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::artifacts::process3d::empty_process3d_snapshot() }),
+            Process3dCommand::SetDocument(set_snapshot::SetDocument { snapshot: crate::artifacts::process3d::empty_process3d_snapshot() }),
             Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCESS3D_EXAMPLE_PLATE.into() }),
             Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: Some([1.0, 2.0, 3.0]) }),
             Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "wood".into(), machine_id: "circularSaw".into() }),
@@ -706,12 +718,19 @@ mod tests {
         );
     }
 
+    /// 🧬️ Swapping the stock kind resets the whole document (stock + cleared timeline), which has no
+    /// in-history mutation (a whole-snapshot variant is banned outright), so `setStock` now surfaces as a
+    /// `HostEffect::LoadDocument` rather than an `artifact_mutations` entry — `dispatch`'s in-process
+    /// harness never applies `effects` to its own store, so this asserts on the emitted effect.
     #[test]
     fn arg_form_set_stock_emits_ops_reading_kind_arg() {
         let mut app = app();
         let result = dispatch(&mut app, Process3dCommand::SetStock(set_stock::SetStock { kind: "cylinder".into() }));
-        assert!(!result.mutations.is_empty(), "the setStock arg form must materialize into document operations");
-        let document = app.snapshot().expect("snapshot");
+        assert!(result.mutations.is_empty(), "setStock replaces the whole document via an effect, not in-history mutations");
+        let HostEffect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setStock must emit a LoadDocument effect") else {
+            panic!("expected a LoadDocument effect");
+        };
+        let document = <Process3dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
         assert!(matches!(document.stock.solid, crate::artifacts::process3d::SolidSpec::Cylinder { .. }), "setStock kind=cylinder must swap the stock solid");
         assert!(document.steps.is_empty(), "swapping stock resets the step timeline");
     }
@@ -760,10 +779,26 @@ mod tests {
         assert_ne!(step_pose(last_two[0]), step_pose(last_two[1]), "repeated clicks at different points must produce distinct step poses");
     }
 
+    /// 🧹️ `SetStock` now replaces the whole document via a `HostEffect::LoadDocument` (see
+    /// `arg_form_set_stock_emits_ops_reading_kind_arg`'s doc comment), which the in-process test
+    /// harness never applies to its own store — so these two face-drag tests instead clear the timber
+    /// example's pre-seeded steps and square off its (already-`Box`) stock via real in-history
+    /// mutations (`RemoveStep`/`PatchInspector`) to reach an equivalent starting state.
+    fn squared_off_box_stock(app: &mut crate::apps::process3d::testkit::Process3dApp) {
+        let step_ids: Vec<String> = app.snapshot().expect("snapshot").steps.iter().map(|step| step.id.clone()).collect();
+        for id in step_ids {
+            dispatch(app, Process3dCommand::RemoveStep(remove_step::RemoveStep { id }));
+        }
+        let stock_id = app.snapshot().expect("snapshot").stock.id.clone();
+        for (field, value) in [("width", 1.0), ("depth", 1.0), ("height", 1.0)] {
+            dispatch(app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: stock_id.clone(), field: field.into(), number: Some(value), text: None }));
+        }
+    }
+
     #[test]
     fn world_face_drag_end_cut_reduces_volume_end_to_end() {
         let mut app = app();
-        dispatch(&mut app, Process3dCommand::SetStock(set_stock::SetStock { kind: "box".into() }));
+        squared_off_box_stock(&mut app);
         let stock_volume = crate::artifacts::process3d::engine::processed_volume(&app.snapshot().expect("snapshot")).expect("stock volume");
         let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) }));
         assert!(!result.mutations.is_empty());
@@ -777,7 +812,7 @@ mod tests {
     #[test]
     fn world_face_drag_end_attach_increases_volume_end_to_end() {
         let mut app = app();
-        dispatch(&mut app, Process3dCommand::SetStock(set_stock::SetStock { kind: "box".into() }));
+        squared_off_box_stock(&mut app);
         let stock_volume = crate::artifacts::process3d::engine::processed_volume(&app.snapshot().expect("snapshot")).expect("stock volume");
         let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: 0.5, face_extent: Some([0.2, 0.2]) }));
         assert!(!result.mutations.is_empty());

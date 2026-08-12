@@ -98,19 +98,13 @@ store::impl_whole_record_config!(MathematicalConfig);
 
 //#region 🔖️ConfigMutations
 /// 🧮️ `MathematicalConfig`'s operation enum — one variant per settled interaction (mirrors the pre-migration
-/// `MathPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()` returns —
-/// mirrors `shooting_op::ShootingConfigMutation`'s "undo this tick is exactly restore the whole-config
-/// snapshot from just before it" pattern: `Mutation::Diff` is the WHOLE `MathematicalConfig` (not a granular
-/// patch type), `diff()` returns "the full config after this op", and
+/// `MathPlayRuntime` field writes); each variant's `backwards()` re-emits the SAME variant with the old
+/// field value read from `base` (no whole-config snapshot sentinel). `Mutation::Diff` is the WHOLE
+/// `MathematicalConfig` (not a granular patch type), `diff()` returns "the full config after this op", and
 /// `protocol::MutationDiff<MathematicalConfig>::apply` for `MathematicalConfig` itself (see `store::impl_whole_record_config!`)
 /// just returns that snapshot verbatim, ignoring `base`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum MathematicalConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: MathematicalConfig,
-    },
     #[dsl(key = "camera")]
     SetCamera {
         #[dsl(block)]
@@ -198,7 +192,6 @@ impl Mutation<MathematicalConfig> for MathematicalConfigMutation {
     fn diff(&self, base: &MathematicalConfig) -> MathematicalConfig {
         let mut next = base.clone();
         match self {
-            MathematicalConfigMutation::Snapshot { config } => return config.clone(),
             MathematicalConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
             MathematicalConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
@@ -206,7 +199,10 @@ impl Mutation<MathematicalConfig> for MathematicalConfigMutation {
     }
 
     fn inverse(&self, base: &MathematicalConfig) -> Vec<Self> {
-        vec![MathematicalConfigMutation::Snapshot { config: base.clone() }]
+        match self {
+            MathematicalConfigMutation::SetCamera { .. } => vec![MathematicalConfigMutation::SetCamera { camera: base.camera.clone() }],
+            MathematicalConfigMutation::SetLocale { .. } => vec![MathematicalConfigMutation::SetLocale { value: base.locale.clone() }],
+        }
     }
 }
 //#endregion 🔖️ConfigMutations
@@ -231,12 +227,11 @@ mod tests {
     }
 
     #[test]
-    fn config_operation_snapshot_diff_ignores_base() {
+    fn config_operation_set_camera_diff_writes_the_targeted_field() {
         let base = MathematicalConfig::default();
-        let mut snapshot = base.clone();
-        snapshot.locale = "de-DE".into();
-        let operation = MathematicalConfigMutation::Snapshot { config: snapshot.clone() };
-        assert_eq!(Mutation::diff(&operation, &base), snapshot);
+        let camera = MathematicalCamera { x: 5.0, y: 6.0, zoom: 2.0 };
+        let operation = MathematicalConfigMutation::SetCamera { camera: camera.clone() };
+        assert_eq!(Mutation::diff(&operation, &base).camera, camera);
     }
 
     #[test]
@@ -247,7 +242,8 @@ mod tests {
         let next = Mutation::diff(&operation, &base);
         assert_eq!(next.camera, camera);
         let backwards = Mutation::inverse(&operation, &base);
-        assert_eq!(backwards, vec![MathematicalConfigMutation::Snapshot { config: base }]);
+        assert_eq!(backwards, vec![MathematicalConfigMutation::SetCamera { camera: base.camera.clone() }]);
+        assert_eq!(Mutation::diff(&backwards[0], &next), base);
         store::os_store::test_support::assert_op_line_round_trip(&operation);
     }
 

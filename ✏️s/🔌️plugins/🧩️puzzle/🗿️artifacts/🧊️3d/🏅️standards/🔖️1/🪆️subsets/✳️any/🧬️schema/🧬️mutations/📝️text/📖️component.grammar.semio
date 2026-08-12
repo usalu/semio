@@ -1,9 +1,70 @@
 dialect grammar
-grammar 3d.mutations
-extension 3d
-start document
+grammar puzzle.puzzle3d.mutations
+extension puzzle3d
+start line
 
-document = header body
-header = "schema" SP "stdio.json" NL
-body = payload NL?
-payload = OCTET+
+line = create-object / delete-object / move-object / rotate-object / scale-object
+     / change-object-mesh / edit-object-label / change-object-kind / change-object-anchor
+     / change-object-hidden / change-object-locked / add-object-vortex / remove-object-vortex
+     / replace-object-vortex / connect-vortices / disconnect-vortices
+     / replace-attraction-geometry / create-target-volume / delete-target-volume
+     / move-target-volume / rotate-target-volume / scale-target-volume
+     / change-target-volume-hidden / change-target-volume-locked / create-reference
+     / delete-reference / move-reference / resize-reference / replace-reference-source
+     / change-reference-hidden / change-reference-locked / change-domain
+     / connect-kind-compatibility / disconnect-kind-compatibility / replace-kind-catalogs
+
+create-object = "create-object" SP object-block SP index-opt
+delete-object = "delete-object" SP id
+move-object = "move-object" SP id SP number SP number SP number
+rotate-object = "rotate-object" SP id SP quat-opt
+scale-object = "scale-object" SP id SP scale-opt
+change-object-mesh = "change-object-mesh" SP id SP text-opt
+edit-object-label = "edit-object-label" SP id SP text-opt
+change-object-kind = "change-object-kind" SP id SP text-opt
+change-object-anchor = "change-object-anchor" SP id SP anchor
+change-object-hidden = "change-object-hidden" SP id SP boolean
+change-object-locked = "change-object-locked" SP id SP boolean
+add-object-vortex = "add-object-vortex" SP id SP vortex-block SP index-opt
+remove-object-vortex = "remove-object-vortex" SP id SP id
+replace-object-vortex = "replace-object-vortex" SP id SP id SP vortex-block
+connect-vortices = "connect-vortices" SP id SP full-vortex-id SP full-vortex-id SP attraction-fields
+disconnect-vortices = "disconnect-vortices" SP id
+replace-attraction-geometry = "replace-attraction-geometry" SP id SP number SP number SP number SP number SP number SP number SP number SP number
+create-target-volume = "create-target-volume" SP volume-block SP index-opt
+delete-target-volume = "delete-target-volume" SP id
+move-target-volume = "move-target-volume" SP id SP number SP number SP number
+rotate-target-volume = "rotate-target-volume" SP id SP quat-opt
+scale-target-volume = "scale-target-volume" SP id SP scale-opt
+change-target-volume-hidden = "change-target-volume-hidden" SP id SP boolean
+change-target-volume-locked = "change-target-volume-locked" SP id SP boolean
+create-reference = "create-reference" SP reference-block SP index-opt
+delete-reference = "delete-reference" SP id
+move-reference = "move-reference" SP id SP number SP number SP number
+resize-reference = "resize-reference" SP id SP number
+replace-reference-source = "replace-reference-source" SP id SP source-block
+change-reference-hidden = "change-reference-hidden" SP id SP boolean
+change-reference-locked = "change-reference-locked" SP id SP boolean
+change-domain = "change-domain" SP text
+connect-kind-compatibility = "connect-kind-compatibility" SP id SP id SP boolean SP boolean SP specificity
+disconnect-kind-compatibility = "disconnect-kind-compatibility" SP id SP id
+replace-kind-catalogs = "replace-kind-catalogs" SP catalogs-block-opt
+
+object-block = "{" NL OCTET+ "}"
+vortex-block = "{" NL OCTET+ "}"
+volume-block = "{" NL OCTET+ "}"
+reference-block = "{" NL OCTET+ "}"
+source-block = "{" NL OCTET+ "}"
+catalogs-block-opt = ( "{" NL OCTET+ "}" ) / "none"
+attraction-fields = number SP number SP number SP number SP number SP number SP number SP number
+full-vortex-id = OCTET+
+anchor = "fixed" / "derived"
+specificity = "general" / "object" / "attraction" / "cable" / "vortex"
+quat-opt = ( number SP number SP number SP number ) / "none"
+scale-opt = number+ / "none"
+index-opt = number / "none"
+text-opt = text / "none"
+id = OCTET+
+number = OCTET+
+text = OCTET+
+boolean = "true" / "false"

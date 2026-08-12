@@ -200,7 +200,7 @@ impl Default for SemioBrepSnapshot {
 
 //#region 🔖️TextPrimitives
 /// 🧪️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION brep wave (following the
-/// workflow pilot's proven template, `ws-codec-workflow-report.md`): real hex/bracket-encoded
+/// flow pilot's proven template, `ws-codec-workflow-report.md`): real hex/bracket-encoded
 /// value primitives backing the hand-rolled `ArtifactDsl` below — same style as this subset's own
 /// `🔺️diff`/`🧬️mutations` facets, duplicated here (not imported from `schema::diff`) to keep
 /// `snapshot` — the base type `diff`/`mutations` both depend ON — free of a reverse dependency on
@@ -208,7 +208,7 @@ impl Default for SemioBrepSnapshot {
 ///
 /// 🧩️ The `#[derive(dsl::DslArtifact)]` path was reconsidered per this ticket's brief now that the
 /// 6 shared `⚙️engine/🧮️geometry` value types (incl. `SemioPoint3`) derive `dsl::DslRecord`. It is
-/// still blocked here for a DIFFERENT, new reason than workflow's: `BrepCurve`/`BrepSurface` are
+/// still blocked here for a DIFFERENT, new reason than flow's: `BrepCurve`/`BrepSurface` are
 /// data-carrying TAGGED ENUMS (`Line`/`Circle`/`Ellipse`/`Nurbs`, `Plane`/`Cylinder`/.../`Nurbs`),
 /// several of whose variants hold `Vec<SemioPoint3>`/`Vec<f64>` fields — the derive path has no
 /// `DslEnum`-over-heterogeneous-payload-shape mechanism proven to emit a matching TEXT production
@@ -492,7 +492,7 @@ fn parse_brep_snapshot_body(body: &str) -> Result<SemioBrepSnapshot, String> {
 
 //#region 🔖️BinaryPrimitives
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers `stdio.semio.workflow`'s upgraded `OpBinary`/`DiffCodec`
+/// `store::ByteReader`, same helpers `stdio.semio.flow`'s upgraded `OpBinary`/`DiffCodec`
 /// reuse) backing the real `ArtifactPack` below — replaces the old `serde_json::to_vec`-in-
 /// envelope shortcut.
 fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
@@ -867,7 +867,7 @@ fn decode_brep_snapshot_binary(bytes: &[u8]) -> Result<SemioBrepSnapshot, String
 
 //#region 🔖️HandcraftedArtifactCodecs
 /// 🎁 Real structured text/binary codecs (brep wave — off the old hex-dump-of-`serde_json`
-/// shortcut, following the workflow pilot's proven template). Wrapped in the repo-wide
+/// shortcut, following the flow pilot's proven template). Wrapped in the repo-wide
 /// `store::semio_format` envelope, unchanged.
 impl store::ArtifactDsl for SemioBrepSnapshot {
     const EXTENSION: &'static str = "semio";

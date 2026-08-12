@@ -27,6 +27,7 @@ mod tests {
     use super::*;
     use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
     use crate::artifacts::raster::op::RasterMutation;
+    use crate::artifacts::raster::mutations::create_layer;
     use std::collections::BTreeMap;
 
     #[test]
@@ -110,7 +111,7 @@ mod tests {
         let mut store = ArtifactStore::new(envelope);
         store
             .dispatch(ArtifactCommand::Apply {
-                mutations: vec![RasterMutation::AddLayer {
+                mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
                     parent_id: None,
                     index: 0,
                     layer: Box::new(RasterLayerNode::Pixel {
@@ -125,7 +126,7 @@ mod tests {
                         height: Some(32),
                         image_key: None,
                     }),
-                }],
+                })],
                 description: None,
             })
             .expect("apply");

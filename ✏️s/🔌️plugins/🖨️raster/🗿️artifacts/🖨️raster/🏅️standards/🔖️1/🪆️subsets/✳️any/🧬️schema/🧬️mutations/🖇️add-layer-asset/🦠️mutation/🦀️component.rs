@@ -1,7 +1,7 @@
 //! 🖇️ `add-layer-asset` — attaches an embedded `RasterImageAsset` to the document's id-keyed asset
 //! map. NOT one of the coordinator's ten mandated derivations; added so `image:in` media import
 //! (`crate::apps::raster::wasm`/the app's `import_media`) can stay a real, undoable operation now
-//! that `SetSnapshot` is gone — `assets: BTreeMap<String, RasterImageAsset>` is itself an id-keyed
+//! that whole-document replace is gone — `assets: BTreeMap<String, RasterImageAsset>` is itself an id-keyed
 //! root collection per `📓️derivation-rules.md` rule 2, and `add`/`remove` is its taxonomy-correct
 //! verb pair (`add`: "Attach a set-like member … inverse: remove").
 

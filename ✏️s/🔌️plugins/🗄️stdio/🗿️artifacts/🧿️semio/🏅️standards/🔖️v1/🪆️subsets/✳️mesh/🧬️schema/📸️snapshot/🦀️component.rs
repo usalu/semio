@@ -135,7 +135,7 @@ impl Default for SemioMeshSnapshot {
 /// same style as this subset's own `🔺️diff`/`🧬️mutations` facets (`GifDiff`/`SvgDiff`/`DocxDiff`'s
 /// established hand-rolled convention), duplicated here (not imported from `schema::diff`) to keep
 /// `snapshot` — the base type `diff`/`mutations` both depend ON — free of a reverse dependency on
-/// either sibling facet (same rationale `✳️workflow`'s own pilot documents).
+/// either sibling facet (same rationale `✳️flow`'s own pilot documents).
 ///
 /// 🧩️ The `#[derive(dsl::DslArtifact)]` path was tried first per this ticket's brief now that the
 /// shared `⚙️engine/🧮️geometry` types derive `dsl::DslRecord`. It is still blocked here: this
@@ -320,7 +320,7 @@ fn parse_mesh_snapshot_body(body: &str) -> Result<SemioMeshSnapshot, String> {
 
 //#region 🔖️BinaryPrimitives
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers `✳️workflow`'s own upgraded `ArtifactPack` uses) backing the
+/// `store::ByteReader`, same helpers `✳️flow`'s own upgraded `ArtifactPack` uses) backing the
 /// real `ArtifactPack` below — replaces the old `serde_json::to_vec`-in-envelope shortcut.
 fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);

@@ -217,7 +217,7 @@ pub mod derived_composition {
 
         //#region 🔖️ConformanceLaws
         /// 🧪️ The 6 real-codec conformance-law tests (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-
-        /// REUSE-EVOLUTION's audio wave), mirroring `✳️workflow`'s/`✳️mesh`'s/`✳️image`'s own proven,
+        /// REUSE-EVOLUTION's audio wave), mirroring `✳️flow`'s/`✳️mesh`'s/`✳️image`'s own proven,
         /// fully-verified template (`ws-codec-workflow-report.md`/`ws-codec-mesh-report.md`/
         /// `ws-codec-image-report.md`) — same 6 test names, same shape, only the facet modules and
         /// demo-case helpers differ.

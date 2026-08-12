@@ -33,11 +33,21 @@ Full design + rationale: `/Users/ueli/.claude/plans/the-current-artifact-system-
 
 SMO is running wave-2 mass fan-out across `✏️s/🔌️plugins/**/🧬️mutations/**` right now, in another session, on this same tree.
 
-1. **Plugin-level mutual exclusion.** Before touching plugin `<P>`, check `../SEMANTIC-MUTATIONS-OVERHAUL/📓️wave2-reports/` (and `📓️wave1-reports/`) for reports covering ALL of `<P>`'s artifacts. Only fully-covered plugins are "SMO-clear." See `📓️smo-clearance.md` for the snapshot computed at ticket-open time — **re-check before dispatch, it goes stale fast.**
+1. ⚠️ **Plugin-level mutual exclusion — DO NOT use report files as the clearance oracle.** `📓️smo-clearance.md` (computed at ticket-open from SMO's report dirs) is **retained only as a historical record; it is NOT authoritative and must not be used to dispatch.** The report-existence oracle was proven unreliable in BOTH directions:
+   - **False "clear"**: `demonstrator-playground-1-any-report.md` exists in SMO's `📓️wave2-reports/`, yet SMO has a *live lane* on demonstrator. SMO runs multiple waves per plugin ("Wave R", "Wave C"), so a report means "that wave finished", not "the plugin is done".
+   - **False "not clear"**: note/energy/space have no SMO report at all, yet SMO explicitly released energy.
+   **The only valid oracle is an explicit per-plugin handshake with the owning session before dispatch** (SMO = `semio-9f`, APA = `semio-52`; names drift, use `ListAgents`). The orchestrator does this, not fan-out agents. Known-bad as of this writing: **demonstrator and note are NOT clear.**
+   General lesson, twice-burned in this ticket: **do not infer a live session's state from static files it happens to have written** — an unchanged report count also got misread as dormancy. Ask the session.
 2. **Never touch `🧬️mutations/**` of an uncleared plugin.**
 3. **stdio is the big overlap risk** — claim it explicitly in `📓️status.md` before W2 starts.
 4. **The one forbidden collision**: our W1 and SMO's eventual wave-4 ratchet both want to write `🔌️plugin/🦀️component.rs`. Whoever starts first wins; the other waits. Check SMO's `📓️status.md` before starting W1.
-5. **Transient failure protocol**: on a compile error in a file OUTSIDE your boundary — `git status --porcelain` + `stat` the file; if modified today by not-you, it's concurrent churn. Retry `cargo check -p <your-crate>` up to 3× at 60s intervals. If it persists, record it under `## Concurrent-churn observations` in your report, prove zero errors originate in your own boundary (grep the cargo output for your path), report `blocked-mechanism`, and stop. Never "fix" someone else's file.
+5. **Transient failure protocol**: on a compile error in a file OUTSIDE your boundary — establish whether it is someone else's in-flight work (churn detection below); if so, it is concurrent churn. Retry `cargo check -p <your-crate>` up to 3× at 60s intervals. If it persists, record it under `## Concurrent-churn observations` in your report, prove zero errors originate in your own boundary (grep the cargo output for your path), report `blocked-mechanism`, and stop. Never "fix" someone else's file.
+
+6. ⚠️ **This repo AUTO-COMMITS — `git status` is NOT a reliable churn detector.** A background process periodically commits the whole tree (commits look like `🐙️ueli🎆️26🌙️06☀️04🚩️<n>`, incrementing; one landed mid-wave during this ticket and swept a sibling agent's framework edits). Consequences:
+   - Work that landed minutes ago is already committed and shows **clean** in `git status --porcelain`. An empty `git status` does NOT mean "nobody touched this file".
+   - If your own edits disappear from `git status`, they were committed, **not lost**. Never run a git-modifying command to "recover" them (forbidden anyway).
+   - Detect churn with these instead: `git log --oneline -5 -- <path>` (recent commits touching it), `stat -f '%Sm' <path>` (mtime, macOS), `git log --oneline -3` (has the auto-committer advanced since you started?).
+   - Never assume a clean tree means a file is safe to overwrite — read it first.
 
 ## Repo conventions learned during this ticket (obey these)
 
@@ -46,6 +56,25 @@ SMO is running wave-2 mass fan-out across `✏️s/🔌️plugins/**/🧬️muta
 3. **`#[link(...)]` is unusable as a custom field attribute** — `link` is a built-in Rust attribute (extern-block FFI) and applying it to a field is a hard error (E0659/E0539/E0459), not a lint. The composition link-slot attribute is therefore `#[link_slot(roles("a", "b"))]`. The child attribute `#[child(kind = "s.stdio.mesh")]` is fine as-is.
 4. **Additive struct fields still break struct literals** (serde `default` only affects (de)serialization, not Rust construction). After adding a field, grep for `TypeName {` across the whole workspace — not just your crate — and either fix the literals or file them under `sharedFileRequests`.
 5. **Adding an enum variant is expensive** where the enum is matched exhaustively. Measure with `grep -rln "EnumName::"` before committing to it. (`Shape::` matches in ~20 files — see deviation D1 in `📓️status.md`.)
+
+## Authoring a `🧬️mutations` facet (BINDING — agreed with the SMO session)
+
+Any new or restructured mutation facet lands inside the SEMANTIC-MUTATIONS-OVERHAUL ticket's policy scope. Author it conforming the first time; retrofits cost that ticket real work. Required reading before writing one: `../SEMANTIC-MUTATIONS-OVERHAUL/📓️taxonomy.md` (closed verb table, naming, addressing) and `📓️fanout-brief.md` (8-step recipe).
+
+**Forbidden vocabulary** — `SetSnapshot` (whole-document replace is NOT an in-history mutation at all; it goes through `ArtifactStore::reset`, a locked user decision), `NoMutation` (a mutation with nothing to undo returns `Vec::new()` from `MutationKind::inverse`), and `CollectionMutation` in a public `pub enum *Mutation`.
+⚠️ **The policy greps raw file content including comments** — prose merely *mentioning* these names trips it. Do not write them in docstrings either. (This doc is exempt; it is not under `✏️s/`.)
+
+**Four mechanical gates:**
+1. **Triad dirs ↔ dispatch variants, 1:1 in both directions.** No orphan dir, no variant without a dir.
+2. **Unique emoji per directory within a facet** (`policyMutationEmojiUniquenessBreaches`, high priority). Do not reuse an emoji across sibling triad dirs.
+3. **Real leaves, not shims.** `🦠️mutation` contains an actual `impl MutationKind<`; `🔺️diff` a real `pub fn diff` building the sparse diff directly from `(payload, base)` — never apply-then-capture, never a snapshot clone; `↩️inverse` a real `pub fn inverse` reconstructing from `base`, returning `Vec::new()` when the target is absent.
+4. **Non-stub `🟦️component.ts` beside every triad `🦀️component.rs`**, and real glue `#[path]` mounts — never inline `#[path = "."]` self-wiring in the dispatch file.
+
+**If a facet cannot be authored conformingly, leave its dispatch enum EMPTY with no triad dirs and flag it in your report.** An empty facet is trivial for the SMO session to populate; a non-conforming one is a teardown. Never invent vocabulary to fill a gap.
+
+**This ticket's composition verbs** (all within the approved core, reviewed and confirmed by the SMO session): `create`/`delete` (child lifecycle; `delete` captures the escrowed child content for its inverse), `extract`/`inline` (owned child ↔ standalone link), `bind`/`unbind` (link attach/detach), `change` (re-pin, i.e. `change-link-pin`). Two rulings worth preserving because a later reader will second-guess both:
+- **`bind`/`unbind`, not `connect`/`disconnect`** — a link fills a *named slot* on the parent as a handle; it is not an edge row in an edge collection. The taxonomy's rule: "a parameterization gets `bind`/`unbind` instead."
+- **`change-link-pin`, not `update-link-pin`** — `update` is reserved for an inseparable ≥2-field facet rewritten atomically. Re-pinning sets the single `pin` field while `target`/`role` stay put, which is exactly `change` (record `ChangedLinkPin`).
 
 ## Report shape (every wave)
 

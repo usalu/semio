@@ -1,7 +1,7 @@
 //! 🔺️ Note artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::note::schema::diff::{
-    NoteAddedBlockEntry, NoteAssetsDelta, NoteBlockPatchEntry, NoteBlocksDelta, NoteDiff, NoteStringList,
+    NoteAddedBlockEntry, NoteAssetsDelta, NoteBlockPatch, NoteBlockPatchEntry, NoteBlocksDelta, NoteDiff, NoteStringList,
 };
 use crate::artifacts::note::engine::{block_id, insert_block, remove_block_from_tree, update_block_in_tree};
 use crate::artifacts::note::schema::NoteArtifact;

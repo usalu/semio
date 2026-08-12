@@ -65,8 +65,8 @@ impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
 /// already gets this for free via `IndexAdded<T>`; `NamedTripleDiff`'s own `added: Vec<T>` field
 /// intentionally stays position-agnostic — most named/keyed collections don't care about order —
 /// so this is opt-in via `T`, not a change to the struct itself). Was independently reinvented by
-/// every W2 subset that needed it (`object::NamedAdded`, `json::JsonObjectAdded`, …) before this
-/// shared copy existed — see `s.stdio.object`'s own `🧬️schema/🔺️diff/🦀️component.rs` for the
+/// every W2 subset that needed it (`value::NamedAdded`, `json::JsonObjectAdded`, …) before this
+/// shared copy existed — see `s.stdio.value`'s own `🧬️schema/🔺️diff/🦀️component.rs` for the
 /// reference usage this was hoisted from. Existing per-subset local copies are untouched (still
 /// correct); only new W4/W5 consumers should import this one instead of reinventing it again.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

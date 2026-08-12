@@ -12,216 +12,12 @@
 //! layer within the build-up, and `change-layer-thickness`/`change-layer-lambda` edit one field of
 //! one layer by BASE-state index.
 //!
-//! Every triad leaf is self-wired directly below (`#[path]`, `🔖️LeafWiring` region) rather than in
-//! `📦️glue.rs` — this facet's fan-out (26/08/12/SEMANTIC-MUTATIONS-OVERHAUL) is scoped to files
-//! inside this artifact directory only; `📦️glue.rs` is plugin-shared and out of that scope. The old
-//! generic `📄set-snapshot` leaf stays physically present as an orphan stub (see its own doc
-//! comments) because `📦️glue.rs` still `#[path]`-wires it — cleanup tracked as a `sharedFileRequests`
-//! entry in this ticket's wave2 report.
+//! Every triad leaf is mounted directly as a `mutations`-sibling module in `📦️glue.rs` (this lane's
+//! agent owns `📦️glue.rs`, so no self-wiring `#[path = "."]` blocks are needed here — the orphaned
+//! `📄set-snapshot` stub is deleted along with its dangling glue mount).
 
 use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
 use serde::{Deserialize, Serialize};
-
-//#region 🔖️LeafWiring
-#[path = "."]
-pub mod change_category {
-    #[path = "🏷️change-category/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🏷️change-category/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🏷️change-category/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_climate {
-    #[path = "🌦️change-climate/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🌦️change-climate/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🌦️change-climate/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_airtightness_n50 {
-    #[path = "💨change-airtightness-n50/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "💨change-airtightness-n50/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "💨change-airtightness-n50/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_psi_times_l_sum {
-    #[path = "🌉change-psi-times-l-sum/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🌉change-psi-times-l-sum/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🌉change-psi-times-l-sum/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_rh_int {
-    #[path = "💧change-rh-int/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "💧change-rh-int/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "💧change-rh-int/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_catalog_id {
-    #[path = "📇change-catalog-id/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📇change-catalog-id/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📇change-catalog-id/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_material_id {
-    #[path = "🧱change-material-id/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🧱change-material-id/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🧱change-material-id/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_airtightness_class {
-    #[path = "🎚️change-airtightness-class/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🎚️change-airtightness-class/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🎚️change-airtightness-class/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_t_int_c {
-    #[path = "🌡️change-t-int-c/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🌡️change-t-int-c/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🌡️change-t-int-c/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_solar_absorptance {
-    #[path = "☀️change-solar-absorptance/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "☀️change-solar-absorptance/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "☀️change-solar-absorptance/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_irradiance_w_m2 {
-    #[path = "🔆change-irradiance-wm2/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔆change-irradiance-wm2/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔆change-irradiance-wm2/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_moisture_mu_exterior {
-    #[path = "🌫️change-moisture-mu-exterior/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🌫️change-moisture-mu-exterior/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🌫️change-moisture-mu-exterior/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_moisture_mu_interior {
-    #[path = "💦change-moisture-mu-interior/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "💦change-moisture-mu-interior/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "💦change-moisture-mu-interior/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_envelope_area_m2 {
-    #[path = "📐change-envelope-area-m2/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📐change-envelope-area-m2/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📐change-envelope-area-m2/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_bb2_details_conform {
-    #[path = "✅change-bb2-details-conform/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "✅change-bb2-details-conform/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "✅change-bb2-details-conform/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_application_type {
-    #[path = "🗂️change-application-type/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗂️change-application-type/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗂️change-application-type/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_declared_application_class {
-    #[path = "📋change-declared-application-class/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📋change-declared-application-class/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📋change-declared-application-class/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod insert_layer {
-    #[path = "➕️insert-layer/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "➕️insert-layer/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "➕️insert-layer/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod remove_layer {
-    #[path = "➖️remove-layer/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "➖️remove-layer/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "➖️remove-layer/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod reorder_layers {
-    #[path = "🔀️reorder-layers/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔀️reorder-layers/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔀️reorder-layers/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_layer_thickness {
-    #[path = "📏️change-layer-thickness/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📏️change-layer-thickness/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📏️change-layer-thickness/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_layer_lambda {
-    #[path = "🧮️change-layer-lambda/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🧮️change-layer-lambda/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🧮️change-layer-lambda/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-//#endregion 🔖️LeafWiring
 
 //#region 🔖️Mutations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<Din4108Snapshot, Din4108Mutation>`
@@ -232,6 +28,31 @@ pub mod change_layer_lambda {
 /// which re-exports it (confirmed against `✏️s/🔌️plugins/📐️cad`'s already-compiling facet, which
 /// uses this exact same `dsl::Mutations` spelling — `dsl_derive::Mutations` only resolves inside
 /// the kernel crate itself).
+//#region 🔖️Leaves
+use super::change_category;
+use super::change_climate;
+use super::change_airtightness_n50;
+use super::change_psi_times_l_sum;
+use super::change_rh_int;
+use super::change_catalog_id;
+use super::change_material_id;
+use super::change_airtightness_class;
+use super::change_t_int_c;
+use super::change_solar_absorptance;
+use super::change_irradiance_w_m2;
+use super::change_moisture_mu_exterior;
+use super::change_moisture_mu_interior;
+use super::change_envelope_area_m2;
+use super::change_bb2_details_conform;
+use super::change_application_type;
+use super::change_declared_application_class;
+use super::insert_layer;
+use super::remove_layer;
+use super::reorder_layers;
+use super::change_layer_thickness;
+use super::change_layer_lambda;
+//#endregion 🔖️Leaves
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = Din4108Snapshot, diff = Din4108Diff, schema = "s.norm.din4108")]
 pub enum Din4108Mutation {
@@ -259,6 +80,44 @@ pub enum Din4108Mutation {
     ChangeLayerLambda(change_layer_lambda::mutation::ChangeLayerLambda),
 }
 //#endregion 🔖️Mutations
+
+//#region 🔖️FromSnapshot
+impl Din4108Mutation {
+    /// 📤️ Decomposes a whole-document replacement into the closed semantic vocabulary — the
+    /// replacement for the banned whole-document-replace variant, used by `import_media`'s
+    /// `"model:in"` port and the `set-snapshot` app command. Unlike the seventeen flat scalars,
+    /// `layers` is a real ordered collection, so this also takes `base` (the pre-replacement
+    /// document): every existing layer is removed (highest index first, so indices stay valid
+    /// mid-sequence) before `target`'s layers are re-inserted in order.
+    pub fn from_snapshot(base: &Din4108Snapshot, target: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+        let mut mutations = Vec::with_capacity(17 + base.layers.len() + target.layers.len());
+        mutations.push(Din4108Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: snapshot.category.clone() }));
+        mutations.push(Din4108Mutation::ChangeClimate(change_climate::mutation::ChangeClimate { new_climate: snapshot.climate.clone() }));
+        mutations.push(Din4108Mutation::ChangeAirtightnessN50(change_airtightness_n50::mutation::ChangeAirtightnessN50 { new_airtightness_n50: snapshot.airtightness_n50.clone() }));
+        mutations.push(Din4108Mutation::ChangePsiTimesLSum(change_psi_times_l_sum::mutation::ChangePsiTimesLSum { new_psi_times_l_sum: snapshot.psi_times_l_sum.clone() }));
+        mutations.push(Din4108Mutation::ChangeRhInt(change_rh_int::mutation::ChangeRhInt { new_rh_int: snapshot.rh_int.clone() }));
+        mutations.push(Din4108Mutation::ChangeCatalogId(change_catalog_id::mutation::ChangeCatalogId { new_catalog_id: snapshot.catalog_id.clone() }));
+        mutations.push(Din4108Mutation::ChangeMaterialId(change_material_id::mutation::ChangeMaterialId { new_material_id: snapshot.material_id.clone() }));
+        mutations.push(Din4108Mutation::ChangeAirtightnessClass(change_airtightness_class::mutation::ChangeAirtightnessClass { new_airtightness_class: snapshot.airtightness_class.clone() }));
+        mutations.push(Din4108Mutation::ChangeTIntC(change_t_int_c::mutation::ChangeTIntC { new_t_int_c: snapshot.t_int_c.clone() }));
+        mutations.push(Din4108Mutation::ChangeSolarAbsorptance(change_solar_absorptance::mutation::ChangeSolarAbsorptance { new_solar_absorptance: snapshot.solar_absorptance.clone() }));
+        mutations.push(Din4108Mutation::ChangeIrradianceWM2(change_irradiance_w_m2::mutation::ChangeIrradianceWM2 { new_irradiance_w_m2: snapshot.irradiance_w_m2.clone() }));
+        mutations.push(Din4108Mutation::ChangeMoistureMuExterior(change_moisture_mu_exterior::mutation::ChangeMoistureMuExterior { new_moisture_mu_exterior: snapshot.moisture_mu_exterior.clone() }));
+        mutations.push(Din4108Mutation::ChangeMoistureMuInterior(change_moisture_mu_interior::mutation::ChangeMoistureMuInterior { new_moisture_mu_interior: snapshot.moisture_mu_interior.clone() }));
+        mutations.push(Din4108Mutation::ChangeEnvelopeAreaM2(change_envelope_area_m2::mutation::ChangeEnvelopeAreaM2 { new_envelope_area_m2: snapshot.envelope_area_m2.clone() }));
+        mutations.push(Din4108Mutation::ChangeBb2DetailsConform(change_bb2_details_conform::mutation::ChangeBb2DetailsConform { new_bb2_details_conform: snapshot.bb2_details_conform.clone() }));
+        mutations.push(Din4108Mutation::ChangeApplicationType(change_application_type::mutation::ChangeApplicationType { new_application_type: snapshot.application_type.clone() }));
+        mutations.push(Din4108Mutation::ChangeDeclaredApplicationClass(change_declared_application_class::mutation::ChangeDeclaredApplicationClass { new_declared_application_class: snapshot.declared_application_class.clone() }));
+        for index in (0..base.layers.len()).rev() {
+            mutations.push(Din4108Mutation::RemoveLayer(remove_layer::mutation::RemoveLayer { index }));
+        }
+        for (index, layer) in target.layers.iter().enumerate() {
+            mutations.push(Din4108Mutation::InsertLayer(insert_layer::mutation::InsertLayer { index, layer: layer.clone() }));
+        }
+        mutations
+    }
+}
+//#endregion 🔖️FromSnapshot
 
 //#region 🧪️Tests
 #[cfg(test)]

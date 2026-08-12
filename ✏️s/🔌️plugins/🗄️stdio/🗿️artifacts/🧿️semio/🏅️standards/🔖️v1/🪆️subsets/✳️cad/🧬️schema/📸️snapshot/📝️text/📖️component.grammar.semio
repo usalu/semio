@@ -4,7 +4,7 @@ extension semio
 start document
 
 # ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION cad wave (following the
-# workflow/brep pilots' proven template, `ws-codec-workflow-report.md`/`ws-codec-brep-report.md`).
+# flow/brep pilots' proven template, `ws-codec-workflow-report.md`/`ws-codec-brep-report.md`).
 # Real grammar for `SemioCadSnapshot::print_dsl`/`parse_dsl` (📸️snapshot/🦀️component.rs's
 # `print_cad_snapshot_body`/`parse_cad_snapshot_body`) — hand-rolled (`CadEntity` is a data-carrying
 # tagged enum; a derive-path `RecordSpec` cannot express the `L[...]`/`A[...]`/.../`D[...]`-tagged

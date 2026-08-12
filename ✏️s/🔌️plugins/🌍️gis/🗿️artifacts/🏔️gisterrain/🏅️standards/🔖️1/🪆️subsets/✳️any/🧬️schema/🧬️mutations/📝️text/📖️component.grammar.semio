@@ -1,9 +1,16 @@
 dialect grammar
-grammar gisterrain.mutations
-extension gisterrain
-start document
+grammar gis.gisterrain.mutations
+extension gis
+start line
 
-document = header body
-header = "schema" SP "stdio.json" NL
-body = payload NL?
-payload = OCTET+
+line = change-exaggeration
+     / change-imported-features
+
+change-exaggeration = "change-exaggeration" SP number
+change-imported-features = "change-imported-features"
+
+id = OCTET+
+number = OCTET+
+text = OCTET+
+boolean = "true" / "false"
+block = "{" NL OCTET+ "}"

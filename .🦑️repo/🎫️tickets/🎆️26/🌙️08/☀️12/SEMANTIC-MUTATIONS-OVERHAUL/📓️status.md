@@ -86,6 +86,45 @@ region 280-534, the `OpText`/`OpBinary` impls 602-633, the dead aliases/wasm bri
 `generation_forms`, and `builder_kit`'s rendering half; update the app's 7 op-builder call sites;
 re-verify flow and forms still compile.
 
+## Cross-ticket coordination with `ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE` (peer session, issue 2549)
+
+A third session owns ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE` ("APA"). It does NOT
+touch `🧬️mutations/**` — but it is **not** disjoint from this ticket, contrary to its initial
+assumption: APA edits plugin roots (`✏️s/🔌️plugins/<P>/🦀️component.rs`), app `🦀️component.rs`
+files (thread_local → Draft lane), `🔧️setup`/`🛂️manifest`/`🎟️capabilities` facet dirs, and plugin
+`Cargo.toml`s — and this ticket's Wave C is rewriting precisely those app-side call sites
+(~141 `.rs` files outside `🧬️mutations`, plus per-plugin `📦️glue.rs`).
+
+Agreement: APA queues every plugin this ticket has in flight, and this session pings the channel
+as each lane completes and releases its plugin.
+
+- **Released to APA now**: `🪐️space`, `🔋️energy` (migrated, audited, no further SMO work queued).
+- **Held by SMO** (in flight): architect, shooting, demonstrator, lowpoly, animate, process,
+  reasoning, layout, gis, mathematical, note, block, puzzle, norm, trinity, dag, raster, sourcing,
+  remodel, imperative, playbook.
+- **Held by SMO** (between waves, Wave C app-debt not yet launched): writer, vcs, flow, sequence.
+- **Neither**: stdio — UCAS's claim.
+
+**Open design question routed to APA**: their "apps become stateless, Draft lane instead of
+`thread_local!`" work changes the `DraftMutation` associated type from the other side, while this
+ticket's final ratchet plans to require `DraftMutation: SemanticMutation`. Today 54 apps use
+`type DraftMutation = NoDraftMutation;` and `NoDraftMutation` implements only `Mutation`. If APA
+makes drafts real per-app types, the bound must be designed jointly rather than ratcheted into
+their change. Awaiting their answer before finalizing the ratchet.
+
+### `📜️script.ts` — three-way contention, serialized
+
+All three tickets need the repo-root policy script (SMO: fix 4 wrong-depth rules + extend
+ts-mirror + widen vocabulary scan + 2 new rules; UCAS: claimed for its W6; APA: 5 new policy
+regions). Agreed protocol: **one writer at a time, announce in-channel immediately before starting
+and immediately after stopping.** It is a flat ~10k-line file whose allowlists are plain string
+sets — concurrent edits clobber silently rather than conflicting loudly.
+
+SMO takes it **last** (proposed order APA → UCAS-W6 → SMO), which suits this ticket anyway since
+Wave R3 is deliberately held until the fan-out settles so its census-seeded allowlists are not
+stale. SMO's edits are confined to the `🔧️PolicyRuleMutationArtifactEngines` region
+(~lines 5280–6050) plus two allowlist constants.
+
 ## Cross-ticket coordination with `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (peer session, issue 2548)
 
 A concurrent session owns ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` and has taken an
@@ -102,11 +141,49 @@ from the settled roster.
 
 Consequences for this ticket:
 - Facet count grows **107 → 112** once the 5 new subsets land.
-- `🧿️semio ✳️any` (the union dispatch, always migrated last) may become an 18-way union — its
-  final variant list must be known before it is touched. Question posted to the peer.
-- The peer was asked NOT to scaffold the 5 new subsets with `SetSnapshot`/`NoMutation` facets
-  (fresh debt), and pointed at `📓️taxonomy.md` + `📓️fanout-brief.md`; offered fallback is an
-  empty mutation enum with no triad dirs, which is cheap to populate later.
+- The peer confirmed they are scaffolding all 5 new subsets **conforming** to `📓️taxonomy.md` +
+  `📓️fanout-brief.md` (strict path, not the empty-enum fallback), so no new facet should be born
+  with banned vocabulary. If any subset can't be done conformingly they will leave its enum empty
+  and name it rather than invent vocabulary. They were additionally given the four mechanical
+  gates their facets must pass (1:1 triad-dir↔variant, unique emoji per facet, real leaves not
+  shims, non-stub TS mirrors + real glue mounts) and warned that the policy rule greps comments.
+
+### `🧿️semio ✳️any` — final 18-variant roster (peer-confirmed)
+
+Migrate this facet LAST; it is a union dispatch delegating to the sub-subsets.
+
+- **Leaves** (no composition): `value`, `table`, `text`, `image`, `audio`, `brep`, `graph`
+- **Composites**: `mesh`, `video`, `animation`, `drawing`, `document`, `presentation`, `object`,
+  `model`, `cad`, `flow`, `kit`
+
+Deltas from today's 13: `workflow`→`flow` (rename), `object`→`value` (rename), plus 5 new —
+`text`, `table`, `object`, `graph`, `kit`. Nothing deleted.
+
+**⚠️ The `object` trap**: the name survives but its meaning changes completely. Today's `✳️object`
+is a value-tree and becomes `✳️value`; the NEW `✳️object` is a spatial "one placed thing". Any
+vocabulary derived from the old value-tree semantics belongs to `✳️value`, not to the new
+`✳️object`. Re-read the snapshot before deriving either.
+
+`✳️workflow` and `✳️object` facets arrive in `✳️flow`/`✳️value` carrying today's vocabulary debt
+unchanged — the peer is deliberately not investing there, it is this ticket's work.
+
+### Composition model (affects parent facets)
+
+Composed children are each their **own document** (own envelope, own `ArtifactVcs`), not an
+inline subtree; a parent snapshot holds only a two-string handle. So a parent's mutations never
+embed child diffs, and **no parent facet needs child-routing vocabulary** — a parent's mutation
+set stays about its own fields plus `bind`/`unbind` of handles. Cross-document atomicity comes
+from the `group_id` stamp: a composite gesture is N per-document edits sharing one id.
+
+Peer's composition verb set, reviewed against `📓️taxonomy.md` by this session:
+`create`/`delete` (child lifecycle, delete captures escrowed content) ✔;
+`extract`/`inline` (child ↔ standalone link) ✔ — exactly the table's "hoist a fragment into a
+reusable entity / dissolve back", replacing their non-approved `adopt`;
+`bind`/`unbind` (link attach/detach) ✔ — correct side of derivation rule 4's edge-vs-
+parameterization split, because the handle fills a named slot rather than being an edge row;
+`update` (re-pin a link) ✘ **flagged** — `update` is restricted to inseparable ≥2-field facets, so
+re-pinning a single pointer should be `change-<field>` unless both handle strings always move
+together.
 - Their in-flight subset renames currently leave `semio-s-plugin-stdio` red (6× `E0433`), and
   every plugin depends on stdio, so **all lane gates are blocked**. Lanes record `blocked-churn`
   and continue on unverified work; Wave V re-verifies everything.

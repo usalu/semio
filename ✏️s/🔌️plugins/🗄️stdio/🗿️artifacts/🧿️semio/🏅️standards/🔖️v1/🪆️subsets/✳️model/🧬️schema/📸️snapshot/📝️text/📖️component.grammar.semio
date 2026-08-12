@@ -3,7 +3,7 @@ grammar semio.model.snapshot
 extension semio
 start document
 
-# P2 pilot (model), following stdio.semio.workflow's proven pattern. Real grammar for
+# P2 pilot (model), following stdio.semio.flow's proven pattern. Real grammar for
 # `SemioModelSnapshot::print_dsl`/`parse_dsl` (📸️snapshot/🦀️component.rs's
 # `print_semio_model_snapshot_body`/`parse_semio_model_snapshot_body`) — hand-rolled, NOT
 # `#[derive(dsl::DslArtifact)]`: even though the shared geometry types now derive `dsl::DslRecord`,

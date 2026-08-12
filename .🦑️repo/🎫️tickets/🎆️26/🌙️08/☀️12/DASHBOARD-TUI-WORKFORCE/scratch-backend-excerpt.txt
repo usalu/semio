@@ -1,0 +1,260 @@
+2861|            self.full_redraw = true;
+2862|            self.render()
+2863|        }
+2864|    }
+2865|}
+2866|// #endregion 🔖️Engine
+2867|
+2868|// #region 🔖️Backend
+2869|pub mod backend {
+2870|    use crate::tui::ansi::AnsiPatch;
+2871|    use crate::tui::event::Event;
+2872|    use crate::tui::geometry::Size;
+2873|    use std::time::Duration;
+2874|
+2875|    #[derive(Debug)]
+2876|    pub struct BackendError {
+2877|        pub message: String,
+2878|    }
+2879|
+2880|    impl std::fmt::Display for BackendError {
+2881|        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+2882|            write!(f, "{}", self.message)
+2883|        }
+2884|    }
+2885|
+2886|    /// 🔌️ A platform terminal I/O implementation, kept out of the retained-mode core.
+2887|    pub trait TerminalBackend {
+2888|        fn size(&mut self) -> Result<Size, BackendError>;
+2889|        fn enter(&mut self) -> Result<(), BackendError>;
+2890|        fn leave(&mut self) -> Result<(), BackendError>;
+2891|        fn present(&mut self, patch: &AnsiPatch) -> Result<(), BackendError>;
+2892|        fn poll(&mut self, timeout: Duration) -> Result<Vec<Event>, BackendError>;
+2893|    }
+2894|
+2895|    #[cfg(all(feature = "tui-terminal", unix, not(target_arch = "wasm32")))]
+2896|    mod native_unix {
+2897|        use super::*;
+2898|        use crate::tui::ansi::{setup_sequence, teardown_sequence, AnsiParser};
+2899|        use std::io::Write;
+2900|        use std::os::unix::io::RawFd;
+2901|
+2902|        fn err(message: impl Into<String>) -> BackendError {
+2903|            BackendError { message: message.into() }
+2904|        }
+2905|
+2906|        /// 🖥️ Raw-mode terminal backend for unix (macOS/Linux), driven by `libc` alone.
+2907|        pub struct NativeTerminal {
+2908|            fd: RawFd,
+2909|            original: libc::termios,
+2910|            parser: AnsiParser,
+2911|            entered: bool,
+2912|        }
+2913|
+2914|        impl NativeTerminal {
+2915|            pub fn new() -> Result<Self, BackendError> {
+2916|                let fd = libc::STDIN_FILENO;
+2917|                let original = unsafe {
+2918|                    let mut t: libc::termios = std::mem::zeroed();
+2919|                    if libc::tcgetattr(fd, &mut t) != 0 {
+2920|                        return Err(err("tcgetattr failed"));
+2921|                    }
+2922|                    t
+2923|                };
+2924|                Ok(Self { fd, original, parser: AnsiParser::new(), entered: false })
+2925|            }
+2926|        }
+2927|
+2928|        impl TerminalBackend for NativeTerminal {
+2929|            fn size(&mut self) -> Result<Size, BackendError> {
+2930|                unsafe {
+2931|                    let mut ws: libc::winsize = std::mem::zeroed();
+2932|                    if libc::ioctl(self.fd, libc::TIOCGWINSZ, &mut ws) != 0 {
+2933|                        return Err(err("TIOCGWINSZ failed"));
+2934|                    }
+2935|                    Ok(Size { width: ws.ws_col, height: ws.ws_row })
+2936|                }
+2937|            }
+2938|
+2939|            fn enter(&mut self) -> Result<(), BackendError> {
+2940|                let mut raw = self.original;
+2941|                raw.c_lflag &= !(libc::ECHO | libc::ICANON | libc::ISIG | libc::IEXTEN);
+2942|                raw.c_iflag &= !(libc::IXON | libc::ICRNL | libc::BRKINT | libc::INPCK | libc::ISTRIP);
+2943|                raw.c_oflag &= !libc::OPOST;
+2944|                raw.c_cc[libc::VMIN] = 0;
+2945|                raw.c_cc[libc::VTIME] = 0;
+2946|                unsafe {
+2947|                    if libc::tcsetattr(self.fd, libc::TCSANOW, &raw) != 0 {
+2948|                        return Err(err("tcsetattr failed"));
+2949|                    }
+2950|                }
+2951|                self.entered = true;
+2952|                std::io::stdout().write_all(setup_sequence().as_bytes()).map_err(|e| err(e.to_string()))?;
+2953|                std::io::stdout().flush().map_err(|e| err(e.to_string()))
+2954|            }
+2955|
+2956|            fn leave(&mut self) -> Result<(), BackendError> {
+2957|                if !self.entered {
+2958|                    return Ok(());
+2959|                }
+2960|                std::io::stdout().write_all(teardown_sequence().as_bytes()).map_err(|e| err(e.to_string()))?;
+2961|                std::io::stdout().flush().map_err(|e| err(e.to_string()))?;
+2962|                unsafe {
+2963|                    libc::tcsetattr(self.fd, libc::TCSANOW, &self.original);
+2964|                }
+2965|                self.entered = false;
+2966|                Ok(())
+2967|            }
+2968|
+2969|            fn present(&mut self, patch: &AnsiPatch) -> Result<(), BackendError> {
+2970|                std::io::stdout().write_all(patch.0.as_bytes()).map_err(|e| err(e.to_string()))?;
+2971|                std::io::stdout().flush().map_err(|e| err(e.to_string()))
+2972|            }
+2973|
+2974|            fn poll(&mut self, timeout: Duration) -> Result<Vec<Event>, BackendError> {
+2975|                let mut pfd = libc::pollfd { fd: self.fd, events: libc::POLLIN, revents: 0 };
+2976|                let ready = unsafe { libc::poll(&mut pfd, 1, timeout.as_millis() as i32) };
+2977|                let mut events = Vec::new();
+2978|                if ready > 0 && pfd.revents & libc::POLLIN != 0 {
+2979|                    let mut buf = [0u8; 4096];
+2980|                    let n = unsafe { libc::read(self.fd, buf.as_mut_ptr() as *mut _, buf.len()) };
+2981|                    if n > 0 {
+2982|                        self.parser.feed(&buf[..n as usize], &mut events);
+2983|                    }
+2984|                } else {
+2985|                    self.parser.flush_escape(&mut events);
+2986|                }
+2987|                Ok(events)
+2988|            }
+2989|        }
+2990|
+2991|        impl Drop for NativeTerminal {
+2992|            fn drop(&mut self) {
+2993|                let _ = self.leave();
+2994|            }
+2995|        }
+2996|    }
+2997|    #[cfg(all(feature = "tui-terminal", unix, not(target_arch = "wasm32")))]
+2998|    pub use native_unix::NativeTerminal;
+2999|
+3000|    #[cfg(all(feature = "tui-terminal", windows))]
+3001|    mod native_windows {
+3002|        use super::*;
+3003|        use crate::tui::ansi::{setup_sequence, teardown_sequence, AnsiParser};
+3004|        use windows_sys::Win32::Foundation::HANDLE;
+3005|        use windows_sys::Win32::Storage::FileSystem::{ReadFile, WriteFile};
+3006|        use windows_sys::Win32::System::Console::{
+3007|            GetConsoleMode, GetConsoleScreenBufferInfo, GetStdHandle, SetConsoleMode, CONSOLE_SCREEN_BUFFER_INFO, DISABLE_NEWLINE_AUTO_RETURN, ENABLE_ECHO_INPUT, ENABLE_LINE_INPUT, ENABLE_PROCESSED_INPUT, ENABLE_VIRTUAL_TERMINAL_INPUT,
+3008|            ENABLE_VIRTUAL_TERMINAL_PROCESSING, STD_INPUT_HANDLE, STD_OUTPUT_HANDLE,
+3009|        };
+3010|        use windows_sys::Win32::System::Threading::WaitForSingleObject;
+3011|
+3012|        fn err(message: impl Into<String>) -> BackendError {
+3013|            BackendError { message: message.into() }
+3014|        }
+3015|
+3016|        /// 🖥️ VT-mode terminal backend for Windows consoles, driven by `windows-sys` alone.
+3017|        pub struct NativeTerminal {
+3018|            stdin: HANDLE,
+3019|            stdout: HANDLE,
+3020|            original_in: u32,
+3021|            original_out: u32,
+3022|            parser: AnsiParser,
+3023|            entered: bool,
+3024|        }
+3025|
+3026|        impl NativeTerminal {
+3027|            pub fn new() -> Result<Self, BackendError> {
+3028|                unsafe {
+3029|                    let stdin = GetStdHandle(STD_INPUT_HANDLE);
+3030|                    let stdout = GetStdHandle(STD_OUTPUT_HANDLE);
+3031|                    let mut original_in = 0u32;
+3032|                    let mut original_out = 0u32;
+3033|                    if GetConsoleMode(stdin, &mut original_in) == 0 || GetConsoleMode(stdout, &mut original_out) == 0 {
+3034|                        return Err(err("GetConsoleMode failed"));
+3035|                    }
+3036|                    Ok(Self { stdin, stdout, original_in, original_out, parser: AnsiParser::new(), entered: false })
+3037|                }
+3038|            }
+3039|        }
+3040|
+3041|        impl TerminalBackend for NativeTerminal {
+3042|            fn size(&mut self) -> Result<Size, BackendError> {
+3043|                unsafe {
+3044|                    let mut info: CONSOLE_SCREEN_BUFFER_INFO = std::mem::zeroed();
+3045|                    if GetConsoleScreenBufferInfo(self.stdout, &mut info) == 0 {
+3046|                        return Err(err("GetConsoleScreenBufferInfo failed"));
+3047|                    }
+3048|                    let width = (info.srWindow.Right - info.srWindow.Left + 1).max(0) as u16;
+3049|                    let height = (info.srWindow.Bottom - info.srWindow.Top + 1).max(0) as u16;
+3050|                    Ok(Size { width, height })
+3051|                }
+3052|            }
+3053|
+3054|            fn enter(&mut self) -> Result<(), BackendError> {
+3055|                unsafe {
+3056|                    let out_mode = self.original_out | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN;
+3057|                    let in_mode = (self.original_in | ENABLE_VIRTUAL_TERMINAL_INPUT) & !(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
+3058|                    if SetConsoleMode(self.stdout, out_mode) == 0 || SetConsoleMode(self.stdin, in_mode) == 0 {
+3059|                        return Err(err("SetConsoleMode failed"));
+3060|                    }
+3061|                }
+3062|                self.entered = true;
+3063|                self.write_raw(setup_sequence().as_bytes())
+3064|            }
+3065|
+3066|            fn leave(&mut self) -> Result<(), BackendError> {
+3067|                if !self.entered {
+3068|                    return Ok(());
+3069|                }
+3070|                self.write_raw(teardown_sequence().as_bytes())?;
+3071|                unsafe {
+3072|                    SetConsoleMode(self.stdin, self.original_in);
+3073|                    SetConsoleMode(self.stdout, self.original_out);
+3074|                }
+3075|                self.entered = false;
+3076|                Ok(())
+3077|            }
+3078|
+3079|            fn present(&mut self, patch: &AnsiPatch) -> Result<(), BackendError> {
+3080|                self.write_raw(patch.0.as_bytes())
+3081|            }
+3082|
+3083|            fn poll(&mut self, timeout: Duration) -> Result<Vec<Event>, BackendError> {
+3084|                let mut events = Vec::new();
+3085|                let wait = unsafe { WaitForSingleObject(self.stdin, timeout.as_millis() as u32) };
+3086|                if wait == 0 {
+3087|                    let mut buf = [0u8; 4096];
+3088|                    let mut read = 0u32;
+3089|                    unsafe {
+3090|                        if ReadFile(self.stdin, buf.as_mut_ptr(), buf.len() as u32, &mut read, std::ptr::null_mut()) != 0 && read > 0 {
+3091|                            self.parser.feed(&buf[..read as usize], &mut events);
+3092|                        }
+3093|                    }
+3094|                } else {
+3095|                    self.parser.flush_escape(&mut events);
+3096|                }
+3097|                Ok(events)
+3098|            }
+3099|        }
+3100|
+3101|        impl NativeTerminal {
+3102|            fn write_raw(&self, bytes: &[u8]) -> Result<(), BackendError> {
+3103|                let mut written = 0u32;
+3104|                unsafe {
+3105|                    if WriteFile(self.stdout, bytes.as_ptr(), bytes.len() as u32, &mut written, std::ptr::null_mut()) == 0 {
+3106|                        return Err(err("WriteFile failed"));
+3107|                    }
+3108|                }
+3109|                Ok(())
+3110|            }
+3111|        }
+3112|
+3113|        impl Drop for NativeTerminal {
+3114|            fn drop(&mut self) {
+3115|                let _ = self.leave();
+3116|            }
+3117|        }
+3118|    }
+3119|    #[cfg(all(feature = "tui-terminal", windows))]
+3120|    pub use native_windows::NativeTerminal;

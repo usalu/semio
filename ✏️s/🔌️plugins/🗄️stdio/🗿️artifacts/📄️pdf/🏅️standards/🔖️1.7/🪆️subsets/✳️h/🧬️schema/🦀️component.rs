@@ -231,7 +231,7 @@ pub mod derived_analysis {
             out.push(soft(CODE_LAUNCH, format!("object {} {} R is an /S /Launch action -- the PDF Healthcare Best Practices Guide discourages launch actions", r.num, r.gen)));
         }
         if !has_signature_field(objects) {
-            out.push(soft(CODE_SIGNATURE_FIELD, "no /AcroForm field with /FT /Sig found -- the PDF Healthcare Best Practices Guide recommends a signature workflow".into()));
+            out.push(soft(CODE_SIGNATURE_FIELD, "no /AcroForm field with /FT /Sig found -- the PDF Healthcare Best Practices Guide recommends a signature flow".into()));
         }
         for r in non_embedded_fonts(objects) {
             out.push(soft(CODE_FONT_NOT_EMBEDDED, format!("font object {} {} R has no FontFile/FontFile2/FontFile3 reachable from its FontDescriptor -- the Guide recommends embedded fonts", r.num, r.gen)));

@@ -9,7 +9,7 @@ framing record
 # frame, replacing the old `serde_json::to_vec`-in-envelope shortcut
 # (`📸️snapshot/🦀️component.rs`'s old `ArtifactPack::encode_pack_with`). `format u8` (real, fixed)
 # then `schema_len`/`schema_bytes` (real, varint-length-prefixed UTF-8 — matches `write_str_lp`'s
-# own wire exactly, the proven BARE `segment` form per the workflow report's UPDATE §7 fix) are
+# own wire exactly, the proven BARE `segment` form per the flow report's UPDATE §7 fix) are
 # genuinely, fully described. Past that, `styles`/`images`/`blocks` are HOMOGENEOUS but
 # variable-length repeated records — `blocks` additionally embeds a data-carrying tagged `DocBlock`
 # union with recursive `List`/`Table`/`Quote` nesting — the `protocol-array-of-records`/

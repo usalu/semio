@@ -770,6 +770,927 @@ pub mod ansi {
 }
 // #endregion 🔖️Ansi
 
+// #region 🔖️Vt
+pub mod vt {
+    use crate::tui::cell::{attr, Cell, CellBuffer};
+    use crate::tui::geometry::{Pos, Rect, Size};
+    use crate::tui::text::char_cells;
+    use crate::tui::theme::Rgb;
+    use std::collections::VecDeque;
+
+    const DEFAULT_FG: Rgb = [192, 192, 192];
+    const DEFAULT_BG: Rgb = [0, 0, 0];
+    const DEFAULT_SCROLLBACK: usize = 10_000;
+
+    //#region 🔖️Palette
+    fn ansi_16(n: u8) -> Rgb {
+        match n {
+            0 => [0, 0, 0],
+            1 => [205, 0, 0],
+            2 => [0, 205, 0],
+            3 => [205, 205, 0],
+            4 => [0, 0, 238],
+            5 => [205, 0, 205],
+            6 => [0, 205, 205],
+            7 => [229, 229, 229],
+            8 => [127, 127, 127],
+            9 => [255, 0, 0],
+            10 => [0, 255, 0],
+            11 => [255, 255, 0],
+            12 => [92, 92, 255],
+            13 => [255, 0, 255],
+            14 => [0, 255, 255],
+            _ => [255, 255, 255],
+        }
+    }
+
+    /// 🎨️ Maps a 256-color index onto an approximate truecolor RGB.
+    pub fn color_256(n: u8) -> Rgb {
+        if n < 16 {
+            return ansi_16(n);
+        }
+        if n < 232 {
+            let i = n - 16;
+            let r = i / 36;
+            let g = (i % 36) / 6;
+            let b = i % 6;
+            let level = |c: u8| if c == 0 { 0 } else { 55 + 40 * c };
+            [level(r), level(g), level(b)]
+        } else {
+            let v = 8 + 10 * (n - 232);
+            [v, v, v]
+        }
+    }
+    //#endregion 🔖️Palette
+
+    //#region 🔖️Parser
+    #[derive(Clone, Copy, PartialEq, Eq)]
+    enum ParserState {
+        Ground,
+        Escape,
+        Csi,
+        Osc,
+        Dcs,
+        SosPmApc,
+    }
+
+    /// 📟 Incremental VT output decoder (CSI/SGR/OSC/DCS) driving a `VtScreen`.
+    #[derive(Clone)]
+    pub struct VtParser {
+        state: ParserState,
+        params: Vec<i32>,
+        current: i32,
+        has_current: bool,
+        intermediate: u8,
+        private: bool,
+        osc: Vec<u8>,
+        utf8_buf: [u8; 4],
+        utf8_len: u8,
+        utf8_need: u8,
+        ignore_esc: bool,
+    }
+
+    impl Default for VtParser {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
+    impl VtParser {
+        pub fn new() -> Self {
+            Self {
+                state: ParserState::Ground,
+                params: Vec::new(),
+                current: 0,
+                has_current: false,
+                intermediate: 0,
+                private: false,
+                osc: Vec::new(),
+                utf8_buf: [0; 4],
+                utf8_len: 0,
+                utf8_need: 0,
+                ignore_esc: false,
+            }
+        }
+
+        fn reset_seq(&mut self) {
+            self.params.clear();
+            self.current = 0;
+            self.has_current = false;
+            self.intermediate = 0;
+            self.private = false;
+        }
+
+        fn push_param(&mut self) {
+            self.params.push(if self.has_current { self.current } else { 0 });
+            self.current = 0;
+            self.has_current = false;
+        }
+
+        fn param(&self, i: usize, default: i32) -> i32 {
+            match self.params.get(i).copied() {
+                Some(0) | None => default,
+                Some(v) => v,
+            }
+        }
+
+        /// 📥️ Feeds raw PTY bytes into `screen`.
+        pub fn feed(&mut self, bytes: &[u8], screen: &mut VtScreen) {
+            for &b in bytes {
+                self.feed_byte(b, screen);
+            }
+        }
+
+        fn feed_byte(&mut self, b: u8, screen: &mut VtScreen) {
+            if self.utf8_need > 0 && self.state == ParserState::Ground {
+                self.utf8_buf[self.utf8_len as usize] = b;
+                self.utf8_len += 1;
+                self.utf8_need -= 1;
+                if self.utf8_need == 0 {
+                    if let Ok(s) = std::str::from_utf8(&self.utf8_buf[..self.utf8_len as usize]) {
+                        if let Some(c) = s.chars().next() {
+                            screen.put_char(c);
+                        }
+                    }
+                    self.utf8_len = 0;
+                }
+                return;
+            }
+            match self.state {
+                ParserState::Ground => self.feed_ground(b, screen),
+                ParserState::Escape => self.feed_escape(b, screen),
+                ParserState::Csi => self.feed_csi(b, screen),
+                ParserState::Osc => self.feed_osc(b, screen),
+                ParserState::Dcs | ParserState::SosPmApc => {
+                    if b == 0x1b {
+                        self.ignore_esc = true;
+                        self.state = ParserState::Escape;
+                    } else if b == 0x07 {
+                        self.state = ParserState::Ground;
+                    }
+                }
+            }
+        }
+
+        fn feed_ground(&mut self, b: u8, screen: &mut VtScreen) {
+            match b {
+                0x1b => {
+                    self.reset_seq();
+                    self.state = ParserState::Escape;
+                }
+                0x07 => {}
+                0x08 => screen.backspace(),
+                0x09 => screen.tab(),
+                0x0a => screen.linefeed(),
+                0x0d => screen.carriage_return(),
+                0x00..=0x1f | 0x7f => {}
+                0xc0..=0xdf => {
+                    self.utf8_buf[0] = b;
+                    self.utf8_len = 1;
+                    self.utf8_need = 1;
+                }
+                0xe0..=0xef => {
+                    self.utf8_buf[0] = b;
+                    self.utf8_len = 1;
+                    self.utf8_need = 2;
+                }
+                0xf0..=0xf7 => {
+                    self.utf8_buf[0] = b;
+                    self.utf8_len = 1;
+                    self.utf8_need = 3;
+                }
+                _ => screen.put_char(b as char),
+            }
+        }
+
+        fn feed_escape(&mut self, b: u8, screen: &mut VtScreen) {
+            if self.ignore_esc {
+                self.ignore_esc = false;
+                if b == b'\\' {
+                    self.state = ParserState::Ground;
+                    return;
+                }
+                self.state = ParserState::Ground;
+                self.feed_ground(b, screen);
+                return;
+            }
+            match b {
+                b'[' => {
+                    self.reset_seq();
+                    self.state = ParserState::Csi;
+                }
+                b']' => {
+                    self.osc.clear();
+                    self.state = ParserState::Osc;
+                }
+                b'P' => self.state = ParserState::Dcs,
+                b'X' | b'^' | b'_' => self.state = ParserState::SosPmApc,
+                b'7' => {
+                    screen.save_cursor();
+                    self.state = ParserState::Ground;
+                }
+                b'8' => {
+                    screen.restore_cursor();
+                    self.state = ParserState::Ground;
+                }
+                b'c' => {
+                    screen.reset();
+                    self.state = ParserState::Ground;
+                }
+                _ => self.state = ParserState::Ground,
+            }
+        }
+
+        fn feed_csi(&mut self, b: u8, screen: &mut VtScreen) {
+            match b {
+                b'0'..=b'9' => {
+                    self.current = self.current.saturating_mul(10).saturating_add(i32::from(b - b'0'));
+                    self.has_current = true;
+                }
+                b';' => self.push_param(),
+                b'?' if self.params.is_empty() && !self.has_current && self.intermediate == 0 => self.private = true,
+                0x20..=0x2f => self.intermediate = b,
+                0x40..=0x7e => {
+                    self.push_param();
+                    self.state = ParserState::Ground;
+                    self.finish_csi(b, screen);
+                }
+                _ => self.state = ParserState::Ground,
+            }
+        }
+
+        fn finish_csi(&mut self, final_byte: u8, screen: &mut VtScreen) {
+            if self.private {
+                match final_byte {
+                    b'h' => {
+                        for p in self.params.clone() {
+                            screen.decset(p, true);
+                        }
+                    }
+                    b'l' => {
+                        for p in self.params.clone() {
+                            screen.decset(p, false);
+                        }
+                    }
+                    _ => {}
+                }
+                return;
+            }
+            match final_byte {
+                b'A' => screen.move_cursor(0, -self.param(0, 1)),
+                b'B' => screen.move_cursor(0, self.param(0, 1)),
+                b'C' => screen.move_cursor(self.param(0, 1), 0),
+                b'D' => screen.move_cursor(-self.param(0, 1), 0),
+                b'H' | b'f' => {
+                    let row = self.param(0, 1);
+                    let col = self.param(1, 1);
+                    screen.cup(row, col);
+                }
+                b'J' => screen.erase_display(self.param(0, 0)),
+                b'K' => screen.erase_line(self.param(0, 0)),
+                b'L' => screen.insert_lines(self.param(0, 1) as u16),
+                b'M' => screen.delete_lines(self.param(0, 1) as u16),
+                b'@' => screen.insert_cells(self.param(0, 1) as u16),
+                b'P' => screen.delete_cells(self.param(0, 1) as u16),
+                b'X' => screen.erase_cells(self.param(0, 1) as u16),
+                b'S' => screen.scroll_up(self.param(0, 1) as u16),
+                b'T' => screen.scroll_down(self.param(0, 1) as u16),
+                b'r' => {
+                    let top = self.param(0, 1);
+                    let bottom = self.param(1, i32::from(screen.size.height));
+                    screen.set_scroll_region(top, bottom);
+                }
+                b'm' => screen.apply_sgr(&self.params),
+                _ => {}
+            }
+        }
+
+        fn feed_osc(&mut self, b: u8, screen: &mut VtScreen) {
+            match b {
+                0x07 => {
+                    self.finish_osc(screen);
+                    self.state = ParserState::Ground;
+                }
+                0x1b => {
+                    self.ignore_esc = true;
+                    self.state = ParserState::Escape;
+                    self.finish_osc(screen);
+                }
+                _ => {
+                    if self.osc.len() < 4096 {
+                        self.osc.push(b);
+                    }
+                }
+            }
+        }
+
+        fn finish_osc(&mut self, screen: &mut VtScreen) {
+            let text = String::from_utf8_lossy(&self.osc);
+            let mut parts = text.splitn(2, ';');
+            let code = parts.next().unwrap_or("");
+            let payload = parts.next().unwrap_or("");
+            if code == "0" || code == "2" {
+                screen.title = Some(payload.to_string());
+            }
+            self.osc.clear();
+        }
+    }
+    //#endregion 🔖️Parser
+
+    //#region 🔖️Screen
+    #[derive(Clone, Copy)]
+    struct SavedCursor {
+        pos: Pos,
+        fg: Rgb,
+        bg: Rgb,
+        attrs: u8,
+        origin: bool,
+    }
+
+    /// 🖥️ VT screen: primary/alt buffers, scrollback, cursor, SGR, scroll region, modes.
+    pub struct VtScreen {
+        pub size: Size,
+        primary: CellBuffer,
+        alt: CellBuffer,
+        pub alt_active: bool,
+        scrollback: VecDeque<Vec<Cell>>,
+        scrollback_cap: usize,
+        pub cursor: Pos,
+        saved: SavedCursor,
+        fg: Rgb,
+        bg: Rgb,
+        attrs: u8,
+        pub scroll_top: u16,
+        pub scroll_bottom: u16,
+        pub origin_mode: bool,
+        pub wrap_mode: bool,
+        pub cursor_visible: bool,
+        pub mouse_tracking: bool,
+        pub mouse_button_event: bool,
+        pub mouse_sgr: bool,
+        pub bracketed_paste: bool,
+        wrap_pending: bool,
+        pub title: Option<String>,
+        parser: VtParser,
+    }
+
+    impl VtScreen {
+        /// 🆕 Creates a blank VT screen of `size` with `scrollback_cap` (0 → default 10000).
+        pub fn new(size: Size, scrollback_cap: usize) -> Self {
+            let blank = Cell::blank(DEFAULT_FG, DEFAULT_BG);
+            let height = size.height.max(1);
+            let width = size.width.max(1);
+            let size = Size { width, height };
+            Self {
+                size,
+                primary: CellBuffer::new(size, blank),
+                alt: CellBuffer::new(size, blank),
+                alt_active: false,
+                scrollback: VecDeque::new(),
+                scrollback_cap: if scrollback_cap == 0 { DEFAULT_SCROLLBACK } else { scrollback_cap },
+                cursor: Pos { x: 0, y: 0 },
+                saved: SavedCursor { pos: Pos { x: 0, y: 0 }, fg: DEFAULT_FG, bg: DEFAULT_BG, attrs: 0, origin: false },
+                fg: DEFAULT_FG,
+                bg: DEFAULT_BG,
+                attrs: 0,
+                scroll_top: 0,
+                scroll_bottom: height - 1,
+                origin_mode: false,
+                wrap_mode: true,
+                cursor_visible: true,
+                mouse_tracking: false,
+                mouse_button_event: false,
+                mouse_sgr: false,
+                bracketed_paste: false,
+                wrap_pending: false,
+                title: None,
+                parser: VtParser::new(),
+            }
+        }
+
+        fn active_buf(&self) -> &CellBuffer {
+            if self.alt_active {
+                &self.alt
+            } else {
+                &self.primary
+            }
+        }
+
+        fn active_buf_mut(&mut self) -> &mut CellBuffer {
+            if self.alt_active {
+                &mut self.alt
+            } else {
+                &mut self.primary
+            }
+        }
+
+        fn clamp_cursor(&mut self) {
+            let max_x = self.size.width.saturating_sub(1);
+            let (min_y, max_y) = if self.origin_mode {
+                (self.scroll_top, self.scroll_bottom)
+            } else {
+                (0, self.size.height.saturating_sub(1))
+            };
+            self.cursor.x = self.cursor.x.min(max_x);
+            self.cursor.y = self.cursor.y.clamp(min_y, max_y);
+            self.wrap_pending = false;
+        }
+
+        /// ↔️ Resizes both buffers; clamps cursor into the new grid.
+        pub fn resize(&mut self, size: Size) {
+            let width = size.width.max(1);
+            let height = size.height.max(1);
+            let size = Size { width, height };
+            let blank = Cell::blank(DEFAULT_FG, DEFAULT_BG);
+            let mut next_primary = CellBuffer::new(size, blank);
+            let mut next_alt = CellBuffer::new(size, blank);
+            let copy_h = self.size.height.min(height);
+            let copy_w = self.size.width.min(width);
+            for y in 0..copy_h {
+                for x in 0..copy_w {
+                    if let Some(c) = self.primary.get(x, y) {
+                        next_primary.put(x, y, *c);
+                    }
+                    if let Some(c) = self.alt.get(x, y) {
+                        next_alt.put(x, y, *c);
+                    }
+                }
+            }
+            self.primary = next_primary;
+            self.alt = next_alt;
+            self.size = size;
+            if self.scroll_bottom >= height || self.scroll_top >= height {
+                self.scroll_top = 0;
+                self.scroll_bottom = height - 1;
+            } else {
+                self.scroll_bottom = self.scroll_bottom.min(height - 1);
+            }
+            self.clamp_cursor();
+        }
+
+        /// 📥️ Feeds raw bytes through the owned incremental parser.
+        pub fn feed(&mut self, bytes: &[u8]) {
+            let mut parser = std::mem::replace(&mut self.parser, VtParser::new());
+            parser.feed(bytes, self);
+            self.parser = parser;
+        }
+
+        /// 👁 Visible viewport row count.
+        pub fn visible_line_count(&self) -> u16 {
+            self.size.height
+        }
+
+        /// 📜 Lines currently held in scrollback.
+        pub fn scrollback_len(&self) -> usize {
+            self.scrollback.len()
+        }
+
+        /// 🔎 Reads one cell from the active buffer.
+        pub fn cell_at(&self, x: u16, y: u16) -> Option<&Cell> {
+            self.active_buf().get(x, y)
+        }
+
+        /// 🖼️ Composites the visible viewport (optionally offset into scrollback) into `dest`.
+        pub fn blit_to(&self, dest: &mut CellBuffer, dest_rect: Rect, scrollback_offset: usize) {
+            let clip = Rect::new(0, 0, dest.size.width, dest.size.height).intersect(dest_rect);
+            if clip.width == 0 || clip.height == 0 {
+                return;
+            }
+            let sb = self.scrollback.len();
+            let offset = scrollback_offset.min(sb);
+            let buf = self.active_buf();
+            for row in 0..clip.height {
+                let abs = (sb as isize - offset as isize) + row as isize;
+                if abs < 0 {
+                    continue;
+                }
+                let abs_u = abs as usize;
+                let cells = if abs_u < sb {
+                    Some(self.scrollback[abs_u].clone())
+                } else {
+                    let vy = (abs_u - sb) as u16;
+                    if vy < self.size.height {
+                        Some(
+                            (0..self.size.width)
+                                .map(|x| buf.get(x, vy).copied().unwrap_or_else(|| Cell::blank(DEFAULT_FG, DEFAULT_BG)))
+                                .collect::<Vec<_>>(),
+                        )
+                    } else {
+                        None
+                    }
+                };
+                let Some(cells) = cells else { continue };
+                for col in 0..clip.width {
+                    if (col as usize) < cells.len() {
+                        dest.put(clip.x + col, clip.y + row, cells[col as usize]);
+                    }
+                }
+            }
+        }
+
+        fn push_scrollback_row(&mut self, y: u16) {
+            if self.alt_active || self.scroll_top != 0 {
+                return;
+            }
+            let buf = self.active_buf();
+            let row: Vec<Cell> = (0..self.size.width).map(|x| buf.get(x, y).copied().unwrap_or_else(|| Cell::blank(DEFAULT_FG, DEFAULT_BG))).collect();
+            if self.scrollback.len() >= self.scrollback_cap {
+                self.scrollback.pop_front();
+            }
+            self.scrollback.push_back(row);
+        }
+
+        fn copy_row(&mut self, from: u16, to: u16) {
+            if from == to {
+                return;
+            }
+            let width = self.size.width;
+            let cells: Vec<Cell> = (0..width).map(|x| self.active_buf().get(x, from).copied().unwrap_or_else(|| Cell::blank(DEFAULT_FG, DEFAULT_BG))).collect();
+            for (x, cell) in cells.into_iter().enumerate() {
+                self.active_buf_mut().put(x as u16, to, cell);
+            }
+        }
+
+        fn clear_row(&mut self, y: u16) {
+            let blank = Cell::blank(DEFAULT_FG, DEFAULT_BG);
+            let width = self.size.width;
+            let buf = self.active_buf_mut();
+            for x in 0..width {
+                buf.put(x, y, blank);
+            }
+        }
+
+        fn scroll_up(&mut self, n: u16) {
+            let n = n.max(1);
+            let top = self.scroll_top;
+            let bottom = self.scroll_bottom;
+            if top > bottom {
+                return;
+            }
+            for _ in 0..n {
+                self.push_scrollback_row(top);
+                for y in top..bottom {
+                    self.copy_row(y + 1, y);
+                }
+                self.clear_row(bottom);
+            }
+        }
+
+        fn scroll_down(&mut self, n: u16) {
+            let n = n.max(1);
+            let top = self.scroll_top;
+            let bottom = self.scroll_bottom;
+            if top > bottom {
+                return;
+            }
+            for _ in 0..n {
+                for y in (top..bottom).rev() {
+                    self.copy_row(y, y + 1);
+                }
+                self.clear_row(top);
+            }
+        }
+
+        fn carriage_return(&mut self) {
+            self.cursor.x = 0;
+            self.wrap_pending = false;
+        }
+
+        fn linefeed(&mut self) {
+            self.wrap_pending = false;
+            if self.cursor.y == self.scroll_bottom {
+                self.scroll_up(1);
+            } else if self.cursor.y < self.size.height.saturating_sub(1) {
+                self.cursor.y += 1;
+            }
+        }
+
+        fn backspace(&mut self) {
+            self.wrap_pending = false;
+            if self.cursor.x > 0 {
+                self.cursor.x -= 1;
+            }
+        }
+
+        fn tab(&mut self) {
+            self.wrap_pending = false;
+            let next = ((self.cursor.x / 8) + 1) * 8;
+            self.cursor.x = next.min(self.size.width.saturating_sub(1));
+        }
+
+        fn put_char(&mut self, c: char) {
+            let w = char_cells(c);
+            if w == 0 {
+                return;
+            }
+            let w = u16::from(w);
+            if self.wrap_pending {
+                self.carriage_return();
+                self.linefeed();
+            }
+            if self.cursor.x + w > self.size.width {
+                if self.wrap_mode {
+                    self.carriage_return();
+                    self.linefeed();
+                } else {
+                    self.cursor.x = self.size.width.saturating_sub(w.max(1));
+                }
+            }
+            let cell = Cell { ch: c, fg: self.fg, bg: self.bg, attrs: self.attrs, width: w as u8 };
+            let x = self.cursor.x;
+            let y = self.cursor.y;
+            self.active_buf_mut().put(x, y, cell);
+            self.cursor.x = x + w;
+            if self.cursor.x >= self.size.width {
+                self.cursor.x = self.size.width.saturating_sub(1);
+                self.wrap_pending = self.wrap_mode;
+            }
+        }
+
+        fn move_cursor(&mut self, dx: i32, dy: i32) {
+            self.wrap_pending = false;
+            let nx = (i32::from(self.cursor.x) + dx).clamp(0, i32::from(self.size.width.saturating_sub(1)));
+            let (min_y, max_y) = (i32::from(self.scroll_top), i32::from(self.scroll_bottom));
+            let ny = (i32::from(self.cursor.y) + dy).clamp(min_y, max_y);
+            self.cursor.x = nx as u16;
+            self.cursor.y = ny as u16;
+        }
+
+        fn cup(&mut self, row: i32, col: i32) {
+            self.wrap_pending = false;
+            let row = row.max(1) as u16;
+            let col = col.max(1) as u16;
+            let (y_base, y_max) = if self.origin_mode {
+                (self.scroll_top, self.scroll_bottom)
+            } else {
+                (0, self.size.height.saturating_sub(1))
+            };
+            let y = y_base.saturating_add(row.saturating_sub(1)).min(y_max);
+            let x = col.saturating_sub(1).min(self.size.width.saturating_sub(1));
+            self.cursor = Pos { x, y };
+        }
+
+        fn erase_display(&mut self, mode: i32) {
+            let blank = Cell::blank(DEFAULT_FG, DEFAULT_BG);
+            let size = self.size;
+            let cursor = self.cursor;
+            let buf = self.active_buf_mut();
+            match mode {
+                0 => {
+                    for x in cursor.x..size.width {
+                        buf.put(x, cursor.y, blank);
+                    }
+                    for y in cursor.y + 1..size.height {
+                        for x in 0..size.width {
+                            buf.put(x, y, blank);
+                        }
+                    }
+                }
+                1 => {
+                    for y in 0..cursor.y {
+                        for x in 0..size.width {
+                            buf.put(x, y, blank);
+                        }
+                    }
+                    for x in 0..=cursor.x {
+                        buf.put(x, cursor.y, blank);
+                    }
+                }
+                _ => {
+                    for y in 0..size.height {
+                        for x in 0..size.width {
+                            buf.put(x, y, blank);
+                        }
+                    }
+                }
+            }
+        }
+
+        fn erase_line(&mut self, mode: i32) {
+            let blank = Cell::blank(DEFAULT_FG, DEFAULT_BG);
+            let size = self.size;
+            let cursor = self.cursor;
+            let buf = self.active_buf_mut();
+            match mode {
+                0 => {
+                    for x in cursor.x..size.width {
+                        buf.put(x, cursor.y, blank);
+                    }
+                }
+                1 => {
+                    for x in 0..=cursor.x {
+                        buf.put(x, cursor.y, blank);
+                    }
+                }
+                _ => {
+                    for x in 0..size.width {
+                        buf.put(x, cursor.y, blank);
+                    }
+                }
+            }
+        }
+
+        fn insert_lines(&mut self, n: u16) {
+            let n = n.max(1);
+            let y = self.cursor.y;
+            if y < self.scroll_top || y > self.scroll_bottom {
+                return;
+            }
+            let bottom = self.scroll_bottom;
+            for _ in 0..n {
+                for row in (y..bottom).rev() {
+                    self.copy_row(row, row + 1);
+                }
+                self.clear_row(y);
+            }
+        }
+
+        fn delete_lines(&mut self, n: u16) {
+            let n = n.max(1);
+            let y = self.cursor.y;
+            if y < self.scroll_top || y > self.scroll_bottom {
+                return;
+            }
+            let bottom = self.scroll_bottom;
+            for _ in 0..n {
+                for row in y..bottom {
+                    self.copy_row(row + 1, row);
+                }
+                self.clear_row(bottom);
+            }
+        }
+
+        fn insert_cells(&mut self, n: u16) {
+            let n = n.max(1).min(self.size.width.saturating_sub(self.cursor.x));
+            let y = self.cursor.y;
+            let x0 = self.cursor.x;
+            let width = self.size.width;
+            let blank = Cell::blank(DEFAULT_FG, DEFAULT_BG);
+            for _ in 0..n {
+                for x in (x0..width.saturating_sub(1)).rev() {
+                    let cell = self.active_buf().get(x, y).copied().unwrap_or(blank);
+                    self.active_buf_mut().put(x + 1, y, cell);
+                }
+                self.active_buf_mut().put(x0, y, blank);
+            }
+        }
+
+        fn delete_cells(&mut self, n: u16) {
+            let n = n.max(1).min(self.size.width.saturating_sub(self.cursor.x));
+            let y = self.cursor.y;
+            let x0 = self.cursor.x;
+            let width = self.size.width;
+            let blank = Cell::blank(DEFAULT_FG, DEFAULT_BG);
+            for _ in 0..n {
+                for x in x0..width.saturating_sub(1) {
+                    let cell = self.active_buf().get(x + 1, y).copied().unwrap_or(blank);
+                    self.active_buf_mut().put(x, y, cell);
+                }
+                self.active_buf_mut().put(width.saturating_sub(1), y, blank);
+            }
+        }
+
+        fn erase_cells(&mut self, n: u16) {
+            let blank = Cell::blank(DEFAULT_FG, DEFAULT_BG);
+            let y = self.cursor.y;
+            let x0 = self.cursor.x;
+            let end = (x0 + n.max(1)).min(self.size.width);
+            let buf = self.active_buf_mut();
+            for x in x0..end {
+                buf.put(x, y, blank);
+            }
+        }
+
+        fn set_scroll_region(&mut self, top: i32, bottom: i32) {
+            let top = (top.max(1) as u16).saturating_sub(1);
+            let bottom = (bottom.max(1) as u16).saturating_sub(1).min(self.size.height.saturating_sub(1));
+            if top < bottom {
+                self.scroll_top = top;
+                self.scroll_bottom = bottom;
+            } else {
+                self.scroll_top = 0;
+                self.scroll_bottom = self.size.height.saturating_sub(1);
+            }
+            self.cup(1, 1);
+        }
+
+        fn save_cursor(&mut self) {
+            self.saved = SavedCursor { pos: self.cursor, fg: self.fg, bg: self.bg, attrs: self.attrs, origin: self.origin_mode };
+        }
+
+        fn restore_cursor(&mut self) {
+            self.cursor = self.saved.pos;
+            self.fg = self.saved.fg;
+            self.bg = self.saved.bg;
+            self.attrs = self.saved.attrs;
+            self.origin_mode = self.saved.origin;
+            self.clamp_cursor();
+        }
+
+        fn reset(&mut self) {
+            let size = self.size;
+            let cap = self.scrollback_cap;
+            *self = Self::new(size, cap);
+        }
+
+        fn decset(&mut self, mode: i32, enable: bool) {
+            match mode {
+                1 => {}
+                6 => {
+                    self.origin_mode = enable;
+                    self.cup(1, 1);
+                }
+                7 => self.wrap_mode = enable,
+                25 => self.cursor_visible = enable,
+                1000 => self.mouse_tracking = enable,
+                1002 => self.mouse_button_event = enable,
+                1006 => self.mouse_sgr = enable,
+                1049 => {
+                    if enable {
+                        self.save_cursor();
+                        self.alt_active = true;
+                        self.erase_display(2);
+                        self.cursor = Pos { x: 0, y: 0 };
+                    } else {
+                        self.alt_active = false;
+                        self.restore_cursor();
+                    }
+                }
+                2004 => self.bracketed_paste = enable,
+                _ => {}
+            }
+        }
+
+        fn apply_sgr(&mut self, params: &[i32]) {
+            if params.is_empty() || (params.len() == 1 && params[0] == 0) {
+                self.fg = DEFAULT_FG;
+                self.bg = DEFAULT_BG;
+                self.attrs = 0;
+                return;
+            }
+            let mut i = 0;
+            while i < params.len() {
+                match params[i] {
+                    0 => {
+                        self.fg = DEFAULT_FG;
+                        self.bg = DEFAULT_BG;
+                        self.attrs = 0;
+                    }
+                    1 => self.attrs |= attr::BOLD,
+                    2 => self.attrs |= attr::DIM,
+                    3 => self.attrs |= attr::ITALIC,
+                    4 => self.attrs |= attr::UNDERLINE,
+                    7 => self.attrs |= attr::REVERSE,
+                    22 => self.attrs &= !(attr::BOLD | attr::DIM),
+                    23 => self.attrs &= !attr::ITALIC,
+                    24 => self.attrs &= !attr::UNDERLINE,
+                    27 => self.attrs &= !attr::REVERSE,
+                    30..=37 => self.fg = ansi_16((params[i] - 30) as u8),
+                    39 => self.fg = DEFAULT_FG,
+                    40..=47 => self.bg = ansi_16((params[i] - 40) as u8),
+                    49 => self.bg = DEFAULT_BG,
+                    90..=97 => self.fg = ansi_16((params[i] - 90 + 8) as u8),
+                    100..=107 => self.bg = ansi_16((params[i] - 100 + 8) as u8),
+                    38 => {
+                        if i + 1 < params.len() {
+                            match params[i + 1] {
+                                5 if i + 2 < params.len() => {
+                                    self.fg = color_256(params[i + 2].clamp(0, 255) as u8);
+                                    i += 2;
+                                }
+                                2 if i + 4 < params.len() => {
+                                    self.fg = [params[i + 2].clamp(0, 255) as u8, params[i + 3].clamp(0, 255) as u8, params[i + 4].clamp(0, 255) as u8];
+                                    i += 4;
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                    48 => {
+                        if i + 1 < params.len() {
+                            match params[i + 1] {
+                                5 if i + 2 < params.len() => {
+                                    self.bg = color_256(params[i + 2].clamp(0, 255) as u8);
+                                    i += 2;
+                                }
+                                2 if i + 4 < params.len() => {
+                                    self.bg = [params[i + 2].clamp(0, 255) as u8, params[i + 3].clamp(0, 255) as u8, params[i + 4].clamp(0, 255) as u8];
+                                    i += 4;
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+                i += 1;
+            }
+        }
+    }
+    //#endregion 🔖️Screen
+}
+// #endregion 🔖️Vt
+
 // #region 🔖️Event
 pub mod event {
     use crate::tui::geometry::{Pos, Size};
@@ -2206,6 +3127,576 @@ pub mod backend {
 }
 // #endregion 🔖️Backend
 
+// #region 🔖️Pty
+/// 🧵 Pseudo-terminal child process spawn and byte I/O for the native TUI host.
+#[cfg(feature = "tui-terminal")]
+pub mod pty {
+    use std::io::Write;
+    use std::path::Path;
+
+    /// 📐 Pseudo-terminal geometry in character cells.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub struct PtySize {
+        pub cols: u16,
+        pub rows: u16,
+    }
+
+    /// 💥 Failure from pseudo-terminal spawn or I/O.
+    #[derive(Debug)]
+    pub struct PtyError {
+        pub message: String,
+    }
+
+    impl std::fmt::Display for PtyError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", self.message)
+        }
+    }
+
+    impl std::error::Error for PtyError {}
+
+    fn err(message: impl Into<String>) -> PtyError {
+        PtyError {
+            message: message.into(),
+        }
+    }
+
+    #[cfg(all(unix, not(target_arch = "wasm32")))]
+    mod unix_impl {
+        use super::*;
+        use std::fs::File;
+        use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
+        use std::os::unix::process::CommandExt;
+        use std::process::{Child, Command};
+
+        /// 🧵 Unix PTY master plus child process.
+        pub struct Pty {
+            master: File,
+            child: Child,
+        }
+
+        impl Pty {
+            pub fn spawn(
+                cmd: &str,
+                args: &[&str],
+                env: &[(&str, &str)],
+                cwd: Option<&Path>,
+                size: PtySize,
+            ) -> Result<Self, PtyError> {
+                let mut master: RawFd = -1;
+                let mut slave: RawFd = -1;
+                let mut ws: libc::winsize = unsafe { std::mem::zeroed() };
+                ws.ws_col = size.cols;
+                ws.ws_row = size.rows;
+                unsafe {
+                    if libc::openpty(
+                        &mut master,
+                        &mut slave,
+                        std::ptr::null_mut(),
+                        std::ptr::null_mut(),
+                        &ws,
+                    ) != 0
+                    {
+                        return Err(err(format!(
+                            "openpty failed: {}",
+                            std::io::Error::last_os_error()
+                        )));
+                    }
+                }
+
+                let flags = unsafe { libc::fcntl(master, libc::F_GETFL) };
+                if flags < 0
+                    || unsafe { libc::fcntl(master, libc::F_SETFL, flags | libc::O_NONBLOCK) } != 0
+                {
+                    unsafe {
+                        libc::close(master);
+                        libc::close(slave);
+                    }
+                    return Err(err("fcntl O_NONBLOCK failed"));
+                }
+
+                let mut command = Command::new(cmd);
+                command.args(args);
+                for (k, v) in env {
+                    command.env(k, v);
+                }
+                if let Some(dir) = cwd {
+                    command.current_dir(dir);
+                }
+                command.stdin(std::process::Stdio::null());
+                command.stdout(std::process::Stdio::null());
+                command.stderr(std::process::Stdio::null());
+                unsafe {
+                    command.pre_exec(move || {
+                        if libc::setsid() < 0 {
+                            return Err(std::io::Error::last_os_error());
+                        }
+                        if libc::ioctl(slave, libc::TIOCSCTTY as _, 0) < 0 {
+                            return Err(std::io::Error::last_os_error());
+                        }
+                        if libc::dup2(slave, libc::STDIN_FILENO) < 0
+                            || libc::dup2(slave, libc::STDOUT_FILENO) < 0
+                            || libc::dup2(slave, libc::STDERR_FILENO) < 0
+                        {
+                            return Err(std::io::Error::last_os_error());
+                        }
+                        if slave > libc::STDERR_FILENO {
+                            libc::close(slave);
+                        }
+                        if master > libc::STDERR_FILENO {
+                            libc::close(master);
+                        }
+                        Ok(())
+                    });
+                }
+
+                let child = match command.spawn() {
+                    Ok(child) => child,
+                    Err(e) => {
+                        unsafe {
+                            libc::close(master);
+                            libc::close(slave);
+                        }
+                        return Err(err(format!("spawn failed: {e}")));
+                    }
+                };
+                unsafe {
+                    libc::close(slave);
+                }
+                let master = unsafe { File::from_raw_fd(master) };
+                Ok(Self { master, child })
+            }
+
+            pub fn resize(&mut self, size: PtySize) -> Result<(), PtyError> {
+                let mut ws: libc::winsize = unsafe { std::mem::zeroed() };
+                ws.ws_col = size.cols;
+                ws.ws_row = size.rows;
+                unsafe {
+                    if libc::ioctl(self.master.as_raw_fd(), libc::TIOCSWINSZ, &ws) != 0 {
+                        return Err(err(format!(
+                            "TIOCSWINSZ failed: {}",
+                            std::io::Error::last_os_error()
+                        )));
+                    }
+                }
+                Ok(())
+            }
+
+            pub fn writer(&mut self) -> &mut impl Write {
+                self
+            }
+
+            pub fn try_read(&mut self, buf: &mut [u8]) -> Result<usize, PtyError> {
+                let n = unsafe {
+                    libc::read(
+                        self.master.as_raw_fd(),
+                        buf.as_mut_ptr() as *mut _,
+                        buf.len(),
+                    )
+                };
+                if n < 0 {
+                    let e = std::io::Error::last_os_error();
+                    if e.kind() == std::io::ErrorKind::WouldBlock {
+                        return Ok(0);
+                    }
+                    return Err(err(format!("read failed: {e}")));
+                }
+                Ok(n as usize)
+            }
+
+            pub fn write_all(&mut self, data: &[u8]) -> Result<(), PtyError> {
+                Write::write_all(self, data).map_err(|e| err(e.to_string()))
+            }
+
+            pub fn try_wait(&mut self) -> Result<Option<i32>, PtyError> {
+                match self.child.try_wait() {
+                    Ok(Some(status)) => Ok(Some(status.code().unwrap_or(-1))),
+                    Ok(None) => Ok(None),
+                    Err(e) => Err(err(format!("try_wait failed: {e}"))),
+                }
+            }
+
+            pub fn kill(&mut self) -> Result<(), PtyError> {
+                self.child.kill().map_err(|e| err(format!("kill failed: {e}")))?;
+                let _ = self.child.wait();
+                Ok(())
+            }
+        }
+
+        impl Write for Pty {
+            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+                let n = unsafe {
+                    libc::write(
+                        self.master.as_raw_fd(),
+                        buf.as_ptr() as *const _,
+                        buf.len(),
+                    )
+                };
+                if n < 0 {
+                    Err(std::io::Error::last_os_error())
+                } else {
+                    Ok(n as usize)
+                }
+            }
+
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+
+        impl Drop for Pty {
+            fn drop(&mut self) {
+                let _ = self.child.kill();
+                let _ = self.child.wait();
+            }
+        }
+    }
+
+    #[cfg(all(unix, not(target_arch = "wasm32")))]
+    pub use unix_impl::Pty;
+
+    #[cfg(windows)]
+    mod windows_impl {
+        use super::*;
+        use std::os::windows::ffi::OsStrExt;
+        use std::ffi::OsStr;
+        use windows_sys::Win32::Foundation::{
+            CloseHandle, SetHandleInformation, HANDLE, HANDLE_FLAG_INHERIT, INVALID_HANDLE_VALUE,
+            STILL_ACTIVE, WAIT_OBJECT_0, WAIT_TIMEOUT,
+        };
+        use windows_sys::Win32::Security::SECURITY_ATTRIBUTES;
+        use windows_sys::Win32::Storage::FileSystem::{ReadFile, WriteFile};
+        use windows_sys::Win32::System::Console::{
+            ClosePseudoConsole, CreatePseudoConsole, ResizePseudoConsole, COORD, HPCON,
+        };
+        use windows_sys::Win32::System::Pipes::{CreatePipe, PeekNamedPipe};
+        use windows_sys::Win32::System::Threading::{
+            CreateProcessW, DeleteProcThreadAttributeList, GetExitCodeProcess,
+            InitializeProcThreadAttributeList, TerminateProcess, UpdateProcThreadAttribute,
+            WaitForSingleObject, CREATE_UNICODE_ENVIRONMENT, EXTENDED_STARTUPINFO_PRESENT,
+            PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, PROCESS_INFORMATION, STARTUPINFOEXW,
+        };
+
+        /// 🧵 Windows ConPTY master pipes plus child process.
+        pub struct Pty {
+            hpcon: HPCON,
+            input_write: HANDLE,
+            output_read: HANDLE,
+            process: HANDLE,
+            thread: HANDLE,
+            closed: bool,
+        }
+
+        fn close_handle(handle: HANDLE) {
+            if handle != 0 && handle != INVALID_HANDLE_VALUE {
+                unsafe {
+                    CloseHandle(handle);
+                }
+            }
+        }
+
+        fn to_wide(s: &str) -> Vec<u16> {
+            OsStr::new(s).encode_wide().chain(std::iter::once(0)).collect()
+        }
+
+        fn build_cmdline(cmd: &str, args: &[&str]) -> Vec<u16> {
+            let mut line = String::new();
+            line.push('"');
+            line.push_str(cmd);
+            line.push('"');
+            for arg in args {
+                line.push(' ');
+                if arg.chars().any(|c| c.is_whitespace()) {
+                    line.push('"');
+                    line.push_str(arg);
+                    line.push('"');
+                } else {
+                    line.push_str(arg);
+                }
+            }
+            to_wide(&line)
+        }
+
+        fn build_env_block(env: &[(&str, &str)]) -> Option<Vec<u16>> {
+            if env.is_empty() {
+                return None;
+            }
+            let mut block = Vec::new();
+            for (k, v) in env {
+                block.extend(OsStr::new(k).encode_wide());
+                block.push(b'=' as u16);
+                block.extend(OsStr::new(v).encode_wide());
+                block.push(0);
+            }
+            block.push(0);
+            Some(block)
+        }
+
+        impl Pty {
+            pub fn spawn(
+                cmd: &str,
+                args: &[&str],
+                env: &[(&str, &str)],
+                cwd: Option<&Path>,
+                size: PtySize,
+            ) -> Result<Self, PtyError> {
+                unsafe {
+                    let mut sa: SECURITY_ATTRIBUTES = std::mem::zeroed();
+                    sa.nLength = std::mem::size_of::<SECURITY_ATTRIBUTES>() as u32;
+                    sa.bInheritHandle = 1;
+
+                    let mut input_read = INVALID_HANDLE_VALUE;
+                    let mut input_write = INVALID_HANDLE_VALUE;
+                    let mut output_read = INVALID_HANDLE_VALUE;
+                    let mut output_write = INVALID_HANDLE_VALUE;
+                    if CreatePipe(&mut input_read, &mut input_write, &sa, 0) == 0 {
+                        return Err(err("CreatePipe input failed"));
+                    }
+                    if CreatePipe(&mut output_read, &mut output_write, &sa, 0) == 0 {
+                        close_handle(input_read);
+                        close_handle(input_write);
+                        return Err(err("CreatePipe output failed"));
+                    }
+                    SetHandleInformation(input_write, HANDLE_FLAG_INHERIT, 0);
+                    SetHandleInformation(output_read, HANDLE_FLAG_INHERIT, 0);
+
+                    let coord = COORD {
+                        X: size.cols as i16,
+                        Y: size.rows as i16,
+                    };
+                    let mut hpcon: HPCON = 0;
+                    let hr = CreatePseudoConsole(coord, input_read, output_write, 0, &mut hpcon);
+                    close_handle(input_read);
+                    close_handle(output_write);
+                    if hr < 0 || hpcon == 0 {
+                        close_handle(input_write);
+                        close_handle(output_read);
+                        return Err(err(format!("CreatePseudoConsole failed: HRESULT {hr}")));
+                    }
+
+                    let mut attr_size = 0usize;
+                    InitializeProcThreadAttributeList(std::ptr::null_mut(), 1, 0, &mut attr_size);
+                    let mut attr_buf = vec![0u8; attr_size];
+                    let attr_list = attr_buf.as_mut_ptr() as _;
+                    if InitializeProcThreadAttributeList(attr_list, 1, 0, &mut attr_size) == 0 {
+                        ClosePseudoConsole(hpcon);
+                        close_handle(input_write);
+                        close_handle(output_read);
+                        return Err(err("InitializeProcThreadAttributeList failed"));
+                    }
+                    if UpdateProcThreadAttribute(
+                        attr_list,
+                        0,
+                        PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE as usize,
+                        &hpcon as *const _ as *const _,
+                        std::mem::size_of::<HPCON>(),
+                        std::ptr::null_mut(),
+                        std::ptr::null(),
+                    ) == 0
+                    {
+                        DeleteProcThreadAttributeList(attr_list);
+                        ClosePseudoConsole(hpcon);
+                        close_handle(input_write);
+                        close_handle(output_read);
+                        return Err(err("UpdateProcThreadAttribute failed"));
+                    }
+
+                    let mut si: STARTUPINFOEXW = std::mem::zeroed();
+                    si.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
+                    si.lpAttributeList = attr_list;
+
+                    let mut cmdline = build_cmdline(cmd, args);
+                    let cwd_wide = cwd.map(|p| to_wide(&p.to_string_lossy()));
+                    let env_block = build_env_block(env);
+                    let mut pi: PROCESS_INFORMATION = std::mem::zeroed();
+                    let mut flags = EXTENDED_STARTUPINFO_PRESENT;
+                    if env_block.is_some() {
+                        flags |= CREATE_UNICODE_ENVIRONMENT;
+                    }
+                    let ok = CreateProcessW(
+                        std::ptr::null(),
+                        cmdline.as_mut_ptr(),
+                        std::ptr::null(),
+                        std::ptr::null(),
+                        0,
+                        flags,
+                        env_block
+                            .as_ref()
+                            .map(|b| b.as_ptr() as *const _)
+                            .unwrap_or(std::ptr::null()),
+                        cwd_wide
+                            .as_ref()
+                            .map(|b| b.as_ptr())
+                            .unwrap_or(std::ptr::null()),
+                        &si.StartupInfo,
+                        &mut pi,
+                    );
+                    DeleteProcThreadAttributeList(attr_list);
+                    if ok == 0 {
+                        ClosePseudoConsole(hpcon);
+                        close_handle(input_write);
+                        close_handle(output_read);
+                        return Err(err(format!(
+                            "CreateProcessW failed: {}",
+                            std::io::Error::last_os_error()
+                        )));
+                    }
+
+                    Ok(Self {
+                        hpcon,
+                        input_write,
+                        output_read,
+                        process: pi.hProcess,
+                        thread: pi.hThread,
+                        closed: false,
+                    })
+                }
+            }
+
+            pub fn resize(&mut self, size: PtySize) -> Result<(), PtyError> {
+                let coord = COORD {
+                    X: size.cols as i16,
+                    Y: size.rows as i16,
+                };
+                let hr = unsafe { ResizePseudoConsole(self.hpcon, coord) };
+                if hr < 0 {
+                    return Err(err(format!("ResizePseudoConsole failed: HRESULT {hr}")));
+                }
+                Ok(())
+            }
+
+            pub fn writer(&mut self) -> &mut impl Write {
+                self
+            }
+
+            pub fn try_read(&mut self, buf: &mut [u8]) -> Result<usize, PtyError> {
+                unsafe {
+                    let mut available = 0u32;
+                    if PeekNamedPipe(
+                        self.output_read,
+                        std::ptr::null_mut(),
+                        0,
+                        std::ptr::null_mut(),
+                        &mut available,
+                        std::ptr::null_mut(),
+                    ) == 0
+                    {
+                        return Err(err(format!(
+                            "PeekNamedPipe failed: {}",
+                            std::io::Error::last_os_error()
+                        )));
+                    }
+                    if available == 0 {
+                        return Ok(0);
+                    }
+                    let to_read = (buf.len() as u32).min(available);
+                    let mut read = 0u32;
+                    if ReadFile(
+                        self.output_read,
+                        buf.as_mut_ptr(),
+                        to_read,
+                        &mut read,
+                        std::ptr::null_mut(),
+                    ) == 0
+                    {
+                        return Err(err(format!(
+                            "ReadFile failed: {}",
+                            std::io::Error::last_os_error()
+                        )));
+                    }
+                    Ok(read as usize)
+                }
+            }
+
+            pub fn write_all(&mut self, data: &[u8]) -> Result<(), PtyError> {
+                Write::write_all(self, data).map_err(|e| err(e.to_string()))
+            }
+
+            pub fn try_wait(&mut self) -> Result<Option<i32>, PtyError> {
+                unsafe {
+                    let wait = WaitForSingleObject(self.process, 0);
+                    if wait == WAIT_TIMEOUT {
+                        return Ok(None);
+                    }
+                    if wait != WAIT_OBJECT_0 {
+                        return Err(err("WaitForSingleObject failed"));
+                    }
+                    let mut code = 0u32;
+                    if GetExitCodeProcess(self.process, &mut code) == 0 {
+                        return Err(err("GetExitCodeProcess failed"));
+                    }
+                    if code == STILL_ACTIVE as u32 {
+                        return Ok(None);
+                    }
+                    Ok(Some(code as i32))
+                }
+            }
+
+            pub fn kill(&mut self) -> Result<(), PtyError> {
+                unsafe {
+                    if TerminateProcess(self.process, 1) == 0 {
+                        return Err(err(format!(
+                            "TerminateProcess failed: {}",
+                            std::io::Error::last_os_error()
+                        )));
+                    }
+                    WaitForSingleObject(self.process, 5000);
+                }
+                Ok(())
+            }
+
+            fn close_conpty(&mut self) {
+                if self.closed {
+                    return;
+                }
+                self.closed = true;
+                unsafe {
+                    ClosePseudoConsole(self.hpcon);
+                }
+                close_handle(self.input_write);
+                close_handle(self.output_read);
+                close_handle(self.thread);
+                close_handle(self.process);
+            }
+        }
+
+        impl Write for Pty {
+            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+                let mut written = 0u32;
+                let ok = unsafe {
+                    WriteFile(
+                        self.input_write,
+                        buf.as_ptr(),
+                        buf.len() as u32,
+                        &mut written,
+                        std::ptr::null_mut(),
+                    )
+                };
+                if ok == 0 {
+                    Err(std::io::Error::last_os_error())
+                } else {
+                    Ok(written as usize)
+                }
+            }
+
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+
+        impl Drop for Pty {
+            fn drop(&mut self) {
+                let _ = self.kill();
+                self.close_conpty();
+            }
+        }
+    }
+
+    #[cfg(windows)]
+    pub use windows_impl::Pty;
+}
+// #endregion 🔖️Pty
+
 // #region 🔖️WasmHost
 pub mod host {
     use crate::tui::ansi::{setup_sequence, teardown_sequence, AnsiParser};
@@ -2914,6 +4405,87 @@ mod tests {
     }
     //#endregion 🔖️Ansi
 
+    //#region 🔖️Vt
+    fn vt_screen(w: u16, h: u16) -> crate::tui::vt::VtScreen {
+        crate::tui::vt::VtScreen::new(Size { width: w, height: h }, 100)
+    }
+
+    fn vt_row(screen: &crate::tui::vt::VtScreen, y: u16) -> String {
+        (0..screen.size.width)
+            .filter_map(|x| screen.cell_at(x, y))
+            .map(|c| c.ch)
+            .filter(|&c| c != '\0')
+            .collect()
+    }
+
+    #[test]
+    fn vt_cursor_motion_cup_and_cuu() {
+        let mut s = vt_screen(10, 5);
+        s.feed(b"\x1b[3;4H");
+        assert_eq!(s.cursor, Pos { x: 3, y: 2 });
+        s.feed(b"\x1b[2A");
+        assert_eq!(s.cursor, Pos { x: 3, y: 0 });
+        s.feed(b"\x1b[1B\x1b[2C\x1b[1D");
+        assert_eq!(s.cursor, Pos { x: 4, y: 1 });
+    }
+
+    #[test]
+    fn vt_wrap_at_edge() {
+        let mut s = vt_screen(4, 3);
+        s.feed(b"abcdX");
+        assert_eq!(&vt_row(&s, 0)[..4], "abcd");
+        assert_eq!(s.cell_at(0, 1).map(|c| c.ch), Some('X'));
+    }
+
+    #[test]
+    fn vt_scroll_region_decstbm_newline_scrolls_inside() {
+        let mut s = vt_screen(5, 5);
+        s.feed(b"AAAAA\nBBBBB\nCCCCC\nDDDDD\nEEEEE");
+        s.feed(b"\x1b[2;4r");
+        assert_eq!((s.scroll_top, s.scroll_bottom), (1, 3));
+        s.feed(b"\x1b[4;1H\n");
+        assert_eq!(&vt_row(&s, 0)[..5], "AAAAA");
+        assert_eq!(&vt_row(&s, 1)[..5], "CCCCC");
+        assert_eq!(&vt_row(&s, 2)[..5], "DDDDD");
+        assert_eq!(vt_row(&s, 3).trim(), "");
+        assert_eq!(&vt_row(&s, 4)[..5], "EEEEE");
+    }
+
+    #[test]
+    fn vt_sgr_truecolor_sets_cell_fg_bg() {
+        let mut s = vt_screen(5, 2);
+        s.feed(b"\x1b[38;2;10;20;30;48;2;40;50;60mZ");
+        let cell = s.cell_at(0, 0).expect("cell");
+        assert_eq!(cell.ch, 'Z');
+        assert_eq!(cell.fg, [10, 20, 30]);
+        assert_eq!(cell.bg, [40, 50, 60]);
+    }
+
+    #[test]
+    fn vt_alt_screen_1049_preserves_primary() {
+        let mut s = vt_screen(5, 3);
+        s.feed(b"HELLO");
+        assert_eq!(&vt_row(&s, 0)[..5], "HELLO");
+        s.feed(b"\x1b[?1049h");
+        assert!(s.alt_active);
+        s.feed(b"ALT");
+        assert_eq!(&vt_row(&s, 0)[..3], "ALT");
+        s.feed(b"\x1b[?1049l");
+        assert!(!s.alt_active);
+        assert_eq!(&vt_row(&s, 0)[..5], "HELLO");
+    }
+
+    #[test]
+    fn vt_resize_clamps_cursor() {
+        let mut s = vt_screen(10, 10);
+        s.feed(b"\x1b[8;8H");
+        assert_eq!(s.cursor, Pos { x: 7, y: 7 });
+        s.resize(Size { width: 4, height: 3 });
+        assert_eq!(s.size, Size { width: 4, height: 3 });
+        assert_eq!(s.cursor, Pos { x: 3, y: 2 });
+    }
+    //#endregion 🔖️Vt
+
     //#region 🔖️Scene
     #[test]
     fn scene_node_mut_setters_update_content_and_visibility() {
@@ -3389,5 +4961,62 @@ mod tests {
         assert!(!patch.is_empty(), "resizing triggers a full repaint on the next render");
     }
     //#endregion 🔖️WasmHost
+
+
+    //#region 🔖️Pty
+    #[cfg(all(unix, feature = "tui-terminal"))]
+    #[test]
+    fn pty_spawn_echo_hello() {
+        use crate::tui::pty::{Pty, PtySize};
+        use std::time::{Duration, Instant};
+
+        let mut pty = Pty::spawn(
+            "/bin/echo",
+            &["hello"],
+            &[],
+            None,
+            PtySize { cols: 80, rows: 24 },
+        )
+        .expect("spawn echo");
+        let mut out = Vec::new();
+        let mut buf = [0u8; 1024];
+        let deadline = Instant::now() + Duration::from_secs(2);
+        loop {
+            match pty.try_read(&mut buf) {
+                Ok(0) => {
+                    if pty.try_wait().ok().flatten().is_some() {
+                        break;
+                    }
+                    if Instant::now() >= deadline {
+                        break;
+                    }
+                    std::thread::sleep(Duration::from_millis(10));
+                }
+                Ok(n) => out.extend_from_slice(&buf[..n]),
+                Err(e) => panic!("try_read failed: {}", e.message),
+            }
+        }
+        let text = String::from_utf8_lossy(&out);
+        assert!(text.contains("hello"), "PTY output missing hello: {text:?}");
+    }
+
+    #[cfg(all(unix, feature = "tui-terminal"))]
+    #[test]
+    fn pty_resize_ok() {
+        use crate::tui::pty::{Pty, PtySize};
+
+        let mut pty = Pty::spawn(
+            "/bin/sleep",
+            &["1"],
+            &[],
+            None,
+            PtySize { cols: 80, rows: 24 },
+        )
+        .expect("spawn sleep");
+        pty.resize(PtySize { cols: 100, rows: 40 })
+            .expect("resize");
+        pty.kill().expect("kill");
+    }
+    //#endregion 🔖️Pty
 }
 // #endregion 🔖️Tests

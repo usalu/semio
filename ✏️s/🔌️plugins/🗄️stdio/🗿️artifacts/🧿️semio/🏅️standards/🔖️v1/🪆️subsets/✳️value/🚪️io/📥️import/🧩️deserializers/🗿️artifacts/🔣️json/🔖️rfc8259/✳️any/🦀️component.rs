@@ -52,7 +52,7 @@ pub fn semio_value_from_json(v: &JsonValue) -> SemioValue {
         }
         JsonValue::String { value } => SemioValue::Str { value: value.clone() },
         JsonValue::Array { items } => SemioValue::List { items: items.iter().map(semio_value_from_json).collect() },
-        JsonValue::Value { members } => SemioValue::Map { entries: members.iter().map(|m| SemioValueEntry { key: m.key.clone(), value: semio_value_from_json(&m.value) }).collect() },
+        JsonValue::Object { members } => SemioValue::Map { entries: members.iter().map(|m| SemioValueEntry { key: m.key.clone(), value: semio_value_from_json(&m.value) }).collect() },
     }
 }
 //#endregion 🔖️Convert
@@ -74,7 +74,7 @@ mod tests {
 
     #[test]
     fn nested_structure_maps_directly() {
-        let json = JsonValue::Value {
+        let json = JsonValue::Object {
             members: vec![
                 JsonMember { key: "name".into(), value: JsonValue::String { value: "semio".into() } },
                 JsonMember { key: "tags".into(), value: JsonValue::Array { items: vec![JsonValue::Bool { value: true }, JsonValue::Null] } },

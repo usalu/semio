@@ -374,7 +374,19 @@ mod tests {
     }
 
     //#region 🔖️MutationLaws
-    use protocol::testkit::assert_mutation_inverse_law;
+    use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+
+    #[test]
+    fn move_part_2d_diff_absorb_law() {
+        use crate::artifacts::puzzle5d::Puzzle5dPart;
+        let base = empty();
+        let part = Puzzle5dPart { id: "p1".into(), ..Default::default() };
+        let with_part = MutationDiff::<Puzzle5dSnapshot>::apply(&create_part(part, None).diff(&base), &base);
+        let d1 = move_part_2d("p1".into(), 10.0, 10.0).diff(&with_part);
+        let mid = MutationDiff::<Puzzle5dSnapshot>::apply(&d1, &with_part);
+        let d2 = move_part_2d("p1".into(), 20.0, 30.0).diff(&mid);
+        assert_mutation_diff_absorb_law(&with_part, d1, d2);
+    }
 
     fn empty() -> Puzzle5dSnapshot {
         Puzzle5dSnapshot::default()

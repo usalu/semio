@@ -95,19 +95,22 @@ pub struct Change {
 }
 
 /// @emoji 🧩️ One owned child's checkpoint pin, captured on the parent's checkpoint so checking out
-/// the parent can restore the whole composition. `child_ref` is the pinned child artifact's
-/// `ArtifactRef` wire URI (`"<artifact_id>!<kind>@<standard>/<subset>"`, see `to_uri`/`parse_uri`
-/// on `ArtifactRef` in `🧰️framework/🔨️modules/🚪️io/🦀️component.rs`), not that type itself: this
-/// crate (`semio-framework-os-kernel`) is the dependency `semio-framework` (where `ArtifactRef`
-/// lives) builds on, so importing it here would invert that edge — same cross-crate consideration,
-/// and the same String-primitive resolution, as `command::MutationMeta.group_id`; see
-/// `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b1-spr-vcs-report.md` for the decision
-/// record. The URI form doubles as a natural deterministic sort key for
-/// [`content_addressed_checkpoint_id`] below.
+/// the parent can restore the whole composition. `child_ref` is the pinned child artifact's real
+/// `crate::os_io::ArtifactRef` — **correction, `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/
+/// b2-store-composition-report.md`**: the prior wave (`b1-spr-vcs-report.md`) believed `ArtifactRef`
+/// (defined in `🧰️framework/🔨️modules/🚪️io/🦀️component.rs`) was unreachable from this crate and fell
+/// back to the wire URI `String`. That was wrong: `io/🦀️component.rs` is dual-mounted — the
+/// `semio-framework` crate mounts it as `io`, and THIS crate (`semio-framework-os-kernel`) mounts the
+/// very same source file as `os_io` (see `💻️os/📦️packages/🦀️rust/📦️glue.rs:237-238`,
+/// `pub mod os_io;`) — no cross-crate dependency-direction problem exists; `store` already reaches
+/// `crate::os_io::ArtifactDialect` directly (`🏪️store/🦀️component.rs:88/105/662`). Sorting for
+/// [`content_addressed_checkpoint_id`] below is therefore by `child_ref.to_uri()` (the same
+/// deterministic string this field used to store literally), not by any `Ord` on `ArtifactRef`
+/// itself (which does not implement one).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CompositionPin {
-    pub child_ref: String,
+    pub child_ref: crate::os_io::ArtifactRef,
     pub checkpoint_id: String,
 }
 
@@ -186,15 +189,34 @@ pub enum VcsError {
     #[error("migration failed: {0}")]
     MigrationFailed(String),
     /// @emoji 🔁️ A composition-pin graph traversal (parent → child → …) found a cycle back to an
-    /// ancestor — an owned-child forest must stay acyclic. Not yet raised by any call site in this
-    /// pass (the `CompositionCoordinator` that walks this graph is a later wave) — additive only.
+    /// ancestor — an owned-child forest must stay acyclic. Raised by `store::CompositionGraph::
+    /// would_cycle_owns`/`would_cycle_links` via `store::CompositionCoordinator::dispatch_group`'s
+    /// phase-1 validation (`UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` `🔖️CompositionCoordinator`, wave B2).
     #[error("composition cycle: {0}")]
     CompositionCycle(String),
     /// @emoji 🚫️ An operation would violate composition's single-ownership invariant (e.g.
-    /// adopting a child that already has a different owner). Not yet raised by any call site in
-    /// this pass — additive only.
+    /// adopting a child that already has a different owner, or dispatching to a child a group's
+    /// stated parent does not actually own). Raised by `store::CompositionGraph::insert_owns` and
+    /// `store::CompositionCoordinator::dispatch_group`'s phase-1 ownership check.
     #[error("ownership violation: {0}")]
     OwnershipViolation(String),
+    /// @emoji 🛂️ A `crate::os_spr::Mutation::validate` call rejected an operation during
+    /// `store::CompositionCoordinator::dispatch_group`'s phase-1 validate-all pass (or the
+    /// object-safe `store::SpaceMember::validate_wire`/`dispatch_wire` bridge that pass uses) — the
+    /// group is aborted with zero side effects anywhere. Additive; not raised anywhere else in this
+    /// crate (every other command path reports its own more specific `VcsError` variant).
+    #[error("validation failed: {0}")]
+    ValidationFailed(String),
+    /// @emoji 🧯️ A `CompositionCoordinator::dispatch_group` call failed AFTER some members were
+    /// already applied, and the reverse-order `Undo` compensation pass (see that method's doc
+    /// comment) itself failed on at least one member — i.e. the group could not be fully rolled
+    /// back. The message embeds a human-readable rollback report (which members compensated
+    /// cleanly, which did not, and why) so a caller can surface/log the exact partial state rather
+    /// than silently losing it. This is the one path in this crate where a command's Result can
+    /// legitimately leave a multi-member gesture inconsistent — every other `VcsError` variant is
+    /// raised BEFORE any mutation lands.
+    #[error("group dispatch failed and rollback also failed: {0}")]
+    CompensationFailed(String),
 }
 
 crate::fault_from_thiserror!(VcsError, crate::os_dsl::FaultOrigin::Module, "module.vcs");
@@ -374,8 +396,8 @@ where
 /// 🎯️ `pins` extension (composition-aware checkpoints): appended to the hash input ONLY when
 /// non-empty, so a non-composite checkpoint (the overwhelming majority, and every checkpoint ever
 /// minted before this ticket) hashes to EXACTLY the pre-existing bytes — this is what keeps old ids
-/// stable, not a version bump. `pins` is re-sorted by `child_ref` (the `ArtifactRef` wire URI, see
-/// [`CompositionPin`]) inside this function rather than trusted in caller-supplied order: a caller
+/// stable, not a version bump. `pins` is re-sorted by `child_ref.to_uri()` (see [`CompositionPin`])
+/// inside this function rather than trusted in caller-supplied order: a caller
 /// building the pin list from a `HashMap`/parallel-dispatch fan-out over owned children has no
 /// natural deterministic order of its own, and two peers committing the identical pin SET must
 /// still converge on the identical id regardless of which order their local dispatch happened to
@@ -398,11 +420,11 @@ pub fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids: &[St
     input.push(0);
     input.extend_from_slice(timestamp.as_bytes());
     if !pins.is_empty() {
-        let mut ordered: Vec<&CompositionPin> = pins.iter().collect();
-        ordered.sort_by(|a, b| a.child_ref.cmp(&b.child_ref));
+        let mut ordered: Vec<(String, &CompositionPin)> = pins.iter().map(|pin| (pin.child_ref.to_uri(), pin)).collect();
+        ordered.sort_by(|(a, _), (b, _)| a.cmp(b));
         input.push(0);
-        for pin in ordered {
-            input.extend_from_slice(pin.child_ref.as_bytes());
+        for (uri, pin) in ordered {
+            input.extend_from_slice(uri.as_bytes());
             input.push(0);
             input.extend_from_slice(pin.checkpoint_id.as_bytes());
             input.push(0);
@@ -582,7 +604,9 @@ mod tests {
         assert_eq!(id_no_pins, legacy_id, "an empty pin list must not change a single byte of the pre-existing hash input");
 
         // (2) A non-empty pin set changes the id relative to no pins at all.
-        let pins_one = vec![CompositionPin { child_ref: "child-a!s.stdio.mesh@87a/mesh".into(), checkpoint_id: "ck-child-a-1".into() }];
+        let child_a_ref = crate::os_io::ArtifactRef::parse_uri("child-a!s.stdio.mesh@87a/mesh").expect("valid test fixture uri");
+        let child_b_ref = crate::os_io::ArtifactRef::parse_uri("child-b!s.stdio.image@87a/image").expect("valid test fixture uri");
+        let pins_one = vec![CompositionPin { child_ref: child_a_ref.clone(), checkpoint_id: "ck-child-a-1".into() }];
         let id_with_pins = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one);
         assert_ne!(id_no_pins, id_with_pins, "a non-empty pin list must change the id relative to no composition");
 
@@ -591,19 +615,19 @@ mod tests {
         assert_eq!(id_with_pins, id_with_pins_again, "identical pins in identical order converge on the identical id");
 
         // (4) A different pin CONTENT (same child, different pinned checkpoint) changes the id.
-        let pins_one_moved = vec![CompositionPin { child_ref: "child-a!s.stdio.mesh@87a/mesh".into(), checkpoint_id: "ck-child-a-2".into() }];
+        let pins_one_moved = vec![CompositionPin { child_ref: child_a_ref.clone(), checkpoint_id: "ck-child-a-2".into() }];
         let id_pin_moved = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one_moved);
         assert_ne!(id_with_pins, id_pin_moved, "a different pinned checkpoint_id for the same child must change the id");
 
         // (5) Two peers that discover the same pin SET in different order (e.g. concurrent
-        // parallel-child dispatch) still converge — the function sorts by `child_ref` internally.
+        // parallel-child dispatch) still converge — the function sorts by `child_ref.to_uri()` internally.
         let pins_two_ordered = vec![
-            CompositionPin { child_ref: "child-a!s.stdio.mesh@87a/mesh".into(), checkpoint_id: "ck-child-a-1".into() },
-            CompositionPin { child_ref: "child-b!s.stdio.image@87a/image".into(), checkpoint_id: "ck-child-b-1".into() },
+            CompositionPin { child_ref: child_a_ref.clone(), checkpoint_id: "ck-child-a-1".into() },
+            CompositionPin { child_ref: child_b_ref.clone(), checkpoint_id: "ck-child-b-1".into() },
         ];
         let pins_two_reordered = vec![
-            CompositionPin { child_ref: "child-b!s.stdio.image@87a/image".into(), checkpoint_id: "ck-child-b-1".into() },
-            CompositionPin { child_ref: "child-a!s.stdio.mesh@87a/mesh".into(), checkpoint_id: "ck-child-a-1".into() },
+            CompositionPin { child_ref: child_b_ref, checkpoint_id: "ck-child-b-1".into() },
+            CompositionPin { child_ref: child_a_ref, checkpoint_id: "ck-child-a-1".into() },
         ];
         let id_ordered = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_two_ordered);
         let id_reordered = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_two_reordered);

@@ -7,6 +7,9 @@ const DEFAULT_EXECUTOR = "nx:run-commands";
 const TEST_TARGET = "test";
 const TEST_LEVELS = ["quick", "long", "exhaustive"];
 
+/** @type {Map<string, string>} Prefer the first non-lossy root per project name across createNodes batches. */
+const rootsByName = new Map();
+
 /**
  * 🎚️ Applies the workspace target convention: every target runs through
  * {@link DEFAULT_EXECUTOR}, and a project that owns a `📜️script.ts` runs from
@@ -66,6 +69,9 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
 
   return configFiles
     .filter((configFile) => {
+      // 🛡️ Nx's native walker sometimes hands back lossy paths with U+FFFD where a
+      // multi-byte emoji used to be; those are unopenable duplicates of a real file.
+      if (configFile.includes("\uFFFD")) return false;
       if (configFile.includes("node_modules") || configFile.includes(".🦑️repo") || configFile.includes("/dist/")) {
         return false;
       }
@@ -82,7 +88,10 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
       const name = json.name;
       if (!name) return null;
       const projectDir = dirname(abs);
-      const root = nxPath(relative(workspaceRoot, projectDir)) || ".";
+      const root = nxPath(relative(workspaceRoot, projectDir)).normalize("NFC") || ".";
+      const prior = rootsByName.get(name);
+      if (prior !== undefined && prior !== root) return null;
+      if (prior === undefined) rootsByName.set(name, root);
       return [configFile, { projects: { [name]: projectWithDefaults(json, root, projectDir) } }];
     })
     .filter(Boolean);

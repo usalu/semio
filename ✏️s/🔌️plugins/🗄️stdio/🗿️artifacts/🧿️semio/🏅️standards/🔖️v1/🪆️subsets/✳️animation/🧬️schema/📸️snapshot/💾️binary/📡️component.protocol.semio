@@ -5,7 +5,7 @@ schema stdio.semio.animation
 start body
 framing record
 
-# animation wave (following the workflow pilot's proven template): REAL binary pack frame,
+# animation wave (following the flow pilot's proven template): REAL binary pack frame,
 # replacing the old `serde_json::to_vec`-in-envelope shortcut (`📸️snapshot/🦀️component.rs`'s old
 # `ArtifactPack::encode_pack_with`). `format u8` (real, fixed) then `schema_len`/`schema_bytes`
 # (real, varint-length-prefixed UTF-8 — matches `write_str_lp`'s own wire exactly, via the PROVEN

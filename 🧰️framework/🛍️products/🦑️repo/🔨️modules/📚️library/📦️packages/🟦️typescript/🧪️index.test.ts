@@ -1145,7 +1145,7 @@ describe("loadTaxonomy", () => {
   test("declares direct plugin-root facets without a nested directory taxonomy field", () => {
     const taxonomy = loadTaxonomy();
     expect("pluginDirName" in taxonomy).toBe(false);
-    expect(taxonomy.pluginChildDirs).toEqual(["🛂️manifest", "🎟️capabilities", "🔧️setup", "🎛️apps"]);
+    expect(taxonomy.pluginChildDirs).toEqual(["🎛️apps"]);
   });
 
   test("keeps the artifact completeness set and the artifact structural set as two separate lists", () => {

@@ -3,6 +3,8 @@
 use crate::apps::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use crate::artifacts::mathematical::dsl::MathematicalGraphDsl;
 use crate::artifacts::mathematical::op::MathematicalMutation;
+use crate::artifacts::mathematical::schema::mutations::replace_graph::mutation::ReplaceGraph;
+use crate::artifacts::mathematical::schema::mutations::replace_points::mutation::ReplacePoints;
 use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -27,10 +29,10 @@ pub mod set_artifact {
         };
         let mut operations = Vec::new();
         if graph != projection.graph {
-            operations.push(MathematicalMutation::SetGraph { graph });
+            operations.push(MathematicalMutation::ReplaceGraph(ReplaceGraph { graph }));
         }
         if payload.geometry != projection.geometry {
-            operations.push(MathematicalMutation::SetGeometry { geometry: payload.geometry.clone() });
+            operations.push(MathematicalMutation::ReplacePoints(ReplacePoints { points: payload.geometry.points.clone() }));
         }
         Ok(Emit::mutations(operations))
     }

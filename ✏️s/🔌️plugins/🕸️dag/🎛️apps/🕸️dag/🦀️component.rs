@@ -129,9 +129,11 @@ impl ArtifactApp for DagPlayApp {
         crate::artifacts::dag::default_snapshot()
     }
 
-    fn whole_document_operation(snapshot: DagSnapshot) -> Option<DagMutation> {
-        Some(DagMutation::SetSnapshot { snapshot: snapshot })
-    }
+    // 🎞️ No `whole_document_operation` override: whole-document replace is not an in-history
+    // mutation any more (the old whole-snapshot-replacement variant is gone with no replacement —
+    // see the mutations facet report). The trait default (`None`) applies, so the generic
+    // `document:in` media importer correctly reports `MediaError::NotImplemented`; a real
+    // whole-document load goes through `store::ArtifactStore::reset` instead.
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
@@ -437,11 +439,9 @@ mod tests {
     }
 
     #[test]
-    fn whole_document_operation_replaces_the_snapshot() {
-        let app = DagPlayApp;
+    fn whole_document_operation_is_not_supported_as_an_in_history_mutation() {
         let replacement = crate::artifacts::dag::default_snapshot();
-        let operation = DagPlayApp::whole_document_operation(replacement.clone()).expect("whole document operation");
-        assert_eq!(operation, DagMutation::SetSnapshot { snapshot: replacement });
+        assert!(DagPlayApp::whole_document_operation(replacement).is_none(), "whole-document replace goes through ArtifactStore::reset, never a mutation");
     }
 
     /// 🧬️ Two instances apply DISJOINT edits (A adds a note node, B adds a slider node) and converge to

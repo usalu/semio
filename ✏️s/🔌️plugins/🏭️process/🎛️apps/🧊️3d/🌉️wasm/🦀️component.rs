@@ -73,9 +73,15 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::process3d::mutations::change_cursor::mutation::ChangeCursor;
+    use crate::artifacts::process3d::mutations::change_step_enabled::mutation::ChangeStepEnabled;
+    use crate::artifacts::process3d::mutations::change_step_origin::mutation::ChangeStepOrigin;
+    use crate::artifacts::process3d::mutations::change_stock_label::mutation::ChangeStockLabel;
+    use crate::artifacts::process3d::mutations::create_step::mutation::CreateStep;
+    use crate::artifacts::process3d::mutations::delete_step::mutation::DeleteStep;
+    use crate::artifacts::process3d::mutations::replace_stock_solid::mutation::ReplaceStockSolid;
     use crate::artifacts::process3d::op::Process3dMutation;
-    use crate::artifacts::process3d::{empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, StepOrigin, Stock, PROCESS_3D_SCHEMA};
-    use protocol::CollectionMutation;
+    use crate::artifacts::process3d::{empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, SolidSpec, StepOrigin, PROCESS_3D_SCHEMA};
     use store::{create_document_envelope, ArtifactCommand};
     use vcs::Author;
 
@@ -100,21 +106,21 @@ mod tests {
     #[test]
     fn adds_and_removes_steps() {
         let mut store = new_store();
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("cut-1") })], description: None }).expect("add step");
         let projection = store.snapshot().expect("snapshot");
         assert_eq!(projection.steps.len(), 1);
         assert_eq!(projection.steps[0].id, "cut-1");
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Remove { id: "cut-1".into() } }], description: None }).expect("remove step");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::DeleteStep(DeleteStep { id: "cut-1".into() })], description: None }).expect("remove step");
         assert!(store.snapshot().expect("snapshot").steps.is_empty());
     }
 
     #[test]
     fn patches_a_step_and_undo_restores_it() {
         let mut store = new_store();
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("cut-1") })], description: None }).expect("add step");
         store
-            .dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Patch { id: "cut-1".into(), patch: ProcessStepPatch { enabled: Some(false), ..Default::default() } } }], description: None })
+            .dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "cut-1".into(), new_enabled: false })], description: None })
             .expect("patch step");
         assert!(!store.snapshot().expect("snapshot").steps[0].enabled);
 
@@ -125,13 +131,13 @@ mod tests {
     #[test]
     fn patches_origin_and_undo_restores_it() {
         let mut store = new_store();
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("cut-1") })], description: None }).expect("add step");
         assert!(store.snapshot().expect("snapshot").steps[0].origin.is_none());
 
         let origin = StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() };
         store
             .dispatch(ArtifactCommand::Apply {
-                mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Patch { id: "cut-1".into(), patch: ProcessStepPatch { origin: Some(Some(origin.clone())), ..Default::default() } } }],
+                mutations: vec![Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: "cut-1".into(), new_origin: Some(origin.clone()) })],
                 description: None,
             })
             .expect("patch origin");
@@ -147,28 +153,39 @@ mod tests {
         store
             .dispatch(ArtifactCommand::Apply {
                 mutations: vec![
-                    Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("a") } },
-                    Process3dMutation::Steps { collection: CollectionMutation::Add { index: 1, item: cut_step("b") } },
-                    Process3dMutation::SetCursor { resolved_up_to: Some(2) },
+                    Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("a") }),
+                    Process3dMutation::CreateStep(CreateStep { index: 1, step: cut_step("b") }),
+                    Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(2) }),
                 ],
                 description: None,
             })
             .expect("build steps + cursor");
         assert_eq!(store.snapshot().expect("snapshot").resolved_up_to, Some(2));
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::Steps { collection: CollectionMutation::Remove { id: "b".into() } }], description: None }).expect("remove step clamps cursor");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::DeleteStep(DeleteStep { id: "b".into() })], description: None }).expect("remove step clamps cursor");
         let projection = store.snapshot().expect("snapshot");
         assert_eq!(projection.steps.len(), 1);
         assert_eq!(projection.resolved_up_to, Some(1));
     }
 
+    /// 🧬️ `Stock`'s `id` has no semantic mutation of its own (it is a fixed singleton-facet key, never
+    /// a user-addressed identity field) — only `solid`/`label`/`pose` each carry their own mutation
+    /// now (`ReplaceStockSolid`/`ChangeStockLabel`/`MoveStock`), so these two tests compose the fields
+    /// that actually change instead of replacing the whole `Stock` record.
     #[test]
     fn sets_stock_and_backwards_restores() {
         let mut store = new_store();
         let original_stock = store.snapshot().expect("snapshot").stock;
-        let new_stock = Stock { id: "beam".into(), label: "Beam".into(), solid: SolidSpec::Cylinder { radius: 0.2, height: 2.0 }, pose: Pose::default() };
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::SetStock { stock: new_stock.clone() }], description: None }).expect("set stock");
-        assert_eq!(store.snapshot().expect("snapshot").stock, new_stock);
+        let new_solid = SolidSpec::Cylinder { radius: 0.2, height: 2.0 };
+        store
+            .dispatch(ArtifactCommand::Apply {
+                mutations: vec![Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: new_solid.clone() }), Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() })],
+                description: None,
+            })
+            .expect("set stock");
+        let updated = store.snapshot().expect("snapshot").stock;
+        assert_eq!(updated.solid, new_solid);
+        assert_eq!(updated.label, "Beam");
 
         store.dispatch(ArtifactCommand::Undo).expect("undo");
         assert_eq!(store.snapshot().expect("snapshot").stock, original_stock);
@@ -178,9 +195,16 @@ mod tests {
     fn sets_stock_to_imported_solid_and_backwards_restores() {
         let mut store = new_store();
         let original_stock = store.snapshot().expect("snapshot").stock;
-        let imported_stock = Stock { id: "stock".into(), label: "Imported STEP".into(), solid: SolidSpec::ImportedSolid { solid_handle: "solid-7".into() }, pose: Pose::default() };
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::SetStock { stock: imported_stock.clone() }], description: None }).expect("set imported stock");
-        assert_eq!(store.snapshot().expect("snapshot").stock, imported_stock);
+        let imported_solid = SolidSpec::ImportedSolid { solid_handle: "solid-7".into() };
+        store
+            .dispatch(ArtifactCommand::Apply {
+                mutations: vec![Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: imported_solid.clone() }), Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Imported STEP".into() })],
+                description: None,
+            })
+            .expect("set imported stock");
+        let updated = store.snapshot().expect("snapshot").stock;
+        assert_eq!(updated.solid, imported_solid);
+        assert_eq!(updated.label, "Imported STEP");
 
         store.dispatch(ArtifactCommand::Undo).expect("undo");
         assert_eq!(store.snapshot().expect("snapshot").stock, original_stock);
@@ -194,10 +218,11 @@ mod tests {
         store
             .dispatch(ArtifactCommand::Apply {
                 mutations: vec![
-                    Process3dMutation::SetStock { stock: Stock { id: "beam".into(), label: "Timber Beam".into(), solid: SolidSpec::Box { width: 2.4, depth: 0.12, height: 0.24 }, pose: Pose::default() } },
-                    Process3dMutation::Steps { collection: CollectionMutation::Add { index: 0, item: cut_step("cut-1") } },
-                    Process3dMutation::Steps { collection: CollectionMutation::Add { index: 1, item: drill_step("drill-1") } },
-                    Process3dMutation::SetCursor { resolved_up_to: Some(1) },
+                    Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: SolidSpec::Box { width: 2.4, depth: 0.12, height: 0.24 } }),
+                    Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Timber Beam".into() }),
+                    Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("cut-1") }),
+                    Process3dMutation::CreateStep(CreateStep { index: 1, step: drill_step("drill-1") }),
+                    Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(1) }),
                 ],
                 description: Some("build timeline".into()),
             })
