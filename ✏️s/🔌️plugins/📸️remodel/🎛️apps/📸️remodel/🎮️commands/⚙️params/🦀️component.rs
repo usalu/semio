@@ -3,6 +3,7 @@
 //! single LWW `Set<Group>Params` operation that replaces it.
 
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use crate::artifacts::remodel::mutations::{update_dense_params, update_feature_params, update_geo_params, update_ingest_params, update_match_params, update_mesh_params, update_motion_params, update_sfm_params};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{DenseParams, DenseResolution, FeatureDetector, FeatureParams, GeoParams, IngestParams, MatchParams, MatcherKind, MeshParams, MotionParams, RemodelSnapshot, RobustLossKind, SfmParams};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -22,9 +23,12 @@ pub mod set_ingest_params {
     }
 
     pub fn handle(payload: &SetIngestParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![RemodelMutation::SetIngestParams {
-            params: IngestParams { frame_sample_stride: payload.frame_sample_stride, max_frames: payload.max_frames, downscale_long_edge_px: payload.downscale_long_edge_px, min_sharpness: payload.min_sharpness },
-        }]))
+        Ok(Emit::mutations(vec![update_ingest_params(IngestParams {
+            frame_sample_stride: payload.frame_sample_stride,
+            max_frames: payload.max_frames,
+            downscale_long_edge_px: payload.downscale_long_edge_px,
+            min_sharpness: payload.min_sharpness,
+        })]))
     }
 }
 //#endregion 🔖️SetIngestParams
@@ -43,18 +47,16 @@ pub mod set_feature_params {
     }
 
     pub fn handle(payload: &SetFeatureParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![RemodelMutation::SetFeatureParams {
-            params: FeatureParams {
-                detector: match payload.detector.as_str() {
-                    "akaze" => FeatureDetector::Akaze,
-                    "harris" => FeatureDetector::Harris,
-                    _ => FeatureDetector::Orb,
-                },
-                target_count: payload.target_count,
-                octaves: payload.octaves,
-                edge_threshold: payload.edge_threshold,
+        Ok(Emit::mutations(vec![update_feature_params(FeatureParams {
+            detector: match payload.detector.as_str() {
+                "akaze" => FeatureDetector::Akaze,
+                "harris" => FeatureDetector::Harris,
+                _ => FeatureDetector::Orb,
             },
-        }]))
+            target_count: payload.target_count,
+            octaves: payload.octaves,
+            edge_threshold: payload.edge_threshold,
+        })]))
     }
 }
 //#endregion 🔖️SetFeatureParams
@@ -75,16 +77,14 @@ pub mod set_match_params {
     }
 
     pub fn handle(payload: &SetMatchParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![RemodelMutation::SetMatchParams {
-            params: MatchParams {
-                matcher: if payload.matcher == "kd-tree" { MatcherKind::KdTree } else { MatcherKind::BruteForce },
-                ratio_test: payload.ratio_test,
-                cross_check: payload.cross_check,
-                sequential_window: payload.sequential_window,
-                max_pairs_per_frame: payload.max_pairs_per_frame,
-                loop_closure: payload.loop_closure,
-            },
-        }]))
+        Ok(Emit::mutations(vec![update_match_params(MatchParams {
+            matcher: if payload.matcher == "kd-tree" { MatcherKind::KdTree } else { MatcherKind::BruteForce },
+            ratio_test: payload.ratio_test,
+            cross_check: payload.cross_check,
+            sequential_window: payload.sequential_window,
+            max_pairs_per_frame: payload.max_pairs_per_frame,
+            loop_closure: payload.loop_closure,
+        })]))
     }
 }
 //#endregion 🔖️SetMatchParams
@@ -105,20 +105,18 @@ pub mod set_sfm_params {
     }
 
     pub fn handle(payload: &SetSfmParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![RemodelMutation::SetSfmParams {
-            params: SfmParams {
-                ransac_iterations: payload.ransac_iterations,
-                ransac_threshold_px: payload.ransac_threshold_px,
-                min_track_length: payload.min_track_length,
-                ba_max_iterations: payload.ba_max_iterations,
-                robust_loss: match payload.robust_loss.as_str() {
-                    "l2" => RobustLossKind::L2,
-                    "cauchy" => RobustLossKind::Cauchy,
-                    _ => RobustLossKind::Huber,
-                },
-                huber_delta_px: payload.huber_delta_px,
+        Ok(Emit::mutations(vec![update_sfm_params(SfmParams {
+            ransac_iterations: payload.ransac_iterations,
+            ransac_threshold_px: payload.ransac_threshold_px,
+            min_track_length: payload.min_track_length,
+            ba_max_iterations: payload.ba_max_iterations,
+            robust_loss: match payload.robust_loss.as_str() {
+                "l2" => RobustLossKind::L2,
+                "cauchy" => RobustLossKind::Cauchy,
+                _ => RobustLossKind::Huber,
             },
-        }]))
+            huber_delta_px: payload.huber_delta_px,
+        })]))
     }
 }
 //#endregion 🔖️SetSfmParams
@@ -138,19 +136,17 @@ pub mod set_dense_params {
     }
 
     pub fn handle(payload: &SetDenseParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![RemodelMutation::SetDenseParams {
-            params: DenseParams {
-                resolution: match payload.resolution.as_str() {
-                    "low" => DenseResolution::Low,
-                    "high" => DenseResolution::High,
-                    _ => DenseResolution::Medium,
-                },
-                window_radius_px: payload.window_radius_px,
-                min_view_consistency: payload.min_view_consistency,
-                confidence_threshold: payload.confidence_threshold,
-                max_points: payload.max_points,
+        Ok(Emit::mutations(vec![update_dense_params(DenseParams {
+            resolution: match payload.resolution.as_str() {
+                "low" => DenseResolution::Low,
+                "high" => DenseResolution::High,
+                _ => DenseResolution::Medium,
             },
-        }]))
+            window_radius_px: payload.window_radius_px,
+            min_view_consistency: payload.min_view_consistency,
+            confidence_threshold: payload.confidence_threshold,
+            max_points: payload.max_points,
+        })]))
     }
 }
 //#endregion 🔖️SetDenseParams
@@ -174,19 +170,17 @@ pub mod set_mesh_params {
     }
 
     pub fn handle(payload: &SetMeshParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![RemodelMutation::SetMeshParams {
-            params: MeshParams {
-                tsdf_voxel_size_mm: payload.tsdf_voxel_size_mm,
-                tsdf_truncation_mm: payload.tsdf_truncation_mm,
-                decimate_target_triangles: payload.decimate_target_triangles,
-                smoothing_iterations: payload.smoothing_iterations,
-                texture_enabled: payload.texture_enabled,
-                texture_size: payload.texture_size,
-                guarantee_watertight: payload.guarantee_watertight,
-                hole_fill_max_boundary_verts: payload.hole_fill_max_boundary_verts,
-                self_intersection_check: payload.self_intersection_check,
-            },
-        }]))
+        Ok(Emit::mutations(vec![update_mesh_params(MeshParams {
+            tsdf_voxel_size_mm: payload.tsdf_voxel_size_mm,
+            tsdf_truncation_mm: payload.tsdf_truncation_mm,
+            decimate_target_triangles: payload.decimate_target_triangles,
+            smoothing_iterations: payload.smoothing_iterations,
+            texture_enabled: payload.texture_enabled,
+            texture_size: payload.texture_size,
+            guarantee_watertight: payload.guarantee_watertight,
+            hole_fill_max_boundary_verts: payload.hole_fill_max_boundary_verts,
+            self_intersection_check: payload.self_intersection_check,
+        })]))
     }
 }
 //#endregion 🔖️SetMeshParams
@@ -206,9 +200,13 @@ pub mod set_motion_params {
     }
 
     pub fn handle(payload: &SetMotionParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![RemodelMutation::SetMotionParams {
-            params: MotionParams { enabled: payload.enabled, max_tracks: payload.max_tracks, track_window_px: payload.track_window_px, min_track_quality: payload.min_track_quality, min_track_length_frames: payload.min_track_length_frames },
-        }]))
+        Ok(Emit::mutations(vec![update_motion_params(MotionParams {
+            enabled: payload.enabled,
+            max_tracks: payload.max_tracks,
+            track_window_px: payload.track_window_px,
+            min_track_quality: payload.min_track_quality,
+            min_track_length_frames: payload.min_track_length_frames,
+        })]))
     }
 }
 //#endregion 🔖️SetMotionParams
@@ -234,18 +232,16 @@ pub mod set_geo_params {
     }
 
     pub fn handle(payload: &SetGeoParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![RemodelMutation::SetGeoParams {
-            params: GeoParams {
-                enabled: payload.enabled,
-                origin_lon: payload.origin_lon,
-                origin_lat: payload.origin_lat,
-                origin_alt: payload.origin_alt,
-                gsd_m: payload.gsd_m,
-                dsm_cell_m: payload.dsm_cell_m,
-                dtm_filter_radius_m: payload.dtm_filter_radius_m,
-                ortho_max_px: payload.ortho_max_px,
-            },
-        }]))
+        Ok(Emit::mutations(vec![update_geo_params(GeoParams {
+            enabled: payload.enabled,
+            origin_lon: payload.origin_lon,
+            origin_lat: payload.origin_lat,
+            origin_alt: payload.origin_alt,
+            gsd_m: payload.gsd_m,
+            dsm_cell_m: payload.dsm_cell_m,
+            dtm_filter_radius_m: payload.dtm_filter_radius_m,
+            ortho_max_px: payload.ortho_max_px,
+        })]))
     }
 }
 //#endregion 🔖️SetGeoParams

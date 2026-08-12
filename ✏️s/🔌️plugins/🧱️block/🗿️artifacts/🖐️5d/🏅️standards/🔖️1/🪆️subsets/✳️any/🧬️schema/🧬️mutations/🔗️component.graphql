@@ -1,41 +1,46 @@
-# 🧬️ Block5d mutation schema — persistent fields only.
+# 🧬️ Block5d mutation schema — one type per mutation kind (41 kinds), not a snapshot mirror.
 
-type Block5dMutation {
-  schema: String! @state(class: PERSISTENT)
-  partKind: BlockKindIdentity! @state(class: PERSISTENT)
-  part2d: Block5dPart2d! @state(class: PERSISTENT)
-  part3d: Block5dPart3d! @state(class: PERSISTENT)
-  representations: [BlockRepresentation!]! @state(class: PERSISTENT)
-  gripKinds: [Block5dGripKind!]! @state(class: PERSISTENT)
-  grips: [Block5dGripTemplate!]! @state(class: PERSISTENT)
-  compatibility: [BlockCompatibilityRule!]! @state(class: PERSISTENT)
-  attributes: [BlockAttribute!]! @state(class: PERSISTENT)
-  authors: [BlockAuthor!]! @state(class: PERSISTENT)
-  camera2d: BlockCamera2d! @state(class: PERSISTENT)
-  camera3d: BlockCamera3d! @state(class: PERSISTENT)
-  meta: BlockMeta! @state(class: PERSISTENT)
-}
+union Block5dMutation = RenamePartKind | ChangePartKindLabel | ChangePartKindVariant | ChangePartKindDescription | ChangePartKindIcon | ChangePartKindUnit | UpdatePart2d | UpdatePart3d | CreateRepresentation | DeleteRepresentation | RenameRepresentation | ChangeRepresentationMeshUrl | ChangeRepresentationLod | ChangeRepresentationDescription | AddRepresentationTag | RemoveRepresentationTag | AddRepresentationAttribute | RemoveRepresentationAttribute | CreateGripKind | DeleteGripKind | RenameGripKind | ChangeGripKindLabel | ChangeGripKindColor | ChangeGripKindDefaultRopeKind | CreateGrip | DeleteGrip | MoveGrip2d | MoveGrip3d | ResizeGrip3d | ChangeGripGripKind | AddCompatibilityRule | RemoveCompatibilityRule | AddAttribute | RemoveAttribute | AddAuthor | RemoveAuthor | MoveCamera2d | ScaleCamera2d | MoveCamera3d | ScaleCamera3d | ChangeMetaDescription
 
-type BlockKindIdentity { _placeholder: Boolean }
-
-type Block5dPart2d { _placeholder: Boolean }
-
-type Block5dPart3d { _placeholder: Boolean }
-
-type BlockRepresentation { _placeholder: Boolean }
-
-type Block5dGripKind { _placeholder: Boolean }
-
-type Block5dGripTemplate { _placeholder: Boolean }
-
-type BlockCompatibilityRule { _placeholder: Boolean }
-
-type BlockAttribute { _placeholder: Boolean }
-
-type BlockAuthor { _placeholder: Boolean }
-
-type BlockCamera2d { _placeholder: Boolean }
-
-type BlockCamera3d { _placeholder: Boolean }
-
-type BlockMeta { _placeholder: Boolean }
+type RenamePartKind { _payload: JSON } # kind "rename-part-kind"
+type ChangePartKindLabel { _payload: JSON } # kind "change-part-kind-label"
+type ChangePartKindVariant { _payload: JSON } # kind "change-part-kind-variant"
+type ChangePartKindDescription { _payload: JSON } # kind "change-part-kind-description"
+type ChangePartKindIcon { _payload: JSON } # kind "change-part-kind-icon"
+type ChangePartKindUnit { _payload: JSON } # kind "change-part-kind-unit"
+type UpdatePart2d { _payload: JSON } # kind "update-part-2d"
+type UpdatePart3d { _payload: JSON } # kind "update-part-3d"
+type CreateRepresentation { _payload: JSON } # kind "create-representation"
+type DeleteRepresentation { _payload: JSON } # kind "delete-representation"
+type RenameRepresentation { _payload: JSON } # kind "rename-representation"
+type ChangeRepresentationMeshUrl { _payload: JSON } # kind "change-representation-mesh-url"
+type ChangeRepresentationLod { _payload: JSON } # kind "change-representation-lod"
+type ChangeRepresentationDescription { _payload: JSON } # kind "change-representation-description"
+type AddRepresentationTag { _payload: JSON } # kind "add-representation-tag"
+type RemoveRepresentationTag { _payload: JSON } # kind "remove-representation-tag"
+type AddRepresentationAttribute { _payload: JSON } # kind "add-representation-attribute"
+type RemoveRepresentationAttribute { _payload: JSON } # kind "remove-representation-attribute"
+type CreateGripKind { _payload: JSON } # kind "create-grip-kind"
+type DeleteGripKind { _payload: JSON } # kind "delete-grip-kind"
+type RenameGripKind { _payload: JSON } # kind "rename-grip-kind"
+type ChangeGripKindLabel { _payload: JSON } # kind "change-grip-kind-label"
+type ChangeGripKindColor { _payload: JSON } # kind "change-grip-kind-color"
+type ChangeGripKindDefaultRopeKind { _payload: JSON } # kind "change-grip-kind-default-rope-kind"
+type CreateGrip { _payload: JSON } # kind "create-grip"
+type DeleteGrip { _payload: JSON } # kind "delete-grip"
+type MoveGrip2d { _payload: JSON } # kind "move-grip-2d"
+type MoveGrip3d { _payload: JSON } # kind "move-grip-3d"
+type ResizeGrip3d { _payload: JSON } # kind "resize-grip-3d"
+type ChangeGripGripKind { _payload: JSON } # kind "change-grip-grip-kind"
+type AddCompatibilityRule { _payload: JSON } # kind "add-compatibility-rule"
+type RemoveCompatibilityRule { _payload: JSON } # kind "remove-compatibility-rule"
+type AddAttribute { _payload: JSON } # kind "add-attribute"
+type RemoveAttribute { _payload: JSON } # kind "remove-attribute"
+type AddAuthor { _payload: JSON } # kind "add-author"
+type RemoveAuthor { _payload: JSON } # kind "remove-author"
+type MoveCamera2d { _payload: JSON } # kind "move-camera2d"
+type ScaleCamera2d { _payload: JSON } # kind "scale-camera2d"
+type MoveCamera3d { _payload: JSON } # kind "move-camera3d"
+type ScaleCamera3d { _payload: JSON } # kind "scale-camera3d"
+type ChangeMetaDescription { _payload: JSON } # kind "change-meta-description"
+scalar JSON

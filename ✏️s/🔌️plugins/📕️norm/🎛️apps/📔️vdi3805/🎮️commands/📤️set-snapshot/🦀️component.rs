@@ -1,4 +1,9 @@
 //! 📤️ Vdi3805 play app command — replace the whole compliance document.
+//!
+//! 🧩️ The whole-document-replace mutation is banned with no 1:1 replacement (`📓️taxonomy.md`), so the
+//! payload decomposes into the closed semantic vocabulary via `Vdi3805Mutation::from_snapshot`
+//! (base + target, since `catalog.products`/`geometry`/`curves` are real id-keyed collections
+//! needing full remove/re-insert), bundled into a single atomic edit.
 
 use crate::artifacts::vdi3805::op::Vdi3805Mutation;
 use crate::artifacts::vdi3805::Vdi3805Snapshot;
@@ -9,15 +14,15 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "set-snapshot")]
-pub struct SetSnapshot {
+pub struct ReplaceSnapshot {
     #[dsl(block)]
     pub snapshot: Vdi3805Snapshot,
 }
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &SetSnapshot, _doc: &ArtifactView<'_, Vdi3805Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation>, Fault> {
-    crate::app_surface::commit_snapshot(Vdi3805Mutation::SetSnapshot { snapshot: payload.snapshot.clone() }, "setSnapshot")
+pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, Vdi3805Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation>, Fault> {
+    crate::app_surface::commit_snapshot_fields(Vdi3805Mutation::from_snapshot(doc.snapshot, &payload.snapshot), "setSnapshot")
 }
 //#endregion 🔖️Handler
 
@@ -33,12 +38,12 @@ mod tests {
         let projection = Vdi3805Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(
-            &SetSnapshot { snapshot: Vdi3805Snapshot::default() },
+            &ReplaceSnapshot { snapshot: Vdi3805Snapshot::default() },
             &ArtifactView { snapshot: &projection, history: &HistoryView::empty() },
             &ConfigView { snapshot: &config },
         )
         .expect("handle");
-        assert_eq!(emit.artifact_mutations, vec![Vdi3805Mutation::SetSnapshot { snapshot: Vdi3805Snapshot::default() }]);
+        assert_eq!(emit.artifact_mutations, Vdi3805Mutation::from_snapshot(&Vdi3805Snapshot::default(), &Vdi3805Snapshot::default()));
         assert_eq!(emit.description.as_deref(), Some("setSnapshot"));
         assert!(emit.config_mutations.is_empty());
     }

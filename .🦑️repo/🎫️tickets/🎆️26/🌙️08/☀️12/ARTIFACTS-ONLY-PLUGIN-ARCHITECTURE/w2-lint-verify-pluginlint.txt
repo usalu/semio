@@ -1,0 +1,134 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-os-dev:plugin lint
+
+> nx run @semio-tech/framework-os-dev:plugin lint
+
+> bun ./📜️script.ts plugin lint
+
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-puzzle: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-remodel: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-gis: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-note: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-process: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-procedural: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-trinity: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-space: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-shooting: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-raster: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-lowpoly: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-cad: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-draw: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-writer: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-layout: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-demonstrator: forbidden dependency semio-framework-os
+[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): semio-s-plugin-animate: forbidden dependency semio-framework-os
+[0m[31m[plugin-capability-lint] semio-s-plugin-fem: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-puzzle: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-puzzle: forbidden dependency web-sys[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-puzzle: forbidden dependency js-sys[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-puzzle: uses std::fs/std::net/std::env/std::process without localBackboneStorage capability (✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/build.rs)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-block: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-remodel: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-flow: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-forms: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-gis: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-reasoning-mindmap: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-note: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-dag: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-playbook: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-mathematical: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-process: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-process-wood: cross-plugin dependency on semio-s-plugin-process (process)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-process-concrete: cross-plugin dependency on semio-s-plugin-process (process)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-process-metal: cross-plugin dependency on semio-s-plugin-process (process)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-process-robotic: cross-plugin dependency on semio-s-plugin-process (process)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-sourcing: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-sourcing-beams: cross-plugin dependency on semio-s-plugin-sourcing (sourcing)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-sourcing-windows: cross-plugin dependency on semio-s-plugin-sourcing (sourcing)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-sourcing-slabs: cross-plugin dependency on semio-s-plugin-sourcing (sourcing)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-sequence: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-sequence: cross-plugin dependency on semio-s-plugin-imperative-control (imperative-extension-control)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-sequence: cross-plugin dependency on semio-s-plugin-imperative-effect (imperative-extension-effect)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-sequence: cross-plugin dependency on semio-s-plugin-imperative-math (imperative-extension-math)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-sequence: cross-plugin dependency on semio-s-plugin-imperative-text (imperative-extension-text)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-sequence: forbidden dependency web-sys[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-sequence: forbidden dependency js-sys[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-flow-extension-brep (flow-extension-brep)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-flow-extension-dictionary (flow-extension-dictionary)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-flow-extension-list (flow-extension-list)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-flow-extension-logic (flow-extension-logic)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-flow-extension-math (flow-extension-math)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-flow-extension-primitive (flow-extension-primitive)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-flow-extension-text (flow-extension-text)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-trinity: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-trinity: forbidden dependency web-sys[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-trinity: forbidden dependency js-sys[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-space: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-shooting: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-raster: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-lowpoly: cross-plugin dependency on semio-s-plugin-cad (cad)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-lowpoly: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-cad: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-draw: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-vcs: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-writer: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-writer: cross-plugin dependency on semio-s-plugin-trinity (trinity)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-layout: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-layout: forbidden dependency web-sys[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-layout: forbidden dependency js-sys[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-imperative: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-cad (cad)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-gis (gis)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-procedural (procedural)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-process (process)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-puzzle (puzzle)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-sourcing (sourcing)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-animate: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-animate: forbidden dependency wgpu[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-animate: forbidden dependency winit[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-norm: cross-plugin dependency on semio-s-plugin-fem (fem)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-norm: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-energy: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[31m[plugin-capability-lint] semio-s-plugin-architect: cross-plugin dependency on semio-s-plugin-stdio (stdio)[0m
+[0m[1m1537 |[0m     [0m[35mconst[0m grandfathered = failures[0m[3m[1m.filter[0m((f) => KNOWN_CAPABILITY_VIOLATIONS[0m[3m[1m.has[0m(f))[0m[2m;[0m
+[0m[1m1538 |[0m     [0m[35mconst[0m blocking = [...failures[0m[3m[1m.filter[0m((f) => !KNOWN_CAPABILITY_VIOLATIONS[0m[3m[1m.has[0m(f)), ...([0m[35mawait[0m checkPlaygroundAliasFreshness())][0m[2m;[0m
+[0m[1m1539 |[0m     [0m[35mfor[0m ([0m[35mconst[0m warning of grandfathered) console[0m[3m[1m.warn[0m([0m[32m`[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): [0m${warning}[0m[32m`[0m)[0m[2m;[0m
+[0m[1m1540 |[0m     [0m[35mif[0m (blocking.length > [0m[33m0[0m) {
+[0m[1m1541 |[0m       [0m[35mfor[0m ([0m[35mconst[0m failure of blocking) console[0m[3m[1m.error[0m([0m[32m`[plugin-capability-lint] [0m${failure}[0m[32m`[0m)[0m[2m;[0m
+[0m[1m1542 |[0m       [0m[35mthrow[0m [0m[35mnew[0m [0m[1mError[0m([0m[32m`plugin capability lint failed ([0m${blocking.length}[0m[32m issue(s), [0m${checkedPackageCount}[0m[32m plugin package(s) evaluated)`[0m)[0m[2m;[0m
+                       [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mplugin capability lint failed (70 issue(s), 59 plugin package(s) evaluated)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/[0m[36m📜️script.ts[0m[2m:[0m[33m1542[0m[2m:[33m17[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3masync run[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/[0m[36m📜️script.ts[0m[2m:[0m[33m2663[0m[2m:[33m59[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3masync run[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m829[0m[2m:[33m19[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3masync runBundleScriptMain[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m859[0m[2m:[33m16[0m[2m)[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+Warning: command "bun ./📜️script.ts plugin lint" exited with non-zero status code
+
+
+ NX   Running target plugin for project @semio-tech/framework-os-dev failed
+
+Failed tasks:
+
+- @semio-tech/framework-os-dev:plugin
+
+Hint: run the command with --verbose for more details.
+
+1385 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1386 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1387 |  */
+1388 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1389 |   const status = runCmdInternal(cmd, args, opts);
+1390 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/framework-os-dev:plugin lint exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1390:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:599:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:829:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:864:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:10621:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

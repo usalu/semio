@@ -5,3 +5,8 @@
     Checking fax v0.2.7
     Checking futures-core v0.3.32
 ===== semio-s-plugin-energy =====
+10 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-energy` (lib) generated 9 warnings (run `cargo fix --lib -p semio-s-plugin-energy` to apply 7 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 12m 59s

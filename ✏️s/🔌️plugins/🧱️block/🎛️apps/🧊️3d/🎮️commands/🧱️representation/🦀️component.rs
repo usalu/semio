@@ -15,7 +15,7 @@ pub mod add_representation {
     pub fn handle(_payload: &AddRepresentation, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
         let id = crate::artifacts::block3d::engine::next_id(doc.snapshot.representations.iter().map(|representation| representation.id.as_str()), "representation-");
         let representation = BlockRepresentation { id: id.clone(), name: id, mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() };
-        Ok(Emit::mutations(vec![Block3dMutation::SetRepresentation { index: doc.snapshot.representations.len(), representation }]))
+        Ok(Emit::mutations(vec![crate::artifacts::block3d::mutations::create_representation(representation)]))
     }
 }
 
@@ -33,7 +33,7 @@ pub mod remove_representation {
     }
 
     pub fn handle(payload: &RemoveRepresentation, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![Block3dMutation::RemoveRepresentation { id: payload.id.clone() }]))
+        Ok(Emit::mutations(vec![crate::artifacts::block3d::mutations::delete_representation(payload.id.clone())]))
     }
 }
 
@@ -53,15 +53,17 @@ pub mod patch_representation {
     }
 
     pub fn handle(payload: &PatchRepresentation, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
-        let Some(index) = doc.snapshot.representations.iter().position(|representation| representation.id == payload.id) else {
+        if !doc.snapshot.representations.iter().any(|representation| representation.id == payload.id) {
             return Ok(Emit::default());
-        };
-        let mut representation = doc.snapshot.representations[index].clone();
-        match payload.field.as_str() {
-            "name" => representation.name = payload.value.clone(),
-            "meshUrl" | "mesh_url" => representation.mesh_url = if payload.value.is_empty() { None } else { Some(payload.value.clone()) },
-            _ => return Ok(Emit::default()),
         }
-        Ok(Emit::mutations(vec![Block3dMutation::SetRepresentation { index, representation }]))
+        use crate::artifacts::block3d::mutations as m;
+        let mutation = match payload.field.as_str() {
+            "name" => m::rename_representation(payload.id.clone(), payload.value.clone()),
+            "meshUrl" | "mesh_url" => m::change_representation_mesh_url(payload.id.clone(), if payload.value.is_empty() { None } else { Some(payload.value.clone()) }),
+            "lod" => m::change_representation_lod(payload.id.clone(), if payload.value.is_empty() { None } else { Some(payload.value.clone()) }),
+            "description" => m::change_representation_description(payload.id.clone(), payload.value.clone()),
+            _ => return Ok(Emit::default()),
+        };
+        Ok(Emit::mutations(vec![mutation]))
     }
 }

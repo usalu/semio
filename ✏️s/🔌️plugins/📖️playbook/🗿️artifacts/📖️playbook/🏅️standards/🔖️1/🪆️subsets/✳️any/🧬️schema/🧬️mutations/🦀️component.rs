@@ -13,7 +13,7 @@
 //! `builder_kit`'s rendering half stay in the framework kernel (`crate::playbook::*`) — only the
 //! mutation vocabulary moved.
 
-use crate::artifacts::playbook::{PlaybookBlock, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
+use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -60,7 +60,8 @@ pub fn inverse_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &Playboo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::{Mutation, MutationKind};
+    use crate::artifacts::playbook::{PlaybookBlock, PlaybookStep};
+    use protocol::MutationKind;
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
     fn sample_block(id: &str, kind: &str, label: &str) -> PlaybookBlock {

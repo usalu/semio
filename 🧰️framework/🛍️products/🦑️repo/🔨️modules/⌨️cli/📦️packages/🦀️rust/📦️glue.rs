@@ -403,31 +403,838 @@ pub mod plugin_registry_command {
                     1
                 }
             }
-            _ => spawn_inherit("bun", &["nx", "run", "@semio-tech/plugin-registry:generate"], root, &[]),
+            _ => {
+                let code = spawn_inherit("bun", &["nx", "run", "@semio-tech/plugin-registry:generate"], root, &[]);
+                if code == 0 {
+                    match crate::registry::generate(root) {
+                        Ok(path) => println!("dashboard registry -> {}", path.display()),
+                        Err(e) => eprintln!("dashboard registry generate failed: {e}"),
+                    }
+                }
+                code
+            }
         }
     }
 }
 // #endregion 🔖️PluginRegistryCommand
 
+
+
+
+// #region 🔖️Workforce
+pub mod workforce {
+    use serde::{Deserialize, Serialize};
+    use std::collections::{HashMap, HashSet, VecDeque};
+    use std::path::{Path, PathBuf};
+
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    pub struct WorkflowTask {
+        pub id: String,
+        pub model: String,
+        pub prompt: String,
+        pub path_scope: Vec<String>,
+        pub verify: Option<String>,
+        pub retries: u32,
+        pub depends_on: Vec<String>,
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    pub struct WorkflowWave {
+        pub id: String,
+        pub tasks: Vec<WorkflowTask>,
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    pub struct WorkflowSpec {
+        pub id: String,
+        pub concurrency: usize,
+        pub waves: Vec<WorkflowWave>,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+    #[serde(rename_all = "snake_case")]
+    pub enum TaskState {
+        Pending,
+        Running,
+        Succeeded,
+        Failed,
+        Blocked,
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct TaskStatus {
+        pub id: String,
+        pub state: TaskState,
+        pub attempts: u32,
+        pub message: Option<String>,
+    }
+
+    /// 🧭 Wave DAG scheduler with bounded concurrency and exclusive path-scope claims.
+    pub struct Scheduler {
+        pub spec: WorkflowSpec,
+        pub statuses: HashMap<String, TaskStatus>,
+        claims: HashSet<String>,
+        ready: VecDeque<String>,
+        running: HashSet<String>,
+    }
+
+    impl Scheduler {
+        pub fn new(spec: WorkflowSpec) -> Self {
+            let mut statuses = HashMap::new();
+            let mut ready = VecDeque::new();
+            for wave in &spec.waves {
+                for task in &wave.tasks {
+                    let blocked = !task.depends_on.is_empty();
+                    statuses.insert(
+                        task.id.clone(),
+                        TaskStatus {
+                            id: task.id.clone(),
+                            state: if blocked { TaskState::Blocked } else { TaskState::Pending },
+                            attempts: 0,
+                            message: None,
+                        },
+                    );
+                    if !blocked {
+                        ready.push_back(task.id.clone());
+                    }
+                }
+            }
+            Self { spec, statuses, claims: HashSet::new(), ready, running: HashSet::new() }
+        }
+
+        fn task(&self, id: &str) -> Option<&WorkflowTask> {
+            self.spec.waves.iter().flat_map(|w| w.tasks.iter()).find(|t| t.id == id)
+        }
+
+        fn scope_free(&self, task: &WorkflowTask) -> bool {
+            task.path_scope.iter().all(|p| !self.claims.contains(p))
+        }
+
+        /// ▶️ Returns up to `concurrency - running` task ids that may start now.
+        pub fn poll_ready(&mut self) -> Vec<String> {
+            let cap = self.spec.concurrency.max(1);
+            let mut out = Vec::new();
+            let mut deferred = VecDeque::new();
+            while out.len() + self.running.len() < cap {
+                let Some(id) = self.ready.pop_front() else { break };
+                let Some(task) = self.task(&id).cloned() else { continue };
+                if !self.scope_free(&task) {
+                    deferred.push_back(id);
+                    continue;
+                }
+                for p in &task.path_scope {
+                    self.claims.insert(p.clone());
+                }
+                self.running.insert(id.clone());
+                if let Some(st) = self.statuses.get_mut(&id) {
+                    st.state = TaskState::Running;
+                    st.attempts += 1;
+                }
+                out.push(id);
+            }
+            self.ready.append(&mut deferred);
+            out
+        }
+
+        pub fn complete(&mut self, id: &str, ok: bool, message: Option<String>) {
+            if let Some(task) = self.task(id).cloned() {
+                for p in &task.path_scope {
+                    self.claims.remove(p);
+                }
+            }
+            self.running.remove(id);
+            if let Some(st) = self.statuses.get_mut(id) {
+                st.state = if ok { TaskState::Succeeded } else { TaskState::Failed };
+                st.message = message;
+            }
+            // unblock dependents
+            let succeeded: HashSet<String> = self
+                .statuses
+                .iter()
+                .filter(|(_, s)| s.state == TaskState::Succeeded)
+                .map(|(k, _)| k.clone())
+                .collect();
+            for wave in &self.spec.waves {
+                for task in &wave.tasks {
+                    let st = self.statuses.get(&task.id).map(|s| s.state);
+                    if st == Some(TaskState::Blocked) && task.depends_on.iter().all(|d| succeeded.contains(d)) {
+                        if let Some(s) = self.statuses.get_mut(&task.id) {
+                            s.state = TaskState::Pending;
+                        }
+                        if !self.ready.contains(&task.id) {
+                            self.ready.push_back(task.id.clone());
+                        }
+                    }
+                }
+            }
+        }
+
+        pub fn done(&self) -> bool {
+            self.statuses.values().all(|s| matches!(s.state, TaskState::Succeeded | TaskState::Failed))
+        }
+    }
+
+    /// 📁 Conventional workflow path inside a ticket folder.
+    pub fn workflow_path(ticket_dir: &Path) -> PathBuf {
+        ticket_dir.join("🌊️workflow.json")
+    }
+
+    pub fn load_workflow(ticket_dir: &Path) -> std::io::Result<WorkflowSpec> {
+        let text = std::fs::read_to_string(workflow_path(ticket_dir))?;
+        serde_json::from_str(&text).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+    }
+
+    pub fn save_workflow(ticket_dir: &Path, spec: &WorkflowSpec) -> std::io::Result<()> {
+        std::fs::create_dir_all(ticket_dir)?;
+        let text = serde_json::to_string_pretty(spec).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+        std::fs::write(workflow_path(ticket_dir), text + "\n")
+    }
+}
+// #endregion 🔖️Workforce
+
+// #region 🔖️AgentRunner
+pub mod agent_runner {
+    use std::path::Path;
+    use std::process::{Command, Stdio};
+
+    /// 🤖️ Pluggable coding-agent launcher.
+    pub trait AgentRunner: Send {
+        fn id(&self) -> &str;
+        fn available(&self) -> bool;
+        fn spawn(&self, prompt: &str, cwd: &Path) -> std::io::Result<std::process::Child>;
+    }
+
+    fn which(bin: &str) -> bool {
+        Command::new("which").arg(bin).stdout(Stdio::null()).stderr(Stdio::null()).status().map(|s| s.success()).unwrap_or(false)
+    }
+
+    pub struct CursorAgent;
+    impl AgentRunner for CursorAgent {
+        fn id(&self) -> &str { "cursor-agent" }
+        fn available(&self) -> bool { which("cursor-agent") }
+        fn spawn(&self, prompt: &str, cwd: &Path) -> std::io::Result<std::process::Child> {
+            Command::new("cursor-agent").arg("-p").arg(prompt).current_dir(cwd).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()
+        }
+    }
+
+    pub struct ClaudeAgent;
+    impl AgentRunner for ClaudeAgent {
+        fn id(&self) -> &str { "claude" }
+        fn available(&self) -> bool { which("claude") }
+        fn spawn(&self, prompt: &str, cwd: &Path) -> std::io::Result<std::process::Child> {
+            Command::new("claude").args(["-p", prompt]).current_dir(cwd).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()
+        }
+    }
+
+    pub struct CodexAgent;
+    impl AgentRunner for CodexAgent {
+        fn id(&self) -> &str { "codex" }
+        fn available(&self) -> bool { which("codex") }
+        fn spawn(&self, prompt: &str, cwd: &Path) -> std::io::Result<std::process::Child> {
+            Command::new("codex").args(["exec", prompt]).current_dir(cwd).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()
+        }
+    }
+
+    /// 🔎 Detects installed runners in preference order.
+    pub fn detect() -> Vec<Box<dyn AgentRunner>> {
+        let candidates: Vec<Box<dyn AgentRunner>> = vec![Box::new(CursorAgent), Box::new(ClaudeAgent), Box::new(CodexAgent)];
+        candidates.into_iter().filter(|a| a.available()).collect()
+    }
+
+    pub fn select(model: &str) -> Option<Box<dyn AgentRunner>> {
+        let all: Vec<Box<dyn AgentRunner>> = vec![Box::new(CursorAgent), Box::new(ClaudeAgent), Box::new(CodexAgent)];
+        all.into_iter().find(|a| a.id() == model && a.available())
+    }
+}
+// #endregion 🔖️AgentRunner
+
+// #region 🔖️Registry
+pub mod registry {
+    use crate::catalog::load_playground_catalog;
+    use serde::Serialize;
+    use std::path::{Path, PathBuf};
+    use std::process::Command;
+
+    #[derive(Debug, Clone, Serialize)]
+    pub struct DashboardTask {
+        pub id: String,
+        pub kind: String,
+        pub label: String,
+        pub command: Vec<String>,
+    }
+
+    #[derive(Debug, Clone, Serialize)]
+    pub struct DashboardAgent {
+        pub id: String,
+        pub bin: String,
+        pub available: bool,
+    }
+
+    #[derive(Debug, Clone, Serialize)]
+    pub struct DashboardRegistry {
+        pub tasks: Vec<DashboardTask>,
+        pub agents: Vec<DashboardAgent>,
+        pub playgrounds: Vec<String>,
+    }
+
+    /// 🗂️ Output path for the generated dashboard catalog.
+    pub fn dashboard_json_path(root: &Path) -> PathBuf {
+        root.join("🤖️generated").join("🎛️dashboard.json")
+    }
+
+    fn bin_on_path(name: &str) -> bool {
+        Command::new(name).arg("--version").output().map(|o| o.status.success()).unwrap_or(false)
+            || Command::new("which").arg(name).output().map(|o| o.status.success()).unwrap_or(false)
+    }
+
+    /// 🧱 Builds the dashboard registry from playgrounds, root verbs, and detected agent runners.
+    pub fn build(root: &Path) -> DashboardRegistry {
+        let playgrounds = load_playground_catalog(root);
+        let mut tasks = Vec::new();
+        for verb in ["dev", "build", "test", "catalog", "daemon", "workflow"] {
+            tasks.push(DashboardTask {
+                id: format!("semio:{verb}"),
+                kind: "root-verb".into(),
+                label: format!("semio {verb}"),
+                command: vec!["semio".into(), verb.into()],
+            });
+        }
+        for row in &playgrounds {
+            tasks.push(DashboardTask {
+                id: format!("playground:{}:dev", row.variant),
+                kind: "playground".into(),
+                label: format!("{} (dev)", row.variant),
+                command: vec!["semio".into(), "dev".into(), row.variant.clone()],
+            });
+        }
+        let agents = ["cursor-agent", "claude", "codex"]
+            .into_iter()
+            .map(|bin| DashboardAgent { id: bin.into(), bin: bin.into(), available: bin_on_path(bin) })
+            .collect();
+        DashboardRegistry {
+            tasks,
+            agents,
+            playgrounds: playgrounds.into_iter().map(|p| p.variant).collect(),
+        }
+    }
+
+    /// ✍️ Writes `🤖️generated/🎛️dashboard.json`.
+    pub fn generate(root: &Path) -> std::io::Result<PathBuf> {
+        let path = dashboard_json_path(root);
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let reg = build(root);
+        let text = serde_json::to_string_pretty(&reg).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+        std::fs::write(&path, text + "\n")?;
+        Ok(path)
+    }
+}
+// #endregion 🔖️Registry
+
+// #region 🔖️Ipc
+pub mod ipc {
+    use serde::{Deserialize, Serialize};
+    use std::io::{Read, Write};
+    use std::path::{Path, PathBuf};
+
+    pub const KIND_CONTROL: u8 = 1;
+    pub const KIND_OUTPUT: u8 = 2;
+
+    /// 🎛️ Client → daemon control envelope (JSON).
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    #[serde(tag = "type", rename_all = "snake_case")]
+    pub enum ClientMsg {
+        Attach { client_id: String },
+        Detach,
+        Spawn {
+            session_id: String,
+            cmd: String,
+            args: Vec<String>,
+            cwd: Option<String>,
+            cols: u16,
+            rows: u16,
+        },
+        Input { session_id: String, data: Vec<u8> },
+        Resize { session_id: String, cols: u16, rows: u16 },
+        Kill { session_id: String },
+        Ping,
+    }
+
+    /// 📣 Daemon → client control envelope (JSON).
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    #[serde(tag = "type", rename_all = "snake_case")]
+    pub enum ServerMsg {
+        Attached { daemon_pid: u32 },
+        SessionStarted { session_id: String },
+        SessionExited { session_id: String, code: i32 },
+        Error { message: String },
+        Pong,
+    }
+
+    /// 📁 Cache directory for the dashboard daemon socket / pid / event log.
+    pub fn dashboard_cache_dir(root: &Path) -> PathBuf {
+        root.join(".🦑️repo").join("⚡️cache").join("🎛️dashboard")
+    }
+
+    pub fn socket_path(root: &Path) -> PathBuf {
+        #[cfg(unix)]
+        {
+            dashboard_cache_dir(root).join("daemon.sock")
+        }
+        #[cfg(windows)]
+        {
+            dashboard_cache_dir(root).join("daemon.pipe.name")
+        }
+        #[cfg(not(any(unix, windows)))]
+        {
+            dashboard_cache_dir(root).join("daemon.sock")
+        }
+    }
+
+    pub fn pid_path(root: &Path) -> PathBuf {
+        dashboard_cache_dir(root).join("daemon.pid")
+    }
+
+    pub fn event_log_path(root: &Path) -> PathBuf {
+        dashboard_cache_dir(root).join("events.jsonl")
+    }
+
+    /// ✉️ Writes one length-prefixed frame: `u32 le len | u8 kind | payload`.
+    pub fn write_frame(out: &mut impl Write, kind: u8, payload: &[u8]) -> std::io::Result<()> {
+        let len = (1u32).saturating_add(payload.len() as u32);
+        out.write_all(&len.to_le_bytes())?;
+        out.write_all(&[kind])?;
+        out.write_all(payload)?;
+        out.flush()
+    }
+
+    /// 📥️ Reads one length-prefixed frame.
+    pub fn read_frame(input: &mut impl Read) -> std::io::Result<(u8, Vec<u8>)> {
+        let mut len_buf = [0u8; 4];
+        input.read_exact(&mut len_buf)?;
+        let len = u32::from_le_bytes(len_buf) as usize;
+        if len == 0 || len > 16 * 1024 * 1024 {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "bad frame length"));
+        }
+        let mut body = vec![0u8; len];
+        input.read_exact(&mut body)?;
+        let kind = body[0];
+        Ok((kind, body[1..].to_vec()))
+    }
+
+    pub fn write_control(out: &mut impl Write, msg: &impl Serialize) -> std::io::Result<()> {
+        let payload = serde_json::to_vec(msg).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+        write_frame(out, KIND_CONTROL, &payload)
+    }
+
+    pub fn decode_control<T: for<'de> Deserialize<'de>>(payload: &[u8]) -> std::io::Result<T> {
+        serde_json::from_slice(payload).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+    }
+
+    /// 📤 Session output frame payload: `u16 le id_len | id_bytes | data`.
+    pub fn encode_output(session_id: &str, data: &[u8]) -> Vec<u8> {
+        let id = session_id.as_bytes();
+        let mut out = Vec::with_capacity(2 + id.len() + data.len());
+        out.extend_from_slice(&(id.len() as u16).to_le_bytes());
+        out.extend_from_slice(id);
+        out.extend_from_slice(data);
+        out
+    }
+
+    pub fn decode_output(payload: &[u8]) -> std::io::Result<(String, Vec<u8>)> {
+        if payload.len() < 2 {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "short output frame"));
+        }
+        let id_len = u16::from_le_bytes([payload[0], payload[1]]) as usize;
+        if payload.len() < 2 + id_len {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "output id truncated"));
+        }
+        let id = std::str::from_utf8(&payload[2..2 + id_len]).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+        Ok((id.to_string(), payload[2 + id_len..].to_vec()))
+    }
+
+    /// 🔌️ Abstract duplex transport used by the dashboard client and daemon.
+    pub trait DashboardTransport: Read + Write + Send {}
+    impl<T: Read + Write + Send> DashboardTransport for T {}
+
+    #[cfg(unix)]
+    pub fn connect(root: &Path) -> std::io::Result<std::os::unix::net::UnixStream> {
+        std::os::unix::net::UnixStream::connect(socket_path(root))
+    }
+
+    #[cfg(unix)]
+    pub fn listen(root: &Path) -> std::io::Result<std::os::unix::net::UnixListener> {
+        let dir = dashboard_cache_dir(root);
+        std::fs::create_dir_all(&dir)?;
+        let path = socket_path(root);
+        let _ = std::fs::remove_file(&path);
+        std::os::unix::net::UnixListener::bind(&path)
+    }
+
+    #[cfg(windows)]
+    pub fn pipe_name(root: &Path) -> String {
+        let hash = {
+            use std::hash::{Hash, Hasher};
+            let mut h = std::collections::hash_map::DefaultHasher::new();
+            root.hash(&mut h);
+            h.finish()
+        };
+        format!(r"\\.\pipe\semio-dashboard-{hash:x}")
+    }
+
+    #[cfg(windows)]
+    pub fn connect(root: &Path) -> std::io::Result<std::fs::File> {
+        // Named-pipe client open; retries briefly while the daemon starts.
+        let name = pipe_name(root);
+        for _ in 0..50 {
+            match std::fs::OpenOptions::new().read(true).write(true).open(&name) {
+                Ok(f) => return Ok(f),
+                Err(_) => std::thread::sleep(std::time::Duration::from_millis(20)),
+            }
+        }
+        Err(std::io::Error::new(std::io::ErrorKind::NotFound, format!("named pipe not found: {name}")))
+    }
+}
+// #endregion 🔖️Ipc
+
+// #region 🔖️Daemon
+pub mod daemon {
+    use crate::ipc::{self, ClientMsg, ServerMsg};
+    use std::collections::HashMap;
+    use std::io::{Read, Write};
+    use std::path::{Path, PathBuf};
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::{Arc, Mutex};
+    use std::time::Duration;
+
+    /// 📜 Append-only JSONL event log for session lifecycle (not PTY bytes).
+    pub struct EventLog {
+        path: PathBuf,
+    }
+
+    impl EventLog {
+        pub fn open(root: &Path) -> std::io::Result<Self> {
+            let dir = ipc::dashboard_cache_dir(root);
+            std::fs::create_dir_all(&dir)?;
+            Ok(Self { path: ipc::event_log_path(root) })
+        }
+
+        pub fn append(&self, event: &ServerMsg) -> std::io::Result<()> {
+            let mut f = std::fs::OpenOptions::new().create(true).append(true).open(&self.path)?;
+            let line = serde_json::to_string(event).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+            f.write_all(line.as_bytes())?;
+            f.write_all(b"\n")?;
+            Ok(())
+        }
+    }
+
+    struct LiveSession {
+        #[cfg(all(unix, not(target_arch = "wasm32")))]
+        pty: ui_tui::tui::pty::Pty,
+        #[cfg(not(all(unix, not(target_arch = "wasm32"))))]
+        _marker: (),
+    }
+
+    /// 🧠 In-process supervisor: sessions + fan-out to attached client streams.
+    pub struct Supervisor {
+        sessions: HashMap<String, LiveSession>,
+        clients: Vec<Box<dyn ipc::DashboardTransport>>,
+        event_log: EventLog,
+        _root: PathBuf,
+    }
+
+    impl Supervisor {
+        pub fn new(root: &Path) -> std::io::Result<Self> {
+            Ok(Self {
+                sessions: HashMap::new(),
+                clients: Vec::new(),
+                event_log: EventLog::open(root)?,
+                _root: root.to_path_buf(),
+            })
+        }
+
+        fn broadcast_control(&mut self, msg: &ServerMsg) {
+            let _ = self.event_log.append(msg);
+            let mut dead = Vec::new();
+            for (i, client) in self.clients.iter_mut().enumerate() {
+                if ipc::write_control(client, msg).is_err() {
+                    dead.push(i);
+                }
+            }
+            for i in dead.into_iter().rev() {
+                self.clients.swap_remove(i);
+            }
+        }
+
+        fn broadcast_output(&mut self, session_id: &str, data: &[u8]) {
+            let payload = ipc::encode_output(session_id, data);
+            let mut dead = Vec::new();
+            for (i, client) in self.clients.iter_mut().enumerate() {
+                if ipc::write_frame(client, ipc::KIND_OUTPUT, &payload).is_err() {
+                    dead.push(i);
+                }
+            }
+            for i in dead.into_iter().rev() {
+                self.clients.swap_remove(i);
+            }
+        }
+
+        pub fn attach_client(&mut self, mut stream: Box<dyn ipc::DashboardTransport>) -> std::io::Result<()> {
+            ipc::write_control(&mut stream, &ServerMsg::Attached { daemon_pid: std::process::id() })?;
+            self.clients.push(stream);
+            Ok(())
+        }
+
+        pub fn handle_client_msg(&mut self, msg: ClientMsg) -> std::io::Result<()> {
+            match msg {
+                ClientMsg::Attach { .. } => Ok(()),
+                ClientMsg::Detach => Ok(()),
+                ClientMsg::Ping => {
+                    self.broadcast_control(&ServerMsg::Pong);
+                    Ok(())
+                }
+                ClientMsg::Spawn { session_id, cmd, args, cwd, cols, rows } => self.spawn_session(session_id, cmd, args, cwd, cols, rows),
+                ClientMsg::Input { session_id, data } => self.input(&session_id, &data),
+                ClientMsg::Resize { session_id, cols, rows } => self.resize(&session_id, cols, rows),
+                ClientMsg::Kill { session_id } => self.kill(&session_id),
+            }
+        }
+
+        fn spawn_session(&mut self, session_id: String, cmd: String, args: Vec<String>, cwd: Option<String>, cols: u16, rows: u16) -> std::io::Result<()> {
+            #[cfg(all(unix, not(target_arch = "wasm32")))]
+            {
+                use ui_tui::tui::pty::{Pty, PtySize};
+                let arg_refs: Vec<&str> = args.iter().map(String::as_str).collect();
+                let cwd_path = cwd.as_ref().map(PathBuf::from);
+                let pty = Pty::spawn(&cmd, &arg_refs, &[], cwd_path.as_deref(), PtySize { cols: cols.max(1), rows: rows.max(1) }).map_err(|e| std::io::Error::other(e.message))?;
+                self.sessions.insert(session_id.clone(), LiveSession { pty });
+                self.broadcast_control(&ServerMsg::SessionStarted { session_id });
+                return Ok(());
+            }
+            #[cfg(not(all(unix, not(target_arch = "wasm32"))))]
+            {
+                let _ = (session_id, cmd, args, cwd, cols, rows);
+                self.broadcast_control(&ServerMsg::Error { message: "PTY supervisor requires unix tui-terminal".into() });
+                Ok(())
+            }
+        }
+
+        fn input(&mut self, session_id: &str, data: &[u8]) -> std::io::Result<()> {
+            #[cfg(all(unix, not(target_arch = "wasm32")))]
+            {
+                if let Some(session) = self.sessions.get_mut(session_id) {
+                    session.pty.write_all(data).map_err(|e| std::io::Error::other(e.message))?;
+                }
+            }
+            #[cfg(not(all(unix, not(target_arch = "wasm32"))))]
+            {
+                let _ = (session_id, data);
+            }
+            Ok(())
+        }
+
+        fn resize(&mut self, session_id: &str, cols: u16, rows: u16) -> std::io::Result<()> {
+            #[cfg(all(unix, not(target_arch = "wasm32")))]
+            {
+                use ui_tui::tui::pty::PtySize;
+                if let Some(session) = self.sessions.get_mut(session_id) {
+                    session.pty.resize(PtySize { cols: cols.max(1), rows: rows.max(1) }).map_err(|e| std::io::Error::other(e.message))?;
+                }
+            }
+            #[cfg(not(all(unix, not(target_arch = "wasm32"))))]
+            {
+                let _ = (session_id, cols, rows);
+            }
+            Ok(())
+        }
+
+        fn kill(&mut self, session_id: &str) -> std::io::Result<()> {
+            #[cfg(all(unix, not(target_arch = "wasm32")))]
+            {
+                if let Some(mut session) = self.sessions.remove(session_id) {
+                    let _ = session.pty.kill();
+                    self.broadcast_control(&ServerMsg::SessionExited { session_id: session_id.to_string(), code: -1 });
+                }
+            }
+            #[cfg(not(all(unix, not(target_arch = "wasm32"))))]
+            {
+                let _ = session_id;
+            }
+            Ok(())
+        }
+
+        /// ⏱️ Polls PTY masters and reaps exited children.
+        pub fn tick(&mut self) -> std::io::Result<()> {
+            #[cfg(all(unix, not(target_arch = "wasm32")))]
+            {
+                let mut buf = [0u8; 4096];
+                let ids: Vec<String> = self.sessions.keys().cloned().collect();
+                let mut outputs: Vec<(String, Vec<u8>)> = Vec::new();
+                let mut exited = Vec::new();
+                for id in ids {
+                    let Some(session) = self.sessions.get_mut(&id) else { continue };
+                    match session.pty.try_read(&mut buf) {
+                        Ok(0) => {}
+                        Ok(n) => outputs.push((id.clone(), buf[..n].to_vec())),
+                        Err(_) => {}
+                    }
+                    if let Ok(Some(code)) = session.pty.try_wait() {
+                        exited.push((id, code));
+                    }
+                }
+                for (id, data) in outputs {
+                    self.broadcast_output(&id, &data);
+                }
+                for (id, code) in exited {
+                    self.sessions.remove(&id);
+                    self.broadcast_control(&ServerMsg::SessionExited { session_id: id, code });
+                }
+            }
+            Ok(())
+        }
+    }
+
+    /// 🏷️ Writes pid file for `semio daemon status`.
+    pub fn write_pid(root: &Path) -> std::io::Result<()> {
+        let dir = ipc::dashboard_cache_dir(root);
+        std::fs::create_dir_all(&dir)?;
+        std::fs::write(ipc::pid_path(root), format!("{}\n", std::process::id()))
+    }
+
+    pub fn read_pid(root: &Path) -> Option<u32> {
+        let text = std::fs::read_to_string(ipc::pid_path(root)).ok()?;
+        text.trim().parse().ok()
+    }
+
+    pub fn status(root: &Path) -> String {
+        match read_pid(root) {
+            Some(pid) => format!("daemon pid {pid} socket {}\n", ipc::socket_path(root).display()),
+            None => "daemon not running\n".into(),
+        }
+    }
+
+    pub fn stop(root: &Path) -> i32 {
+        if let Some(pid) = read_pid(root) {
+            #[cfg(unix)]
+            {
+                let _ = std::process::Command::new("kill").args(["-TERM", &pid.to_string()]).status();
+            }
+            let _ = std::fs::remove_file(ipc::pid_path(root));
+            #[cfg(unix)]
+            let _ = std::fs::remove_file(ipc::socket_path(root));
+            println!("stopped daemon {pid}");
+            0
+        } else {
+            eprintln!("daemon not running");
+            1
+        }
+    }
+
+    /// 🌀 Blocking daemon serve loop (unix domain socket).
+    #[cfg(unix)]
+    pub fn serve(root: &Path, running: Arc<AtomicBool>) -> std::io::Result<()> {
+        write_pid(root)?;
+        let listener = ipc::listen(root)?;
+        listener.set_nonblocking(true)?;
+        let supervisor = Arc::new(Mutex::new(Supervisor::new(root)?));
+        while running.load(Ordering::SeqCst) {
+            match listener.accept() {
+                Ok((stream, _)) => {
+                    stream.set_nonblocking(false)?;
+                    let stream_for_client = stream.try_clone()?;
+                    {
+                        let mut sup = supervisor.lock().unwrap();
+                        let _ = sup.attach_client(Box::new(stream_for_client));
+                    }
+                    let sup = Arc::clone(&supervisor);
+                    let running = Arc::clone(&running);
+                    std::thread::spawn(move || {
+                        let mut stream = stream;
+                        while running.load(Ordering::SeqCst) {
+                            match ipc::read_frame(&mut stream) {
+                                Ok((kind, payload)) if kind == ipc::KIND_CONTROL => {
+                                    if let Ok(msg) = ipc::decode_control::<ClientMsg>(&payload) {
+                                        let mut g = sup.lock().unwrap();
+                                        let _ = g.handle_client_msg(msg);
+                                    }
+                                }
+                                Ok(_) => {}
+                                Err(_) => break,
+                            }
+                        }
+                    });
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
+                Err(e) => return Err(e),
+            }
+            {
+                let mut g = supervisor.lock().unwrap();
+                let _ = g.tick();
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        let _ = std::fs::remove_file(ipc::pid_path(root));
+        let _ = std::fs::remove_file(ipc::socket_path(root));
+        Ok(())
+    }
+
+    #[cfg(not(unix))]
+    pub fn serve(root: &Path, _running: Arc<AtomicBool>) -> std::io::Result<()> {
+        let _ = root;
+        Err(std::io::Error::other("dashboard daemon listen is unix-only in this build"))
+    }
+
+    /// 🚀 Starts a detached daemon process (`semio daemon serve --root …`).
+    pub fn start_detached(root: &Path, exe: &Path) -> i32 {
+        if read_pid(root).is_some() {
+            println!("{}", status(root));
+            return 0;
+        }
+        let mut cmd = std::process::Command::new(exe);
+        cmd.args(["daemon", "serve", "--root", &root.display().to_string()]);
+        match cmd.spawn() {
+            Ok(child) => {
+                println!("started daemon pid {}", child.id());
+                0
+            }
+            Err(e) => {
+                eprintln!("failed to start daemon: {e}");
+                1
+            }
+        }
+    }
+
+    /// 🧪 Drive a supervisor against an in-memory duplex for unit tests.
+    pub fn handle_one_for_test(sup: &mut Supervisor, msg: ClientMsg) -> std::io::Result<()> {
+        sup.handle_client_msg(msg)
+    }
+}
+// #endregion 🔖️Daemon
+
 // #region 🔖️Tui
 pub mod tui_dashboard {
     use crate::catalog::{load_playground_catalog, PlaygroundEntry};
+    use crate::daemon::Supervisor;
     use crate::env_contract::{build_dev_env, DevOptions};
+    use crate::ipc::ClientMsg;
+    use std::collections::HashMap;
     use std::io::{BufRead, BufReader};
     use std::path::Path;
     use std::process::{Child, Command, Stdio};
     use std::sync::mpsc::{channel, Receiver};
+    use std::sync::{Arc, Mutex};
     use std::time::Duration;
     use ui_styling::appearance::AppearanceName;
     use ui_tui::tui::backend::{NativeTerminal, TerminalBackend};
     use ui_tui::tui::chrome::{shell, ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState};
     use ui_tui::tui::engine::Tui;
-    use ui_tui::tui::event::{Event, Key};
+    use ui_tui::tui::event::{mods, Event, Key, KeyEvent};
     use ui_tui::tui::geometry::Size;
-    use ui_tui::tui::layout::{even_window_layout, Constraint, Dimension, Direction};
+    use ui_tui::tui::layout::{even_window_layout, split_window, zoom_window, Constraint, Dimension, Direction};
     use ui_tui::tui::scene::{Node, NodeContent, NodeId};
     use ui_tui::tui::theme::Theme;
-    use ui_tui::tui::widget::{LogState, TableAlign, TableColumn, TableRow, TableState, WidgetSignal, WidgetState};
+    use ui_tui::tui::widget::{TableAlign, TableColumn, TableRow, TableState, TerminalState, WidgetSignal, WidgetState};
 
     //#region 🔖️CatalogTable
     /// 🌳️ Groups the catalog by `pluginId` into a two-level table: one parent row per plugin, one
@@ -500,20 +1307,59 @@ pub mod tui_dashboard {
         }
     }
 
-    /// 📡️ Drains whatever log lines have arrived since the last tick into the window's `Log` widget.
-    fn pump_session(tui: &mut Tui, session: &Option<Session>, log_id: NodeId) {
-        let Some(session) = session else { return };
-        while let Ok(line) = session.rx.try_recv() {
-            if let Some(WidgetState::Log(log)) = tui.scene.node_mut(log_id).widget() {
-                log.push(&line);
-            }
-        }
-    }
     //#endregion 🔖️Sessions
 
-    /// 🎛️ The bare-`semio` interactive dashboard: `dev` and `build` windows, each a table of
-    /// plugins (parent rows) with their apps (child rows), and a log pane streaming the session
-    /// launched from whichever row is activated.
+    //#region 🔖️Client
+    enum LeaderMode {
+        Idle,
+        Armed,
+        Palette,
+        Utilities,
+    }
+
+    fn key_to_pty_bytes(ev: &KeyEvent) -> Option<Vec<u8>> {
+        match ev.key {
+            Key::Char(c) if ev.mods == 0 => Some(c.to_string().into_bytes()),
+            Key::Char(c) if ev.mods == mods::CTRL && c.is_ascii_lowercase() => Some(vec![(c as u8) & 0x1f]),
+            Key::Enter => Some(vec![b'\r']),
+            Key::Tab => Some(vec![b'\t']),
+            Key::Backspace => Some(vec![0x7f]),
+            Key::Esc => Some(vec![0x1b]),
+            Key::Up => Some(b"\x1b[A".to_vec()),
+            Key::Down => Some(b"\x1b[B".to_vec()),
+            Key::Right => Some(b"\x1b[C".to_vec()),
+            Key::Left => Some(b"\x1b[D".to_vec()),
+            Key::Home => Some(b"\x1b[H".to_vec()),
+            Key::End => Some(b"\x1b[F".to_vec()),
+            Key::PageUp => Some(b"\x1b[5~".to_vec()),
+            Key::PageDown => Some(b"\x1b[6~".to_vec()),
+            _ => None,
+        }
+    }
+
+    /// 🔗 Shared in-process supervisor used when no external daemon is reachable.
+    struct LocalBus {
+        supervisor: Arc<Mutex<Supervisor>>,
+    }
+
+    impl LocalBus {
+        fn new(root: &Path) -> std::io::Result<Self> {
+            Ok(Self { supervisor: Arc::new(Mutex::new(Supervisor::new(root)?)) })
+        }
+
+        fn send(&self, msg: ClientMsg) -> std::io::Result<()> {
+            let mut g = self.supervisor.lock().unwrap();
+            g.handle_client_msg(msg)
+        }
+
+        fn tick(&self) {
+            let mut g = self.supervisor.lock().unwrap();
+            let _ = g.tick();
+        }
+    }
+    //#endregion 🔖️Client
+
+    /// 🎛️ Multiplexed dashboard client: leader `Ctrl-Space`, Alt window jump, catalog + PTY panes.
     pub fn run(root: &Path) -> i32 {
         let catalog = load_playground_catalog(root);
         if catalog.is_empty() {
@@ -530,129 +1376,236 @@ pub mod tui_dashboard {
         let size = term.size().unwrap_or(Size { width: 100, height: 32 });
         let mut tui = Tui::new(size, Theme::new(AppearanceName::Dark));
 
-        let navbar = NavbarState { left: vec![NavItem { id: "logo".into(), label: "semio".into(), active: true }], center: vec![], right: vec![] };
+        let local = LocalBus::new(root).ok();
+
+        let navbar = NavbarState {
+            left: vec![NavItem { id: "logo".into(), label: "semio".into(), active: true }],
+            center: vec![NavItem { id: "mode".into(), label: "dashboard".into(), active: false }],
+            right: vec![],
+        };
         let footer = FooterState {
             hints: vec![
-                KeyHint { key: "\u{2191}\u{2193}".into(), label: "select".into() },
-                KeyHint { key: "\u{21b5}".into(), label: "launch/toggle".into() },
-                KeyHint { key: "Tab".into(), label: "window".into() },
+                KeyHint { key: "C-Space".into(), label: "leader".into() },
+                KeyHint { key: "Alt-1..9".into(), label: "jump".into() },
+                KeyHint { key: "\u{21b5}".into(), label: "launch".into() },
                 KeyHint { key: "x".into(), label: "stop".into() },
+                KeyHint { key: "d".into(), label: "detach".into() },
                 KeyHint { key: "q".into(), label: "quit".into() },
             ],
             status: format!("{} playgrounds", catalog.len()),
         };
-        let built = shell(&mut tui.scene, navbar, footer, &even_window_layout(&[]));
+        let mut layout = even_window_layout(&["dev".into(), "build".into()]);
+        let built = shell(&mut tui.scene, navbar, footer, &layout);
         tui.scene.node_mut(built.canvas).set_constraint(Constraint { direction: Direction::Row, height: Dimension::Weight(1), ..Default::default() });
 
-        let dev_window = tui.scene.add(built.canvas, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new("dev")))));
-        tui.scene.node_mut(dev_window).set_constraint(Constraint { width: Dimension::Weight(1), direction: Direction::Column, padding: [2, 1, 1, 1], gap: 1, ..Default::default() });
-        let build_window = tui.scene.add(built.canvas, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new("build")))));
-        tui.scene.node_mut(build_window).set_constraint(Constraint { width: Dimension::Weight(1), direction: Direction::Column, padding: [2, 1, 1, 1], gap: 1, ..Default::default() });
+        let mut window_nodes: HashMap<String, NodeId> = HashMap::new();
+        let mut table_nodes: HashMap<String, NodeId> = HashMap::new();
+        let mut term_nodes: HashMap<String, NodeId> = HashMap::new();
+        let mut maps: HashMap<String, Vec<Option<usize>>> = HashMap::new();
+        let mut pipe_sessions: HashMap<String, Session> = HashMap::new();
 
-        let (dev_rows, dev_map) = group_catalog_into_table(&catalog);
-        let dev_table = tui.scene.add(dev_window, Node::new(NodeContent::Widget(WidgetState::Table(TableState::new(plugin_table_columns(), dev_rows)))));
-        tui.scene.node_mut(dev_table).set_constraint(Constraint { height: Dimension::Weight(3), ..Default::default() });
-        let dev_log = tui.scene.add(dev_window, Node::new(NodeContent::Widget(WidgetState::Log(LogState::new(500)))));
-        tui.scene.node_mut(dev_log).set_constraint(Constraint { height: Dimension::Weight(1), ..Default::default() });
+        for (kind, verb) in [("dev", "dev"), ("build", "build")] {
+            let win = tui.scene.add(built.canvas, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new(kind).with_stack_tabs(vec![kind.into()], 0)))));
+            tui.scene.node_mut(win).set_constraint(Constraint { width: Dimension::Weight(1), direction: Direction::Column, padding: [2, 1, 1, 1], gap: 1, ..Default::default() });
+            let (rows, map) = group_catalog_into_table(&catalog);
+            let table = tui.scene.add(win, Node::new(NodeContent::Widget(WidgetState::Table(TableState::new(plugin_table_columns(), rows)))));
+            tui.scene.node_mut(table).set_constraint(Constraint { height: Dimension::Weight(2), ..Default::default() });
+            let term_id = tui.scene.add(
+                win,
+                Node::new(NodeContent::Widget(WidgetState::Terminal(TerminalState::new(Size { width: 40, height: 10 }, 2000)))),
+            );
+            tui.scene.node_mut(term_id).set_constraint(Constraint { height: Dimension::Weight(3), ..Default::default() });
+            window_nodes.insert(kind.into(), win);
+            table_nodes.insert(kind.into(), table);
+            term_nodes.insert(kind.into(), term_id);
+            maps.insert(kind.into(), map);
+            let _ = verb;
+        }
 
-        let (build_rows, build_map) = group_catalog_into_table(&catalog);
-        let build_table = tui.scene.add(build_window, Node::new(NodeContent::Widget(WidgetState::Table(TableState::new(plugin_table_columns(), build_rows)))));
-        tui.scene.node_mut(build_table).set_constraint(Constraint { height: Dimension::Weight(3), ..Default::default() });
-        let build_log = tui.scene.add(build_window, Node::new(NodeContent::Widget(WidgetState::Log(LogState::new(500)))));
-        tui.scene.node_mut(build_log).set_constraint(Constraint { height: Dimension::Weight(1), ..Default::default() });
-
-        tui.set_focus(Some(dev_table));
+        tui.set_focus(Some(*table_nodes.get("dev").unwrap()));
         term.present(&tui.render_full()).ok();
 
-        let mut dev_session: Option<Session> = None;
-        let mut build_session: Option<Session> = None;
+        let mut leader = LeaderMode::Idle;
+        let mut focused_window = "dev".to_string();
+        let window_order = ["dev", "build"];
 
         loop {
+            if let Some(bus) = &local {
+                bus.tick();
+            }
+            // legacy pipe sessions still feed into terminal as text lines
+            for (kind, term_id) in &term_nodes {
+                if let Some(session) = pipe_sessions.get(kind) {
+                    while let Ok(line) = session.rx.try_recv() {
+                        if let Some(WidgetState::Terminal(t)) = tui.scene.node_mut(*term_id).widget() {
+                            let mut bytes = line.into_bytes();
+                            bytes.push(b'\n');
+                            t.feed(&bytes);
+                        }
+                    }
+                }
+            }
+
             let events = term.poll(Duration::from_millis(80)).unwrap_or_default();
             let mut quit = false;
+            let mut detach = false;
             for event in &events {
                 if let Event::Key(k) = event {
-                    if k.key == Key::Char('q') {
+                    // Leader arm: Ctrl-Space
+                    if k.key == Key::Char(' ') && k.mods & mods::CTRL != 0 {
+                        leader = LeaderMode::Armed;
+                        continue;
+                    }
+                    match leader {
+                        LeaderMode::Armed => {
+                            match k.key {
+                                Key::Char('p') => leader = LeaderMode::Palette,
+                                Key::Char('u') => leader = LeaderMode::Utilities,
+                                Key::Char('d') => {
+                                    detach = true;
+                                    leader = LeaderMode::Idle;
+                                }
+                                Key::Char('-') => {
+                                    let _ = split_window(&mut layout, &focused_window, "column", "shell", Some("shell".into()));
+                                    leader = LeaderMode::Idle;
+                                }
+                                Key::Char('|') => {
+                                    let _ = split_window(&mut layout, &focused_window, "row", "shell", Some("shell".into()));
+                                    leader = LeaderMode::Idle;
+                                }
+                                Key::Char('z') => {
+                                    if layout.zoomed.is_some() {
+                                        zoom_window(&mut layout, None);
+                                    } else {
+                                        zoom_window(&mut layout, Some(&focused_window));
+                                    }
+                                    leader = LeaderMode::Idle;
+                                }
+                                Key::Esc => leader = LeaderMode::Idle,
+                                _ => leader = LeaderMode::Idle,
+                            }
+                            continue;
+                        }
+                        LeaderMode::Palette | LeaderMode::Utilities => {
+                            if k.key == Key::Esc {
+                                leader = LeaderMode::Idle;
+                            }
+                            continue;
+                        }
+                        LeaderMode::Idle => {}
+                    }
+
+                    // Alt-1..9 window jump
+                    if k.mods & mods::ALT != 0 {
+                        if let Key::Char(c) = k.key {
+                            if let Some(d) = c.to_digit(10) {
+                                if let Some(name) = window_order.get((d as usize).saturating_sub(1)) {
+                                    focused_window = (*name).to_string();
+                                    if let Some(id) = table_nodes.get(*name) {
+                                        tui.set_focus(Some(*id));
+                                    }
+                                }
+                                continue;
+                            }
+                            if matches!(c, 'h' | 'j' | 'k' | 'l') {
+                                let idx = window_order.iter().position(|w| *w == focused_window).unwrap_or(0);
+                                let next = match c {
+                                    'h' | 'k' => idx.saturating_sub(1),
+                                    _ => (idx + 1).min(window_order.len() - 1),
+                                };
+                                focused_window = window_order[next].to_string();
+                                if let Some(id) = table_nodes.get(focused_window.as_str()) {
+                                    tui.set_focus(Some(*id));
+                                }
+                                continue;
+                            }
+                        }
+                    }
+
+                    if k.key == Key::Char('q') && k.mods == 0 {
                         quit = true;
                         break;
                     }
-                    if k.key == Key::Char('x') {
-                        let focus = tui.focus();
-                        if focus == Some(dev_table) || focus == Some(dev_log) {
-                            if let Some(session) = dev_session.take() {
-                                session.stop();
-                            }
-                        } else if focus == Some(build_table) || focus == Some(build_log) {
-                            if let Some(session) = build_session.take() {
-                                session.stop();
+                    if k.key == Key::Char('x') && k.mods == 0 {
+                        if let Some(session) = pipe_sessions.remove(&focused_window) {
+                            session.stop();
+                        }
+                        if let Some(bus) = &local {
+                            let _ = bus.send(ClientMsg::Kill { session_id: focused_window.clone() });
+                        }
+                        continue;
+                    }
+
+                    // Terminal passthrough
+                    let focus = tui.focus();
+                    let term_focus = term_nodes.values().any(|id| Some(*id) == focus);
+                    if term_focus {
+                        let signals = tui.dispatch(event);
+                        for (node_id, signal) in signals {
+                            if signal == WidgetSignal::TerminalPassthrough {
+                                if let Some(bytes) = key_to_pty_bytes(k) {
+                                    if let Some(bus) = &local {
+                                        let sid = term_nodes.iter().find(|(_, id)| **id == node_id).map(|(k, _)| k.clone()).unwrap_or_else(|| focused_window.clone());
+                                        let _ = bus.send(ClientMsg::Input { session_id: sid, data: bytes });
+                                    }
+                                }
                             }
                         }
                         continue;
                     }
                 }
+
                 for (node_id, signal) in tui.dispatch(event) {
                     let WidgetSignal::Activated(row_idx) = signal else { continue };
-                    let (verb, map, window_id) = if node_id == dev_table {
-                        ("dev", &dev_map, dev_window)
-                    } else if node_id == build_table {
-                        ("build", &build_map, build_window)
+                    let (verb, map) = if Some(node_id) == table_nodes.get("dev").copied() {
+                        ("dev", maps.get("dev").unwrap())
+                    } else if Some(node_id) == table_nodes.get("build").copied() {
+                        ("build", maps.get("build").unwrap())
                     } else {
                         continue;
                     };
-                    let Some(Some(catalog_idx)) = map.get(row_idx) else { continue };
-                    let Some(row) = catalog.get(*catalog_idx) else { continue };
-                    if let Ok(session) = spawn_session(root, verb, &row.variant, row) {
-                        let log_id = if window_id == dev_window { dev_log } else { build_log };
-                        if let Some(WidgetState::Log(log)) = tui.scene.node_mut(log_id).widget() {
-                            log.clear();
-                            log.push(&format!("[{verb}] launching {}\u{2026}", row.variant));
+                    let Some(Some(catalog_idx)) = map.get(row_idx).copied() else { continue };
+                    let row = &catalog[catalog_idx];
+                    let kind = verb.to_string();
+                    if let Some(prev) = pipe_sessions.remove(&kind) {
+                        prev.stop();
+                    }
+                    match spawn_session(root, verb, &row.variant, row) {
+                        Ok(session) => {
+                            if let Some(WidgetState::Terminal(t)) = tui.scene.node_mut(*term_nodes.get(&kind).unwrap()).widget() {
+                                t.feed(format!("[semio] launching {} ({})\r\n", row.variant, verb).as_bytes());
+                            }
+                            // Also ask local PTY supervisor for an interactive shell alongside the piped nx run.
+                            if let Some(bus) = &local {
+                                let _ = bus.send(ClientMsg::Spawn {
+                                    session_id: format!("{kind}-pty"),
+                                    cmd: "bash".into(),
+                                    args: vec!["-lc".into(), format!("echo pty:{kind}; exec bash")],
+                                    cwd: Some(root.display().to_string()),
+                                    cols: 80,
+                                    rows: 24,
+                                });
+                            }
+                            pipe_sessions.insert(kind, session);
                         }
-                        let old = if window_id == dev_window { dev_session.replace(session) } else { build_session.replace(session) };
-                        if let Some(old) = old {
-                            old.stop();
+                        Err(e) => {
+                            if let Some(WidgetState::Terminal(t)) = tui.scene.node_mut(*term_nodes.get(&kind).unwrap()).widget() {
+                                t.feed(format!("[semio] spawn failed: {e}\r\n").as_bytes());
+                            }
                         }
                     }
                 }
             }
-            if quit {
+            if quit || detach {
                 break;
             }
-
-            pump_session(&mut tui, &dev_session, dev_log);
-            pump_session(&mut tui, &build_session, build_log);
-
-            let focus = tui.focus();
-            let dev_focused = focus == Some(dev_table) || focus == Some(dev_log);
-            let build_focused = focus == Some(build_table) || focus == Some(build_log);
-            if let Some(ChromeState::Window(w)) = tui.scene.node_mut(dev_window).chrome() {
-                w.focused = dev_focused;
-            }
-            if let Some(ChromeState::Window(w)) = tui.scene.node_mut(build_window).chrome() {
-                w.focused = build_focused;
-            }
-            let status = match (&dev_session, &build_session) {
-                (None, None) => format!("{} playgrounds", catalog.len()),
-                (Some(d), None) => format!("dev: {}", d.variant),
-                (None, Some(b)) => format!("build: {}", b.variant),
-                (Some(d), Some(b)) => format!("dev: {} \u{2502} build: {}", d.variant, b.variant),
-            };
-            if let Some(ChromeState::Footer(f)) = tui.scene.node_mut(built.footer).chrome() {
-                f.status = status;
-            }
-
-            let patch = tui.render();
-            if !patch.0.is_empty() {
-                term.present(&patch).ok();
-            }
+            term.present(&tui.render()).ok();
         }
-        term.leave().ok();
 
-        if let Some(session) = dev_session {
+        for (_, session) in pipe_sessions {
             session.stop();
         }
-        if let Some(session) = build_session {
-            session.stop();
-        }
+        let _ = term.leave();
         0
     }
 }
@@ -671,6 +1624,8 @@ pub fn run(argv: Vec<String>) -> i32 {
     }
     let parsed = args::parse(&argv);
     match parsed.verb.as_str() {
+        "daemon" => daemon_command(&root, &parsed),
+        "workflow" => workflow_command(&root, &parsed),
         "dev" => dev::run_dev(&root, &parsed),
         "catalog" => {
             if parsed.has_flag("json") {
@@ -693,8 +1648,108 @@ pub fn run(argv: Vec<String>) -> i32 {
     }
 }
 
+
+
+fn workflow_command(root: &PathBuf, parsed: &args::ParsedArgs) -> i32 {
+    let sub = parsed.segments.first().map(String::as_str).unwrap_or("status");
+    let ticket = parsed.flag("ticket").map(PathBuf::from).unwrap_or_else(|| root.join(".🦑️repo/🎫️tickets"));
+    match sub {
+        "status" => {
+            let path = workforce::workflow_path(&ticket);
+            if !path.exists() {
+                eprintln!("no workflow at {}", path.display());
+                return 1;
+            }
+            match workforce::load_workflow(&ticket) {
+                Ok(spec) => {
+                    println!("workflow {} waves={} concurrency={}", spec.id, spec.waves.len(), spec.concurrency);
+                    0
+                }
+                Err(e) => {
+                    eprintln!("{e}");
+                    1
+                }
+            }
+        }
+        "run" => {
+            let Ok(spec) = workforce::load_workflow(&ticket) else {
+                eprintln!("missing 🌊️workflow.json under {}", ticket.display());
+                return 1;
+            };
+            let tasks: Vec<_> = spec.waves.iter().flat_map(|w| w.tasks.clone()).collect();
+            let mut sched = workforce::Scheduler::new(spec);
+            while !sched.done() {
+                let batch = sched.poll_ready();
+                if batch.is_empty() {
+                    break;
+                }
+                for id in batch {
+                    let task = tasks.iter().find(|t| t.id == id);
+                    let (model, prompt) = task.map(|t| (t.model.as_str(), t.prompt.as_str())).unwrap_or(("claude", ""));
+                    let ok = if let Some(runner) = agent_runner::select(model) {
+                        match runner.spawn(prompt, root) {
+                            Ok(mut child) => child.wait().map(|s| s.success()).unwrap_or(false),
+                            Err(e) => {
+                                eprintln!("agent spawn failed: {e}");
+                                false
+                            }
+                        }
+                    } else {
+                        eprintln!("no agent runner for model {model}");
+                        false
+                    };
+                    sched.complete(&id, ok, None);
+                }
+            }
+            0
+        }
+        _ => {
+            eprintln!("usage: semio workflow status|run --ticket <dir>");
+            1
+        }
+    }
+}
+
+fn daemon_command(root: &PathBuf, parsed: &args::ParsedArgs) -> i32 {
+    let sub = parsed.segments.first().map(String::as_str).unwrap_or("status");
+    let root = if let Some(r) = parsed.flag("root") { PathBuf::from(r) } else { root.clone() };
+    match sub {
+        "start" => {
+            let exe = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("semio"));
+            daemon::start_detached(&root, &exe)
+        }
+        "serve" => {
+            let running = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
+            let flag = std::sync::Arc::clone(&running);
+            ctrlc_stub(flag);
+            match daemon::serve(&root, running) {
+                Ok(()) => 0,
+                Err(e) => {
+                    eprintln!("daemon serve failed: {e}");
+                    1
+                }
+            }
+        }
+        "stop" => daemon::stop(&root),
+        "status" => {
+            print!("{}", daemon::status(&root));
+            0
+        }
+        "attach" => tui_dashboard::run(&root),
+        _ => {
+            eprintln!("usage: semio daemon start|stop|status|attach|serve");
+            1
+        }
+    }
+}
+
+fn ctrlc_stub(_flag: std::sync::Arc<std::sync::atomic::AtomicBool>) {
+    // No ctrlc crate: daemon stops via `semio daemon stop` (SIGTERM) or process kill.
+}
+
 fn print_usage() {
-    eprintln!("semio — semio monorepo orchestrator\n\nUsage:\n  semio                 interactive TUI dashboard (requires a TTY)\n  semio dev <variant…>  start a plugin dev session\n  semio catalog         list playgrounds\n  semio plugin registry generate|check\n  semio <verb> …        forwarded to `bun ./📜️script.ts <verb> …`");
+    eprintln!("semio — semio monorepo orchestrator\n\nUsage:\n  semio                 interactive TUI dashboard (requires a TTY)\n  semio dev <variant…>  start a plugin dev session\n  semio catalog         list playgrounds\n  semio plugin registry generate|check\n  semio daemon …        start|stop|status|attach dashboard daemon
+  semio <verb> …        forwarded to `bun ./📜️script.ts <verb> …`");
 }
 // #endregion 🔖️Dispatch
 
@@ -853,5 +1908,141 @@ mod tests {
         std::fs::remove_dir_all(&root).ok();
     }
     //#endregion 🔖️CatalogConsumer
+
+    //#region 🔖️Workforce
+    #[test]
+    fn workforce_scheduler_respects_scope_and_deps() {
+        use crate::workforce::{Scheduler, TaskState, WorkflowSpec, WorkflowTask, WorkflowWave};
+        let spec = WorkflowSpec {
+            id: "demo".into(),
+            concurrency: 1,
+            waves: vec![WorkflowWave {
+                id: "w0".into(),
+                tasks: vec![
+                    WorkflowTask { id: "a".into(), model: "claude".into(), prompt: "one".into(), path_scope: vec!["x".into()], verify: None, retries: 0, depends_on: vec![] },
+                    WorkflowTask { id: "b".into(), model: "claude".into(), prompt: "two".into(), path_scope: vec!["x".into()], verify: None, retries: 0, depends_on: vec!["a".into()] },
+                ],
+            }],
+        };
+        let mut sched = Scheduler::new(spec);
+        let first = sched.poll_ready();
+        assert_eq!(first, vec!["a".to_string()]);
+        assert!(sched.poll_ready().is_empty(), "scope claimed / concurrency full");
+        sched.complete("a", true, None);
+        let second = sched.poll_ready();
+        assert_eq!(second, vec!["b".to_string()]);
+        assert_eq!(sched.statuses["b"].state, TaskState::Running);
+    }
+
+    #[test]
+    fn agent_runner_detect_returns_only_available() {
+        let detected = crate::agent_runner::detect();
+        for runner in &detected {
+            assert!(runner.available());
+        }
+    }
+    //#endregion 🔖️Workforce
+
+    //#region 🔖️Registry
+    #[test]
+    fn registry_build_includes_agents_and_verbs() {
+        let root = temp_root("dashboard-registry");
+        let reg = crate::registry::build(&root);
+        assert!(reg.tasks.iter().any(|t| t.id == "semio:daemon"));
+        assert!(reg.agents.iter().any(|a| a.id == "claude" || a.id == "codex" || a.id == "cursor-agent"));
+        let path = crate::registry::generate(&root).unwrap();
+        assert!(path.exists());
+        let text = std::fs::read_to_string(path).unwrap();
+        assert!(text.contains("semio:daemon"));
+        std::fs::remove_dir_all(&root).ok();
+    }
+    //#endregion 🔖️Registry
+
+    //#region 🔖️Ipc
+    #[test]
+    fn ipc_frame_roundtrip_and_output_codec() {
+        use crate::ipc::{self, ClientMsg, ServerMsg};
+        let mut buf = Vec::new();
+        let msg = ClientMsg::Ping;
+        ipc::write_control(&mut buf, &msg).unwrap();
+        let mut cursor = std::io::Cursor::new(buf);
+        let (kind, payload) = ipc::read_frame(&mut cursor).unwrap();
+        assert_eq!(kind, ipc::KIND_CONTROL);
+        let decoded: ClientMsg = ipc::decode_control(&payload).unwrap();
+        assert_eq!(decoded, ClientMsg::Ping);
+
+        let out = ipc::encode_output("s1", b"hi");
+        let (id, data) = ipc::decode_output(&out).unwrap();
+        assert_eq!(id, "s1");
+        assert_eq!(data, b"hi");
+
+        let mut buf = Vec::new();
+        ipc::write_control(&mut buf, &ServerMsg::Pong).unwrap();
+        assert!(!buf.is_empty());
+    }
+
+    #[test]
+    fn daemon_supervisor_ping_appends_event_log() {
+        use crate::daemon::{self, Supervisor};
+        use crate::ipc::{self, ClientMsg, ServerMsg};
+        let root = temp_root("daemon-sup");
+        let mut sup = Supervisor::new(&root).unwrap();
+        let (a, mut b) = duplex_pair();
+        // attach uses write on the client-facing end we keep in supervisor
+        sup.attach_client(Box::new(a)).unwrap();
+        // read Attached
+        let (kind, payload) = ipc::read_frame(&mut b).unwrap();
+        assert_eq!(kind, ipc::KIND_CONTROL);
+        let msg: ServerMsg = ipc::decode_control(&payload).unwrap();
+        assert!(matches!(msg, ServerMsg::Attached { .. }));
+        daemon::handle_one_for_test(&mut sup, ClientMsg::Ping).unwrap();
+        let (kind, payload) = ipc::read_frame(&mut b).unwrap();
+        assert_eq!(kind, ipc::KIND_CONTROL);
+        let msg: ServerMsg = ipc::decode_control(&payload).unwrap();
+        assert_eq!(msg, ServerMsg::Pong);
+        let log = std::fs::read_to_string(ipc::event_log_path(&root)).unwrap();
+        assert!(log.contains("pong") || log.contains("Pong") || log.contains("\"type\":\"pong\""));
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    /// 🧵 Tiny in-memory bidirectional pipe for supervisor tests.
+    fn duplex_pair() -> (DuplexEnd, DuplexEnd) {
+        use std::sync::mpsc::channel;
+        let (t1, r1) = channel::<Vec<u8>>();
+        let (t2, r2) = channel::<Vec<u8>>();
+        (DuplexEnd { tx: t1, rx: r2, buf: Vec::new() }, DuplexEnd { tx: t2, rx: r1, buf: Vec::new() })
+    }
+
+    struct DuplexEnd {
+        tx: std::sync::mpsc::Sender<Vec<u8>>,
+        rx: std::sync::mpsc::Receiver<Vec<u8>>,
+        buf: Vec<u8>,
+    }
+
+    impl std::io::Read for DuplexEnd {
+        fn read(&mut self, out: &mut [u8]) -> std::io::Result<usize> {
+            while self.buf.is_empty() {
+                match self.rx.recv_timeout(std::time::Duration::from_secs(2)) {
+                    Ok(chunk) => self.buf.extend_from_slice(&chunk),
+                    Err(_) => return Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "duplex closed")),
+                }
+            }
+            let n = out.len().min(self.buf.len());
+            out[..n].copy_from_slice(&self.buf[..n]);
+            self.buf.drain(..n);
+            Ok(n)
+        }
+    }
+
+    impl std::io::Write for DuplexEnd {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            self.tx.send(buf.to_vec()).map_err(|_| std::io::Error::new(std::io::ErrorKind::BrokenPipe, "duplex"))?;
+            Ok(buf.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+    //#endregion 🔖️Ipc
 }
 // #endregion 🔖️Tests

@@ -14,15 +14,18 @@ pub mod patch_object_kind {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchObjectKind, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
-        let mut object_kind = doc.snapshot.object_kind.clone();
-        match payload.field.as_str() {
-            "name" => object_kind.name = payload.value.clone(),
-            "label" => object_kind.label = payload.value.clone(),
-            "variant" => object_kind.variant = if payload.value.is_empty() { None } else { Some(payload.value.clone()) },
-            "description" => object_kind.description = payload.value.clone(),
+    pub fn handle(payload: &PatchObjectKind, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+        use crate::artifacts::block3d::mutations as m;
+        let optional = |value: &str| if value.is_empty() { None } else { Some(value.to_string()) };
+        let mutation = match payload.field.as_str() {
+            "name" => m::rename_object_kind(payload.value.clone()),
+            "label" => m::change_object_kind_label(payload.value.clone()),
+            "variant" => m::change_object_kind_variant(optional(&payload.value)),
+            "description" => m::change_object_kind_description(payload.value.clone()),
+            "icon" => m::change_object_kind_icon(optional(&payload.value)),
+            "unit" => m::change_object_kind_unit(optional(&payload.value)),
             _ => return Ok(Emit::default()),
-        }
-        Ok(Emit::mutations(vec![Block3dMutation::SetObjectKind { object_kind }]))
+        };
+        Ok(Emit::mutations(vec![mutation]))
     }
 }

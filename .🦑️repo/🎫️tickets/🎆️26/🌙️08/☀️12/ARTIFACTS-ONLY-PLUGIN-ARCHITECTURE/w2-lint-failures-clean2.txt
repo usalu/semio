@@ -1,0 +1,89 @@
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-puzzle: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-puzzle: uses std::fs/std::net/std::env/std::process without localBackboneStorage capability (✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/build.rs)
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-remodel: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-gis: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-note: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-process: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-procedural: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-trinity: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-space: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-shooting: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-raster: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-lowpoly: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-cad: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-draw: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-writer: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-layout: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-demonstrator: forbidden dependency semio-framework-os
+WARN (grandfathered, see spawned fix-it task): semio-s-plugin-animate: forbidden dependency semio-framework-os
+semio-s-plugin-fem: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-puzzle: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-puzzle: forbidden dependency web-sys
+semio-s-plugin-puzzle: forbidden dependency js-sys
+semio-s-plugin-block: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-remodel: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-flow: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-forms: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-gis: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-reasoning-mindmap: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-note: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-dag: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-playbook: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-mathematical: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-process: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-process-wood: cross-plugin dependency on semio-s-plugin-process (process)
+semio-s-plugin-process-concrete: cross-plugin dependency on semio-s-plugin-process (process)
+semio-s-plugin-process-metal: cross-plugin dependency on semio-s-plugin-process (process)
+semio-s-plugin-process-robotic: cross-plugin dependency on semio-s-plugin-process (process)
+semio-s-plugin-sourcing: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-sourcing-beams: cross-plugin dependency on semio-s-plugin-sourcing (sourcing)
+semio-s-plugin-sourcing-windows: cross-plugin dependency on semio-s-plugin-sourcing (sourcing)
+semio-s-plugin-sourcing-slabs: cross-plugin dependency on semio-s-plugin-sourcing (sourcing)
+semio-s-plugin-sequence: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-sequence: cross-plugin dependency on semio-s-plugin-imperative-control (imperative-extension-control)
+semio-s-plugin-sequence: cross-plugin dependency on semio-s-plugin-imperative-effect (imperative-extension-effect)
+semio-s-plugin-sequence: cross-plugin dependency on semio-s-plugin-imperative-math (imperative-extension-math)
+semio-s-plugin-sequence: cross-plugin dependency on semio-s-plugin-imperative-text (imperative-extension-text)
+semio-s-plugin-sequence: forbidden dependency web-sys
+semio-s-plugin-sequence: forbidden dependency js-sys
+semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-flow-extension-brep (flow-extension-brep)
+semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-flow-extension-dictionary (flow-extension-dictionary)
+semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-flow-extension-list (flow-extension-list)
+semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-flow-extension-logic (flow-extension-logic)
+semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-flow-extension-math (flow-extension-math)
+semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-flow-extension-primitive (flow-extension-primitive)
+semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-flow-extension-text (flow-extension-text)
+semio-s-plugin-procedural: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-trinity: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-trinity: forbidden dependency web-sys
+semio-s-plugin-trinity: forbidden dependency js-sys
+semio-s-plugin-space: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-shooting: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-raster: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-lowpoly: cross-plugin dependency on semio-s-plugin-cad (cad)
+semio-s-plugin-lowpoly: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-cad: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-draw: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-vcs: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-writer: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-writer: cross-plugin dependency on semio-s-plugin-trinity (trinity)
+semio-s-plugin-layout: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-layout: forbidden dependency web-sys
+semio-s-plugin-layout: forbidden dependency js-sys
+semio-s-plugin-imperative: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-cad (cad)
+semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-gis (gis)
+semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-procedural (procedural)
+semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-process (process)
+semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-puzzle (puzzle)
+semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-demonstrator: cross-plugin dependency on semio-s-plugin-sourcing (sourcing)
+semio-s-plugin-animate: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-animate: forbidden dependency wgpu
+semio-s-plugin-animate: forbidden dependency winit
+semio-s-plugin-norm: cross-plugin dependency on semio-s-plugin-fem (fem)
+semio-s-plugin-norm: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-energy: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+semio-s-plugin-architect: cross-plugin dependency on semio-s-plugin-stdio (stdio)
+WARN (grandfathered, see spawned fix-it task): ${warning}`);
+${failure}`);

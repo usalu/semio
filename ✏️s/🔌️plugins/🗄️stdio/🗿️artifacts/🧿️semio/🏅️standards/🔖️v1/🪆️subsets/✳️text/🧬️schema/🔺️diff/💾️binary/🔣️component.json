@@ -1,0 +1,11 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.text.diff/binary.json",
+  "title": "SemioTextDiffFrameHeader",
+  "description": "Diff pack-binary-encoding header mirror — see ../🔣️component.json for the canonical facet schema.",
+  "type": "object",
+  "properties": {
+    "format": { "type": "integer" },
+    "presence": { "type": "integer" },
+    "payload": { "type": "string", "contentEncoding": "hex" }
+  }
+}

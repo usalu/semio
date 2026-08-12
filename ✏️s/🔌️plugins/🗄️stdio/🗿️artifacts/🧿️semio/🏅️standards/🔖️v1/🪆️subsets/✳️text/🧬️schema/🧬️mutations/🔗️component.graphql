@@ -1,0 +1,11 @@
+# 🧬️ SemioTextMutation schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+input InsertRunInput { index: Int! run: SemioTextRunInput! }
+input RemoveRunInput { index: Int! }
+input EditRunInput { index: Int! newContent: String! }
+input ChangeRunLanguageInput { index: Int! newLanguage: String! }
+input ReorderRunsInput { from: Int! to: Int! }
+input AddMarkInput { runIndex: Int! index: Int! mark: SemioTextMarkInput! }
+input RemoveMarkInput { runIndex: Int! index: Int! }
+
+input SemioTextRunInput { language: String! content: String! marks: [SemioTextMarkInput!]! }
+input SemioTextMarkInput { kind: String! href: String! }

@@ -31,7 +31,34 @@ class RunScript extends BundleScript {
   }
 }
 
+
+/**
+ * 🌀 Forwards `semio daemon …` after ensuring the binary is built.
+ */
+class DaemonScript extends BundleScript {
+  run(segments: string[]): void {
+    runCmd("cargo", ["build", "-p", "semio-framework-repo-cli"], { cwd: this.repoRoot, env: devToolingEnv() });
+    const binName = process.platform === "win32" ? "semio.exe" : "semio";
+    const bin = join(this.repoRoot, "target", "debug", binName);
+    const status = runCmdStatus(bin, ["daemon", ...segments], { cwd: this.repoRoot, env: devToolingEnv() });
+    process.exit(status);
+  }
+}
+
+/**
+ * 🌊️ Forwards `semio workflow …` after ensuring the binary is built.
+ */
+class WorkflowScript extends BundleScript {
+  run(segments: string[]): void {
+    runCmd("cargo", ["build", "-p", "semio-framework-repo-cli"], { cwd: this.repoRoot, env: devToolingEnv() });
+    const binName = process.platform === "win32" ? "semio.exe" : "semio";
+    const bin = join(this.repoRoot, "target", "debug", binName);
+    const status = runCmdStatus(bin, ["workflow", ...segments], { cwd: this.repoRoot, env: devToolingEnv() });
+    process.exit(status);
+  }
+}
+
 if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("run", RunScript);
+  const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript).register("workflow", WorkflowScript);
   await runBundleScriptMain(router, import.meta.url);
 }

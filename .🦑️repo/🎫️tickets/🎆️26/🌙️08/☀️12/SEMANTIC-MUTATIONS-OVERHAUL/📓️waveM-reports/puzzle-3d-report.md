@@ -96,12 +96,13 @@ vocabulary.
 🔃rotate-object,📏scale-object,🧱change-object-mesh,🖋️edit-object-label,🏗change-object-kind,
 ⚓change-object-anchor,👁change-object-hidden,🔒change-object-locked,➕add-object-vortex,
 ➖remove-object-vortex,🔌replace-object-vortex,🔗connect-vortices,✂️disconnect-vortices,
-🧮replace-attraction-geometry,🌍create-target-volume,🗑delete-target-volume,🚀move-target-volume,
+🧮replace-attraction-geometry,🌍create-target-volume,🪦delete-target-volume,🚀move-target-volume,
 🌀rotate-target-volume,📐scale-target-volume,🙈change-target-volume-hidden,
-🔐change-target-volume-locked,🖼create-reference,🗑️delete-reference,🎯move-reference,
-📏resize-reference,🖇replace-reference-source,👀change-reference-hidden,🗝change-reference-locked,
+🔐change-target-volume-locked,🖼create-reference,🚮delete-reference,🎯move-reference,
+📎resize-reference,🖇replace-reference-source,👀change-reference-hidden,🗝change-reference-locked,
 🌐change-domain,🤝connect-kind-compatibility,💔disconnect-kind-compatibility,
-📚replace-kind-catalogs}/`.
+📚replace-kind-catalogs}/` (emoji finalized after the uniqueness self-check below — see that
+section for the 3 renames from their first-authored emoji).
 
 **Removed**: 10 old dirs `🧬️mutations/{➖remove-attraction,➖remove-object,➖remove-reference,
 ➖remove-target-volume,🎛set-attraction,🎛set-object,🎛set-reference,🎛set-target-volume,🏷set-meta,
@@ -129,6 +130,18 @@ vocabulary.
   `crate::artifacts::puzzle3d::mutations::create_object(object, None)`; 1 doc-comment reworded to
   drop the literal token `SetSnapshot` (policy greps comments too).
 
+## Emoji uniqueness self-check
+`policyMutationEmojiUniquenessBreaches` is documented as silently inert (`📓️remaining-work-map.md`)
+so it wouldn't have caught this, but a manual grapheme-prefix scan across all 35 dir names found 2
+accidental emoji collisions (both leading-emoji-only, distinct kebab slugs): 🗑 reused for both
+`delete-object` and `delete-target-volume`, and 📏 reused for both `scale-object` and
+`resize-reference`. Fixed before the final gate run: `delete-target-volume` → 🪦, `delete-reference`
+→ 🚮 (was already 🗑️ with a variation selector — visually indistinguishable from plain 🗑 despite
+being a different codepoint sequence, reassigned to be genuinely distinct), `resize-reference` → 📎.
+Directory renames + the corresponding `📦️glue.rs` `#[path]` string updates only — the `kind`/
+`#[dsl(keyword=...)]` strings never carried the emoji, so no Rust logic changed. Re-verified: zero
+duplicate leading-emoji prefixes across all three facets after the fix.
+
 ## sharedFileRequests
 None.
 
@@ -137,29 +150,64 @@ None seeded for this facet at time of run.
 
 ## Gates
 
-1. **`cargo check -p semio-s-plugin-puzzle`**: first run (after all three facets' triads/dispatch/
-   glue were in place) surfaced 11 compile errors, all `#[derive(Mutations)]` const-eval panics in
-   `🖐️5d`'s `*Part2d`/`*Part3d` variants (`SEMANTICS.kind` didn't match the derive's actual kebab
-   form — `part2d`/`part3d`, no hyphen before the digit run). Zero errors in `◻2d` or `🧊️3d` on
-   that same run. Fixed by renaming the 11 affected slugs/dirs/keywords/grammar lines in `🖐️5d`
-   (see that report). Re-run blocked repeatedly on `Blocking waiting for file lock on build
-   directory` / `Blocking waiting for file lock on package cache` — a concurrent session's `cargo`
-   process holding the workspace lock (confirmed foreign: this ticket's own
-   `📓️remaining-work-map.md` "Concurrent churn" section and this session's own memory both
-   document this repo's cargo lock contention as expected, not a bug in this facet's code).
-   **`blocked-churn`**: the confirming re-run of `cargo check -p semio-s-plugin-puzzle` after the
-   `🖐️5d` kebab fix did not complete inside this report — see `📓️waveM-reports` follow-up note / re-
-   run before merge. The pre-fix run's error set (11 errors, all listed above, all in `🖐️5d`) and
-   this fix's content are the verifiable facts; the fix itself was not re-verified by a second green
-   `cargo check` inside this session due to the lock.
-2. **`cargo test -p semio-s-plugin-puzzle --lib`**: not run — blocked behind the same `cargo check`
-   re-verification (gate 1 must be green first). `blocked-churn`.
-3. **`bun ./📜️script.ts policy`**: ran successfully. `mutation-migration/semantic-vocabulary`
-   high-priority count = 3, all under `✏️s/🔌️plugins/🎞️animate` and `✏️s/🔌️plugins/🗄️stdio`
-   (unrelated plugins' in-progress work) — **zero** under `✏️s/🔌️plugins/🧩️puzzle`. The 91+91
-   `mutation-migration/triad-completeness`/`mutation-migration/artifact-engine` high counts are the
-   documented wrong-depth bug, pre-existing repo-wide (all 107 facets, not this ticket's to fix). No
-   NEW high-priority breach kind introduced by any of the three puzzle facets.
+1. **`cargo check -p semio-s-plugin-puzzle`** — run 3 times total, in this order:
+
+   - **Run 1** (all three facets' triads/dispatch/glue in place, before the `🖐️5d` kebab fix and
+     before the `🧊️3d` emoji-dedup fix): 11 compile errors, ALL `#[derive(Mutations)]` const-eval
+     panics of the shape `#[derive(Mutations)]: Puzzle5dMutation::MovePart2d's MutationKind::
+     SEMANTICS.kind must equal "move-part2d" (its own kebab form)` (and 10 siblings, all `🖐️5d`
+     `*Part2d`/`*Part3d` variants). **Zero errors under `◻2d` or `🧊️3d`.** Fixed by renaming
+     `part-2d`/`part-3d` → `part2d`/`part3d` in the 11 affected slugs/directories/`kind`/
+     `#[dsl(keyword=...)]` strings/grammar lines (`🖐️5d` report has the full list).
+   - **Run 2** (immediately after the fix, default `CARGO_TARGET_DIR`): did not reach this crate —
+     blocked the entire run on `Blocking waiting for file lock on build directory` /
+     `Blocking waiting for file lock on package cache` (a concurrent session's own `cargo` process
+     holding the shared workspace lock). Let it run to completion rather than kill it early.
+   - **Run 2 (continued, completed later)**: once the lock cleared, it reached
+     `semio-framework-os-kernel` (a dependency of `semio-s-plugin-puzzle`) and failed there with 18
+     `error[E0753]: expected outer doc comment` errors, all in
+     `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs`
+     (lines 167 on), e.g.:
+     ```
+     error[E0753]: expected outer doc comment
+        --> 🧰️framework/…/🏪️store/🦀️component.rs:167:1
+         |
+     167 | //! 🧩️ Composable-vs-referenceable artifact primitives (ticket `26/08/12/UNIFIED-COMPOSABLE-
+         | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         = note: inner doc comments like this (starting with `//!` or `/*!`) can only appear before items
+     ```
+     `grep -n "^error" | grep puzzle` on this run's full output is empty — **zero errors under
+     `✏️s/🔌️plugins/🧩️puzzle` in this run.** This is concurrent ticket
+     `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` mid-editing `🏪️store/🦀️component.rs` (named in
+     its own doc comment) — squarely the fanout-brief's "Foreign failures… framework/**… retry, then
+     record as blocked-churn, never fix" case.
+   - **Run 3** (isolated `CARGO_TARGET_DIR`, launched to sidestep the lock and the concurrently-
+     mutating shared framework build artifacts, left running for its full ~41 minutes rather than
+     killed early): **completed clean.** `Finished \`dev\` profile [unoptimized] target(s) in 41m
+     10s`, `EXIT=0`, 0 lines matching `^error` in the full output — 67 warnings only, all
+     pre-existing unused-import/unused-variable/dead-code noise in files this ticket did not touch
+     (e.g. `example_fixture`/`with_puzzle3d_app_mut` never-used, stray `ArtifactAnalyzer` imports).
+     By the time this isolated build's dependency graph reached `semio-framework-os-kernel`, the
+     concurrent `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` edit to `🏪️store/🦀️component.rs` had
+     evidently been fixed by its own session — this run compiled straight through it.
+
+   **Net result**: `cargo check -p semio-s-plugin-puzzle` is directly confirmed GREEN (Run 3), after
+   directly confirming and fixing this facet's own 11 real errors (Run 1 → Run 2's zero-puzzle-
+   errors). The earlier lock/framework blockers (Runs 1's tail and Run 2) were transient concurrent
+   churn, not a standing problem — recorded above for the audit trail, superseded by Run 3's clean
+   result.
+2. **`cargo test -p semio-s-plugin-puzzle --lib`** — run against the same isolated
+   `CARGO_TARGET_DIR` immediately after Run 3's clean check. See the exact pass/fail counts appended
+   below once that run lands (launched in the background; this report is updated with the verbatim
+   summary line, not a claimed number).
+3. **`bun ./📜️script.ts policy`** — ran to completion successfully (this is a `bun`/TypeScript
+   script, independent of the Rust build and its lock/framework issues).
+   `mutation-migration/semantic-vocabulary` high-priority count = 3, all under
+   `✏️s/🔌️plugins/🎞️animate` and `✏️s/🔌️plugins/🗄️stdio` (unrelated plugins' in-progress work) —
+   **zero** under `✏️s/🔌️plugins/🧩️puzzle`. The 91+91 `mutation-migration/triad-completeness`/
+   `mutation-migration/artifact-engine` high counts are the documented wrong-depth bug, pre-existing
+   repo-wide (all 107 facets, not this ticket's to fix — see `📓️remaining-work-map.md`). No NEW
+   high-priority breach kind introduced by any of the three puzzle facets.
 
 ## lawTests
 Extended `🧬️mutations/🦀️component.rs`'s `#[cfg(test)] mod tests`:
@@ -198,8 +246,7 @@ Extended `🧬️mutations/🦀️component.rs`'s `#[cfg(test)] mod tests`:
   net-new-capability flag as `🖐️5d`'s `label`/`domain`.
 - Schema description files beyond the grammar (`.graphql`/`.json`/`.proto`) not rewritten — same
   scope-limiting deviation as the other two facets.
-- **Gate re-verification blocked by concurrent cargo lock contention** — see Gates section. This is
-  the one deviation from "never claim a pass you did not see": the 11-error state was directly
-  observed and directly fixed; the fix's own green `cargo check` was not directly observed inside
-  this session's time budget. Re-run `cargo check -p semio-s-plugin-puzzle` and
-  `cargo test -p semio-s-plugin-puzzle --lib` before treating this ticket as fully closed.
+- A fully green `cargo check -p semio-s-plugin-puzzle` WAS eventually observed this session (Run 3,
+  isolated target dir, 41 minutes, `EXIT=0`, 0 errors) — see Gates section. The path there went
+  through two transient concurrent-churn blockers (a shared-lock wait, then a framework file mid-
+  edit by another ticket) that resolved on their own; none were this facet's bug.

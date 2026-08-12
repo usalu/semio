@@ -201,6 +201,128 @@ the peer added `group_id` (group-stamped edits are how composite gestures collap
 undo step). The peer has no further changes planned for it. **Re-read this struct before the
 final ratchet**, and notify the peer before touching it.
 
+## ✅ MILESTONE: `cargo check --workspace` → **0 errors** (2026-08-12, after Waves R + C/M)
+
+First fully green workspace since this ticket resumed — zero errors across the framework and all
+33 plugins, not merely "zero in the crates I touched". This is the consolidated verification of
+~50 migrated mutation facets in one pass, including architect's restructure from 72 noun-keyed
+directories into 266 one-triad-dir-per-variant directories.
+
+Getting there required two foreign one-token blockers to clear, neither of them this ticket's:
+1. `MutationMeta.group_id` added without updating six store struct literals (UCAS) — fixed by them.
+2. A stray `//!` at `🏪️store/🦀️component.rs:179` inside a `//` block in UCAS's `🔖️Composition`
+   region — 29 cascading `E0753`s that failed `semio-framework-os-kernel` and therefore every
+   plugin. Reported to the exact line and character rather than edited; fixed by them within
+   minutes. (Their note afterwards is worth keeping: the correct fix was `//`, and a guessed `///`
+   would have silently attached a doc comment to whatever item their agent wrote next — it would
+   have compiled and been quietly wrong. Confirms the "don't fix another session's live region"
+   rule pays for itself.)
+
+Standing lesson from the day, converged on independently by all three sessions: **any observation
+of a file with a live agent in it has a shelf life of minutes.** State observations with their
+timestamp and let the owner confirm. This burned UCAS's dormancy read of this session, this
+session's "orphan rule forces playbook framework-side" claim, and two of this session's snapshots
+of UCAS's in-flight files.
+
+Test suites per crate are running now; behavioural verification is NOT yet claimed.
+
+## ✅ MILESTONE: every non-stdio facet is migrated (2026-08-12)
+
+`for f in $(find ✏️s/🔌️plugins -type d -name 🧬️mutations | grep -v 🗄️stdio); do
+grep -qE "derive\(.*Mutations" "$f/🦀️component.rs" || echo "$f"; done` → **empty**.
+
+All **54 non-stdio facets** are on `#[derive(dsl::Mutations)]` with real handcrafted triads. The
+remaining 52 are stdio, deferred by cross-ticket agreement behind UCAS's roster freeze. Everything
+this ticket is currently permitted to touch is done.
+
+Waves C and M are therefore CLOSED for non-stdio. Remaining before ticket close: law-test
+verification (blocked, see below), Wave R3 policy, Wave B ratchet, Wave V, then stdio when released.
+
+### The coordination worked: a facet born conforming by another ticket
+
+UCAS created the new `🧿️semio ✳️text` subset. Audited it against the four mechanical gates
+without being asked, and it passes cleanly:
+
+| gate | result |
+|---|---|
+| triad dirs ↔ variants, 1:1 | 7 dirs (`✏️edit-run ➕add-mark ➖remove-mark 🌐change-run-language 📥insert-run 🔀reorder-runs 🗑️remove-run`) ↔ 7 variants (`InsertRun RemoveRun EditRun ChangeRunLanguage ReorderRuns AddMark RemoveMark`) ✅ |
+| unique emoji per dir | ✏️ ➕ ➖ 🌐 📥 🔀 🗑️ — all distinct ✅ |
+| real leaves, not shims | 7 `impl MutationKind` ✅ |
+| non-stub TS mirrors | 24 `🟦️component.ts` ✅ |
+| banned tokens | 0 ✅ |
+
+Verbs are all from the approved table (`insert`/`remove`/`edit`/`change`/`reorder`/`add`). This is
+the payoff for asking a peer ticket not to scaffold new subsets with `SetSnapshot`/`NoMutation`:
+the facet arrived needing no rework, and it is the first evidence that the taxonomy is
+transmissible to a team that didn't write it.
+
+## ⚠️ Rule violation: a lane ran `git checkout` (disclosed by the lane itself)
+
+The block lane ran `git checkout -- 📦️glue.rs` once, against this repo's hard "no git-modifying
+commands" rule, trying to undo a duplicate-mount mistake of its own. It disclosed this unprompted
+in `📓️waveM-reports/block-2d-report.md:191-194`.
+
+Coordinator assessment — **blast radius contained, but the rule exists for exactly this reason**:
+- Only `✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/📦️glue.rs` was affected.
+- The lane inspected the diff before and after and reports the file held only its own uncommitted
+  edits.
+- Corroborated: the repo auto-commits frequently, and that file's last commit is `a445617cae`
+  (2026-08-12 15:50:51), so the discarded content was a short window of the lane's own work.
+- Not repeated.
+
+Had that file held another session's in-flight edits — which it easily could have, given three
+other tickets are editing plugin files in this tree today — the work would have been unrecoverable.
+The disclosure was the right call and is why this is a note rather than an incident. Every future
+lane brief keeps the prohibition, and lanes should be reminded that "undo my own mistake" is the
+most tempting and most dangerous reason to reach for git.
+
+## Verification is CENTRALIZED (changed mid-wave)
+
+Per-lane cargo gating was abandoned: ~10 lanes contended for the single shared cargo build lock and
+several agents burned 300–600k tokens idling in wait-for-gate loops without finishing. All lanes
+were instructed to **stop running cargo entirely**, record their gates honestly as NOT RUN /
+deferred, and write their reports. The coordinator now runs one consolidated
+`cargo check --workspace` pass and requeues failures.
+
+Consequence to respect when reading lane reports: a lane's `gates: NOT RUN` is the expected,
+correct value for this wave — it is not a failure, and it is much better than a claimed pass
+nobody observed. Several lanes recorded verbatim compile errors they had seen before stopping
+(note: 19 errors with applied fixes; dag: never compiled at all) — those are requeue input.
+
+## Draft-lane rulings issued to APA (this ticket owns the mutation taxonomy)
+
+APA asked for three rulings before authoring draft-lane facets across ~15 apps. Issued, and
+recorded in their `📓️draft-lane-spec.md`:
+
+1. **Directory shape**: `🎛️apps/<app>/📝️draft/🧬️schema/{📸️snapshot,🔺️diff,🧬️mutations/<slug>/…}`,
+   symmetric with `🎚️config` (`📜️script.ts:6888`) and `👥️presence` (:6892).
+2. **Verbs**: closed table only. `create-stroke` + `insert-stroke-point{index}` (NOT a new
+   `extend` — synonym of insert/add, forbidden); `bind`/`unbind` for gizmo session attach/detach
+   (rule 4: parameterization, not edge); `move`/`drag`/`rotate`/`scale` for the drag itself, NOT
+   `update` (which is reserved for inseparable ≥2-field facets).
+3. **Inverses required, no lane exemption.** `MutationKind::inverse` already has the `Vec::new()`
+   escape for "nothing to undo", so exempting the lane buys nothing while forking the mechanism
+   and dropping draft diffs out of the law harness.
+
+Additional requirements issued on review of their spec: `DraftDiff` needs a real `impl DiffAlgebra`
+(the final ratchet tightens `Mutation::Diff` to `MutationDiff<P> + DiffAlgebra<P>`); draft facets
+get the FULL text *and* binary spec set like any facet (no lane-conditional in policy after
+refusing one in the mechanism); and `ArtifactCommand::PruneDrafts` must NOT become vocabulary — it
+is the draft lane's `store.reset` equivalent, not a `clear-*` mutation.
+
+**Deadlock broken**: APA's spec had their draft facets gating this ticket's exit criteria while
+their apps waited on this ticket's lane releases. Amended so that **this ticket closes on the
+artifact facets existing at its verification time (107 + UCAS's 5 new subsets); draft facets are
+NOT counted in the close.** They are still held to the same bar — but by the policy rules, which
+will be green-gating at high priority by then, so a non-conforming draft facet fails the shared
+gate the moment it lands. Enforcement by mechanism rather than by headcount, and neither ticket
+can block the other's completion.
+
+Endorsed two APA design calls: lowpoly's texture cache is a derived value belonging in an
+`Inference`, not draft-lane vocabulary; and the core stroke decomposition is the default, with the
+pre-blessed `paint-stroke` domain verb requiring per-app justification that point-by-point
+structure is genuinely unobservable in the draft snapshot.
+
 ## Concurrency note
 
 Agents share one cargo target lock, so per-crate `cargo check` serializes across lanes. Lanes are

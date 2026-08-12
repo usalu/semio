@@ -123,16 +123,16 @@ None found seeded for this facet in `POLICY_SEMANTIC_VOCABULARY_ALLOWLIST` at th
 post-change scan — see Gates).
 
 ## Gates
-See the `🧊️3d` report for the full verbatim evidence (shared crate, run once for all three
-facets). Summary: `cargo check -p semio-s-plugin-puzzle` run #1 (before any facet gate) reported
-ONLY 11 errors, all `Puzzle5dMutation` kebab mismatches (`🖐️5d` facet, see that report) — zero
-errors anywhere under `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d`. Two subsequent re-runs (after the
-`🖐️5d` fix) each hit unrelated, actively-changing breakage inside
-`🧰️framework/…/🏪️store/🦀️component.rs` (concurrent ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-
-SYSTEM` — see `🧊️3d` report's Gates section for verbatim errors from both runs, which differ from
-each other, proving another session is actively mid-edit on that file). Neither re-run reported a
-single error under `✏️s/🔌️plugins/🧩️puzzle` (grepped and confirmed empty both times). `bun
-./📜️script.ts policy` ran clean of NEW high-priority breaches for this facet (see `🧊️3d` report).
+See the `🧊️3d` report for the full verbatim run-by-run evidence (shared crate, gated once for all
+three facets). Summary: `cargo check -p semio-s-plugin-puzzle` run #1 (before any facet gate)
+reported ONLY 11 errors, all `Puzzle5dMutation` kebab mismatches (`🖐️5d` facet) — zero errors
+anywhere under `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d`. After two transient concurrent-churn
+blockers (shared build-lock contention, then an unrelated framework file mid-edit by ticket
+`26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`) resolved on their own, an isolated-target-dir
+`cargo check -p semio-s-plugin-puzzle` run completed **clean**: `Finished dev profile
+[unoptimized] target(s) in 41m 10s`, `EXIT=0`, 0 errors, warnings only. `cargo test -p
+semio-s-plugin-puzzle --lib` — see `🧊️3d` report for the exact pass/fail counts (same crate/run).
+`bun ./📜️script.ts policy` ran clean of NEW high-priority breaches for this facet.
 
 ## lawTests
 Extended `🧬️mutations/🦀️component.rs`'s `#[cfg(test)] mod tests`:

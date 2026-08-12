@@ -3,6 +3,7 @@
 
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::engine::{decode_still_image, describe_video_probe, images as remodel_image, next_remodel_id, payload_from_data_url, video as remodel_video, video_codec_from_label, video_codec_to_artifact};
+use crate::artifacts::remodel::mutations::{add_stream_frame, change_stream_sync, create_asset, create_stream, delete_stream, replace_stream_source};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelSnapshot, VideoSource};
 use base64::Engine as _;
@@ -78,7 +79,7 @@ fn rebuild_video_import_scratch(scene: &RemodelSnapshot, stream_id: &str) -> Vid
 
 /// 🆔️ The stream a batch tick lands on: `index == 0` starts a new stream, `index > 0` appends to
 /// `scene.streams.last()` — the stream THIS batch's `index == 0` call just created (each call sees the
-/// prior call's already-committed `SetStreams`, since dispatches within one batch are sequential).
+/// prior call's already-committed mutations, since dispatches within one batch are sequential).
 fn batch_stream_id(scene: &RemodelSnapshot, index: u32) -> String {
     if index == 0 {
         next_remodel_id("stream")
@@ -114,14 +115,14 @@ pub mod import_frame_payload {
         let asset_key = format!("{stream_id}-frame-{}", payload.index);
         let asset = ImageAsset { mime, data: base64::engine::general_purpose::STANDARD.encode(&bytes), width, height };
 
-        let mut streams = scene.streams.clone();
-        match streams.iter_mut().find(|stream| stream.id == stream_id) {
+        let mut mutations = vec![create_asset(asset_key.clone(), asset)];
+        match scene.streams.iter().find(|stream| stream.id == stream_id) {
             Some(stream) => {
                 let frame_index = stream.frames.len() as u32;
-                stream.frames.push(FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key.clone() });
+                mutations.push(add_stream_frame(stream_id.clone(), FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key.clone() }, MediaKind::ImageSequence));
             }
             None => {
-                streams.push(MediaStream {
+                mutations.push(create_stream(MediaStream {
                     id: stream_id.clone(),
                     name: payload.name.clone(),
                     kind: MediaKind::ImageSequence,
@@ -130,10 +131,10 @@ pub mod import_frame_payload {
                     fps_hint: 30.0,
                     frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id: asset_key.clone() }],
                     source: None,
-                });
+                }));
             }
         }
-        Ok(Emit::amend(vec![RemodelMutation::SetAsset { key: asset_key, value: Some(asset) }, RemodelMutation::SetStreams { streams }], format!("remodel-import:{stream_id}")))
+        Ok(Emit::amend(mutations, format!("remodel-import:{stream_id}")))
     }
 }
 //#endregion 🔖️ImportFramePayload
@@ -170,13 +171,10 @@ pub mod import_video_frame_payload {
 
         let asset_key = format!("{stream_id}-frame-{}", payload.frame_index);
         let asset = ImageAsset { mime: "image/jpeg".into(), data: base64::engine::general_purpose::STANDARD.encode(&bytes), width: image.width, height: image.height };
-        let mut streams = scene.streams.clone();
-        match streams.iter_mut().find(|stream| stream.id == stream_id) {
-            Some(stream) => {
-                stream.kind = MediaKind::Video;
-                stream.frames.push(FrameRef { index: payload.frame_index, timestamp_ms: payload.timestamp_ms, asset_id: asset_key.clone() });
-            }
-            None => streams.push(MediaStream {
+        let mut mutations = vec![create_asset(asset_key.clone(), asset)];
+        match scene.streams.iter().any(|stream| stream.id == stream_id) {
+            true => mutations.push(add_stream_frame(stream_id.clone(), FrameRef { index: payload.frame_index, timestamp_ms: payload.timestamp_ms, asset_id: asset_key.clone() }, MediaKind::Video)),
+            false => mutations.push(create_stream(MediaStream {
                 id: stream_id.clone(),
                 name: payload.name.clone(),
                 kind: MediaKind::Video,
@@ -185,9 +183,9 @@ pub mod import_video_frame_payload {
                 fps_hint: 0.0,
                 frames: vec![FrameRef { index: payload.frame_index, timestamp_ms: payload.timestamp_ms, asset_id: asset_key.clone() }],
                 source: None,
-            }),
+            })),
         }
-        Ok(Emit::amend(vec![RemodelMutation::SetAsset { key: asset_key, value: Some(asset) }, RemodelMutation::SetStreams { streams }], format!("remodel-import:{stream_id}")))
+        Ok(Emit::amend(mutations, format!("remodel-import:{stream_id}")))
     }
 }
 //#endregion 🔖️ImportVideoFramePayload
@@ -215,10 +213,8 @@ pub mod import_video_done {
         let scene = doc.snapshot;
         let Some(stream_id) = scene.streams.last().map(|stream| stream.id.clone()) else { return Ok(Emit::default()) };
         let codec_value = video_codec_from_label(&payload.codec);
-        let mut streams = scene.streams.clone();
-        let Some(stream) = streams.iter_mut().find(|stream| stream.id == stream_id) else { return Ok(Emit::default()) };
-        stream.source = Some(VideoSource { name: payload.name.clone(), container: "unknown".into(), codec: codec_value, duration_ms: payload.duration_ms, frame_count: payload.frame_count, width: payload.width, height: payload.height });
-        Ok(Emit::amend(vec![RemodelMutation::SetStreams { streams }], format!("remodel-import:{stream_id}")))
+        let source = VideoSource { name: payload.name.clone(), container: "unknown".into(), codec: codec_value, duration_ms: payload.duration_ms, frame_count: payload.frame_count, width: payload.width, height: payload.height };
+        Ok(Emit::amend(vec![replace_stream_source(stream_id.clone(), Some(source))], format!("remodel-import:{stream_id}")))
     }
 }
 //#endregion 🔖️ImportVideoDone
@@ -258,7 +254,7 @@ pub mod import_video_bytes_payload {
         let min_sharpness = ingest.min_sharpness;
         let mut scratch = VideoImportScratch::default();
         let mut frames = Vec::new();
-        let mut operations = Vec::new();
+        let mut mutations = Vec::new();
         for extracted in iter {
             let Ok(extracted) = extracted else { continue };
             let score = local_sharpness_score(&extracted.image);
@@ -267,14 +263,10 @@ pub mod import_video_bytes_payload {
             }
             let jpeg = remodel_image::encode_jpeg(&extracted.image, 90);
             let asset_key = format!("{stream_id}-frame-{}", extracted.index);
-            operations.push(RemodelMutation::SetAsset {
-                key: asset_key.clone(),
-                value: Some(ImageAsset { mime: "image/jpeg".into(), data: base64::engine::general_purpose::STANDARD.encode(&jpeg), width: extracted.image.width, height: extracted.image.height }),
-            });
+            mutations.push(create_asset(asset_key.clone(), ImageAsset { mime: "image/jpeg".into(), data: base64::engine::general_purpose::STANDARD.encode(&jpeg), width: extracted.image.width, height: extracted.image.height }));
             frames.push(FrameRef { index: extracted.index, timestamp_ms: extracted.timestamp_ms, asset_id: asset_key });
         }
-        let mut streams = scene.streams.clone();
-        streams.push(MediaStream {
+        mutations.push(create_stream(MediaStream {
             id: stream_id,
             name: payload.name.clone(),
             kind: MediaKind::Video,
@@ -283,9 +275,8 @@ pub mod import_video_bytes_payload {
             fps_hint: 0.0,
             frames,
             source: Some(VideoSource { name: String::new(), container: container.into(), codec: video_codec_to_artifact(codec), duration_ms, frame_count: 0, width, height }),
-        });
-        operations.push(RemodelMutation::SetStreams { streams });
-        Ok(Emit::mutations(operations))
+        }));
+        Ok(Emit::mutations(mutations))
     }
 }
 //#endregion 🔖️ImportVideoBytesPayload
@@ -302,14 +293,12 @@ pub mod add_stream {
         pub camera_id: String,
     }
 
-    pub fn handle(payload: &AddStream, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        let scene = doc.snapshot;
+    pub fn handle(payload: &AddStream, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let kind = if payload.kind == "video" { MediaKind::Video } else { MediaKind::ImageSequence };
         let camera_id = if payload.camera_id.is_empty() { None } else { Some(payload.camera_id.clone()) };
         let id = next_remodel_id("stream");
-        let mut streams = scene.streams.clone();
-        streams.push(MediaStream { id, name: payload.name.clone(), kind, camera_id, sync_offset_ms: 0.0, fps_hint: 30.0, frames: Vec::new(), source: None });
-        Ok(Emit::mutations(vec![RemodelMutation::SetStreams { streams }]))
+        let stream = MediaStream { id, name: payload.name.clone(), kind, camera_id, sync_offset_ms: 0.0, fps_hint: 30.0, frames: Vec::new(), source: None };
+        Ok(Emit::mutations(vec![create_stream(stream)]))
     }
 }
 //#endregion 🔖️AddStream
@@ -324,9 +313,8 @@ pub mod remove_stream {
         pub stream_id: String,
     }
 
-    pub fn handle(payload: &RemoveStream, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        let streams: Vec<MediaStream> = doc.snapshot.streams.iter().filter(|stream| stream.id != payload.stream_id).cloned().collect();
-        Ok(Emit::mutations(vec![RemodelMutation::SetStreams { streams }]))
+    pub fn handle(payload: &RemoveStream, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![delete_stream(payload.stream_id.clone())]))
     }
 }
 //#endregion 🔖️RemoveStream
@@ -343,10 +331,10 @@ pub mod set_stream_sync {
     }
 
     pub fn handle(payload: &SetStreamSync, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        let mut streams = doc.snapshot.streams.clone();
-        let Some(stream) = streams.iter_mut().find(|stream| stream.id == payload.stream_id) else { return Ok(Emit::default()) };
-        stream.sync_offset_ms = payload.sync_offset_ms;
-        Ok(Emit::mutations(vec![RemodelMutation::SetStreams { streams }]))
+        if !doc.snapshot.streams.iter().any(|stream| stream.id == payload.stream_id) {
+            return Ok(Emit::default());
+        }
+        Ok(Emit::mutations(vec![change_stream_sync(payload.stream_id.clone(), payload.sync_offset_ms)]))
     }
 }
 //#endregion 🔖️SetStreamSync

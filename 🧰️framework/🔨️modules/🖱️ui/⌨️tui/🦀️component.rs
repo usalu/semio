@@ -1611,6 +1611,7 @@ pub mod vt {
                         self.alt_active = true;
                         self.erase_display(2);
                         self.cursor = Pos { x: 0, y: 0 };
+                        self.wrap_pending = false;
                     } else {
                         self.alt_active = false;
                         self.restore_cursor();
@@ -2170,6 +2171,8 @@ pub mod layout {
     #[derive(Clone, Debug, PartialEq)]
     pub struct WindowLayout {
         pub root: WindowLayoutRoot,
+        /// When set, only this window fills the canvas (zoom / maximize).
+        pub zoomed: Option<String>,
     }
 
     /// 📐️ The resolved on-screen placement of one visible window.
@@ -2214,8 +2217,37 @@ pub mod layout {
         out.push(WindowMeasure { window_kind_id: active, rect: area, active: true, stack_tabs: tabs });
     }
 
+    fn find_stack_measure(node: &WindowLayoutChild, id: &str, area: Rect) -> Option<WindowMeasure> {
+        match node {
+            WindowLayoutChild::Stack(s) => {
+                if s.children.iter().any(|c| c.window_kind_id == id) {
+                    let mut out = Vec::new();
+                    let mut forced = s.clone();
+                    forced.active_window_kind_id = Some(id.to_string());
+                    solve_stack(&forced, area, &mut out);
+                    out.into_iter().next()
+                } else {
+                    None
+                }
+            }
+            WindowLayoutChild::Axis(a) => a.children.iter().find_map(|c| find_stack_measure(c, id, area)),
+        }
+    }
+
+    fn find_stack_measure_root(root: &WindowLayoutRoot, id: &str, area: Rect) -> Option<WindowMeasure> {
+        match root {
+            WindowLayoutRoot::Stack(s) => find_stack_measure(&WindowLayoutChild::Stack(s.clone()), id, area),
+            WindowLayoutRoot::Axis(a) => a.children.iter().find_map(|c| find_stack_measure(c, id, area)),
+        }
+    }
+
     /// 🧮️ Resolves a `WindowLayout` into concrete on-screen `WindowMeasure`s.
     pub fn solve_window_layout(layout: &WindowLayout, area: Rect) -> Vec<WindowMeasure> {
+        if let Some(zid) = layout.zoomed.as_deref() {
+            if let Some(m) = find_stack_measure_root(&layout.root, zid, area) {
+                return vec![m];
+            }
+        }
         let mut out = Vec::new();
         match &layout.root {
             WindowLayoutRoot::Axis(a) => solve_axis(a, area, &mut out),
@@ -2237,13 +2269,236 @@ pub mod layout {
                 })
             })
             .collect();
-        WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: direction.to_string(), size: None, children }) }
+        WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: direction.to_string(), size: None, children }), zoomed: None }
     }
 
     /// 🏗️ Builds an evenly-weighted row layout.
     pub fn even_window_layout(window_ids: &[String]) -> WindowLayout {
         create_default_layout(window_ids, "row", None, None)
     }
+
+    //#region 🔖️WindowLayoutMutations
+    fn stack_contains(stack: &WindowLayoutStackNode, id: &str) -> bool {
+        stack.children.iter().any(|c| c.window_kind_id == id)
+    }
+
+    fn take_window_node(root: &mut WindowLayoutRoot, id: &str) -> Option<WindowLayoutWindowNode> {
+        fn from_stack(stack: &mut WindowLayoutStackNode, id: &str) -> Option<WindowLayoutWindowNode> {
+            if let Some(i) = stack.children.iter().position(|c| c.window_kind_id == id) {
+                let node = stack.children.remove(i);
+                if stack.active_window_kind_id.as_deref() == Some(id) {
+                    stack.active_window_kind_id = stack.children.first().map(|c| c.window_kind_id.clone());
+                }
+                return Some(node);
+            }
+            None
+        }
+        fn walk(child: &mut WindowLayoutChild, id: &str) -> Option<WindowLayoutWindowNode> {
+            match child {
+                WindowLayoutChild::Stack(s) => from_stack(s, id),
+                WindowLayoutChild::Axis(a) => {
+                    for c in &mut a.children {
+                        if let Some(n) = walk(c, id) {
+                            return Some(n);
+                        }
+                    }
+                    None
+                }
+            }
+        }
+        match root {
+            WindowLayoutRoot::Stack(s) => from_stack(s, id),
+            WindowLayoutRoot::Axis(a) => {
+                for c in &mut a.children {
+                    if let Some(n) = walk(c, id) {
+                        return Some(n);
+                    }
+                }
+                None
+            }
+        }
+    }
+
+    fn with_stack_mut(root: &mut WindowLayoutRoot, id: &str, f: &mut dyn FnMut(&mut WindowLayoutStackNode) -> bool) -> bool {
+        fn walk(child: &mut WindowLayoutChild, id: &str, f: &mut dyn FnMut(&mut WindowLayoutStackNode) -> bool) -> bool {
+            match child {
+                WindowLayoutChild::Stack(s) if stack_contains(s, id) => f(s),
+                WindowLayoutChild::Axis(a) => a.children.iter_mut().any(|c| walk(c, id, f)),
+                _ => false,
+            }
+        }
+        match root {
+            WindowLayoutRoot::Stack(s) if stack_contains(s, id) => f(s),
+            WindowLayoutRoot::Axis(a) => a.children.iter_mut().any(|c| walk(c, id, f)),
+            _ => false,
+        }
+    }
+
+    /// 🔍 Zooms `window_kind_id` to fill the canvas; `None` restores the tiling.
+    pub fn zoom_window(layout: &mut WindowLayout, window_kind_id: Option<&str>) {
+        layout.zoomed = window_kind_id.map(str::to_string);
+    }
+
+    /// 🗂️ Activates `tab_id` inside its stack.
+    pub fn activate_stack_tab(layout: &mut WindowLayout, tab_id: &str) -> bool {
+        with_stack_mut(&mut layout.root, tab_id, &mut |s| {
+            if stack_contains(s, tab_id) {
+                s.active_window_kind_id = Some(tab_id.to_string());
+                true
+            } else {
+                false
+            }
+        })
+    }
+
+    /// 🔁 Cycles the active tab in the stack containing `window_kind_id` by `delta`.
+    pub fn cycle_stack_tab(layout: &mut WindowLayout, window_kind_id: &str, delta: i32) -> bool {
+        with_stack_mut(&mut layout.root, window_kind_id, &mut |s| {
+            if s.children.is_empty() {
+                return false;
+            }
+            let cur = s
+                .active_window_kind_id
+                .as_ref()
+                .and_then(|id| s.children.iter().position(|c| &c.window_kind_id == id))
+                .unwrap_or(0);
+            let len = s.children.len() as i32;
+            let next = ((cur as i32 + delta).rem_euclid(len)) as usize;
+            s.active_window_kind_id = Some(s.children[next].window_kind_id.clone());
+            true
+        })
+    }
+
+    /// ✂️ Splits the stack containing `window_kind_id` into an axis of two equal stacks.
+    pub fn split_window(layout: &mut WindowLayout, window_kind_id: &str, direction: &str, new_id: &str, new_title: Option<String>) -> bool {
+        let direction = if direction == "column" { "column" } else { "row" };
+        let new_stack = WindowLayoutChild::Stack(WindowLayoutStackNode {
+            size: Some(1.0),
+            active_window_kind_id: Some(new_id.to_string()),
+            children: vec![WindowLayoutWindowNode { window_kind_id: new_id.to_string(), title: new_title }],
+        });
+        fn split_in_axis(axis: &mut WindowLayoutAxisNode, window_kind_id: &str, direction: &str, new_stack: &WindowLayoutChild) -> bool {
+            for i in 0..axis.children.len() {
+                match &axis.children[i] {
+                    WindowLayoutChild::Stack(s) if stack_contains(s, window_kind_id) => {
+                        let old = axis.children[i].clone();
+                        let old = match old {
+                            WindowLayoutChild::Stack(mut s) => {
+                                s.size = Some(1.0);
+                                WindowLayoutChild::Stack(s)
+                            }
+                            other => other,
+                        };
+                        let parent_size = axis_child_size(&old);
+                        axis.children[i] = WindowLayoutChild::Axis(WindowLayoutAxisNode {
+                            kind: direction.to_string(),
+                            size: Some(parent_size),
+                            children: vec![old, new_stack.clone()],
+                        });
+                        return true;
+                    }
+                    WindowLayoutChild::Axis(_) => {
+                        if let WindowLayoutChild::Axis(a) = &mut axis.children[i] {
+                            if split_in_axis(a, window_kind_id, direction, new_stack) {
+                                return true;
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            false
+        }
+        match &mut layout.root {
+            WindowLayoutRoot::Stack(s) if stack_contains(s, window_kind_id) => {
+                let mut old = s.clone();
+                old.size = Some(1.0);
+                layout.root = WindowLayoutRoot::Axis(WindowLayoutAxisNode {
+                    kind: direction.to_string(),
+                    size: None,
+                    children: vec![WindowLayoutChild::Stack(old), new_stack],
+                });
+                true
+            }
+            WindowLayoutRoot::Axis(a) => split_in_axis(a, window_kind_id, direction, &new_stack),
+            _ => false,
+        }
+    }
+
+    /// ↔️ Nudges the weight of the stack containing `window_kind_id` by `delta`; a sibling absorbs `-delta`.
+    pub fn resize_window(layout: &mut WindowLayout, window_kind_id: &str, delta: f64) -> bool {
+        fn child_has(id: &str, child: &WindowLayoutChild) -> bool {
+            match child {
+                WindowLayoutChild::Stack(s) => stack_contains(s, id),
+                WindowLayoutChild::Axis(a) => a.children.iter().any(|c| child_has(id, c)),
+            }
+        }
+        fn nudge(axis: &mut WindowLayoutAxisNode, window_kind_id: &str, delta: f64) -> bool {
+            if let Some(i) = axis.children.iter().position(|c| child_has(window_kind_id, c)) {
+                // Prefer a direct sibling slot; if nested deeper, still nudge this level when the child is an immediate match stack.
+                let direct = matches!(&axis.children[i], WindowLayoutChild::Stack(s) if stack_contains(s, window_kind_id));
+                if direct {
+                    let j = if i + 1 < axis.children.len() { i + 1 } else if i > 0 { i - 1 } else { return false };
+                    let set_size = |child: &mut WindowLayoutChild, size: f64| match child {
+                        WindowLayoutChild::Stack(s) => s.size = Some(size.max(0.05)),
+                        WindowLayoutChild::Axis(a) => a.size = Some(size.max(0.05)),
+                    };
+                    let a = axis_child_size(&axis.children[i]);
+                    let b = axis_child_size(&axis.children[j]);
+                    set_size(&mut axis.children[i], a + delta);
+                    set_size(&mut axis.children[j], (b - delta).max(0.05));
+                    return true;
+                }
+            }
+            for c in &mut axis.children {
+                if let WindowLayoutChild::Axis(a) = c {
+                    if nudge(a, window_kind_id, delta) {
+                        return true;
+                    }
+                }
+            }
+            false
+        }
+        match &mut layout.root {
+            WindowLayoutRoot::Axis(a) => nudge(a, window_kind_id, delta),
+            _ => false,
+        }
+    }
+
+    /// 🚚 Moves `window_kind_id` into the stack that hosts `target_window_kind_id` as a new tab.
+    pub fn move_window_to_stack(layout: &mut WindowLayout, window_kind_id: &str, target_window_kind_id: &str) -> bool {
+        if window_kind_id == target_window_kind_id {
+            return false;
+        }
+        let Some(node) = take_window_node(&mut layout.root, window_kind_id) else {
+            return false;
+        };
+        let node_id = node.window_kind_id.clone();
+        let placed = with_stack_mut(&mut layout.root, target_window_kind_id, &mut |s| {
+            s.children.push(node.clone());
+            s.active_window_kind_id = Some(node_id.clone());
+            true
+        });
+        if placed {
+            return true;
+        }
+        match &mut layout.root {
+            WindowLayoutRoot::Axis(a) => {
+                a.children.push(WindowLayoutChild::Stack(WindowLayoutStackNode {
+                    size: Some(1.0),
+                    active_window_kind_id: Some(node.window_kind_id.clone()),
+                    children: vec![node],
+                }));
+                true
+            }
+            WindowLayoutRoot::Stack(s) => {
+                s.children.push(node);
+                true
+            }
+        }
+    }
+    //#endregion 🔖️WindowLayoutMutations
+
     //#endregion 🔖️WindowLayout
 }
 // #endregion 🔖️Layout
@@ -2277,6 +2532,8 @@ pub mod widget {
         TabChanged(usize),
         WindowClose,
         WindowMaximize,
+        /// Key should be forwarded to the attached PTY / session.
+        TerminalPassthrough,
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -2446,6 +2703,170 @@ pub mod widget {
     }
     //#endregion 🔖️Table
 
+    //#region 🔖️Terminal
+    /// 🖍️ Inclusive cell-range selection inside a terminal pane (viewport coordinates).
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct TerminalSelection {
+        pub start: crate::tui::geometry::Pos,
+        pub end: crate::tui::geometry::Pos,
+    }
+
+    /// 🖥️ VT pane state: scrollback viewport, search, selection, follow/pin, key passthrough.
+    pub struct TerminalState {
+        pub screen: crate::tui::vt::VtScreen,
+        pub scrollback_offset: usize,
+        pub follow: bool,
+        pub pinned: bool,
+        pub search: String,
+        pub search_active: bool,
+        pub selection: Option<TerminalSelection>,
+    }
+
+    impl TerminalState {
+        /// 🆕 Blank terminal pane of `size` with `scrollback_cap` (0 → VT default).
+        pub fn new(size: crate::tui::geometry::Size, scrollback_cap: usize) -> Self {
+            Self {
+                screen: crate::tui::vt::VtScreen::new(size, scrollback_cap),
+                scrollback_offset: 0,
+                follow: true,
+                pinned: false,
+                search: String::new(),
+                search_active: false,
+                selection: None,
+            }
+        }
+
+        /// 📥️ Feeds PTY bytes; keeps the viewport glued when following and not pinned.
+        pub fn feed(&mut self, bytes: &[u8]) {
+            self.screen.feed(bytes);
+            if self.follow && !self.pinned {
+                self.scrollback_offset = 0;
+            }
+        }
+
+        /// ↔️ Resizes the underlying VT screen.
+        pub fn resize(&mut self, size: crate::tui::geometry::Size) {
+            self.screen.resize(size);
+        }
+
+        fn max_offset(&self) -> usize {
+            self.screen.scrollback_len()
+        }
+
+        fn scroll_by(&mut self, delta: i32, page: u16) {
+            let step = if delta == 0 { 0 } else { i32::from(page.max(1)) * delta.signum() };
+            let next = (self.scrollback_offset as i32 + step).clamp(0, self.max_offset() as i32) as usize;
+            self.scrollback_offset = next;
+            self.follow = next == 0 && !self.pinned;
+        }
+
+        /// 📋 Extracts selected text from the active buffer (simple row-major slice).
+        pub fn selected_text(&self) -> Option<String> {
+            let sel = self.selection?;
+            let (a, b) = if (sel.start.y, sel.start.x) <= (sel.end.y, sel.end.x) {
+                (sel.start, sel.end)
+            } else {
+                (sel.end, sel.start)
+            };
+            let mut out = String::new();
+            for y in a.y..=b.y {
+                let x0 = if y == a.y { a.x } else { 0 };
+                let x1 = if y == b.y { b.x } else { self.screen.size.width.saturating_sub(1) };
+                if y > a.y {
+                    out.push('\n');
+                }
+                for x in x0..=x1 {
+                    if let Some(cell) = self.screen.cell_at(x, y) {
+                        if cell.ch != '\0' {
+                            out.push(cell.ch);
+                        }
+                    }
+                }
+            }
+            Some(out)
+        }
+    }
+
+    fn terminal_on_key(term: &mut TerminalState, ev: &KeyEvent) -> Option<WidgetSignal> {
+        use crate::tui::event::{mods, Key};
+        if term.search_active {
+            match ev.key {
+                Key::Esc => {
+                    term.search_active = false;
+                    term.search.clear();
+                    None
+                }
+                Key::Backspace => {
+                    term.search.pop();
+                    Some(WidgetSignal::ValueChanged(term.search.clone()))
+                }
+                Key::Enter => Some(WidgetSignal::ValueChanged(term.search.clone())),
+                Key::Char(c) if ev.mods == 0 || ev.mods == mods::SHIFT => {
+                    term.search.push(c);
+                    Some(WidgetSignal::ValueChanged(term.search.clone()))
+                }
+                _ => None,
+            }
+        } else {
+            match (ev.key, ev.mods) {
+                (Key::PageUp, _) => {
+                    term.pinned = false;
+                    term.scroll_by(1, term.screen.size.height);
+                    None
+                }
+                (Key::PageDown, _) => {
+                    term.scroll_by(-1, term.screen.size.height);
+                    None
+                }
+                (Key::Home, m) if m & mods::CTRL != 0 => {
+                    term.scrollback_offset = term.max_offset();
+                    term.follow = false;
+                    None
+                }
+                (Key::End, _) => {
+                    term.scrollback_offset = 0;
+                    term.follow = true;
+                    None
+                }
+                (Key::Char('/'), 0) => {
+                    term.search_active = true;
+                    term.search.clear();
+                    None
+                }
+                (Key::Char('p'), m) if m == mods::CTRL => {
+                    term.pinned = !term.pinned;
+                    if !term.pinned && term.follow {
+                        term.scrollback_offset = 0;
+                    }
+                    Some(WidgetSignal::Toggled(term.pinned))
+                }
+                _ => Some(WidgetSignal::TerminalPassthrough),
+            }
+        }
+    }
+
+    fn paint_terminal(term: &TerminalState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+        let bg = theme.surface(crate::tui::theme::Surface::Window);
+        let fg = theme.role(Role::Foreground);
+        buf.fill_rect(rect, crate::tui::cell::Cell::blank(fg, bg));
+        if rect.width == 0 || rect.height == 0 {
+            return;
+        }
+        let (body, search_row) = if term.search_active && rect.height > 1 {
+            (Rect::new(rect.x, rect.y, rect.width, rect.height - 1), Some(rect.y + rect.height - 1))
+        } else {
+            (rect, None)
+        };
+        term.screen.blit_to(buf, body, term.scrollback_offset);
+        if let Some(y) = search_row {
+            let label = format!("/{}", term.search);
+            let muted = theme.role(Role::MutedForeground);
+            buf.fill_rect(Rect::new(rect.x, y, rect.width, 1), crate::tui::cell::Cell::blank(muted, bg));
+            buf.put_str(crate::tui::geometry::Pos { x: rect.x, y }, &label, muted, bg, 0, Rect::new(rect.x, y, rect.width, 1));
+        }
+    }
+    //#endregion 🔖️Terminal
+
     /// 🧩️ The concrete state of any core widget.
     pub enum WidgetState {
         Label(LabelState),
@@ -2457,6 +2878,7 @@ pub mod widget {
         Divider(DividerState),
         Chip(ChipState),
         Table(TableState),
+        Terminal(TerminalState),
     }
 
     impl WidgetState {
@@ -2469,6 +2891,7 @@ pub mod widget {
                 }
                 WidgetState::Chip(c) => Size { width: display_width(&c.label) + 2, height: 1 },
                 WidgetState::Divider(_) => Size { width: 1, height: 1 },
+                WidgetState::Terminal(t) => t.screen.size,
                 _ => Size { width: 0, height: 0 },
             }
         }
@@ -2485,6 +2908,7 @@ pub mod widget {
                     log_on_key(log, ev);
                     None
                 }
+                WidgetState::Terminal(t) => terminal_on_key(t, ev),
                 _ => None,
             }
         }
@@ -2501,6 +2925,7 @@ pub mod widget {
                 WidgetState::Divider(d) => paint_divider(d, theme, rect, buf),
                 WidgetState::Chip(c) => paint_chip(c, theme, rect, buf),
                 WidgetState::Table(t) => paint_table(t, theme, rect, buf, focused),
+                WidgetState::Terminal(t) => paint_terminal(t, theme, rect, buf),
             }
         }
     }
@@ -2550,11 +2975,33 @@ pub mod chrome {
         pub focused: bool,
         pub closable: bool,
         pub maximizable: bool,
+        pub stack_tabs: Vec<String>,
+        pub active_stack_tab: usize,
     }
 
     impl WindowState {
         pub fn new(title: impl Into<String>) -> Self {
-            Self { title: title.into(), number: None, focused: false, closable: true, maximizable: true }
+            Self {
+                title: title.into(),
+                number: None,
+                focused: false,
+                closable: true,
+                maximizable: true,
+                stack_tabs: Vec::new(),
+                active_stack_tab: 0,
+            }
+        }
+
+        /// 🗂️ Attaches per-stack tab labels; `active` is clamped into range.
+        pub fn with_stack_tabs(mut self, tabs: Vec<String>, active: usize) -> Self {
+            self.active_stack_tab = if tabs.is_empty() { 0 } else { active.min(tabs.len() - 1) };
+            self.stack_tabs = tabs;
+            self
+        }
+
+        /// ↕️ Extra chrome rows consumed by a multi-tab stack strip (0 when ≤1 tab).
+        pub fn stack_tab_strip_height(&self) -> u16 {
+            if self.stack_tabs.len() > 1 { 1 } else { 0 }
         }
     }
 
@@ -2889,6 +3336,189 @@ pub mod backend {
         }
     }
 
+    //#region 🔖️Clipboard
+    /// 📋️ Host clipboard access, kept behind an interface so VT panes never depend on a crate.
+    pub trait Clipboard {
+        fn copy_text(&mut self, text: &str) -> Result<(), BackendError>;
+        fn paste_text(&mut self) -> Result<String, BackendError>;
+    }
+
+    fn base64_encode(data: &[u8]) -> String {
+        const T: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        let mut out = String::with_capacity((data.len() + 2) / 3 * 4);
+        let mut i = 0;
+        while i < data.len() {
+            let b0 = data[i];
+            let b1 = if i + 1 < data.len() { data[i + 1] } else { 0 };
+            let b2 = if i + 2 < data.len() { data[i + 2] } else { 0 };
+            out.push(T[(b0 >> 2) as usize] as char);
+            out.push(T[(((b0 & 0x03) << 4) | (b1 >> 4)) as usize] as char);
+            if i + 1 < data.len() {
+                out.push(T[(((b1 & 0x0f) << 2) | (b2 >> 6)) as usize] as char);
+            } else {
+                out.push('=');
+            }
+            if i + 2 < data.len() {
+                out.push(T[(b2 & 0x3f) as usize] as char);
+            } else {
+                out.push('=');
+            }
+            i += 3;
+        }
+        out
+    }
+
+    /// 📋 Builds an OSC 52 clipboard-set sequence for selection `c`.
+    pub fn osc52_copy_sequence(text: &str) -> String {
+        let mut out = String::new();
+        out.push('\u{1b}');
+        out.push_str("]52;c;");
+        out.push_str(&base64_encode(text.as_bytes()));
+        out.push('\u{07}');
+        out
+    }
+
+    fn clip_err(message: impl Into<String>) -> BackendError {
+        BackendError { message: message.into() }
+    }
+
+    fn native_copy(text: &str) -> Result<(), BackendError> {
+        #[cfg(all(unix, not(target_arch = "wasm32")))]
+        {
+            use std::io::Write;
+            use std::process::{Command, Stdio};
+            let candidates: &[&[&str]] = if cfg!(target_os = "macos") {
+                &[&["pbcopy"]]
+            } else {
+                &[&["wl-copy"], &["xclip", "-selection", "clipboard"], &["xsel", "--clipboard", "--input"]]
+            };
+            for argv in candidates {
+                let mut child = match Command::new(argv[0]).args(&argv[1..]).stdin(Stdio::piped()).stdout(Stdio::null()).stderr(Stdio::null()).spawn() {
+                    Ok(c) => c,
+                    Err(_) => continue,
+                };
+                if let Some(mut stdin) = child.stdin.take() {
+                    if stdin.write_all(text.as_bytes()).is_err() {
+                        continue;
+                    }
+                }
+                if child.wait().map(|s| s.success()).unwrap_or(false) {
+                    return Ok(());
+                }
+            }
+            return Err(clip_err("no native clipboard tool available"));
+        }
+        #[cfg(all(windows, not(target_arch = "wasm32")))]
+        {
+            use std::io::Write;
+            use std::process::{Command, Stdio};
+            let mut child = Command::new("clip").stdin(Stdio::piped()).stdout(Stdio::null()).stderr(Stdio::null()).spawn().map_err(|e| clip_err(e.to_string()))?;
+            if let Some(mut stdin) = child.stdin.take() {
+                stdin.write_all(text.as_bytes()).map_err(|e| clip_err(e.to_string()))?;
+            }
+            if child.wait().map(|s| s.success()).unwrap_or(false) {
+                return Ok(());
+            }
+            return Err(clip_err("clip.exe failed"));
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = text;
+            Err(clip_err("native clipboard unavailable on wasm"))
+        }
+    }
+
+    fn native_paste() -> Result<String, BackendError> {
+        #[cfg(all(unix, not(target_arch = "wasm32")))]
+        {
+            use std::process::Command;
+            let candidates: &[&[&str]] = if cfg!(target_os = "macos") {
+                &[&["pbpaste"]]
+            } else {
+                &[&["wl-paste", "--no-newline"], &["xclip", "-selection", "clipboard", "-o"], &["xsel", "--clipboard", "--output"]]
+            };
+            for argv in candidates {
+                if let Ok(out) = Command::new(argv[0]).args(&argv[1..]).output() {
+                    if out.status.success() {
+                        return Ok(String::from_utf8_lossy(&out.stdout).into_owned());
+                    }
+                }
+            }
+            Err(clip_err("no native clipboard tool available"))
+        }
+        #[cfg(all(windows, not(target_arch = "wasm32")))]
+        {
+            use std::process::Command;
+            let out = Command::new("powershell")
+                .args(["-NoProfile", "-Command", "Get-Clipboard"])
+                .output()
+                .map_err(|e| clip_err(e.to_string()))?;
+            if out.status.success() {
+                Ok(String::from_utf8_lossy(&out.stdout).trim_end_matches(&['\r', '\n'][..]).to_string())
+            } else {
+                Err(clip_err("Get-Clipboard failed"))
+            }
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            Err(clip_err("native clipboard unavailable on wasm"))
+        }
+    }
+
+    /// 🖥️ Clipboard that prefers OSC 52 (survives SSH/devcontainer) then falls back to native tools.
+    pub struct HostClipboard<F>
+    where
+        F: FnMut(&[u8]) -> Result<(), BackendError>,
+    {
+        pub write_osc: Option<F>,
+    }
+
+    impl<F> HostClipboard<F>
+    where
+        F: FnMut(&[u8]) -> Result<(), BackendError>,
+    {
+        pub fn new(write_osc: Option<F>) -> Self {
+            Self { write_osc }
+        }
+    }
+
+    impl<F> Clipboard for HostClipboard<F>
+    where
+        F: FnMut(&[u8]) -> Result<(), BackendError>,
+    {
+        fn copy_text(&mut self, text: &str) -> Result<(), BackendError> {
+            if let Some(write) = self.write_osc.as_mut() {
+                let seq = osc52_copy_sequence(text);
+                if write(seq.as_bytes()).is_ok() {
+                    return Ok(());
+                }
+            }
+            native_copy(text)
+        }
+
+        fn paste_text(&mut self) -> Result<String, BackendError> {
+            native_paste()
+        }
+    }
+
+    /// 🧪 In-memory clipboard for tests and headless hosts.
+    #[derive(Default)]
+    pub struct MemoryClipboard {
+        pub text: String,
+    }
+
+    impl Clipboard for MemoryClipboard {
+        fn copy_text(&mut self, text: &str) -> Result<(), BackendError> {
+            self.text = text.to_string();
+            Ok(())
+        }
+
+        fn paste_text(&mut self) -> Result<String, BackendError> {
+            Ok(self.text.clone())
+        }
+    }
+    //#endregion 🔖️Clipboard
+
     /// 🔌️ A platform terminal I/O implementation, kept out of the retained-mode core.
     pub trait TerminalBackend {
         fn size(&mut self) -> Result<Size, BackendError>;
@@ -3194,7 +3824,7 @@ pub mod pty {
                         &mut slave,
                         std::ptr::null_mut(),
                         std::ptr::null_mut(),
-                        &ws,
+                        &mut ws,
                     ) != 0
                     {
                         return Err(err(format!(
@@ -3798,7 +4428,7 @@ mod tests {
     use crate::tui::scene::{Node, NodeContent, Scene};
     use crate::tui::text::{display_width, truncate_to};
     use crate::tui::theme::{Role, Surface, Theme};
-    use crate::tui::widget::{Align, ChipState, DividerState, InputState, LabelState, ListState, LogScroll, LogState, SelectState, TableAlign, TableColumn, TableRow, TableState, TabsState, WidgetSignal, WidgetState};
+    use crate::tui::widget::{Align, ChipState, DividerState, InputState, LabelState, ListState, LogScroll, LogState, SelectState, TableAlign, TableColumn, TableRow, TableState, TabsState, TerminalState, WidgetSignal, WidgetState};
     use ui_styling::appearance::AppearanceName;
 
     fn row_text(buf: &CellBuffer, y: u16) -> String {
@@ -3863,6 +4493,7 @@ mod tests {
                 active_window_kind_id: Some("b".into()),
                 children: vec![WindowLayoutWindowNode { window_kind_id: "a".into(), title: None }, WindowLayoutWindowNode { window_kind_id: "b".into(), title: None }],
             }),
+            zoomed: None,
         };
         let measures = solve_window_layout(&layout, Rect::new(0, 0, 40, 10));
         assert_eq!(measures.len(), 1);
@@ -4440,10 +5071,11 @@ mod tests {
     #[test]
     fn vt_scroll_region_decstbm_newline_scrolls_inside() {
         let mut s = vt_screen(5, 5);
-        s.feed(b"AAAAA\nBBBBB\nCCCCC\nDDDDD\nEEEEE");
-        s.feed(b"\x1b[2;4r");
+        s.feed(b"[1;1HAAAAA[2;1HBBBBB[3;1HCCCCC[4;1HDDDDD[5;1HEEEEE");
+        s.feed(b"[2;4r");
         assert_eq!((s.scroll_top, s.scroll_bottom), (1, 3));
-        s.feed(b"\x1b[4;1H\n");
+        s.feed(b"[4;1H
+");
         assert_eq!(&vt_row(&s, 0)[..5], "AAAAA");
         assert_eq!(&vt_row(&s, 1)[..5], "CCCCC");
         assert_eq!(&vt_row(&s, 2)[..5], "DDDDD");
@@ -4576,6 +5208,39 @@ mod tests {
         assert_eq!(widths.iter().sum::<u16>(), 10);
         assert_eq!(widths[0], 4, "equal fractional remainders are broken by original order");
     }
+
+    #[test]
+    fn window_layout_split_resize_move_zoom_and_tabs() {
+        use crate::tui::layout::{
+            activate_stack_tab, cycle_stack_tab, move_window_to_stack, resize_window, solve_window_layout, split_window, zoom_window,
+            WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
+        };
+        let mut layout = WindowLayout {
+            root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
+                size: None,
+                active_window_kind_id: Some("a".into()),
+                children: vec![WindowLayoutWindowNode { window_kind_id: "a".into(), title: None }],
+            }),
+            zoomed: None,
+        };
+        assert!(split_window(&mut layout, "a", "row", "b", None));
+        let measures = solve_window_layout(&layout, Rect::new(0, 0, 100, 10));
+        assert_eq!(measures.len(), 2);
+        assert!(resize_window(&mut layout, "a", 0.5));
+        assert!(move_window_to_stack(&mut layout, "b", "a"));
+        let measures = solve_window_layout(&layout, Rect::new(0, 0, 100, 10));
+        assert_eq!(measures.len(), 1);
+        assert_eq!(measures[0].stack_tabs, vec!["a", "b"]);
+        assert!(activate_stack_tab(&mut layout, "b"));
+        assert!(cycle_stack_tab(&mut layout, "b", 1));
+        zoom_window(&mut layout, Some("a"));
+        let zoomed = solve_window_layout(&layout, Rect::new(0, 0, 80, 12));
+        assert_eq!(zoomed.len(), 1);
+        assert_eq!(zoomed[0].window_kind_id, "a");
+        assert_eq!(zoomed[0].rect, Rect::new(0, 0, 80, 12));
+        zoom_window(&mut layout, None);
+    }
+
     //#endregion 🔖️Layout
 
     //#region 🔖️Widget
@@ -4795,6 +5460,36 @@ mod tests {
     }
 
     #[test]
+    fn terminal_widget_scroll_search_and_passthrough() {
+        let mut term = TerminalState::new(Size { width: 8, height: 3 }, 50);
+        term.feed(b"line1\nline2\nline3\nline4\n");
+        let mut widget = WidgetState::Terminal(term);
+        let page = KeyEvent { key: Key::PageUp, mods: 0 };
+        assert_eq!(widget.on_key(&page), None);
+        let slash = KeyEvent { key: Key::Char('/'), mods: 0 };
+        assert_eq!(widget.on_key(&slash), None);
+        let a = KeyEvent { key: Key::Char('a'), mods: 0 };
+        assert_eq!(widget.on_key(&a), Some(WidgetSignal::ValueChanged("a".into())));
+        let esc = KeyEvent { key: Key::Esc, mods: 0 };
+        assert_eq!(widget.on_key(&esc), None);
+        let x = KeyEvent { key: Key::Char('x'), mods: 0 };
+        assert_eq!(widget.on_key(&x), Some(WidgetSignal::TerminalPassthrough));
+        let mut buf = CellBuffer::new(Size { width: 8, height: 3 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        widget.paint(&Theme::new(AppearanceName::Dark), Rect::new(0, 0, 8, 3), &mut buf, true);
+    }
+
+    #[test]
+    fn window_stack_tabs_paint_on_body_top() {
+        let theme = Theme::new(AppearanceName::Dark);
+        let rect = Rect::new(0, 0, 40, 6);
+        let mut buf = CellBuffer::new(Size { width: 40, height: 6 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        let w = WindowState::new("Main").with_stack_tabs(vec!["a".into(), "b".into()], 1);
+        ChromeState::Window(w).paint(&theme, rect, &mut buf);
+        let row: String = (0..40).filter_map(|x| buf.get(x, 2).map(|c| c.ch)).collect();
+        assert!(row.contains('[') && row.contains('b'), "stack tab strip missing: {row:?}");
+    }
+
+    #[test]
     fn paint_log_shows_the_tail_when_following() {
         let theme = Theme::new(AppearanceName::Dark);
         let mut log = LogState::new(10);
@@ -4962,6 +5657,20 @@ mod tests {
     }
     //#endregion 🔖️WasmHost
 
+
+
+    //#region 🔖️Clipboard
+    #[test]
+    fn osc52_copy_sequence_is_base64_payload() {
+        let seq = crate::tui::backend::osc52_copy_sequence("hi");
+        assert_eq!(seq.as_bytes()[0], 0x1b);
+        assert!(seq.contains("]52;c;aGk="), "got {seq:?}");
+        assert_eq!(*seq.as_bytes().last().unwrap(), 0x07);
+        let mut mem = crate::tui::backend::MemoryClipboard::default();
+        crate::tui::backend::Clipboard::copy_text(&mut mem, "abc").unwrap();
+        assert_eq!(crate::tui::backend::Clipboard::paste_text(&mut mem).unwrap(), "abc");
+    }
+    //#endregion 🔖️Clipboard
 
     //#region 🔖️Pty
     #[cfg(all(unix, feature = "tui-terminal"))]

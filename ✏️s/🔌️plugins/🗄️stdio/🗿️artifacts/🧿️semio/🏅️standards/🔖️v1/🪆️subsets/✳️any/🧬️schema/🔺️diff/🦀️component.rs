@@ -21,6 +21,7 @@ use crate::artifacts::semio::standards::v1::subsets::audio::schema::{diff::Semio
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::{diff::SemioAnimationDiff, snapshot::SemioAnimationSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::{diff::SemioPresentationDiff, snapshot::SemioPresentationSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::flow::schema::{diff::SemioFlowDiff, snapshot::SemioFlowSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::text::schema::{diff::SemioTextDiff, snapshot::SemioTextSnapshot};
 use protocol::DiffCodec;
 use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
@@ -51,6 +52,7 @@ pub enum SemioDiff {
     Animation(SemioAnimationDiff),
     Presentation(SemioPresentationDiff),
     Flow(SemioFlowDiff),
+    Text(SemioTextDiff),
     Replace(Box<SemioSnapshot>),
 }
 
@@ -73,6 +75,7 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
             (SemioDiff::Animation(d), S::Animation(b)) => S::Animation(<SemioAnimationDiff as MutationDiff<SemioAnimationSnapshot>>::apply(d, b)),
             (SemioDiff::Presentation(d), S::Presentation(b)) => S::Presentation(<SemioPresentationDiff as MutationDiff<SemioPresentationSnapshot>>::apply(d, b)),
             (SemioDiff::Flow(d), S::Flow(b)) => S::Flow(<SemioFlowDiff as MutationDiff<SemioFlowSnapshot>>::apply(d, b)),
+            (SemioDiff::Text(d), S::Text(b)) => S::Text(<SemioTextDiff as MutationDiff<SemioTextSnapshot>>::apply(d, b)),
             // 🛡️ Kind mismatch (a nested-kind diff paired with a base of a DIFFERENT kind): can
             // only arise from a malformed/foreign diff, never from this module's own `between`/
             // `diff` — `apply` stays TOTAL (never panics) per `MutationDiff`'s contract by
@@ -108,6 +111,7 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
             (Animation(mut d1), Animation(d2)) => { d1.absorb(d2); Animation(d1) }
             (Presentation(mut d1), Presentation(d2)) => { d1.absorb(d2); Presentation(d1) }
             (Flow(mut d1), Flow(d2)) => { d1.absorb(d2); Flow(d1) }
+            (Text(mut d1), Text(d2)) => { d1.absorb(d2); Text(d1) }
             // 🛡️ Mismatched, non-`Replace` kind pair — structurally impossible from this module's
             // OWN sequential diffs (a kind change always goes through `Replace`), but `absorb`
             // must stay TOTAL over every pair per its trait contract; last-diff-wins is the
@@ -135,6 +139,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
             (S::Animation(b), S::Animation(o)) => SemioDiff::Animation(<SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(b, o)),
             (S::Presentation(b), S::Presentation(o)) => SemioDiff::Presentation(<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(b, o)),
             (S::Flow(b), S::Flow(o)) => SemioDiff::Flow(<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(b, o)),
+            (S::Text(b), S::Text(o)) => SemioDiff::Text(<SemioTextDiff as DiffAlgebra<SemioTextSnapshot>>::between(b, o)),
             // 🧭 Different kinds (or, degenerately, the exact same value): a cross-kind change has
             // no sparse representation, so it's `Replace`; an identical pair collapses to `NoChange`
             // so `between(a, a).is_empty()` holds even when `a`/`b` happen to share a reference.
@@ -160,6 +165,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
             (SemioDiff::Animation(d), S::Animation(b)) => SemioDiff::Animation(<SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::inverse(d, b)),
             (SemioDiff::Presentation(d), S::Presentation(b)) => SemioDiff::Presentation(<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::inverse(d, b)),
             (SemioDiff::Flow(d), S::Flow(b)) => SemioDiff::Flow(<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::inverse(d, b)),
+            (SemioDiff::Text(d), S::Text(b)) => SemioDiff::Text(<SemioTextDiff as DiffAlgebra<SemioTextSnapshot>>::inverse(d, b)),
             // 🛡️ Kind mismatch: same total-fallback stance as `apply`/`absorb` above — the safe
             // inverse of "unknown, ill-typed change" is "restore base wholesale".
             (_, b) => SemioDiff::Replace(Box::new(SemioSnapshot { schema: base.schema.clone(), subset: b.clone() })),
@@ -183,6 +189,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
             SemioDiff::Animation(d) => d.is_empty(),
             SemioDiff::Presentation(d) => d.is_empty(),
             SemioDiff::Flow(d) => d.is_empty(),
+            SemioDiff::Text(d) => d.is_empty(),
         }
     }
 }
@@ -221,9 +228,9 @@ fn dec_replace_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
     <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|e| format!("replace: dsl decode: {e}"))
 }
 
-/// 🏷️ Binary tag ordinal for [`SemioDiff`] — `0` = `NoChange`, `1..=13` = the 13 wrapped subset
+/// 🏷️ Binary tag ordinal for [`SemioDiff`] — `0` = `NoChange`, `1..=14` = the 14 wrapped subset
 /// kinds (same enum declaration order as [`crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::subset_ordinal`],
-/// offset by one to make room for `NoChange`), `14` = `Replace`.
+/// offset by one to make room for `NoChange`), `15` = `Replace`.
 fn diff_tag(d: &SemioDiff) -> u8 {
     match d {
         SemioDiff::NoChange => 0,
@@ -240,7 +247,8 @@ fn diff_tag(d: &SemioDiff) -> u8 {
         SemioDiff::Animation(_) => 11,
         SemioDiff::Presentation(_) => 12,
         SemioDiff::Flow(_) => 13,
-        SemioDiff::Replace(_) => 14,
+        SemioDiff::Text(_) => 14,
+        SemioDiff::Replace(_) => 15,
     }
 }
 
@@ -261,6 +269,7 @@ fn print_semio_diff(d: &SemioDiff) -> String {
         SemioDiff::Animation(d) => format!("animation:{}", d.print_diff()),
         SemioDiff::Presentation(d) => format!("presentation:{}", d.print_diff()),
         SemioDiff::Flow(d) => format!("flow:{}", d.print_diff()),
+        SemioDiff::Text(d) => format!("text:{}", d.print_diff()),
     }
 }
 
@@ -284,6 +293,7 @@ fn parse_semio_diff(line: &str) -> Result<SemioDiff, String> {
         "animation" => Ok(SemioDiff::Animation(SemioAnimationDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         "presentation" => Ok(SemioDiff::Presentation(SemioPresentationDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         "flow" => Ok(SemioDiff::Flow(SemioFlowDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "text" => Ok(SemioDiff::Text(SemioTextDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         other => Err(format!("semio diff: unknown tag {other:?}")),
     }
 }
@@ -319,6 +329,7 @@ impl protocol::DiffCodec for SemioDiff {
             SemioDiff::Animation(d) => d.encode_diff()?,
             SemioDiff::Presentation(d) => d.encode_diff()?,
             SemioDiff::Flow(d) => d.encode_diff()?,
+            SemioDiff::Text(d) => d.encode_diff()?,
         };
         out.extend_from_slice(&payload);
         Ok(out)
@@ -350,7 +361,8 @@ impl protocol::DiffCodec for SemioDiff {
             11 => SemioDiff::Animation(SemioAnimationDiff::decode_diff(payload)?),
             12 => SemioDiff::Presentation(SemioPresentationDiff::decode_diff(payload)?),
             13 => SemioDiff::Flow(SemioFlowDiff::decode_diff(payload)?),
-            14 => SemioDiff::Replace(Box::new(<SemioSnapshot as store::ArtifactPack>::decode_pack(payload)?)),
+            14 => SemioDiff::Text(SemioTextDiff::decode_diff(payload)?),
+            15 => SemioDiff::Replace(Box::new(<SemioSnapshot as store::ArtifactPack>::decode_pack(payload)?)),
             other => return Err(protocol::ProtocolError::Malformed { what: "diff tag", offset: 1, detail: format!("unknown tag {other}") }),
         })
     }
@@ -378,6 +390,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioDiff> {
         SemioSubsetSnapshot::Animation(Default::default()),
         SemioSubsetSnapshot::Presentation(Default::default()),
         SemioSubsetSnapshot::Flow(Default::default()),
+        SemioSubsetSnapshot::Text(Default::default()),
     ];
     let mut cases = vec![SemioDiff::NoChange];
     for subset in subsets {
@@ -532,12 +545,12 @@ mod tests {
         }
     }
 
-    /// 🧪️ Dispatch-table coverage: every one of the 13 same-kind tags round-trips through
-    /// `print_diff`/`parse_diff` for the trivial `NoChange`-shaped nested diff (proves the 26-arm
+    /// 🧪️ Dispatch-table coverage: every one of the 14 same-kind tags round-trips through
+    /// `print_diff`/`parse_diff` for the trivial `NoChange`-shaped nested diff (proves the 28-arm
     /// print/parse match is wired correctly for every subset, without re-deriving each subset's
     /// own deep field grammar here).
     #[test]
-    fn all_thirteen_subset_tags_round_trip_empty_nested_diff() {
+    fn all_fourteen_subset_tags_round_trip_empty_nested_diff() {
         let subsets: Vec<SemioSubsetSnapshot> = vec![
             SemioSubsetSnapshot::Brep(Default::default()),
             SemioSubsetSnapshot::Mesh(Default::default()),
@@ -552,6 +565,7 @@ mod tests {
             SemioSubsetSnapshot::Animation(Default::default()),
             SemioSubsetSnapshot::Presentation(Default::default()),
             SemioSubsetSnapshot::Flow(Default::default()),
+            SemioSubsetSnapshot::Text(Default::default()),
         ];
         for subset in subsets {
             let snap = SemioSnapshot { schema: "stdio.semio".into(), subset };

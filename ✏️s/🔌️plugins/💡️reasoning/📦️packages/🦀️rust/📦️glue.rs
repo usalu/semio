@@ -184,6 +184,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
                                 }
+                            }
                         }
                         #[path = "."]
                         pub mod io {
@@ -458,7 +459,7 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/🔌️wires/📌️panels/📄️document/🦀️component.rs"]
+            #[path = "../../🎛️apps/🔌️wires/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
             #[path = "../../🎛️apps/🔌️wires/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;

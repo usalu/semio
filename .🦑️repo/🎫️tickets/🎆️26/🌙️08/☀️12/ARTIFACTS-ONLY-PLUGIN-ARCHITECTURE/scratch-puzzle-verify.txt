@@ -1,0 +1,1 @@
+===== cargo check -p semio-s-plugin-puzzle --all-targets =====

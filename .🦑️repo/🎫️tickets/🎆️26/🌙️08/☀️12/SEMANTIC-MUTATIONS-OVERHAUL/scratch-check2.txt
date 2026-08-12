@@ -1,0 +1,78 @@
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:30:9: error[E0432]: unresolved import `db_engine`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:39:9: error[E0432]: unresolved import `db_engine`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:43:9: error[E0432]: unresolved import `db_ids`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:54:13: error[E0432]: unresolved import `db_ids`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:58:13: error[E0432]: unresolved import `db_durability`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:62:13: error[E0432]: unresolved import `db_policy`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:66:13: error[E0432]: unresolved import `db_version_graph`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:72:13: error[E0432]: unresolved import `db_actor`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:78:13: error[E0432]: unresolved import `db_state`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:85:13: error[E0432]: unresolved import `db_storage`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:91:13: error[E0432]: unresolved import `db_wal`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:97:13: error[E0432]: unresolved import `db_snapshot`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:103:13: error[E0432]: unresolved import `db_index`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:109:13: error[E0432]: unresolved import `db_conflict`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:114:13: error[E0432]: unresolved import `db_projection`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:120:13: error[E0432]: unresolved import `db_query`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:126:13: error[E0432]: unresolved import `db_preview`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:132:13: error[E0432]: unresolved import `db_security`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:139:13: error[E0432]: unresolved import `db_artifact`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:145:13: error[E0432]: unresolved import `db_compact`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:151:13: error[E0432]: unresolved import `db_sync`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:157:13: error[E0432]: unresolved import `db_cluster`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:163:13: error[E0432]: unresolved import `db_observe`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:171:13: error[E0432]: unresolved import `db_engine`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:180:13: error[E0432]: unresolved import `db_storage_sqlite`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🪶️sqlite/🦀️component.rs:40:10: error[E0432]: unresolved imports `check_len`, `DbError`, `ArtifactId`, `DurabilityClass`, `EpochFence`: no external crate `check_len`, no external crate `DbError`, no external crate `ArtifactId`, no external crate `DurabilityClass`, no external crate `EpochFence`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🪶️sqlite/🦀️component.rs:41:9: error[E0432]: unresolved import `db_storage`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:36:5: error[E0433]: cannot find module or crate `db` in this scope: use of unresolved module or unlinked crate `db`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🪶️sqlite/🦀️component.rs:43:9: error[E0432]: unresolved import `rusqlite`: use of unresolved module or unlinked crate `rusqlite`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️preview/🦀️component.rs:30:6: error[E0432]: unresolved imports `check_len`, `ActorId`, `DbError`, `DbLimits`, `ArtifactId`, `Frontier`: no external crate `check_len`, no external crate `ActorId`, no external crate `DbError`, no external crate `DbLimits`, no external crate `ArtifactId`, no external crate `Frontier`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️preview/🦀️component.rs:31:5: error[E0432]: unresolved import `db_state`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:18:6: error[E0432]: unresolved imports `check_len`, `ActorId`, `DbError`, `ArtifactId`, `Frontier`: no external crate `check_len`, no external crate `ActorId`, no external crate `DbError`, no external crate `ArtifactId`, no external crate `Frontier`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:19:5: error[E0432]: unresolved import `db_storage`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:23:6: error[E0432]: unresolved imports `check_len`, `DbError`, `ArtifactId`, `DurabilityClass`, `EpochFence`: no external crate `check_len`, no external crate `DbError`, no external crate `ArtifactId`, no external crate `DurabilityClass`, no external crate `EpochFence`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:561:9: error[E0432]: unresolved import `check_len`: no external crate `check_len`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎭️actor/🦀️component.rs:27:6: error[E0432]: unresolved imports `DbError`, `GenerationId`, `MailboxCapacities`, `Priority`: no external crate `DbError`, no external crate `GenerationId`, no external crate `MailboxCapacities`, no external crate `Priority`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:33:5: error[E0432]: unresolved import `DbError`: no external crate `DbError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:34:5: error[E0432]: unresolved import `db_storage`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:43:6: error[E0432]: unresolved imports `check_len`, `DbError`, `ArtifactId`, `EpochFence`: no external crate `check_len`, no external crate `DbError`, no external crate `ArtifactId`, no external crate `EpochFence`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:44:5: error[E0432]: unresolved import `db_state`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:45:5: error[E0432]: unresolved import `db_storage`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔘️state/🦀️component.rs:23:5: error[E0432]: unresolved import `DbError`: no external crate `DbError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📽️projection/🦀️component.rs:50:6: error[E0432]: unresolved imports `DbError`, `ArtifactId`: no external crate `DbError`, no external crate `ArtifactId`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📽️projection/🦀️component.rs:51:5: error[E0432]: unresolved import `db_index`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📽️projection/🦀️component.rs:52:5: error[E0432]: unresolved import `db_state`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📽️projection/🦀️component.rs:53:5: error[E0432]: unresolved import `db_storage`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗜️compact/🦀️component.rs:33:6: error[E0432]: unresolved imports `check_len`, `DbError`, `ArtifactId`: no external crate `check_len`, no external crate `DbError`, no external crate `ArtifactId`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚔️conflict/🦀️component.rs:23:5: error[E0432]: unresolved import `db_state`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:47:5: error[E0432]: unresolved import `DbError`: no external crate `DbError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:32:6: error[E0432]: unresolved imports `check_len`, `DbError`, `Frontier`: no external crate `check_len`, no external crate `DbError`, no external crate `Frontier`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:33:5: error[E0432]: unresolved import `db_index`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:34:5: error[E0432]: unresolved import `db_projection`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:35:5: error[E0432]: unresolved import `db_state`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:45:5: error[E0432]: unresolved import `DbError`: no external crate `DbError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:48:10: error[E0432]: unresolved imports `DbCapabilities`, `DbConfig`, `DurabilityClass`, `Profile`: no external crate `DbCapabilities`, no external crate `DbConfig`, no external crate `DurabilityClass`, no external crate `Profile`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:49:9: error[E0432]: unresolved import `db_storage`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:263:9: error[E0432]: unresolved import `DbError`: no external crate `DbError`
+compose/client/lib/rs/lib.rs:7816:13: error[E0432]: unresolved import `vcs`
+compose/client/lib/rs/lib.rs:851:67: error[E0433]: cannot find module or crate `dsl` in this scope: use of unresolved module or unlinked crate `dsl`
+compose/client/lib/rs/lib.rs:859:67: error[E0433]: cannot find module or crate `dsl` in this scope: use of unresolved module or unlinked crate `dsl`
+compose/client/lib/rs/lib.rs:867:67: error[E0433]: cannot find module or crate `dsl` in this scope: use of unresolved module or unlinked crate `dsl`
+compose/client/lib/rs/lib.rs:874:67: error[E0433]: cannot find module or crate `dsl` in this scope: use of unresolved module or unlinked crate `dsl`
+compose/client/lib/rs/lib.rs:881:58: error[E0433]: cannot find module or crate `dsl` in this scope: use of unresolved module or unlinked crate `dsl`
+compose/client/lib/rs/lib.rs:900:67: error[E0433]: cannot find module or crate `dsl` in this scope: use of unresolved module or unlinked crate `dsl`
+compose/client/lib/rs/lib.rs:202:80: error[E0433]: cannot find module or crate `dsl` in this scope: use of unresolved module or unlinked crate `dsl`
+compose/client/lib/rs/lib.rs:886:11: error: cannot find attribute `dsl` in this scope
+compose/client/lib/rs/lib.rs:889:11: error: cannot find attribute `dsl` in this scope
+compose/client/lib/rs/lib.rs:8228:31: error[E0433]: cannot find module or crate `vcs` in this scope: use of unresolved module or unlinked crate `vcs`
+compose/client/lib/rs/lib.rs:718:13: error[E0433]: cannot find module or crate `dsl` in this scope: use of unresolved module or unlinked crate `dsl`
+compose/client/lib/rs/lib.rs:721:13: error[E0433]: cannot find module or crate `dsl` in this scope: use of unresolved module or unlinked crate `dsl`
+compose/client/lib/rs/lib.rs:725:17: error[E0433]: cannot find module or crate `dsl` in this scope: use of unresolved module or unlinked crate `dsl`
+error: could not compile `semio-framework-os-kernel-db` (lib) due to 57 previous errors; 38 warnings emitted
+compose/client/lib/rs/lib.rs:716:10: error[E0433]: cannot find module or crate `dsl` in this scope: use of unresolved module or unlinked crate `dsl`
+compose/client/lib/rs/lib.rs:717:23: error[E0433]: cannot find module or crate `dsl` in this scope: use of unresolved module or unlinked crate `dsl`
+compose/client/lib/rs/lib.rs:720:31: error[E0433]: cannot find module or crate `dsl` in this scope: use of unresolved module or unlinked crate `dsl`
+compose/client/lib/rs/lib.rs:723:31: error[E0433]: cannot find module or crate `dsl` in this scope: use of unresolved module or unlinked crate `dsl`
+compose/client/lib/rs/lib.rs:7919:116: error[E0433]: cannot find module or crate `vcs` in this scope: use of unresolved module or unlinked crate `vcs`
+error: could not compile `semio-compose-rs` (lib) due to 22 previous errors; 823 warnings emitted

@@ -19,10 +19,12 @@ use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::Se
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
-/// 🌐️ The envelope union of all 13 semio subset snapshot types (master plan: "SemioSnapshot =
-/// tagged union of the 13"). Wrapped by `SemioSnapshot` below (a struct, not the enum directly —
-/// keeps `#[derive(ArtifactSchema)]` on a proven struct shape; see the W1b manifest for why).
+/// 🌐️ The envelope union of all 14 semio subset snapshot types (master plan: "SemioSnapshot =
+/// tagged union of the 14" — `text`, UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a, is the 14th arm).
+/// Wrapped by `SemioSnapshot` below (a struct, not the enum directly — keeps
+/// `#[derive(ArtifactSchema)]` on a proven struct shape; see the W1b manifest for why).
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "subset", rename_all = "camelCase")]
 pub enum SemioSubsetSnapshot {
@@ -39,6 +41,7 @@ pub enum SemioSubsetSnapshot {
     Animation(SemioAnimationSnapshot),
     Presentation(SemioPresentationSnapshot),
     Flow(SemioFlowSnapshot),
+    Text(SemioTextSnapshot),
 }
 
 impl Default for SemioSubsetSnapshot {
@@ -91,11 +94,12 @@ fn subset_tag(s: &SemioSubsetSnapshot) -> &'static str {
         SemioSubsetSnapshot::Animation(_) => "animation",
         SemioSubsetSnapshot::Presentation(_) => "presentation",
         SemioSubsetSnapshot::Flow(_) => "flow",
+        SemioSubsetSnapshot::Text(_) => "text",
     }
 }
 
 /// 🔢️ The binary sibling of [`subset_tag`] — a real, individually protocol-walkable `u8` ordinal
-/// (0-12, enum declaration order), used by the binary pack header instead of a length-prefixed name.
+/// (0-13, enum declaration order), used by the binary pack header instead of a length-prefixed name.
 pub(crate) fn subset_ordinal(s: &SemioSubsetSnapshot) -> u8 {
     match s {
         SemioSubsetSnapshot::Brep(_) => 0,
@@ -111,6 +115,7 @@ pub(crate) fn subset_ordinal(s: &SemioSubsetSnapshot) -> u8 {
         SemioSubsetSnapshot::Animation(_) => 10,
         SemioSubsetSnapshot::Presentation(_) => 11,
         SemioSubsetSnapshot::Flow(_) => 12,
+        SemioSubsetSnapshot::Text(_) => 13,
     }
 }
 //#endregion 🔖️SubsetDispatch
@@ -158,6 +163,7 @@ fn enc_semio_snapshot_body(snap: &SemioSnapshot) -> String {
         SemioSubsetSnapshot::Animation(s) => <SemioAnimationSnapshot as store::ArtifactDsl>::print_dsl(s),
         SemioSubsetSnapshot::Presentation(s) => <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(s),
         SemioSubsetSnapshot::Flow(s) => <SemioFlowSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Text(s) => <SemioTextSnapshot as store::ArtifactDsl>::print_dsl(s),
     };
     let inner_body = strip_inner_preamble(&inner_printed);
     format!("subset={tag}\nschema={}\n{inner_body}", hex_encode(snap.schema.as_bytes()))
@@ -185,6 +191,7 @@ fn dec_semio_snapshot_body(body: &str) -> Result<SemioSnapshot, String> {
         "animation" => SemioSubsetSnapshot::Animation(<SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         "presentation" => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         "flow" => SemioSubsetSnapshot::Flow(<SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "text" => SemioSubsetSnapshot::Text(<SemioTextSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         other => return Err(format!("semio snapshot: unknown subset tag {other:?}")),
     };
     Ok(SemioSnapshot { schema, subset })
@@ -227,6 +234,7 @@ fn encode_semio_snapshot_binary(snap: &SemioSnapshot) -> Vec<u8> {
         SemioSubsetSnapshot::Animation(s) => <SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(s),
         SemioSubsetSnapshot::Presentation(s) => <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(s),
         SemioSubsetSnapshot::Flow(s) => <SemioFlowSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Text(s) => <SemioTextSnapshot as store::ArtifactPack>::encode_pack(s),
     };
     out.extend_from_slice(&payload);
     out
@@ -255,6 +263,7 @@ fn decode_semio_snapshot_binary(bytes: &[u8]) -> Result<SemioSnapshot, String> {
         10 => SemioSubsetSnapshot::Animation(<SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         11 => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         12 => SemioSubsetSnapshot::Flow(<SemioFlowSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        13 => SemioSubsetSnapshot::Text(<SemioTextSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         other => return Err(format!("semio snapshot: unknown subset tag {other}")),
     };
     Ok(SemioSnapshot { schema, subset })
@@ -365,11 +374,11 @@ mod tests {
         assert_eq!(<SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse"), snap);
     }
 
-    /// 🧪️ Every one of the 13 subset tags real-round-trips through both facets — proves the
+    /// 🧪️ Every one of the 14 subset tags real-round-trips through both facets — proves the
     /// dispatch tables (text AND binary) are wired correctly for every wrapped subset, not just
     /// the one exercised by [`demo_semio_snapshot`].
     #[test]
-    fn all_thirteen_subset_tags_round_trip_text_and_binary() {
+    fn all_fourteen_subset_tags_round_trip_text_and_binary() {
         let subsets: Vec<SemioSubsetSnapshot> = vec![
             SemioSubsetSnapshot::Brep(Default::default()),
             SemioSubsetSnapshot::Mesh(Default::default()),
@@ -384,6 +393,7 @@ mod tests {
             SemioSubsetSnapshot::Animation(Default::default()),
             SemioSubsetSnapshot::Presentation(Default::default()),
             SemioSubsetSnapshot::Flow(Default::default()),
+            SemioSubsetSnapshot::Text(Default::default()),
         ];
         for subset in subsets {
             let snap = SemioSnapshot { schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset };

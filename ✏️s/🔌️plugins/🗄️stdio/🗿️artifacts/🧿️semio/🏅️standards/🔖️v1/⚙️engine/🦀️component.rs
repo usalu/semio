@@ -1,8 +1,10 @@
 //! ⚙️ Semio v1 engine — holds the two REAL shared submodules (🧮️geometry, 🧰️triples — see their
-//! own doc comments) and `register()`, which registers all 14 subsets' schema descriptors +
-//! document codecs + SubsetValidators (13 domain subsets each register a validator; the ✳️any
+//! own doc comments) and `register()`, which registers all 15 subsets' schema descriptors +
+//! document codecs + SubsetValidators (14 domain subsets each register a validator; the ✳️any
 //! envelope does not — subset `"*"` is exempt per `policyStandardsSubsetVocabularyBreaches`,
-//! matching every other stdio artifact's `✳️any`).
+//! matching every other stdio artifact's `✳️any`). `text` (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM,
+//! W2a) is the 14th domain subset — a LEAF (no import/export io entries yet, see its own
+//! `🚪️io/🦀️component.rs` doc comment).
 
 pub fn register() {
     crate::artifacts::semio::standards::v1::subsets::brep::io::register();
@@ -18,6 +20,7 @@ pub fn register() {
     crate::artifacts::semio::standards::v1::subsets::animation::io::register();
     crate::artifacts::semio::standards::v1::subsets::presentation::io::register();
     crate::artifacts::semio::standards::v1::subsets::flow::io::register();
+    crate::artifacts::semio::standards::v1::subsets::text::io::register();
     crate::artifacts::semio::standards::v1::subsets::any::io::register();
 }
 //#region 🚪️DerivedIoRegistry
@@ -37,6 +40,7 @@ pub mod io_registry {
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::SemioAnimationComposer;
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::SemioPresentationComposer;
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::SemioFlowComposer;
+    use crate::artifacts::semio::standards::v1::subsets::text::schema::SemioTextComposer;
     use crate::artifacts::semio::standards::v1::subsets::any::schema::SemioComposer as SemioRawAnyComposer;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -56,6 +60,7 @@ pub mod io_registry {
             composer_entry_of::<SemioAnimationComposer>(),
             composer_entry_of::<SemioPresentationComposer>(),
             composer_entry_of::<SemioFlowComposer>(),
+            composer_entry_of::<SemioTextComposer>(),
             composer_entry_of::<SemioRawAnyComposer>(),
         ]).as_slice()
     }

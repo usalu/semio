@@ -1,81 +1,215 @@
 syntax = "proto3";
 package semio.s.block.block5d.mutation;
 
-// 🧬️ Block5d mutation schema — persistent fields only.
+// 🧬️ Block5d mutation schema — one message per mutation kind (41 kinds).
 
 message Block5dMutation {
-  // @state persistent
-  string schema = 1;
-  // @state persistent
-  BlockKindIdentity part_kind = 2;
-  // @state persistent
-  Block5dPart2d part2d = 3;
-  // @state persistent
-  Block5dPart3d part3d = 4;
-  // @state persistent
-  repeated BlockRepresentation representations = 5;
-  // @state persistent
-  repeated Block5dGripKind grip_kinds = 6;
-  // @state persistent
-  repeated Block5dGripTemplate grips = 7;
-  // @state persistent
-  repeated BlockCompatibilityRule compatibility = 8;
-  // @state persistent
-  repeated BlockAttribute attributes = 9;
-  // @state persistent
-  repeated BlockAuthor authors = 10;
-  // @state persistent
-  BlockCamera2d camera2d = 11;
-  // @state persistent
-  BlockCamera3d camera3d = 12;
-  // @state persistent
-  BlockMeta meta = 13;
+  oneof kind {
+    RenamePartKind rename_part_kind = 1;
+    ChangePartKindLabel change_part_kind_label = 2;
+    ChangePartKindVariant change_part_kind_variant = 3;
+    ChangePartKindDescription change_part_kind_description = 4;
+    ChangePartKindIcon change_part_kind_icon = 5;
+    ChangePartKindUnit change_part_kind_unit = 6;
+    UpdatePart2d update_part_2d = 7;
+    UpdatePart3d update_part_3d = 8;
+    CreateRepresentation create_representation = 9;
+    DeleteRepresentation delete_representation = 10;
+    RenameRepresentation rename_representation = 11;
+    ChangeRepresentationMeshUrl change_representation_mesh_url = 12;
+    ChangeRepresentationLod change_representation_lod = 13;
+    ChangeRepresentationDescription change_representation_description = 14;
+    AddRepresentationTag add_representation_tag = 15;
+    RemoveRepresentationTag remove_representation_tag = 16;
+    AddRepresentationAttribute add_representation_attribute = 17;
+    RemoveRepresentationAttribute remove_representation_attribute = 18;
+    CreateGripKind create_grip_kind = 19;
+    DeleteGripKind delete_grip_kind = 20;
+    RenameGripKind rename_grip_kind = 21;
+    ChangeGripKindLabel change_grip_kind_label = 22;
+    ChangeGripKindColor change_grip_kind_color = 23;
+    ChangeGripKindDefaultRopeKind change_grip_kind_default_rope_kind = 24;
+    CreateGrip create_grip = 25;
+    DeleteGrip delete_grip = 26;
+    MoveGrip2d move_grip_2d = 27;
+    MoveGrip3d move_grip_3d = 28;
+    ResizeGrip3d resize_grip_3d = 29;
+    ChangeGripGripKind change_grip_grip_kind = 30;
+    AddCompatibilityRule add_compatibility_rule = 31;
+    RemoveCompatibilityRule remove_compatibility_rule = 32;
+    AddAttribute add_attribute = 33;
+    RemoveAttribute remove_attribute = 34;
+    AddAuthor add_author = 35;
+    RemoveAuthor remove_author = 36;
+    MoveCamera2d move_camera2d = 37;
+    ScaleCamera2d scale_camera2d = 38;
+    MoveCamera3d move_camera3d = 39;
+    ScaleCamera3d scale_camera3d = 40;
+    ChangeMetaDescription change_meta_description = 41;
+  }
 }
 
-message BlockKindIdentity {
-  bool _placeholder = 1;
+message RenamePartKind { // kind "rename-part-kind"
+  bytes payload = 1;
 }
 
-message Block5dPart2d {
-  bool _placeholder = 1;
+message ChangePartKindLabel { // kind "change-part-kind-label"
+  bytes payload = 1;
 }
 
-message Block5dPart3d {
-  bool _placeholder = 1;
+message ChangePartKindVariant { // kind "change-part-kind-variant"
+  bytes payload = 1;
 }
 
-message BlockRepresentation {
-  bool _placeholder = 1;
+message ChangePartKindDescription { // kind "change-part-kind-description"
+  bytes payload = 1;
 }
 
-message Block5dGripKind {
-  bool _placeholder = 1;
+message ChangePartKindIcon { // kind "change-part-kind-icon"
+  bytes payload = 1;
 }
 
-message Block5dGripTemplate {
-  bool _placeholder = 1;
+message ChangePartKindUnit { // kind "change-part-kind-unit"
+  bytes payload = 1;
 }
 
-message BlockCompatibilityRule {
-  bool _placeholder = 1;
+message UpdatePart2d { // kind "update-part-2d"
+  bytes payload = 1;
 }
 
-message BlockAttribute {
-  bool _placeholder = 1;
+message UpdatePart3d { // kind "update-part-3d"
+  bytes payload = 1;
 }
 
-message BlockAuthor {
-  bool _placeholder = 1;
+message CreateRepresentation { // kind "create-representation"
+  bytes payload = 1;
 }
 
-message BlockCamera2d {
-  bool _placeholder = 1;
+message DeleteRepresentation { // kind "delete-representation"
+  bytes payload = 1;
 }
 
-message BlockCamera3d {
-  bool _placeholder = 1;
+message RenameRepresentation { // kind "rename-representation"
+  bytes payload = 1;
 }
 
-message BlockMeta {
-  bool _placeholder = 1;
+message ChangeRepresentationMeshUrl { // kind "change-representation-mesh-url"
+  bytes payload = 1;
 }
+
+message ChangeRepresentationLod { // kind "change-representation-lod"
+  bytes payload = 1;
+}
+
+message ChangeRepresentationDescription { // kind "change-representation-description"
+  bytes payload = 1;
+}
+
+message AddRepresentationTag { // kind "add-representation-tag"
+  bytes payload = 1;
+}
+
+message RemoveRepresentationTag { // kind "remove-representation-tag"
+  bytes payload = 1;
+}
+
+message AddRepresentationAttribute { // kind "add-representation-attribute"
+  bytes payload = 1;
+}
+
+message RemoveRepresentationAttribute { // kind "remove-representation-attribute"
+  bytes payload = 1;
+}
+
+message CreateGripKind { // kind "create-grip-kind"
+  bytes payload = 1;
+}
+
+message DeleteGripKind { // kind "delete-grip-kind"
+  bytes payload = 1;
+}
+
+message RenameGripKind { // kind "rename-grip-kind"
+  bytes payload = 1;
+}
+
+message ChangeGripKindLabel { // kind "change-grip-kind-label"
+  bytes payload = 1;
+}
+
+message ChangeGripKindColor { // kind "change-grip-kind-color"
+  bytes payload = 1;
+}
+
+message ChangeGripKindDefaultRopeKind { // kind "change-grip-kind-default-rope-kind"
+  bytes payload = 1;
+}
+
+message CreateGrip { // kind "create-grip"
+  bytes payload = 1;
+}
+
+message DeleteGrip { // kind "delete-grip"
+  bytes payload = 1;
+}
+
+message MoveGrip2d { // kind "move-grip-2d"
+  bytes payload = 1;
+}
+
+message MoveGrip3d { // kind "move-grip-3d"
+  bytes payload = 1;
+}
+
+message ResizeGrip3d { // kind "resize-grip-3d"
+  bytes payload = 1;
+}
+
+message ChangeGripGripKind { // kind "change-grip-grip-kind"
+  bytes payload = 1;
+}
+
+message AddCompatibilityRule { // kind "add-compatibility-rule"
+  bytes payload = 1;
+}
+
+message RemoveCompatibilityRule { // kind "remove-compatibility-rule"
+  bytes payload = 1;
+}
+
+message AddAttribute { // kind "add-attribute"
+  bytes payload = 1;
+}
+
+message RemoveAttribute { // kind "remove-attribute"
+  bytes payload = 1;
+}
+
+message AddAuthor { // kind "add-author"
+  bytes payload = 1;
+}
+
+message RemoveAuthor { // kind "remove-author"
+  bytes payload = 1;
+}
+
+message MoveCamera2d { // kind "move-camera2d"
+  bytes payload = 1;
+}
+
+message ScaleCamera2d { // kind "scale-camera2d"
+  bytes payload = 1;
+}
+
+message MoveCamera3d { // kind "move-camera3d"
+  bytes payload = 1;
+}
+
+message ScaleCamera3d { // kind "scale-camera3d"
+  bytes payload = 1;
+}
+
+message ChangeMetaDescription { // kind "change-meta-description"
+  bytes payload = 1;
+}
+

@@ -1,0 +1,14 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.text/mutations.json",
+  "title": "SemioTextMutation",
+  "description": "Closed, seven-variant mutation dispatch over SemioTextSnapshot's runs collection and each run's nested marks collection.",
+  "oneOf": [
+    { "properties": { "mutation": { "const": "insertRun" }, "payload": { "type": "object", "properties": { "index": { "type": "integer" }, "run": { "type": "object" } } } } },
+    { "properties": { "mutation": { "const": "removeRun" }, "payload": { "type": "object", "properties": { "index": { "type": "integer" } } } } },
+    { "properties": { "mutation": { "const": "editRun" }, "payload": { "type": "object", "properties": { "index": { "type": "integer" }, "newContent": { "type": "string" } } } } },
+    { "properties": { "mutation": { "const": "changeRunLanguage" }, "payload": { "type": "object", "properties": { "index": { "type": "integer" }, "newLanguage": { "type": "string" } } } } },
+    { "properties": { "mutation": { "const": "reorderRuns" }, "payload": { "type": "object", "properties": { "from": { "type": "integer" }, "to": { "type": "integer" } } } } },
+    { "properties": { "mutation": { "const": "addMark" }, "payload": { "type": "object", "properties": { "runIndex": { "type": "integer" }, "index": { "type": "integer" }, "mark": { "type": "object" } } } } },
+    { "properties": { "mutation": { "const": "removeMark" }, "payload": { "type": "object", "properties": { "runIndex": { "type": "integer" }, "index": { "type": "integer" } } } } }
+  ]
+}

@@ -185,6 +185,29 @@ mod tests {
         assert_op_line_round_trip(&move_node("node-1".into(), 1.0, 2.0));
     }
 
+    //#region 🧪️MutationLaws
+    /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`
+    /// (reachable here as `protocol::testkit`), exercised against the two most structurally distinct
+    /// kinds: an id-keyed create/delete pair (`create-node`) and a single-field addressed setter
+    /// (`move-node`).
+    #[test]
+    fn create_node_satisfies_the_inverse_and_absorb_laws() {
+        let base = empty_wires_snapshot();
+        let mutation = create_node(node("node-1", "Alpha"));
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        let d1 = mutation.diff(&base);
+        let d2 = create_node(node("node-2", "Beta")).diff(&base);
+        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+
+    #[test]
+    fn move_node_satisfies_the_inverse_law() {
+        let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
+        let mutation = move_node("node-1".into(), 40.0, 30.0);
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+    }
+    //#endregion 🧪️MutationLaws
+
     #[test]
     fn dispatch_registers_semantic_descriptors() {
         register_wires_mutation_descriptors();

@@ -12,7 +12,7 @@ use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::apps::playbook::modes::builder;
 use crate::apps::playbook::modes::builder::windows::builder as builder_window;
 use crate::artifacts::playbook::engine::{default_block, flatten_playbook_blocks, playbook_io, PlaybookChapterPayload};
-use crate::artifacts::playbook::op::{AddBlock, AddStep, PlaybookMutation};
+use crate::artifacts::playbook::op::{AddStep, PlaybookMutation};
 use crate::artifacts::playbook::{artifact_kind, PlaybookSnapshot, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
 use store::EngineHandles;
@@ -212,6 +212,7 @@ pub(crate) mod testkit {
 mod tests {
     use super::*;
     use crate::apps::playbook::testkit::playbook_app;
+    use crate::artifacts::playbook::op::AddBlock;
     use semio_framework_plugin::testkit;
     use semio_framework_plugin::{ArtifactApp, MediaClass, MediaForm};
 

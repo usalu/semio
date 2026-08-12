@@ -639,8 +639,25 @@ impl Puzzle3dEngine {
 //#endregion 🔖️ArtifactEngine
 
 //#region 🔖️IoFacet
+/// 🔌️ Registers this artifact's `ComposerEntry` io tree plus the `"3d.puzzle"` OS-host mesh
+/// export/import bridge — the latter relocated from `apps::puzzle3d::register_puzzle3d_exports`
+/// (APA, ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: OS-host registration belongs to the
+/// owning artifact's own engine, never to an app file). The callback bodies stay in `apps::puzzle3d`
+/// next to the app-local helpers (mesh registry, fixture types) they depend on, exposed `pub(crate)`
+/// for this call site only.
 pub fn register_io() {
     crate::artifacts::puzzle3d::io_registry::register();
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    {
+        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", crate::apps::puzzle3d::puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
+        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", crate::apps::puzzle3d::puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
+        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", crate::apps::puzzle3d::puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
+        semio_framework_os::register_mesh_importer("3d.puzzle", crate::apps::puzzle3d::puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
+        semio_framework_os::register_mesh_importer("3d.puzzle", crate::apps::puzzle3d::puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
+        semio_framework_os::register_mesh_importer("3d.puzzle", crate::apps::puzzle3d::puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
+        semio_framework_os::register_mesh_dwg_export_handler("3d.puzzle", "puzzle", crate::apps::puzzle3d::puzzle3d_mesh_from_document);
+        semio_framework_os::register_mesh_dwg_import_handler("3d.puzzle", crate::apps::puzzle3d::puzzle3d_document_from_mesh);
+    }
 }
 //#endregion 🔖️IoFacet
 //#region 🚪️DerivedIoRegistry

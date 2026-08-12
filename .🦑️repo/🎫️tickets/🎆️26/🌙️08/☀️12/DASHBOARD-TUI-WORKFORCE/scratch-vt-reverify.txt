@@ -1,0 +1,51 @@
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:4063:29
+     |
+4063 |         assert_eq!(runs[0], crate::tui::cell::DiffRun { y: 0, x: 3, len: 1 });
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+4063 -         assert_eq!(runs[0], crate::tui::cell::DiffRun { y: 0, x: 3, len: 1 });
+4063 +         assert_eq!(runs[0], DiffRun { y: 0, x: 3, len: 1 });
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:4123:44
+     |
+4123 |         assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Esc, mods: 0 })]);
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4123 -         assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Esc, mods: 0 })]);
+4123 +         assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Esc, mods: 0 })]);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:4134:44
+     |
+4134 |         assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Char('ü'), mods: 0 })]);
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4134 -         assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Char('ü'), mods: 0 })]);
+4134 +         assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Char('ü'), mods: 0 })]);
+     |
+
+warning: `semio-framework-ui` (lib test) generated 3 warnings (run `cargo fix --lib -p semio-framework-ui --tests` to apply 3 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 0.53s
+     Running unittests 📦️glue.rs (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/DASHBOARD-TUI-WORKFORCE/🎯️target-w1a/debug/deps/semio_framework_ui-750d9f66b3bf643c)
+
+running 6 tests
+test tui::component::tests::vt_alt_screen_1049_preserves_primary ... ok
+test tui::component::tests::vt_scroll_region_decstbm_newline_scrolls_inside ... ok
+test tui::component::tests::vt_resize_clamps_cursor ... ok
+test tui::component::tests::vt_cursor_motion_cup_and_cuu ... ok
+test tui::component::tests::vt_sgr_truecolor_sets_cell_fg_bg ... ok
+test tui::component::tests::vt_wrap_at_edge ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 77 filtered out; finished in 0.00s
+

@@ -1,0 +1,6 @@
+# 📝️ Text-facet grammar mirror (descriptive) — see ../🔗️component.graphql for the canonical facet
+# schema; this file describes the OP-TEXT ENCODING of the mutation dispatch shape.
+type SemioTextMutationOpDsl {
+  keyword: String!
+  argsWire: String!
+}

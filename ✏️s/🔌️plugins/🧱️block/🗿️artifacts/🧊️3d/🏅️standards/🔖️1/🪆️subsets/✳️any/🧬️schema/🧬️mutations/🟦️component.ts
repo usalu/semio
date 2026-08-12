@@ -1,2 +1,80 @@
-/** 🧩 block3d 🧬️mutations WASM facade stub. */
-export {};
+/** 🧬️ block3d 🧬️mutations facade — the real per-kind dispatch union (37 kinds), mirroring
+ * `🦀️component.rs`'s `Block3dMutation` enum. Not a snapshot mirror.
+ */
+
+export type { RenameObjectKind } from "./✏️rename-object-kind/🦠️mutation/🟦️component";
+export type { ChangeObjectKindLabel } from "./🏷️change-object-kind-label/🦠️mutation/🟦️component";
+export type { ChangeObjectKindVariant } from "./🔀️change-object-kind-variant/🦠️mutation/🟦️component";
+export type { ChangeObjectKindDescription } from "./📃️change-object-kind-description/🦠️mutation/🟦️component";
+export type { ChangeObjectKindIcon } from "./🖼️change-object-kind-icon/🦠️mutation/🟦️component";
+export type { ChangeObjectKindUnit } from "./📐change-object-kind-unit/🦠️mutation/🟦️component";
+export type { CreateRepresentation } from "./🧱create-representation/🦠️mutation/🟦️component";
+export type { DeleteRepresentation } from "./🗑delete-representation/🦠️mutation/🟦️component";
+export type { RenameRepresentation } from "./✒rename-representation/🦠️mutation/🟦️component";
+export type { ChangeRepresentationMeshUrl } from "./🌐change-representation-mesh-url/🦠️mutation/🟦️component";
+export type { ChangeRepresentationLod } from "./🏔change-representation-lod/🦠️mutation/🟦️component";
+export type { ChangeRepresentationDescription } from "./📜change-representation-description/🦠️mutation/🟦️component";
+export type { AddRepresentationTag } from "./🔖add-representation-tag/🦠️mutation/🟦️component";
+export type { RemoveRepresentationTag } from "./🚫remove-representation-tag/🦠️mutation/🟦️component";
+export type { AddRepresentationAttribute } from "./🧩add-representation-attribute/🦠️mutation/🟦️component";
+export type { RemoveRepresentationAttribute } from "./➖remove-representation-attribute/🦠️mutation/🟦️component";
+export type { CreateVortexKind } from "./🌱create-vortex-kind/🦠️mutation/🟦️component";
+export type { DeleteVortexKind } from "./❌delete-vortex-kind/🦠️mutation/🟦️component";
+export type { RenameVortexKind } from "./🖋rename-vortex-kind/🦠️mutation/🟦️component";
+export type { ChangeVortexKindLabel } from "./🎫change-vortex-kind-label/🦠️mutation/🟦️component";
+export type { ChangeVortexKindColor } from "./🎨change-vortex-kind-color/🦠️mutation/🟦️component";
+export type { ChangeVortexKindDefaultCableKind } from "./🔌change-vortex-kind-default-cable-kind/🦠️mutation/🟦️component";
+export type { CreateVortex } from "./🌀create-vortex/🦠️mutation/🟦️component";
+export type { DeleteVortex } from "./🕳delete-vortex/🦠️mutation/🟦️component";
+export type { MoveVortex } from "./📍move-vortex/🦠️mutation/🟦️component";
+export type { ResizeVortex } from "./📏resize-vortex/🦠️mutation/🟦️component";
+export type { ChangeVortexVortexKind } from "./🧷change-vortex-vortex-kind/🦠️mutation/🟦️component";
+export type { ChangeVortexLabel } from "./🪧change-vortex-label/🦠️mutation/🟦️component";
+export type { AddCompatibilityRule } from "./➕add-compatibility-rule/🦠️mutation/🟦️component";
+export type { RemoveCompatibilityRule } from "./✂remove-compatibility-rule/🦠️mutation/🟦️component";
+export type { AddAttribute } from "./🔩add-attribute/🦠️mutation/🟦️component";
+export type { RemoveAttribute } from "./🚷remove-attribute/🦠️mutation/🟦️component";
+export type { AddAuthor } from "./👤add-author/🦠️mutation/🟦️component";
+export type { RemoveAuthor } from "./🙅remove-author/🦠️mutation/🟦️component";
+export type { MoveCamera3d } from "./🎥move-camera3d/🦠️mutation/🟦️component";
+export type { ScaleCamera3d } from "./🔍scale-camera3d/🦠️mutation/🟦️component";
+export type { ChangeMetaDescription } from "./💬change-meta-description/🦠️mutation/🟦️component";
+
+export type Block3dMutation =
+  | { mutation: "rename-object-kind" } & import("./✏️rename-object-kind/🦠️mutation/🟦️component").RenameObjectKind
+  | { mutation: "change-object-kind-label" } & import("./🏷️change-object-kind-label/🦠️mutation/🟦️component").ChangeObjectKindLabel
+  | { mutation: "change-object-kind-variant" } & import("./🔀️change-object-kind-variant/🦠️mutation/🟦️component").ChangeObjectKindVariant
+  | { mutation: "change-object-kind-description" } & import("./📃️change-object-kind-description/🦠️mutation/🟦️component").ChangeObjectKindDescription
+  | { mutation: "change-object-kind-icon" } & import("./🖼️change-object-kind-icon/🦠️mutation/🟦️component").ChangeObjectKindIcon
+  | { mutation: "change-object-kind-unit" } & import("./📐change-object-kind-unit/🦠️mutation/🟦️component").ChangeObjectKindUnit
+  | { mutation: "create-representation" } & import("./🧱create-representation/🦠️mutation/🟦️component").CreateRepresentation
+  | { mutation: "delete-representation" } & import("./🗑delete-representation/🦠️mutation/🟦️component").DeleteRepresentation
+  | { mutation: "rename-representation" } & import("./✒rename-representation/🦠️mutation/🟦️component").RenameRepresentation
+  | { mutation: "change-representation-mesh-url" } & import("./🌐change-representation-mesh-url/🦠️mutation/🟦️component").ChangeRepresentationMeshUrl
+  | { mutation: "change-representation-lod" } & import("./🏔change-representation-lod/🦠️mutation/🟦️component").ChangeRepresentationLod
+  | { mutation: "change-representation-description" } & import("./📜change-representation-description/🦠️mutation/🟦️component").ChangeRepresentationDescription
+  | { mutation: "add-representation-tag" } & import("./🔖add-representation-tag/🦠️mutation/🟦️component").AddRepresentationTag
+  | { mutation: "remove-representation-tag" } & import("./🚫remove-representation-tag/🦠️mutation/🟦️component").RemoveRepresentationTag
+  | { mutation: "add-representation-attribute" } & import("./🧩add-representation-attribute/🦠️mutation/🟦️component").AddRepresentationAttribute
+  | { mutation: "remove-representation-attribute" } & import("./➖remove-representation-attribute/🦠️mutation/🟦️component").RemoveRepresentationAttribute
+  | { mutation: "create-vortex-kind" } & import("./🌱create-vortex-kind/🦠️mutation/🟦️component").CreateVortexKind
+  | { mutation: "delete-vortex-kind" } & import("./❌delete-vortex-kind/🦠️mutation/🟦️component").DeleteVortexKind
+  | { mutation: "rename-vortex-kind" } & import("./🖋rename-vortex-kind/🦠️mutation/🟦️component").RenameVortexKind
+  | { mutation: "change-vortex-kind-label" } & import("./🎫change-vortex-kind-label/🦠️mutation/🟦️component").ChangeVortexKindLabel
+  | { mutation: "change-vortex-kind-color" } & import("./🎨change-vortex-kind-color/🦠️mutation/🟦️component").ChangeVortexKindColor
+  | { mutation: "change-vortex-kind-default-cable-kind" } & import("./🔌change-vortex-kind-default-cable-kind/🦠️mutation/🟦️component").ChangeVortexKindDefaultCableKind
+  | { mutation: "create-vortex" } & import("./🌀create-vortex/🦠️mutation/🟦️component").CreateVortex
+  | { mutation: "delete-vortex" } & import("./🕳delete-vortex/🦠️mutation/🟦️component").DeleteVortex
+  | { mutation: "move-vortex" } & import("./📍move-vortex/🦠️mutation/🟦️component").MoveVortex
+  | { mutation: "resize-vortex" } & import("./📏resize-vortex/🦠️mutation/🟦️component").ResizeVortex
+  | { mutation: "change-vortex-vortex-kind" } & import("./🧷change-vortex-vortex-kind/🦠️mutation/🟦️component").ChangeVortexVortexKind
+  | { mutation: "change-vortex-label" } & import("./🪧change-vortex-label/🦠️mutation/🟦️component").ChangeVortexLabel
+  | { mutation: "add-compatibility-rule" } & import("./➕add-compatibility-rule/🦠️mutation/🟦️component").AddCompatibilityRule
+  | { mutation: "remove-compatibility-rule" } & import("./✂remove-compatibility-rule/🦠️mutation/🟦️component").RemoveCompatibilityRule
+  | { mutation: "add-attribute" } & import("./🔩add-attribute/🦠️mutation/🟦️component").AddAttribute
+  | { mutation: "remove-attribute" } & import("./🚷remove-attribute/🦠️mutation/🟦️component").RemoveAttribute
+  | { mutation: "add-author" } & import("./👤add-author/🦠️mutation/🟦️component").AddAuthor
+  | { mutation: "remove-author" } & import("./🙅remove-author/🦠️mutation/🟦️component").RemoveAuthor
+  | { mutation: "move-camera3d" } & import("./🎥move-camera3d/🦠️mutation/🟦️component").MoveCamera3d
+  | { mutation: "scale-camera3d" } & import("./🔍scale-camera3d/🦠️mutation/🟦️component").ScaleCamera3d
+  | { mutation: "change-meta-description" } & import("./💬change-meta-description/🦠️mutation/🟦️component").ChangeMetaDescription;

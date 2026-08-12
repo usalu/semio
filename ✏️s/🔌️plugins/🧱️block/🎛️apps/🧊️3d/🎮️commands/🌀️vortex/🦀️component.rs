@@ -17,7 +17,7 @@ pub mod add_vortex {
         };
         let id = crate::artifacts::block3d::engine::next_id(doc.snapshot.vortices.iter().map(|vortex| vortex.id.as_str()), "vortex-");
         let vortex = Block3dVortexTemplate { id, vortex_kind: vortex_kind_id, position: [0.0, 0.0, 0.0], direction: [0.0, 0.0, 1.0], radius: 0.3, label: None };
-        Ok(Emit::mutations(vec![Block3dMutation::SetVortex { index: doc.snapshot.vortices.len(), vortex }]))
+        Ok(Emit::mutations(vec![crate::artifacts::block3d::mutations::create_vortex(vortex)]))
     }
 }
 
@@ -35,6 +35,6 @@ pub mod remove_vortex {
     }
 
     pub fn handle(payload: &RemoveVortex, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![Block3dMutation::RemoveVortex { id: payload.id.clone() }]))
+        Ok(Emit::mutations(vec![crate::artifacts::block3d::mutations::delete_vortex(payload.id.clone())]))
     }
 }

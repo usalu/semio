@@ -11,6 +11,7 @@
 
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::engine::{build_engine_params, build_qc_snapshot, camera_pose_preview, decode_still_image, next_remodel_id, raster_to_png_asset, reconstruction as remodel_engine, watertight_snapshot};
+use crate::artifacts::remodel::mutations::{create_asset, replace_geo_products, replace_job, replace_mesh_result, replace_qc, replace_sparse, replace_trajectory};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{CameraPosePreview, CameraTrajectory, GeoProducts, ImageAsset, MeshSource, PackedF32, ReconstructionJob, ReconstructionStage, RemodelMesh, RemodelSnapshot, SparseCloud};
 use base64::Engine as _;
@@ -67,7 +68,7 @@ pub fn run_whole_pipeline(doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emi
                 camera_poses_preview: Vec::new(),
                 sparse_point_cloud_preview: PackedF32::default(),
             };
-            return Ok(Emit::mutations(vec![RemodelMutation::SetJob { job }]));
+            return Ok(Emit::mutations(vec![replace_job(job)]));
         }
         match engine.advance(RECONSTRUCTION_STEP_BUDGET) {
             remodel_engine::EngineStatus::Working { progress, .. } => {
@@ -95,10 +96,10 @@ pub fn run_whole_pipeline(doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emi
                     sparse_point_cloud_preview: PackedF32::from_f32_slice(&preview.packed_points),
                 };
 
-                let mut operations = vec![RemodelMutation::SetJob { job }];
-                operations.push(RemodelMutation::SetSparse { sparse: Some(SparseCloud { points: PackedF32::from_f32_slice(&preview.packed_points), colors: None }) });
+                let mut operations = vec![replace_job(job)];
+                operations.push(replace_sparse(Some(SparseCloud { points: PackedF32::from_f32_slice(&preview.packed_points), colors: None })));
                 if !camera_previews.is_empty() {
-                    operations.push(RemodelMutation::SetTrajectory { trajectory: Some(CameraTrajectory { poses: camera_previews }) });
+                    operations.push(replace_trajectory(Some(CameraTrajectory { poses: camera_previews })));
                 }
                 if let Some(mesh_data) = mesh_data {
                     let watertight = quality.as_ref().and_then(|quality| quality.watertight.as_ref()).map(watertight_snapshot);
@@ -106,20 +107,20 @@ pub fn run_whole_pipeline(doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emi
                     if let Some(texture) = &mesh_data.paint_texture_base64 {
                         let texture_size = scene.params.mesh.texture_size;
                         let asset_id = format!("mesh-texture-{job_id}");
-                        operations.push(RemodelMutation::SetAsset { key: asset_id.clone(), value: Some(ImageAsset { mime: "image/png".into(), data: texture.clone(), width: texture_size, height: texture_size }) });
+                        operations.push(create_asset(asset_id.clone(), ImageAsset { mime: "image/png".into(), data: texture.clone(), width: texture_size, height: texture_size }));
                         texture_asset_id = Some(asset_id);
                     }
-                    operations.push(RemodelMutation::SetMeshResult { mesh: Box::new(RemodelMesh { mesh: mesh_data, source: MeshSource::Reconstructed, texture_asset_id, watertight }) });
+                    operations.push(replace_mesh_result(Box::new(RemodelMesh { mesh: mesh_data, source: MeshSource::Reconstructed, texture_asset_id, watertight })));
                 }
                 if let Some(quality) = &quality {
-                    operations.push(RemodelMutation::SetQc { qc: Some(build_qc_snapshot(quality, registered_count, accepted_count, scene.gcps.len())) });
+                    operations.push(replace_qc(Some(build_qc_snapshot(quality, registered_count, accepted_count, scene.gcps.len()))));
                 }
                 if let Some(geo) = geo_products {
                     let dsm_id = format!("geo-dsm-{job_id}");
                     let dtm_id = format!("geo-dtm-{job_id}");
-                    operations.push(RemodelMutation::SetAsset { key: dsm_id.clone(), value: Some(raster_to_png_asset(&geo.dsm)) });
-                    operations.push(RemodelMutation::SetAsset { key: dtm_id.clone(), value: Some(raster_to_png_asset(&geo.dtm)) });
-                    operations.push(RemodelMutation::SetGeoProducts { geo: Some(GeoProducts { dsm_asset_id: Some(dsm_id), dtm_asset_id: Some(dtm_id), ortho_asset_id: None }) });
+                    operations.push(create_asset(dsm_id.clone(), raster_to_png_asset(&geo.dsm)));
+                    operations.push(create_asset(dtm_id.clone(), raster_to_png_asset(&geo.dtm)));
+                    operations.push(replace_geo_products(Some(GeoProducts { dsm_asset_id: Some(dsm_id), dtm_asset_id: Some(dtm_id), ortho_asset_id: None })));
                 }
                 return Ok(Emit::mutations(operations));
             }
@@ -135,7 +136,7 @@ pub fn run_whole_pipeline(doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emi
                     camera_poses_preview: Vec::new(),
                     sparse_point_cloud_preview: PackedF32::default(),
                 };
-                return Ok(Emit::mutations(vec![RemodelMutation::SetJob { job }]));
+                return Ok(Emit::mutations(vec![replace_job(job)]));
             }
         }
     }
@@ -208,7 +209,7 @@ mod tests {
         let mut app = app();
         testkit_import_checker_stream(&mut app, 2);
         let run = dispatch(&mut app, RemodelCommand::RunReconstruction(super::run_reconstruction::RunReconstruction {}));
-        assert!(!run.mutations.is_empty(), "a completed run publishes at least the final SetJob");
+        assert!(!run.mutations.is_empty(), "a completed run publishes at least the final replace-job");
         let scene = app.snapshot().expect("projection");
         assert!(scene.job.stage == ReconstructionStage::Done || scene.job.stage == ReconstructionStage::Failed, "a synchronous run always ends terminal");
         if scene.job.stage == ReconstructionStage::Done {

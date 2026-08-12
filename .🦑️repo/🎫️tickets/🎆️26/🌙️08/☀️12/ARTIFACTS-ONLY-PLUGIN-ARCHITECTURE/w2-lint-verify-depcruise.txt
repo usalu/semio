@@ -1,0 +1,1415 @@
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🪐️space/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🗒️note/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🕸️dag/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🔱️trinity/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📜️imperative/🧩️extensions/��️control/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📖️playbook/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️glue.tsx
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🔨️modules/📐️brepjs/🟦️component.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🧪️vitest.config.ts → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📋️forms/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/��️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/💡️reasoning/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/��️plugins/💡️reasoning/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🏛️architect/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🎪️demonstrator/📦️packages/��️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌍️gis/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/��️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌊️flow/🔨️modules/🧮️compute/🟦️component.ts → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    ✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but
+    not any other 🧰️framework package — mirrors the Cargo capability lint's
+    semio-framework-os ban
+
+  warn no-plugin-to-extension-📐️cad: ✏️s/🔌️plugins/📐️cad/🔨️modules/📐️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/📦️index.ts
+    a plugin's core must not depend on any plugin's extensions tree —
+    extensions depend on core, not the reverse — WARN: 📐️cad's real violation
+    is its runtime/brepjs composition-root statically importing all 4 of its
+    own extensions to register them — an architecture change, not a lint flip;
+    see this rule's own docstring above
+
+  warn no-plugin-to-extension-📐️cad: ✏️s/🔌️plugins/📐️cad/🔨️modules/📐️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/📦️index.ts
+    a plugin's core must not depend on any plugin's extensions tree —
+    extensions depend on core, not the reverse — WARN: 📐️cad's real violation
+    is its runtime/brepjs composition-root statically importing all 4 of its
+    own extensions to register them — an architecture change, not a lint flip;
+    see this rule's own docstring above
+
+  warn no-plugin-to-extension-📐️cad: ✏️s/🔌️plugins/📐️cad/🔨️modules/📐️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/📦️index.ts
+    a plugin's core must not depend on any plugin's extensions tree —
+    extensions depend on core, not the reverse — WARN: 📐️cad's real violation
+    is its runtime/brepjs composition-root statically importing all 4 of its
+    own extensions to register them — an architecture change, not a lint flip;
+    see this rule's own docstring above
+
+  warn no-plugin-to-extension-📐️cad: ✏️s/🔌️plugins/📐️cad/��️modules/🏃️runtime/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/📦️index.ts
+    a plugin's core must not depend on any plugin's extensions tree —
+    extensions depend on core, not the reverse — WARN: 📐️cad's real violation
+    is its runtime/brepjs composition-root statically importing all 4 of its
+    own extensions to register them — an architecture change, not a lint flip;
+    see this rule's own docstring above
+
+  warn no-plugin-to-extension-📐️cad: ✏️s/🔌️plugins/📐️cad/🔨️modules/🏃️runtime/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/📦️index.ts
+    a plugin's core must not depend on any plugin's extensions tree —
+    extensions depend on core, not the reverse — WARN: 📐️cad's real violation
+    is its runtime/brepjs composition-root statically importing all 4 of its
+    own extensions to register them — an architecture change, not a lint flip;
+    see this rule's own docstring above
+
+  warn no-plugin-to-extension-📐️cad: ✏️s/🔌️plugins/📐️cad/🔨️modules/🏃️runtime/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/📦️index.ts
+    a plugin's core must not depend on any plugin's extensions tree —
+    extensions depend on core, not the reverse — WARN: 📐️cad's real violation
+    is its runtime/brepjs composition-root statically importing all 4 of its
+    own extensions to register them — an architecture change, not a lint flip;
+    see this rule's own docstring above
+
+  warn no-plugin-to-extension-📐️cad: ✏️s/🔌️plugins/📐️cad/🔨️modules/🏃️runtime/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/📦️index.ts
+    a plugin's core must not depend on any plugin's extensions tree —
+    extensions depend on core, not the reverse — WARN: 📐️cad's real violation
+    is its runtime/brepjs composition-root statically importing all 4 of its
+    own extensions to register them — an architecture change, not a lint flip;
+    see this rule's own docstring above
+
+  warn no-cross-package-relative: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🏪️store/📜️store.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts → 🧰️framework/��️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖥️platform/🟦️component.ts → 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖥️platform/🟦️component.ts → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts → 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts → 🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️ui-axes.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎯️action-bus/🟦️component.ts → 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎯️action-bus/🟦️component.ts → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts → 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts → 🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️ui-axes.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts → 🧰️framework/🔨️modules/🖥️platform/🟦️component.ts
+    Deep relative imports must not cross package/module family boundaries in
+    favor of @semio-tech/… package-name imports — WARN until package-name
+    imports are the norm repo-wide, then promote at finalization
+
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    🧰️framework/🔨️modules/🖱️ui must stay presentational and business-logic
+    free — no OS/plugin/framework coupling
+
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    🧰️framework/🔨️modules/🖱️ui must stay presentational and business-logic
+    free — no OS/plugin/framework coupling
+
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts
+    🧰️framework/🔨️modules/🖱️ui must stay presentational and business-logic
+    free — no OS/plugin/framework coupling
+
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    🧰️framework/🔨️modules/🖱️ui must stay presentational and business-logic
+    free — no OS/plugin/framework coupling
+
+  error not-to-unlisted: 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx → node_modules/three/examples/jsm/controls/OrbitControls.js
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx → node_modules/three/build/three.module.js
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx → node_modules/three-mesh-bvh/src/index.js
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts → node_modules/vite/dist/node/index.js
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts → node_modules/@vitejs/plugin-react/dist/index.js
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts → node_modules/@tailwindcss/vite/dist/index.mjs
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🎨️tailwind/🎨️tailwind.config.ts → node_modules/tailwindcss/dist/lib.js
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/��️tailwind/🎨️tailwind.config.ts → node_modules/@tailwindcss/typography/src/index.js
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: ✏️s/🔌️plugins/📐️cad/🔨️modules/📐️brepjs/🟦️component.ts → node_modules/brepjs/dist/brepjs.js
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: ✏️s/🔌️plugins/📐️cad/🔨️modules/📐️brepjs/🟦️component.ts → node_modules/brepjs-opencascade/src/brepjs_single.wasm
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: ✏️s/🔌️plugins/📐️cad/🔨️modules/📐️brepjs/🟦️component.ts → node_modules/brepjs-opencascade/src/brepjs_single.js
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: ✏️s/🔌️plugins/📐️cad/🔨️modules/🎰️stately/🟦️component.ts → node_modules/xstate/dist/xstate.cjs.mjs
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx → node_modules/unified/index.js
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx → node_modules/reveal.js/dist/reveal.js
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx → node_modules/reveal.js/dist/reveal.css
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx → node_modules/remark-rehype/index.js
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx → node_modules/remark-parse/index.js
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: ✏️s/🔌️plugins/🎞️animate/��️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx → node_modules/rehype-stringify/index.js
+    Only depend on packages declared in the nearest package.json
+
+  error not-to-unlisted: ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx → node_modules/react-pdf/dist/index.js
+    Only depend on packages declared in the nearest package.json
+
+  error no-state-outside-os: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/��️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🏪️store/📜️store.ts
+    OS-exclusive state authority: ✏️s and non-OS framework must not import OS
+    host DocumentStore/session internals via deep relative paths — go through
+    @semio-tech packages / public host APIs
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🪐️space/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🗒️note/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🕸️dag/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🔱️trinity/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📖️playbook/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🔨️modules/🧬️typology/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🔨️modules/🧪️tests/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🔨️modules/🗺️spatial/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️glue.tsx
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🔨️modules/📔️registry/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🔨️modules/📐️geometry/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🔨️modules/📐️brepjs/🟦️component.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/��️core/pkg/flow_core.js
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🔨️modules/📄️artifact/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🔨️modules/🏃️runtime/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🔨️modules/🎬️actions/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🧪️vitest.config.ts → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📋️forms/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/💡️reasoning/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🏛️architect/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/��️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌍️gis/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-��️framework: ✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌊️flow/🔨️modules/🧮️compute/🟦️component.ts → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌊️flow/🔨️modules/🧮️compute/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/📜️script.ts → ��️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+    Relative imports must not cross top-level technology folders; use
+    @semio-tech packages
+
+  error no-core-path: ✏️s/🔌️plugins/��️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx → @semio-tech/animate-present-core
+    Clean mechanism: no dependency may resolve through a banned name stem
+    folder (core/shared/util/…) — ERROR after Wave 4 core dissolve
+
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts → 
+
+      🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🏪️store/📜️store.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts
+    No circular dependencies
+
+  error no-circular: 🧰️framework/🔨️modules/🖥️platform/🟦️component.ts → 
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts →
+      🧰️framework/🔨️modules/🖥️platform/🟦️component.ts
+    No circular dependencies
+
+  error no-circular: 🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts → 
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts →
+      🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts
+    No circular dependencies
+
+  error no-circular: 🧰️framework/🔨️modules/🎯️action-bus/🟦️component.ts → 
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts →
+      🧰️framework/🔨️modules/🎯️action-bus/🟦️component.ts
+    No circular dependencies
+
+  error no-circular: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts → 
+      🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/��️glue.ts →
+      🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts
+    No circular dependencies
+
+  error no-circular: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts → 
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts →
+      🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts
+    No circular dependencies
+
+  error no-circular: 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts → 
+      🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    No circular dependencies
+
+  error no-circular: 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts → 
+      🧰️framework/🔨️modules/🖥️platform/🟦️component.ts →
+      🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    No circular dependencies
+
+  error no-circular: 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts → 
+      🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts →
+      🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    No circular dependencies
+
+  error no-circular: 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts → 
+      🧰️framework/🔨️modules/🎯️action-bus/🟦️component.ts →
+      🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    No circular dependencies
+
+  error no-circular: 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts → 
+      🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts →
+      🧰️framework/🔨️modules/🖥️platform/🟦️component.ts →
+      🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+    No circular dependencies
+
+
+x 298 dependency violations (158 errors, 140 warnings). 6675 modules, 2450 dependencies cruised.
+

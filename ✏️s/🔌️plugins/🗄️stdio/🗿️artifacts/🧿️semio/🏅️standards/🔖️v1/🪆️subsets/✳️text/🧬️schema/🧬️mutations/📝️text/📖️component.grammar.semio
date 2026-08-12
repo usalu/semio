@@ -1,0 +1,29 @@
+dialect grammar
+grammar stdio.semio.text.mutations
+extension semio
+start op
+
+# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM text wave: real one-line `OpText::print_op`/`parse_op` shape
+# ALREADY emitted by `../📝️text/🦀️component.rs` (`print_text_mutation`/`parse_text_mutation`) —
+# `tag:args` (no space; `:` separates the keyword from its positional, comma-separated argument
+# list). Every keyword/tag token below is copied verbatim from the real `format!(...)` call sites
+# in that file's `print_text_mutation`, not invented. Seven keywords, one per closed-vocabulary
+# verb this facet registers (`insert`/`remove`/`edit`/`change`/`reorder`/`add`/`remove`) —
+# `📓️taxonomy.md`'s `APPROVED_VERBS`, no `no`/`setSnapshot` (banned vocabulary).
+op = insert-run | remove-run | edit-run | change-run-language | reorder-runs | add-mark | remove-mark
+
+insert-run = "insertRun" ":" INT "," run
+remove-run = "removeRun" ":" INT
+edit-run = "editRun" ":" INT "," hex
+change-run-language = "changeRunLanguage" ":" INT "," hex
+reorder-runs = "reorderRuns" ":" INT "," INT
+add-mark = "addMark" ":" INT "," INT "," mark
+remove-mark = "removeMark" ":" INT "," INT
+
+run = "[" hex "," hex "," "[" mark-list? "]" "]"
+mark-list = mark {"," mark}*
+mark = "[" mark-kind "," hex "]"
+mark-kind = "b" | "i" | "c" | "l"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — a run of lowercase hex digits, incl. the empty string.

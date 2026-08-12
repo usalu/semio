@@ -1,7 +1,6 @@
 # 🧬️ Rewrite diff schema — sparse field delta.
 
 type RewriteDiff {
-  artifact: RewriteArtifact @state(class: PERSISTENT)
   beforeFixtureJson: String @state(class: PERSISTENT)
   lhsJson: String @state(class: PERSISTENT)
   rhsJson: String @state(class: PERSISTENT)

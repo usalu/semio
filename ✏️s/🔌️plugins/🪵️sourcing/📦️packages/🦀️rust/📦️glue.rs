@@ -363,7 +363,7 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/📄️document/🦀️component.rs"]
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/📄️artifact/🦀️component.rs"]
             pub mod document;
             #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧺️curation/🦀️component.rs"]
             pub mod curation;

@@ -40,5 +40,23 @@ mod tests {
         }
         assert_eq!(<SHomeMutation as protocol::SemanticMutation<SHomeSnapshot>>::kinds().len(), 1);
     }
+
+    //#region 🔖️MutationLaws
+    #[test]
+    fn change_catalog_generation_inverse_law() {
+        let base = SHomeSnapshot::default();
+        protocol::testkit::assert_mutation_inverse_law(&base, &change_catalog_generation(7));
+    }
+
+    #[test]
+    fn change_catalog_generation_diff_absorb_law() {
+        use protocol::Mutation;
+        let base = SHomeSnapshot::default();
+        let d1 = change_catalog_generation(3).diff(&base);
+        let mid = protocol::MutationDiff::apply(&d1, &base);
+        let d2 = change_catalog_generation(9).diff(&mid);
+        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+    //#endregion 🔖️MutationLaws
 }
 //#endregion 🧪️Tests

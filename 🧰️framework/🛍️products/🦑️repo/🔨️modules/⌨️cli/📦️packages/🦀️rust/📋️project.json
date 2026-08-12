@@ -5,43 +5,59 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build"
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts build"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test"
       }
     },
     "test-quick": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test quick"
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test quick"
       }
     },
     "test-long": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test long"
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test long"
       }
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test exhaustive"
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test exhaustive"
       }
     },
     "run": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts run",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts run",
+        "forwardAllArgs": true
+      }
+    },
+    "daemon": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts daemon",
+        "forwardAllArgs": true
+      }
+    },
+    "workflow": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts workflow",
         "forwardAllArgs": true
       }
     }

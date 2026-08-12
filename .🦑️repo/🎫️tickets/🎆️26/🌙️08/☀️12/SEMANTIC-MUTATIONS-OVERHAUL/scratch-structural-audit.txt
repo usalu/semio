@@ -1,0 +1,6 @@
+MISMATCH dirs=8 vars=14  🌀️procedural/🗿️artifacts/🌀️procedural2d
+MISMATCH dirs=9 vars=10  🌊️flow/🗿️artifacts/🌊️flow
+MISMATCH dirs=9 vars=10  📋️forms/🗿️artifacts/📋️forms
+MISMATCH dirs=4 vars=5  📜️imperative/🗿️artifacts/📜️imperative
+MISMATCH dirs=8 vars=12  🔱️trinity/🗿️artifacts/🔌️jack
+MISMATCH dirs=14 vars=15  🖍️draw/🗿️artifacts/🖍️draw

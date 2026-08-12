@@ -1,0 +1,67 @@
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:2727:26
+     |
+2727 |         pub fn new(size: crate::tui::geometry::Size, scrollback_cap: usize) -> Self {
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2727 -         pub fn new(size: crate::tui::geometry::Size, scrollback_cap: usize) -> Self {
+2727 +         pub fn new(size: Size, scrollback_cap: usize) -> Self {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:2748:40
+     |
+2748 |         pub fn resize(&mut self, size: crate::tui::geometry::Size) {
+     |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2748 -         pub fn resize(&mut self, size: crate::tui::geometry::Size) {
+2748 +         pub fn resize(&mut self, size: Size) {
+     |
+
+warning: `semio-framework-ui` (lib) generated 2 warnings (run `cargo fix --lib -p semio-framework-ui` to apply 2 suggestions)
+   Compiling semio-framework-repo-cli v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust)
+warning: unused import: `Read`
+   --> 🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📦️glue.rs:583:19
+    |
+583 |     use std::io::{Read, Write};
+    |                   ^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `variant` is never read
+   --> 🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📦️glue.rs:952:9
+    |
+949 |     struct Session {
+    |            ------- field in this struct
+...
+952 |         variant: String,
+    |         ^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-repo-cli` (lib test) generated 2 warnings (run `cargo fix --lib -p semio-framework-repo-cli --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized] target(s) in 1.53s
+     Running unittests 📦️glue.rs (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/DASHBOARD-TUI-WORKFORCE/🎯️target-w3/debug/deps/semio_framework_repo_cli-9075f4d2c4e10ea3)
+
+running 13 tests
+test tests::args_split_verb_segments_and_flags ... ok
+test tests::env_contract_sets_locks_only_for_individual ... ok
+test tests::group_catalog_into_table_nests_apps_under_their_plugin_with_a_catalog_index_map ... ok
+test tests::ipc_frame_roundtrip_and_output_codec ... ok
+test tests::legacy_fixture_prefix_maps_to_example ... ok
+test tests::parse_lock_all_is_case_insensitive ... ok
+test tests::resolve_port_prefers_explicit_then_catalog_then_fallback ... ok
+test tests::resolve_playground_prefers_longest_multi_word_alias ... ok
+test tests::daemon_supervisor_ping_appends_event_log ... ok
+test tests::playgrounds_json_text_falls_back_to_empty_array_when_missing ... ok
+test tests::check_registry_reports_invalid_json_and_passes_when_valid ... ok
+test tests::check_registry_reports_missing_generated_files ... ok
+test tests::playgrounds_json_text_passes_generated_content_through_verbatim ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+

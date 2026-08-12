@@ -2,6 +2,7 @@
 
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::engine::next_remodel_id;
+use crate::artifacts::remodel::mutations::{add_gcp_observation, create_camera_calibration, create_gcp, delete_gcp, update_camera_calibration};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{CameraCalibration, GcpObservation, GroundControlPoint, RemodelSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -44,12 +45,11 @@ pub mod edit_calibration {
             rms_reprojection_px: None,
             locked: payload.locked,
         };
-        let mut calibration = doc.snapshot.calibration.clone();
-        match calibration.cameras.iter_mut().find(|camera| camera.id == payload.camera_id) {
-            Some(existing) => *existing = entry,
-            None => calibration.cameras.push(entry),
-        }
-        Ok(Emit::mutations(vec![RemodelMutation::SetCalibration { calibration }]))
+        let mutation = match doc.snapshot.calibration.cameras.iter().any(|camera| camera.id == payload.camera_id) {
+            true => update_camera_calibration(entry),
+            false => create_camera_calibration(entry),
+        };
+        Ok(Emit::mutations(vec![mutation]))
     }
 }
 //#endregion 🔖️EditCalibration
@@ -64,22 +64,25 @@ pub mod calibrate_cameras {
 
     /// 🎯️ Auto-derives placeholder pinhole intrinsics (`fx = fy = max(width, height)`, principal point
     /// centered, no distortion — mirroring the reconstruction engine's own uncalibrated-input heuristic)
-    /// for every camera id referenced by a stream that has no calibration entry yet. A documented
-    /// simplification standing in for a real Zhang/checkerboard calibration pass (no calibration target
-    /// detection is wired into this program).
+    /// for every camera id referenced by a stream that has no calibration entry yet, one
+    /// `create-camera-calibration` per newly-derived camera. A documented simplification standing in for
+    /// a real Zhang/checkerboard calibration pass (no calibration target detection is wired into this
+    /// program).
     pub fn handle(_payload: &CalibrateCameras, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let scene = doc.snapshot;
-        let mut calibration = scene.calibration.clone();
+        let mut seen: Vec<String> = scene.calibration.cameras.iter().map(|camera| camera.id.clone()).collect();
+        let mut mutations = Vec::new();
         for stream in &scene.streams {
             let Some(camera_id) = &stream.camera_id else { continue };
-            if calibration.cameras.iter().any(|camera| &camera.id == camera_id) {
+            if seen.iter().any(|id| id == camera_id) {
                 continue;
             }
             let Some(frame) = stream.frames.first() else { continue };
             let Some(asset) = scene.assets.get(&frame.asset_id) else { continue };
             let (width, height) = (asset.width.max(1), asset.height.max(1));
             let f = f64::from(width.max(height));
-            calibration.cameras.push(CameraCalibration {
+            seen.push(camera_id.clone());
+            mutations.push(create_camera_calibration(CameraCalibration {
                 id: camera_id.clone(),
                 label: camera_id.clone(),
                 model: "pinhole".into(),
@@ -91,9 +94,9 @@ pub mod calibrate_cameras {
                 distortion: [0.0; 5],
                 rms_reprojection_px: None,
                 locked: false,
-            });
+            }));
         }
-        Ok(Emit::mutations(vec![RemodelMutation::SetCalibration { calibration }]))
+        Ok(Emit::mutations(mutations))
     }
 }
 //#endregion 🔖️CalibrateCameras
@@ -111,11 +114,10 @@ pub mod add_gcp {
         pub world_z: f64,
     }
 
-    pub fn handle(payload: &AddGcp, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+    pub fn handle(payload: &AddGcp, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         let id = next_remodel_id("gcp");
-        let mut gcps = doc.snapshot.gcps.clone();
-        gcps.push(GroundControlPoint { id, name: payload.name.clone(), world_position: [payload.world_x, payload.world_y, payload.world_z], observations: Vec::new() });
-        Ok(Emit::mutations(vec![RemodelMutation::SetGcps { gcps }]))
+        let gcp = GroundControlPoint { id, name: payload.name.clone(), world_position: [payload.world_x, payload.world_y, payload.world_z], observations: Vec::new() };
+        Ok(Emit::mutations(vec![create_gcp(gcp)]))
     }
 }
 //#endregion 🔖️AddGcp
@@ -130,9 +132,8 @@ pub mod remove_gcp {
         pub gcp_id: String,
     }
 
-    pub fn handle(payload: &RemoveGcp, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        let gcps: Vec<GroundControlPoint> = doc.snapshot.gcps.iter().filter(|gcp| gcp.id != payload.gcp_id).cloned().collect();
-        Ok(Emit::mutations(vec![RemodelMutation::SetGcps { gcps }]))
+    pub fn handle(payload: &RemoveGcp, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![delete_gcp(payload.gcp_id.clone())]))
     }
 }
 //#endregion 🔖️RemoveGcp
@@ -152,10 +153,11 @@ pub mod place_gcp_observation {
     }
 
     pub fn handle(payload: &PlaceGcpObservation, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        let mut gcps = doc.snapshot.gcps.clone();
-        let Some(gcp) = gcps.iter_mut().find(|gcp| gcp.id == payload.gcp_id) else { return Ok(Emit::default()) };
-        gcp.observations.push(GcpObservation { stream_id: payload.stream_id.clone(), frame_index: payload.frame_index, pixel: [payload.pixel_x, payload.pixel_y] });
-        Ok(Emit::mutations(vec![RemodelMutation::SetGcps { gcps }]))
+        if !doc.snapshot.gcps.iter().any(|gcp| gcp.id == payload.gcp_id) {
+            return Ok(Emit::default());
+        }
+        let observation = GcpObservation { stream_id: payload.stream_id.clone(), frame_index: payload.frame_index, pixel: [payload.pixel_x, payload.pixel_y] };
+        Ok(Emit::mutations(vec![add_gcp_observation(payload.gcp_id.clone(), observation)]))
     }
 }
 //#endregion 🔖️PlaceGcpObservation

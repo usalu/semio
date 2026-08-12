@@ -1,0 +1,22 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-os-dev:layer-lint
+
+ NX   Cannot find configuration for task @semio-tech/framework-os-dev:layer-lint
+
+Pass --verbose to see the stacktrace.
+
+1385 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1386 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1387 |  */
+1388 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1389 |   const status = runCmdInternal(cmd, args, opts);
+1390 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/framework-os-dev:layer-lint exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1390:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:599:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:829:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:864:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:10621:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

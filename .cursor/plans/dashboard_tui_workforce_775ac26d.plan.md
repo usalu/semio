@@ -7,37 +7,37 @@ todos:
     status: completed
   - id: w1-vt
     content: "W1a: add the Vt region to 🖱️ui/⌨️tui/🦀️component.rs (VtScreen + VtParser: CSI/SGR/OSC/DCS, alt screen, scroll region, scrollback, resize) with a conformance test suite"
-    status: in_progress
+    status: completed
   - id: w1-pty
     content: "W1b: add the Pty region (libc openpty + pre_exec on unix, ConPTY on windows), extend windows-sys features with Win32_System_Pipes and Win32_Security, add spawn/resize/wait tests"
-    status: in_progress
+    status: completed
   - id: w2-widget
     content: "W2a: add WidgetState::Terminal wrapping VtScreen, and extend Layout/Chrome with split, resize, move, zoom and per-stack tab strips"
-    status: pending
+    status: completed
   - id: w2-clipboard
     content: "W2b: add a Clipboard trait to the Backend region with OSC 52 plus pbcopy/clip.exe/wl-copy fallbacks"
-    status: pending
+    status: completed
   - id: w3-daemon
     content: "W3a: add Ipc and Daemon regions to the repo CLI glue (unix socket + named pipe transport, framed protocol, supervisor, append-only event log, attach/detach)"
-    status: pending
+    status: completed
   - id: w3-client
     content: "W3b: rewrite the Tui region into the multiplexed dashboard client (leader keys, Alt window jump, command palette, per-window utilities menu, internal views)"
-    status: pending
+    status: completed
   - id: w4-registry
     content: "W4a: add the Registry region and generate 🤖️dashboard.json from project.json targets, root script verbs, playground catalog and detected agent runners via @semio-tech/plugin-registry:generate"
-    status: pending
+    status: completed
   - id: w4-wiring
     content: "W4b: add daemon and workflow commands to the CLI 📜️script.ts and 📋️project.json, and add dashboard entries to the launch seed"
-    status: pending
+    status: completed
   - id: w5-workforce
     content: "W5a: add the Workforce region (wave DAG scheduler, bounded concurrency, path scope claims, 🌊️workflow.json inside ticket folders)"
-    status: pending
+    status: completed
   - id: w5-agents
     content: "W5b: add AgentRunner adapters for cursor-agent, claude -p and codex exec with PATH detection, plus the workforce board window"
-    status: pending
+    status: completed
   - id: verify
     content: "Verify end to end: cargo tests for both crates, scripted PTY smoke of semio, daemon survival across client restart, and a two-task workflow run with both models"
-    status: pending
+    status: completed
 isProject: false
 ---
 

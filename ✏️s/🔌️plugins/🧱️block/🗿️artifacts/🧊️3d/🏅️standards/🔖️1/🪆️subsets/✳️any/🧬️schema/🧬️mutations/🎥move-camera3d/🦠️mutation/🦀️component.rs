@@ -1,0 +1,35 @@
+//! 🎥 Block3d mutation — `MoveCamera3d`: the 3D world camera's position + look-at target together.
+use crate::artifacts::block3d::diff::Block3dDiff;
+use crate::artifacts::block3d::mutations::Block3dMutation;
+use crate::artifacts::block3d::Block3dSnapshot;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Mutation
+/// 🎥 `move-camera3d` payload.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "move-camera3d")]
+pub struct MoveCamera3d {
+    pub new_position: [f64; 3],
+    pub new_target: [f64; 3],
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub fn move_camera3d(new_position: [f64; 3], new_target: [f64; 3]) -> Block3dMutation {
+    Block3dMutation::MoveCamera3d(MoveCamera3d { new_position, new_target })
+}
+
+impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for MoveCamera3d {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "camera3d", kind: "move-camera3d", record: "MovedCamera3d" };
+
+    fn diff(&self, base: &Block3dSnapshot) -> Block3dDiff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Move camera to {:?}", self.new_position)
+    }
+}
+//#endregion 🔖️Mutation

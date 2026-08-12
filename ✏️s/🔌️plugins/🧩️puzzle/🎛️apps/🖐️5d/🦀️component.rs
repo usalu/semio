@@ -1989,27 +1989,19 @@ pub fn create_puzzle5d_app() -> App {
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 /// 📥️ Tier C DWG mesh import — always returns the empty puzzle-5d document; never errors on a structurally valid mesh.
-fn puzzle5d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
+pub(crate) fn puzzle5d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
     serde_json::to_value(empty_document()).map_err(|error| error.to_string())
 }
 
 /// 🗂️ Registers `Puzzle5dPlaySnapshot`'s pack<->dsl codec under its real `document_schema()` string
 /// so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-5d play documents without
-/// depending on this crate's concrete `Projection`/`Mutation` types, plus the 5d mesh export/import
-/// handlers. Called by the plugin `setup:` hook (`crate::artifacts::puzzle2d::engine::register`).
+/// depending on this crate's concrete `Projection`/`Mutation` types. Called by the plugin `setup:`
+/// hook (`crate::artifacts::puzzle2d::engine::register`). The 5d mesh export/import OS-host
+/// registration lives at `crate::artifacts::puzzle5d::engine::register_io` — APA (ticket
+/// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`): OS-host registration belongs to the owning
+/// artifact's own engine, never to an app file.
 pub fn register_puzzle5d_exports() {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle5dPlayApp>(PUZZLE5D_SCHEMA);
-    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    {
-        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::ObjExporter));
-        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
-        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::StlExporter));
-        semio_framework_os::register_mesh_importer("5d.puzzle", puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
-        semio_framework_os::register_mesh_importer("5d.puzzle", puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
-        semio_framework_os::register_mesh_importer("5d.puzzle", puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
-        semio_framework_os::register_mesh_dwg_export_handler("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
-        semio_framework_os::register_mesh_dwg_import_handler("5d.puzzle", puzzle5d_document_from_mesh);
-    }
 }
 //#endregion 🔖️Manifest
 

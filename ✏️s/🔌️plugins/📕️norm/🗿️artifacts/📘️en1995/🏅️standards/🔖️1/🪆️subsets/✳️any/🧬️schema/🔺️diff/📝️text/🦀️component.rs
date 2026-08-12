@@ -129,11 +129,13 @@ mod tests {
     use protocol::{Mutation as _, MutationDiff};
 
     #[test]
-    fn set_snapshot_diff_replaces_the_whole_snapshot() {
+    fn change_mutation_diff_updates_only_its_field() {
         let base = En1995Snapshot::default();
-        let mutation = En1995Mutation::SetSnapshot { snapshot: En1995Snapshot::default() };
+        let mutation = En1995Mutation::ChangeMEdKnm(crate::artifacts::en1995::mutations::change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 25.0 });
         let diff = mutation.diff(&base);
-        assert_eq!(diff.apply(&base), En1995Snapshot::default());
+        let mut expected = base.clone();
+        expected.m_ed_knm = 25.0;
+        assert_eq!(diff.apply(&base), expected);
     }
 }
 //#endregion 🧪️Tests

@@ -1775,6 +1775,8 @@ pub mod apps {
         }
         #[path = "../../🎛️apps/◻2d/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
+        #[path = "../../🎛️apps/◻2d/🌉️wasm/🦀️component.rs"]
+        pub mod wasm;
 
         #[path = "."]
         pub mod commands {
@@ -2144,14 +2146,6 @@ pub mod apps {
     }
 }
 //#endregion 🎛️Apps
-
-//#region 🔨️Modules
-#[path = "."]
-pub mod modules {
-    #[path = "../../🔨️modules/🎲️board-2d/🦀️component.rs"]
-    pub mod board_2d;
-}
-//#endregion 🔨️Modules
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]

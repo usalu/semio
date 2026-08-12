@@ -1,4 +1,50 @@
-   Compiling libc v0.2.186
    Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
-   Compiling unicode-width v0.2.2
-   Compiling semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:4062:29
+     |
+4062 |         assert_eq!(runs[0], crate::tui::cell::DiffRun { y: 0, x: 3, len: 1 });
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+4062 -         assert_eq!(runs[0], crate::tui::cell::DiffRun { y: 0, x: 3, len: 1 });
+4062 +         assert_eq!(runs[0], DiffRun { y: 0, x: 3, len: 1 });
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:4122:44
+     |
+4122 |         assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Esc, mods: 0 })]);
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4122 -         assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Esc, mods: 0 })]);
+4122 +         assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Esc, mods: 0 })]);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:4133:44
+     |
+4133 |         assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Char('ü'), mods: 0 })]);
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4133 -         assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Char('ü'), mods: 0 })]);
+4133 +         assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Char('ü'), mods: 0 })]);
+     |
+
+warning: `semio-framework-ui` (lib test) generated 3 warnings (run `cargo fix --lib -p semio-framework-ui --tests` to apply 3 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 2.79s
+     Running unittests 📦️glue.rs (.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/DASHBOARD-TUI-WORKFORCE/target-w1b/debug/deps/semio_framework_ui-e097f46ec8331bea)
+
+running 4 tests
+test tui::component::tests::select_on_key_wraps_and_ignores_empty_options ... ok
+test tui::component::tests::tabs_on_key_wraps_and_ignores_empty_tabs ... ok
+test tui::component::tests::pty_resize_ok ... ok
+test tui::component::tests::pty_spawn_echo_hello ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 81 filtered out; finished in 0.03s
+

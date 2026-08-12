@@ -13,6 +13,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 pub use crate::artifacts::en1995::schema::mutations::En1995Mutation;
 use crate::artifacts::en1995::schema::mutations::{set_snapshot, change_m_ed_knm, change_n_ed_kn, change_v_ed_kn, change_w_mm3, change_a_mm2, change_b_mm, change_h_mm, change_f_m_k, change_f_c_0_k, change_service_class, change_load_duration, change_m_crit_knm, change_f_ed_kn, change_a_ef_mm2, change_f_v_k, change_fire_duration_min, change_section_depth_mm, change_a_vert_m_s2, change_n_cycles_bridge};
+use crate::document::AnnexChoice;
 
 use protocol::OpText;
 

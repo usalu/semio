@@ -6,64 +6,18 @@
 //! collections, no name/identity field to `rename`. Every field becomes its own `change-<field>`
 //! mutation per the rule's "change-<field> per remaining scalar" clause; none qualify for the
 //! `update-<facet>` grouping exception (each check input is independently measured/entered in the
-//! host UI, never validated as an atomic multi-field bundle). `SetSnapshot` — the pre-migration
-//! whole-document replace — is gone: banned outright per `📓️taxonomy.md`/`📓️derivation-rules.md`
-//! rule 6, with NO replacement mutation; file-open/import/load-example now goes through
+//! host UI, never validated as an atomic multi-field bundle). The pre-migration whole-document-
+//! replace variant is gone: banned outright per `📓️taxonomy.md`/`📓️derivation-rules.md` rule 6,
+//! with NO replacement mutation; file-open/import/load-example now goes through
 //! `store::ArtifactStore::reset`, entirely outside this enum.
 //!
-//! `📄set-snapshot` keeps its pre-migration directory name — `📦️glue.rs` path-includes that exact
-//! triad outside this facet's writable boundary, so it was repurposed in place (same path,
-//! rewritten `🦠️mutation`/`🔺️diff`/`↩️inverse` content) to hold `ChangeAnnex` instead of being
-//! renamed; see this ticket's wave2 report `sharedFileRequests` for the rename once a later pass
-//! can touch `📦️glue.rs`. The other thirty-four triads have no pre-migration slot and are
-//! self-wired directly below via nested `#[path = "."] pub mod <name> { ... }` blocks.
+//! All thirty-five triads (including the repurposed `set_snapshot` slot, which still holds
+//! `ChangeAnnex`) are mounted directly as `mutations`-sibling modules in `📦️glue.rs` (this lane's
+//! agent owns `📦️glue.rs`, so no self-wiring `#[path = "."]` blocks are needed here).
 
 use crate::artifacts::en1992::diff::En1992Diff;
 use crate::artifacts::en1992::En1992Snapshot;
 use serde::{Deserialize, Serialize};
-
-//#region 🔖️NewLeaves
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️NewLeaves
-
-//#region 🔖️RepurposedLeaves
-// 🌱️ `set_snapshot` is declared by `📦️glue.rs` as a sibling of `component` (this file) under
-// `pub mod mutations { ... }` — brought into this file's own scope the same way this ticket's
-// din16798/vdi3805 precedents reach their own repurposed `set_snapshot` sibling.
-use super::set_snapshot;
-//#endregion 🔖️RepurposedLeaves
 
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the En1992 document, derived per

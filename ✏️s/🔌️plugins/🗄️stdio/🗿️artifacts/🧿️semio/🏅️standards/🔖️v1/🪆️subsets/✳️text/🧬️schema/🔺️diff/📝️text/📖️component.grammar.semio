@@ -1,0 +1,19 @@
+dialect grammar
+grammar stdio.semio.text.diff
+extension semio
+start document
+
+# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM text wave: real one-line `DiffCodec::print_diff`/`parse_diff`
+# shape ALREADY emitted by `🔺️diff/🦀️component.rs` (`print_text_diff`/`parse_text_diff`). `text`
+# has exactly one mutable field (`runs`), so the whole diff is optional.
+document = runs-line?
+
+runs-line = "runs" "=" "[" run-list? "]"
+run-list = run {"," run}*
+run = "[" hex "," hex "," "[" mark-list? "]" "]"
+mark-list = mark {"," mark}*
+mark = "[" mark-kind "," hex "]"
+mark-kind = "b" | "i" | "c" | "l"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — a run of lowercase hex digits, incl. the empty string.

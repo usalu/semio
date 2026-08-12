@@ -17,7 +17,7 @@ pub mod add_grip {
         };
         let id = crate::artifacts::block5d::engine::next_id(doc.snapshot.grips.iter().map(|grip| grip.id.as_str()), "grip-");
         let grip = Block5dGripTemplate { id, grip_kind: grip_kind_id, angle: 0.0, radius_2d: 0.36, position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.36 };
-        Ok(Emit::mutations(vec![Block5dMutation::SetGrip { index: doc.snapshot.grips.len(), grip }]))
+        Ok(Emit::mutations(vec![crate::artifacts::block5d::mutations::create_grip(grip)]))
     }
 }
 
@@ -35,6 +35,6 @@ pub mod remove_grip {
     }
 
     pub fn handle(payload: &RemoveGrip, _doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![Block5dMutation::RemoveGrip { id: payload.id.clone() }]))
+        Ok(Emit::mutations(vec![crate::artifacts::block5d::mutations::delete_grip(payload.id.clone())]))
     }
 }

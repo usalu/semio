@@ -1,0 +1,23 @@
+syntax = "proto3";
+// 🧬️ SemioTextMutation schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+package semio.s_stdio_semio_text.mutations;
+
+message InsertRun { uint64 index = 1; bytes run = 2; }
+message RemoveRun { uint64 index = 1; }
+message EditRun { uint64 index = 1; string new_content = 2; }
+message ChangeRunLanguage { uint64 index = 1; string new_language = 2; }
+message ReorderRuns { uint64 from = 1; uint64 to = 2; }
+message AddMark { uint64 run_index = 1; uint64 index = 2; bytes mark = 3; }
+message RemoveMark { uint64 run_index = 1; uint64 index = 2; }
+
+message SemioTextMutation {
+  oneof variant {
+    InsertRun insert_run = 1;
+    RemoveRun remove_run = 2;
+    EditRun edit_run = 3;
+    ChangeRunLanguage change_run_language = 4;
+    ReorderRuns reorder_runs = 5;
+    AddMark add_mark = 6;
+    RemoveMark remove_mark = 7;
+  }
+}

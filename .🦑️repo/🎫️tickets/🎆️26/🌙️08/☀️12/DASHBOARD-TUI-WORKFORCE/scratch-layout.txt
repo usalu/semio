@@ -1,0 +1,258 @@
+// #region 🔖️Layout
+pub mod layout {
+    use crate::tui::geometry::Rect;
+    use crate::tui::scene::{NodeContent, NodeId, Scene};
+
+    /// 📐️ How one axis of a node's size is determined.
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub enum Dimension {
+        Auto,
+        Cells(u16),
+        Weight(u16),
+    }
+
+    impl Default for Dimension {
+        fn default() -> Self {
+            Dimension::Auto
+        }
+    }
+
+    /// ↔ How a node arranges its children.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+    pub enum Direction {
+        #[default]
+        Row,
+        Column,
+        Stack,
+    }
+
+    /// 📦️ A node's layout intent.
+    #[derive(Clone, Copy, Debug, Default)]
+    pub struct Constraint {
+        pub direction: Direction,
+        pub width: Dimension,
+        pub height: Dimension,
+        pub gap: u16,
+        pub padding: [u16; 4],
+    }
+
+    fn measure(scene: &Scene, id: NodeId) -> (u16, u16) {
+        match &scene.node(id).content {
+            NodeContent::Text(s) => (crate::tui::text::display_width(s), 1),
+            NodeContent::Widget(w) => {
+                let size = w.preferred_size();
+                (size.width, size.height)
+            }
+            _ => (0, 0),
+        }
+    }
+
+    fn distribute(dims: &[Dimension], measured: &[u16], total: u16, gap: u16) -> Vec<u16> {
+        let n = dims.len();
+        if n == 0 {
+            return Vec::new();
+        }
+        let gaps = gap.saturating_mul(n.saturating_sub(1) as u16);
+        let mut sizes = vec![0u16; n];
+        let mut weight_total = 0u32;
+        let mut fixed_total = gaps;
+        for (i, d) in dims.iter().enumerate() {
+            match d {
+                Dimension::Cells(c) => {
+                    sizes[i] = *c;
+                    fixed_total += c;
+                }
+                Dimension::Auto => {
+                    sizes[i] = measured[i];
+                    fixed_total += measured[i];
+                }
+                Dimension::Weight(w) => weight_total += u32::from(*w),
+            }
+        }
+        let remaining = u32::from(total).saturating_sub(u32::from(fixed_total));
+        if weight_total > 0 {
+            let mut remainders: Vec<(usize, u32)> = Vec::new();
+            let mut used = 0u32;
+            for (i, d) in dims.iter().enumerate() {
+                if let Dimension::Weight(w) = d {
+                    let share = remaining * u32::from(*w) / weight_total;
+                    sizes[i] = share as u16;
+                    used += share;
+                    remainders.push((i, remaining * u32::from(*w) % weight_total));
+                }
+            }
+            let mut leftover = remaining.saturating_sub(used);
+            remainders.sort_by(|a, b| b.1.cmp(&a.1));
+            for (i, _) in remainders {
+                if leftover == 0 {
+                    break;
+                }
+                sizes[i] += 1;
+                leftover -= 1;
+            }
+        }
+        sizes
+    }
+
+    /// 🧮️ Recomputes rects for the whole tree from `viewport` down (no-operation-safe to call every frame).
+    pub fn solve(scene: &mut Scene, viewport: Rect) {
+        layout_node(scene, scene.root(), viewport);
+    }
+
+    fn layout_node(scene: &mut Scene, id: NodeId, rect: Rect) {
+        scene.node_raw_mut(id).rect = rect;
+        let constraint = scene.node(id).constraint;
+        let [top, right, bottom, left] = constraint.padding;
+        let inner = rect.inset_sides(top, right, bottom, left);
+        let children: Vec<NodeId> = scene.node(id).children().to_vec();
+        if children.is_empty() {
+            return;
+        }
+        match constraint.direction {
+            Direction::Stack => {
+                for &child in &children {
+                    layout_node(scene, child, inner);
+                }
+            }
+            Direction::Row => {
+                let dims: Vec<Dimension> = children.iter().map(|c| scene.node(*c).constraint.width).collect();
+                let measured: Vec<u16> = children.iter().map(|c| measure(scene, *c).0).collect();
+                let sizes = distribute(&dims, &measured, inner.width, constraint.gap);
+                let mut x = inner.x;
+                for (i, &child) in children.iter().enumerate() {
+                    let w = sizes[i];
+                    layout_node(scene, child, Rect::new(x, inner.y, w, inner.height));
+                    x += w + constraint.gap;
+                }
+            }
+            Direction::Column => {
+                let dims: Vec<Dimension> = children.iter().map(|c| scene.node(*c).constraint.height).collect();
+                let measured: Vec<u16> = children.iter().map(|c| measure(scene, *c).1).collect();
+                let sizes = distribute(&dims, &measured, inner.height, constraint.gap);
+                let mut y = inner.y;
+                for (i, &child) in children.iter().enumerate() {
+                    let h = sizes[i];
+                    layout_node(scene, child, Rect::new(inner.x, y, inner.width, h));
+                    y += h + constraint.gap;
+                }
+            }
+        }
+    }
+
+    //#region 🔖️WindowLayout
+    /// 🪟️ One tiled window leaf: which content it hosts and its display title.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct WindowLayoutWindowNode {
+        pub window_kind_id: String,
+        pub title: Option<String>,
+    }
+
+    /// 🗂️ A stack of windows sharing one area; only `active_window_kind_id` is visible.
+    #[derive(Clone, Debug, PartialEq, Default)]
+    pub struct WindowLayoutStackNode {
+        pub size: Option<f64>,
+        pub active_window_kind_id: Option<String>,
+        pub children: Vec<WindowLayoutWindowNode>,
+    }
+
+    /// ↔ A row or column of tiled children.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct WindowLayoutAxisNode {
+        pub kind: String,
+        pub size: Option<f64>,
+        pub children: Vec<WindowLayoutChild>,
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub enum WindowLayoutChild {
+        Axis(WindowLayoutAxisNode),
+        Stack(WindowLayoutStackNode),
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub enum WindowLayoutRoot {
+        Axis(WindowLayoutAxisNode),
+        Stack(WindowLayoutStackNode),
+    }
+
+    /// 🌳️ A full tiling window arrangement (rows/columns/stacks with weights).
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct WindowLayout {
+        pub root: WindowLayoutRoot,
+    }
+
+    /// 📐️ The resolved on-screen placement of one visible window.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct WindowMeasure {
+        pub window_kind_id: String,
+        pub rect: Rect,
+        pub active: bool,
+        pub stack_tabs: Vec<String>,
+    }
+
+    fn axis_child_size(child: &WindowLayoutChild) -> f64 {
+        match child {
+            WindowLayoutChild::Axis(a) => a.size.unwrap_or(1.0),
+            WindowLayoutChild::Stack(s) => s.size.unwrap_or(1.0),
+        }
+    }
+
+    fn solve_axis(node: &WindowLayoutAxisNode, area: Rect, out: &mut Vec<WindowMeasure>) {
+        let is_row = node.kind == "row";
+        let total_weight: f64 = node.children.iter().map(axis_child_size).sum::<f64>().max(1e-6);
+        let extent = if is_row { area.width } else { area.height };
+        let mut offset = 0u16;
+        for child in &node.children {
+            let weight = axis_child_size(child);
+            let size = ((f64::from(extent) * weight / total_weight).round() as u16).min(extent - offset);
+            let child_rect = if is_row { Rect::new(area.x + offset, area.y, size, area.height) } else { Rect::new(area.x, area.y + offset, area.width, size) };
+            match child {
+                WindowLayoutChild::Axis(a) => solve_axis(a, child_rect, out),
+                WindowLayoutChild::Stack(s) => solve_stack(s, child_rect, out),
+            }
+            offset += size;
+        }
+    }
+
+    fn solve_stack(node: &WindowLayoutStackNode, area: Rect, out: &mut Vec<WindowMeasure>) {
+        if node.children.is_empty() {
+            return;
+        }
+        let tabs: Vec<String> = node.children.iter().map(|c| c.window_kind_id.clone()).collect();
+        let active = node.active_window_kind_id.clone().unwrap_or_else(|| node.children[0].window_kind_id.clone());
+        out.push(WindowMeasure { window_kind_id: active, rect: area, active: true, stack_tabs: tabs });
+    }
+
+    /// 🧮️ Resolves a `WindowLayout` into concrete on-screen `WindowMeasure`s.
+    pub fn solve_window_layout(layout: &WindowLayout, area: Rect) -> Vec<WindowMeasure> {
+        let mut out = Vec::new();
+        match &layout.root {
+            WindowLayoutRoot::Axis(a) => solve_axis(a, area, &mut out),
+            WindowLayoutRoot::Stack(s) => solve_stack(s, area, &mut out),
+        }
+        out
+    }
+
+    /// 🏗️ Builds a row/column layout of individually-sized windows.
+    pub fn create_default_layout(window_ids: &[String], direction: &str, sizes: Option<&[f64]>, titles: Option<&[String]>) -> WindowLayout {
+        let children = window_ids
+            .iter()
+            .enumerate()
+            .map(|(i, id)| {
+                WindowLayoutChild::Stack(WindowLayoutStackNode {
+                    size: sizes.and_then(|s| s.get(i)).copied(),
+                    active_window_kind_id: Some(id.clone()),
+                    children: vec![WindowLayoutWindowNode { window_kind_id: id.clone(), title: titles.and_then(|t| t.get(i)).cloned() }],
+                })
+            })
+            .collect();
+        WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: direction.to_string(), size: None, children }) }
+    }
+
+    /// 🏗️ Builds an evenly-weighted row layout.
+    pub fn even_window_layout(window_ids: &[String]) -> WindowLayout {
+        create_default_layout(window_ids, "row", None, None)
+    }
+    //#endregion 🔖️WindowLayout
+}
+// #endregion 🔖️Layout

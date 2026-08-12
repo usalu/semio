@@ -108,38 +108,6 @@ impl En1995Mutation {
 }
 //#endregion 🔖️FromSnapshot
 
-//#region 🔖️FromSnapshot
-impl En1995Mutation {
-    /// 📤️ Decomposes a whole `En1995Snapshot` into one `change-<field>` mutation per
-    /// persistent field — the closed-vocabulary replacement for the banned whole-document-replace
-    /// variant, used by `import_media`'s `"model:in"` port and the `set-snapshot` app command to
-    /// bundle a bulk document replacement into a single atomic `Emit::commit`.
-    pub fn from_snapshot(snapshot: &En1995Snapshot) -> Vec<En1995Mutation> {
-        let mut mutations = Vec::with_capacity(19);
-        mutations.push(En1995Mutation::ChangeAEfMm2(change_a_ef_mm2::mutation::ChangeAEfMm2 { new_a_ef_mm2: snapshot.a_ef_mm2.clone() }));
-        mutations.push(En1995Mutation::ChangeAMm2(change_a_mm2::mutation::ChangeAMm2 { new_a_mm2: snapshot.a_mm2.clone() }));
-        mutations.push(En1995Mutation::ChangeAVertMS2(change_a_vert_m_s2::mutation::ChangeAVertMS2 { new_a_vert_m_s2: snapshot.a_vert_m_s2.clone() }));
-        mutations.push(En1995Mutation::ChangeBMm(change_b_mm::mutation::ChangeBMm { new_b_mm: snapshot.b_mm.clone() }));
-        mutations.push(En1995Mutation::ChangeFEdKn(change_f_ed_kn::mutation::ChangeFEdKn { new_f_ed_kn: snapshot.f_ed_kn.clone() }));
-        mutations.push(En1995Mutation::ChangeFC0K(change_f_c_0_k::mutation::ChangeFC0K { new_f_c_0_k: snapshot.f_c_0_k.clone() }));
-        mutations.push(En1995Mutation::ChangeFireDurationMin(change_fire_duration_min::mutation::ChangeFireDurationMin { new_fire_duration_min: snapshot.fire_duration_min.clone() }));
-        mutations.push(En1995Mutation::ChangeFMK(change_f_m_k::mutation::ChangeFMK { new_f_m_k: snapshot.f_m_k.clone() }));
-        mutations.push(En1995Mutation::ChangeFVK(change_f_v_k::mutation::ChangeFVK { new_f_v_k: snapshot.f_v_k.clone() }));
-        mutations.push(En1995Mutation::ChangeHMm(change_h_mm::mutation::ChangeHMm { new_h_mm: snapshot.h_mm.clone() }));
-        mutations.push(En1995Mutation::ChangeLoadDuration(change_load_duration::mutation::ChangeLoadDuration { new_load_duration: snapshot.load_duration.clone() }));
-        mutations.push(En1995Mutation::ChangeMCritKnm(change_m_crit_knm::mutation::ChangeMCritKnm { new_m_crit_knm: snapshot.m_crit_knm.clone() }));
-        mutations.push(En1995Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm.clone() }));
-        mutations.push(En1995Mutation::ChangeNCyclesBridge(change_n_cycles_bridge::mutation::ChangeNCyclesBridge { new_n_cycles_bridge: snapshot.n_cycles_bridge.clone() }));
-        mutations.push(En1995Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: snapshot.n_ed_kn.clone() }));
-        mutations.push(En1995Mutation::ChangeSectionDepthMm(change_section_depth_mm::mutation::ChangeSectionDepthMm { new_section_depth_mm: snapshot.section_depth_mm.clone() }));
-        mutations.push(En1995Mutation::ChangeServiceClass(change_service_class::mutation::ChangeServiceClass { new_service_class: snapshot.service_class.clone() }));
-        mutations.push(En1995Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn.clone() }));
-        mutations.push(En1995Mutation::ChangeWMm3(change_w_mm3::mutation::ChangeWMm3 { new_w_mm3: snapshot.w_mm3.clone() }));
-        mutations
-    }
-}
-//#endregion 🔖️FromSnapshot
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

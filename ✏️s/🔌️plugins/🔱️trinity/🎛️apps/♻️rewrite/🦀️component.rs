@@ -3,7 +3,10 @@
 //! 📌️ Pure-trait `ArtifactApp`: `TrinityRewritePlayApp` is a unit struct; every former
 //! `RewritePlayRuntime` field (selection, hover/select var, camera, LOD, …) lives in
 //! `config::RewriteConfig`, written via `config::RewriteConfigMutation`s. Every rule/parameter/
-//! before-fixture mutation flows through the single LWW `RewriteRuleMutation::SetState`. The
+//! before-fixture edit flows through the semantic `RewriteRuleMutation` vocabulary (`edit-*` body
+//! replaces, `change-*`/`remove-*` map upserts) — see
+//! `crate::artifacts::rewrite::mutations::rewrite_snapshot_mutations`, the seam commands that still
+//! compute a whole `next: RewriteSnapshot` use to emit granular mutations. The
 //! `TrinityRewriteCommand` enum stays hand-rolled (TEMPLATE §5.1 fallback, same rationale as `jack`).
 
 use crate::artifacts::jack::{Camera, JackSnapshot, Node, PropertyValue};
@@ -95,6 +98,16 @@ pub(crate) fn default_rule_state() -> RewriteSnapshot {
 /// before-fixture's initial framing is consumed into the app's live config camera.
 pub(crate) fn seed_before_pane_camera(state: &RewriteSnapshot) -> Camera {
     parse_fixture_json(&state.before_fixture_json).map(|fixture| fixture.camera).unwrap_or_default()
+}
+
+/// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetState` — see
+/// `📓️taxonomy.md`'s forbidden vocabulary), so `resetRule` builds a `HostEffect::LoadDocument`
+/// (outside undo history) instead of an `artifact_mutations` entry.
+pub(crate) fn reset_document_effect(state: &RewriteSnapshot) -> semio_framework_plugin::HostEffect {
+    let pack = <RewriteSnapshot as ArtifactPack>::encode_pack(state);
+    let envelope = store::create_document_envelope::<RewriteSnapshot, RewriteRuleMutation>(REWRITE_RULE_SCHEMA, "rewrite", state.clone(), None);
+    let spr = store::print_document_spr(&envelope).expect("rewrite document spr encode is infallible for a fresh, edit-free envelope");
+    semio_framework_plugin::HostEffect::LoadDocument { pack, spr }
 }
 
 pub(crate) fn rewrite_action(action: &str, args: Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor {
@@ -507,13 +520,14 @@ impl ArtifactApp for TrinityRewritePlayApp {
         Some(rewrite_io())
     }
 
-    fn whole_document_operation(snapshot: RewriteSnapshot) -> Option<RewriteRuleMutation> {
-        Some(RewriteRuleMutation::SetState { state: snapshot })
-    }
+    // 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetState` — a
+    // whole-snapshot LWW register wearing a mutation costume, see `📓️taxonomy.md`'s forbidden
+    // vocabulary), so this intentionally falls back to the trait default (`None`) rather than
+    // overriding — the `"document:in"` media port therefore reports `MediaError::NotImplemented`;
+    // there is no import mutation (locked decision).
 
     /// 🔌️ `"graph:in"` loads an incoming `trinity.graph` pack as this rule's `before_fixture_json`
-    /// working graph. `"document:in"` reimplements the default `ArtifactApp::import_media` body for
-    /// the rule document itself.
+    /// working graph — a single targeted field edit, not a whole-document replace.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RewriteSnapshot>) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "graph:in" => {
@@ -523,20 +537,8 @@ impl ArtifactApp for TrinityRewritePlayApp {
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let fixture = <JackSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let fixture_json = fixture.to_json().map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let mut next = doc.snapshot.clone();
-                next.before_fixture_json = fixture_json;
-                Ok(Emit::mutations(vec![RewriteRuleMutation::SetState { state: next }]))
-            }
-            "document:in" => {
-                let MediaPayload::Structured { json, .. } = &media.payload else {
-                    return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
-                };
-                let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let projection = <RewriteSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                match Self::whole_document_operation(projection) {
-                    Some(operation) => Ok(Emit::mutations(vec![operation])),
-                    None => Err(MediaError::NotImplemented),
-                }
+                let _ = doc;
+                Ok(Emit::mutations(vec![crate::artifacts::rewrite::mutations::edit_before_fixture(fixture_json)]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -886,7 +888,7 @@ mod tests {
     fn set_parameter_emits_one_op_and_is_undoable() {
         let mut app = new_app();
         let result = app.dispatch_typed(TrinityRewriteCommand::SetParameter { name: "label".into(), value: "changed".into() }, &meta("local")).expect("set parameter");
-        assert_eq!(result.mutations.len(), 1, "a parameter edit is a single SetState operation");
+        assert_eq!(result.mutations.len(), 1, "a single-key parameter edit is one ChangeParameterBinding operation");
         assert_eq!(app.snapshot().unwrap().parameter_bindings.get("label").cloned(), Some(PropertyValue::String("changed".into())));
         app.handle_action("undo", None, &meta("local")).expect("undo");
         assert_eq!(app.snapshot().unwrap().parameter_bindings.get("label").cloned(), Some(PropertyValue::String("nakagin-core".into())));

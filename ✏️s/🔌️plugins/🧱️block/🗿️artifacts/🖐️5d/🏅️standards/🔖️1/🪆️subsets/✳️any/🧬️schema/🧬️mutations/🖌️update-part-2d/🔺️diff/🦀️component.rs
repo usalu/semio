@@ -1,0 +1,10 @@
+//! 🔺️ Sparse diff builder for `UpdatePart2d` — real handcrafted delta, never apply-then-capture.
+use crate::artifacts::block5d::diff::Block5dDiff;
+use crate::artifacts::block5d::Block5dSnapshot;
+use crate::artifacts::block5d::{Block5dPart2d};
+
+//#region 🔖️Diff
+pub fn diff(payload: &super::mutation::UpdatePart2d, base: &Block5dSnapshot) -> Block5dDiff {
+    Block5dDiff { part_2d: Some(Block5dPart2d { shape: payload.new_shape.clone(), radius: payload.new_radius, width: payload.new_width, height: payload.new_height, color: payload.new_color.clone(), icon_kind: payload.new_icon_kind.clone() }), ..Default::default() }
+}
+//#endregion 🔖️Diff

@@ -1,0 +1,31 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.text/snapshot.json",
+  "title": "SemioTextSnapshot",
+  "description": "A sequence of language-tagged runs carrying content plus inline marks (bold/italic/code/link).",
+  "type": "object",
+  "required": ["schema", "runs"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "runs": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": {
+        "type": "object",
+        "properties": {
+          "language": { "type": "string", "description": "BCP-47 tag; empty = unspecified" },
+          "content": { "type": "string" },
+          "marks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": { "enum": ["bold", "italic", "code", "link"] },
+                "href": { "type": "string", "description": "populated only when kind == link" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

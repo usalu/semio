@@ -90,4 +90,21 @@ pub(crate) fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut
     if body_right_x > body_left_x {
         buf.hline(Pos { x: body_left_x, y: top_y }, body_right_x - body_left_x, '\u{2500}', border, bg);
     }
+
+    // per-stack tab strip on the body's top hairline when the stack has multiple windows
+    if w.stack_tabs.len() > 1 && body_right_x > body_left_x + 2 {
+        let mut x = body_left_x + 1;
+        for (i, tab) in w.stack_tabs.iter().enumerate() {
+            if x >= body_right_x {
+                break;
+            }
+            let active = i == w.active_stack_tab;
+            let label = if active { format!("[{}]", tab) } else { format!(" {} ", tab) };
+            let room = body_right_x.saturating_sub(x);
+            let fg = if active { theme.role(Role::Accent) } else { theme.role(Role::MutedForeground) };
+            let attrs = if active { 1 } else { 0 };
+            let written = buf.put_str(Pos { x, y: top_y }, &label, fg, bg, attrs, Rect::new(x, top_y, room, 1));
+            x = x.saturating_add(written.max(1));
+        }
+    }
 }

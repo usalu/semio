@@ -1,0 +1,21 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-os-dev:layer-lint
+
+> nx run @semio-tech/framework-os-dev:layer-lint
+
+> bun ./📜️script.ts layer-lint
+
+[capability-layering-lint] WARN (grandfathered C2, see 📓️w5b-c2-verdict.md): semio-s-plugin-procedural: plugin->extension dependency on semio-s-plugin-flow-extension-brep
+[capability-layering-lint] WARN (grandfathered C2, see 📓️w5b-c2-verdict.md): semio-s-plugin-procedural: plugin->extension dependency on semio-s-plugin-flow-extension-dictionary
+[capability-layering-lint] WARN (grandfathered C2, see 📓️w5b-c2-verdict.md): semio-s-plugin-procedural: plugin->extension dependency on semio-s-plugin-flow-extension-list
+[capability-layering-lint] WARN (grandfathered C2, see 📓️w5b-c2-verdict.md): semio-s-plugin-procedural: plugin->extension dependency on semio-s-plugin-flow-extension-logic
+[capability-layering-lint] WARN (grandfathered C2, see 📓️w5b-c2-verdict.md): semio-s-plugin-procedural: plugin->extension dependency on semio-s-plugin-flow-extension-math
+[capability-layering-lint] WARN (grandfathered C2, see 📓️w5b-c2-verdict.md): semio-s-plugin-procedural: plugin->extension dependency on semio-s-plugin-flow-extension-primitive
+[capability-layering-lint] WARN (grandfathered C2, see 📓️w5b-c2-verdict.md): semio-s-plugin-procedural: plugin->extension dependency on semio-s-plugin-flow-extension-text
+[capability-layering-lint] WARN (grandfathered C2, see 📓️w5b-c2-verdict.md): semio-framework-os-renderer-wgpu: framework->plugin dependency on semio-s-plugin-puzzle
+[DEBUG] capability layering lint passed (231 cross-role edge(s) evaluated, 8 grandfathered warning(s))
+
+
+
+ NX   Successfully ran target layer-lint for project @semio-tech/framework-os-dev
+
+

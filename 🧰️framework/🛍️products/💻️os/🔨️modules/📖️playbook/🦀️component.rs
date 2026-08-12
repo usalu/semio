@@ -898,7 +898,7 @@ pub mod builder_kit {
     //! (embedded Blueprint mode). Block-kind-specific property editing stays with the host app. Moved
     //! here (from `semio-framework-plugin`) since it is entirely playbook-domain code.
 
-    use super::{PlaybookBlock, PlaybookSpec, PlaybookStep};
+    use super::PlaybookSpec;
     use semio_framework::ProgramContributionEntry;
     use serde::Deserialize;
     use serde_json::Value;

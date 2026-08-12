@@ -1421,8 +1421,39 @@ async function checkPlaygroundAliasFreshness(): Promise<string[]> {
  * as WARN (not a `verify gate` failure) so reviving the rule with real teeth doesn't redden the
  * gate for unrelated pre-existing plugin work — mirrors the master ticket's general
  * warn-until-finalization pattern for revived W0 checks. Any violation NOT already listed here
- * still hard-fails the gate; remove an entry once its underlying violation is fixed. */
-const KNOWN_CAPABILITY_VIOLATIONS = new Set<string>([]);
+ * still hard-fails the gate; remove an entry once its underlying violation is fixed.
+ *
+ * The `semio-framework-os` (OS HOST crate) block below is `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`'s
+ * addition: exactly the 17 plugin crates census'd live in 📓️w0-d-sdk-surface.md §3.2 as depending on the
+ * host crate, each verified with `grep -rl '^semio-framework-os[[:space:]]*=' ✏️s/🔌️plugins/**​/📦️packages/🦀️rust/Cargo.toml`
+ * at seed time. This backlog is APA's own to shrink (its W3/W4 waves move the `semio_framework_os::*`
+ * symbols these 17 crates use into the SDK's curated re-export surface and drop the host dep) — it must
+ * only ever shrink from here; never add a NEW plugin to this list to silence a fresh violation. */
+const KNOWN_CAPABILITY_VIOLATIONS = new Set<string>([
+  "semio-s-plugin-writer: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-procedural: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-gis: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-demonstrator: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-process: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-layout: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-cad: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-shooting: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-animate: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-lowpoly: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-remodel: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-note: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-trinity: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-draw: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-raster: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-puzzle: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-s-plugin-space: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  // 🚪️ `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: predates the std::env/std::process addition — puzzle's
+  // build.rs already used std::fs (read_dir/copy/write) under the OLD std::fs/std::net-only check, undeclared
+  // (no localBackboneStorage capability), so this was already a live gate failure before this wave touched
+  // anything. Seeded here rather than left as an unexplained new-looking regression once std::env joined the
+  // same check (build.rs also reads CARGO_MANIFEST_DIR/OUT_DIR via std::env::var).
+  "semio-s-plugin-puzzle: uses std::fs/std::net/std::env/std::process without localBackboneStorage capability (✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/build.rs)",
+]);
 
 class PluginCapabilityLintScript extends BundleScript {
   async run(): Promise<void> {
@@ -1450,6 +1481,10 @@ class PluginCapabilityLintScript extends BundleScript {
       wgpu: "forbidden",
       "wgpu-core": "forbidden",
       winit: "forbidden",
+      // 🚪️ `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: the OS HOST crate. A plugin/extension may
+      // depend on the plugin SDK, never on the host that hosts it — see 📓️w0-d-sdk-surface.md §3.2 for
+      // the current 17-crate backlog, seeded below in KNOWN_CAPABILITY_VIOLATIONS.
+      "semio-framework-os": "forbidden",
     };
     // 🕵️ Real registry membership, not a path substring: the pre-emoji-rename
     // `/plugin/rs/Cargo.toml` substring this used to filter on matches zero packages under
@@ -1493,8 +1528,11 @@ class PluginCapabilityLintScript extends BundleScript {
       walkRustSources(dirname(pkg.manifest_path), rustSources);
       for (const sourcePath of rustSources) {
         const source = await Bun.file(sourcePath).text();
-        if (/std::fs::|std::net::/.test(source) && !declared.has("localBackboneStorage")) {
-          failures.push(`${pkg.name}: uses std::fs/std::net without localBackboneStorage capability (${relative(repoRoot, sourcePath)})`);
+        // 🚪️ `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: std::env/std::process joined std::fs/std::net
+        // on the same footing — all four are raw-ambient-authority escape hatches a sandboxed plugin
+        // must not reach for directly; all four are gated by the same localBackboneStorage capability.
+        if (/std::fs::|std::net::|std::env::|std::process::/.test(source) && !declared.has("localBackboneStorage")) {
+          failures.push(`${pkg.name}: uses std::fs/std::net/std::env/std::process without localBackboneStorage capability (${relative(repoRoot, sourcePath)})`);
         }
         for (const symbol of PLUGIN_HOST_MODE_SYMBOLS) {
           if (!source.includes(symbol)) continue;
@@ -1529,12 +1567,26 @@ const LAYERING_ROLES = new Set<string>(["framework", "s-module", "plugin", "exte
  * into a real boot path, guest-side component-extension wiring for all 7 crates, and a resolution for the
  * shared brep-kernel `GeometryHandle` coupling) — tracked as a dedicated follow-up ticket, not mechanical
  * cleanup. Do not add an entry here to silence a failure without the same standard of evidence — every
- * other hit this lint finds is a REAL new violation, not noise. */
-const KNOWN_LAYERING_VIOLATIONS = new Set<string>(
-  ["brep", "math", "primitive", "logic", "dictionary", "list", "text"].map(
+ * other hit this lint finds is a REAL new violation, not noise.
+ *
+ * The second entry is `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`'s: `semio-framework-os-renderer-wgpu`
+ * (role `framework`) has a live Cargo dependency on `semio-s-plugin-puzzle` (role `plugin`) — declared at
+ * `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml:30`
+ * (`puzzle = { path = "…", package = "semio-s-plugin-puzzle" }`). No `puzzle::` call site was found in the
+ * wgpu renderer's own sources when this was triaged, so the edge reads as dead/vestigial rather than a
+ * real runtime coupling — but this lint deliberately does not try to prove "unused" from source text (a
+ * feature-gated or macro-expanded call site would false-negative that check), so it stays a real, accepted
+ * exception, not a false positive silenced away. **The real fix is deleting the unused Cargo dependency
+ * line from the wgpu renderer's `Cargo.toml`** — that file and `puzzle` are both outside this ticket's
+ * boundary (puzzle is held by another concurrent session per `📌️important.md`'s cross-session protocol),
+ * so APA does not touch either; this entry keeps the gate green until whoever owns that boundary removes
+ * the dependency, at which point this entry should be deleted, not left stale. */
+const KNOWN_LAYERING_VIOLATIONS = new Set<string>([
+  ...["brep", "math", "primitive", "logic", "dictionary", "list", "text"].map(
     (ext) => `semio-s-plugin-procedural: plugin->extension dependency on semio-s-plugin-flow-extension-${ext}`,
   ),
-);
+  "semio-framework-os-renderer-wgpu: framework->plugin dependency on semio-s-plugin-puzzle", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+]);
 
 /** 🧱️ `[package.metadata.semio]`'s `role` key, read the same way `PluginCapabilityLintScript`'s own
  * `[package.metadata.semio]` regex above reads `capabilities` — a plain-text scrape, not a TOML parser
@@ -1555,13 +1607,15 @@ function extractSemioRole(manifestText: string): LayeringRole | null {
  * never a directory-path guess) and walks `cargo metadata`'s real dependency edges, `kind: null` (normal/
  * runtime) only — `dev`/`build` edges are test/build-time-only and not a real production coupling (mirrors
  * this file's own `dsl-fixture-sweep`-style "test-only harness, not a runtime violation" precedent). W7 of
- * `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`. Deliberately NOT wired into `plugin lint`/the root
- * `verify gate`: a dry run surfaced one real, undocumented `framework->plugin` edge
- * (`semio-framework-os-renderer-wgpu` → `semio-s-plugin-puzzle`, apparently-unused — no `puzzle::` call
- * site found in the wgpu renderer's sources despite the live Cargo dependency) that nobody has yet
- * evaluated or accepted as a grandfathered exception; wiring straight into the shared gate would redden it
- * repo-wide over an unreviewed finding. Run on demand instead (`bun ./📜️script.ts layer-lint` from this
- * package, or `bun nx run @semio-tech/framework-os-dev:layer-lint`) until that finding is triaged. */
+ * `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`. Was deliberately NOT wired into `plugin lint`/the
+ * root `verify gate` because a dry run surfaced one real, undocumented `framework->plugin` edge
+ * (`semio-framework-os-renderer-wgpu` → `semio-s-plugin-puzzle`) nobody had yet evaluated. That finding is
+ * now triaged and grandfathered in `KNOWN_LAYERING_VIOLATIONS` above (`26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`),
+ * so this now runs as part of `plugin lint` (see the `"plugin"`/`"lint"` router entry below) — the same
+ * gate `semio-framework-os-dev:plugin lint` already gets invoked by from the repo-root `verify gate`
+ * (`📜️script.ts`), so wiring happens here rather than by touching that file. Still directly runnable
+ * standalone too: `bun ./📜️script.ts layer-lint` from this package, or
+ * `bun nx run @semio-tech/framework-os-dev:layer-lint`. */
 class CapabilityLayeringLintScript extends BundleScript {
   async run(): Promise<void> {
     const metadataResult = runProbe("cargo", ["metadata", "--format-version", "1", "--no-deps"], { cwd: repoRoot, budgetMs: buildBudgetMs() });
@@ -2582,9 +2636,9 @@ const router = new ScriptRouter(import.meta.dir)
   .register("build", BuildScript)
   .register("test", TestScript)
   .register("verify", VerifyScript)
-  // 🧱️ Standalone, not folded into `plugin lint`/`verify` — see `CapabilityLayeringLintScript`'s own
-  // docstring: a dry run surfaced one real, undocumented framework->plugin edge that isn't yet triaged,
-  // and wiring straight into the shared gate would redden it repo-wide over an unreviewed finding.
+  // 🧱️ Also runs as part of `plugin lint` below (the `"plugin"`/`"lint"` router entry) now that its one
+  // finding is triaged — see `CapabilityLayeringLintScript`'s own docstring. Kept independently runnable
+  // here too: `bun ./📜️script.ts layer-lint`.
   .register("layer-lint", CapabilityLayeringLintScript)
   .register(
     "parity",
@@ -2606,7 +2660,15 @@ const router = new ScriptRouter(import.meta.dir)
       async run(segments: string[]): Promise<void> {
         const sub = segments[0];
         if (sub === "watch") return new PluginWatchScript(this.root).run(segments.slice(1));
-        if (sub === "lint") return new PluginCapabilityLintScript(this.root).run(segments.slice(1));
+        if (sub === "lint") {
+          // 🚪️ `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: folds the Cargo-layering lint into the same
+          // `plugin lint` invocation the repo-root `verify gate` already calls unconditionally
+          // (`nx run @semio-tech/framework-os-dev:plugin lint`) — this wires layering into the gate without
+          // touching the repo-root `📜️script.ts` (owned by a concurrent session this wave). Run the
+          // capability lint first (its own error carries a richer per-package count).
+          await new PluginCapabilityLintScript(this.root).run(segments.slice(1));
+          return new CapabilityLayeringLintScript(this.root).run();
+        }
         if (sub === "registry") {
           await ensurePluginRegistry(segments[1] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND);
           return;

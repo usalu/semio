@@ -27,24 +27,23 @@ pub fn decode_op(bytes: &[u8]) -> Result<Block3dMutation, protocol::ProtocolErro
 mod tests {
     use super::*;
     use crate::artifacts::block3d::{Block3dSnapshot, BLOCK_3D_SCHEMA};
-    use crate::BlockKindIdentity;
     use store::{create_document_envelope, ArtifactCommand};
 
     #[test]
     fn block3d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::block3d::schema::mutations::Block3dStore;
+        use crate::artifacts::block3d::schema::mutations::{self as m, Block3dStore};
 
         let mut store = Block3dStore::new(create_document_envelope(BLOCK_3D_SCHEMA, "block3d", Block3dSnapshot::default(), None));
         store
-            .dispatch(ArtifactCommand::Apply { mutations: vec![Block3dMutation::SetObjectKind { object_kind: BlockKindIdentity { id: "o1".into(), name: "o1".into(), label: "O1".into(), ..Default::default() } }], description: None })
+            .dispatch(ArtifactCommand::Apply { mutations: vec![m::rename_object_kind("o1".into())], description: None })
             .expect("apply");
         let projection = store.snapshot().expect("snapshot");
-        assert_eq!(projection.object_kind.id, "o1");
+        assert_eq!(projection.object_kind.name, "o1");
     }
 
     #[test]
     fn block3d_operation_binary_round_trips() {
-        let operation = Block3dMutation::RemoveVortex { id: "v0".into() };
+        let operation = crate::artifacts::block3d::schema::mutations::delete_vortex("v0".into());
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }

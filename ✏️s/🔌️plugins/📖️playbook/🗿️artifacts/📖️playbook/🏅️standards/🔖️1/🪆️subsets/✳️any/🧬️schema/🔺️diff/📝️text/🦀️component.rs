@@ -1,9 +1,6 @@
 //! 🔺️ Playbook artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::playbook::schema::diff::{
-    PlaybookBlockPatch, PlaybookBlockPatchEntry, PlaybookBlocksDelta, PlaybookDiff, PlaybookStepPatch,
-    PlaybookStepPatchEntry, PlaybookStepsDelta, PlaybookStringList,
-};
+use crate::artifacts::playbook::schema::diff::{PlaybookBlockPatch, PlaybookBlocksDelta, PlaybookDiff, PlaybookStepPatch, PlaybookStepsDelta};
 use crate::artifacts::playbook::schema::PlaybookArtifact;
 use crate::artifacts::playbook::schema::snapshot::PlaybookSnapshot;
 use crate::playbook::PlaybookBlock;

@@ -250,6 +250,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
                                 }
+                            }
                         }
                         #[path = "."]
                         pub mod io {

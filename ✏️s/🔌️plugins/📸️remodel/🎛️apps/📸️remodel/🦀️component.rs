@@ -385,10 +385,14 @@ impl ArtifactApp for RemodelPlayApp {
                 let frame_index = scene.streams.iter().find(|stream| stream.id == stream_id).map_or(0, |stream| stream.frames.len() as u32);
                 let asset_key = format!("{stream_id}-frame-{frame_index}");
                 let asset = ImageAsset { mime: "image/png".into(), data: json.clone(), width, height };
-                let mut streams = scene.streams.clone();
-                match streams.iter_mut().find(|stream| stream.id == stream_id) {
-                    Some(stream) => stream.frames.push(FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key.clone() }),
-                    None => streams.push(MediaStream {
+                let mut mutations = vec![crate::artifacts::remodel::mutations::create_asset(asset_key.clone(), asset)];
+                match scene.streams.iter().any(|stream| stream.id == stream_id) {
+                    true => mutations.push(crate::artifacts::remodel::mutations::add_stream_frame(
+                        stream_id.to_string(),
+                        FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key.clone() },
+                        MediaKind::ImageSequence,
+                    )),
+                    false => mutations.push(crate::artifacts::remodel::mutations::create_stream(MediaStream {
                         id: stream_id.to_string(),
                         name: "Workflow Photos".into(),
                         kind: MediaKind::ImageSequence,
@@ -397,9 +401,9 @@ impl ArtifactApp for RemodelPlayApp {
                         fps_hint: 30.0,
                         frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id: asset_key.clone() }],
                         source: None,
-                    }),
+                    })),
                 }
-                Ok(Emit::mutations(vec![RemodelMutation::SetAsset { key: asset_key, value: Some(asset) }, RemodelMutation::SetStreams { streams }]))
+                Ok(Emit::mutations(mutations))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -982,7 +986,7 @@ mod tests {
             },
         };
         let emit = RemodelPlayApp::import_media("photos:in", &media, &doc).expect("photos:in import");
-        assert_eq!(emit.artifact_mutations.len(), 2, "one SetAsset + one SetStreams");
+        assert_eq!(emit.artifact_mutations.len(), 2, "one create-asset + one create-stream");
         let next = emit.artifact_mutations.iter().fold(projection.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation));
         assert_eq!(next.streams.len(), 1);
         assert_eq!(next.streams[0].id, REMODEL_WORKFLOW_PHOTOS_STREAM_ID);

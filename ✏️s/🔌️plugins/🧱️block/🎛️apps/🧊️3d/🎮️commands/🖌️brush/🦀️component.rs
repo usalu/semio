@@ -123,13 +123,10 @@ pub mod place_vortex {
         let vortex_kind_id = resolve_brush_vortex_kind_id(doc.snapshot, cfg.snapshot);
         let mut operations = Vec::new();
         if doc.snapshot.vortex_kinds.is_empty() {
-            operations.push(Block3dMutation::SetVortexKind { index: 0, vortex_kind: default_vortex_kind() });
+            operations.push(crate::artifacts::block3d::mutations::create_vortex_kind(default_vortex_kind()));
         }
         let id = crate::artifacts::block3d::engine::next_id(doc.snapshot.vortices.iter().map(|vortex| vortex.id.as_str()), "vortex-");
-        operations.push(Block3dMutation::SetVortex {
-            index: doc.snapshot.vortices.len(),
-            vortex: Block3dVortexTemplate { id, vortex_kind: vortex_kind_id, position: local_position, direction, radius: cfg.snapshot.brush_radius, label: None },
-        });
+        operations.push(crate::artifacts::block3d::mutations::create_vortex(Block3dVortexTemplate { id, vortex_kind: vortex_kind_id, position: local_position, direction, radius: cfg.snapshot.brush_radius, label: None }));
         Ok(Emit { artifact_mutations: operations, config_mutations: vec![Block3dConfigMutation::SetBrushPreview { preview: None }], description: None, ..Default::default() })
     }
 }

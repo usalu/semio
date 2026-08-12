@@ -20,9 +20,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 impl RewriteDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &RewriteArtifact) -> RewriteArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
         let mut next = artifact.clone();
         if let Some(value) = &self.before_fixture_json {
             next.before_fixture_json = value.clone();
@@ -83,17 +80,19 @@ fn apply_map_delta<V: Clone>(target: &mut BTreeMap<String, V>, delta: &BTreeMap<
     }
 }
 
+/// 🪢 Merges a per-key map delta into `self`'s accumulated delta (per-key upsert of the newer
+/// entry) rather than replacing the whole map — two `change-*`/`remove-*` mutations touching
+/// DIFFERENT keys in the same coalesced batch must both survive.
+fn merge_map_delta<V>(dst: &mut Option<BTreeMap<String, Option<V>>>, src: Option<BTreeMap<String, Option<V>>>) {
+    match (dst.as_mut(), src) {
+        (Some(dst_map), Some(src_map)) => dst_map.extend(src_map),
+        (None, Some(src_map)) => *dst = Some(src_map),
+        _ => {}
+    }
+}
+
 impl MutationDiff<RewriteSnapshot> for RewriteDiff {
     fn apply(&self, snapshot: &RewriteSnapshot) -> RewriteSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return RewriteSnapshot {
-                before_fixture_json: replacement.before_fixture_json.clone(),
-                lhs_json: replacement.lhs_json.clone(),
-                rhs_json: replacement.rhs_json.clone(),
-                parameter_bindings: replacement.parameter_bindings.clone(),
-                rule_layout: replacement.rule_layout.clone(),
-            };
-        }
         let mut next = snapshot.clone();
         if let Some(value) = &self.before_fixture_json {
             next.before_fixture_json = value.clone();
@@ -114,10 +113,6 @@ impl MutationDiff<RewriteSnapshot> for RewriteDiff {
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.artifact.is_some() {
-            *self = other;
-            return;
-        }
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -140,18 +135,5 @@ impl MutationDiff<RewriteSnapshot> for RewriteDiff {
         take!(select_epoch);
         take!(locale);
     }
-}
-
-/// 🏗️ Whole-snapshot replacement diff (set-state mutation).
-pub fn diff_set_snapshot(snapshot: &RewriteSnapshot) -> RewriteDiff {
-    RewriteDiff {
-        artifact: Some(Box::new(RewriteArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
-}
-
-/// 🏗️ Alias used by set-state mutation wrappers.
-pub fn diff_set_state(snapshot: &RewriteSnapshot) -> RewriteDiff {
-    diff_set_snapshot(snapshot)
 }
 //#endregion 🔖️Apply

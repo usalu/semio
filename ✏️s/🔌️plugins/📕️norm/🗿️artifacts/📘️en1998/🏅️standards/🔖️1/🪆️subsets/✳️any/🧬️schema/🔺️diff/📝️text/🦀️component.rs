@@ -216,11 +216,13 @@ mod tests {
     use protocol::{Mutation as _, MutationDiff};
 
     #[test]
-    fn set_snapshot_diff_replaces_the_whole_snapshot() {
+    fn change_mutation_diff_updates_only_its_field() {
         let base = En1998Snapshot::default();
-        let mutation = En1998Mutation::SetSnapshot { snapshot: En1998Snapshot::default() };
+        let mutation = En1998Mutation::ChangeSeismicZone(crate::artifacts::en1998::mutations::change_seismic_zone::mutation::ChangeSeismicZone { new_seismic_zone: 3 });
         let diff = mutation.diff(&base);
-        assert_eq!(diff.apply(&base), En1998Snapshot::default());
+        let mut expected = base.clone();
+        expected.seismic_zone = 3;
+        assert_eq!(diff.apply(&base), expected);
     }
 }
 //#endregion 🧪️Tests

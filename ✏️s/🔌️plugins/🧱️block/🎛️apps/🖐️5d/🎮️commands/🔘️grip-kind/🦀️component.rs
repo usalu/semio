@@ -14,7 +14,7 @@ pub mod add_grip_kind {
     pub fn handle(_payload: &AddGripKind, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
         let id = crate::artifacts::block5d::engine::next_id(doc.snapshot.grip_kinds.iter().map(|kind| kind.id.as_str()), "grip-kind-");
         let grip_kind = Block5dGripKind { id: id.clone(), name: id.clone(), label: id, color: "#888888".into(), default_rope_kind: "rope.link".into() };
-        Ok(Emit::mutations(vec![Block5dMutation::SetGripKind { index: doc.snapshot.grip_kinds.len(), grip_kind }]))
+        Ok(Emit::mutations(vec![crate::artifacts::block5d::mutations::create_grip_kind(grip_kind)]))
     }
 }
 
@@ -32,6 +32,6 @@ pub mod remove_grip_kind {
     }
 
     pub fn handle(payload: &RemoveGripKind, _doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![Block5dMutation::RemoveGripKind { id: payload.id.clone() }]))
+        Ok(Emit::mutations(vec![crate::artifacts::block5d::mutations::delete_grip_kind(payload.id.clone())]))
     }
 }

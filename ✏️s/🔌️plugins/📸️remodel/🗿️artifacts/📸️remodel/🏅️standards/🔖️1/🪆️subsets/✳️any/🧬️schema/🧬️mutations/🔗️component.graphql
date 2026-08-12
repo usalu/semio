@@ -1,22 +1,215 @@
-# 🧬️ Remodel mutation schema — persistent fields only.
+# 🧬️ Remodel mutation schema — one type per handcrafted semantic mutation kind.
 
-type RemodelMutation {
-  schema: String! @state(class: PERSISTENT)
-  id: String! @state(class: PERSISTENT)
-  streams: [MediaStream!]! @state(class: PERSISTENT)
-  assets: [ImageAssetEntry!]! @state(class: PERSISTENT)
-  calibration: CalibrationState! @state(class: PERSISTENT)
-  params: ReconstructionParams! @state(class: PERSISTENT)
-  gcps: [GroundControlPoint!]! @state(class: PERSISTENT)
-  job: ReconstructionJob! @state(class: PERSISTENT)
-  results: ReconstructionResults! @state(class: PERSISTENT)
+union RemodelMutation =
+  CreateStream
+  | DeleteStream
+  | ChangeStreamSync
+  | AddStreamFrame
+  | RemoveStreamFrame
+  | ReplaceStreamSource
+  | CreateAsset
+  | DeleteAsset
+  | CreateCameraCalibration
+  | UpdateCameraCalibration
+  | DeleteCameraCalibration
+  | CreateRigExtrinsic
+  | DeleteRigExtrinsic
+  | UpdateRigExtrinsic
+  | CreateGcp
+  | DeleteGcp
+  | AddGcpObservation
+  | RemoveGcpObservation
+  | UpdateIngestParams
+  | UpdateFeatureParams
+  | UpdateMatchParams
+  | UpdateSfmParams
+  | UpdateDenseParams
+  | UpdateMeshParams
+  | UpdateMotionParams
+  | UpdateGeoParams
+  | ReplaceJob
+  | ReplaceSparse
+  | ReplaceDense
+  | ReplaceMeshResult
+  | ReplaceTrajectory
+  | ReplaceTracks
+  | ReplaceGeoProducts
+  | ReplaceQc
+
+type CreateStream {
+  mutation: String! # "create-stream"
+  stream: MediaStream!
 }
 
-type MediaStream { id: String! }
-type ImageAsset { mime: String! }
-type ImageAssetEntry { key: String! value: ImageAsset! }
-type CalibrationState { _placeholder: Boolean }
-type ReconstructionParams { _placeholder: Boolean }
-type GroundControlPoint { id: String! }
-type ReconstructionJob { _placeholder: Boolean }
-type ReconstructionResults { _placeholder: Boolean }
+type DeleteStream {
+  mutation: String! # "delete-stream"
+  id: String!
+}
+
+type ChangeStreamSync {
+  mutation: String! # "change-stream-sync"
+  id: String!
+  newSyncOffsetMs: Float!
+}
+
+type AddStreamFrame {
+  mutation: String! # "add-stream-frame"
+  id: String!
+  frame: FrameRef!
+  kind: String!
+}
+
+type RemoveStreamFrame {
+  mutation: String! # "remove-stream-frame"
+  id: String!
+  frameIndex: Int!
+}
+
+type ReplaceStreamSource {
+  mutation: String! # "replace-stream-source"
+  id: String!
+  source: VideoSource
+}
+
+type CreateAsset {
+  mutation: String! # "create-asset"
+  key: String!
+  asset: ImageAsset!
+}
+
+type DeleteAsset {
+  mutation: String! # "delete-asset"
+  key: String!
+}
+
+type CreateCameraCalibration {
+  mutation: String! # "create-camera-calibration"
+  camera: CameraCalibration!
+}
+
+type UpdateCameraCalibration {
+  mutation: String! # "update-camera-calibration"
+  camera: CameraCalibration!
+}
+
+type DeleteCameraCalibration {
+  mutation: String! # "delete-camera-calibration"
+  cameraId: String!
+}
+
+type CreateRigExtrinsic {
+  mutation: String! # "create-rig-extrinsic"
+  extrinsic: RigExtrinsic!
+}
+
+type DeleteRigExtrinsic {
+  mutation: String! # "delete-rig-extrinsic"
+  cameraId: String!
+}
+
+type UpdateRigExtrinsic {
+  mutation: String! # "update-rig-extrinsic"
+  extrinsic: RigExtrinsic!
+}
+
+type CreateGcp {
+  mutation: String! # "create-gcp"
+  gcp: GroundControlPoint!
+}
+
+type DeleteGcp {
+  mutation: String! # "delete-gcp"
+  id: String!
+}
+
+type AddGcpObservation {
+  mutation: String! # "add-gcp-observation"
+  id: String!
+  observation: GcpObservation!
+}
+
+type RemoveGcpObservation {
+  mutation: String! # "remove-gcp-observation"
+  id: String!
+  observationIndex: Int!
+}
+
+type UpdateIngestParams {
+  mutation: String! # "update-ingest-params"
+  params: IngestParams!
+}
+
+type UpdateFeatureParams {
+  mutation: String! # "update-feature-params"
+  params: FeatureParams!
+}
+
+type UpdateMatchParams {
+  mutation: String! # "update-match-params"
+  params: MatchParams!
+}
+
+type UpdateSfmParams {
+  mutation: String! # "update-sfm-params"
+  params: SfmParams!
+}
+
+type UpdateDenseParams {
+  mutation: String! # "update-dense-params"
+  params: DenseParams!
+}
+
+type UpdateMeshParams {
+  mutation: String! # "update-mesh-params"
+  params: MeshParams!
+}
+
+type UpdateMotionParams {
+  mutation: String! # "update-motion-params"
+  params: MotionParams!
+}
+
+type UpdateGeoParams {
+  mutation: String! # "update-geo-params"
+  params: GeoParams!
+}
+
+type ReplaceJob {
+  mutation: String! # "replace-job"
+  job: ReconstructionJob!
+}
+
+type ReplaceSparse {
+  mutation: String! # "replace-sparse"
+  sparse: SparseCloud
+}
+
+type ReplaceDense {
+  mutation: String! # "replace-dense"
+  dense: DenseCloud
+}
+
+type ReplaceMeshResult {
+  mutation: String! # "replace-mesh-result"
+  mesh: RemodelMesh!
+}
+
+type ReplaceTrajectory {
+  mutation: String! # "replace-trajectory"
+  trajectory: CameraTrajectory
+}
+
+type ReplaceTracks {
+  mutation: String! # "replace-tracks"
+  tracks: [MotionTrackSummary!]!
+}
+
+type ReplaceGeoProducts {
+  mutation: String! # "replace-geo-products"
+  geo: GeoProducts
+}
+
+type ReplaceQc {
+  mutation: String! # "replace-qc"
+  qc: QcReportSnapshot
+}

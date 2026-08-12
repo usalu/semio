@@ -277,8 +277,24 @@ impl Puzzle5dEngine {
 //#endregion 🔖️ArtifactEngine
 
 //#region 🔖️IoFacet
+/// 🔌️ Registers this artifact's `ComposerEntry` io tree plus the `"5d.puzzle"` OS-host mesh
+/// export/import bridge — the latter relocated from `apps::puzzle5d::register_puzzle5d_exports`
+/// (APA, ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: OS-host registration belongs to the
+/// owning artifact's own engine, never to an app file). The importer/dwg callback stays in
+/// `apps::puzzle5d` next to `empty_document`, exposed `pub(crate)` for this call site only.
 pub fn register_io() {
     crate::artifacts::puzzle5d::io_registry::register();
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    {
+        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::ObjExporter));
+        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
+        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::StlExporter));
+        semio_framework_os::register_mesh_importer("5d.puzzle", crate::apps::puzzle5d::puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
+        semio_framework_os::register_mesh_importer("5d.puzzle", crate::apps::puzzle5d::puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
+        semio_framework_os::register_mesh_importer("5d.puzzle", crate::apps::puzzle5d::puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
+        semio_framework_os::register_mesh_dwg_export_handler("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
+        semio_framework_os::register_mesh_dwg_import_handler("5d.puzzle", crate::apps::puzzle5d::puzzle5d_document_from_mesh);
+    }
 }
 //#endregion 🔖️IoFacet
 //#region 🚪️DerivedIoRegistry

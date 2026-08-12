@@ -1,9 +1,8 @@
 //! 🧭️ S Studio app — shell navigation + app-registry push commands.
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::{register_app_io, AppDefinition, WorkflowSnapshot, WorkflowMutation};
+use semio_framework_os::{WorkflowSnapshot, WorkflowMutation};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
-use serde::Deserialize;
 
 //#region 🔖️SetActivePanelTab
 pub mod set_active_panel_tab {
@@ -55,33 +54,9 @@ pub mod navigate_virtual_file_system_node {
 //#endregion 🔖️NavigateVirtualFileSystemNode
 
 //#region 🔖️SetAppRegistrations
-/// 🪐️ One `appRegistrationsJson` entry — the wire shape `os-shell.tsx`'s `SetAppRegistrations` push
-/// builds from `loadedPlugins.flatMap(entry => entry.manifest.apps.map(app => ({pluginId, app})))`.
-/// `app` deserializes straight off `AppDefinition`'s own `Deserialize` impl since it's the literal
-/// manifest-JSON `AppDefinition` object, unmodified across the wasm boundary.
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct AppRegistrationWireEntry {
-    plugin_id: String,
-    app: AppDefinition,
-}
-
-/// 🪐️ Registers every `{pluginId, app}` entry `json` carries into this wasm instance's OWN
-/// `semio_framework_os::APP_REGISTRATIONS` copy — the space app is its own wasm component, so its
-/// statically-linked copy of os-core's `APP_REGISTRATIONS` never sees what native/test hosts populate
-/// via `PluginHost::load_plugin`/`hot_swap_plugin`; this is how it gets populated in a real
-/// browser/wasm host instead. Malformed/empty `json` degrades to a silent no-op — this is a
-/// best-effort host hint push, not a user-facing operation with error surfacing.
-fn apply_app_registrations(json: &str) {
-    let Ok(entries) = serde_json::from_str::<Vec<AppRegistrationWireEntry>>(json) else { return };
-    for entry in entries {
-        register_app_io(&entry.plugin_id, &entry.app);
-    }
-}
-
 pub mod set_app_registrations {
     use super::*;
-    use serde::Serialize;
+    use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "set-app-registrations")]
@@ -90,9 +65,12 @@ pub mod set_app_registrations {
     }
 
     /// 🪐️ Pure host-hint side effect; no document/config mutation, so the default full-refresh `Emit`
-    /// is enough to pick up the newly-registered apps on the next catalogue render.
+    /// is enough to pick up the newly-registered apps on the next catalogue render. The actual
+    /// `register_app_io` OS-registry bridge is `engine::apply_app_registrations` — this handler stays
+    /// dispatch-only per the per-app recipe (command files parse + delegate, they don't call OS-host
+    /// registration APIs directly).
     pub fn handle(payload: &SetAppRegistrations, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-        apply_app_registrations(&payload.json);
+        crate::apps::space::engine::apply_app_registrations(&payload.json);
         Ok(Emit::default())
     }
 }

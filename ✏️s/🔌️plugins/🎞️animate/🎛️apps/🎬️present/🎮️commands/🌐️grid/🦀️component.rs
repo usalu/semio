@@ -78,7 +78,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("projection").tiles.len(), 4);
     }
 
-    /// 🧬️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright), so
+    /// 🧬️ Whole-document replace is not an in-history mutation (a whole-snapshot variant is banned outright), so
     /// `setActiveExample` now surfaces as a `HostEffect::LoadDocument` carrying the default document's
     /// pack bytes rather than an `artifact_mutations` entry — `dispatch`'s in-process `VcsArtifactApp`
     /// never applies `effects` to its own store (that's the real host's job), so this asserts directly

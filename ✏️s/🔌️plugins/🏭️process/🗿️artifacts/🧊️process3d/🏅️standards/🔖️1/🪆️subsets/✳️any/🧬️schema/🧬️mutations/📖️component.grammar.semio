@@ -1,15 +1,34 @@
 dialect grammar
 grammar process.process3d.op
 extension process3d
-use family-scene
 start mutation
 
-artifact-mark = "process.process3d-op"
-mutation = artifact-mark mesh-op+
-mesh-op = "add-vertex" vtx-field+ | "set-face" face-field+ | "transform-mesh" xfm-field+ | "merge-solid" merge-field+
-vtx-field = "x" "=" FLOAT | "y" "=" FLOAT | "z" "=" FLOAT
-face-field = "index" "=" INT | "loop" "=" list
-xfm-field = "axis" "=" IDENT | "angle" "=" FLOAT
-merge-field = "target" "=" IDENT | "source" "=" IDENT
-list = "[" INT* "]"
-layer = IDENT "@" FLOAT FLOAT FLOAT?
+mutation = create-step | delete-step | rename-step | change-step-enabled | change-step-origin
+         | replace-step-measure | reorder-steps | create-machine | delete-machine
+         | rename-machine | change-machine-icon | replace-machine-capabilities
+         | move-stock | change-stock-label | replace-stock-solid | change-cursor
+
+create-step = "create-step" "index" "=" INT "step" "=" step-block
+delete-step = "delete-step" "id" "=" IDENT
+rename-step = "rename-step" "id" "=" IDENT "new-label" "=" STRING
+change-step-enabled = "change-step-enabled" "id" "=" IDENT "new-enabled" "=" BOOL
+change-step-origin = "change-step-origin" "id" "=" IDENT ("new-origin" "=" origin-block)?
+replace-step-measure = "replace-step-measure" "id" "=" IDENT "new-measure" "=" measure-block
+reorder-steps = "reorder-steps" "id" "=" IDENT "to-index" "=" INT
+create-machine = "create-machine" "index" "=" INT "machine" "=" machine-block
+delete-machine = "delete-machine" "id" "=" IDENT
+rename-machine = "rename-machine" "id" "=" IDENT "new-label" "=" STRING
+change-machine-icon = "change-machine-icon" "id" "=" IDENT "new-icon-id" "=" IDENT
+replace-machine-capabilities = "replace-machine-capabilities" "id" "=" IDENT "new-capabilities" "=" capabilities-list
+move-stock = "move-stock" "new-pose" "=" pose-block
+change-stock-label = "change-stock-label" "new-label" "=" STRING
+replace-stock-solid = "replace-stock-solid" "new-solid" "=" solid-block
+change-cursor = "change-cursor" ("new-resolved-up-to" "=" INT)?
+
+step-block = "{" FIELD* "}"
+machine-block = "{" FIELD* "}"
+origin-block = "{" FIELD* "}"
+measure-block = "{" FIELD* "}"
+pose-block = "{" FIELD* "}"
+solid-block = "{" FIELD* "}"
+capabilities-list = "[" FIELD* "]"

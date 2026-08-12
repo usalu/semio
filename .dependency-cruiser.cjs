@@ -58,6 +58,11 @@ function scanPackageJsonFiles(rootAbsDir) {
  * the rule, so each rule's `to` combines a path pattern with these derived name patterns. */
 const S_PACKAGES = scanPackageJsonFiles(path.join(__dirname, "✏️s"));
 
+/** 🧰️ Every `package.json` found anywhere under `🧰️framework`, used the same way `S_PACKAGES` is above —
+ * package-name equivalents for `pluginsFrameworkSdkOnlyRule`'s `to`, so a bare `@semio-tech/framework-os`
+ * (etc.) import trips the rule even where dependency-cruiser doesn't resolve it down to the real file path. */
+const FRAMEWORK_PACKAGES = scanPackageJsonFiles(path.join(__dirname, "🧰️framework"));
+
 function crossTechnologyRules() {
   const rules = [];
   for (const from of TECHNOLOGIES) {
@@ -246,6 +251,40 @@ function noPluginToExtensionRules() {
   }));
 }
 
+/** 🔌️ `plugins-framework-sdk-only` (`26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`): TS/JS mirror of
+ * `PluginCapabilityLintScript`'s Cargo-side `semio-framework-os` ban (framework-os-dev's `📜️script.ts`,
+ * `depRules`) — a plugin may depend on the plugin SDK (`@semio-tech/framework`, the product-neutral
+ * package rooted at `🧰️framework/📦️packages/`) but must not depend on any OTHER `🧰️framework` package: the
+ * OS host (`@semio-tech/framework-os`), a renderer target, or anything else product-specific that isn't
+ * the SDK. `from` excludes `📜️script.ts` for the exact reason `crossPackageRelativeRule` above already
+ * does: every plugin's own build/dev script relative-imports repo-lib
+ * (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/…`), a sanctioned dev-tooling pattern, not a runtime
+ * coupling — leaving it in would have drowned the real findings below in 108 identical script.ts hits. WARN,
+ * not error, for the same reason this ticket's other policy rules stay report-mode (see
+ * `noImplSegmentRule`/`crossPackageRelativeRule` above): do not shift the shared verify gate under the two
+ * other sessions concurrently editing this tree. A dry sweep at seed time DID find 7 real runtime hits after
+ * the `📜️script.ts` exclusion (`bunx dependency-cruiser --config .dependency-cruiser.cjs --output-type
+ * err-long ✏️s`, grep `plugins-framework-sdk-only` minus `📜️script\.ts →` lines) — `📐️cad`'s renderer/brepjs
+ * components reaching `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f`,
+ * `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg` (a wasm build output), and three plugins'
+ * `🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react` direct-renderer imports — real,
+ * pre-existing, left as WARN backlog for a future wave to triage rather than silenced or hastily excepted. */
+function pluginsFrameworkSdkOnlyRule() {
+  const otherFrameworkPackageNames = FRAMEWORK_PACKAGES.filter((p) => /^@semio-tech\/framework($|-)/.test(p.name) && p.name !== "@semio-tech/framework").map(
+    (p) => `^${escapeRegex(p.name)}$`,
+  );
+  return {
+    name: "plugins-framework-sdk-only",
+    severity: "warn",
+    comment: "✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but not any other 🧰️framework package — mirrors the Cargo capability lint's semio-framework-os ban",
+    from: { path: "^✏️s/🔌️plugins/", pathNot: "(^|/)📜️script\\.ts$" },
+    to: {
+      path: ["^🧰️framework/"].concat(otherFrameworkPackageNames),
+      pathNot: ["^🧰️framework/📦️packages/", "^@semio-tech/framework$"],
+    },
+  };
+}
+
 module.exports = {
   forbidden: [
     {
@@ -354,6 +393,7 @@ module.exports = {
     frameworkNoSRule(),
     sModulesNoPluginsRule(),
     ...noPluginToExtensionRules(),
+    pluginsFrameworkSdkOnlyRule(),
   ],
   options: {
     doNotFollow: {

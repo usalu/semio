@@ -6863,6 +6863,7 @@ dependencies = [
  "console_error_panic_hook",
  "semio-framework",
  "semio-framework-os-kernel",
+ "semio-framework-schema",
  "semio-framework-ui",
  "serde",
  "serde_json",

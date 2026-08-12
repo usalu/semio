@@ -82,7 +82,7 @@ pub(crate) fn tile_morph_prompt_effect(deck: &PresentSnapshot) -> HostEffect {
 
 /// 🔁️ Builds a `HostEffect::LoadDocument` for `document` — the sanctioned non-history "reset the
 /// whole document" gesture (`ArtifactStore::reset`, applied host-side) that
-/// `🎮️commands/🖼️source::set_active_example` uses instead of the banned `SetSnapshot` mutation. The
+/// `🎮️commands/🖼️source::set_active_example` uses instead of the banned whole-snapshot mutation. The
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
 pub fn reset_present_document_effect(document: &PresentSnapshot) -> HostEffect {
     let pack = <PresentSnapshot as store::ArtifactPack>::encode_pack(document);

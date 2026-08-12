@@ -1,71 +1,195 @@
 syntax = "proto3";
 package semio.s.block.block3d.mutation;
 
-// 🧬️ Block3d mutation schema — persistent fields only.
+// 🧬️ Block3d mutation schema — one message per mutation kind (37 kinds).
 
 message Block3dMutation {
-  // @state persistent
-  string schema = 1;
-  // @state persistent
-  BlockKindIdentity object_kind = 2;
-  // @state persistent
-  repeated BlockRepresentation representations = 3;
-  // @state persistent
-  repeated Block3dVortexKind vortex_kinds = 4;
-  // @state persistent
-  repeated Block3dVortexTemplate vortices = 5;
-  // @state persistent
-  repeated BlockCompatibilityRule compatibility = 6;
-  // @state persistent
-  repeated BlockAttribute attributes = 7;
-  // @state persistent
-  repeated BlockAuthor authors = 8;
-  // @state persistent
-  BlockCamera3d camera3d = 9;
-  // @state persistent
-  BlockMeta meta = 10;
+  oneof kind {
+    RenameObjectKind rename_object_kind = 1;
+    ChangeObjectKindLabel change_object_kind_label = 2;
+    ChangeObjectKindVariant change_object_kind_variant = 3;
+    ChangeObjectKindDescription change_object_kind_description = 4;
+    ChangeObjectKindIcon change_object_kind_icon = 5;
+    ChangeObjectKindUnit change_object_kind_unit = 6;
+    CreateRepresentation create_representation = 7;
+    DeleteRepresentation delete_representation = 8;
+    RenameRepresentation rename_representation = 9;
+    ChangeRepresentationMeshUrl change_representation_mesh_url = 10;
+    ChangeRepresentationLod change_representation_lod = 11;
+    ChangeRepresentationDescription change_representation_description = 12;
+    AddRepresentationTag add_representation_tag = 13;
+    RemoveRepresentationTag remove_representation_tag = 14;
+    AddRepresentationAttribute add_representation_attribute = 15;
+    RemoveRepresentationAttribute remove_representation_attribute = 16;
+    CreateVortexKind create_vortex_kind = 17;
+    DeleteVortexKind delete_vortex_kind = 18;
+    RenameVortexKind rename_vortex_kind = 19;
+    ChangeVortexKindLabel change_vortex_kind_label = 20;
+    ChangeVortexKindColor change_vortex_kind_color = 21;
+    ChangeVortexKindDefaultCableKind change_vortex_kind_default_cable_kind = 22;
+    CreateVortex create_vortex = 23;
+    DeleteVortex delete_vortex = 24;
+    MoveVortex move_vortex = 25;
+    ResizeVortex resize_vortex = 26;
+    ChangeVortexVortexKind change_vortex_vortex_kind = 27;
+    ChangeVortexLabel change_vortex_label = 28;
+    AddCompatibilityRule add_compatibility_rule = 29;
+    RemoveCompatibilityRule remove_compatibility_rule = 30;
+    AddAttribute add_attribute = 31;
+    RemoveAttribute remove_attribute = 32;
+    AddAuthor add_author = 33;
+    RemoveAuthor remove_author = 34;
+    MoveCamera3d move_camera3d = 35;
+    ScaleCamera3d scale_camera3d = 36;
+    ChangeMetaDescription change_meta_description = 37;
+  }
 }
 
-message BlockKindIdentity {
-  bool _placeholder = 1;
+message RenameObjectKind { // kind "rename-object-kind"
+  bytes payload = 1;
 }
 
-message BlockRepresentation {
-  bool _placeholder = 1;
+message ChangeObjectKindLabel { // kind "change-object-kind-label"
+  bytes payload = 1;
 }
 
-message Block3dVortexKind {
-  bool _placeholder = 1;
+message ChangeObjectKindVariant { // kind "change-object-kind-variant"
+  bytes payload = 1;
 }
 
-message Block3dVortexTemplate {
-  bool _placeholder = 1;
+message ChangeObjectKindDescription { // kind "change-object-kind-description"
+  bytes payload = 1;
 }
 
-message BlockCompatibilityRule {
-  bool _placeholder = 1;
+message ChangeObjectKindIcon { // kind "change-object-kind-icon"
+  bytes payload = 1;
 }
 
-message BlockAttribute {
-  bool _placeholder = 1;
+message ChangeObjectKindUnit { // kind "change-object-kind-unit"
+  bytes payload = 1;
 }
 
-message BlockAuthor {
-  bool _placeholder = 1;
+message CreateRepresentation { // kind "create-representation"
+  bytes payload = 1;
 }
 
-message BlockCamera3d {
-  bool _placeholder = 1;
+message DeleteRepresentation { // kind "delete-representation"
+  bytes payload = 1;
 }
 
-message BlockMeta {
-  bool _placeholder = 1;
+message RenameRepresentation { // kind "rename-representation"
+  bytes payload = 1;
 }
 
-message Block3dWindowView {
-  bool _placeholder = 1;
+message ChangeRepresentationMeshUrl { // kind "change-representation-mesh-url"
+  bytes payload = 1;
 }
 
-message Block3dBrushPreview {
-  bool _placeholder = 1;
+message ChangeRepresentationLod { // kind "change-representation-lod"
+  bytes payload = 1;
 }
+
+message ChangeRepresentationDescription { // kind "change-representation-description"
+  bytes payload = 1;
+}
+
+message AddRepresentationTag { // kind "add-representation-tag"
+  bytes payload = 1;
+}
+
+message RemoveRepresentationTag { // kind "remove-representation-tag"
+  bytes payload = 1;
+}
+
+message AddRepresentationAttribute { // kind "add-representation-attribute"
+  bytes payload = 1;
+}
+
+message RemoveRepresentationAttribute { // kind "remove-representation-attribute"
+  bytes payload = 1;
+}
+
+message CreateVortexKind { // kind "create-vortex-kind"
+  bytes payload = 1;
+}
+
+message DeleteVortexKind { // kind "delete-vortex-kind"
+  bytes payload = 1;
+}
+
+message RenameVortexKind { // kind "rename-vortex-kind"
+  bytes payload = 1;
+}
+
+message ChangeVortexKindLabel { // kind "change-vortex-kind-label"
+  bytes payload = 1;
+}
+
+message ChangeVortexKindColor { // kind "change-vortex-kind-color"
+  bytes payload = 1;
+}
+
+message ChangeVortexKindDefaultCableKind { // kind "change-vortex-kind-default-cable-kind"
+  bytes payload = 1;
+}
+
+message CreateVortex { // kind "create-vortex"
+  bytes payload = 1;
+}
+
+message DeleteVortex { // kind "delete-vortex"
+  bytes payload = 1;
+}
+
+message MoveVortex { // kind "move-vortex"
+  bytes payload = 1;
+}
+
+message ResizeVortex { // kind "resize-vortex"
+  bytes payload = 1;
+}
+
+message ChangeVortexVortexKind { // kind "change-vortex-vortex-kind"
+  bytes payload = 1;
+}
+
+message ChangeVortexLabel { // kind "change-vortex-label"
+  bytes payload = 1;
+}
+
+message AddCompatibilityRule { // kind "add-compatibility-rule"
+  bytes payload = 1;
+}
+
+message RemoveCompatibilityRule { // kind "remove-compatibility-rule"
+  bytes payload = 1;
+}
+
+message AddAttribute { // kind "add-attribute"
+  bytes payload = 1;
+}
+
+message RemoveAttribute { // kind "remove-attribute"
+  bytes payload = 1;
+}
+
+message AddAuthor { // kind "add-author"
+  bytes payload = 1;
+}
+
+message RemoveAuthor { // kind "remove-author"
+  bytes payload = 1;
+}
+
+message MoveCamera3d { // kind "move-camera3d"
+  bytes payload = 1;
+}
+
+message ScaleCamera3d { // kind "scale-camera3d"
+  bytes payload = 1;
+}
+
+message ChangeMetaDescription { // kind "change-meta-description"
+  bytes payload = 1;
+}
+

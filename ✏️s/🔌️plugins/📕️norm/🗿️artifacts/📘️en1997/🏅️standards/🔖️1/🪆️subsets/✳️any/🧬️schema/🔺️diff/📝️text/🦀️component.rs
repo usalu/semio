@@ -135,11 +135,13 @@ mod tests {
     use protocol::{Mutation as _, MutationDiff};
 
     #[test]
-    fn set_snapshot_diff_replaces_the_whole_snapshot() {
+    fn change_mutation_diff_updates_only_its_field() {
         let base = En1997Snapshot::default();
-        let mutation = En1997Mutation::SetSnapshot { snapshot: En1997Snapshot::default() };
+        let mutation = En1997Mutation::ChangeVEdKn(crate::artifacts::en1997::mutations::change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 });
         let diff = mutation.diff(&base);
-        assert_eq!(diff.apply(&base), En1997Snapshot::default());
+        let mut expected = base.clone();
+        expected.v_ed_kn = 620.0;
+        assert_eq!(diff.apply(&base), expected);
     }
 }
 //#endregion 🧪️Tests

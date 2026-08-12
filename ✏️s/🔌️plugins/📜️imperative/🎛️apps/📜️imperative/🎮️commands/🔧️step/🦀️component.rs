@@ -68,13 +68,9 @@ pub mod add_step {
         let id = next_step_id(document);
         let step = Step { id: id.clone(), kind: payload.kind.clone(), params: Dictionary::new(), bodies: BTreeMap::new() };
         // 🪆️ `create-step` is append-only (no index field, matching `apply_steps_delta`'s `added`
-        // handling); a requested `index` is honored as a follow-up reorder.
-        let mut mutations = vec![create_step(PathRef::default(), step)];
-        if let Some(index) = payload.index {
-            mutations.push(reorder_steps(PathRef::default(), id.clone(), index));
-        }
+        // handling, which already ignored the old `CollectionMutation::Add`'s index the same way).
         Ok(Emit {
-            artifact_mutations: mutations,
+            artifact_mutations: vec![create_step(PathRef::default(), step)],
             config_mutations: vec![ImperativeConfigMutation::SetSelectedSteps { ids: vec![id] }],
             ..Default::default()
         })
@@ -100,12 +96,8 @@ pub mod add_step_at {
         let path_ref = path_ref_from(payload.owner.as_deref(), payload.slot.as_deref(), document);
         let id = next_step_id(document);
         let step = Step { id: id.clone(), kind: payload.kind.clone(), params: Dictionary::new(), bodies: BTreeMap::new() };
-        let mut mutations = vec![create_step(path_ref.clone(), step)];
-        if let Some(index) = payload.index {
-            mutations.push(reorder_steps(path_ref, id.clone(), index));
-        }
         Ok(Emit {
-            artifact_mutations: mutations,
+            artifact_mutations: vec![create_step(path_ref, step)],
             config_mutations: vec![ImperativeConfigMutation::SetSelectedSteps { ids: vec![id] }],
             ..Default::default()
         })
@@ -211,7 +203,7 @@ pub mod move_step_at {
         let document = doc.snapshot;
         if resolve_contains(document, payload.owner.as_deref(), payload.slot.as_deref(), &payload.id) {
             let path_ref = path_ref_from(payload.owner.as_deref(), payload.slot.as_deref(), document);
-            Ok(Emit::mutations(vec![ImperativeMutation { path_ref, collection: CollectionMutation::Move { id: payload.id.clone(), to_index: payload.index } }]))
+            Ok(Emit::mutations(vec![reorder_steps(path_ref, payload.id.clone(), payload.index)]))
         } else {
             Ok(Emit::default())
         }
@@ -233,7 +225,7 @@ pub mod set_step_params {
     pub fn handle(payload: &SetStepParams, doc: &ArtifactView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
         let document = doc.snapshot;
         if resolve_contains(document, None, None, &payload.id) {
-            Ok(Emit::mutations(vec![ImperativeMutation { path_ref: PathRef::default(), collection: CollectionMutation::Patch { id: payload.id.clone(), patch: crate::artifacts::imperative::dsl::value_dsl_map_to_dictionary(&payload.params) } }]))
+            Ok(Emit::mutations(vec![edit_step_params(PathRef::default(), payload.id.clone(), crate::artifacts::imperative::dsl::value_dsl_map_to_dictionary(&payload.params))]))
         } else {
             Ok(Emit::default())
         }
@@ -258,7 +250,7 @@ pub mod set_step_params_at {
         let document = doc.snapshot;
         if resolve_contains(document, payload.owner.as_deref(), payload.slot.as_deref(), &payload.id) {
             let path_ref = path_ref_from(payload.owner.as_deref(), payload.slot.as_deref(), document);
-            Ok(Emit::mutations(vec![ImperativeMutation { path_ref, collection: CollectionMutation::Patch { id: payload.id.clone(), patch: crate::artifacts::imperative::dsl::value_dsl_map_to_dictionary(&payload.params) } }]))
+            Ok(Emit::mutations(vec![edit_step_params(path_ref, payload.id.clone(), crate::artifacts::imperative::dsl::value_dsl_map_to_dictionary(&payload.params))]))
         } else {
             Ok(Emit::default())
         }

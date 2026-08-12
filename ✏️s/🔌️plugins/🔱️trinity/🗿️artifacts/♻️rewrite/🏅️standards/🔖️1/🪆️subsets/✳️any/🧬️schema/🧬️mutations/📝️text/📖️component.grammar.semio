@@ -1,9 +1,20 @@
 dialect grammar
 grammar rewrite.mutations
 extension rewrite
-start document
+start line
 
-document = header body
-header = "schema" SP "stdio.json" NL
-body = payload NL?
-payload = OCTET+
+line = edit-before-fixture / edit-lhs / edit-rhs / change-parameter-binding / remove-parameter-binding / change-rule-layout-point / remove-rule-layout-point
+
+edit-before-fixture = "edit-before-fixture" SP text
+edit-lhs = "edit-lhs" SP text
+edit-rhs = "edit-rhs" SP text
+change-parameter-binding = "change-parameter-binding" SP key SP value
+remove-parameter-binding = "remove-parameter-binding" SP key
+change-rule-layout-point = "change-rule-layout-point" SP key SP point-block
+remove-rule-layout-point = "remove-rule-layout-point" SP key
+
+point-block = "{" NL number SP number "}"
+key = OCTET+
+value = OCTET+
+number = OCTET+
+text = OCTET+

@@ -1,0 +1,39 @@
+//! 🌱 Block3d mutation — `CreateVortexKind`: a new vortex-kind catalog row.
+use crate::artifacts::block3d::diff::Block3dDiff;
+use crate::artifacts::block3d::mutations::Block3dMutation;
+use crate::artifacts::block3d::Block3dSnapshot;
+use crate::artifacts::block3d::{Block3dVortexKind};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Mutation
+/// 🌱 `create-vortex-kind` payload.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "create-vortex-kind")]
+pub struct CreateVortexKind {
+    #[dsl(block)]
+    pub vortex_kind: Block3dVortexKind,
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub fn create_vortex_kind(vortex_kind: Block3dVortexKind) -> Block3dMutation {
+    Block3dMutation::CreateVortexKind(CreateVortexKind { vortex_kind })
+}
+
+impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for CreateVortexKind {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "vortex-kind", kind: "create-vortex-kind", record: "CreatedVortexKind" };
+
+    fn diff(&self, base: &Block3dSnapshot) -> Block3dDiff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Create vortex kind \"{}\"", self.vortex_kind.id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.vortex_kind.id.clone()]
+    }
+}
+//#endregion 🔖️Mutation

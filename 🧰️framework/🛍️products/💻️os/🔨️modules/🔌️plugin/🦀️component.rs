@@ -184,7 +184,7 @@ pub mod app {
     use semio_framework::{
         clipboard_action_definitions, element_id_segment, history_action_definitions, is_element_id,
         kernel::{
-            ActorId, AppEvent, ArtifactKind, CapabilityRequirement, ClipboardError, ClipboardFragment, ArtifactDiff, ArtifactHandle, ArtifactVersion, HostEffect, HybridLogicalTimestamp, InverseMutation, InvocationId, InvocationResult,
+            ActorId, AppEvent, ArtifactKind, CapabilityRequirement, ClipboardError, ClipboardFragment, ArtifactDiff, ArtifactHandle, ArtifactVersion, EditRef, HostEffect, HybridLogicalTimestamp, InverseMutation, InvocationId, InvocationResult,
             KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
         },
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
@@ -197,7 +197,15 @@ pub mod app {
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
     use std::collections::{HashMap, HashSet};
-    use store::{build_history_columns, create_config_envelope, create_document_envelope, ConfigStore, ArtifactCommand, ArtifactPack, ArtifactStore, EngineHandles, HistoryColumn, SpaceConflict};
+    use store::{
+        build_history_columns, child_store_factory, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactPack, ArtifactStore, ChildDispatch, ChildGenesis, ChildStoreFactory, CompositionCoordinator, ConfigStore, EngineHandles,
+        GroupMeta, GroupReceipt, HistoryColumn, OwnerRef, SpaceConflict, SpaceMember,
+    };
+    /// 🚪️ `os_io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
+    /// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
+    /// the `os_io` mount), so it is named through the `store::os_io::` path everywhere in this file,
+    /// exactly like the sibling `🎞️gif` migration leaf (`store::os_io::ArtifactDialect`) already does.
+    use store::os_io::{ArtifactKindId, ArtifactRef};
     use ui_wgpu::wgpu::{
         collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ui_tree_stamp_presence, ActionDescriptor, ContextMenuItemSpec, ContextMenuRequest, ContextMenuSurfaceTarget, Label, Locale, LocalizedLabel, NamedLayout,
         SurfaceKind, Terminology, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiState, UiTreeActionPlacement, UiTreeItemAction,
@@ -3745,6 +3753,13 @@ pub mod app {
         /// exposes just the LATEST for display/revert purposes. A single dispatch may also set `edit_id`
         /// (touching both stores at once); `revertToCommand` prefers `edit_id` when both are present.
         pub config_edit_ids: Vec<String>,
+        /// @emoji 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): every CHILD document edit id this
+        /// command's composite `dispatch_group` call produced — the `config_edit_ids` precedent
+        /// applied to the composition seam. Unlike `config_edit_ids` (one store, possibly several
+        /// fold-ticks), this is one entry per touched CHILD member of a single group dispatch (never
+        /// folded — a group dispatch always issues a plain `Apply`, see `Emit::child_emits`'s own doc
+        /// comment), so it needs no "latest" reduction on the `CommandView` side.
+        pub child_edit_ids: Vec<String>,
         /// @emoji 🔢️ How many consecutive identical `View`/`Shell` dispatches folded into this one row —
         /// see `VcsArtifactApp::record_command`. Always `1` for `Mutation`/`History`/`Clipboard` entries
         /// and for anything carrying an `edit_id`, which never fold.
@@ -3767,6 +3782,8 @@ pub mod app {
         pub edit_id: Option<String>,
         /// @emoji 🧮️ The LATEST of `CommandLogEntry::config_edit_ids` — the id `revertToCommand` targets.
         pub config_edit_id: Option<String>,
+        /// @emoji 🧩️ Verbatim `CommandLogEntry::child_edit_ids` — see that field's own doc comment.
+        pub child_edit_ids: Vec<String>,
         /// @emoji 📜️ This entry's edit's forward operations, printed via `OpText::print_op` — empty for
         /// cursor-motion entries and for a dangling `edit_id` (document replaced mid-session).
         pub op_lines: Vec<String>,
@@ -3945,11 +3962,66 @@ pub mod app {
         /// 🐢️ Which rendered UI sections this action actually invalidates — `Full` (the default) preserves
         /// today's whole-shell-refresh behavior for every app that doesn't opt in to narrower scopes.
         pub ui_scope: semio_framework::kernel::UiDirtyScope,
+        /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): zero-or-more owned-child edits riding
+        /// alongside this SAME gesture — the seam that lets one user action touch a parent AND N of
+        /// its composed children as ONE undo step. Never hand-built; always via `ChildEmit::of`, which
+        /// captures each op's `SemanticMutation` label/semantics BEFORE `OpBinary`-encoding it, so the
+        /// child artifact's own semantic vocabulary survives end-to-end into history instead of being
+        /// re-invented as a parent-side "child routing" mutation. `VcsArtifactApp::dispatch_emit`
+        /// routes `artifact_mutations` (the parent's own ops) plus every entry here through
+        /// `store::CompositionCoordinator::dispatch_group` as one atomic multi-document gesture — see
+        /// that method's own doc comment for the two-phase validate/apply protocol.
+        pub child_emits: Vec<ChildEmit>,
     }
 
     impl<Mutation, ConfigMutation, DraftMutation> Default for Emit<Mutation, ConfigMutation, DraftMutation> {
         fn default() -> Self {
-            Self { artifact_mutations: Vec::new(), config_mutations: Vec::new(), draft_mutations: Vec::new(), description: None, coalesce_key: None, effects: Vec::new(), events: Vec::new(), ui_scope: semio_framework::kernel::UiDirtyScope::default() }
+            Self { artifact_mutations: Vec::new(), config_mutations: Vec::new(), draft_mutations: Vec::new(), description: None, coalesce_key: None, effects: Vec::new(), events: Vec::new(), ui_scope: semio_framework::kernel::UiDirtyScope::default(), child_emits: Vec::new() }
+        }
+    }
+
+    /// 🧩️ One composed child's share of an `Emit` — the plugin-layer twin of `store::ChildDispatch`,
+    /// minted exclusively by `ChildEmit::of` so a plugin author never hand-encodes an op or
+    /// hand-writes a `SchemaId`. `ops` are already `protocol::OpBinary`-encoded (the same per-op wire
+    /// shape `store::ChildDispatch::ops` bundles); `labels` are each op's `SemanticMutation::label()`,
+    /// captured BEFORE encoding — the vocabulary a history UI shows for this child's edit without
+    /// ever decoding the raw bytes back into a concrete `Mutation` type it has no way to name
+    /// generically.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct ChildEmit {
+        pub slot: String,
+        pub child_id: String,
+        pub ops: Vec<Vec<u8>>,
+        pub op_schema: SchemaId,
+        pub labels: Vec<String>,
+    }
+
+    impl ChildEmit {
+        /// 🏭️ The one sanctioned constructor: `S` is the child artifact's OWN snapshot type (turbofish
+        /// it explicitly, e.g. `ChildEmit::of::<ChildSnapshot, _>("mesh", &child_id, ops)` — `S`
+        /// appears only in the `SemanticMutation<S>` bound below, so Rust cannot infer it from `ops`
+        /// alone). Captures `op.label()`/`op.semantics()` per op (the child's real semantic
+        /// vocabulary) BEFORE `OpBinary::encode_op`, so nothing about the child's own history
+        /// authoring is lost crossing into the parent's `Emit`. `op_schema` is a best-effort
+        /// diagnostic tag derived from the first op's `SemanticDescriptor` (`"<entity>.<kind>"`,
+        /// falling back to `"child.empty"` for a no-op `ChildEmit`) — `store::dispatch_group` carries
+        /// `ChildDispatch.op_schema` through as forward-compat metadata without interpreting it (see
+        /// `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b2-store-composition-report.md`), so
+        /// there is no schema REGISTRY this must resolve against yet.
+        pub fn of<S, M>(slot: impl Into<String>, child_id: impl Into<String>, ops: Vec<M>) -> ChildEmit
+        where
+            M: protocol::SemanticMutation<S> + ::protocol::OpBinary,
+        {
+            let labels: Vec<String> = ops.iter().map(|op| protocol::SemanticMutation::label(op)).collect();
+            let op_schema = ops
+                .first()
+                .map(|op| {
+                    let semantics = protocol::SemanticMutation::semantics(op);
+                    SchemaId(format!("{}.{}", semantics.entity, semantics.kind))
+                })
+                .unwrap_or_else(|| SchemaId("child.empty".to_string()));
+            let encoded: Vec<Vec<u8>> = ops.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect();
+            ChildEmit { slot: slot.into(), child_id: child_id.into(), ops: encoded, op_schema, labels }
         }
     }
 
@@ -5146,6 +5218,39 @@ pub mod app {
         /// invalidates a stale render.
         log_generation: u64,
         history_filter: HistoryCommandFilter,
+        /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): every owned child's LIVE store, keyed by
+        /// `(slot, child_id)` — mirrors how `store`/`config_store`/`draft_store` above each hold one
+        /// lane's live `ArtifactStore`, generalized to N children instead of one fixed lane. Each
+        /// entry also carries the dialect captured at open/genesis time (`SpaceMember` itself has no
+        /// object-safe dialect getter — see `dispatch_emit_group`'s own doc comment), so a
+        /// `store::ChildDispatch`/`store::ArtifactRef` can be rebuilt for it without re-deriving one.
+        children: HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>,
+        /// 🧩️ STATEFUL by design (owns the incrementally-maintained `store::CompositionGraph`) — see
+        /// `store::CompositionCoordinator`'s own doc comment. One coordinator per `VcsArtifactApp`
+        /// instance (i.e. per document), exactly like `store`/`config_store`/`draft_store` are
+        /// per-instance rather than global.
+        composition: CompositionCoordinator,
+    }
+
+    /// 🆔️ Deterministic session-local `ArtifactHandle` for a CHILD's real (string) artifact id.
+    /// `result_from_last_edit`'s own `ArtifactHandle(meta.instance_id as u128)` only identifies the
+    /// ONE wasm-hosted document this plugin instance runs (the parent) — a child pulled in through
+    /// `dispatch_emit_group` is a different document with its own string `artifact_id` and no
+    /// instance id of its own, so `KernelMutation.document` needs a handle derived from THAT id
+    /// instead, so history correctly attributes a child's edit to the child, not the parent. FNV-1a
+    /// (128-bit, two interleaved 64-bit lanes) rather than `std::collections::hash_map::DefaultHasher`
+    /// — the latter's hash is only guaranteed stable for one process/compiler invocation, not the
+    /// byte-identical value the SAME child id must always map to.
+    fn artifact_handle_of(artifact_id: &str) -> ArtifactHandle {
+        const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+        const PRIME: u64 = 0x0000_0100_0000_01b3;
+        let mut lane0 = OFFSET;
+        let mut lane1 = OFFSET ^ 0x9e37_79b9_7f4a_7c15;
+        for byte in artifact_id.as_bytes() {
+            lane0 = (lane0 ^ *byte as u64).wrapping_mul(PRIME);
+            lane1 = (lane1 ^ (*byte as u64).rotate_left(7)).wrapping_mul(PRIME);
+        }
+        ArtifactHandle(((lane0 as u128) << 64) | lane1 as u128)
     }
 
     const HISTORY_ACTION_IDS: [&str; 6] = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"];
@@ -5171,7 +5276,59 @@ pub mod app {
             let config_store = ConfigStore::new(config_envelope);
             let draft_store = store::DraftStore::new(draft_envelope);
             A::seed(&mut store);
-            Self { app, store, config_store, draft_store, last_emit_wire: None, cache: None, registry, command_log: Vec::new(), next_command_seq: 0, log_generation: 0, history_filter: HistoryCommandFilter::default() }
+            Self {
+                app,
+                store,
+                config_store,
+                draft_store,
+                last_emit_wire: None,
+                cache: None,
+                registry,
+                command_log: Vec::new(),
+                next_command_seq: 0,
+                log_generation: 0,
+                history_filter: HistoryCommandFilter::default(),
+                children: HashMap::new(),
+                composition: CompositionCoordinator::new(),
+            }
+        }
+
+        /// 🌱️ Opens an already-persisted child store for `slot`/`child_id` via the registered
+        /// `store::ChildStoreFactory` for `dialect.artifact_kind` — the mechanism Task 2 names:
+        /// "wiring to the `ChildStoreFactory` registry so children can be created/opened by artifact
+        /// kind". `envelope_pack` is the child's own full envelope pack (`ChildStoreFactory::open`'s
+        /// own contract — it self-describes id/history, unlike `create`'s bare `initial_pack`); the
+        /// caller supplies `dialect` regardless, since no object-safe `SpaceMember` getter can read it
+        /// back out (see the `children` field's own doc comment). Also seeds the ownership edge into
+        /// `self.composition`'s graph immediately, since `dispatch_group`'s phase 1 ownership check
+        /// (`CompositionGraph::owner_of`) is fail-closed — a child dispatched against before being
+        /// registered here (or absorbed from a genesis `GroupReceipt`, see `dispatch_emit_group`) is
+        /// rejected as an `OwnershipViolation`, not silently accepted.
+        pub fn open_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: store::os_io::ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
+            let slot = slot.into();
+            let child_id = child_id.into();
+            let kind = ArtifactKindId::parse(&dialect.artifact_kind).map_err(plugin_sdk_fault)?;
+            let factory = child_store_factory(&kind).ok_or_else(|| plugin_sdk_fault(format!("open_child: no ChildStoreFactory registered for kind {}", dialect.artifact_kind)))?;
+            let member = factory.open(envelope_pack).map_err(|error| plugin_sdk_fault(error.to_string()))?;
+            let parent_id = self.store.envelope().id.clone();
+            self.composition.graph_mut().insert_owns(&parent_id, &slot, &child_id).map_err(plugin_sdk_fault)?;
+            self.children.insert((slot, child_id), (dialect, member));
+            Ok(())
+        }
+
+        /// 🔎️ The live child store for `(slot, child_id)`, if adopted/created — the read half of
+        /// `open_child`/`register_child`.
+        pub fn child_store(&self, slot: &str, child_id: &str) -> Option<&dyn SpaceMember> {
+            self.children.get(&(slot.to_string(), child_id.to_string())).map(|(_, member)| member.as_ref())
+        }
+
+        /// 🌱️ Adopts an already-live `Box<dyn SpaceMember>` into the child-store map directly — the
+        /// counterpart `dispatch_emit_group` uses to absorb a `store::GroupReceipt::created_children`
+        /// entry (a `ChildGenesis`-minted member has no prior caller-held reference an `open_child`
+        /// call could have produced it from) and the general escape hatch for a caller that already
+        /// holds a constructed member from elsewhere (e.g. a host-level `SpaceHost`).
+        pub fn register_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: store::os_io::ArtifactDialect, member: Box<dyn SpaceMember>) {
+            self.children.insert((slot.into(), child_id.into()), (dialect, member));
         }
 
         #[cfg(test)]
@@ -5231,6 +5388,7 @@ pub mod app {
                 timestamp: timestamp.unwrap_or_else(store::now_iso),
                 edit_id,
                 config_edit_ids: config_edit_id.into_iter().collect(),
+                child_edit_ids: Vec::new(),
                 count: 1,
                 inverse,
             });
@@ -5346,6 +5504,7 @@ pub mod app {
                         timestamp: entry.timestamp.clone(),
                         edit_id: entry.edit_id.clone(),
                         config_edit_id: latest_config_edit_id.map(str::to_string),
+                        child_edit_ids: entry.child_edit_ids.clone(),
                         op_lines,
                         applied,
                         revertible,
@@ -5495,7 +5654,7 @@ pub mod app {
         /// and builds the resulting `InvocationResult` from the document side (config-only dispatches
         /// never touch `KernelMutation`/space-sync — see `🔖️CommandLog`'s doc region for why).
         fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
-            let Emit { artifact_mutations, config_mutations, draft_mutations, description, coalesce_key, effects, events, ui_scope } = emit;
+            let Emit { artifact_mutations, config_mutations, draft_mutations, description, coalesce_key, effects, events, ui_scope, child_emits } = emit;
             self.last_emit_wire = Some((
                 protocol::encode_ops_vec(&artifact_mutations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>()),
                 protocol::encode_ops_vec(&config_mutations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>()),
@@ -5524,6 +5683,15 @@ pub mod app {
                 self.cache = None;
                 let amended_same_config_edit = before_config_edit_id.is_some() && self.config_store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_config_edit_id.as_ref();
                 config_edit_id = if amended_same_config_edit { before_config_edit_id } else { self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) };
+            }
+
+            // 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): a non-empty `child_emits` means this
+            // gesture must land as ONE atomic multi-document group — routed entirely through
+            // `dispatch_emit_group` (parent ops included), never through the solitary single-store
+            // path below. See that method's own doc comment for why the two paths stay genuinely
+            // separate rather than being unified into one (the group protocol has no `AmendLast`).
+            if !child_emits.is_empty() {
+                return self.dispatch_emit_group(verb, artifact_mutations, child_emits, description, effects, events, ui_scope, config_edit_id, meta);
             }
 
             if artifact_mutations.is_empty() {
@@ -5573,12 +5741,293 @@ pub mod app {
             Ok(self.result_from_last_edit(verb, meta, effects, events, ui_scope, tail_offset))
         }
 
+        /// @emoji 🧩️ `dispatch_emit`'s composite-gesture branch, taken whenever `emit.child_emits` is
+        /// non-empty. Routes `artifact_mutations` (the parent's own ops) plus every `ChildEmit`
+        /// through `store::CompositionCoordinator::dispatch_group` as ONE atomic multi-document
+        /// gesture, so a single user action spanning a parent and N owned children still produces ONE
+        /// `UndoGroup`: `inverse_group.member_edits` names every touched document (parent included),
+        /// and `dispatch_action`'s history-action arm routes an undo/redo of a group-tailed edit
+        /// through `CompositionCoordinator::undo_group`/`redo_group` — see that arm's own doc comment.
+        /// Deliberately narrower than the solitary (zero-children) path above: `dispatch_group`'s
+        /// phase 2 always issues a plain `Apply` on every touched member (never `AmendLast` — there is
+        /// no group-aware per-tick coalescing protocol), so a composite gesture with children is
+        /// always ONE described edit per member, never folded across ticks — the solitary path keeps
+        /// `AmendLast` coalescing exactly as before. `inverse_group.mutations`/`.inverse_mutations`
+        /// are best-effort for CHILD members specifically: real per-op inverse bytes are retrievable
+        /// only through `ArtifactStore<P, Mutation>`'s own inherent `edit_mutations()`, and each
+        /// child's concrete `P`/`Mutation` is erased behind `Box<dyn SpaceMember>` — the REAL
+        /// reversal mechanism for a child member is `CompositionCoordinator::undo_group` calling
+        /// `undo()` directly on the live child store (driven by `inverse_group.member_edits`, not by
+        /// replaying these bytes).
+        #[allow(clippy::too_many_arguments)]
+        fn dispatch_emit_group(
+            &mut self,
+            verb: &str,
+            artifact_mutations: Vec<A::Mutation>,
+            child_emits: Vec<ChildEmit>,
+            description: Option<String>,
+            effects: Vec<HostEffect>,
+            events: Vec<AppEvent>,
+            ui_scope: semio_framework::kernel::UiDirtyScope,
+            config_edit_id: Option<String>,
+            meta: &ActionMeta,
+        ) -> Result<InvocationResult, Fault> {
+            let parent_id = self.store.envelope().id.clone();
+            // 🚧️ `ArtifactEnvelope.dialect` stays `Option<ArtifactDialect>` per B2's own DEFERRED
+            // scope decision (`📓️wave1-reports/b2-store-composition-report.md`) — this fallback (a
+            // synthetic "native" dialect from the app's own `DOCUMENT_SCHEMA`) is only ever consulted
+            // when no real dialect was ever threaded through `create_document_envelope`, and only
+            // matters for the OWNERSHIP-GRAPH bookkeeping `dispatch_group` needs a real `ArtifactRef`
+            // for, not for any wire/codec decision.
+            let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| store::os_io::ArtifactDialect { artifact_kind: A::DOCUMENT_SCHEMA.to_string(), standard: "native".to_string(), subset: "*".to_string() });
+            let parent_ref = ArtifactRef { artifact_id: parent_id.clone(), dialect: parent_dialect };
+            let parent_ops: Vec<Vec<u8>> = artifact_mutations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect();
+
+            self.store.set_local_actor_id(Some(meta.actor.clone()));
+            let mut dispatches: Vec<(&mut dyn SpaceMember, ChildDispatch)> = Vec::with_capacity(child_emits.len());
+            for child_emit in &child_emits {
+                let key = (child_emit.slot.clone(), child_emit.child_id.clone());
+                let (dialect, member) = self.children.get_mut(&key).ok_or_else(|| {
+                    plugin_sdk_fault(format!(
+                        "dispatch_emit: verb {verb:?} emitted a ChildEmit for slot {:?} child {:?} with no live child store — call VcsArtifactApp::open_child/register_child first",
+                        child_emit.slot, child_emit.child_id
+                    ))
+                })?;
+                let target = ArtifactRef { artifact_id: child_emit.child_id.clone(), dialect: dialect.clone() };
+                dispatches.push((member.as_mut(), ChildDispatch { child: target, ops: child_emit.ops.clone(), op_schema: child_emit.op_schema.clone(), labels: child_emit.labels.clone() }));
+            }
+
+            // 🎛️ `meta.actor`/`description` are honored; `coalesce_key` is intentionally dropped here
+            // — `GroupMeta.coalesce_key` is accepted-but-not-wired by `dispatch_group` itself today
+            // (per B2's own scoping note: `SpaceMember` has no object-safe `AmendLast` seam yet), and
+            // this whole branch is already documented as never coalescing.
+            let group_meta = GroupMeta { actor: Some(meta.actor.clone()), description: description.clone(), coalesce_key: None };
+            let receipt = self
+                .composition
+                .dispatch_group(&parent_ref, &mut self.store as &mut dyn SpaceMember, &mut dispatches, parent_ops, Vec::new(), group_meta)
+                .map_err(|error| plugin_sdk_fault(error.to_string()))?;
+            drop(dispatches);
+            self.cache = None;
+
+            // 🌱️ Absorb any freshly-created children into the live map — B2 flagged that a
+            // `ChildGenesis`-created member is otherwise silently dropped, making genesis pointless
+            // (`GroupReceipt::created_children`'s own doc comment). Defensive here specifically:
+            // `genesis` is always `Vec::new()` on THIS call (a `ChildEmit` only ever targets an
+            // ALREADY-live child; genesis authoring is a later wave's constructor), but the absorb
+            // logic is written for real regardless, not stubbed, so it needs no revisiting once a
+            // genesis-emitting `Emit` constructor lands.
+            for (target, member) in receipt.created_children {
+                let slot = self.composition.graph().slot_of(&target.artifact_id).unwrap_or_default().to_string();
+                self.children.insert((slot, target.artifact_id.clone()), (target.dialect.clone(), member));
+            }
+
+            let invocation_id = InvocationId(receipt.invocation_id.clone());
+            let member_edits: Vec<EditRef> = receipt.member_edits.iter().map(|(reference, edit_id)| EditRef { document: artifact_handle_of(&reference.artifact_id), edit_id: edit_id.clone() }).collect();
+
+            let mut mutations: Vec<KernelMutation> = Vec::new();
+
+            // 🧱️ Parent side: `dispatch_wire` landed a REAL edit on `self.store` above (whenever
+            // `parent_ops` was non-empty), so its tail edit's real forward/inverse mutations are
+            // available exactly like the solitary path's `result_from_last_edit`.
+            let parent_touched = receipt.member_edits.iter().any(|(reference, _)| reference.artifact_id == parent_id);
+            if parent_touched {
+                if let Some((forwards, inverse, mutation_meta)) = self.store.edit_mutations() {
+                    let inverse_payload = protocol::encode_ops_vec(&inverse.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>());
+                    let document = ArtifactHandle(meta.instance_id as u128);
+                    let schema = A::DOCUMENT_SCHEMA.to_string();
+                    for (index, forward) in forwards.iter().enumerate() {
+                        let entry = mutation_meta.get(index);
+                        let mutation_id = entry.and_then(|entry_meta| entry_meta.mutation_id.clone()).unwrap_or_else(|| MutationId(format!("{}:{index}", invocation_id.0)));
+                        let base_version = ArtifactVersion(entry.map(|entry_meta| entry_meta.base_version).unwrap_or(0));
+                        let undo_policy = entry.map(|entry_meta| entry_meta.undo_policy).unwrap_or(UndoPolicy::ExactBaseOnly);
+                        let author = entry.and_then(|entry_meta| entry_meta.author_id.clone()).unwrap_or_else(|| ActorId(meta.actor.clone()));
+                        let timestamp = entry.map(|entry_meta| entry_meta.timestamp).unwrap_or_else(|| HybridLogicalTimestamp::new(0, 0));
+                        mutations.push(KernelMutation {
+                            id: mutation_id.clone(),
+                            document,
+                            base_version,
+                            invocation_id: invocation_id.clone(),
+                            diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation")), payload: ::protocol::OpBinary::encode_op(forward).unwrap_or_default() },
+                            inverse: InverseMutation {
+                                target_mutation: mutation_id,
+                                inverse_diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation.inverse")), payload: inverse_payload.clone() },
+                                base_version,
+                                dependencies: Vec::new(),
+                                undo_policy,
+                            },
+                            dependencies: Vec::new(),
+                            author,
+                            timestamp,
+                        });
+                    }
+                }
+            }
+
+            // 🧩️ Child side: real per-op inverse bytes are not retrievable through the object-safe
+            // `SpaceMember` seam (see this fn's own doc comment) — each touched child's edit surfaces
+            // as ONE best-effort `KernelMutation` bundling all of that child's ops as its diff
+            // payload, with an empty (but validly-encoded, decodes to zero ops) inverse payload.
+            // `dispatch_group`'s phase 2 walks `children` (built here in the SAME order as
+            // `child_emits`) by index, skipping empty-ops entries — so the non-empty-ops subsequence
+            // of `child_emits`, in order, lines up 1:1 with the non-parent tail of `member_edits`.
+            let child_member_edits: Vec<&(ArtifactRef, String)> = receipt.member_edits.iter().filter(|(reference, _)| reference.artifact_id != parent_id).collect();
+            let touched_child_emits: Vec<&ChildEmit> = child_emits.iter().filter(|child_emit| !child_emit.ops.is_empty()).collect();
+            debug_assert_eq!(touched_child_emits.len(), child_member_edits.len(), "dispatch_group's per-child edit order must match the non-empty-ops subsequence of child_emits");
+            let mut child_edit_ids: Vec<String> = Vec::with_capacity(child_member_edits.len());
+            for (child_emit, (reference, edit_id)) in touched_child_emits.into_iter().zip(child_member_edits.into_iter()) {
+                child_edit_ids.push(edit_id.clone());
+                let document = artifact_handle_of(&reference.artifact_id);
+                let mutation_id = MutationId(edit_id.clone());
+                mutations.push(KernelMutation {
+                    id: mutation_id.clone(),
+                    document,
+                    base_version: ArtifactVersion(0),
+                    invocation_id: invocation_id.clone(),
+                    diff: ArtifactDiff { schema: child_emit.op_schema.clone(), payload: protocol::encode_ops_vec(&child_emit.ops) },
+                    inverse: InverseMutation {
+                        target_mutation: mutation_id,
+                        inverse_diff: ArtifactDiff { schema: SchemaId(format!("{}.inverse", child_emit.op_schema.0)), payload: protocol::encode_ops_vec(&[]) },
+                        base_version: ArtifactVersion(0),
+                        dependencies: Vec::new(),
+                        undo_policy: UndoPolicy::ExactBaseOnly,
+                    },
+                    dependencies: Vec::new(),
+                    author: ActorId(meta.actor.clone()),
+                    timestamp: HybridLogicalTimestamp::new(0, 0),
+                });
+            }
+
+            let mutation_ids: Vec<MutationId> = mutations.iter().map(|mutation| mutation.id.clone()).collect();
+            let inverse_mutations: Vec<InverseMutation> = mutations.iter().map(|mutation| mutation.inverse.clone()).collect();
+
+            // 🧾️ One command-log row for the whole group — `child_edit_ids` follows the existing
+            // `config_edit_ids` precedent (see `CommandLogEntry::child_edit_ids`'s own doc comment).
+            let parent_edit_id = receipt.member_edits.iter().find(|(reference, _)| reference.artifact_id == parent_id).map(|(_, edit_id)| edit_id.clone());
+            let kind = self.registry.get(verb).map(|def| def.kind).unwrap_or(ActionKind::Mutation);
+            self.record_command(verb, kind, description, parent_edit_id, config_edit_id, None);
+            if let Some(last) = self.command_log.last_mut() {
+                last.child_edit_ids = child_edit_ids;
+            }
+
+            Ok(InvocationResult {
+                output: DslValue::Null,
+                mutations,
+                inverse_group: UndoGroup { invocation_id, mutations: mutation_ids, inverse_mutations, member_edits },
+                diagnostics: Vec::new(),
+                requested_effects: effects,
+                events,
+                ui_scope,
+            })
+        }
+
+        /// @emoji 🕸️ Re-syncs `self.composition`'s ownership/link graph from the parent's own live
+        /// `ArtifactRefs` projection (`child_refs()`/`links()`) — the mechanism
+        /// `store::CompositionGraph::sync_member`'s own doc comment names as the required follow-up
+        /// "after any dispatch that might have changed an artifact's own `ArtifactRefs`". Deliberately
+        /// NOT called automatically by `dispatch_emit`/`dispatch_emit_group`: doing so would force
+        /// `A::Snapshot: store::ArtifactRefs` onto EVERY `ArtifactApp` impl in the workspace (today
+        /// zero of them implement it — `ArtifactRefs`-bearing snapshots are new, later-wave-scoped
+        /// schema work), breaking every existing plugin's compile for a graph no leaf artifact needs
+        /// synced. A composed artifact's own app calls this explicitly wherever its `handle` might
+        /// have changed a `#[child(...)]`/`#[link_slot(...)]` field — see B2's own
+        /// `📓️wave1-reports/b2-store-composition-report.md` sharedFileRequest #6.
+        pub fn sync_composition_graph(&mut self) -> Result<(), Fault>
+        where
+            A::Snapshot: store::ArtifactRefs,
+        {
+            let snapshot = self.store.snapshot().map_err(|error| error.into_fault())?;
+            let parent_id = self.store.envelope().id.clone();
+            self.composition.graph_mut().sync_member(&parent_id, &snapshot).map_err(plugin_sdk_fault)
+        }
+
+        /// @emoji ↩️ Task 4: group-aware undo/redo. Routes through
+        /// `store::CompositionCoordinator::undo_group`/`redo_group` across `self.store` (the parent)
+        /// plus every LIVE child in `self.children` — the coordinator itself filters to members whose
+        /// tail actually carries `group_id` (a child never touched by this particular gesture, or one
+        /// whose own `undo()`/`redo()` call fails, is SKIPPED, not aborted — see `GroupUndoReport`'s
+        /// own doc comment for why abort-all would be actively harmful: one collaborator's foreign or
+        /// failed child edit must never permanently freeze this parent's undo stack). This generalizes
+        /// the plain single-store path's existing benign `NothingToUndo`/`NothingToRedo`/`ForeignEdit`
+        /// collapse to the multi-member case. Member order matters only for readability/parity with
+        /// `dispatch_group`'s own fixed apply order (children → parent): undo reverses it
+        /// (parent → children), redo re-establishes it (children → parent) — `undo_group`/`redo_group`
+        /// themselves treat every member independently regardless of list order.
+        fn dispatch_group_history_action(&mut self, action: &str, group_id: &str, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            let parent_id = self.store.envelope().id.clone();
+            let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| store::os_io::ArtifactDialect { artifact_kind: A::DOCUMENT_SCHEMA.to_string(), standard: "native".to_string(), subset: "*".to_string() });
+            let parent_ref = ArtifactRef { artifact_id: parent_id.clone(), dialect: parent_dialect };
+            // 🪞️ Two SEPARATE passes over `self.children` (an immutable key/dialect snapshot, then
+            // `values_mut()`) rather than repeated `get_mut` calls in a loop — `HashMap` iteration
+            // order is unspecified but DETERMINISTIC for a given map instance as long as it is not
+            // mutated in between two iterations, which holds here (nothing inserts/removes between
+            // the two calls below), so the positional zip lines each dialect/id up with its own member.
+            let child_refs: Vec<ArtifactRef> = self.children.iter().map(|(key, (dialect, _))| ArtifactRef { artifact_id: key.1.clone(), dialect: dialect.clone() }).collect();
+
+            let mut members: Vec<(&ArtifactRef, &mut dyn SpaceMember)> = Vec::with_capacity(1 + child_refs.len());
+            if action == "undo" {
+                members.push((&parent_ref, &mut self.store as &mut dyn SpaceMember));
+                for (reference, (_, member)) in child_refs.iter().zip(self.children.values_mut()) {
+                    members.push((reference, member.as_mut()));
+                }
+            } else {
+                for (reference, (_, member)) in child_refs.iter().zip(self.children.values_mut()) {
+                    members.push((reference, member.as_mut()));
+                }
+                members.push((&parent_ref, &mut self.store as &mut dyn SpaceMember));
+            }
+
+            let report = if action == "undo" { CompositionCoordinator::undo_group(&mut members, group_id) } else { CompositionCoordinator::redo_group(&mut members, group_id) };
+            drop(members);
+            self.cache = None;
+
+            let diagnostics: Vec<dsl::Diagnostic> = report
+                .skipped
+                .iter()
+                .map(|(reference, error)| dsl::Diagnostic::error("composition.group-history.skipped-member", dsl::TextSpan::default(), format!("{action} skipped member {} ({error})", reference.artifact_id)))
+                .collect();
+
+            if report.undone.is_empty() {
+                // 🧾️ Nothing actually moved (every member was foreign/failed) — benign collapse,
+                // mirroring `NothingToUndo`/`NothingToRedo`/`ForeignEdit` just above: NOT logged
+                // (never touched any store), but the skip diagnostics still ride along so the caller
+                // can see WHY nothing happened instead of silently no-op'ing.
+                let mut result = Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::None);
+                result.diagnostics = diagnostics;
+                return Ok(result);
+            }
+
+            // 🧾️ Append-only, same as the plain path: undo/redo are pure cursor motion, never
+            // logged with an `edit_id` — `child_edit_ids` records every CHILD member this group call
+            // actually touched, following the `config_edit_ids`/`child_edit_ids` precedent.
+            self.record_command(action, ActionKind::History, None, None, None, None);
+            let child_edit_ids: Vec<String> = report.undone.iter().filter(|(reference, _)| reference.artifact_id != parent_id).map(|(_, edit_id)| edit_id.clone()).collect();
+            if let Some(last) = self.command_log.last_mut() {
+                last.child_edit_ids = child_edit_ids;
+            }
+
+            let mut result = Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework::kernel::UiDirtyScope::Full);
+            result.diagnostics = diagnostics;
+            Ok(result)
+        }
+
         /// @emoji 🕰️ The actual body of `PluginApp::handle_action` — renamed to an inherent method so
         /// `handle_action` itself can stay a thin `finish_recorded` wrapper (see `🔖️CommandLog`). B1:
         /// FRAMEWORK-reserved verbs only (history/revert/filter/noteShellCommand/clipboard) — an app's own
         /// behavior is dispatched exclusively through `dispatch_typed_command` now.
         fn dispatch_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             if HISTORY_ACTION_IDS.contains(&action) {
+                // 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): when the tail edit (undo) / redo-tail
+                // edit (redo) carries a `MutationMeta.group_id`, this history action must reverse the
+                // WHOLE composite gesture — every member the group's `dispatch_group` call touched,
+                // not just `self.store` — so it is routed through `dispatch_group_history_action`
+                // instead of the plain single-store path below. A solitary (non-grouped) edit has no
+                // `group_id` and falls through unchanged.
+                if action == "undo" || action == "redo" {
+                    let group_id = if action == "undo" { self.store.tail_group_id() } else { self.store.redo_tail().and_then(|(_, group_id)| group_id) };
+                    if let Some(group_id) = group_id {
+                        return self.dispatch_group_history_action(action, &group_id, meta);
+                    }
+                }
                 let command = Self::history_command(action, args).ok_or_else(|| format!("history action {action} missing required argument"))?;
                 match self.store.dispatch(command) {
                     Ok(_) => {
@@ -8233,6 +8682,7 @@ pub mod plugin_runtime {
                         timestamp: "0".into(),
                         edit_id: Some("e1".into()),
                         config_edit_id: None,
+                        child_edit_ids: Vec::new(),
                         op_lines: vec!["set-count value=1".into()],
                         applied: true,
                         revertible: true,
@@ -8247,6 +8697,7 @@ pub mod plugin_runtime {
                         timestamp: "1".into(),
                         edit_id: None,
                         config_edit_id: None,
+                        child_edit_ids: Vec::new(),
                         op_lines: Vec::new(),
                         applied: false,
                         revertible: false,

@@ -1,36 +1,42 @@
-# 🧬️ Block3d mutation schema — persistent fields only.
+# 🧬️ Block3d mutation schema — one type per mutation kind (37 kinds), not a snapshot mirror.
 
-type Block3dMutation {
-  schema: String! @state(class: PERSISTENT)
-  objectKind: BlockKindIdentity! @state(class: PERSISTENT)
-  representations: [BlockRepresentation!]! @state(class: PERSISTENT)
-  vortexKinds: [Block3dVortexKind!]! @state(class: PERSISTENT)
-  vortices: [Block3dVortexTemplate!]! @state(class: PERSISTENT)
-  compatibility: [BlockCompatibilityRule!]! @state(class: PERSISTENT)
-  attributes: [BlockAttribute!]! @state(class: PERSISTENT)
-  authors: [BlockAuthor!]! @state(class: PERSISTENT)
-  camera3d: BlockCamera3d! @state(class: PERSISTENT)
-  meta: BlockMeta! @state(class: PERSISTENT)
-}
+union Block3dMutation = RenameObjectKind | ChangeObjectKindLabel | ChangeObjectKindVariant | ChangeObjectKindDescription | ChangeObjectKindIcon | ChangeObjectKindUnit | CreateRepresentation | DeleteRepresentation | RenameRepresentation | ChangeRepresentationMeshUrl | ChangeRepresentationLod | ChangeRepresentationDescription | AddRepresentationTag | RemoveRepresentationTag | AddRepresentationAttribute | RemoveRepresentationAttribute | CreateVortexKind | DeleteVortexKind | RenameVortexKind | ChangeVortexKindLabel | ChangeVortexKindColor | ChangeVortexKindDefaultCableKind | CreateVortex | DeleteVortex | MoveVortex | ResizeVortex | ChangeVortexVortexKind | ChangeVortexLabel | AddCompatibilityRule | RemoveCompatibilityRule | AddAttribute | RemoveAttribute | AddAuthor | RemoveAuthor | MoveCamera3d | ScaleCamera3d | ChangeMetaDescription
 
-type BlockKindIdentity { _placeholder: Boolean }
-
-type BlockRepresentation { _placeholder: Boolean }
-
-type Block3dVortexKind { _placeholder: Boolean }
-
-type Block3dVortexTemplate { _placeholder: Boolean }
-
-type BlockCompatibilityRule { _placeholder: Boolean }
-
-type BlockAttribute { _placeholder: Boolean }
-
-type BlockAuthor { _placeholder: Boolean }
-
-type BlockCamera3d { _placeholder: Boolean }
-
-type BlockMeta { _placeholder: Boolean }
-
-type Block3dWindowView { _placeholder: Boolean }
-
-type Block3dBrushPreview { _placeholder: Boolean }
+type RenameObjectKind { _payload: JSON } # kind "rename-object-kind"
+type ChangeObjectKindLabel { _payload: JSON } # kind "change-object-kind-label"
+type ChangeObjectKindVariant { _payload: JSON } # kind "change-object-kind-variant"
+type ChangeObjectKindDescription { _payload: JSON } # kind "change-object-kind-description"
+type ChangeObjectKindIcon { _payload: JSON } # kind "change-object-kind-icon"
+type ChangeObjectKindUnit { _payload: JSON } # kind "change-object-kind-unit"
+type CreateRepresentation { _payload: JSON } # kind "create-representation"
+type DeleteRepresentation { _payload: JSON } # kind "delete-representation"
+type RenameRepresentation { _payload: JSON } # kind "rename-representation"
+type ChangeRepresentationMeshUrl { _payload: JSON } # kind "change-representation-mesh-url"
+type ChangeRepresentationLod { _payload: JSON } # kind "change-representation-lod"
+type ChangeRepresentationDescription { _payload: JSON } # kind "change-representation-description"
+type AddRepresentationTag { _payload: JSON } # kind "add-representation-tag"
+type RemoveRepresentationTag { _payload: JSON } # kind "remove-representation-tag"
+type AddRepresentationAttribute { _payload: JSON } # kind "add-representation-attribute"
+type RemoveRepresentationAttribute { _payload: JSON } # kind "remove-representation-attribute"
+type CreateVortexKind { _payload: JSON } # kind "create-vortex-kind"
+type DeleteVortexKind { _payload: JSON } # kind "delete-vortex-kind"
+type RenameVortexKind { _payload: JSON } # kind "rename-vortex-kind"
+type ChangeVortexKindLabel { _payload: JSON } # kind "change-vortex-kind-label"
+type ChangeVortexKindColor { _payload: JSON } # kind "change-vortex-kind-color"
+type ChangeVortexKindDefaultCableKind { _payload: JSON } # kind "change-vortex-kind-default-cable-kind"
+type CreateVortex { _payload: JSON } # kind "create-vortex"
+type DeleteVortex { _payload: JSON } # kind "delete-vortex"
+type MoveVortex { _payload: JSON } # kind "move-vortex"
+type ResizeVortex { _payload: JSON } # kind "resize-vortex"
+type ChangeVortexVortexKind { _payload: JSON } # kind "change-vortex-vortex-kind"
+type ChangeVortexLabel { _payload: JSON } # kind "change-vortex-label"
+type AddCompatibilityRule { _payload: JSON } # kind "add-compatibility-rule"
+type RemoveCompatibilityRule { _payload: JSON } # kind "remove-compatibility-rule"
+type AddAttribute { _payload: JSON } # kind "add-attribute"
+type RemoveAttribute { _payload: JSON } # kind "remove-attribute"
+type AddAuthor { _payload: JSON } # kind "add-author"
+type RemoveAuthor { _payload: JSON } # kind "remove-author"
+type MoveCamera3d { _payload: JSON } # kind "move-camera3d"
+type ScaleCamera3d { _payload: JSON } # kind "scale-camera3d"
+type ChangeMetaDescription { _payload: JSON } # kind "change-meta-description"
+scalar JSON

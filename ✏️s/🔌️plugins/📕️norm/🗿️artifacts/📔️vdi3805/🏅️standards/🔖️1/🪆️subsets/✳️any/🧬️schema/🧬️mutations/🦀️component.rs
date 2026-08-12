@@ -13,190 +13,13 @@
 //! `rename`/`replace-configuration`/`delete`) keeps it in lockstep via the `🔖️IndexSync` helpers
 //! below, rather than letting it silently drift out of sync with the catalog it indexes.
 //!
-//! Every triad leaf is self-wired directly below (`#[path]`, `🔖️LeafWiring` region) rather than in
-//! `📦️glue.rs` — this facet's fan-out (26/08/12/SEMANTIC-MUTATIONS-OVERHAUL) is scoped to files
-//! inside this artifact directory only; `📦️glue.rs` is plugin-shared and out of that scope. The old
-//! generic `📄set-snapshot` leaf stays physically present as an orphan stub (see its own doc
-//! comments) because `📦️glue.rs` still `#[path]`-wires it — cleanup tracked as a `sharedFileRequests`
-//! entry in this ticket's wave2 report.
+//! Every triad leaf is mounted directly as a `mutations`-sibling module in `📦️glue.rs` (this lane's
+//! agent owns `📦️glue.rs`, so no self-wiring `#[path = "."]` blocks are needed here — the orphaned
+//! `📄set-snapshot` stub is deleted along with its dangling glue mount).
 
 use crate::artifacts::vdi3805::{CatalogIndexEntry, CatalogueProduct, Vdi3805Diff, Vdi3805Snapshot, VdiValue};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-
-//#region 🔖️LeafWiring
-#[path = "."]
-pub mod update_manufacturer_file {
-    #[path = "🏭️update-manufacturer-file/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🏭️update-manufacturer-file/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🏭️update-manufacturer-file/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_correction_as_of {
-    #[path = "📅️change-correction-as-of/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📅️change-correction-as-of/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📅️change-correction-as-of/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_strict_mode {
-    #[path = "🔐️change-strict-mode/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔐️change-strict-mode/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔐️change-strict-mode/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod update_limits {
-    #[path = "🛡️update-limits/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🛡️update-limits/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🛡️update-limits/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod change_edition_profile {
-    #[path = "🔁️change-edition-profile/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔁️change-edition-profile/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔁️change-edition-profile/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod remove_edition_profile {
-    #[path = "➖️remove-edition-profile/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "➖️remove-edition-profile/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "➖️remove-edition-profile/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod create_product {
-    #[path = "📦️create-product/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📦️create-product/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📦️create-product/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod delete_product {
-    #[path = "🗑️delete-product/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗑️delete-product/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗑️delete-product/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod rename_product {
-    #[path = "🏷️rename-product/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🏷️rename-product/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🏷️rename-product/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod replace_product_configuration {
-    #[path = "♻️replace-product-configuration/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "♻️replace-product-configuration/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "♻️replace-product-configuration/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod create_geometry {
-    #[path = "🧊️create-geometry/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🧊️create-geometry/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🧊️create-geometry/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod delete_geometry {
-    #[path = "🗑️delete-geometry/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗑️delete-geometry/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗑️delete-geometry/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod resize_geometry {
-    #[path = "📐️resize-geometry/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📐️resize-geometry/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📐️resize-geometry/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod add_geometry_connection {
-    #[path = "🔌️add-geometry-connection/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔌️add-geometry-connection/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔌️add-geometry-connection/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod remove_geometry_connection {
-    #[path = "✂️remove-geometry-connection/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "✂️remove-geometry-connection/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "✂️remove-geometry-connection/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod replace_geometry_parameters {
-    #[path = "🔧️replace-geometry-parameters/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧️replace-geometry-parameters/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧️replace-geometry-parameters/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod create_curve {
-    #[path = "📈️create-curve/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📈️create-curve/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📈️create-curve/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod delete_curve {
-    #[path = "🗑️delete-curve/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗑️delete-curve/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗑️delete-curve/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod replace_curve_points {
-    #[path = "📉️replace-curve-points/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "📉️replace-curve-points/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "📉️replace-curve-points/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-//#endregion 🔖️LeafWiring
 
 //#region 🔖️IndexSync
 /// 🧮️ Mirrors `CatalogIndex::from_catalog`'s per-product mapping — kept here so every product
@@ -220,6 +43,28 @@ pub fn extract_dn(parameters: &BTreeMap<String, VdiValue>) -> Option<u16> {
 //#region 🔖️Mutations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️component.rs`.
+//#region 🔖️Leaves
+use super::update_manufacturer_file;
+use super::change_correction_as_of;
+use super::change_strict_mode;
+use super::update_limits;
+use super::change_edition_profile;
+use super::remove_edition_profile;
+use super::create_product;
+use super::delete_product;
+use super::rename_product;
+use super::replace_product_configuration;
+use super::create_geometry;
+use super::delete_geometry;
+use super::resize_geometry;
+use super::add_geometry_connection;
+use super::remove_geometry_connection;
+use super::replace_geometry_parameters;
+use super::create_curve;
+use super::delete_curve;
+use super::replace_curve_points;
+//#endregion 🔖️Leaves
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = Vdi3805Snapshot, diff = Vdi3805Diff, schema = "s.norm.vdi3805")]
 pub enum Vdi3805Mutation {
@@ -244,6 +89,57 @@ pub enum Vdi3805Mutation {
     ReplaceCurvePoints(replace_curve_points::mutation::ReplaceCurvePoints),
 }
 //#endregion 🔖️Mutations
+
+//#region 🔖️FromSnapshot
+impl Vdi3805Mutation {
+    /// 📤️ Decomposes a whole-document replacement into the closed semantic vocabulary — the
+    /// replacement for the banned whole-document-replace variant, used by `import_media`'s
+    /// `"model:in"` port and the `set-snapshot` app command. `catalog.index` needs no explicit
+    /// mutation of its own: `create-product`/`delete-product` already keep it in lockstep (see
+    /// `🔖️IndexSync` above), so recreating every product from `target` rebuilds it for free. `base`
+    /// is required because `products`/`geometry`/`curves` are real id-keyed collections needing full
+    /// remove/re-insert, and `edition_profile` is a real map needing a key-diff.
+    pub fn from_snapshot(base: &Vdi3805Snapshot, target: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+        let mut mutations = Vec::new();
+        mutations.push(Vdi3805Mutation::UpdateManufacturerFile(update_manufacturer_file::mutation::UpdateManufacturerFile { new_manufacturer_file: target.manufacturer_file.clone() }));
+        mutations.push(Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::mutation::ChangeCorrectionAsOf { new_correction_as_of: target.correction_as_of.clone() }));
+        mutations.push(Vdi3805Mutation::ChangeStrictMode(change_strict_mode::mutation::ChangeStrictMode { new_strict_mode: target.strict_mode.clone() }));
+        mutations.push(Vdi3805Mutation::UpdateLimits(update_limits::mutation::UpdateLimits { new_limits: target.limits.clone() }));
+
+        for sheet in base.edition_profile.keys() {
+            if !target.edition_profile.contains_key(sheet) {
+                mutations.push(Vdi3805Mutation::RemoveEditionProfile(remove_edition_profile::mutation::RemoveEditionProfile { sheet: sheet.clone() }));
+            }
+        }
+        for (sheet, choice) in target.edition_profile.iter() {
+            mutations.push(Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::mutation::ChangeEditionProfile { sheet: sheet.clone(), new_choice: choice.clone() }));
+        }
+
+        for product in base.catalog.products.iter() {
+            mutations.push(Vdi3805Mutation::DeleteProduct(delete_product::mutation::DeleteProduct { id: product.identity.article_number.clone() }));
+        }
+        for (index, product) in target.catalog.products.iter().enumerate() {
+            mutations.push(Vdi3805Mutation::CreateProduct(create_product::mutation::CreateProduct { product: product.clone(), index: Some(index) }));
+        }
+
+        for id in base.geometry.keys() {
+            mutations.push(Vdi3805Mutation::DeleteGeometry(delete_geometry::mutation::DeleteGeometry { id: id.clone() }));
+        }
+        for geometry in target.geometry.values() {
+            mutations.push(Vdi3805Mutation::CreateGeometry(create_geometry::mutation::CreateGeometry { geometry: geometry.clone() }));
+        }
+
+        for id in base.curves.keys() {
+            mutations.push(Vdi3805Mutation::DeleteCurve(delete_curve::mutation::DeleteCurve { id: id.clone() }));
+        }
+        for curve in target.curves.values() {
+            mutations.push(Vdi3805Mutation::CreateCurve(create_curve::mutation::CreateCurve { curve: curve.clone() }));
+        }
+
+        mutations
+    }
+}
+//#endregion 🔖️FromSnapshot
 
 //#region 🧪️Tests
 #[cfg(test)]

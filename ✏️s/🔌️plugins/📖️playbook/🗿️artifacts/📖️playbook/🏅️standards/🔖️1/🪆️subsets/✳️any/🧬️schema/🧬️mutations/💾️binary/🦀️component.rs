@@ -17,7 +17,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::playbook::op::{change_title_operation, PlaybookMutation};
+use crate::artifacts::playbook::op::PlaybookMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `PlaybookMutation` to its binary state-patch form.
@@ -34,6 +34,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<PlaybookMutation, protocol::ProtocolErr
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::playbook::op::change_title_operation;
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {

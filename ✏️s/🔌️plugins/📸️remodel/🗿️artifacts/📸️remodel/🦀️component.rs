@@ -808,10 +808,10 @@ impl dsl::DslField for RemodelMesh {
 
 /// 🌉️ `Box<T>` is a `#[fundamental]` std type, so implementing the foreign `dsl::DslField` trait for
 /// `Box<RemodelMesh>` (a local type parameter) here is coherence-legal — needed because
-/// `RemodelMutation::SetMeshResult`/`RemodelMutation::SetMeshResult` carry `mesh: Box<RemodelMesh>`
-/// (boxed only to shrink the enum's overall size; `RemodelMesh` itself is a plain record, not a
-/// `DslEnum`, so the derive's `#[dsl(statements)] Box<T>` "exactly-one-tagged-value" idiom doesn't
-/// apply — this is the ordinary boxed-scalar case instead).
+/// `RemodelMutation::ReplaceMeshResult` carries `mesh: Box<RemodelMesh>` (boxed only to shrink the
+/// enum's overall size; `RemodelMesh` itself is a plain record, not a `DslEnum`, so the derive's
+/// `#[dsl(statements)] Box<T>` "exactly-one-tagged-value" idiom doesn't apply — this is the ordinary
+/// boxed-scalar case instead).
 impl dsl::DslField for Box<RemodelMesh> {
     fn shape() -> dsl::Shape {
         <RemodelMesh as dsl::DslField>::shape()

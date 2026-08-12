@@ -19,6 +19,12 @@ component-extension-guest = []
 [dependencies]
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+# 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): `ArtifactChildren`'s `slots() -> &'static
+# [ChildSlotSpec]` needs the real `ChildSlotSpec`/ `ArtifactCompositionFields` types A2 landed in
+# this crate — not otherwise reachable from `semio-framework-plugin` (`semio-framework` itself does
+# not depend on `semio-framework-schema`). No cycle: `semio-framework-schema` depends only on
+# `semio-framework-os-kernel` + its own derive crate, never on this crate or `semio-framework`.
+semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

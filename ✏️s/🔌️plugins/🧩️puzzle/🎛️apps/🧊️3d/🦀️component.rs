@@ -2638,7 +2638,7 @@ fn quat_rotate_point(point: [f32; 3], quat: [f64; 4]) -> [f32; 3] {
 /// 💾️ Bakes each object's world transform (GLB frame correction, then scale/orientation/origin) into a
 /// single merged mesh for OBJ/GLB export; objects whose GLB hasn't round-tripped through
 /// `registerBrushMesh` this session fall back to a box.
-fn puzzle3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
+pub(crate) fn puzzle3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
     let fixture: Puzzle3dFixture = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
     let registry = PUZZLE3D_MESH_REGISTRY.lock().map_err(|_| "puzzle3d mesh registry poisoned".to_string())?;
     let fallback = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
@@ -2671,27 +2671,19 @@ fn puzzle3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::Me
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 /// 📥️ Tier C DWG mesh import — always returns the empty puzzle-3d fixture; never errors on a structurally valid mesh.
-fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
+pub(crate) fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
     serde_json::to_value(empty_fixture()).map_err(|error| error.to_string())
 }
 
 /// 🗂️ Registers `Puzzle3dPlaySnapshot`'s pack<->dsl codec under its real `document_schema()` string
 /// so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-3d play documents without
-/// depending on this crate's concrete `Projection`/`Mutation` types, plus the 3d mesh export/import
-/// handlers. Called by the plugin `setup:` hook (`crate::artifacts::puzzle2d::engine::register`).
+/// depending on this crate's concrete `Projection`/`Mutation` types. Called by the plugin `setup:`
+/// hook (`crate::artifacts::puzzle2d::engine::register`). The 3d mesh export/import OS-host
+/// registration lives at `crate::artifacts::puzzle3d::engine::register_io` — APA (ticket
+/// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`): OS-host registration belongs to the owning
+/// artifact's own engine, never to an app file.
 pub fn register_puzzle3d_exports() {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle3dPlayApp>(PUZZLE3D_FIXTURE_SCHEMA);
-    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    {
-        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
-        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
-        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
-        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
-        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
-        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
-        semio_framework_os::register_mesh_dwg_export_handler("3d.puzzle", "puzzle", puzzle3d_mesh_from_document);
-        semio_framework_os::register_mesh_dwg_import_handler("3d.puzzle", puzzle3d_document_from_mesh);
-    }
 }
 //#endregion 🔖️Manifest
 

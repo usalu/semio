@@ -1,0 +1,259 @@
+// #region 🔖️Widget
+
+pub mod widget {
+    use crate::tui::cell::CellBuffer;
+    use crate::tui::chip::paint_chip;
+    use crate::tui::divider::paint_divider;
+    use crate::tui::event::KeyEvent;
+    use crate::tui::geometry::{Rect, Size};
+    use crate::tui::input::{input_on_key, paint_input};
+    use crate::tui::label::paint_label;
+    use crate::tui::list::{list_on_key, paint_list};
+    use crate::tui::log::{log_on_key, paint_log};
+    use crate::tui::select::{paint_select, select_on_key};
+    use crate::tui::table::{paint_table, table_on_key};
+    use crate::tui::tabs::{paint_tabs, tabs_on_key};
+    use crate::tui::text::display_width;
+    use crate::tui::theme::{Role, Theme};
+    use std::collections::VecDeque;
+
+    /// 📣️ A widget- or window-chrome-level result of handling input, surfaced to the app.
+    #[derive(Clone, Debug, PartialEq)]
+    pub enum WidgetSignal {
+        Activated(usize),
+        SelectionChanged(usize),
+        ValueChanged(String),
+        Toggled(bool),
+        TabChanged(usize),
+        WindowClose,
+        WindowMaximize,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Align {
+        Left,
+        Center,
+        Right,
+    }
+
+    /// 🏷️ Static or dynamic single-line text.
+    pub struct LabelState {
+        pub text: String,
+        pub align: Align,
+        pub role: Role,
+    }
+
+    /// 📃️ A scrollable, selectable, optionally multi-marked list.
+    pub struct ListState {
+        pub items: Vec<String>,
+        pub selected: usize,
+        pub offset: usize,
+        pub marks: Vec<bool>,
+    }
+
+    impl ListState {
+        pub fn new(items: Vec<String>) -> Self {
+            let marks = vec![false; items.len()];
+            Self { items, selected: 0, offset: 0, marks }
+        }
+    }
+
+    /// 🔁️ A cycler for an `All | Individual(value)` style option pick.
+    pub struct SelectState {
+        pub label: String,
+        pub options: Vec<String>,
+        pub index: usize,
+    }
+
+    pub struct TabsState {
+        pub tabs: Vec<String>,
+        pub active: usize,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub enum LogScroll {
+        Follow,
+        At(usize),
+    }
+
+    /// 📜️ A bounded scrollback log view.
+    pub struct LogState {
+        lines: VecDeque<String>,
+        pub capacity: usize,
+        pub scroll: LogScroll,
+    }
+
+    impl LogState {
+        pub fn new(capacity: usize) -> Self {
+            Self { lines: VecDeque::with_capacity(capacity), capacity, scroll: LogScroll::Follow }
+        }
+
+        pub fn push(&mut self, line: &str) {
+            if self.lines.len() >= self.capacity {
+                self.lines.pop_front();
+            }
+            self.lines.push_back(line.to_string());
+        }
+
+        pub fn clear(&mut self) {
+            self.lines.clear();
+            self.scroll = LogScroll::Follow;
+        }
+
+        pub fn lines(&self) -> &VecDeque<String> {
+            &self.lines
+        }
+    }
+
+    pub struct InputState {
+        pub value: String,
+        pub cursor: usize,
+        pub placeholder: String,
+    }
+
+    #[derive(Default)]
+    pub struct DividerState {
+        pub label: Option<String>,
+    }
+
+    pub struct ChipState {
+        pub label: String,
+        pub on: bool,
+    }
+
+    //#region 🔖️Table
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum TableAlign {
+        Left,
+        Right,
+    }
+
+    /// 📐️ One table column; `width == 0` means "flex" — split the remaining space evenly.
+    pub struct TableColumn {
+        pub label: String,
+        pub width: u16,
+        pub align: TableAlign,
+    }
+
+    impl TableColumn {
+        pub fn new(label: impl Into<String>, width: u16, align: TableAlign) -> Self {
+            Self { label: label.into(), width, align }
+        }
+    }
+
+    /// 🌳️ One row, flat in display order; `level` and `has_children` express the tree — a row is
+    /// hidden whenever a preceding, still-nesting ancestor has `expanded == false`.
+    pub struct TableRow {
+        pub id: String,
+        pub cells: Vec<String>,
+        pub level: u16,
+        pub has_children: bool,
+        pub expanded: bool,
+    }
+
+    impl TableRow {
+        pub fn parent(id: impl Into<String>, cells: Vec<String>) -> Self {
+            Self { id: id.into(), cells, level: 0, has_children: true, expanded: true }
+        }
+
+        pub fn child(id: impl Into<String>, cells: Vec<String>, level: u16) -> Self {
+            Self { id: id.into(), cells, level, has_children: false, expanded: true }
+        }
+    }
+
+    /// 🗂️ A semio-styled table: bold muted header with a hairline underline, hairline row
+    /// separators, no vertical rules, no striping — mirrors `ui/js/react`'s `Table` and
+    /// `print/tex/🖋️semio-table.sty`. Tree rows are plain indented rows in the same table.
+    pub struct TableState {
+        pub columns: Vec<TableColumn>,
+        pub rows: Vec<TableRow>,
+        pub selected: usize,
+    }
+
+    impl TableState {
+        pub fn new(columns: Vec<TableColumn>, rows: Vec<TableRow>) -> Self {
+            Self { columns, rows, selected: 0 }
+        }
+
+        /// 👁️ Row indices in display order, skipping any row nested under a collapsed ancestor.
+        pub fn visible_indices(&self) -> Vec<usize> {
+            let mut out = Vec::new();
+            let mut collapsed_from: Option<u16> = None;
+            for (i, row) in self.rows.iter().enumerate() {
+                if let Some(level) = collapsed_from {
+                    if row.level > level {
+                        continue;
+                    }
+                    collapsed_from = None;
+                }
+                out.push(i);
+                if row.has_children && !row.expanded {
+                    collapsed_from = Some(row.level);
+                }
+            }
+            out
+        }
+    }
+    //#endregion 🔖️Table
+
+    /// 🧩️ The concrete state of any core widget.
+    pub enum WidgetState {
+        Label(LabelState),
+        List(ListState),
+        Select(SelectState),
+        Tabs(TabsState),
+        Log(LogState),
+        Input(InputState),
+        Divider(DividerState),
+        Chip(ChipState),
+        Table(TableState),
+    }
+
+    impl WidgetState {
+        pub fn preferred_size(&self) -> Size {
+            match self {
+                WidgetState::Label(l) => Size { width: display_width(&l.text), height: 1 },
+                WidgetState::Select(s) => {
+                    let text = format!("{} \u{2039} {} \u{203a}", s.label, s.options.get(s.index).map(String::as_str).unwrap_or(""));
+                    Size { width: display_width(&text), height: 1 }
+                }
+                WidgetState::Chip(c) => Size { width: display_width(&c.label) + 2, height: 1 },
+                WidgetState::Divider(_) => Size { width: 1, height: 1 },
+                _ => Size { width: 0, height: 0 },
+            }
+        }
+
+        /// ⌨️ Handles one key press, returning a signal when it changes visible state.
+        pub fn on_key(&mut self, ev: &KeyEvent) -> Option<WidgetSignal> {
+            match self {
+                WidgetState::List(l) => list_on_key(l, ev),
+                WidgetState::Select(s) => select_on_key(s, ev),
+                WidgetState::Tabs(t) => tabs_on_key(t, ev),
+                WidgetState::Input(i) => input_on_key(i, ev),
+                WidgetState::Table(t) => table_on_key(t, ev),
+                WidgetState::Log(log) => {
+                    log_on_key(log, ev);
+                    None
+                }
+                _ => None,
+            }
+        }
+
+        /// 🖌️ Paints this widget's content into `rect` of `buf`.
+        pub fn paint(&self, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
+            match self {
+                WidgetState::Label(l) => paint_label(l, theme, rect, buf),
+                WidgetState::List(l) => paint_list(l, theme, rect, buf, focused),
+                WidgetState::Select(s) => paint_select(s, theme, rect, buf, focused),
+                WidgetState::Tabs(t) => paint_tabs(t, theme, rect, buf),
+                WidgetState::Log(log) => paint_log(log, theme, rect, buf),
+                WidgetState::Input(i) => paint_input(i, theme, rect, buf, focused),
+                WidgetState::Divider(d) => paint_divider(d, theme, rect, buf),
+                WidgetState::Chip(c) => paint_chip(c, theme, rect, buf),
+                WidgetState::Table(t) => paint_table(t, theme, rect, buf, focused),
+            }
+        }
+    }
+}
+// #endregion 🔖️Widget
+

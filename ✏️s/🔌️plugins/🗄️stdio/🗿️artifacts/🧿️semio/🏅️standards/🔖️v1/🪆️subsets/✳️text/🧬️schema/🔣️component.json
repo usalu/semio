@@ -1,0 +1,11 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.text/artifact.json",
+  "title": "SemioTextArtifact",
+  "description": "Full artifact state for s.stdio.semio.text — mirrors SemioTextSnapshot field for field.",
+  "type": "object",
+  "required": ["schema", "runs"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "runs": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+  }
+}

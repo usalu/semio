@@ -1308,7 +1308,7 @@ fn puzzle2d_snapshot_to_drawing(
 /// `semio/drawing`→`svg` bridge, called through `io_dispatch` — never hand-rolled SVG here) →
 /// SVG XML text. Replaces the previous generic `title_card_svg` placeholder.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-fn puzzle2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+pub(crate) fn puzzle2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
     use semio_framework_plugin::{io_dispatch, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
     use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
@@ -1351,21 +1351,19 @@ fn puzzle2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), St
 /// state, and this import path produces a bare document with no live app instance to receive it.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 #[allow(clippy::unnecessary_wraps, reason = "the fallible signature is fixed by `semio_framework_os::register_dwg_import_handler`; puzzle-2d simply has no failure mode.")]
-fn puzzle2d_document_json_from_dwg(_drawing: &semio_framework::DwgDrawing) -> Result<Value, String> {
+pub(crate) fn puzzle2d_document_json_from_dwg(_drawing: &semio_framework::DwgDrawing) -> Result<Value, String> {
     Ok(default_empty_fixture())
 }
 
 /// 🗂️ Registers `Puzzle2dPlaySnapshot`'s pack<->dsl codec under its real `document_schema()` string
 /// so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-2d play documents without
-/// depending on this crate's concrete `Projection`/`Mutation` types, plus the 2d export/import
-/// handlers. Called by the plugin `setup:` hook (`crate::artifacts::puzzle2d::engine::register`).
+/// depending on this crate's concrete `Projection`/`Mutation` types. Called by the plugin `setup:`
+/// hook (`crate::artifacts::puzzle2d::engine::register`). The 2d media export/import OS-host
+/// registration lives at `crate::artifacts::puzzle2d::engine::register_media_io` — APA (ticket
+/// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`): OS-host registration belongs to the owning
+/// artifact's own engine, never to an app file.
 pub fn register_puzzle2d_exports() {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle2dPlayApp>(PUZZLE2D_FIXTURE_SCHEMA);
-    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    {
-        semio_framework_os::register_2d_export_handlers("2d.puzzle", "puzzle2d", puzzle2d_document_json_to_svg);
-        semio_framework_os::register_dwg_import_handler("2d.puzzle", puzzle2d_document_json_from_dwg);
-    }
 }
 //#endregion 🔖️Manifest
 

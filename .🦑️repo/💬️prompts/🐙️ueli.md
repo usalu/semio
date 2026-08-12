@@ -373,10 +373,13 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+The process model
+
+---
+
 Dissolve and unify all kernels, modules, etc into artifacts with schema, snapshot, diff, mutations, inferences, etc.
 e.g. 2d, mesh, brep, etc
 No regular, CRUD-based implementation must remain, only CQRS event-sourced implementations over schema, snapshot, diff, mutations, inferences, etc.
-
 
 ---
 

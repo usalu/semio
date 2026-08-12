@@ -61,7 +61,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    /// 🧬️ Whole-document replace has no in-history mutation (`SetSnapshot` is banned outright — see
+    /// 🧬️ Whole-document replace has no in-history mutation (a whole-snapshot variant is banned outright — see
     /// `📓️taxonomy.md`'s forbidden vocabulary), so "reset to demo" builds
     /// `apps::present::reset_present_document_effect` (a `HostEffect::LoadDocument`, outside undo
     /// history) instead of an `artifact_mutations` entry.
@@ -122,7 +122,7 @@ mod tests {
         assert_eq!(frame.height, 0.4);
     }
 
-    /// 🧬️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright), so
+    /// 🧬️ Whole-document replace is not an in-history mutation (a whole-snapshot variant is banned outright), so
     /// `setActiveExample` now surfaces as a `HostEffect::LoadDocument` carrying the default document's
     /// pack bytes rather than an `artifact_mutations` entry — `dispatch`'s in-process `VcsArtifactApp`
     /// never applies `effects` to its own store (that's the real host's job), so this asserts directly

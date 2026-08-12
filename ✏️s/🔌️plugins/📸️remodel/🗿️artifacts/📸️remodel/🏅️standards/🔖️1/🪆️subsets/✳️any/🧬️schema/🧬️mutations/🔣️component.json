@@ -1,225 +1,706 @@
 {
   "$id": "https://semio.tech/schema/s/remodel/remodel/mutation.json",
   "title": "RemodelMutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema",
-    "id",
-    "streams",
-    "assets",
-    "calibration",
-    "params",
-    "gcps",
-    "job",
-    "results"
-  ],
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "description": "One handcrafted semantic mutation kind per $defs entry - the tagged union RemodelMutation dispatches on.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/CreateStream"
     },
-    "id": {
-      "type": "string",
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/DeleteStream"
     },
-    "streams": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/MediaStream"
-      },
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/ChangeStreamSync"
     },
-    "assets": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/$defs/ImageAsset"
-      },
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/AddStreamFrame"
     },
-    "calibration": {
-      "$ref": "#/$defs/CalibrationState",
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/RemoveStreamFrame"
     },
-    "params": {
-      "$ref": "#/$defs/ReconstructionParams",
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/ReplaceStreamSource"
     },
-    "gcps": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/GroundControlPoint"
-      },
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/CreateAsset"
     },
-    "job": {
-      "$ref": "#/$defs/ReconstructionJob",
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/DeleteAsset"
     },
-    "results": {
-      "$ref": "#/$defs/ReconstructionResults",
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/CreateCameraCalibration"
+    },
+    {
+      "$ref": "#/$defs/UpdateCameraCalibration"
+    },
+    {
+      "$ref": "#/$defs/DeleteCameraCalibration"
+    },
+    {
+      "$ref": "#/$defs/CreateRigExtrinsic"
+    },
+    {
+      "$ref": "#/$defs/DeleteRigExtrinsic"
+    },
+    {
+      "$ref": "#/$defs/UpdateRigExtrinsic"
+    },
+    {
+      "$ref": "#/$defs/CreateGcp"
+    },
+    {
+      "$ref": "#/$defs/DeleteGcp"
+    },
+    {
+      "$ref": "#/$defs/AddGcpObservation"
+    },
+    {
+      "$ref": "#/$defs/RemoveGcpObservation"
+    },
+    {
+      "$ref": "#/$defs/UpdateIngestParams"
+    },
+    {
+      "$ref": "#/$defs/UpdateFeatureParams"
+    },
+    {
+      "$ref": "#/$defs/UpdateMatchParams"
+    },
+    {
+      "$ref": "#/$defs/UpdateSfmParams"
+    },
+    {
+      "$ref": "#/$defs/UpdateDenseParams"
+    },
+    {
+      "$ref": "#/$defs/UpdateMeshParams"
+    },
+    {
+      "$ref": "#/$defs/UpdateMotionParams"
+    },
+    {
+      "$ref": "#/$defs/UpdateGeoParams"
+    },
+    {
+      "$ref": "#/$defs/ReplaceJob"
+    },
+    {
+      "$ref": "#/$defs/ReplaceSparse"
+    },
+    {
+      "$ref": "#/$defs/ReplaceDense"
+    },
+    {
+      "$ref": "#/$defs/ReplaceMeshResult"
+    },
+    {
+      "$ref": "#/$defs/ReplaceTrajectory"
+    },
+    {
+      "$ref": "#/$defs/ReplaceTracks"
+    },
+    {
+      "$ref": "#/$defs/ReplaceGeoProducts"
+    },
+    {
+      "$ref": "#/$defs/ReplaceQc"
     }
-  },
+  ],
   "$defs": {
-    "MediaStream": {
+    "CreateStream": {
       "type": "object",
-      "title": "MediaStream"
-    },
-    "ImageAsset": {
-      "type": "object",
-      "title": "ImageAsset"
-    },
-    "CalibrationState": {
-      "type": "object",
-      "title": "CalibrationState"
-    },
-    "ReconstructionParams": {
-      "type": "object",
-      "title": "ReconstructionParams"
-    },
-    "GroundControlPoint": {
-      "type": "object",
-      "title": "GroundControlPoint"
-    },
-    "ReconstructionJob": {
-      "type": "object",
-      "title": "ReconstructionJob"
-    },
-    "ReconstructionResults": {
-      "type": "object",
-      "title": "ReconstructionResults"
-    },
-    "RemodelUiCamera": {
-      "type": "object",
-      "title": "RemodelUiCamera",
+      "additionalProperties": false,
       "required": [
-        "position",
-        "target",
-        "fov"
+        "mutation",
+        "stream"
       ],
       "properties": {
-        "position": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
+        "mutation": {
+          "const": "create-stream"
         },
-        "target": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "fov": {
-          "type": "number",
-          "format": "double"
+        "stream": {
+          "type": "object",
+          "description": "MediaStream"
         }
       }
     },
-    "RemodelUiSelection": {
+    "DeleteStream": {
       "type": "object",
-      "title": "RemodelUiSelection",
+      "additionalProperties": false,
       "required": [
-        "mode",
-        "ids"
+        "mutation",
+        "id"
       ],
       "properties": {
-        "mode": {
+        "mutation": {
+          "const": "delete-stream"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "ChangeStreamSync": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "newSyncOffsetMs"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-stream-sync"
+        },
+        "id": {
           "type": "string"
         },
-        "ids": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "newSyncOffsetMs": {
+          "type": "number"
         }
       }
     },
-    "RemodelUiLayers": {
+    "AddStreamFrame": {
       "type": "object",
-      "title": "RemodelUiLayers",
+      "additionalProperties": false,
       "required": [
-        "mesh",
-        "dense",
-        "sparse",
-        "cameras",
-        "gcps"
+        "mutation",
+        "id",
+        "frame",
+        "kind"
       ],
       "properties": {
-        "mesh": {
-          "type": "boolean"
+        "mutation": {
+          "const": "add-stream-frame"
         },
-        "dense": {
-          "type": "boolean"
+        "id": {
+          "type": "string"
         },
-        "sparse": {
-          "type": "boolean"
+        "frame": {
+          "type": "object",
+          "description": "FrameRef"
         },
-        "cameras": {
-          "type": "boolean"
-        },
-        "gcps": {
-          "type": "boolean"
+        "kind": {
+          "type": "string"
         }
       }
     },
-    "RemodelUiFrameCursor": {
+    "RemoveStreamFrame": {
       "type": "object",
-      "title": "RemodelUiFrameCursor",
+      "additionalProperties": false,
       "required": [
+        "mutation",
+        "id",
         "frameIndex"
       ],
       "properties": {
-        "streamId": {
+        "mutation": {
+          "const": "remove-stream-frame"
+        },
+        "id": {
           "type": "string"
         },
         "frameIndex": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
+          "type": "integer"
         }
       }
     },
-    "RemodelMediaStreamList": {
+    "ReplaceStreamSource": {
       "type": "object",
-      "title": "RemodelMediaStreamList",
+      "additionalProperties": false,
       "required": [
-        "values"
+        "mutation",
+        "id"
       ],
       "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/MediaStream"
-          }
+        "mutation": {
+          "const": "replace-stream-source"
+        },
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "object",
+          "description": "VideoSource"
         }
       }
     },
-    "RemodelGcpList": {
+    "CreateAsset": {
       "type": "object",
-      "title": "RemodelGcpList",
+      "additionalProperties": false,
       "required": [
-        "values"
+        "mutation",
+        "key",
+        "asset"
       ],
       "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/GroundControlPoint"
-          }
+        "mutation": {
+          "const": "create-asset"
+        },
+        "key": {
+          "type": "string"
+        },
+        "asset": {
+          "type": "object",
+          "description": "ImageAsset"
         }
       }
     },
-    "RemodelArtifact": {
+    "DeleteAsset": {
       "type": "object",
-      "title": "RemodelArtifact"
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "key"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "delete-asset"
+        },
+        "key": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateCameraCalibration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "camera"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "create-camera-calibration"
+        },
+        "camera": {
+          "type": "object",
+          "description": "CameraCalibration"
+        }
+      }
+    },
+    "UpdateCameraCalibration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "camera"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "update-camera-calibration"
+        },
+        "camera": {
+          "type": "object",
+          "description": "CameraCalibration"
+        }
+      }
+    },
+    "DeleteCameraCalibration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "cameraId"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "delete-camera-calibration"
+        },
+        "cameraId": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateRigExtrinsic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "extrinsic"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "create-rig-extrinsic"
+        },
+        "extrinsic": {
+          "type": "object",
+          "description": "RigExtrinsic"
+        }
+      }
+    },
+    "DeleteRigExtrinsic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "cameraId"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "delete-rig-extrinsic"
+        },
+        "cameraId": {
+          "type": "string"
+        }
+      }
+    },
+    "UpdateRigExtrinsic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "extrinsic"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "update-rig-extrinsic"
+        },
+        "extrinsic": {
+          "type": "object",
+          "description": "RigExtrinsic"
+        }
+      }
+    },
+    "CreateGcp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "gcp"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "create-gcp"
+        },
+        "gcp": {
+          "type": "object",
+          "description": "GroundControlPoint"
+        }
+      }
+    },
+    "DeleteGcp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "delete-gcp"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "AddGcpObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "observation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "add-gcp-observation"
+        },
+        "id": {
+          "type": "string"
+        },
+        "observation": {
+          "type": "object",
+          "description": "GcpObservation"
+        }
+      }
+    },
+    "RemoveGcpObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "observationIndex"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-gcp-observation"
+        },
+        "id": {
+          "type": "string"
+        },
+        "observationIndex": {
+          "type": "integer"
+        }
+      }
+    },
+    "UpdateIngestParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "params"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "update-ingest-params"
+        },
+        "params": {
+          "type": "object",
+          "description": "IngestParams"
+        }
+      }
+    },
+    "UpdateFeatureParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "params"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "update-feature-params"
+        },
+        "params": {
+          "type": "object",
+          "description": "FeatureParams"
+        }
+      }
+    },
+    "UpdateMatchParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "params"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "update-match-params"
+        },
+        "params": {
+          "type": "object",
+          "description": "MatchParams"
+        }
+      }
+    },
+    "UpdateSfmParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "params"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "update-sfm-params"
+        },
+        "params": {
+          "type": "object",
+          "description": "SfmParams"
+        }
+      }
+    },
+    "UpdateDenseParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "params"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "update-dense-params"
+        },
+        "params": {
+          "type": "object",
+          "description": "DenseParams"
+        }
+      }
+    },
+    "UpdateMeshParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "params"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "update-mesh-params"
+        },
+        "params": {
+          "type": "object",
+          "description": "MeshParams"
+        }
+      }
+    },
+    "UpdateMotionParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "params"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "update-motion-params"
+        },
+        "params": {
+          "type": "object",
+          "description": "MotionParams"
+        }
+      }
+    },
+    "UpdateGeoParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "params"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "update-geo-params"
+        },
+        "params": {
+          "type": "object",
+          "description": "GeoParams"
+        }
+      }
+    },
+    "ReplaceJob": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "job"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-job"
+        },
+        "job": {
+          "type": "object",
+          "description": "ReconstructionJob"
+        }
+      }
+    },
+    "ReplaceSparse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-sparse"
+        },
+        "sparse": {
+          "type": "object",
+          "description": "SparseCloud"
+        }
+      }
+    },
+    "ReplaceDense": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-dense"
+        },
+        "dense": {
+          "type": "object",
+          "description": "DenseCloud"
+        }
+      }
+    },
+    "ReplaceMeshResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "mesh"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-mesh-result"
+        },
+        "mesh": {
+          "type": "object",
+          "description": "RemodelMesh"
+        }
+      }
+    },
+    "ReplaceTrajectory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-trajectory"
+        },
+        "trajectory": {
+          "type": "object",
+          "description": "CameraTrajectory"
+        }
+      }
+    },
+    "ReplaceTracks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "tracks"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-tracks"
+        },
+        "tracks": {
+          "type": "array"
+        }
+      }
+    },
+    "ReplaceGeoProducts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-geo-products"
+        },
+        "geo": {
+          "type": "object",
+          "description": "GeoProducts"
+        }
+      }
+    },
+    "ReplaceQc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-qc"
+        },
+        "qc": {
+          "type": "object",
+          "description": "QcReportSnapshot"
+        }
+      }
     }
   }
 }

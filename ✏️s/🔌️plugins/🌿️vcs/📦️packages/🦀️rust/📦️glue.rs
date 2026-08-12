@@ -400,7 +400,7 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/🌿️vcs/📌️panels/📄️document/🦀️component.rs"]
+            #[path = "../../🎛️apps/🌿️vcs/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
             #[path = "../../🎛️apps/🌿️vcs/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;

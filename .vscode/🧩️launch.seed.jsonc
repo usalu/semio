@@ -78,6 +78,39 @@
         "order": 1
       }
     },
+    {
+      "name": "🛠️dev🎛️dashboard🌀daemon▶️start",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📜️script.ts daemon start",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 1.1
+      }
+    },
+    {
+      "name": "🛠️dev🎛️dashboard🌀daemon📎attach",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📜️script.ts daemon attach",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 1.2
+      }
+    },
+    {
+      "name": "🛠️dev🎛️dashboard🌊️workflow",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📜️script.ts workflow",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 1.3
+      }
+    },
     "@generated:cad:react",
     "@generated:cad:wgpu",
     {

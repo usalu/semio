@@ -1,0 +1,7 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.text.mutations/text.json",
+  "title": "SemioTextMutationOpDsl",
+  "description": "Op-text-encoding mirror of the mutations facet — see ../🔣️component.json for the canonical facet schema.",
+  "type": "object",
+  "properties": { "keyword": { "type": "string" }, "argsWire": { "type": "string" } }
+}

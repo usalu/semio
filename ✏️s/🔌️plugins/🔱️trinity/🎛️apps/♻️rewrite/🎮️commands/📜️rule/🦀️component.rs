@@ -1,10 +1,15 @@
 //! 📜️ Trinity Rewrite app — document-mutating rule commands (`nodeGraphEdit`, `setLhsJson`,
 //! `setRhsJson`, `setParameter`, `addRuleClause`, `resetRule`, `patchNodes`) — dispatched as VCS
-//! operations with a true inverse (every mutation flows through the single LWW `SetState`).
+//! operations with a true inverse. Every command still computes a whole `next: RewriteSnapshot`
+//! (convenient for JSON-body clause editing) and diffs it against `state` via
+//! `rewrite_snapshot_mutations` to emit the real semantic (`edit-*`/`change-*`/`remove-*`) granular
+//! mutations — `resetRule` is the one genuine whole-document reset, routed through
+//! `HostEffect::LoadDocument` instead (`SetState` is banned outright).
 
 use crate::apps::rewrite::config::RewriteConfigMutation;
 use crate::artifacts::jack::{Graph, JackSnapshot, PropertyValue};
 use crate::artifacts::rewrite::engine::{ParameterKind, Rhs};
+use crate::artifacts::rewrite::mutations::rewrite_snapshot_mutations;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use crate::artifacts::rewrite::RewriteSnapshot;
 use semio_framework_plugin::{Emit, Fault};
@@ -235,28 +240,20 @@ pub(crate) fn node_graph_edit(state: &RewriteSnapshot, selected_node_ids: &[Stri
         return Ok(Emit::default());
     }
     let config_mutations = if clear_selection { vec![RewriteConfigMutation::SetSelection { node_ids: Vec::new() }] } else { Vec::new() };
-    Ok(Emit { artifact_mutations: vec![RewriteRuleMutation::SetState { state: next }], config_mutations, ..Default::default() })
+    Ok(Emit { artifact_mutations: rewrite_snapshot_mutations(state, &next), config_mutations, ..Default::default() })
 }
 
 pub(crate) fn set_lhs_json(state: &RewriteSnapshot, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let mut next = state.clone();
     next.lhs_json = value.to_string();
-    if &next == state {
-        Ok(Emit::default())
-    } else {
-        Ok(Emit::mutations(vec![RewriteRuleMutation::SetState { state: next }]))
-    }
+    Ok(Emit::mutations(rewrite_snapshot_mutations(state, &next)))
 }
 
 pub(crate) fn set_rhs_json(state: &RewriteSnapshot, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let mut next = state.clone();
     next.rhs_json = value.to_string();
     next.parameter_bindings = crate::apps::rewrite::default_parameter_bindings(&next.rhs_json);
-    if &next == state {
-        Ok(Emit::default())
-    } else {
-        Ok(Emit::mutations(vec![RewriteRuleMutation::SetState { state: next }]))
-    }
+    Ok(Emit::mutations(rewrite_snapshot_mutations(state, &next)))
 }
 
 pub(crate) fn set_parameter(state: &RewriteSnapshot, name: &str, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
@@ -276,11 +273,7 @@ pub(crate) fn set_parameter(state: &RewriteSnapshot, name: &str, value: &str) ->
         Some(parsed) => {
             let mut next = state.clone();
             next.parameter_bindings.insert(name.to_string(), parsed);
-            if &next == state {
-                Ok(Emit::default())
-            } else {
-                Ok(Emit::mutations(vec![RewriteRuleMutation::SetState { state: next }]))
-            }
+            Ok(Emit::mutations(rewrite_snapshot_mutations(state, &next)))
         }
         None => Ok(Emit::default()),
     }
@@ -289,12 +282,16 @@ pub(crate) fn set_parameter(state: &RewriteSnapshot, name: &str, value: &str) ->
 pub(crate) fn add_rule_clause_command(state: &RewriteSnapshot, kind: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let mut next = state.clone();
     if add_rule_clause(&mut next, kind) {
-        Ok(Emit::mutations(vec![RewriteRuleMutation::SetState { state: next }]))
+        Ok(Emit::mutations(rewrite_snapshot_mutations(state, &next)))
     } else {
         Ok(Emit::default())
     }
 }
 
+/// 🧬️ `resetRule` is a genuine whole-document reset (back to the blank default rule) — not
+/// expressible as a granular mutation, so it routes through `HostEffect::LoadDocument` (outside
+/// undo history) via `apps::rewrite::reset_document_effect`, mirroring `set_active_example`/
+/// `set_fixture_json` conventions elsewhere in this ticket.
 pub(crate) fn reset_rule(state: &RewriteSnapshot) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let next = crate::apps::rewrite::default_rule_state();
     let camera = crate::apps::rewrite::seed_before_pane_camera(&next);
@@ -302,7 +299,7 @@ pub(crate) fn reset_rule(state: &RewriteSnapshot) -> Result<Emit<RewriteRuleMuta
     if &next == state {
         Ok(Emit::config(config_mutations))
     } else {
-        Ok(Emit { artifact_mutations: vec![RewriteRuleMutation::SetState { state: next }], config_mutations, ..Default::default() })
+        Ok(Emit { effects: vec![crate::apps::rewrite::reset_document_effect(&next)], config_mutations, ..Default::default() })
     }
 }
 
@@ -315,11 +312,7 @@ pub(crate) fn patch_nodes(state: &RewriteSnapshot, node_ids: &[String], field: &
         Some(patched) => {
             let mut next = state.clone();
             next.before_fixture_json = patched;
-            if &next == state {
-                Ok(Emit::default())
-            } else {
-                Ok(Emit::mutations(vec![RewriteRuleMutation::SetState { state: next }]))
-            }
+            Ok(Emit::mutations(rewrite_snapshot_mutations(state, &next)))
         }
         None => Ok(Emit::default()),
     }

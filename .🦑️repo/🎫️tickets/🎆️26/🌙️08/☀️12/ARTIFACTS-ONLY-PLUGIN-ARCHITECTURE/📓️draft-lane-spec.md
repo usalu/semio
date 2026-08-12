@@ -51,8 +51,8 @@ Emoji uniqueness is scoped *within* one `🧬️mutations` tree, not across app-
 `policyFindAllMutationsDirs` (`📜️script.ts:5500`) walks all of `✏️s` for any directory named `🧬️mutations` and does **not** exclude `🎛️apps`. Today zero of the 107 facets sit under `🎛️apps`. **The moment a draft facet lands, every SMO rule picks it up** — banned-vocabulary scan, dispatch coverage, emoji uniqueness, TS-mirror presence. SMO has chosen not to exclude them: drafts are held to the same bar.
 
 Consequences APA accepts:
-- SMO's facet count goes 112 → ~127; SMO absorbs that.
-- **APA's draft facets gate SMO's ticket exit criteria.** They must pass the four mechanical gates from the outset — there is no "clean it up later".
+- **Draft facets are NOT counted in SMO's close** (SMO ruling, superseding the earlier "112 → ~127" line). SMO's exit criteria cover the artifact facets existing at their verification time — today's 107 plus UCAS's 5 new subsets. This deliberately breaks a deadlock: APA's draft facets cannot be authored until SMO's lanes release the plugins, while SMO's close cannot wait on APA's facets. Neither ticket may block the other's completion.
+- **They are still held to exactly the same bar — by mechanism rather than by headcount.** By the time draft facets are authored, SMO's policy rules will be green-gating at high priority, so a non-conforming draft facet fails the shared gate the moment it lands, whether or not SMO's ticket is still open. That is stronger enforcement than a count in a report.
 - If a draft facet cannot be authored conformingly, **leave its dispatch enum empty with no triad dirs and report it**. Never invent vocabulary to fill a gap. (Same standing arrangement SMO has with UCAS.)
 
 ### The four mechanical gates (binding)
@@ -63,6 +63,12 @@ Consequences APA accepts:
 4. **Non-stub `🟦️component.ts` beside every triad `🦀️component.rs`**, and real glue `#[path]` mounts — never inline `#[path = "."]` self-wiring in the dispatch file.
 
 Plus: docstrings start with a unique fitting emoji; no comments inside definitions; and **never write the three banned mutation identifiers anywhere under `✏️s/`, including in prose or docstrings** — the policy greps raw content.
+
+### Three further obligations (SMO, on review of this spec)
+
+5. **`DraftDiff` must `impl DiffAlgebra<DraftSnapshot>`**, not merely `MutationDiff` (`apply`/`absorb`). SMO's final ratchet tightens `Mutation::Diff` to `MutationDiff<P> + DiffAlgebra<P>` and it applies to this lane like any other, so each app's `DraftDiff` needs real `inverse`/`between`/`is_empty` as a per-field fold. Cheap designed in, expensive retrofitted across 15 apps.
+6. **Draft facets get the FULL spec set — text *and* binary.** Do not skip `📡️component.protocol.semio` / `.abnf` / `.ksy` / `.spicy` on the grounds that drafts never reach a collaborator: one record per slug, tags `1..N` in variant order. Draft mutations are still dispatched through a store and pruned; the law harness's `assert_op_text_binary_equivalence` needs both encodings; and a lane-conditional in the spec rules is the same special-case that was rejected for inverses. Useful side effect: **if a draft snapshot turns out not to be serializable, that is evidence the draft is holding something it shouldn't** — a handle, a texture, a channel — and authoring time is the right moment to discover it.
+7. **`PruneDrafts` must never become vocabulary.** Dropping the lane wholesale is the draft-lane equivalent of `ArtifactStore::reset` — a lane operation, not a mutation. Do **not** mint a clear-draft or reset-draft mutation for it. (`clear` exists in the approved table, but it means emptying a collection or field *within* a snapshot, with an inverse restoring every captured member — not discarding a lane.)
 
 ## Ruling 3 — verbs (SMO, with two corrections to APA's instinct)
 

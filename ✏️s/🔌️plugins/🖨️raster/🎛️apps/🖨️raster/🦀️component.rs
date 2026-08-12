@@ -744,15 +744,19 @@ mod tests {
         }
     }
 
-    /// ⚖️ The rows whose `Option` fields make `None`/`Some` distinct wire cases, pinned to the exact
-    /// bytes captured from the pre-merge `raster_protocol` crate (this ticket's
-    /// `🧪️wire-baseline-before.txt`, rows for `set-layer-visible`/`set-hover` with `None`). A regression
-    /// here is a real format break, not a test-fixture mismatch.
+    /// ⚖️ The rows whose `Option` fields make `None`/`Some` distinct wire cases, pinned to exact
+    /// bytes so an ACCIDENTAL row reorder is caught. Baseline rebased once, deliberately, by the
+    /// `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL` ticket: dropping the two leading `setSnapshot`/
+    /// `setActiveExample` rows (whole-document replace is no longer expressible as a mutation)
+    /// shifted every later row's binary ordinal down by two — `set-layer-visible` 4→2 (`0104`→`0102`),
+    /// `set-hover` 12→10 (`010c`→`010a`). Only the leading ordinal byte moved; each row's payload
+    /// encoding is byte-identical to the pre-migration capture. Greenfield repo, no persisted wire
+    /// data to migrate. Any FURTHER drift here is a real format break, not a fixture mismatch.
     #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
+    fn optional_field_rows_keep_their_declared_wire_bytes() {
         let cases: [(RasterCommand, &str, &str); 2] = [
-            (RasterCommand::SetLayerVisible(set_layer_visible::SetLayerVisible { layer_id: "l1".into(), visible: None }), "set-layer-visible set-layer-visible layer-id=l1", "010401026c3101000600"),
-            (RasterCommand::SetHover(set_hover::SetHover { id: None }), "set-hover set-hover", "010c0000"),
+            (RasterCommand::SetLayerVisible(set_layer_visible::SetLayerVisible { layer_id: "l1".into(), visible: None }), "set-layer-visible set-layer-visible layer-id=l1", "010201026c3101000600"),
+            (RasterCommand::SetHover(set_hover::SetHover { id: None }), "set-hover set-hover", "010a0000"),
         ];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text, "printed text drifted for {command:?}");

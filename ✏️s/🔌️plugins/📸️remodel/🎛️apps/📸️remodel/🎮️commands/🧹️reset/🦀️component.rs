@@ -1,6 +1,7 @@
 //! 🧹️ Remodel play app commands — clearing and resetting reconstruction results.
 
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use crate::artifacts::remodel::mutations::{replace_dense, replace_geo_products, replace_mesh_result, replace_qc, replace_sparse, replace_trajectory, replace_tracks};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{MeshSource, RemodelMesh, RemodelSnapshot};
 use semio_framework_plugin::{mesh_from_kind, ConfigView, ArtifactView, Emit, Fault, MeshData};
@@ -27,7 +28,7 @@ pub mod reset_placeholder_mesh {
     pub struct ResetPlaceholderMesh {}
 
     pub fn handle(_payload: &ResetPlaceholderMesh, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![RemodelMutation::SetMeshResult { mesh: Box::new(placeholder_result()) }]))
+        Ok(Emit::mutations(vec![replace_mesh_result(Box::new(placeholder_result()))]))
     }
 }
 //#endregion 🔖️ResetPlaceholderMesh
@@ -41,7 +42,7 @@ pub mod clear_sparse {
     pub struct ClearSparse {}
 
     pub fn handle(_payload: &ClearSparse, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![RemodelMutation::SetSparse { sparse: None }]))
+        Ok(Emit::mutations(vec![replace_sparse(None)]))
     }
 }
 //#endregion 🔖️ClearSparse
@@ -55,7 +56,7 @@ pub mod clear_dense {
     pub struct ClearDense {}
 
     pub fn handle(_payload: &ClearDense, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![RemodelMutation::SetDense { dense: None }]))
+        Ok(Emit::mutations(vec![replace_dense(None)]))
     }
 }
 //#endregion 🔖️ClearDense
@@ -69,7 +70,7 @@ pub mod clear_mesh_result {
     pub struct ClearMeshResult {}
 
     pub fn handle(_payload: &ClearMeshResult, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![RemodelMutation::SetMeshResult { mesh: Box::new(empty_result()) }]))
+        Ok(Emit::mutations(vec![replace_mesh_result(Box::new(empty_result()))]))
     }
 }
 //#endregion 🔖️ClearMeshResult
@@ -83,7 +84,7 @@ pub mod clear_tracks {
     pub struct ClearTracks {}
 
     pub fn handle(_payload: &ClearTracks, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![RemodelMutation::SetTracks { tracks: Vec::new() }]))
+        Ok(Emit::mutations(vec![replace_tracks(Vec::new())]))
     }
 }
 //#endregion 🔖️ClearTracks
@@ -97,7 +98,7 @@ pub mod clear_geo_products {
     pub struct ClearGeoProducts {}
 
     pub fn handle(_payload: &ClearGeoProducts, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![RemodelMutation::SetGeoProducts { geo: None }]))
+        Ok(Emit::mutations(vec![replace_geo_products(None)]))
     }
 }
 //#endregion 🔖️ClearGeoProducts
@@ -113,13 +114,13 @@ pub mod clear_result {
     /// 🧹️ Resets all seven `ReconstructionResults` fields in one undoable step.
     pub fn handle(_payload: &ClearResult, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![
-            RemodelMutation::SetMeshResult { mesh: Box::new(empty_result()) },
-            RemodelMutation::SetSparse { sparse: None },
-            RemodelMutation::SetDense { dense: None },
-            RemodelMutation::SetTrajectory { trajectory: None },
-            RemodelMutation::SetTracks { tracks: Vec::new() },
-            RemodelMutation::SetGeoProducts { geo: None },
-            RemodelMutation::SetQc { qc: None },
+            replace_mesh_result(Box::new(empty_result())),
+            replace_sparse(None),
+            replace_dense(None),
+            replace_trajectory(None),
+            replace_tracks(Vec::new()),
+            replace_geo_products(None),
+            replace_qc(None),
         ]))
     }
 }

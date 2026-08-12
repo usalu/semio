@@ -1,0 +1,15 @@
+# 🧬️ SemioTextArtifact schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+enum SemioTextMarkKind { BOLD ITALIC CODE LINK }
+type SemioTextMark {
+  kind: SemioTextMarkKind!
+  href: String!
+}
+type SemioTextRun {
+  language: String!
+  content: String!
+  marks: [SemioTextMark!]!
+}
+type SemioTextArtifact {
+  schema: String! @state(class: PERSISTENT)
+  runs: [SemioTextRun!]! @state(class: PERSISTENT)
+}

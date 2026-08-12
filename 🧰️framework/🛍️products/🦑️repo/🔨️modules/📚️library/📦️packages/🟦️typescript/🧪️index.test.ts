@@ -1114,7 +1114,7 @@ describe("resolveCargoPackageName", () => {
 describe("loadTaxonomy", () => {
   test("parses 🔣️taxonomy.json into the expected shape", () => {
     const taxonomy = loadTaxonomy();
-    expect(taxonomy.artifactComponentDirs).toEqual(["🧬️mutations", "🔺️diff", "🗣️dsl", "🧬️schema", "📸️snapshot", "🔧️op", "📡️spr", "⚙️engine"]);
+    expect(taxonomy.artifactComponentDirs).toEqual(["🧬️schema", "⚙️engine", "🚪️io"]);
     expect(taxonomy.mutationChildDirs).toEqual(["🦠️mutation", "🔺️diff", "↩️inverse"]);
     expect(taxonomy.snapshotChildDirs).toEqual(["🧬️schema", "🎒️pack"]);
     expect(taxonomy.diffChildDirs).toEqual(["🧬️schema"]);

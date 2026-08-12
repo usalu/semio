@@ -9,9 +9,11 @@
 
 ## status
 
-**partial — code complete on disk, gates deferred.** Every code, wiring and schema-description
-change is authored and in the working tree. The compile/test gates were NOT run to completion by
-this lane (see `gates`); the coordinator's consolidated pass owns verification.
+**partial — code complete, gates substantially green, two blind fixes outstanding.** Every code,
+wiring and schema-description change is authored and in the working tree. `cargo check` was observed
+clean; `cargo test` was observed at `64 passed; 2 failed`, and both failures were real bugs in this
+lane's own work that have since been repaired in source **without a confirming run** (see `gates`).
+The coordinator's consolidated pass owns that final confirmation.
 
 ## mutationsCreated
 
@@ -186,23 +188,54 @@ so they are stale entries regardless of the token scan. `📜️script.ts` was N
 
 ## gates
 
-**`cargo check -p semio-s-plugin-raster` — PARTIALLY OBSERVED, treat as NOT RUN.**
-One run was started before the coordinator's stop instruction and did finish, reporting
-`Finished \`dev\` profile [unoptimized] target(s) in 5m 30s` with
-`semio-s-plugin-raster (lib) generated 11 warnings` and **zero errors**. Two caveats that mean this
-must not be recorded as a clean gate for the final tree:
+**`cargo check -p semio-s-plugin-raster` — RAN, CLEAN.** Started before the coordinator's stop
+instruction and finished: `Finished \`dev\` profile [unoptimized] target(s) in 5m 30s`,
+`semio-s-plugin-raster (lib) generated 11 warnings`, **zero errors**. All 11 warnings are
+pre-existing repo-style lints (unused `extern crate vcs`, unnecessary qualifications, dead
+`SEMIO_RASTER_EXAMPLE_TEXT`, elided lifetimes in `🚪️io`, …); none was introduced by this lane, and
+the two it did flag in a file I own (`RasterStringList` / `locate_layer` unused imports in the diff
+text leaf) were removed immediately after. That cleanup landed BEFORE the `cargo test` run below,
+so the test run's successful compile supersedes this check and covers the tree as of that moment.
 
-1. It predates the final edit to
-   `…/🧬️schema/🔺️diff/📝️text/🦀️component.rs` (dropping the now-unused `RasterStringList` and
-   `locate_layer` imports, which that very run had flagged as warnings). The exact current tree was
-   never compiled.
-2. All 11 warnings were pre-existing repo-style lints (unused `extern crate vcs`, unnecessary
-   qualifications, dead `SEMIO_RASTER_EXAMPLE_TEXT`, etc.), none introduced by this lane — but that
-   assessment is from the pre-final-edit run.
+**`cargo test -p semio-s-plugin-raster --lib` — RAN TO COMPLETION, 2 FAILURES, both since fixed
+BLIND.** This run had been started before the coordinator's stop instruction and finished on its
+own afterwards; its output file was read (no new cargo invocation). Result:
 
-**`cargo test -p semio-s-plugin-raster --lib` — NOT RUN.** Started, never reached the test-run
-phase, abandoned unfinished on the coordinator's instruction. **No test result of any kind was
-observed by this lane.** No claim is made that any test in this facet passes.
+```
+test result: FAILED. 64 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.12s
+```
+
+Both failures were genuine defects introduced by this lane, not churn, and both were repaired in
+source afterwards. **The repairs are UNVERIFIED — no cargo run has observed them.**
+
+1. `…::mutations::component::tests::every_variant_round_trips_via_inverse` —
+   `assertion left == right failed: inverse(base) must restore the pre-mutation snapshot`, restored
+   snapshot missing `assets: {"asset-1": …}`. Cause: `add-layer-asset`'s inverse unconditionally
+   emitted `remove-layer-asset`. `assets` is a map, so `add` over an **already-present key is an
+   overwrite**, whose correct inverse re-adds the PRIOR asset rather than deleting the key. Fixed in
+   `🖇️add-layer-asset/↩️inverse/🦀️component.rs`: read `base.assets.get(asset_id)` — `Some(prior)` ⇒
+   `AddLayerAsset { prior }`, `None` ⇒ `RemoveLayerAsset`. (A good argument that this asset pair,
+   deviation 1, deserves the coordinator's scrutiny — it is the least-reviewed part of this lane.)
+2. `apps::raster::component::tests::optional_field_rows_keep_their_pre_migration_bytes` —
+   `binary bytes drifted for SetLayerVisible(… visible: None)`, `left 0102…` vs `right 0104…`.
+   Cause: removing the two LEADING `app_commands!` rows (`setSnapshot`, `setActiveExample`) shifted
+   every later row's binary variant ordinal down by two — `set-layer-visible` 4→2, `set-hover`
+   12→10. This is an intended consequence of deleting the whole-document commands, not a regression:
+   only the leading ordinal byte moved, each payload encoding is byte-identical. Rebaselined the two
+   pinned hex strings (`010401026c3101000600`→`010201026c3101000600`, `010c0000`→`010a0000`),
+   renamed the test to `optional_field_rows_keep_their_declared_wire_bytes`, and rewrote its
+   docstring to record that the rebase was deliberate and one-time so a FURTHER drift still fails.
+   Greenfield repo, no persisted wire data to migrate (CLAUDE.md: no backwards compatibility).
+
+**Every mutation-vocabulary test passed on that run**, including all three law tests, both
+`every_variant_*` tests (the descriptor one passed; the round-trip one is failure 1),
+`raster_op_text_round_trips_every_variant`, `resize_layer_is_a_graceful_no_op_on_a_group`,
+`op_binary_round_trips_and_agrees_with_text`, both `command_envelope_round_trip…` tests, and the
+app-level `raster_import_media_appends_layer_from_incoming_image` (proving the two-mutation
+`image:in` path works).
+
+**What the coordinator's consolidated pass must confirm:** that the two repairs above turn
+`64 passed; 2 failed` into `66 passed; 0 failed`. Nothing else in this facet is outstanding.
 
 **`bun ./📜️script.ts policy` — RUN, observed, clean for this facet.** Completed. The only raster
 line in the output is
@@ -211,8 +244,9 @@ line in the output is
 stdio, puzzle, block, …), is unrelated to mutation vocabulary, and is untouched by this lane. **No
 new high-priority breach kinds.**
 
-**Both compile gates are deferred to the coordinator's consolidated pass** because ~10 lanes are
-contending for one shared cargo build lock. Verification of this facet is owed and unpaid.
+**No further cargo command was run after the coordinator's stop instruction**, per that instruction;
+~10 lanes were contending for one shared build lock. The two post-failure repairs are therefore
+authored blind and are the one thing this facet still owes verification on.
 
 ### blocked-churn
 
@@ -223,8 +257,9 @@ sites before that run. Nothing to report as blocked-churn.
 
 ## lawTests
 
-Authored in the dispatch file's existing `#[cfg(test)]` region (no new test file). **Authored, not
-observed passing** — see `gates`.
+Authored in the dispatch file's existing `#[cfg(test)]` region (no new test file). **All observed
+PASSING** in the `cargo test` run recorded under `gates`, except `every_variant_round_trips_via_inverse`,
+which correctly caught a real inverse bug (now fixed, unverified).
 
 - `every_variant_registers_an_approved_semantic_descriptor` — iterates all 12 via `every_mutation()`,
   asserts `protocol::is_approved_verb` for each and that `SemanticMutation::kinds().len()` equals the
@@ -302,8 +337,9 @@ observed passing** — see `gates`.
 
 ## incomplete / owed
 
-- **Both compile gates.** `cargo check` was observed clean only on a tree one edit stale;
-  `cargo test` produced no result at all. This is the single real gap in this report.
+- **Re-verification of two blind repairs.** `cargo check` was clean and `cargo test` reached
+  `64 passed; 2 failed`; both failures were then fixed in source without a confirming run. The
+  consolidated pass should see `66 passed; 0 failed`. This is the single real gap in this report.
 - The snapshot facet's `📸️snapshot/🟦️component.ts` is still the stale generic `JsonSnapshot`
   scaffold, so the mutations `🟦️component.ts` defines a small local `RasterLayerNode` mirror rather
   than importing it. Fixing the snapshot facet's TS is outside this facet's scope.

@@ -15,6 +15,7 @@
     "audio": { "name": "Audio container", "schema": "s.stdio.semio.audio" },
     "animation": { "name": "Keyframe animation", "schema": "s.stdio.semio.animation" },
     "presentation": { "name": "Slide presentation", "schema": "s.stdio.semio.presentation" },
-    "flow": { "name": "Node/edge flow graph", "schema": "s.stdio.semio.flow" }
+    "flow": { "name": "Node/edge flow graph", "schema": "s.stdio.semio.flow" },
+    "text": { "name": "Language-tagged inline-marked text runs", "schema": "s.stdio.semio.text" }
   }
 }

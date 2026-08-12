@@ -46,8 +46,20 @@ A plugin consists of **exactly two things: `🎛️apps` and `🗿️artifacts`*
 - **Repo-root `📜️script.ts` order: APA → UCAS-W6 → SMO.** All three agreed. Single writer at a time. **Announce on both channels immediately before starting to write it and immediately after stopping.** APA's five regions go at the END of the policy block (SMO's are ~5280–6050) and land in **report mode only** — they census, they never gate — until APA W5.
 - **`🔣️taxonomy.json`: APA takes it before UCAS W6, but the `pluginChildDirs` flip to `["🎛️apps","🗿️artifacts"]` must land WITH OR AFTER the per-plugin cleanup reaches stdio.** Flipping early turns UCAS's W2 red on violations only APA can fix. The flip is the LAST thing APA does.
 - **Plugin ordering: UCAS-W4 before APA, per plugin.** UCAS deletes plugin-local types and repoints them at stdio subsets; APA moves files between directories. Moving first invalidates their in-flight paths. Clearance signal: the existence of `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave4-reports/<plugin>-report.md`.
-- **SMO holds ~21 plugin lanes**, actively rewriting app `🦀️component.rs`, `🎮️commands/**`, `📌️panels`, `⚙️engine` and per-plugin `📦️glue.rs` — the same files APA's Draft-lane work touches. SMO pings this channel as each lane releases. Do not enter an SMO lane.
-- **Cleared for APA by BOTH peers right now: `🪐️space` only.** (SMO also released `🔋️energy`; UCAS clearance for it is pending.) UCAS released demonstrator/vcs/note but SMO holds all three — do not take them.
+- **SMO holds the remaining plugin lanes**, actively rewriting app `🦀️component.rs`, `🎮️commands/**`, `📌️panels`, `⚙️engine` and per-plugin `📦️glue.rs` — the same files APA's Draft-lane work touches. Do not enter an SMO lane.
+
+### ⚠️ Plugin clearance — ONE authority, never a copy
+
+**The single source of truth is SMO's live predicate file:**
+`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️plugin-release-status.md`
+
+**Read it at dispatch time. Do not trust any clearance list written in this ticket** — including in `📓️status.md`, `📓️w0-e-peer-state.md`, or an agent's own dispatch prompt. Those are snapshots, and clearance changes by the hour.
+
+This rule exists because it already went wrong: an earlier version of this file said "do not take note", `📓️status.md` said note was released, and `📓️w0-e-peer-state.md` ruled it LATER — three documents in one ticket, all disagreeing, because each froze a fact that had since moved. A W3 agent hit the contradiction and correctly refused to touch the plugin rather than guess. **It was right to stop, and the fault was the duplication, not the agent.**
+
+This is the same defect all five sessions diagnosed independently this afternoon: a derived artifact encodes "what was true when it was written", while every consumer needs "what is true now". The fix is not to keep the copies better synchronised — it is to have no copies. If you need to know whether a plugin is free, read SMO's predicate file and, for anything UCAS has in flight, ask on their channel. If a dispatch prompt and that file disagree, **the file wins and the prompt is stale** — report the contradiction and stop, exactly as that agent did.
+
+For UCAS's side, the same applies: their `📓️wave4-reports/<plugin>-report.md` carries an explicit `ucas-status: complete | partial` line. Read the line; do not infer freedom from the file's existence.
 - **stdio is UCAS's** and is transiently red mid-rename. **Everything depends on stdio, so no plugin-side `cargo check` passes for anyone right now.** Treat red plugin crates as churn: retry `-p <crate>` up to 3× at 60s intervals, then record it under `## Concurrent-churn observations`, prove no error originates in your own boundary (grep the cargo output for your paths), and report `blocked-churn`. **Never "fix" another session's file.**
 
 ## Draft lane — SETTLED, read `📓️draft-lane-spec.md` before touching any app

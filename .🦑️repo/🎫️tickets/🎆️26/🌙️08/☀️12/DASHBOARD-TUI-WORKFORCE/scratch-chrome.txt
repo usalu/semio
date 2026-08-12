@@ -1,0 +1,177 @@
+// #region 🔖️Chrome
+
+pub mod chrome {
+    use crate::tui::cell::{Cell, CellBuffer};
+    use crate::tui::footer::paint_footer;
+    use crate::tui::geometry::{Pos, Rect};
+    use crate::tui::layout::{solve_window_layout, WindowLayout};
+    use crate::tui::navbar::paint_navbar;
+    use crate::tui::scene::{Node, NodeContent, NodeId, Scene};
+    use crate::tui::text::{display_width, truncate_to};
+    use crate::tui::theme::{Role, Surface, Theme};
+    use crate::tui::window::paint_window;
+
+    #[derive(Clone)]
+    pub struct NavItem {
+        pub id: String,
+        pub label: String,
+        pub active: bool,
+    }
+
+    pub struct NavbarState {
+        pub left: Vec<NavItem>,
+        pub center: Vec<NavItem>,
+        pub right: Vec<NavItem>,
+    }
+
+    #[derive(Clone)]
+    pub struct KeyHint {
+        pub key: String,
+        pub label: String,
+    }
+
+    pub struct FooterState {
+        pub hints: Vec<KeyHint>,
+        pub status: String,
+    }
+
+    pub struct WindowState {
+        pub title: String,
+        pub number: Option<String>,
+        pub focused: bool,
+        pub closable: bool,
+        pub maximizable: bool,
+    }
+
+    impl WindowState {
+        pub fn new(title: impl Into<String>) -> Self {
+            Self { title: title.into(), number: None, focused: false, closable: true, maximizable: true }
+        }
+    }
+
+    /// 🧩️ The concrete state of any semio chrome node.
+    pub enum ChromeState {
+        Navbar(NavbarState),
+        Footer(FooterState),
+        Canvas,
+        Window(WindowState),
+    }
+
+    impl ChromeState {
+        /// 🖌️ Paints the chrome background/frame; window/content children paint over it.
+        pub fn paint(&self, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+            match self {
+                ChromeState::Navbar(n) => paint_navbar(n, theme, rect, buf),
+                ChromeState::Footer(f) => paint_footer(f, theme, rect, buf),
+                ChromeState::Canvas => {
+                    buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), theme.surface(Surface::Base)));
+                }
+                ChromeState::Window(w) => paint_window(w, theme, rect, buf),
+            }
+        }
+
+        /// 🖱️ Resolves a click on a window's close/maximize tab, if any (tab text-row hit only).
+        pub fn window_control_at(&self, rect: Rect, pos: Pos) -> Option<crate::tui::widget::WidgetSignal> {
+            let ChromeState::Window(w) = self else { return None };
+            let layout = window_chip_layout(w, rect);
+            if !layout.has_tabs || pos.y != rect.y + 1 {
+                return None;
+            }
+            let controls = layout.controls?;
+            let maximize_x = controls.x + 1 + WINDOW_CONTROLS_MAXIMIZE_OFFSET;
+            let close_x = controls.x + 1 + WINDOW_CONTROLS_CLOSE_OFFSET;
+            if pos.x == close_x && w.closable {
+                Some(crate::tui::widget::WidgetSignal::WindowClose)
+            } else if pos.x == maximize_x && w.maximizable {
+                Some(crate::tui::widget::WidgetSignal::WindowMaximize)
+            } else {
+                None
+            }
+        }
+    }
+
+    /// 🔘️ The controls tab's interior content: enlarge glyph then close glyph, padded to one cell each.
+    const WINDOW_CONTROLS_INTERIOR: &str = " \u{2922} \u{2715} ";
+    const WINDOW_CONTROLS_MAXIMIZE_OFFSET: u16 = 1;
+    const WINDOW_CONTROLS_CLOSE_OFFSET: u16 = 3;
+
+    /// 🪟️ One 2-row tab recessed into a top corner of the window: `x` is its own left-wall column,
+    /// `interior` is the padded text between its walls (the tab is `interior_width + 2` cells wide).
+    /// `pub(crate)` (struct and fields): shared with `crate::tui::window`'s `paint_window`/`paint_corner_tab`.
+    pub(crate) struct WindowTab {
+        pub(crate) x: u16,
+        pub(crate) interior: String,
+        pub(crate) interior_width: u16,
+    }
+
+    /// 🪟️ `pub(crate)` (struct and fields): shared with `crate::tui::window`'s `paint_window`.
+    pub(crate) struct WindowChipLayout {
+        pub(crate) has_tabs: bool,
+        pub(crate) title: WindowTab,
+        pub(crate) controls: Option<WindowTab>,
+    }
+
+    /// 📐️ Shared by paint and click hit-testing so the two can never drift apart. The title tab's own
+    /// left wall is the window's left wall; the controls tab's own right wall is the window's right
+    /// wall — both 2 rows tall, each bending down into the main body's top edge one row below.
+    /// `pub(crate)`: called from `crate::tui::window`'s `paint_window` (extracted to its own element file;
+    /// this fn stays here because `ChromeState::window_control_at`, also in this mod, needs it too).
+    pub(crate) fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
+        let controls_interior_width = display_width(WINDOW_CONTROLS_INTERIOR);
+        let controls_width = controls_interior_width + 2;
+        let number_prefix = w.number.as_ref().map(|n| format!("{n} ")).unwrap_or_default();
+        let title_interior_full = format!(" {number_prefix}{} ", w.title);
+        let show_controls = w.closable || w.maximizable;
+        let title_room = rect.width.saturating_sub(2 + if show_controls { controls_width + 1 } else { 0 });
+        let (title_interior, title_interior_width) = truncate_to(&title_interior_full, title_room);
+        let title_width = title_interior_width + 2;
+        let has_tabs = rect.height >= 4 && title_width >= 3 && rect.width >= title_width + 2;
+        let controls_fits = show_controls && rect.width >= title_width + controls_width + 3;
+        let controls = controls_fits.then(|| WindowTab { x: rect.x + rect.width - controls_width, interior: WINDOW_CONTROLS_INTERIOR.to_string(), interior_width: controls_interior_width });
+        WindowChipLayout { has_tabs, title: WindowTab { x: rect.x, interior: title_interior.to_string(), interior_width: title_interior_width }, controls }
+    }
+
+    /// 🏛️ The three fixed shell regions plus one Window node per resolved `WindowMeasure`.
+    pub struct Shell {
+        pub navbar: NodeId,
+        pub canvas: NodeId,
+        pub footer: NodeId,
+        pub windows: Vec<(String, NodeId)>,
+    }
+
+    /// 🏗️ Builds navbar(top) + canvas(fill) + footer(bottom), then one Window per tiled slot.
+    pub fn shell(scene: &mut Scene, navbar: NavbarState, footer: FooterState, layout: &WindowLayout) -> Shell {
+        let root = scene.root();
+        let navbar_id = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Navbar(navbar))));
+        let canvas_id = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Canvas)));
+        let footer_id = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Footer(footer))));
+        {
+            let mut root_mut = scene.node_mut(root);
+            root_mut.set_constraint(crate::tui::layout::Constraint { direction: crate::tui::layout::Direction::Column, ..Default::default() });
+        }
+        scene.node_mut(navbar_id).set_constraint(crate::tui::layout::Constraint { height: crate::tui::layout::Dimension::Cells(2), ..Default::default() });
+        scene.node_mut(canvas_id).set_constraint(crate::tui::layout::Constraint { height: crate::tui::layout::Dimension::Weight(1), direction: crate::tui::layout::Direction::Stack, ..Default::default() });
+        scene.node_mut(footer_id).set_constraint(crate::tui::layout::Constraint { height: crate::tui::layout::Dimension::Cells(2), ..Default::default() });
+        let mut windows = Vec::new();
+        for measure in solve_window_layout(layout, Rect::default()) {
+            let id = scene.add(canvas_id, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new(measure.window_kind_id.clone())))));
+            windows.push((measure.window_kind_id, id));
+        }
+        Shell { navbar: navbar_id, canvas: canvas_id, footer: footer_id, windows }
+    }
+
+    impl Shell {
+        /// 🔁️ Re-measures `layout` against the canvas rect and repositions each window node.
+        pub fn apply_layout(&self, scene: &mut Scene, layout: &WindowLayout) {
+            let area = scene.rect(self.canvas);
+            let measures = solve_window_layout(layout, area);
+            for (kind_id, id) in &self.windows {
+                if let Some(m) = measures.iter().find(|m| &m.window_kind_id == kind_id) {
+                    scene.node_mut(*id).set_constraint(crate::tui::layout::Constraint { width: crate::tui::layout::Dimension::Cells(m.rect.width), height: crate::tui::layout::Dimension::Cells(m.rect.height), ..Default::default() });
+                }
+            }
+        }
+    }
+}
+// #endregion 🔖️Chrome
+

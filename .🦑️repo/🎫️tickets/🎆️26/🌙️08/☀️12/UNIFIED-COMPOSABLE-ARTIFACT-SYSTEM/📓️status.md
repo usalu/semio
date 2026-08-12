@@ -42,7 +42,15 @@ A1's additive `UndoGroup.member_edits` broke two struct literals in `🔌️plug
 - **A1 (framework-core): DONE** — `🚪️io:85-185` ArtifactRef/ArtifactKindId + validator + uri codec (5 tests); `🎠️kernel` EditRef:451, `UndoGroup.member_edits`:465, TS mirror :242-253; `InvocationId` already existed at :46 and was reused. `cargo check -p semio-framework` clean; `cargo test -p semio-framework --lib` 125 passed.
 - **A2 (schema): DONE** — `🧬️schema:93-140` `🔖️ArtifactCompositionSpec` (ChildSlotSpec/LinkSlotSpec/ArtifactCompositionFields with `&[]` defaults, GRAPHQL_COMPOSITION_PREAMBLE) + tests :695-732; `#[derive(ArtifactSchema)]` now emits `ArtifactCompositionFields` by syntactic field classification; TS mirror updated. `cargo check -p semio-framework-schema` clean; `--lib` 9/9 passed. Two findings promoted into `📌️important.md`: the derive-crate glue duplication rule, and `#[link(...)]`→`#[link_slot(...)]` (`link` is a built-in Rust attribute — hard error as a field attribute).
 - **B1 (spr+vcs): DONE** — `MutationMeta.group_id: Option<String>` (`📡️spr/🎮️command:389-425`) threaded through `.spr` persistence via `HistoryOpMeta.group_id` (`📡️spr/📜️history:83-97`, presence-bit-4 in `write_op_meta`/`read_op_meta` :602/:651) and the store bridge fns (:1169-1194), round-trip proven narrowly and through the shared `sample_log()` fixture. `CompositionPin` + `Checkpoint.composition_pins` (`🌿️vcs:109-129`), `content_addressed_checkpoint_id` pin-extended (byte-identical for empty pins, proven by reimplementing the old formula in a test) with deterministic sort. `VcsError::{CompositionCycle, OwnershipViolation}`. Check clean, 49 warnings = baseline; `--lib` 802 passed / 2 failed, both `os_dsl::fixture_sweep` over fem/norm/dag plugin fixtures = live SMO churn (retried 3×, grep-proven unrelated).
-- **B2 (store composition + coordinator): dispatched.**
+- **B2 (store composition + coordinator): DONE** — `🔖️Composition` (`🏪️store:166-571`): `ArtifactChild<S>` with hand-written `Clone`/`Debug`/`PartialEq` + `#[serde(bound="")]` to dodge the `PhantomData<S>` bound trap, `OwnerRef`, `ArtifactLink`/`LinkPin`, `ArtifactRefs`, `LinkResolver`/`LinkState`, `ChildStoreFactory` + registry, handcrafted `DslField` records (no new `Shape` variants, per D1). `🔖️CompositionCoordinator` (`:4494-5003`): `CompositionGraph` (ownership forest + link DAG), two-phase `dispatch_group` with reverse-order compensation, `undo_group`/`redo_group`. `CompositionPin.child_ref` corrected to the real `crate::os_io::ArtifactRef`. 15 new tests pass; check clean at 49 warnings; `--lib` 817 passed / 2 failed (the same pre-existing fem/norm/dag fixture-sweep pair).
+  - **Deviations accepted**: `SpaceMember` gained 8 object-safe methods, not 3 — the extra 5 (`tail_edit_id`, `redo_tail`, `stamp_tail_group_id`, `set_owner`, …) are needed to stamp group ids and owners through a type-erased interface. `GroupReceipt` gained `created_children` because a genesis-created member has no caller-held reference and would otherwise be silently dropped, making `ChildGenesis` pointless. `CompositionCoordinator` is STATEFUL (owns the graph) because `SpaceMember` is fully type-erased, so a cross-document ownership graph cannot be derived from a single call's arguments. `GroupMeta.actor`/`coalesce_key` accepted but not wired (no object-safe seam yet) — filed as a `sharedFileRequests` item.
+  - **Correctly deferred**: making `ArtifactEnvelope.dialect` required — measured blast radius 106 files / 168 call sites. Left `Option`, filed rather than half-done.
+
+### W1 COMPLETE (kernel). Now running:
+- **C1 (plugin composition runtime)** — `Emit.child_emits`/`ChildEmit`, `VcsArtifactApp` child-store map, `dispatch_emit` group routing, group undo/redo, `ArtifactChildren` + `derive_artifact_facets!` children arm, WIT `resolve-artifact-link`. Crate `semio-framework-plugin`.
+- **W2a (`✳️text` subset exemplar)** — crate `semio-s-plugin-stdio`. Deliberately ONE subset end-to-end as the template for the remaining four (`table`, `graph`, spatial `object`, `kit`), mirroring the exemplar→fan-out pattern that worked for SMO and is planned for our W3/W4. Its report carries a `## Template for the remaining subsets` section. `🚪️io` hub-routing leaves are explicitly out of scope for that round.
+
+Different crates, so the two run in parallel safely.
 
 ### Correction to B1 — `ArtifactRef` IS reachable from os-kernel
 
@@ -105,6 +113,25 @@ SMO's `📓️taxonomy.md` revealed that the closed `APPROVED_VERBS` table alrea
 Also ruled and recorded in `📌️important.md`: **`bind`/`unbind`, not `connect`/`disconnect`** — a link fills a *named slot* as a handle, not an edge row in an edge collection ("a parameterization gets bind/unbind instead").
 
 Net: the complete composition verb set is **entirely within the existing approved core** — `create`/`delete`, `extract`/`inline`, `bind`/`unbind`, `change` — so this ticket needs no verb-spine change in `📡️spr`. Plan file and `📓️design-full-plan.md` updated; stale `Shape::Child`/`Shape::LinkRef` references in the design doc also corrected to match deviation D1.
+
+### W2-prep (subset renames): DONE
+
+`✳️object`→`✳️value` (76 files) and `✳️workflow`→`✳️flow` (72 files), exhaustive: dirs (plain `mv`), Rust type/field/fn/const families, all 5 schema-twin languages plus grammar/protocol/spicy/ksy leaves, the `✳️any` union arms, `glue.rs` `#[path]` tree, engine registrations, `🪆️subsets/🔣️component.json`, and ~52 cross-subset doc-comment citations elsewhere in stdio. Fixtures **regenerated** from real `print_dsl`/`encode_pack` output (greenfield rule — not hand-migrated) for `🕸️graph`, `🌊️pipeline`, `🌐️envelope`.
+
+Two judgement calls worth keeping:
+- **Collision avoided**: the subset's top-level snapshot-diff struct became `SemioValueTreeDiff`, NOT `SemioValueDiff` — the latter already exists as the recursive leaf-value diff. Renaming blindly would have collided two distinct concepts.
+- **Bulk-substitution bug caught**: `JsonValue::Object` (an unrelated external enum from the `json` subset, cited inside the value subset's JSON bridge) was mis-rewritten to `JsonValue::Value`; found via compiler errors and reverted. Exactly the "read each hit in context, do not blind-sed" hazard the brief warned about.
+
+**Verification**: `cargo check -p semio-s-plugin-stdio --tests` 0 errors. `cargo nextest --profile long -p semio-s-plugin-stdio`: **2021 passed, 5 failed, 3 skipped** (2026 total), reproduced identically twice. The 5 failures are `inference_default_law`/outline tests in the csv/html/json/md/pdf `inferences` facets — the agent reports them git-clean and pre-existing (i.e. untouched by this or any concurrent session).
+
+✅ **Independently verified — 2021 / 5 / 3 IS the stdio baseline.** Orchestrator re-ran `cargo nextest --profile long -p semio-s-plugin-stdio --no-fail-fast` and reproduced the numbers exactly. The five are:
+```
+csv|html|json|pdf  …/💡️inferences/…::tests::inference_default_law
+md                 …/💡️inferences/outline/…::collects_headings_and_counts_words_and_blocks
+```
+**Decisive evidence they are pre-existing**: `git log` on those `💡️inferences` facet dirs shows last commit `a46ac1f883` (flag **491**) — the HEAD at this session's start. Every commit from this ticket is 492+. They therefore cannot have been touched by the renames. Corroborated by scope: they are `💡️inferences` facets of the csv/html/json/md/pdf *format* artifacts, untouched by the `🧿️semio` subset work; SMO attributes them to ticket `26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING`. **Any run showing more than these five is a new regression.**
+
+(Transient blocker cleared: `semio-framework-os-kernel` briefly went red with 29× `E0753 expected outer doc comment` from a stray `//!` at `🏪️store:179` written by our own in-flight B2 agent. SMO pinpointed it to the exact line; B2 corrected it itself before intervention. Note for future one-character "helpful" fixes in a live region: the correct repair was `//`, and guessing `///` would have silently attached a doc comment to whatever item landed next — compiling cleanly while being wrong.)
 
 Prep agent runs the two mechanical subset renames only (`✳️workflow`→`✳️flow`, `✳️object`→`✳️value`), which are independent of the kernel primitives and unblock the rest of W2. New subsets (`text`, `table`, the spatial `object`, `graph`, `kit`) and child/link slots come in the main W2 agent after Round 3 lands.
 

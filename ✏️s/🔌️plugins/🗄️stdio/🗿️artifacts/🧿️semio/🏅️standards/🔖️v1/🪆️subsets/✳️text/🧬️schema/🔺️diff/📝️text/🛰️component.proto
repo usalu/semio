@@ -1,0 +1,7 @@
+syntax = "proto3";
+// 📝️ Text-facet grammar mirror (descriptive) — see ../🛰️component.proto for the canonical facet
+// schema; this file describes the DSL-text ENCODING of the diff shape.
+package semio.s_stdio_semio_text_diff.text;
+message SemioTextDiffDsl {
+  string runs_wire = 1;
+}

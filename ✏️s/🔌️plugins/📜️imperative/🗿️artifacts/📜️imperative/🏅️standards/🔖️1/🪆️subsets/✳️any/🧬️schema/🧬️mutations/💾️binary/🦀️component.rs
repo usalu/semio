@@ -31,8 +31,8 @@ use std::collections::BTreeMap;
 /// ✂️ Local mirror of `ImperativeMutation` — flattens `PathRef` into bare `owner`/`slot`
 /// `Option<String>` fields (printed bare when the value lexes as a bare ident, per the engine's
 /// default `Shape::Text` behavior — no per-field opt-in needed) since a `store::Mutation` grammar is
-/// a genuinely tagged enum (`#[derive(dsl::DslEnum)]` requires an enum), not the single generic-struct
-/// shape the old `ImperativeMutation`/`protocol::CollectionMutation` pairing used.
+/// a genuinely tagged enum (`#[derive(dsl::DslEnum)]` requires an enum), not the single generic
+/// struct-plus-op-payload shape the old pre-migration mutation type used.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum ImperativeMutationDsl {
     CreateStep {

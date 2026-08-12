@@ -188,7 +188,7 @@ where
 /// 🎞️ `"model:in"` is an honest generic pass-through: a payload that happens to decode as this family's
 /// own `Document` shape becomes a bundle of targeted `change-<field>` mutations (one per persistent
 /// field, via each migrated facet's `XMutation::from_snapshot`) rather than a single whole-document
-/// replace mutation — the banned `SetSnapshot` escape hatch has no 1:1 replacement, so `wrap` now
+/// replace mutation — the banned whole-document-replace escape hatch has no 1:1 replacement, so `wrap` now
 /// decomposes the imported document into the closed semantic vocabulary instead. Bundling them into one
 /// `Emit::mutations` call keeps the import atomic (one edit, one undo entry), matching the old
 /// single-mutation commit's history shape. Anything that doesn't decode is accepted but inert (no norm
@@ -224,14 +224,14 @@ where
 /// is the manifest action id the command was declared under, which the command log labels the edit with.
 
 /// 📤️ Commit a typed document mutation (kept for the norm sub-lane's not-yet-migrated sibling facets;
-/// migrated facets use `commit_snapshot_fields` below instead, since the whole-document `SetSnapshot`
+/// migrated facets use `commit_snapshot_fields` below instead, since the whole-document-replace
 /// variant this helper used to construct is banned with no 1:1 replacement).
 pub fn commit_snapshot<M>(mutation: M, description: &str) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
     Ok(Emit::commit(vec![mutation], description))
 }
 
 /// 📤️ Commit a bundle of targeted semantic mutations as one described edit — the migrated facets'
-/// replacement for `commit_snapshot`'s old single whole-document `SetSnapshot` commit: a `set-snapshot`
+/// replacement for `commit_snapshot`'s old single whole-document-replace commit: a `set-snapshot`
 /// command payload (or a re-evaluation re-commit) decomposes into one `change-<field>` mutation per
 /// persistent field via `XMutation::from_snapshot`, bundled here into a single undo entry.
 pub fn commit_snapshot_fields<M>(mutations: Vec<M>, description: &str) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {

@@ -12,7 +12,6 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.trinity.rewrite")]
 pub struct RewriteDiff {
-    #[state(persistent)] pub artifact: Option<Box<crate::artifacts::rewrite::schema::RewriteArtifact>>,
     #[state(persistent)] pub before_fixture_json: Option<String>,
     #[state(persistent)] pub lhs_json: Option<String>,
     #[state(persistent)] pub rhs_json: Option<String>,

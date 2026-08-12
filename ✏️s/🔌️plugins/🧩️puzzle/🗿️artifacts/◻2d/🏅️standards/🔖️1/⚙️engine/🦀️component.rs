@@ -56,8 +56,24 @@ pub fn register() {
     register_artifact_inferences();
     register_app_schemas();
     crate::apps::puzzle2d::register_puzzle2d_exports();
+    register_media_io();
     crate::apps::puzzle3d::register_puzzle3d_exports();
+    crate::artifacts::puzzle3d::engine::register_io();
     crate::apps::puzzle5d::register_puzzle5d_exports();
+    crate::artifacts::puzzle5d::engine::register_io();
+}
+
+/// 🖼️ Registers the `"2d.puzzle"` SVG/DWG media export-import bridge with the OS host — relocated
+/// from `apps::puzzle2d::register_puzzle2d_exports` (APA, ticket
+/// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: OS-host registration belongs to the owning
+/// artifact's own engine, never to an app file). The callback bodies stay in `apps::puzzle2d` next
+/// to the app-local helpers they depend on and are exposed `pub(crate)` for this call site only.
+fn register_media_io() {
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    {
+        semio_framework_os::register_2d_export_handlers("2d.puzzle", "puzzle2d", crate::apps::puzzle2d::puzzle2d_document_json_to_svg);
+        semio_framework_os::register_dwg_import_handler("2d.puzzle", crate::apps::puzzle2d::puzzle2d_document_json_from_dwg);
+    }
 }
 
 /// 📎 Registers all puzzle app schema descriptors (config + presence facets) into the open

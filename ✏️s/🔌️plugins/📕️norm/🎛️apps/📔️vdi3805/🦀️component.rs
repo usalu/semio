@@ -36,7 +36,7 @@ semio_framework_plugin::app_commands! {
     /// id and the kebab `#[dsl(key)]` wire keyword respectively — both copied verbatim off the
     /// pre-migration enum, never derived from one another.
     pub enum Vdi3805Command for Vdi3805Snapshot, Vdi3805Mutation, NormConfig, NormConfigMutation {
-        "setSnapshot" as "set-snapshot" => set_snapshot::SetSnapshot,
+        "setSnapshot" as "set-snapshot" => set_snapshot::ReplaceSnapshot,
         "evaluate" as "evaluate" => evaluate::Evaluate,
         "setSelectedCheckIndex" as "selected-check" => selected_check::SetSelectedCheckIndex,
     }
@@ -103,8 +103,9 @@ impl ArtifactApp for Vdi3805PlayApp {
     }
 
     /// 🎞️ `"model:in"`/`"document:in"` — see `crate::app_surface::import_media`.
-    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, Vdi3805Snapshot>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
-        crate::app_surface::import_media(port, media, |snapshot| vec![Vdi3805Mutation::SetSnapshot { snapshot }])
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Vdi3805Snapshot>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
+        let base = doc.snapshot.clone();
+        crate::app_surface::import_media(port, media, move |snapshot: Vdi3805Snapshot| Vdi3805Mutation::from_snapshot(&base, &snapshot))
     }
     //#endregion 🔖️MediaPorts
 }
@@ -175,7 +176,7 @@ mod tests {
     /// that is not listed here fails `command_ids_cover_every_row`.
     fn every_command() -> Vec<Vdi3805Command> {
         vec![
-            Vdi3805Command::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Vdi3805Snapshot::default() }),
+            Vdi3805Command::SetSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Vdi3805Snapshot::default() }),
             Vdi3805Command::Evaluate(evaluate::Evaluate {}),
             Vdi3805Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
         ]
@@ -260,7 +261,7 @@ mod tests {
     #[test]
     fn set_snapshot_commits_a_host_backed_report() {
         let mut app = testkit::new_app();
-        testkit::dispatch(&mut app, Vdi3805Command::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Vdi3805Snapshot::default() }));
+        testkit::dispatch(&mut app, Vdi3805Command::SetSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Vdi3805Snapshot::default() }));
         let host = NormHost::<Vdi3805Family>::from_document(app.snapshot().expect("projection"));
         assert!(!host.report().checks.is_empty());
     }
@@ -295,7 +296,7 @@ mod tests {
     #[test]
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = testkit::new_app();
-        testkit::dispatch(&mut app, Vdi3805Command::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Vdi3805Snapshot::default() }));
+        testkit::dispatch(&mut app, Vdi3805Command::SetSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Vdi3805Snapshot::default() }));
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
         assert_eq!(app.snapshot().expect("projection"), Vdi3805Snapshot::default());

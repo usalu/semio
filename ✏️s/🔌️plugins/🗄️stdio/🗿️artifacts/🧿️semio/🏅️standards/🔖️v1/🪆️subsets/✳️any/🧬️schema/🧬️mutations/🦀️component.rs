@@ -23,6 +23,7 @@ use crate::artifacts::semio::standards::v1::subsets::audio::schema::{mutations::
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::{mutations::SemioAnimationMutation, snapshot::SemioAnimationSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::{mutations::SemioPresentationMutation, snapshot::SemioPresentationSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::flow::schema::{mutations::SemioFlowMutation, snapshot::SemioFlowSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::text::schema::{mutations::SemioTextMutation, snapshot::SemioTextSnapshot};
 use protocol::Mutation;
 use protocol::MutationDiff;
 use protocol::OpText;
@@ -59,6 +60,7 @@ pub enum SemioMutation {
     Animation(SemioAnimationMutation),
     Presentation(SemioPresentationMutation),
     Flow(SemioFlowMutation),
+    Text(SemioTextMutation),
 }
 
 impl Mutation<SemioSnapshot> for SemioMutation {
@@ -82,6 +84,7 @@ impl Mutation<SemioSnapshot> for SemioMutation {
             (SemioMutation::Animation(m), S::Animation(b)) => SemioDiff::Animation(<SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(m, b)),
             (SemioMutation::Presentation(m), S::Presentation(b)) => SemioDiff::Presentation(<SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::diff(m, b)),
             (SemioMutation::Flow(m), S::Flow(b)) => SemioDiff::Flow(<SemioFlowMutation as Mutation<SemioFlowSnapshot>>::diff(m, b)),
+            (SemioMutation::Text(m), S::Text(b)) => SemioDiff::Text(<SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(m, b)),
             // 🛡️ A wrapped mutation whose kind doesn't match the base snapshot's current kind
             // (e.g. `SemioMutation::Audio(..)` applied to a flow base): can only arise from
             // caller error, not from any path this module itself constructs. `diff()` has no
@@ -110,6 +113,7 @@ impl Mutation<SemioSnapshot> for SemioMutation {
             (SemioMutation::Animation(m), S::Animation(b)) => <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Animation).collect(),
             (SemioMutation::Presentation(m), S::Presentation(b)) => <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Presentation).collect(),
             (SemioMutation::Flow(m), S::Flow(b)) => <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Flow).collect(),
+            (SemioMutation::Text(m), S::Text(b)) => <SemioTextMutation as Mutation<SemioTextSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Text).collect(),
             // 🛡️ Same kind-mismatch fallback as `diff()` above.
             _ => vec![SemioMutation::NoMutation],
         }
@@ -149,11 +153,12 @@ fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
         SemioMutation::Animation(_) => "animation",
         SemioMutation::Presentation(_) => "presentation",
         SemioMutation::Flow(_) => "flow",
+        SemioMutation::Text(_) => "text",
     }
 }
 
 /// 🏷️ Binary tag ordinal for [`SemioMutation`] — `0` = `NoMutation`, `1` = `SetSnapshot`,
-/// `2..=14` = the 13 wrapped subset kinds (enum declaration order).
+/// `2..=15` = the 14 wrapped subset kinds (enum declaration order).
 fn mutation_tag(m: &SemioMutation) -> u8 {
     match m {
         SemioMutation::NoMutation => 0,
@@ -171,6 +176,7 @@ fn mutation_tag(m: &SemioMutation) -> u8 {
         SemioMutation::Animation(_) => 12,
         SemioMutation::Presentation(_) => 13,
         SemioMutation::Flow(_) => 14,
+        SemioMutation::Text(_) => 15,
     }
 }
 
@@ -211,6 +217,7 @@ fn print_semio_mutation(m: &SemioMutation) -> String {
         SemioMutation::Animation(m) => format!("{tag}:{}", m.print_op()),
         SemioMutation::Presentation(m) => format!("{tag}:{}", m.print_op()),
         SemioMutation::Flow(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Text(m) => format!("{tag}:{}", m.print_op()),
     }
 }
 
@@ -234,6 +241,7 @@ fn parse_semio_mutation(line: &str) -> Result<SemioMutation, String> {
         "animation" => Ok(SemioMutation::Animation(SemioAnimationMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         "presentation" => Ok(SemioMutation::Presentation(SemioPresentationMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         "flow" => Ok(SemioMutation::Flow(SemioFlowMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "text" => Ok(SemioMutation::Text(SemioTextMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         other => Err(format!("semio mutation: unknown tag {other:?}")),
     }
 }
@@ -272,6 +280,7 @@ impl protocol::OpBinary for SemioMutation {
             SemioMutation::Animation(m) => m.encode_op()?,
             SemioMutation::Presentation(m) => m.encode_op()?,
             SemioMutation::Flow(m) => m.encode_op()?,
+            SemioMutation::Text(m) => m.encode_op()?,
         };
         out.extend_from_slice(&payload);
         Ok(out)
@@ -304,6 +313,7 @@ impl protocol::OpBinary for SemioMutation {
             12 => SemioMutation::Animation(SemioAnimationMutation::decode_op(payload)?),
             13 => SemioMutation::Presentation(SemioPresentationMutation::decode_op(payload)?),
             14 => SemioMutation::Flow(SemioFlowMutation::decode_op(payload)?),
+            15 => SemioMutation::Text(SemioTextMutation::decode_op(payload)?),
             other => return Err(protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("unknown tag {other}") }),
         })
     }
@@ -311,10 +321,13 @@ impl protocol::OpBinary for SemioMutation {
 //#endregion OpCodecs
 
 //#region 🔖️Demo
-/// 🌱 All 15 top-level [`SemioMutation`] tags (`NoMutation`, `SetSnapshot`, and each of the 13
-/// wrapped-kind `NoMutation`-equivalent variants) — full dispatch-table coverage for this facet's
+/// 🌱 All 16 top-level [`SemioMutation`] tags (`NoMutation`, `SetSnapshot`, and each of the 14
+/// wrapped-kind representative variants) — full dispatch-table coverage for this facet's
 /// grammar/protocol conformance-law tests. Single source of truth shared with
-/// `🎹️composer/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`.
+/// `🎹️composer/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`. `text`
+/// (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a) has no `NoMutation`-equivalent variant — that
+/// vocabulary is banned for new facets (`📓️taxonomy.md`) — so its representative case is a real
+/// `RemoveRun` against an out-of-range index, a genuine no-op at the snapshot-apply level.
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
     vec![
@@ -333,6 +346,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
         SemioMutation::Animation(SemioAnimationMutation::NoMutation),
         SemioMutation::Presentation(SemioPresentationMutation::NoMutation),
         SemioMutation::Flow(SemioFlowMutation::NoMutation),
+        SemioMutation::Text(SemioTextMutation::RemoveRun(crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::remove_run::mutation::RemoveRun { index: 99 })),
     ]
 }
 //#endregion 🔖️Demo

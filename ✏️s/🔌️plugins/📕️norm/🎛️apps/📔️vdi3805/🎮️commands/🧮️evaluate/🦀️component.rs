@@ -1,8 +1,10 @@
 //! 🧮️ VDI 3805 play app command — recompute the compliance report in place.
 //!
-//! 📌️ Recommitting the current projection is what forces `NormHost` to re-evaluate: the report is not
-//! document state, it is derived on every read, so a no-op whole-document commit is the honest way to
-//! record "the user asked for a fresh evaluation" in the command log.
+//! 📌️ The report is not document state, it is derived on every read (`NormHost::from_document`
+//! re-evaluates unconditionally) — so this command genuinely mutates nothing. The pre-migration
+//! version recommitted the whole document as a no-op whole-document-replace mutation purely to leave
+//! a command-log entry; now that whole-document replace has no vocabulary equivalent, the honest
+//! fix is to emit zero mutations (`Emit::default()`) rather than inventing a fake semantic edit.
 
 use crate::artifacts::vdi3805::op::Vdi3805Mutation;
 use crate::artifacts::vdi3805::Vdi3805Snapshot;
@@ -19,8 +21,8 @@ pub struct Evaluate {}
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(_payload: &Evaluate, doc: &ArtifactView<'_, Vdi3805Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation>, Fault> {
-    crate::app_surface::commit_snapshot(Vdi3805Mutation::SetSnapshot { snapshot: doc.snapshot.clone() }, "evaluate")
+pub fn handle(_payload: &Evaluate, _doc: &ArtifactView<'_, Vdi3805Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation>, Fault> {
+    Ok(Emit::default())
 }
 //#endregion 🔖️Handler
 
@@ -28,15 +30,15 @@ pub fn handle(_payload: &Evaluate, doc: &ArtifactView<'_, Vdi3805Snapshot>, _cfg
 #[cfg(test)]
 mod tests {
     use super::*;
-        use semio_framework_plugin::HistoryView;
+    use semio_framework_plugin::HistoryView;
 
     #[test]
-    fn handle_recommits_the_current_projection_under_its_action_id() {
+    fn handle_emits_no_mutation_since_the_report_is_always_recomputed() {
         let projection = Vdi3805Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(&Evaluate {}, &ArtifactView { snapshot: &projection, history: &HistoryView::empty() }, &ConfigView { snapshot: &config }).expect("handle");
-        assert_eq!(emit.artifact_mutations, vec![Vdi3805Mutation::SetSnapshot { snapshot: Vdi3805Snapshot::default() }]);
-        assert_eq!(emit.description.as_deref(), Some("evaluate"));
+        assert!(emit.artifact_mutations.is_empty());
+        assert!(emit.config_mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

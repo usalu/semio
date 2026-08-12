@@ -123,20 +123,18 @@ None seeded for this facet at time of run; zero `mutation-migration/semantic-voc
 under `✏️s/🔌️plugins/🧩️puzzle` in the post-change policy scan.
 
 ## Gates
-See the `🧊️3d` report for the full verbatim evidence (shared crate, run once for all three
-facets). Summary specific to this facet: `cargo check -p semio-s-plugin-puzzle` run #1 (before any
-gate) reported 11 errors, ALL `#[derive(Mutations)]` const-eval kebab-mismatch panics in this
-facet's `*Part2d`/`*Part3d` variants (`SEMANTICS.kind` was authored as `part-2d`/`part-3d`, the
-derive's actual kebab form is `part2d`/`part3d` — no hyphen inserted before a digit run). Fixed by
-renaming the 11 affected slugs/directory-names/`kind`/`#[dsl(keyword=...)]` strings/grammar lines
-from `part-2d`/`part-3d` to `part2d`/`part3d`. Two subsequent `cargo check -p semio-s-plugin-puzzle`
-re-runs each hit unrelated, actively-changing breakage inside a FRAMEWORK file
-(`🧰️framework/…/🏪️store/🦀️component.rs`, concurrent ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-
-SYSTEM` — verbatim errors differ between the two runs, proving another session is mid-edit there
-right now) — neither re-run reported a single error under `✏️s/🔌️plugins/🧩️puzzle` (grepped and
-confirmed empty both times), so this facet's own fix is verified-fixed by the FIRST run's error set
-going to zero on the SECOND run, even though neither run reached a fully green crate. `blocked-
-churn` on the framework side; not this facet's bug.
+See the `🧊️3d` report for the full verbatim run-by-run evidence (shared crate, gated once for all
+three facets). Summary specific to this facet: `cargo check -p semio-s-plugin-puzzle` run #1
+(before any gate) reported 11 errors, ALL `#[derive(Mutations)]` const-eval kebab-mismatch panics
+in this facet's `*Part2d`/`*Part3d` variants (`SEMANTICS.kind` was authored as `part-2d`/`part-3d`,
+the derive's actual kebab form is `part2d`/`part3d` — no hyphen inserted before a digit run). Fixed
+by renaming the 11 affected slugs/directory-names/`kind`/`#[dsl(keyword=...)]` strings/grammar
+lines from `part-2d`/`part-3d` to `part2d`/`part3d`. After two transient concurrent-churn blockers
+resolved on their own (shared build-lock contention, then an unrelated framework file mid-edit by
+ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`), an isolated-target-dir `cargo check
+-p semio-s-plugin-puzzle` completed **clean**: `Finished dev profile [unoptimized] target(s) in
+41m 10s`, `EXIT=0`, 0 errors — this facet's 11-error fix is directly confirmed. `cargo test
+-p semio-s-plugin-puzzle --lib` — see `🧊️3d` report for the exact pass/fail counts.
 
 ## lawTests
 Extended `🧬️mutations/🦀️component.rs`'s `#[cfg(test)] mod tests`:

@@ -7,9 +7,10 @@
 
 use infinite_board_port_directed_dag::{dag_fixture_to_wire_literal, DagCamera, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
 use semio_framework_os::{
-    create_default_workflow_parameter, create_os_id, media_port_spec_id, negotiate_media_contract, os_app_registration, patch_workflow_parameter, resolve_os_app_definition, workflow_node_for_app, workflow_parameter_id_from_port_id, MediaContract,
+    create_default_workflow_parameter, create_os_id, media_port_spec_id, negotiate_media_contract, os_app_registration, patch_workflow_parameter, register_app_io, resolve_os_app_definition, workflow_node_for_app, workflow_parameter_id_from_port_id, AppDefinition, MediaContract,
     WorkflowSnapshot, WorkflowMutation, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterType, WorkflowPosition,
 };
+use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -212,6 +213,36 @@ pub fn os_parameter_types_compatible_shim(parameter: &WorkflowParameter, target:
     semio_framework_os::os_parameter_types_compatible(&workflow_parameter_type_to_os(&kind), target)
 }
 //#endregion 🔖️OsParameterBridge
+
+//#region 🔖️AppRegistrations
+/// 🪐️ One `appRegistrationsJson` entry — the wire shape `os-shell.tsx`'s `SetAppRegistrations` push
+/// builds from `loadedPlugins.flatMap(entry => entry.manifest.apps.map(app => ({pluginId, app})))`.
+/// `app` deserializes straight off `AppDefinition`'s own `Deserialize` impl since it's the literal
+/// manifest-JSON `AppDefinition` object, unmodified across the wasm boundary.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AppRegistrationWireEntry {
+    plugin_id: String,
+    app: AppDefinition,
+}
+
+/// 🪐️ Registers every `{pluginId, app}` entry `json` carries into this wasm instance's OWN
+/// `semio_framework_os::APP_REGISTRATIONS` copy — the space app is its own wasm component, so its
+/// statically-linked copy of os-core's `APP_REGISTRATIONS` never sees what native/test hosts populate
+/// via `PluginHost::load_plugin`/`hot_swap_plugin`; this is how it gets populated in a real
+/// browser/wasm host instead. Malformed/empty `json` degrades to a silent no-op — this is a
+/// best-effort host hint push, not a user-facing operation with error surfacing. Lives here (the
+/// app-level compute engine, per this app's no-`🗿️artifacts`-node rationale in `🦀️component.rs`'s
+/// module doc) rather than in the `🧭️navigation` command file, so the command handler stays
+/// dispatch-only and the one production `register_app_io` call for this app sits beside its other
+/// OS-registry bridge functions.
+pub fn apply_app_registrations(json: &str) {
+    let Ok(entries) = serde_json::from_str::<Vec<AppRegistrationWireEntry>>(json) else { return };
+    for entry in entries {
+        register_app_io(&entry.plugin_id, &entry.app);
+    }
+}
+//#endregion 🔖️AppRegistrations
 
 //#region 🧪️Tests
 #[cfg(test)]

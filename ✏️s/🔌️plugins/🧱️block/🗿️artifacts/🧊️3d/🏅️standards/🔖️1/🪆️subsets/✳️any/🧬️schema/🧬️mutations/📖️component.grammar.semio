@@ -5,11 +5,42 @@ use family-scene
 start mutation
 
 artifact-mark = "block.3d-op"
-mutation = artifact-mark mesh-op+
-mesh-op = "add-vertex" vtx-field+ | "set-face" face-field+ | "transform-mesh" xfm-field+ | "merge-solid" merge-field+
-vtx-field = "x" "=" FLOAT | "y" "=" FLOAT | "z" "=" FLOAT
-face-field = "index" "=" INT | "loop" "=" list
-xfm-field = "axis" "=" IDENT | "angle" "=" FLOAT
-merge-field = "target" "=" IDENT | "source" "=" IDENT
-list = "[" INT* "]"
-layer = IDENT "@" FLOAT FLOAT FLOAT?
+mutation = artifact-mark op+
+op = "rename-object-kind" field*
+   | "change-object-kind-label" field*
+   | "change-object-kind-variant" field*
+   | "change-object-kind-description" field*
+   | "change-object-kind-icon" field*
+   | "change-object-kind-unit" field*
+   | "create-representation" field*
+   | "delete-representation" field*
+   | "rename-representation" field*
+   | "change-representation-mesh-url" field*
+   | "change-representation-lod" field*
+   | "change-representation-description" field*
+   | "add-representation-tag" field*
+   | "remove-representation-tag" field*
+   | "add-representation-attribute" field*
+   | "remove-representation-attribute" field*
+   | "create-vortex-kind" field*
+   | "delete-vortex-kind" field*
+   | "rename-vortex-kind" field*
+   | "change-vortex-kind-label" field*
+   | "change-vortex-kind-color" field*
+   | "change-vortex-kind-default-cable-kind" field*
+   | "create-vortex" field*
+   | "delete-vortex" field*
+   | "move-vortex" field*
+   | "resize-vortex" field*
+   | "change-vortex-vortex-kind" field*
+   | "change-vortex-label" field*
+   | "add-compatibility-rule" field*
+   | "remove-compatibility-rule" field*
+   | "add-attribute" field*
+   | "remove-attribute" field*
+   | "add-author" field*
+   | "remove-author" field*
+   | "move-camera3d" field*
+   | "scale-camera3d" field*
+   | "change-meta-description" field*
+field = IDENT "=" (STRING | FLOAT | INT | BOOL | IDENT)

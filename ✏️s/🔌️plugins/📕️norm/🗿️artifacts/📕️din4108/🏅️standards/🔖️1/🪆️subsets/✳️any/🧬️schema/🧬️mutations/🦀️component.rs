@@ -91,23 +91,23 @@ impl Din4108Mutation {
     /// mid-sequence) before `target`'s layers are re-inserted in order.
     pub fn from_snapshot(base: &Din4108Snapshot, target: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         let mut mutations = Vec::with_capacity(17 + base.layers.len() + target.layers.len());
-        mutations.push(Din4108Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: snapshot.category.clone() }));
-        mutations.push(Din4108Mutation::ChangeClimate(change_climate::mutation::ChangeClimate { new_climate: snapshot.climate.clone() }));
-        mutations.push(Din4108Mutation::ChangeAirtightnessN50(change_airtightness_n50::mutation::ChangeAirtightnessN50 { new_airtightness_n50: snapshot.airtightness_n50.clone() }));
-        mutations.push(Din4108Mutation::ChangePsiTimesLSum(change_psi_times_l_sum::mutation::ChangePsiTimesLSum { new_psi_times_l_sum: snapshot.psi_times_l_sum.clone() }));
-        mutations.push(Din4108Mutation::ChangeRhInt(change_rh_int::mutation::ChangeRhInt { new_rh_int: snapshot.rh_int.clone() }));
-        mutations.push(Din4108Mutation::ChangeCatalogId(change_catalog_id::mutation::ChangeCatalogId { new_catalog_id: snapshot.catalog_id.clone() }));
-        mutations.push(Din4108Mutation::ChangeMaterialId(change_material_id::mutation::ChangeMaterialId { new_material_id: snapshot.material_id.clone() }));
-        mutations.push(Din4108Mutation::ChangeAirtightnessClass(change_airtightness_class::mutation::ChangeAirtightnessClass { new_airtightness_class: snapshot.airtightness_class.clone() }));
-        mutations.push(Din4108Mutation::ChangeTIntC(change_t_int_c::mutation::ChangeTIntC { new_t_int_c: snapshot.t_int_c.clone() }));
-        mutations.push(Din4108Mutation::ChangeSolarAbsorptance(change_solar_absorptance::mutation::ChangeSolarAbsorptance { new_solar_absorptance: snapshot.solar_absorptance.clone() }));
-        mutations.push(Din4108Mutation::ChangeIrradianceWM2(change_irradiance_w_m2::mutation::ChangeIrradianceWM2 { new_irradiance_w_m2: snapshot.irradiance_w_m2.clone() }));
-        mutations.push(Din4108Mutation::ChangeMoistureMuExterior(change_moisture_mu_exterior::mutation::ChangeMoistureMuExterior { new_moisture_mu_exterior: snapshot.moisture_mu_exterior.clone() }));
-        mutations.push(Din4108Mutation::ChangeMoistureMuInterior(change_moisture_mu_interior::mutation::ChangeMoistureMuInterior { new_moisture_mu_interior: snapshot.moisture_mu_interior.clone() }));
-        mutations.push(Din4108Mutation::ChangeEnvelopeAreaM2(change_envelope_area_m2::mutation::ChangeEnvelopeAreaM2 { new_envelope_area_m2: snapshot.envelope_area_m2.clone() }));
-        mutations.push(Din4108Mutation::ChangeBb2DetailsConform(change_bb2_details_conform::mutation::ChangeBb2DetailsConform { new_bb2_details_conform: snapshot.bb2_details_conform.clone() }));
-        mutations.push(Din4108Mutation::ChangeApplicationType(change_application_type::mutation::ChangeApplicationType { new_application_type: snapshot.application_type.clone() }));
-        mutations.push(Din4108Mutation::ChangeDeclaredApplicationClass(change_declared_application_class::mutation::ChangeDeclaredApplicationClass { new_declared_application_class: snapshot.declared_application_class.clone() }));
+        mutations.push(Din4108Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: target.category.clone() }));
+        mutations.push(Din4108Mutation::ChangeClimate(change_climate::mutation::ChangeClimate { new_climate: target.climate.clone() }));
+        mutations.push(Din4108Mutation::ChangeAirtightnessN50(change_airtightness_n50::mutation::ChangeAirtightnessN50 { new_airtightness_n50: target.airtightness_n50.clone() }));
+        mutations.push(Din4108Mutation::ChangePsiTimesLSum(change_psi_times_l_sum::mutation::ChangePsiTimesLSum { new_psi_times_l_sum: target.psi_times_l_sum.clone() }));
+        mutations.push(Din4108Mutation::ChangeRhInt(change_rh_int::mutation::ChangeRhInt { new_rh_int: target.rh_int.clone() }));
+        mutations.push(Din4108Mutation::ChangeCatalogId(change_catalog_id::mutation::ChangeCatalogId { new_catalog_id: target.catalog_id.clone() }));
+        mutations.push(Din4108Mutation::ChangeMaterialId(change_material_id::mutation::ChangeMaterialId { new_material_id: target.material_id.clone() }));
+        mutations.push(Din4108Mutation::ChangeAirtightnessClass(change_airtightness_class::mutation::ChangeAirtightnessClass { new_airtightness_class: target.airtightness_class.clone() }));
+        mutations.push(Din4108Mutation::ChangeTIntC(change_t_int_c::mutation::ChangeTIntC { new_t_int_c: target.t_int_c.clone() }));
+        mutations.push(Din4108Mutation::ChangeSolarAbsorptance(change_solar_absorptance::mutation::ChangeSolarAbsorptance { new_solar_absorptance: target.solar_absorptance.clone() }));
+        mutations.push(Din4108Mutation::ChangeIrradianceWM2(change_irradiance_w_m2::mutation::ChangeIrradianceWM2 { new_irradiance_w_m2: target.irradiance_w_m2.clone() }));
+        mutations.push(Din4108Mutation::ChangeMoistureMuExterior(change_moisture_mu_exterior::mutation::ChangeMoistureMuExterior { new_moisture_mu_exterior: target.moisture_mu_exterior.clone() }));
+        mutations.push(Din4108Mutation::ChangeMoistureMuInterior(change_moisture_mu_interior::mutation::ChangeMoistureMuInterior { new_moisture_mu_interior: target.moisture_mu_interior.clone() }));
+        mutations.push(Din4108Mutation::ChangeEnvelopeAreaM2(change_envelope_area_m2::mutation::ChangeEnvelopeAreaM2 { new_envelope_area_m2: target.envelope_area_m2.clone() }));
+        mutations.push(Din4108Mutation::ChangeBb2DetailsConform(change_bb2_details_conform::mutation::ChangeBb2DetailsConform { new_bb2_details_conform: target.bb2_details_conform.clone() }));
+        mutations.push(Din4108Mutation::ChangeApplicationType(change_application_type::mutation::ChangeApplicationType { new_application_type: target.application_type.clone() }));
+        mutations.push(Din4108Mutation::ChangeDeclaredApplicationClass(change_declared_application_class::mutation::ChangeDeclaredApplicationClass { new_declared_application_class: target.declared_application_class.clone() }));
         for index in (0..base.layers.len()).rev() {
             mutations.push(Din4108Mutation::RemoveLayer(remove_layer::mutation::RemoveLayer { index }));
         }
