@@ -1,0 +1,359 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-graph}[2026/08/12 v0.1.0 semio graph diagrams]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{geometry}
+\RequirePackage{semio-core}
+\RequirePackage{semio-fonts}
+\RequirePackage{semio-window}
+% tikz itself arrives with semio-window.sty; nothing extra to load here.
+
+% ⚫ Node contour radius. Graph coordinates are plain millimetre numbers (the
+% picture sets x=1mm,y=-1mm), but the radius is a real dimension because it is
+% a design token, not data. The emphasis delta is added via pgfmath at the
+% draw site, so the relationship between the two stays visible instead of
+% being pre-baked into a second unrelated literal.
+\providecommand{\semio@graph@node@radius}{2.275mm}
+\providecommand{\semio@graph@node@radius@emphasis}{0.3mm}
+% 🔠 Node label face. Deliberately smaller than \semio@chrome@font@chip: a
+% graph label sits inside a ~4.5mm circle, not in a window tab.
+\providecommand{\semio@graph@label@size}{5.2pt}
+\providecommand{\semio@graph@label@leading}{5.4pt}
+% 📐 Default drawing frame, in graph millimetres. Callers that own their own
+% layout (a generator) always pass width=/height= explicitly.
+\providecommand{\semio@graph@frame@width}{181}
+\providecommand{\semio@graph@frame@height}{50}
+% 🗺 Spread page margins -- the values every full-width figure page duplicated
+% before this package existed.
+\providecommand{\semio@graph@spread@margin@h}{1.2cm}
+\providecommand{\semio@graph@spread@margin@v}{1.5cm}
+
+\ExplSyntaxOn
+
+%region Diagnostics
+\msg_new:nnn { semio-graph } { unknown-state }
+  { Unknown~graph~node~state~'#1'.~Known~states:~
+    \seq_use:Nn \g_semio_graph_states_seq { ,~ } . }
+\msg_new:nnn { semio-graph } { unknown-edge-kind }
+  { Unknown~graph~edge~kind~'#1'.~Known~kinds:~
+    \seq_use:Nn \g_semio_graph_edge_kinds_seq { ,~ } . }
+\msg_new:nnn { semio-graph } { outside-figure }
+  { \iow_char:N\\#1~needs~an~enclosing~GraphFigure~(it~draws~into~its~tikzpicture). }
+\msg_new:nnn { semio-graph } { unit-in-number }
+  { Graph~key~'#1'~takes~a~plain~millimetre~number,~got~'#2'. }
+\msg_new:nnn { semio-graph } { state-exists }
+  { Graph~node~state~'#1'~is~already~defined. }
+\msg_new:nnn { semio-graph } { legend-needs-value }
+  { \iow_char:N\\SemioGraphLegend~entry~'#1'~needs~the~form~state=Text. }
+%endregion Diagnostics
+
+%region StyleVocabulary
+% 🎨 The reusable graph vocabulary. No other .sty in this system defines
+% \tikzset styles -- the vocabulary lived only in document preambles, which is
+% why every graph document redeclared it from scratch. Namespaced
+% `semio graph *` so it can never collide with, nor accidentally inherit
+% from, the document-level `semio` / `semio edge` / `semio tree *` styles --
+% notably `semio edge` carries -latex, which a plain graph edge must not.
+\tikzset{
+  semio~graph~picture/.style={
+    x=1mm, y=-1mm,
+    every~node/.append~style={ outer~sep=0pt },
+  },
+  semio~graph~node/.style={
+    draw=semio-chrome-border-normal,
+    line~width=\semio@stroke@hairline,
+    fill=semio-chrome-canvas,
+    radius=\semio@graph@node@radius,
+  },
+  semio~graph~label/.style={
+    font=\SemioMono\fontsize{\semio@graph@label@size}{\semio@graph@label@leading}\selectfont,
+    inner~sep=0,
+    text=semio-chrome-text-normal,
+  },
+  semio~graph~label~emphasized/.style={ text=semio-chrome-foreground },
+  semio~graph~edge/.style={
+    draw=semio-chrome-border-emphasized,
+    line~width=\semio@stroke@hairline,
+  },
+}
+%endregion StyleVocabulary
+
+%region StateRegistry
+% 🧬 A node STATE is an abstract visual-semantic role, never a dataset word.
+% Each state is a DELTA on `semio graph node`, so states compose (a node can
+% be focal AND hypo later) and adding one never touches the base. The factory
+% also records which label-style delta the state implies, which is why an
+% emitter never has to name a label style itself -- that mapping used to be a
+% second, easily-desynchronised copy of the state list.
+\seq_new:N \g_semio_graph_states_seq
+\seq_new:N \g_semio_graph_edge_kinds_seq
+
+\cs_new_protected:Npn \semio_graph_state_define:nnn #1#2#3 {
+  \seq_if_in:NnTF \g_semio_graph_states_seq {#1}
+    { \msg_error:nnn { semio-graph } { state-exists } {#1} }
+    {
+      \seq_gput_right:Nn \g_semio_graph_states_seq {#1}
+      \tl_const:cn { c_semio_graph_state_#1_label_tl } {#3}
+      \tikzset{ semio~graph~node~#1/.style={#2} }
+    }
+}
+
+\cs_new_protected:Npn \semio_graph_edge_kind_define:nn #1#2 {
+  \seq_gput_right:Nn \g_semio_graph_edge_kinds_seq {#1}
+  \tikzset{ semio~graph~edge~#1/.style={#2} }
+}
+
+% 🌱 The default vocabulary. `plain` is the base (asserted, unremarkable)
+% member of the set; the other three extend the epistemic axis the system
+% already names for edges (`semio edge` -> `synth` -> `hypo`) onto nodes, plus
+% one prominence role. Callers map their own dataset's semantics onto these
+% four roles; new roles are added with \SemioGraphState, never by editing
+% these definitions.
+\semio_graph_state_define:nnn { plain } { } { }
+\semio_graph_state_define:nnn { focal }
+  {
+    draw=semio-chrome-border-emphasized,
+    line~width=\semio@stroke@default,
+    fill=semio-chrome-panel,
+    radius=\semio@graph@node@radius+\semio@graph@node@radius@emphasis,
+  }
+  { semio~graph~label~emphasized }
+\semio_graph_state_define:nnn { attested }
+  {
+    draw=semio-chrome-border-emphasized,
+    fill=semio-chrome-window,
+  }
+  { semio~graph~label~emphasized }
+\semio_graph_state_define:nnn { hypo }
+  { dash~pattern=on~\semio@stroke@focus~off~\semio@stroke@default }
+  { }
+
+\semio_graph_edge_kind_define:nn { plain } { }
+\semio_graph_edge_kind_define:nn { muted } { draw=semio-chrome-border-normal }
+\semio_graph_edge_kind_define:nn { synth }
+  { dash~pattern=on~\semio@stroke@focus~off~\semio@stroke@default }
+\semio_graph_edge_kind_define:nn { hypo }
+  { dash~pattern=on~\semio@stroke@hairline~off~\semio@stroke@default }
+\semio_graph_edge_kind_define:nn { directed } { -latex }
+
+\NewDocumentCommand \SemioGraphState { m m m }
+  { \semio_graph_state_define:nnn {#1} {#2} {#3} }
+\NewDocumentCommand \SemioGraphEdgeKind { m m }
+  { \semio_graph_edge_kind_define:nn {#1} {#2} }
+%endregion StateRegistry
+
+%region Keys
+\tl_new:N \l_semio_graph_title_tl
+\tl_new:N \l_semio_graph_window_tl
+\tl_new:N \l_semio_graph_width_tl
+\tl_new:N \l_semio_graph_height_tl
+\tl_new:N \l_semio_graph_state_tl
+\tl_new:N \l_semio_graph_kind_tl
+\tl_new:N \l_semio_graph_margin_h_tl
+\tl_new:N \l_semio_graph_margin_v_tl
+\bool_new:N \l_semio_graph_chrome_bool
+\bool_new:N \l_semio_graph_in_figure_bool
+\int_new:N \l_semio_graph_legend_int
+
+\cs_new_protected:Npn \semio_graph_number_check:nn #1#2 {
+  \regex_match:nnT { [a-zA-Z] } {#2}
+    { \msg_error:nnnn { semio-graph } { unit-in-number } {#1} {#2} }
+}
+\cs_new_protected:Npn \semio_graph_state_select:n #1 {
+  \seq_if_in:NnTF \g_semio_graph_states_seq {#1}
+    { \tl_set:Nn \l_semio_graph_state_tl {#1} }
+    { \msg_error:nnn { semio-graph } { unknown-state } {#1} }
+}
+\cs_new_protected:Npn \semio_graph_kind_select:n #1 {
+  \seq_if_in:NnTF \g_semio_graph_edge_kinds_seq {#1}
+    { \tl_set:Nn \l_semio_graph_kind_tl {#1} }
+    { \msg_error:nnn { semio-graph } { unknown-edge-kind } {#1} }
+}
+
+\keys_define:nn { semio / graph / figure } {
+  title  .tl_set:N = \l_semio_graph_title_tl,
+  window .tl_set:N = \l_semio_graph_window_tl,
+  width  .code:n = {
+    \semio_graph_number_check:nn { width } {#1}
+    \tl_set:Nn \l_semio_graph_width_tl {#1}
+  },
+  height .code:n = {
+    \semio_graph_number_check:nn { height } {#1}
+    \tl_set:Nn \l_semio_graph_height_tl {#1}
+  },
+}
+\keys_define:nn { semio / graph / node } {
+  state .code:n = { \semio_graph_state_select:n {#1} },
+}
+\keys_define:nn { semio / graph / edge } {
+  kind .code:n = { \semio_graph_kind_select:n {#1} },
+}
+\keys_define:nn { semio / graph / spread } {
+  margin-h .tl_set:N = \l_semio_graph_margin_h_tl,
+  margin-v .tl_set:N = \l_semio_graph_margin_v_tl,
+  chrome .choice:,
+  chrome / drop .code:n = { \bool_set_false:N \l_semio_graph_chrome_bool },
+  chrome / keep .code:n = { \bool_set_true:N  \l_semio_graph_chrome_bool },
+}
+
+% 🧯 Defaults are set by an explicit reset called before \keys_set:nn, never
+% via `.initial:n` -- this is how every existing semio key tree distinguishes
+% "not passed, use the default" from "explicitly set to the default value".
+\cs_new_protected:Npn \semio_graph_figure_keys_reset: {
+  \tl_clear:N \l_semio_graph_title_tl
+  \tl_clear:N \l_semio_graph_window_tl
+  \tl_set:Nn \l_semio_graph_width_tl  { \semio@graph@frame@width }
+  \tl_set:Nn \l_semio_graph_height_tl { \semio@graph@frame@height }
+}
+\cs_new_protected:Npn \semio_graph_node_keys_reset:
+  { \tl_set:Nn \l_semio_graph_state_tl { plain } }
+\cs_new_protected:Npn \semio_graph_edge_keys_reset:
+  { \tl_set:Nn \l_semio_graph_kind_tl { plain } }
+\cs_new_protected:Npn \semio_graph_spread_keys_reset: {
+  \tl_set:Nn \l_semio_graph_margin_h_tl { \semio@graph@spread@margin@h }
+  \tl_set:Nn \l_semio_graph_margin_v_tl { \semio@graph@spread@margin@v }
+  \bool_set_false:N \l_semio_graph_chrome_bool
+}
+%endregion Keys
+
+%region Figure
+% 🪟 GraphFigure does NOT reimplement Figure -- it opens the existing window
+% kind from semio-window.sty and adds only what a graph needs: the picture
+% style, the millimetre-number unit contract and the bounding box. break=false
+% is structural (a tikzpicture is one unbreakable box), so it is not exposed
+% as a key; anything else the window understands (anchor=, key=, hierarchy=)
+% goes through window={...}, a passthrough rather than a mirrored key set.
+\cs_new_protected:Npn \semio_graph_figure_open:n #1 {
+  \begin{Figure}[#1]
+  \begin{tikzpicture}[ semio~graph~picture ]
+  \useasboundingbox (0,0) rectangle
+    ( \l_semio_graph_width_tl , \l_semio_graph_height_tl ) ;
+}
+
+\cs_new_protected:Npn \semio_graph_figure_begin:n #1 {
+  \semio_graph_figure_keys_reset:
+  \keys_set:nn { semio / graph / figure } {#1}
+  \tl_set:Nx \l_tmpa_tl {
+    title = { \exp_not:V \l_semio_graph_title_tl } ,
+    break = false ,
+    \exp_not:V \l_semio_graph_window_tl
+  }
+  \exp_args:NV \semio_graph_figure_open:n \l_tmpa_tl
+  \bool_set_true:N \l_semio_graph_in_figure_bool
+}
+
+\cs_new_protected:Npn \semio_graph_figure_end: {
+  \bool_set_false:N \l_semio_graph_in_figure_bool
+  \end{tikzpicture}
+  \end{Figure}
+}
+
+\NewDocumentEnvironment { GraphFigure } { O{} }
+  { \semio_graph_figure_begin:n {#1} }
+  { \semio_graph_figure_end: }
+%endregion Figure
+
+%region Primitives
+\cs_new_protected:Npn \semio_graph_frame_require:n #1 {
+  \bool_if:NF \l_semio_graph_in_figure_bool
+    { \msg_error:nnn { semio-graph } { outside-figure } {#1} }
+}
+
+\cs_new_protected:Npn \semio_graph_node_draw:nnn #1#2#3 {
+  \draw [ semio~graph~node , semio~graph~node~#1 ] (#2) circle [] ;
+  \tl_if_blank:nF {#3} {
+    \node [ semio~graph~label , \tl_use:c { c_semio_graph_state_#1_label_tl } ]
+      at (#2) {#3} ;
+  }
+}
+
+\cs_new_protected:Npn \semio_graph_node:nnn #1#2#3 {
+  \semio_graph_frame_require:n { SemioGraphNode }
+  \semio_graph_node_keys_reset:
+  \keys_set:nn { semio / graph / node } {#1}
+  \exp_args:NV \semio_graph_node_draw:nnn \l_semio_graph_state_tl {#2} {#3}
+}
+
+\cs_new_protected:Npn \semio_graph_edge_draw:nnn #1#2#3 {
+  \draw [ semio~graph~edge , semio~graph~edge~#1 ] (#2) -- (#3) ;
+}
+
+\cs_new_protected:Npn \semio_graph_edge:nnn #1#2#3 {
+  \semio_graph_frame_require:n { SemioGraphEdge }
+  \semio_graph_edge_keys_reset:
+  \keys_set:nn { semio / graph / edge } {#1}
+  \exp_args:NV \semio_graph_edge_draw:nnn \l_semio_graph_kind_tl {#2} {#3}
+}
+
+\NewDocumentCommand \SemioGraphNode { O{} m m } { \semio_graph_node:nnn {#1}{#2}{#3} }
+\NewDocumentCommand \SemioGraphEdge { O{} m m } { \semio_graph_edge:nnn {#1}{#2}{#3} }
+%endregion Primitives
+
+%region Legend
+% 🔖 The legend DRAWS the vocabulary instead of describing it in prose: each
+% entry is a real node in that state, so a token change updates the legend
+% automatically. Callers supply only the dataset word the role means in
+% their document -- the one thing this package cannot know.
+\seq_new:N \l_semio_graph_legend_pair_seq
+
+\cs_new_protected:Npn \semio_graph_legend_swatch:n #1 {
+  \tikz[ semio~graph~picture, baseline=-0.5ex ]
+    \draw [ semio~graph~node , semio~graph~node~#1 ] (0,0) circle [] ;
+}
+\cs_new_protected:Npn \semio_graph_legend_item:nn #1#2 {
+  \semio_graph_state_select:n {#1}
+  \int_incr:N \l_semio_graph_legend_int
+  \int_compare:nNnT \l_semio_graph_legend_int > 1
+    { \textcolor{semio-chrome-border-normal}{ ~\textperiodcentered } ~ }
+  \semio_graph_legend_swatch:n { \l_semio_graph_state_tl } \nobreakspace #2
+}
+% 🪢 One entry is `state=Text`; split on the FIRST `=` only (an entry text may
+% itself contain `=`, though none in this document's vocabulary do).
+\cs_new_protected:Npn \semio_graph_legend_entry:n #1 {
+  \seq_set_split:Nnn \l_semio_graph_legend_pair_seq { = } {#1}
+  \int_compare:nNnTF { \seq_count:N \l_semio_graph_legend_pair_seq } > { 1 }
+    {
+      \exp_args:Noo \semio_graph_legend_item:nn
+        { \seq_item:Nn \l_semio_graph_legend_pair_seq {1} }
+        { \seq_item:Nn \l_semio_graph_legend_pair_seq {2} }
+    }
+    { \msg_error:nnn { semio-graph } { legend-needs-value } {#1} }
+}
+\cs_new_protected:Npn \semio_graph_legend:n #1 {
+  \int_zero:N \l_semio_graph_legend_int
+  \clist_map_inline:nn {#1} { \semio_graph_legend_entry:n {##1} }
+}
+\NewDocumentCommand \SemioGraphLegend { m } { \semio_graph_legend:n {#1} }
+%endregion Legend
+
+%region Spread
+% 🗺 Full-width figure page. KNOWN DEFECT, deliberately preserved: a bare
+% \newgeometry drops the class's includehead/includefoot reservation, so the
+% chrome band is unaccounted for on spread pages. That is the behaviour of
+% every raw \newgeometry in this codebase today (\makecoverpages included),
+% and the pixel gate depends on it, so `chrome=drop` is the default.
+% `chrome=keep` is the one-word fix, opt-in, for whoever re-baselines these
+% pages later. An ENVIRONMENT, not a macro pair: it makes the
+% \clearpage/\restoregeometry pairing unforgeable, matching every other block
+% mechanism in this system (Figure, Table, SemioTable are all environments).
+\cs_new_protected:Npn \semio_graph_spread_begin:n #1 {
+  \semio_graph_spread_keys_reset:
+  \keys_set:nn { semio / graph / spread } {#1}
+  \clearpage
+  \use:x {
+    \exp_not:N \newgeometry {
+      left = \l_semio_graph_margin_h_tl , right = \l_semio_graph_margin_h_tl ,
+      top = \l_semio_graph_margin_v_tl , bottom = \l_semio_graph_margin_v_tl
+      \bool_if:NT \l_semio_graph_chrome_bool { , includehead , includefoot }
+    }
+  }
+}
+\cs_new_protected:Npn \semio_graph_spread_end: { \clearpage \restoregeometry }
+
+\NewDocumentEnvironment { GraphSpread } { O{} }
+  { \semio_graph_spread_begin:n {#1} }
+  { \semio_graph_spread_end: }
+%endregion Spread
+
+\ExplSyntaxOff

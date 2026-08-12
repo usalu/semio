@@ -77,5 +77,6 @@
 \RequirePackage[style=\semio@citestyle,backend=bibtex,sorting=nyt]{biblatex}
 \RequirePackage{semio-window}
 \RequirePackage{semio-components}
+\RequirePackage{semio-graph}
 \RequirePackage{hyperref}
 \hypersetup{colorlinks,linkcolor=semio-primary,citecolor=semio-primary,urlcolor=semio-primary,filecolor=semio-primary}
