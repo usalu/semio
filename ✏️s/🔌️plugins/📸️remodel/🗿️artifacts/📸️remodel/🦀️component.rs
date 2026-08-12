@@ -1,11 +1,13 @@
 //! 📸️ Remodel scene document — schema-only photogrammetry/videogrammetry project state (media
 //! streams, calibration, ground control points, reconstruction params/job/results) shared as CRDT
-//! operations. The actual algorithms live in the sibling `⚙️engine/` topic files (`images`/`video`/
-//! `camera`/`feature`/`sfm`/`dense`/`mesh`/`motion`/`geo`/`reconstruction`), none of which this node
-//! references: heavier runtime types (`Se3`, `Intrinsics`, `Distortion`, `WatertightReport`, decoded
-//! pyramids, match graphs, depth maps, TSDF volumes) are not designed for durable CRDT persistence,
-//! so every reference to their shape below is a plain-JSON (or `Packed*`) snapshot the app fills in,
-//! never the library type itself.
+//! operations. The actual algorithms live in the app's own `🎛️apps/📸️remodel/⚙️engine/` topic files
+//! (`images`/`video`/`camera`/`feature`/`sfm`/`dense`/`mesh`/`motion`/`geo`/`reconstruction`,
+//! relocated out of this artifact tree by 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES,
+//! #2553 — an artifact is a schema plus IO, never an engine), none of which this node references:
+//! heavier runtime types (`Se3`, `Intrinsics`, `Distortion`, `WatertightReport`, decoded pyramids,
+//! match graphs, depth maps, TSDF volumes) are not designed for durable CRDT persistence, so every
+//! reference to their shape below is a plain-JSON (or `Packed*`) snapshot the app fills in, never the
+//! library type itself.
 
 use base64::Engine as _;
 use semio_framework::MeshData;
@@ -49,7 +51,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.remodel")
         .schema(crate::artifacts::remodel::schema::remodel_artifact_schema_descriptor())
         .inferences([crate::artifacts::remodel::standards::v1::subsets::any::schema::inferences::remodel_artifact_inference_descriptor()])
-        .composers(crate::artifacts::remodel::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::remodel::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::remodel::RemodelPlayApp>()
         .build()
@@ -1217,7 +1219,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::remodel::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::remodel::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

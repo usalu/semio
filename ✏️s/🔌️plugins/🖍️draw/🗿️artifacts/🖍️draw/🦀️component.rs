@@ -465,16 +465,15 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// is the one exception, still called from `🖍️draw/🦀️component.rs`'s own `.setup()`: it registers the
 /// `DrawPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
 /// no field for (see that struct's own doc).
-/// 🔀️ Deviation from the mechanical move-both: `.composers(...)` is qualified with the full
-/// `crate::artifacts::draw::standards::v1::engine::io_registry::entries()` path here — the original
-/// engine-file body called `io_registry::entries()` unqualified, resolving to the `io_registry`
-/// submodule that still lives in `⚙️engine/🦀️component.rs` (NOT moved, per the ticket's move-both
-/// rule covering only `declaration()`/`pilot_languages()`).
+/// 🔀️ The `⚙️engine` directory this function moved out of has since been dissolved into
+/// `🧬️schema/`/`🚪️io/`/the app (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES); the
+/// `.composers(...)` call below is re-qualified onto `subsets::any::io::io_registry`, the real
+/// `io_registry`'s new home.
 pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.draw")
         .schema(crate::artifacts::draw::schema::draw_artifact_schema_descriptor())
         .inferences([crate::artifacts::draw::schema::inferences::draw_artifact_inference_descriptor()])
-        .composers(crate::artifacts::draw::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::draw::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::draw::DrawPlayApp>()
         .build()
@@ -484,7 +483,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::draw::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::draw::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

@@ -30,7 +30,7 @@ mod tests {
 
     #[test]
     fn vcs_demo_projection_dsl_pack_equivalence() {
-        let projection = crate::artifacts::vcs::engine::empty_vcs_snapshot();
+        let projection = crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot();
         store::os_store::test_support::assert_dsl_pack_equivalence(&projection);
         let bytes = encode(&projection);
         assert_eq!(decode(&bytes).expect("decode"), projection);
@@ -47,7 +47,7 @@ mod tests {
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let mut store: ArtifactStore<VcsSnapshot, VcsDemoMutation> =
-            ArtifactStore::new(create_document_envelope(VCS_DOCUMENT_SCHEMA, "vcs-demo", crate::artifacts::vcs::engine::empty_vcs_snapshot(), None));
+            ArtifactStore::new(create_document_envelope(VCS_DOCUMENT_SCHEMA, "vcs-demo", crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot(), None));
         store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::vcs::mutations::rename_vcs("Renamed".into())], description: None }).expect("apply");
         let edit: &Edit<VcsDemoMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<VcsSnapshot, VcsDemoMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));

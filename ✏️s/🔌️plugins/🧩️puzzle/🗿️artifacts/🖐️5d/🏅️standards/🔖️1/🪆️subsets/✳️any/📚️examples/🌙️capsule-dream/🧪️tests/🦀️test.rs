@@ -14,7 +14,7 @@ fn dsl_asset_parses_and_round_trips() {
 fn flatten_matches_golden_poses_to_1e4() {
     let text = include_str!("../🖼️assets/🗣️dream.dsl.semio");
     let mut projection = crate::artifacts::puzzle5d::dsl::parse_dsl(text).expect("example dsl parses");
-    crate::artifacts::puzzle5d::engine::flatten::flatten_snapshot_inplace(&mut projection);
+    crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot_inplace(&mut projection);
     let golden: serde_json::Map<String, serde_json::Value> =
         serde_json::from_str(include_str!("../🖼️assets/🏅golden-poses.json")).expect("golden json");
     assert_eq!(golden.len(), 2880);

@@ -3,7 +3,7 @@
 //! drags (coalesced into one undoable edit per gesture).
 
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
-use crate::artifacts::procedural3d::engine::{
+use crate::artifacts::procedural3d::schema::{
     commit_fixture, ensure_gumball_node, gumball_rotate_params_json, gumball_scale_params_json, gumball_translate_params_json, gumball_widget_number_param, gumball_widget_offset, host_from_fixture};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
@@ -136,7 +136,7 @@ mod tests {
 
     #[test]
     fn translate_selection_persists_transform_into_flow_graph() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         let before = app.snapshot().expect("snapshot");
         assert!(before.fixture.synapses.iter().any(|synapse| synapse.from == "extrude" && synapse.to == "column-preview"));
@@ -157,7 +157,7 @@ mod tests {
 
     #[test]
     fn rotate_and_scale_selection_persist_into_flow_graph() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut rotate_app = app();
         dispatch(&mut rotate_app, Procedural3dCommand::RotateSelection(rotate_selection::RotateSelection { node_ids: vec!["extrude".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: std::f64::consts::FRAC_PI_2 }));
         let rotated = rotate_app.snapshot().expect("snapshot");

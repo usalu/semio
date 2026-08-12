@@ -7,7 +7,7 @@ use crate::apps::puzzle2d::modes::edit::tools::fill;
 use crate::apps::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::apps::puzzle2d::terminology::Puzzle2dLabels;
 use crate::apps::puzzle2d::{fixture_edges, fixture_nodes, puzzle2d_action, runtime_camera, Puzzle2dScene, PUZZLE2D_LOD_MODE_AUTOMATIC, PUZZLE2D_PLAY_SURFACE_ID};
-use crate::artifacts::puzzle2d::engine::{BoardHost, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
+use crate::apps::puzzle2d::engine::{BoardHost, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
 use semio_framework_plugin::{build_board2d_scene, create_default_layout, Board2dScene, LocalizedLabel, ModeDefinition, ToolRef, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowLayout};
 use serde_json::{json, Value};
 

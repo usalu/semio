@@ -5,16 +5,16 @@
 //! mounting mechanism, same as mutations); each named inference gets its own `<emoji><slug>/` child
 //! (currently: `🎛flat-position/`).
 //!
-//! 🎛 Puzzle5d's flatten math already lives at `⚙️engine/📐️flatten` (`flatten_snapshot`, which maps
-//! parts/grips/fasteners onto the 3d object/vortex/attraction graph and runs puzzle3d's own solver)
-//! — unlike puzzle3d's own inference, there is no separate low-level per-edge decomposition exposed
+//! 🎛 Puzzle5d's flatten math lives at `💡️inferences/🎛flat-position` (`flatten_snapshot`, which maps
+//! parts/grips/fasteners onto the 3d object/vortex/attraction graph and runs puzzle3d's own solver) —
+//! unlike puzzle3d's own inference, there is no separate low-level per-edge decomposition exposed
 //! here to drive an incremental `InferredField` chain, so this inference is a plain whole-snapshot
 //! `Inference` impl (per the family root's own "simple whole-snapshot scalars" guidance) that calls
-//! that existing engine function directly; `ArtifactInferrer::infer_cached`'s default passthrough
+//! that sibling slug's function directly; `ArtifactInferrer::infer_cached`'s default passthrough
 //! (just calls `infer`) is used as-is, uncached.
 
 use crate::artifacts::puzzle3d::engine::geometry::flatten::FlattenPose;
-use crate::artifacts::puzzle5d::standards::v1::engine::flatten::flatten_snapshot;
+use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot;
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 use artifact_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;

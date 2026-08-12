@@ -6,9 +6,10 @@
 //! still read texture/transform preview state while `handle(&self, ..)` locks it mutably for dispatch.
 
 use crate::apps::lowpoly::config::LowpolyConfig;
+use crate::apps::lowpoly::engine::LowpolyDocument;
 use crate::apps::lowpoly::view::build_doc;
-use crate::artifacts::lowpoly::engine::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from, stamp_brush, LowpolyDocument};
 use crate::artifacts::lowpoly::op::{LowpolyMutation, PixelRun};
+use crate::artifacts::lowpoly::schema::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from, stamp_brush};
 use crate::artifacts::lowpoly::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
 use base64::Engine;
 use semio_framework_3d::mesh::Vec3;
@@ -483,7 +484,7 @@ impl LowpolyScratch {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::engine::default_snapshot;
+    use crate::artifacts::lowpoly::schema::default_snapshot;
 
     #[test]
     fn gesture_preview_is_none_without_an_active_transform_drag() {

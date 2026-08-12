@@ -1,7 +1,7 @@
 //! 🧱️ Note play app commands — block create/move/delete/duplicate/patch. Document-mutating.
 
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
-use crate::artifacts::note::engine::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, offset_block_tree};
+use crate::artifacts::note::schema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, offset_block_tree};
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::schema::mutations::{
     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutation,
@@ -230,7 +230,7 @@ mod tests {
         assert_eq!(result.mutations.len(), 1);
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.blocks.len(), 1);
-        assert_eq!(crate::artifacts::note::engine::block_kind(&projection.blocks[0]), "text");
+        assert_eq!(crate::artifacts::note::schema::block_kind(&projection.blocks[0]), "text");
     }
 
     #[test]
@@ -270,7 +270,7 @@ mod tests {
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.blocks.len(), 2);
         let clone = projection.blocks.iter().find(|block| block_id(block) != source_id).expect("clone block");
-        let (x, y, ..) = crate::artifacts::note::engine::block_bounds(clone);
+        let (x, y, ..) = crate::artifacts::note::schema::block_bounds(clone);
         assert_eq!((x, y), (34.0, 34.0));
     }
 }

@@ -6,7 +6,7 @@ use protocol::Patchable;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
 use crate::artifacts::program::diff::{ProgramAdjacenciesDelta, ProgramAdjacenciesPatchEntry};
-use crate::artifacts::program::engine::adjacency::normalize_pair;
+use crate::artifacts::program::standards::v1::subsets::any::schema::normalize_pair;
 
 /// 🔌️ `added = [normalized edge]` if the pair is new, else `patched = [{existing id, full patch}]`
 /// — the existing edge's own id is preserved even if `payload.adjacency` carries a different one.

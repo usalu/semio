@@ -44,7 +44,7 @@ mod tests {
 
     #[test]
     fn document_lists_widgets() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_DOCUMENT).contains("procedural-widget:"));
     }

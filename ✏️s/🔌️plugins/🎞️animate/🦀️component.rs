@@ -7,7 +7,7 @@ pub fn plugin() -> Plugin {
     Plugin::builder("animate")
         .label("Animate")
         .version("0.1.0")
-        .setup(crate::artifacts::present::engine::register)
+        .setup(crate::apps::present::register)
         .register_document_app::<crate::apps::present::AnimatePresentPlayApp>(crate::apps::present::create_animate_present_app())
         .build()
 }

@@ -342,7 +342,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
-/// `OnceLock`-backed `io_registry::entries()` convention used by `standards::v1::engine::io_registry`.
+/// `OnceLock`-backed `io_registry::entries()` convention used by `standards::v1::subsets::any::io::io_registry`.
 /// Relocated from `⚙️engine/🦀️component.rs` alongside `declaration()` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) — `declaration()`'s only caller, kept private.
 fn pilot_languages() -> &'static [dsl::LanguageSpec] {
@@ -408,7 +408,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `register()`, which called five different global registries directly from
 /// a plugin `.setup()` callback, including `crate::artifacts::layout::io_registry::register()` — a
-/// DUPLICATE registration of the exact `standards::v1::engine::io_registry::entries()` slice the
+/// DUPLICATE registration of the exact `standards::v1::subsets::any::io::io_registry::entries()` slice the
 /// `.composers(…)` call below now registers once (that top-level `artifacts::layout::io_registry`
 /// module has no other caller in the repo — deleting its call here rather than keeping it, per the
 /// W1b duplicate-IO-registration finding; the module itself is left in place as inert dead code,
@@ -421,7 +421,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.layout")
         .schema(crate::artifacts::layout::schema::layout_artifact_schema_descriptor())
         .inferences([crate::artifacts::layout::standards::v1::subsets::any::schema::inferences::layout_artifact_inference_descriptor()])
-        .composers(crate::artifacts::layout::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::layout::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::layout::LayoutPlayApp>()
         .build()
@@ -727,7 +727,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::layout::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::layout::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

@@ -3,14 +3,14 @@
 
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::apps::present::tile_morph_prompt_effect;
-use crate::artifacts::present::engine::export_video_from_scene;
-use crate::artifacts::present::engine::PresentScene;
+use crate::apps::present::engine::export_video_from_scene;
+use crate::apps::present::engine::PresentScene;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::PresentSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
 
-fn export_video_from_deck(scene: &PresentScene, output_dir: &str) -> Result<Vec<crate::artifacts::present::engine::SceneAssetBundle>, crate::artifacts::present::engine::PresentError> {
+fn export_video_from_deck(scene: &PresentScene, output_dir: &str) -> Result<Vec<crate::apps::present::engine::SceneAssetBundle>, crate::apps::present::engine::PresentVideoExportError> {
     export_video_from_scene(scene, std::path::Path::new(output_dir))
 }
 

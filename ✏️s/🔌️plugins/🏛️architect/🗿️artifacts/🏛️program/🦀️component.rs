@@ -288,7 +288,7 @@ pub fn sample_plugin() -> ProgramSnapshot {
         success_metrics: Vec::new(),
     });
 
-    let (a, b) = crate::artifacts::program::engine::adjacency::normalize_pair(&reception_id, &waiting_id);
+    let (a, b) = crate::artifacts::program::standards::v1::subsets::any::schema::normalize_pair(&reception_id, &waiting_id);
     program.adjacencies.push(Adjacency {
         header: EntityHeader::new(EntityId::new_serial("adjacency", "Reception ↔ Waiting"), "Reception ↔ Waiting"),
         element_a_id: a,
@@ -393,7 +393,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::program::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::program::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

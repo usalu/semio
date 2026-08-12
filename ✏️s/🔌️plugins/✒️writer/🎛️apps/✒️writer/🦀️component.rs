@@ -561,6 +561,16 @@ mod tests {
         serde_json::to_value(app.context_menu(&request)).unwrap_or(Value::Null)
     }
 
+    /// 🪶 Relocated from the artifact's `🧬️schema` tests: it needs `register_writer_languages()`, so
+    /// leaving it artifact-side made the artifact depend on its app — the inversion this ticket removes.
+    /// An app may reach into its artifact; never the reverse.
+    #[test]
+    fn jack_completions_use_example_fixture() {
+        register_writer_languages();
+        let json = crate::artifacts::writer::standards::v1::subsets::any::schema::jack_completions_json("RETURN a.", 9).unwrap_or_default();
+        assert!(!json.is_empty());
+    }
+
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row (`setEditorSetting`
     /// legitimately covers three rows — see the `app_commands!` doc comment above), and every row's wire

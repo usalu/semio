@@ -35,14 +35,6 @@ pub mod artifacts {
             #[path = "."]
             pub mod v1 {
                 #[path = "."]
-                pub mod engine {
-                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎬️scene/🦀️component.rs"]
-                    pub mod scene;
-                }
-                #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
@@ -501,9 +493,6 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v1::engine::*;
-        }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
@@ -537,6 +526,15 @@ pub mod apps {
         #[path = "../../🎛️apps/📏️layout/🦀️component.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod engine {
+            #[path = "../../🎛️apps/📏️layout/⚙️engine/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "../../🎛️apps/📏️layout/⚙️engine/🎬️scene/🦀️component.rs"]
+            pub mod scene;
+        }
 
         #[path = "."]
         pub mod config {

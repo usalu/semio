@@ -41,7 +41,7 @@ pub fn window_measures(document: &NoteSnapshot, camera: &NoteCamera, labels: &No
 }
 
 pub fn engagement(document: &NoteSnapshot, camera: &NoteCamera, selected_ids: &[String], engagement_input: &str) -> WindowEngagement {
-    let block_count = crate::artifacts::note::engine::flatten_blocks(&document.blocks).len();
+    let block_count = crate::artifacts::note::schema::flatten_blocks(&document.blocks).len();
     let selected_count = selected_ids.len();
     let zoom = camera.zoom;
     let snap_status = if document.snap_enabled.unwrap_or(false) { format!("snap {}px", document.snap_grid_spacing.unwrap_or(8.0)) } else { "snap off".into() };

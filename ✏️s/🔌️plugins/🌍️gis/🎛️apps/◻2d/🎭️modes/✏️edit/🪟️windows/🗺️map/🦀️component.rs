@@ -3,7 +3,7 @@
 use crate::apps::gis2d::config::Gis2dConfig;
 use crate::apps::gis2d::terminology::Gis2dPlayLabels;
 use crate::apps::gis2d::{GIS2D_PLAY_APP_ID, GIS_MAP_LAYER_IDS};
-use crate::artifacts::gismap::engine::gis_map_descriptor_json;
+use crate::artifacts::gismap::schema::gis_map_descriptor_json;
 use crate::artifacts::gismap::GisMapSnapshot;
 use framework_surface::tiled_map::clamp_map_layer_weight;
 use semio_framework_plugin::{build_tiled_map_scene, LocalizedLabel, SurfaceKind, TiledMapScene, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};

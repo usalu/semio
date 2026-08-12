@@ -3,6 +3,15 @@
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
+//#region 🔖️DocumentHelpers
+/// 🌱️ The artifact's empty/default snapshot — used as `VcsPlayApp::initial_snapshot()` and by every
+/// test fixture that needs a base document (was: `⚙️engine::empty_vcs_snapshot()`, dissolved per ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
+pub fn empty_vcs_snapshot() -> crate::artifacts::vcs::VcsSnapshot {
+    crate::artifacts::vcs::VcsSnapshot::default()
+}
+//#endregion 🔖️DocumentHelpers
+
 //#region 🔖️Artifact
 /// 🧬️ Full VCS demo artifact state across persistent, shared-ui and local-ui classes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
@@ -221,3 +230,17 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: VcsComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_snapshot_matches_schema() {
+        let snapshot = empty_vcs_snapshot();
+        assert_eq!(snapshot.schema, crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA);
+        assert_eq!(snapshot.status, "new");
+    }
+}
+//#endregion 🧪️Tests

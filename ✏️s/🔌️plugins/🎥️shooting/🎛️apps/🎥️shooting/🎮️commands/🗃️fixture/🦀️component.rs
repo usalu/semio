@@ -42,7 +42,7 @@ pub mod set_active_example {
         let next = if payload.example_id.is_empty() {
             Some(crate::artifacts::shooting::empty_shooting_snapshot())
         } else if payload.example_id == SHOOTING_EXAMPLE_DEFAULT_ID || payload.example_id == "base" {
-            Some(crate::artifacts::shooting::engine::default_snapshot())
+            Some(crate::artifacts::shooting::schema::default_snapshot())
         } else {
             None
         };
@@ -63,7 +63,7 @@ pub mod reset_snapshot {
     pub struct ResetSnapshot {}
 
     pub fn handle(_payload: &ResetSnapshot, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit { effects: vec![crate::apps::shooting::reset_document_effect(&crate::artifacts::shooting::engine::default_snapshot())], ..Default::default() })
+        Ok(Emit { effects: vec![crate::apps::shooting::reset_document_effect(&crate::artifacts::shooting::schema::default_snapshot())], ..Default::default() })
     }
 }
 //#endregion 🔖️ResetSnapshot

@@ -240,3 +240,11 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: Puzzle2dComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+/// 📄️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+/// W1e): a pure default-snapshot constructor over document types, no `AppIo`/app dependency.
+pub fn empty_puzzle2d_snapshot() -> Puzzle2dSnapshot {
+    Puzzle2dSnapshot::default()
+}
+//#endregion 🔖️DocumentHelpers

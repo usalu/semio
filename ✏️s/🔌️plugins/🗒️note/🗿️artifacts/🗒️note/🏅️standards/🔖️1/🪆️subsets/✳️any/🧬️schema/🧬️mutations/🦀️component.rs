@@ -117,7 +117,7 @@ mod tests {
     use protocol::SemanticMutation;
 
     fn sample_snapshot() -> NoteSnapshot {
-        let mut snapshot = crate::artifacts::note::engine::empty_note_snapshot();
+        let mut snapshot = crate::artifacts::note::schema::empty_note_snapshot();
         snapshot.blocks.push(NoteBlockNode::Text {
             id: "b1".into(), name: "Text".into(), x: 0.0, y: 0.0, width: 100.0, height: 40.0, rotation: 0.0, visible: true, locked: false,
             paragraphs: Vec::new(), font_size: 18.0, font_weight: "normal".into(), align: "left".into(),
@@ -200,7 +200,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &create_block(new_block.clone(), None, None));
         assert_mutation_inverse_law(&base, &delete_block("b1".into()));
         assert_mutation_inverse_law(&base, &delete_blocks(vec!["b1".into(), "b3".into()]));
-        let dup = crate::artifacts::note::engine::clone_block(base.blocks.iter().find(|b| crate::artifacts::note::engine::block_id(b) == "b1").unwrap());
+        let dup = crate::artifacts::note::schema::clone_block(base.blocks.iter().find(|b| crate::artifacts::note::schema::block_id(b) == "b1").unwrap());
         assert_mutation_inverse_law(&base, &duplicate_block("b1".into(), dup));
     }
 

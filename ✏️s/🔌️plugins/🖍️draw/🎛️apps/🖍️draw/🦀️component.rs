@@ -130,19 +130,19 @@ impl ArtifactApp for DrawPlayApp {
     }
 
     fn initial_snapshot() -> DrawSnapshot {
-        crate::artifacts::draw::engine::default_draw_document("empty", None)
+        crate::artifacts::draw::schema::default_draw_document("empty", None)
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
-        Some(crate::artifacts::draw::engine::draw_io())
+        Some(draw_io())
     }
 
-    /// 🎞️ `vector:out` (see `crate::artifacts::draw::engine::draw_vector_media`) plus the inherited
-    /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
-    /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
+    /// 🎞️ `vector:out` (see `draw_vector_media`) plus the inherited `document:out` default (the pack
+    /// of `doc.snapshot`, replicated inline — overriding `export_media` shadows the trait's provided
+    /// body for every port on this app, not just the new one).
     fn export_media(port: &str, doc: &ArtifactView<'_, DrawSnapshot>) -> Result<Media, MediaError> {
         match port {
-            "vector:out" => crate::artifacts::draw::engine::draw_vector_media(doc.snapshot),
+            "vector:out" => draw_vector_media(doc.snapshot),
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.snapshot.encode_pack();
@@ -190,6 +190,54 @@ impl ArtifactApp for DrawPlayApp {
     }
 }
 //#endregion 🔖️DrawPlayApp
+
+//#region 🔖️Io
+/// 🔌️ Relocated verbatim from the `⚙️engine` directory (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 4: anything returning `AppIo` or
+/// referencing an app type lives in `🎛️apps/<app>/`). This app's typed media I/O surface
+/// (`AppDefinition.io`) — mirrors the `2d.drawing` `ArtifactKindSpec` literal `create_draw_app`
+/// already declares via `.artifact_kind(...)` (schema/media type/export+import formats copied
+/// verbatim), plus the app-specific `vector:out` port (see `draw_vector_out_port` below).
+pub fn draw_io() -> semio_framework::AppIo {
+    semio_framework::AppIo {
+        document_schema: DRAW_DOCUMENT_SCHEMA.into(),
+        document_media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Vector },
+        ports: vec![draw_vector_out_port()],
+        export_formats: Vec::new(),
+        import_formats: Vec::new(),
+        artifact: semio_framework::ArtifactPresentation { id: "2d.drawing".into(), name: "2D Drawing".into(), dimension: "2d".into(), component_kind: "draw".into() },
+    }
+}
+
+/// 🔌️ `vector:out` — the draw document's current vector content, exported as SVG (workflow port
+/// surface; WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe). Reuses the existing `2d.drawing`
+/// kind (already declared by `create_draw_app`'s `.artifact_kind(...)`) rather than minting a
+/// duplicate — `kind_id` just pins this port to that same catalog entry. `Many`/optional: a
+/// consumer (e.g. raster's Vector→Raster-converted `image:in`) may connect before the canvas has
+/// any content, or fan out to several consumers at once.
+pub fn draw_vector_out_port() -> semio_framework::MediaPortSpec {
+    semio_framework::MediaPortSpec {
+        id: "vector:out".into(),
+        label: "Vector".into(),
+        direction: semio_framework::MediaPortDirection::Out,
+        media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Vector },
+        kind_id: Some("2d.drawing".into()),
+        required: false,
+        multiplicity: semio_framework::PortMultiplicity::Many,
+    }
+}
+
+/// 🖼️ Exports the current draw document as an SVG `Media` payload for the `vector:out` port —
+/// reuses `crate::artifacts::draw::io::draw_document_to_svg` (the same semio/drawing↔svg bridge the
+/// export-svg shell path uses), so there is exactly one SVG renderer.
+pub fn draw_vector_media(doc: &DrawSnapshot) -> Result<semio_framework::Media, semio_framework::MediaError> {
+    let (svg, _width, _height) = crate::artifacts::draw::io::draw_document_to_svg(doc).map_err(|error| semio_framework::MediaError::Payload("vector:out".into(), error))?;
+    Ok(semio_framework::Media {
+        media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Vector },
+        payload: semio_framework::MediaPayload::Structured { schema: "2d.drawing".into(), json: svg },
+    })
+}
+//#endregion 🔖️Io
 
 //#region 🔖️Manifest
 pub fn create_draw_app() -> App {
@@ -279,7 +327,7 @@ pub fn create_draw_app() -> App {
             .keybinding("enter", "canvasCommitDraft")
             .default_layout(edit::layout()),
     )
-    .example(DRAW_PLAY_EXAMPLE_DEFAULT_ID, LocalizedLabel::native("Semio", "Semio"), crate::artifacts::draw::engine::semio_draw_example_json(), "sparkles")
+    .example(DRAW_PLAY_EXAMPLE_DEFAULT_ID, LocalizedLabel::native("Semio", "Semio"), crate::artifacts::draw::schema::semio_draw_example_json(), "sparkles")
     .workflow("draw", "Draw", "2d.drawing")
 }
 //#endregion 🔖️Manifest
@@ -318,7 +366,7 @@ mod wasm_bridge {
                     let envelope: DrawEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     DrawStore::new(envelope)
                 }
-                None => DrawStore::new(create_document_envelope(DRAW_DOCUMENT_SCHEMA, "draw", crate::artifacts::draw::engine::empty_draw_snapshot(), None)),
+                None => DrawStore::new(create_document_envelope(DRAW_DOCUMENT_SCHEMA, "draw", crate::artifacts::draw::schema::empty_draw_snapshot(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
@@ -382,7 +430,7 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::draw::engine::{default_draw_document, layer_id, semio_draw_example_json};
+    use crate::artifacts::draw::schema::{default_draw_document, layer_id, semio_draw_example_json};
     use crate::artifacts::draw::DrawLayerNode;
     use semio_framework_plugin::kernel::HostEffect;
     use semio_framework_plugin::{testkit as fw_testkit, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
@@ -462,7 +510,7 @@ mod tests {
         let result = app.dispatch_typed(DrawCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }), &fw_testkit::meta("local")).expect("patch");
         assert_eq!(result.mutations.len(), 1);
         let projection = app.snapshot().unwrap();
-        assert!((crate::artifacts::draw::engine::layer_base(&projection.layers[0]).opacity - 0.5).abs() < f64::EPSILON);
+        assert!((crate::artifacts::draw::schema::layer_base(&projection.layers[0]).opacity - 0.5).abs() < f64::EPSILON);
     }
 
     #[test]
@@ -471,7 +519,7 @@ mod tests {
         let id = first_layer_id(&app);
         let result = app.dispatch_typed(DrawCommand::PatchLayer(patch_layer::PatchLayer { layer_id: id, field: "name".into(), value: "Renamed".into() }), &fw_testkit::meta("local")).expect("patch");
         assert_eq!(result.mutations.len(), 1);
-        assert_eq!(crate::artifacts::draw::engine::layer_base(&app.snapshot().unwrap().layers[0]).name, "Renamed");
+        assert_eq!(crate::artifacts::draw::schema::layer_base(&app.snapshot().unwrap().layers[0]).name, "Renamed");
     }
 
     #[test]

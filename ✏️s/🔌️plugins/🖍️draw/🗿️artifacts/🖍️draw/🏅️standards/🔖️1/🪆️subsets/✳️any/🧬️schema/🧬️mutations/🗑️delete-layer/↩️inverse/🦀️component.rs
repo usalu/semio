@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteLayer` — reconstructs a `create-layer` at the exact captured (parent,
 //! index) BASE location, carrying the full removed subtree (children included for a group).
 //! Missing target ⇒ `Vec::new()`.
-use crate::artifacts::draw::engine::{find_draw_layer, find_draw_layer_location};
+use crate::artifacts::draw::schema::{find_draw_layer, find_draw_layer_location};
 use crate::artifacts::draw::mutations::DrawMutation;
 use crate::artifacts::draw::DrawSnapshot;
 

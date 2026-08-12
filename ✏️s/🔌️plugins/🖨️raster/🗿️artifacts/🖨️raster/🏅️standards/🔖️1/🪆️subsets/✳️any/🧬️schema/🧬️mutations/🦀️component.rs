@@ -75,7 +75,7 @@ pub type RasterStore = store::ArtifactStore<RasterSnapshot, RasterMutation>;
 mod tests {
     use super::*;
     use protocol::SemanticMutation;
-    use crate::artifacts::raster::engine::{empty_raster_snapshot, layer_name, layer_visible};
+    use crate::artifacts::raster::schema::{empty_raster_snapshot, layer_name, layer_visible};
     use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
     use protocol::Mutation;
     use std::collections::BTreeMap;
@@ -161,7 +161,7 @@ mod tests {
         let moved = round_trip(&snapshot, &RasterMutation::ReorderLayers(reorder_layers::mutation::ReorderLayers { layer_id: "l1".into(), parent_id: Some("g1".into()), index: 0 }));
         let RasterLayerNode::Group { children, .. } = &moved.layers[0] else { panic!("expected group") };
         assert_eq!(children.len(), 1);
-        assert_eq!(crate::artifacts::raster::engine::layer_node_id(&children[0]), "l1");
+        assert_eq!(crate::artifacts::raster::schema::layer_node_id(&children[0]), "l1");
     }
 
     #[test]

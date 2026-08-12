@@ -206,9 +206,18 @@ type ArtifactFacetLevel =
   | { readonly kind: "wildcard" }
   | { readonly kind: "none" };
 
-/** 🂡 Whether a dir name is an emoji-prefixed slug (requires U+FE0F in the emoji prefix). */
+/**
+ * 🂡 Whether a dir name is an emoji-prefixed slug — an Extended_Pictographic codepoint at the
+ * start, U+FE0F variation selector optional.
+ *
+ * The selector must be optional: real slug dirs on disk are predominantly bare. Among `🧬️mutations`
+ * slugs, `📄set-snapshot` and `➕create-node` carry no U+FE0F; among `💡️inferences` slugs, neither do
+ * `📦bounds`, `🧭topology`, `⏱duration` or `🧾outline`. Requiring it rejected the majority of genuine
+ * slugs as undeclared. Anchoring at the start also matches this predicate's own name — the previous
+ * unanchored form accepted an emoji occurring anywhere in the name.
+ */
 function isEmojiPrefixedSlugDir(name: string): boolean {
-  return /\p{Extended_Pictographic}\uFE0F/u.test(name);
+  return /^\p{Extended_Pictographic}\uFE0F?/u.test(name);
 }
 
 /** 🌳️ Declared child level of a path under an artifact root (parents are `/`-segments already accepted). */
@@ -226,12 +235,14 @@ function artifactFacetChildLevel(parents: readonly string[], taxonomy: Taxonomy)
   if (root === "🧬️schema") {
     if (parents.length === 2 && (taxonomy.schemaChildDirs ?? []).includes(a!)) {
       if (a === "🧬️mutations") return { kind: "fixed", dirs: [...(taxonomy.representationDirs ?? []), "*"] };
+      if (a === "💡️inferences") return { kind: "fixed", dirs: [...(taxonomy.representationDirs ?? []), "*"] };
       return { kind: "fixed", dirs: taxonomy.representationDirs ?? [] };
     }
     if (parents.length === 3 && a === "🧬️mutations") {
       if ((taxonomy.representationDirs ?? []).includes(b!)) return { kind: "none" };
       return { kind: "fixed", dirs: taxonomy.mutationChildDirs ?? [] };
     }
+    if (parents.length === 3 && a === "💡️inferences") return { kind: "none" };
     if (parents.length === 3 && (taxonomy.representationDirs ?? []).includes(b!)) return { kind: "none" };
     if (parents.length === 4 && a === "🧬️mutations") return { kind: "none" };
     return { kind: "none" };

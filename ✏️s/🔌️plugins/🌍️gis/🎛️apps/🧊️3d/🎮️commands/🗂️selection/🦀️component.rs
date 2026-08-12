@@ -72,7 +72,7 @@ mod tests {
     /// selected, so a substring check on the render output is not a selection probe.
     #[test]
     fn both_rows_write_the_same_selection() {
-        let document = crate::artifacts::gisterrain::engine::default_terrain_document();
+        let document = crate::artifacts::gisterrain::schema::default_terrain_document();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView { snapshot: &document, history: &history };
         let config = Gis3dConfig::default();

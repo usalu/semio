@@ -6,15 +6,30 @@
 //! payload fields — mirrors `procedural_3d`'s identical shape).
 
 use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
-use crate::artifacts::procedural2d::engine::refresh_generation_preview;
 use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::forms_bridge::flow_fixture_to_form_spec;
 use flow::FlowEvalSession;
-use flow::playbook::{apply_generation_mutation, generation_operations, select_generation};
+use flow::FlowFixture;
+use flow::playbook::{apply_generation_mutation, generation_operations, select_generation, GenerationPlayState};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+
+//#region 🔖️PreviewHelper
+/// 👁️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
+/// — recomputes the ephemeral generation preview for the currently selected generation and stores it
+/// on the config (never on the persisted document). References [`Procedural2dConfig`], an app type, so
+/// it stayed out of the artifact's `🧬️schema` unlike its sibling document helpers.
+fn refresh_generation_preview(config: &mut Procedural2dConfig, fixture: &FlowFixture, generation: &GenerationPlayState) {
+    let Some(selected) = flow::playbook::selected_generation(generation) else {
+        config.generation_preview_text = None;
+        return;
+    };
+    let preview = crate::artifacts::procedural2d::schema::evaluate_generation_preview(fixture, &selected.values);
+    config.generation_preview_text = Some(preview);
+}
+//#endregion 🔖️PreviewHelper
 
 //#region 🔖️Shared
 /// 🧬️ Emits generation operations for the generate-mode commands, updating the config's ephemeral

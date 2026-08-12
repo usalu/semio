@@ -7,7 +7,7 @@
 use semio_framework_plugin::Plugin;
 
 use gis::apps::gis2d::{create_gis2d_app, Gis2dPlayApp};
-use gis::artifacts::gismap::engine::{gis2d_document_json_from_dwg, gis2d_document_json_to_svg};
+use gis::artifacts::gismap::schema::{gis2d_document_json_from_dwg, gis2d_document_json_to_svg};
 use gis::artifacts::gismap::GIS_MAP_SCHEMA;
 
 const GIS_MAP_KIND: &str = "2d.map";

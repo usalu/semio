@@ -22,7 +22,7 @@ mod wasm_bridge {
                     let envelope: Fem3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Fem3dStore::new(envelope)
                 }
-                None => Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", crate::artifacts::fem3d::engine::empty_fem3d_snapshot(), None)),
+                None => Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", crate::artifacts::fem3d::schema::empty_fem3d_snapshot(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }

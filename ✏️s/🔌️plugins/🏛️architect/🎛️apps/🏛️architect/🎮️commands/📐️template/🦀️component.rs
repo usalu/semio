@@ -2,7 +2,7 @@
 
 pub mod apply {
     use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::artifacts::program::engine::template::apply_template;
+    use crate::apps::architect::behavior::apply_template;
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
     use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

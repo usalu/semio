@@ -1,5 +1,5 @@
 //! 🚪️ IO s.process3d (1/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from ⚙️engine::register), not per-leaf register().
+//! (called once from `crate::apps::process3d::register`), not per-leaf register().
 pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl", "stdio.txt"] }
 pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl", "stdio.txt"] }
 //#region 🎹️DerivedComposition
@@ -132,3 +132,91 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+//#region 🔖️MediaImportExport
+use base64::Engine as _;
+use crate::artifacts::process3d::{Pose, Process3dSnapshot, SolidSpec, Stock};
+use semio_framework_3d::brep::kernel::{ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
+use serde_json::Value;
+
+/// 📤️ A pending native-geometry export ready to become a `HostEffect::DownloadMediaExport`.
+pub struct Process3dModelExport {
+    pub filename: String,
+    pub data: Value,
+    pub mime_type: String,
+    pub encoding: Option<String>,
+}
+
+/// 🕳️ Tessellation tolerance for STEP/OBJ/STL import — mirrors the inference family's private
+/// kernel-replay constant of the same value (`schema::inferences::PROCESS3D_TESSELLATION_TOLERANCE`).
+const PROCESS3D_TESSELLATION_TOLERANCE: f64 = 0.05;
+
+/// 📤️ Encodes the replayed stock through `format`'s codec. STEP/OBJ/STL go through the
+/// `SolidExporter` trait objects (real B-Rep, exact where the format allows it); GLB goes through
+/// the mesh tessellation bridge (`schema::inferences::processed_mesh` → `GlbExporter`), matching how
+/// it is already rendered/exported elsewhere in this app.
+pub fn export_process3d_model(fixture: &Process3dSnapshot, format: &str) -> Option<Process3dModelExport> {
+    if format == "glb" {
+        let mesh = crate::artifacts::process3d::schema::inferences::processed_mesh(fixture)?;
+        let bytes = semio_framework_plugin::GlbExporter.export(&mesh).ok()?;
+        return Some(Process3dModelExport {
+            filename: "process3d.glb".into(),
+            data: Value::String(base64::engine::general_purpose::STANDARD.encode(bytes)),
+            mime_type: "model/gltf-binary".into(),
+            encoding: Some("base64".into()),
+        });
+    }
+    let exporter: Box<dyn SolidExporter> = match format {
+        "obj" => Box::new(ObjSolidExporter),
+        "stl" => Box::new(StlSolidExporter),
+        _ => Box::new(StepSolidExporter),
+    };
+    let mut session = crate::artifacts::process3d::schema::inferences::ProcessKernelReplay::new();
+    let handle = crate::artifacts::process3d::schema::inferences::replay_process(&mut session, fixture)?;
+    let bytes = exporter.export(&*session.kernel().lock().ok()?, &[handle], PROCESS3D_TESSELLATION_TOLERANCE).ok()?;
+    let format_kind = exporter.format_kind();
+    let descriptor = semio_framework::format_descriptor(format_kind);
+    let binary = descriptor.as_ref().map(|d| d.is_binary).unwrap_or(true);
+    let mime_type = descriptor.map(|d| d.mime).unwrap_or_else(|| "application/octet-stream".to_string());
+    let data = if binary { Value::String(base64::engine::general_purpose::STANDARD.encode(&bytes)) } else { Value::String(String::from_utf8(bytes).ok()?) };
+    Some(Process3dModelExport { filename: format!("process3d.{}", format_kind), data, mime_type, encoding: if binary { Some("base64".into()) } else { None } })
+}
+
+/// 📦️ Decodes a `requestFileOpen(readAs: "dataUrl")` payload into raw bytes.
+fn process3d_bytes_from_data_url(data_url: &str) -> Option<Vec<u8>> {
+    if let Some((header, encoded)) = data_url.split_once(',') {
+        if header.starts_with("data:") {
+            return base64::engine::general_purpose::STANDARD.decode(encoded).ok();
+        }
+    }
+    Some(data_url.as_bytes().to_vec())
+}
+
+/// 📥️ Imports a picked file into a brand-new stock-only fixture (steps cleared): STEP/OBJ/STL go
+/// through the `SolidImporter` trait objects and land as `SolidSpec::ImportedSolid` (real B-Rep,
+/// reusable as a Cut/Drill/Attach operand); GLB is decoded once (via the mesh tessellation bridge,
+/// `GlbImporter`) purely to validate it, then kept as `SolidSpec::ImportedMesh` referencing the
+/// original data url directly — it carries no exact B-Rep, so it is never re-imported into the kernel.
+pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSnapshot> {
+    let bytes = process3d_bytes_from_data_url(data_url)?;
+    let mut fixture = Process3dSnapshot::default();
+    if name.ends_with(".glb") {
+        semio_framework_plugin::GlbImporter.import(&bytes).ok()?;
+        fixture.stock = Stock { id: "stock".into(), label: "Imported GLB".into(), solid: SolidSpec::ImportedMesh { mesh_url: data_url.into() }, pose: Pose::default() };
+        return Some(fixture);
+    }
+    let (importer, label): (Box<dyn SolidImporter>, &str) = if name.ends_with(".stp") || name.ends_with(".step") {
+        (Box::new(StepSolidImporter), "Imported STEP")
+    } else if name.ends_with(".obj") {
+        (Box::new(ObjSolidImporter), "Imported OBJ")
+    } else if name.ends_with(".stl") {
+        (Box::new(StlSolidImporter), "Imported STL")
+    } else {
+        return None;
+    };
+    let mut session = crate::artifacts::process3d::schema::inferences::ProcessKernelReplay::new();
+    let handle = importer.import(&mut *session.kernel().lock().ok()?, &bytes, PROCESS3D_TESSELLATION_TOLERANCE).ok()?.into_iter().next()?;
+    fixture.stock = Stock { id: "stock".into(), label: label.into(), solid: SolidSpec::ImportedSolid { solid_handle: handle.0 }, pose: Pose::default() };
+    Some(fixture)
+}
+//#endregion 🔖️MediaImportExport

@@ -3,7 +3,7 @@
 use crate::artifacts::raster::schema::diff::{
     RasterAssetsDelta, RasterDiff, RasterLayerInsertion, RasterLayerMove, RasterLayerPatchEntry, RasterLayersDelta,
 };
-use crate::artifacts::raster::engine::layer_node_id;
+use crate::artifacts::raster::schema::layer_node_id;
 use crate::artifacts::raster::schema::RasterArtifact;
 use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 use protocol::MutationDiff;

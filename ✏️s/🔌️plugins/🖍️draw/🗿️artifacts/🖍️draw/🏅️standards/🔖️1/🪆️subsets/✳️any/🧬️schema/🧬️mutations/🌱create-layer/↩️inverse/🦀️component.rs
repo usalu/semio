@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `CreateLayer` — always a `delete-layer` of the id it created (the payload itself
 //! carries the id, so no BASE lookup is needed to know what to undo).
-use crate::artifacts::draw::engine::layer_id;
+use crate::artifacts::draw::schema::layer_id;
 use crate::artifacts::draw::mutations::DrawMutation;
 use crate::artifacts::draw::DrawSnapshot;
 

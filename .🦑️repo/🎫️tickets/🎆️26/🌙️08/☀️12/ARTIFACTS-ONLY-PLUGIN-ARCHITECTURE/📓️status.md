@@ -1,5 +1,40 @@
 # Status
 
+## FINAL STATE (2026-08-13 ~00:15)
+
+### The mechanism
+
+`ArtifactDeclaration` is landed. **Registration is data the framework walks in a fixed deterministic order**, replacing 33 hand-written callbacks with implicit ordering. `build()` validates ownership — *produce-or-consume*, so export entries writing a foreign dialect are accepted while a plugin registering IO for a kind it does not own is a **hard error**. A strict `s.<plugin>.<artifact>` check activates automatically once kind ids become canonical.
+
+**That check is the ticket's deliverable.** The lowpoly violation is now unrepresentable, not merely removed.
+
+Builder surface: `schema · inferences · composers · formats · subset_validators · languages · document_codec::<A> · document_codec_bare::<S,M> · migrations · composition::<S> · capability`. Composition slots take the *snapshot type*, never a hand-written list — there is no public slice setter, so a divergent list is unwritable.
+
+### `.setup()` — 33 → 11
+
+| | count | |
+|---|---:|---|
+| plugins with **no** `.setup()` at all | **22** | |
+| peer-held, cannot be touched | 8 | writer flow vcs animate sequence architect process reasoning |
+| **APA-held residue, each documented** | **3** | procedural puzzle space |
+
+The hook **cannot** be deleted while 8 peer-held plugins call it. It was found to already accumulate into a `Vec<fn()>` — the agent *verified* this rather than authoring it and said so, correcting an earlier report of a silent-overwrite footgun.
+
+**The three residues are honest, not incomplete:** `🌀️procedural` keeps 4 named survivors (2 app-schema now closed elsewhere, a DWG mesh bridge, a linked-flow extension installer) with no declaration field by design; `🧩️puzzle` keeps OS media-host bridges; `🪐️space` keeps a wasm-sandbox app-registry mirror. Each is named, justified, and reported rather than force-converted.
+
+### Escape hatches — 35 sites, classified
+
+- **20 inside artifact trees** (puzzle 18, process 1, procedural 1) — the *compliant interim shape*, which converts when the remaining declaration gaps close.
+- **15 in app/pane files** — the real violations: `🎪️demonstrator` 12 (the `2d.map`/`3d.cad` registrations **deliberately preserved** per UCAS's composition ruling — deleting them removes capability), `🪐️space` 2 (app-registry mirror, not domain IO), `🧩️puzzle` 1.
+
+### The design premise that was wrong
+
+APA asserted app-schema was the *last* legitimate `.setup()` use. Conversion found **four** categories. Two were closed (`app_schema()`, `document_codec_bare`). One dissolved on inspection — puzzle's "distinct gap" was category-1 under a stale comment. One was **deliberately left unclosed**: the agent declined to add a declaration field for OS media-host bridges, on the grounds that doing so would *legitimise the exact process-global registry mechanism this ticket documents as a bug*. That refusal is the correct call and the best single judgement any agent made here.
+
+### Verified
+
+Nine crates at 0 errors under `RUSTC_WRAPPER=""` + `--all-targets` with `Finished` + exit 0, plus `📕️norm` green after retry. **All such results are timestamps, not properties** — stdio regressed three times this evening, and every plugin depends on it.
+
 Coordinator: Opus 5 session. Executors: Sonnet 5 agents via `Workflow`. Plan authored by a Fable session at `/Users/ueli/.claude/plans/the-new-architecture-is-prancy-pearl.md`.
 **Only the coordinator edits this file.** Agents append to their own report files.
 

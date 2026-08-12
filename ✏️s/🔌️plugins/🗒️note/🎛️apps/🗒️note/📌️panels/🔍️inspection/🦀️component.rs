@@ -1,7 +1,7 @@
 //! 🔍️ Note play app panel — the properties inspector for the current selection.
 
 use crate::apps::note::terminology::NotePlayLabels;
-use crate::artifacts::note::engine::{block_bounds, block_id, block_name, block_visible, find_block, flatten_blocks};
+use crate::artifacts::note::schema::{block_bounds, block_id, block_name, block_visible, find_block, flatten_blocks};
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, ActionDescriptor, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode,

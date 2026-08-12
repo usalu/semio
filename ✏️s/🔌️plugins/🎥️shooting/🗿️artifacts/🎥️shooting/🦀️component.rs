@@ -111,17 +111,18 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
 /// function set.
 ///
-/// DEVIATION (26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g1): the `.composers(...)` argument is
-/// qualified to `standards::v1::engine::io_registry::entries()` rather than left as the bare
-/// `io_registry::entries()` this body used while it still lived in the `⚙️engine` file. Left bare it
-/// would now resolve to THIS file's own `io_registry` module below, which has a different, incompatible
-/// return type (`&'static [&'static ComposerEntry]`, wrapping the engine's owned entries) — not the
-/// `&'static [ComposerEntry]` `.composers()` expects.
+/// DEVIATION (26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES reloc-g1): the `.composers(...)`
+/// argument is qualified to `standards::v1::subsets::any::io::io_registry::entries()` (the `⚙️engine`
+/// directory that used to own this module is gone — deleted, not relocated to a sibling engine) rather
+/// than left as the bare `io_registry::entries()` this body used while `io_registry` still lived in that
+/// file. Left bare it would now resolve to THIS file's own `io_registry` module below, which has a
+/// different, incompatible return type (`&'static [&'static ComposerEntry]`, wrapping the real registry's
+/// owned entries) — not the `&'static [ComposerEntry]` `.composers()` expects.
 pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.shooting")
         .schema(crate::artifacts::shooting::standards::v1::subsets::any::schema::shooting_artifact_schema_descriptor())
         .inferences([crate::artifacts::shooting::standards::v1::subsets::any::schema::inferences::shooting_artifact_inference_descriptor()])
-        .composers(crate::artifacts::shooting::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::shooting::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::shooting::ShootingPlayApp>()
         .build()
@@ -512,7 +513,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::shooting::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::shooting::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

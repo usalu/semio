@@ -3,7 +3,7 @@
 use crate::apps::draw::config::DrawConfig;
 use crate::apps::draw::terminology::DrawPlayLabels;
 use crate::apps::draw::draw_play_action;
-use crate::artifacts::draw::engine::{draw_play_boolean_child_row_id, draw_play_layers_tree_row_id, find_draw_layer, layer_base};
+use crate::artifacts::draw::schema::{draw_play_boolean_child_row_id, draw_play_layers_tree_row_id, find_draw_layer, layer_base};
 use crate::artifacts::draw::{DrawSnapshot, DrawLayerNode};
 use semio_framework_plugin::{tree_item, tree_item_with_action, tree_item_with_action_draggable, Label, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use serde_json::json;
@@ -56,7 +56,7 @@ fn layer_tree_item(doc: &DrawSnapshot, layer: &DrawLayerNode) -> UiTreeItemNode 
 fn boolean_child_item(doc: &DrawSnapshot, boolean_id: &str, child_id: &str) -> UiTreeItemNode {
     let row_id = draw_play_boolean_child_row_id(boolean_id, child_id);
     match find_draw_layer(doc, child_id) {
-        Some(child) => UiTreeItemNode { draggable: Some(false), ..tree_item_with_action(row_id, Label::data(layer_base(child).name.clone()), Some(crate::artifacts::draw::engine::layer_kind_label(child)), draw_play_action("setSelection", Some(json!({ "ids": [child_id] })))) },
+        Some(child) => UiTreeItemNode { draggable: Some(false), ..tree_item_with_action(row_id, Label::data(layer_base(child).name.clone()), Some(crate::artifacts::draw::schema::layer_kind_label(child)), draw_play_action("setSelection", Some(json!({ "ids": [child_id] })))) },
         None => UiTreeItemNode { icon_id: Some("alert-circle".into()), draggable: Some(false), ..tree_item(row_id, Label::data(format!("{child_id} (missing)"))) },
     }
 }

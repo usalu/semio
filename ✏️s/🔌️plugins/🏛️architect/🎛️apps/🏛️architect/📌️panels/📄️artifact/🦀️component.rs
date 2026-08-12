@@ -4,7 +4,7 @@ use crate::apps::architect::architect_action;
 use crate::apps::architect::catalog::register_len;
 use crate::apps::architect::chrome::{tree_item, tree_item_with_action, tree_node, tree_section};
 use crate::apps::architect::config::{active_register, ArchitectConfig};
-use crate::artifacts::program::engine::status_summary::status_summary;
+use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::status_summary;
 use crate::artifacts::program::ProgramSnapshot;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use serde_json::json;

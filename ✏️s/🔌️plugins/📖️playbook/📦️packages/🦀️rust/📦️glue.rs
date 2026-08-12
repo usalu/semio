@@ -45,8 +45,6 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -338,9 +336,6 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v1::engine::*;
-        }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
@@ -374,6 +369,9 @@ pub mod apps {
         #[path = "../../🎛️apps/📖️playbook/🦀️component.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "../../🎛️apps/📖️playbook/⚙️engine/🦀️component.rs"]
+        pub mod engine;
 
         #[path = "."]
         pub mod config {

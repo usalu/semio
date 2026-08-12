@@ -4,7 +4,7 @@
 //! app level no matter how many taxonomy nodes consume them — artifacts must never depend on apps.
 
 use crate::apps::lowpoly::config::LowpolyConfig;
-use crate::artifacts::lowpoly::engine::LowpolyDocument;
+use crate::apps::lowpoly::engine::LowpolyDocument;
 use crate::artifacts::lowpoly::{LowpolyObject, LowpolySnapshot, LowpolySelection, LowpolySelectionTargets};
 use serde_json::Value;
 

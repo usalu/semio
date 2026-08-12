@@ -791,11 +791,7 @@ export class VerifyScript extends Script {
         ...policyEmojiPrefixBreaches(this.root),
         ...policyPluginRootShapeBreaches(this.root),
         ...policyPluginBuilderBreaches(this.root, policyDiscoverCrateDirs(this.root)),
-        ...policyPluginClosedShapeBreaches(this.root),
-        ...policyPluginPurityBreaches(this.root),
-        ...policyDeclarativeRegistrationBreaches(this.root),
-        ...policyPluginDependencyAllowlistBreaches(this.root),
-        ...policyEffectCapabilityParityBreaches(this.root),
+        ...policyApaBreaches(this.root),
       ].filter((b) => b.priority === "high");
       if (dissolveBreaches.length > 0) {
         for (const b of dissolveBreaches) {
@@ -5584,6 +5580,98 @@ function policyEffectCapabilityParityBreaches(repoRoot: string): BreachRecord[] 
 }
 //#endregion 🔧️PolicyRuleEffectCapabilityParity
 
+//#region 🔧️PolicyRuleApaRatchet
+/**
+ * 🚦W5 shrink-only ceiling table for APA's five report-mode rules. A rule's kind at or under its ceiling
+ * stays entirely at `priority: "medium"` (census, non-gating); only breaches ABOVE the ceiling — the
+ * measured regression — are promoted to `priority: "high"`, which `VerifyScript.runGate`'s
+ * `dissolveBreaches` block already filters on. Ceilings MAY be lowered freely as debt burns down; RAISING
+ * one requires a ticket citation in a comment beside the changed entry, or the ratchet is meaningless.
+ * Measured `bun ./📜️script.ts policy` against `.🦑️repo/⚡️cache/breaches/compose.json`, three runs
+ * 2026-08-13 ~00:12/00:14/00:16 (~90-100s apart) — see `📓️w5-ratchet-report.md`.
+ *
+ * Four of eight APA ratchet keys are intentionally ABSENT below — no ceiling, permanently `medium` — not
+ * from a stale prior estimate but because the three-run measurement itself showed each one moving:
+ * - `plugin-registration-engine-backlog` — coordinator-flagged: a concurrent peer wave (9 agents) is
+ *   actively dissolving artifact ⚙️engine/ dirs and relocating register*() calls out of them right now; a
+ *   move leaves code transiently in both the old and new location, which can legitimately INCREASE this
+ *   count for a few minutes. A shrink-only ceiling here would gate the shared tree on the peer's own
+ *   in-flight progress.
+ * - `plugin-registration-violation` — measured 570 → 580 → 600 across the three runs; the same dual-write
+ *   window reaches this kind too (a register*() call briefly lands outside any ⚙️engine mid-move).
+ * - `plugin-registration-setup-callback` — measured 14 → 14 → 15, in the same window `📓️status.md`'s
+ *   "FINAL STATE" section describes the `.setup()` 33→11 conversion landing in.
+ * - `plugin-purity` (all `taxonomy/plugin-purity-*` sub-kinds summed) — measured 116 → 118 → 125
+ *   (filesystem-io alone: 35 → 35 → 42, interior-mutability-mutex: 20 → 22 → 22). Despite being
+ *   inventory-only by APA's own original design (nothing in this ticket ever tried to reduce it), the
+ *   underlying file set is not static tonight, so it gets the same exemption on measured evidence rather
+ *   than on the design intent alone.
+ */
+const POLICY_APA_RATCHET_CEILINGS: Readonly<Record<string, number>> = {
+  "plugin-closed-shape": 41, // flat 41/41/41 across 3 runs ~90-100s apart, 2026-08-13 ~00:12-00:16 — 📓️w5-ratchet-report.md
+  "plugin-dependency-allowlist": 105, // flat 105/105/105 across 3 runs ~90-100s apart, 2026-08-13 ~00:12-00:16 — 📓️w5-ratchet-report.md
+  "plugin-dependency-os-host": 10, // flat 10/10/10 across 3 runs ~90-100s apart, 2026-08-13 ~00:12-00:16 — 📓️w5-ratchet-report.md
+  "effect-capability-parity": 47, // flat 47/47/47 across 3 runs ~90-100s apart, 2026-08-13 ~00:12-00:16 — 📓️w5-ratchet-report.md
+};
+
+/** 🔑Ratchet grouping key for a breach `kind` — every `taxonomy/plugin-purity-*` sub-kind (filesystem-io, interior-mutability-*, thread-local-state, ts-side-effect, …) collapses onto one shared `"plugin-purity"` key matching the ceiling table's single combined row; every other APA kind keeps a 1:1 key. */
+function policyApaRatchetKey(kind: string): string {
+  if (kind.startsWith("taxonomy/plugin-purity-")) return "plugin-purity";
+  return kind.startsWith("taxonomy/") ? kind.slice("taxonomy/".length) : kind;
+}
+
+/**
+ * 🚦Applies the shrink-only ratchet: groups `breaches` by `policyApaRatchetKey`, and for any key present in
+ * `POLICY_APA_RATCHET_CEILINGS`, keeps the first `ceiling` breaches at their original `medium` priority and
+ * promotes only the breaches beyond the ceiling to `high` with a regression message naming the key, the
+ * ceiling, and the measured count. Keys absent from the table pass through untouched, always `medium`.
+ */
+function policyApaRatchetApply(breaches: readonly BreachRecord[]): BreachRecord[] {
+  const grouped = new Map<string, BreachRecord[]>();
+  for (const b of breaches) {
+    const key = policyApaRatchetKey(b.kind);
+    const list = grouped.get(key);
+    if (list) list.push(b);
+    else grouped.set(key, [b]);
+  }
+  const out: BreachRecord[] = [];
+  for (const [key, list] of grouped) {
+    const ceiling = POLICY_APA_RATCHET_CEILINGS[key];
+    if (ceiling === undefined || list.length <= ceiling) {
+      out.push(...list);
+      continue;
+    }
+    list.forEach((b, i) => {
+      if (i < ceiling) {
+        out.push(b);
+        return;
+      }
+      out.push({
+        ...b,
+        priority: "high",
+        summary: `RATCHET REGRESSION on "${key}": ceiling is ${ceiling}, measured ${list.length} — shrink-only, raising the ceiling requires a ticket citation — ${b.summary}`,
+      });
+    });
+  }
+  return out;
+}
+
+/**
+ * 🎯Combined, ratcheted breach set for all five APA rules — the single call site both `policy`'s
+ * aggregator and `VerifyScript.runGate`'s `dissolveBreaches` block use, so census and gate can never
+ * disagree on a breach's priority.
+ */
+function policyApaBreaches(repoRoot: string): BreachRecord[] {
+  return policyApaRatchetApply([
+    ...policyPluginClosedShapeBreaches(repoRoot),
+    ...policyPluginPurityBreaches(repoRoot),
+    ...policyDeclarativeRegistrationBreaches(repoRoot),
+    ...policyPluginDependencyAllowlistBreaches(repoRoot),
+    ...policyEffectCapabilityParityBreaches(repoRoot),
+  ]);
+}
+//#endregion 🔧️PolicyRuleApaRatchet
+
 //#endregion 🔧️PolicyRuleArtifactsOnlyPluginArchitecture
 
 
@@ -6334,7 +6422,12 @@ function policyLeadingEmojiPrefix(name: string): string {
 
 /** 🔎️Mutation-specific dirs under `🧬️mutations/` (skips leaf files and reserved kind names). */
 function policyListMutationDirs(repoRoot: string, mutationsRel: string): string[] {
-  const reserved = new Set<string>([...POLICY_MUTATION_TRIAD_DIRS, "📚️examples"]);
+  // 💾️binary / 📝️text are the facet's CODEC dirs (OpBinary/OpText), siblings of the mutation
+  // triads rather than mutations themselves — they own no 🦠️mutation/🔺️diff/↩️inverse and never
+  // should. They were harmless while the callers walked a shallow path that matched nothing on
+  // disk; the moment the mutation rules were repointed at the real deep taxonomy they became 672
+  // false "missing triad kind" highs. Reserved here, once, so every caller inherits the exclusion.
+  const reserved = new Set<string>([...POLICY_MUTATION_TRIAD_DIRS, "📚️examples", "💾️binary", "📝️text"]);
   return policyReaddirSafe(repoRoot, mutationsRel)
     .filter((e) => e.isDirectory && !reserved.has(e.name) && !e.name.startsWith("."))
     .map((e) => e.name)
@@ -11732,11 +11825,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyEmojiPrefixBreaches(repoRoot));
   breaches.push(...policyPluginRootShapeBreaches(repoRoot));
   breaches.push(...policyPluginBuilderBreaches(repoRoot, crateDirs));
-  breaches.push(...policyPluginClosedShapeBreaches(repoRoot));
-  breaches.push(...policyPluginPurityBreaches(repoRoot));
-  breaches.push(...policyDeclarativeRegistrationBreaches(repoRoot));
-  breaches.push(...policyPluginDependencyAllowlistBreaches(repoRoot));
-  breaches.push(...policyEffectCapabilityParityBreaches(repoRoot));
+  breaches.push(...policyApaBreaches(repoRoot));
   breaches.push(...policyJsonFixtureBreaches(repoRoot));
   breaches.push(...policyOpsGrammarBreaches(repoRoot));
   breaches.push(...policyDslCompletenessBreaches(repoRoot));

@@ -28,7 +28,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<LowpolyMutation, protocol::ProtocolErro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::engine::default_snapshot;
+    use crate::artifacts::lowpoly::schema::default_snapshot;
     use crate::artifacts::lowpoly::mutations::rename_object;
     use crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA;
 

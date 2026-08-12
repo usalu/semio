@@ -4,8 +4,8 @@
 //! cached report/analysis JSON, adjacency filter, graph camera) lives here, written via whole-snapshot
 //! `ArchitectConfigMutation::Snapshot`s from the `🎮️commands/*` handlers.
 
-use crate::artifacts::program::engine::report::ProgramReport;
-use crate::artifacts::program::engine::search::SearchQuery;
+use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::ProgramReport;
+use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::SearchQuery;
 use crate::artifacts::program::registers::AdjacencyKind;
 use protocol::{Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};

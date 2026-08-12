@@ -2,7 +2,7 @@
 
 use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::apps::gis2d::maphost::map_host_from;
-use crate::artifacts::gismap::engine::{default_document, positions_operations, regions_operations, routes_operations};
+use crate::artifacts::gismap::schema::{default_document, positions_operations, regions_operations, routes_operations};
 use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::GisMapSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

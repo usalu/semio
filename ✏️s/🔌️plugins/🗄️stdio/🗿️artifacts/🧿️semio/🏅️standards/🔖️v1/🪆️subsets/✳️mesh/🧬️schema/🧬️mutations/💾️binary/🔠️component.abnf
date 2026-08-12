@@ -5,4 +5,4 @@
 document = format tag payload
 format   = OCTET     ; OP_BINARY_FORMAT, currently 1
 tag      = OCTET     ; SemioMeshMutation variant ordinal — see OP_KEYWORDS in ../../🦀️component.rs
-payload  = *OCTET    ; UTF-8 "key=value ..." argument text (empty for no-mutation)
+payload  = *OCTET    ; UTF-8 "key=value ..." argument text (never empty — all 17 mesh keywords carry >=1 argument)

@@ -4,7 +4,7 @@
 use crate::apps::process3d::config::Process3dConfig;
 use crate::apps::process3d::modes::edit::windows::workpiece::options;
 use crate::apps::process3d::process3d_action;
-use crate::artifacts::process3d::engine::processed_mesh;
+use crate::artifacts::process3d::schema::inferences::processed_mesh;
 use crate::artifacts::process3d::{Process3dSnapshot, SolidSpec};
 use semio_framework_plugin::{
     build_world_3d_scene, mesh_from_kind, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
@@ -148,7 +148,7 @@ pub fn engagement(fixture: &Process3dSnapshot, config: &Process3dConfig, labels:
     let active_utility = config.active_utility();
     let len = fixture.steps.len();
     let cursor = fixture.resolved_up_to.unwrap_or(len);
-    let volume = crate::artifacts::process3d::engine::processed_volume(fixture).unwrap_or(0.0);
+    let volume = crate::artifacts::process3d::schema::inferences::processed_volume(fixture).unwrap_or(0.0);
     WindowEngagement {
         session_active: Some(active_utility != "select"),
         // 🧰️ The select/cut/drill/attach switcher lives in the framework utility bar (declared via

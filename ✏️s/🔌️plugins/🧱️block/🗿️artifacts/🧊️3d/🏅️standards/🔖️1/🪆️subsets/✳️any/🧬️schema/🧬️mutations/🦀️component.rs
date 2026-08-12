@@ -121,7 +121,7 @@ pub fn inverse_block3d_mutation(projection: &Block3dSnapshot, mutation: &Block3d
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::block3d::engine::empty_block3d_snapshot;
+    use crate::artifacts::block3d::schema::empty_block3d_snapshot;
     use crate::artifacts::block3d::{Block3dVortexKind, Block3dVortexTemplate};
     use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};

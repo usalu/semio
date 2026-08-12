@@ -9,7 +9,7 @@
 
 use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::apps::curate::{reset_document_effect, EMPTY_EXAMPLE_ID};
-use crate::artifacts::curate::engine::{available_modules, default_document, empty_document};
+use crate::artifacts::curate::schema::{available_modules, default_document, empty_document};
 use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -166,7 +166,7 @@ mod tests {
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = stock_from_catalogue::handle(&stock_from_catalogue::StockFromCatalogue {}, &doc, &cfg).expect("handle");
         let loaded = load_document_pack(&emit);
-        let expected: usize = crate::artifacts::curate::engine::sourcing_modules().iter().map(|module| module.demo_kinds().len()).sum();
+        let expected: usize = crate::artifacts::curate::schema::sourcing_modules().iter().map(|module| module.demo_kinds().len()).sum();
         assert_eq!(loaded.stock.len(), expected);
 
         let doc2 = ArtifactView { snapshot: &loaded, history: &history };

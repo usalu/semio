@@ -31,7 +31,7 @@ mod tests {
 
     #[test]
     fn vcs_demo_projection_dsl_round_trips() {
-        store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::vcs::engine::empty_vcs_snapshot());
+        store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot());
     }
 
     #[test]

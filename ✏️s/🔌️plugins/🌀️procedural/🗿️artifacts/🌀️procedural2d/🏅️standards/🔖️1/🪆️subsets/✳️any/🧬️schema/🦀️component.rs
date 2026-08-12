@@ -6,6 +6,12 @@ use flow::FlowFixture;
 use flow::playbook::GenerationPlayState;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use flow::dag::DagFixture;
+use flow::forms_bridge::apply_generation_values_to_fixture;
+use flow::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowHost};
+use flow::render_scene_json;
+use serde_json::{json, Value};
+use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Procedural2dArtifact
 /// 🧬️ Procedural2dArtifact facet type.
@@ -199,3 +205,185 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: Procedural2dComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+/// 🧬️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
+/// pure helpers over document types (`FlowFixture`/`DagFixture`/eval `Value`), not app-referencing.
+pub fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
+    let mut host = FlowHost::from_fixture(fixture.clone());
+    host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
+    host
+}
+
+pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalSession) -> FlowHost {
+    flow_host_with_session(fixture, session)
+}
+
+/// 🔀️ Runs a host mutation seeded from the projection fixture and diffs the result into operations.
+/// Diffs against the host-normalized baseline (not the raw projection) so `FlowHost`'s own
+/// dedupe/dag-rebuild normalization does not leak spurious collection operations — only the actual
+/// mutation becomes an operation, which keeps concurrent disjoint edits mergeable on the backbone.
+pub fn host_operations(fixture: &FlowFixture, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::artifacts::procedural2d::op::Procedural2dMutation> {
+    let mut host = host_from_fixture(fixture);
+    let baseline = host.fixture.clone();
+    mutate(&mut host);
+    crate::artifacts::procedural2d::op::procedural2d_fixture_operations(&baseline, &host.fixture)
+}
+
+pub fn split_endpoint(endpoint: &str) -> (String, String) {
+    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
+}
+
+pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+    let nodes: Vec<NodeGraphNodeRecord> = fixture
+        .nodes
+        .iter()
+        .map(|node| NodeGraphNodeRecord {
+            id: node.id.clone(),
+            label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
+            x: node.x,
+            y: node.y,
+            width: node.width,
+            height: node.height,
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
+            ..Default::default()
+        })
+        .collect();
+    let edges: Vec<NodeGraphEdgeRecord> = fixture
+        .edges
+        .iter()
+        .map(|edge| {
+            let (source_node_id, source_port_id) = split_endpoint(&edge.source);
+            let (target_node_id, target_port_id) = split_endpoint(&edge.target);
+            NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
+        })
+        .collect();
+    (nodes, edges)
+}
+
+pub fn collect_drawing_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
+    match value {
+        Value::Object(map) => {
+            if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
+                if handle.starts_with("drawing-") {
+                    handles.push(handle.into());
+                }
+            }
+            for entry in map.values() {
+                collect_drawing_handles_from_eval(entry, handles);
+            }
+        }
+        Value::Array(items) => {
+            for item in items {
+                collect_drawing_handles_from_eval(item, handles);
+            }
+        }
+        _ => {}
+    }
+}
+
+pub fn affine_transform_array(value: &Value) -> [f64; 6] {
+    if let Some(matrix) = value.as_array() {
+        let mut out = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+        for (index, entry) in matrix.iter().take(6).enumerate() {
+            out[index] = entry.as_f64().unwrap_or(if index == 0 || index == 3 { 1.0 } else { 0.0 });
+        }
+        return out;
+    }
+    if let Some(matrix) = value.get("0").and_then(|entry| entry.as_array()) {
+        let wrapped = Value::Array(matrix.clone());
+        return affine_transform_array(&wrapped);
+    }
+    [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+}
+
+pub fn path_segments_from_node(node: &Value) -> Vec<Value> {
+    if let Some(segments) = node.get("segments").and_then(|entry| entry.as_array()) {
+        return segments.clone();
+    }
+    for key in ["path", "shape", "line", "polyline", "rect", "ellipse", "circle", "polygon"] {
+        if let Some(inner) = node.get(key) {
+            if let Some(segments) = inner.get("segments").and_then(|entry| entry.as_array()) {
+                return segments.clone();
+            }
+        }
+    }
+    Vec::new()
+}
+
+pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<Value> {
+    let scene_json = render_scene_json(handle);
+    let Ok(scene) = serde_json::from_str::<Value>(&scene_json) else {
+        return Vec::new();
+    };
+    if scene.get("error").is_some() {
+        return Vec::new();
+    }
+    let Some(nodes) = scene.get("nodes").and_then(|entry| entry.as_array()) else {
+        return Vec::new();
+    };
+    nodes
+        .iter()
+        .enumerate()
+        .map(|(index, node)| {
+            let node_body = node.get("node").unwrap_or(node);
+            json!({
+                "id": format!("{prefix}-{handle}-{index}"),
+                "transform": affine_transform_array(node.get("transform").unwrap_or(&Value::Null)),
+                "segments": path_segments_from_node(node_body),
+                "fill": node.get("fill").cloned().unwrap_or(Value::Null),
+                "stroke": node.get("stroke").cloned().unwrap_or(Value::Null),
+                "opacity": node.get("opacity").and_then(|entry| entry.as_f64()).unwrap_or(1.0),
+                "blendMode": "normal",
+                "visible": true,
+                "needsKernel": false})
+        })
+        .collect()
+}
+
+pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::Map<String, Value>) -> String {
+    let fixture_json = serde_json::to_string(fixture).unwrap_or_default();
+    let patched = apply_generation_values_to_fixture(&fixture_json, values);
+    let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
+    let mut host = FlowHost::from_fixture(patched_fixture);
+    host.evaluate().unwrap_or_default()
+}
+
+pub fn generation_preview_layers(eval_json: &str) -> String {
+    let prefix = "procedural2d-generate-preview";
+    let mut layers = Vec::new();
+    if let Ok(outputs) = serde_json::from_str::<Value>(eval_json) {
+        let mut handles = Vec::new();
+        collect_drawing_handles_from_eval(&outputs, &mut handles);
+        handles.sort();
+        handles.dedup();
+        for handle in handles {
+            layers.extend(scene_layers_from_drawing_handle(&handle, prefix));
+        }
+    }
+    serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
+}
+
+/// 📄️ The `procedural2d-play` "default" document — parsed from the bundled `.procedural2d` example
+/// fixture, falling back to the empty document if the fixture ever fails to parse.
+pub fn default_snapshot() -> Procedural2dSnapshot {
+    Procedural2dSnapshot::parse_dsl(crate::artifacts::procedural2d::dsl::PROCEDURAL2D_EXAMPLE_TEXT).unwrap_or_default()
+}
+
+pub fn empty_procedural2d_snapshot() -> Procedural2dSnapshot {
+    Procedural2dSnapshot::default()
+}
+//#endregion 🔖️DocumentHelpers
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_snapshot_parses_the_bundled_example() {
+        assert!(!default_snapshot().fixture.widgets.is_empty());
+    }
+}
+//#endregion 🧪️Tests

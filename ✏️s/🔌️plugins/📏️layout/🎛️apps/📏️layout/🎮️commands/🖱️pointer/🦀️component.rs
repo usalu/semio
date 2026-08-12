@@ -8,7 +8,7 @@ use crate::apps::layout::commands::author::{add_frame, add_page};
 use crate::apps::layout::config::LayoutConfig;
 use crate::artifacts::layout::LayoutDropPreviewState;
 use crate::apps::layout::config::LayoutConfigMutation;
-use crate::artifacts::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
+use crate::apps::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
 use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::{LayoutCamera, LayoutSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

@@ -22,7 +22,7 @@ mod wasm_bridge {
                     let envelope: Fem2dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Fem2dStore::new(envelope)
                 }
-                None => Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::engine::empty_fem2d_snapshot(), None)),
+                None => Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::schema::empty_fem2d_snapshot(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
@@ -64,7 +64,7 @@ mod tests {
     /// own beyond that shared coverage.
     #[test]
     fn fem2d_store_type_alias_constructs_from_an_empty_envelope() {
-        let store = crate::artifacts::fem2d::mutations::Fem2dStore::new(store::create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::engine::empty_fem2d_snapshot(), None));
+        let store = crate::artifacts::fem2d::mutations::Fem2dStore::new(store::create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::schema::empty_fem2d_snapshot(), None));
         assert!(store.snapshot().expect("snapshot").nodes.is_empty());
     }
 }

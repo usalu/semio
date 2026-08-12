@@ -2,7 +2,7 @@
 //! and the graph viewport/select/hover view commands.
 
 use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
-use crate::artifacts::procedural2d::engine::host_operations;
+use crate::artifacts::procedural2d::schema::host_operations;
 use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::{CameraJson, FlowEvalSession, FlowFixture};

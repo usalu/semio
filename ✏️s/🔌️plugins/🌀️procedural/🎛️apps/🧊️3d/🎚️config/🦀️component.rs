@@ -327,7 +327,7 @@ impl Mutation<Procedural3dConfig> for Procedural3dConfigMutation {
             Procedural3dConfigMutation::SetLocale { value } => next.locale = value.clone(),
             Procedural3dConfigMutation::SetContributions { json } => {
                 next.contributions_json = json.clone();
-                crate::artifacts::procedural3d::engine::sync_flow_extension_contributions(json);
+                crate::apps::procedural3d::sync_flow_extension_contributions(json);
             }
         }
         next

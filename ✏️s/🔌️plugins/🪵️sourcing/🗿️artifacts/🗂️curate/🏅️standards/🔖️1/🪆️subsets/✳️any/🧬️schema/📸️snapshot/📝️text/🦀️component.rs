@@ -38,7 +38,7 @@ mod tests {
     #[test]
     #[ignore = "manual fixture export"]
     fn export_demo_stock_fixture_text() {
-        use crate::artifacts::curate::engine::{beams, slabs, windows, SourcingModule};
+        use crate::artifacts::curate::schema::{beams, slabs, windows, SourcingModule};
         let stock: Vec<_> = SourcingModule::demo_kinds(&beams::BeamsModule)
             .into_iter()
             .chain(SourcingModule::demo_kinds(&windows::WindowsModule))

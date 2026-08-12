@@ -1,5 +1,5 @@
 //! note <- svg
-use crate::artifacts::note::engine::{create_note_id, empty_note_snapshot};
+use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot};
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
 use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{parse_svg_xml, write_svg_xml, SvgSnapshot};
 use semio_s_plugin_stdio::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA;

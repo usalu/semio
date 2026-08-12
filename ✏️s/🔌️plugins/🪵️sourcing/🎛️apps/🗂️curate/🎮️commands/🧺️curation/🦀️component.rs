@@ -2,7 +2,7 @@
 //! from `crate::apps::curate::modes::curate::windows::curated` (the "Curated" window this pushes into).
 
 use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
-use crate::artifacts::curate::engine::{curation_decision_for_delta, curation_decision_for_set, CurationDecision};
+use crate::artifacts::curate::schema::{curation_decision_for_delta, curation_decision_for_set, CurationDecision};
 use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -126,7 +126,7 @@ mod tests {
     use crate::apps::curate::commands::curation::{curate_add, curate_remove, curate_set_count, drop_on_curated, drop_on_pool};
     use crate::apps::curate::testkit::{dispatch, new_app};
     use crate::apps::curate::SourcingCurateCommand;
-    use crate::artifacts::curate::engine::curated_count;
+    use crate::artifacts::curate::schema::curated_count;
 
     #[test]
     fn curate_add_and_remove_round_trip_through_operations() {

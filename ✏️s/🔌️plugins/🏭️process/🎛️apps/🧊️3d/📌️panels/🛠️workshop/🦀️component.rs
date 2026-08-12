@@ -5,7 +5,7 @@ use crate::apps::process3d::config::Process3dConfig;
 use crate::apps::process3d::iconed_tree_item_with_action;
 use crate::apps::process3d::process3d_action;
 use crate::apps::process3d::terminology::Process3dLabels;
-use crate::artifacts::process3d::engine::installed_catalogs;
+use crate::apps::process3d::installed_catalogs;
 use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode};
 use serde_json::json;

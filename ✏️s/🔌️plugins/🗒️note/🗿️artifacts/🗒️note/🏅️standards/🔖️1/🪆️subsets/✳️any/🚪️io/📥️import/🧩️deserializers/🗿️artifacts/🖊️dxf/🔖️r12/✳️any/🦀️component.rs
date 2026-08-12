@@ -4,7 +4,7 @@
 //! `DxfSnapshot`'s flat `lines` -> `entities: Vec<DxfEntity>`). Only `DxfEntity::Line` is mapped
 //! back to an ink block (the same narrow scope the old `lines`-only reader covered — this leaf
 //! was never a general DXF importer).
-use crate::artifacts::note::engine::{create_note_id, empty_note_snapshot};
+use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot};
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use semio_s_plugin_stdio::artifacts::dxf::schema::snapshot::{parse_dxf_document, DxfEntity};
 use semio_s_plugin_stdio::artifacts::dxf::DxfSnapshot;

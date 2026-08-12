@@ -170,11 +170,11 @@ impl ArtifactApp for Process3dPlayApp {
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
 
     fn initial_snapshot() -> Process3dSnapshot {
-        crate::artifacts::process3d::engine::default_document()
+        crate::artifacts::process3d::schema::default_document()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
-        Some(crate::artifacts::process3d::engine::process3d_io())
+        Some(process3d_io())
     }
 
     //#region 🔖️Media
@@ -183,7 +183,7 @@ impl ArtifactApp for Process3dPlayApp {
     /// shadows the trait's provided body for every port on this app, not just the new one).
     fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
-            "brep:out" => match crate::artifacts::process3d::engine::export_process3d_model(doc.snapshot, "step") {
+            "brep:out" => match crate::artifacts::process3d::io::export_process3d_model(doc.snapshot, "step") {
                 Some(export) => {
                     let text = match export.data {
                         Value::String(text) => text,
@@ -226,7 +226,7 @@ impl ArtifactApp for Process3dPlayApp {
                 // `import_process3d_model`'s `data:...,<base64>` expectation.
                 use base64::Engine;
                 let data_url = format!("data:application/octet-stream;base64,{}", base64::engine::general_purpose::STANDARD.encode(json.as_bytes()));
-                match crate::artifacts::process3d::engine::import_process3d_model("geometry-in.step", &data_url) {
+                match crate::artifacts::process3d::io::import_process3d_model("geometry-in.step", &data_url) {
                     Some(snapshot) => Ok(Emit { effects: vec![reset_process3d_document_effect(&snapshot)], ..Default::default() }),
                     None => Err(MediaError::Payload("geometry:in".into(), "STEP import failed".into())),
                 }
@@ -253,7 +253,7 @@ impl ArtifactApp for Process3dPlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
-        crate::artifacts::process3d::engine::sync_process_machine_contributions(&cfg.snapshot.contributions_json);
+        sync_process_machine_contributions(&cfg.snapshot.contributions_json);
         let config = cfg.snapshot;
         let labels = process3d_labels(config);
         match body_key {
@@ -393,13 +393,279 @@ pub fn create_process3d_app() -> App {
             .keybinding("delete", "removeSelectedStep")
             .keybinding("backspace", "removeSelectedStep")
             .config(Process3dPlayApp::config_spec())
-            .io(crate::artifacts::process3d::engine::process3d_io()),
+            .io(process3d_io()),
     )
-    .example(PROCESS3D_EXAMPLE_TIMBER, LocalizedLabel::native("Timber Beam Joinery", "Holzbalkenverbindung"), crate::artifacts::process3d::engine::TIMBER_EXAMPLE_DSL, "file-text")
-    .example(PROCESS3D_EXAMPLE_PLATE, LocalizedLabel::native("Drilled Plate", "Gebohrte Platte"), crate::artifacts::process3d::engine::PLATE_EXAMPLE_DSL, "file-text")
+    .example(PROCESS3D_EXAMPLE_TIMBER, LocalizedLabel::native("Timber Beam Joinery", "Holzbalkenverbindung"), crate::artifacts::process3d::schema::TIMBER_EXAMPLE_DSL, "file-text")
+    .example(PROCESS3D_EXAMPLE_PLATE, LocalizedLabel::native("Drilled Plate", "Gebohrte Platte"), crate::artifacts::process3d::schema::PLATE_EXAMPLE_DSL, "file-text")
     .workflow("process3d", "Process 3D", "brep")
 }
 //#endregion 🔖️Manifest
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors `crate::artifacts::process3d::
+/// artifact_kind()`'s literal for `"3d.process"` (schema/media type/export+import formats/presentation
+/// fields copied verbatim), plus the two workflow ports: `geometry:in` (Many, unrequired — accepts
+/// upstream geometry producers, e.g. cad/lowpoly) and `brep:out` (Many, unrequired, `kind_id:
+/// "3d.process"` — reusing the artifact kind already declared, never a second `.artifact_kind(...)` call).
+pub fn process3d_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: crate::artifacts::process3d::PROCESS_3D_SCHEMA.into(),
+        document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+        ports: vec![
+            semio_framework_plugin::MediaPortSpec {
+                id: "geometry:in".into(),
+                label: "Geometry".into(),
+                direction: semio_framework_plugin::MediaPortDirection::In,
+                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
+                kind_id: None,
+                required: false,
+                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+            },
+            semio_framework_plugin::MediaPortSpec {
+                id: "brep:out".into(),
+                label: "Brep".into(),
+                direction: semio_framework_plugin::MediaPortDirection::Out,
+                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+                kind_id: Some("3d.process".into()),
+                required: false,
+                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+            },
+        ],
+        export_formats: vec![],
+        import_formats: vec![],
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.process".into(), name: "3D Process".into(), dimension: "3d".into(), component_kind: "process3d".into() },
+    }
+}
+//#endregion 🔖️Io
+
+//#region 🔌️Registration
+/// 🔌️ Registers this app's document exporters/import handlers and codec with the OS runtime — the
+/// plugin root (`🏭️process/🦀️component.rs`)'s `.setup(crate::apps::process3d::register)` call invokes
+/// this. Dissolved out of the former `⚙️engine::register()` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — process3d has not yet migrated to the
+/// `declaration()`/`.artifact(...)` pattern block2d/block3d/block5d use (see that plugin's own
+/// `🔌️Registration` doc comment), so this stays a `.setup()`-invoked free function rather than an
+/// `ArtifactDeclaration`.
+pub fn register() {
+    crate::artifacts::process3d::io_registry::register();
+
+    register_artifact_schema();
+    register_artifact_inference();
+    crate::apps::process3d::config::schema::register_app_schema();
+    register_pilot_languages();
+    fn process3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
+        let snapshot: Process3dSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
+        crate::artifacts::process3d::schema::inferences::processed_mesh(&snapshot).ok_or_else(|| "process3d: kernel replay failed".to_string())
+    }
+
+    fn process3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
+        Err("process3d: mesh import not supported".into())
+    }
+
+    semio_framework_os::register_mesh_dwg_import_handler("3d.process", process3d_document_from_mesh);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Process3dPlayApp>(crate::artifacts::process3d::PROCESS_3D_SCHEMA);
+}
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "process.process3d",
+        extension: Some("process3d"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::process3d::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::process3d::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::process3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::process3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("process.process3d"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "process.process3d.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::process3d::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::process3d::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::process3d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::process3d::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("process.process3d.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "process.process3d.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::process3d::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::process3d::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("process.process3d.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "process3d.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::process3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::process3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("process3d.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "process3d.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::process3d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::process3d::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("process3d.spr"),
+    });
+}
+
+/// 🧬️ Registers the twenty handcrafted schema leaves for `s.process.process3d`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::process3d::schema::process3d_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers the process3d artifact `💡️inference` descriptor into the OS-wide inference
+/// catalog — sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inference() {
+    ::schema::register_artifact_inference_descriptor(
+        crate::artifacts::process3d::standards::v1::subsets::any::schema::inferences::process3d_artifact_inference_descriptor(),
+    );
+}
+//#endregion 🔌️Registration
+
+//#region 🔧️Behavior
+/// 🧭️ Axis-angle rotation that maps world-up `[0,0,1]` onto an arbitrary unit `normal`, so a box
+/// primitive's local Z axis (its `height` dimension) ends up flush with a picked face's normal. Pure
+/// math with no snapshot/io coupling — only `🎮️commands/🌍️world`'s face-drag placement calls it, so
+/// it lives here rather than `🧬️schema/💡️inferences`.
+pub fn axis_angle_from_up_to(normal: [f64; 3]) -> ([f64; 3], f64) {
+    const UP: [f64; 3] = [0.0, 0.0, 1.0];
+    let dot = (UP[0] * normal[0] + UP[1] * normal[1] + UP[2] * normal[2]).clamp(-1.0, 1.0);
+    if dot > 1.0 - 1e-9 {
+        return ([0.0, 0.0, 1.0], 0.0);
+    }
+    if dot < -1.0 + 1e-9 {
+        return ([1.0, 0.0, 0.0], std::f64::consts::PI);
+    }
+    let cross = [UP[1] * normal[2] - UP[2] * normal[1], UP[2] * normal[0] - UP[0] * normal[2], UP[0] * normal[1] - UP[1] * normal[0]];
+    let len = (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt();
+    let axis = if len > 1e-9 { [cross[0] / len, cross[1] / len, cross[2] / len] } else { [0.0, 0.0, 1.0] };
+    (axis, dot.acos())
+}
+
+fn leak_str(value: String) -> &'static str {
+    Box::leak(value.into_boxed_str())
+}
+
+/// 🧩️ One hot-installed machine catalog deserialized from the `"process.machines"` topic contribution.
+#[derive(Clone)]
+struct ContributedMachineCatalog {
+    catalog_id: &'static str,
+    label: &'static str,
+    icon_id: &'static str,
+    machines: Vec<crate::artifacts::process3d::WorkshopMachine>,
+}
+
+impl crate::artifacts::process3d::MachineCatalog for ContributedMachineCatalog {
+    fn catalog_id(&self) -> &'static str {
+        self.catalog_id
+    }
+
+    fn label(&self) -> &'static str {
+        self.label
+    }
+
+    fn icon_id(&self) -> &'static str {
+        self.icon_id
+    }
+
+    fn machines(&self) -> Vec<crate::artifacts::process3d::WorkshopMachine> {
+        self.machines.clone()
+    }
+}
+
+static CONTRIBUTED_MACHINE_CATALOGS: std::sync::Mutex<Vec<ContributedMachineCatalog>> = std::sync::Mutex::new(Vec::new());
+static LAST_PROCESS_CONTRIBUTIONS_JSON: std::sync::Mutex<String> = std::sync::Mutex::new(String::new());
+
+/// 🔌️ Refreshes contributed `process.machines` catalogs when the host pushes a new catalogue.
+//#region 🔖️ProcessMachinesTopicPayload
+/// 🗂️ `topic_contribution.payload` shape for the `"process.machines"` topic — the sole shape
+/// `sync_process_machine_contributions` decodes. See `TopicContribution` in
+/// `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs`.
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ProcessMachinesTopicPayload {
+    app_id: String,
+    module_id: String,
+    label: String,
+    icon_id: semio_framework::IconName,
+    machines_json: String,
+}
+//#endregion 🔖️ProcessMachinesTopicPayload
+
+pub fn sync_process_machine_contributions(contributions_json: &str) {
+    let mut last = LAST_PROCESS_CONTRIBUTIONS_JSON.lock().expect("process contributions lock");
+    if *last == contributions_json {
+        return;
+    }
+    let mut catalogs = Vec::new();
+    for entry in semio_framework::parse_contributions(contributions_json) {
+        let Some(payload) = entry
+            .topic_contribution
+            .as_ref()
+            .filter(|topic| topic.topic == "process.machines")
+            .and_then(|topic| topic.decode::<ProcessMachinesTopicPayload>().ok())
+        else {
+            continue;
+        };
+        let (app_id, module_id, label, icon_id, machines_json) = (payload.app_id, payload.module_id, payload.label, payload.icon_id, payload.machines_json);
+        if app_id != PROCESS_3D_PLAY_APP_ID {
+            continue;
+        }
+        let machines: Vec<crate::artifacts::process3d::WorkshopMachine> = serde_json::from_str(&machines_json).unwrap_or_default();
+        catalogs.push(ContributedMachineCatalog {
+            catalog_id: leak_str(module_id),
+            label: leak_str(label),
+            icon_id: leak_str(icon_id.to_string()),
+            machines,
+        });
+    }
+    *CONTRIBUTED_MACHINE_CATALOGS.lock().expect("process contributed catalogs lock") = catalogs;
+    *last = contributions_json.to_string();
+}
+
+fn builtin_installed_catalogs() -> Vec<Box<dyn crate::artifacts::process3d::MachineCatalog>> {
+    vec![
+        Box::new(crate::artifacts::process3d::schema::GenericCatalog),
+        crate::artifacts::process3d::schema::wood_catalog(),
+        crate::artifacts::process3d::schema::concrete_catalog(),
+        crate::artifacts::process3d::schema::metal_catalog(),
+        crate::artifacts::process3d::schema::robotic_catalog(),
+    ]
+}
+
+/// 🧩️ Every machine catalog installed in this build, in stable display order — the built-in generic
+/// catalog first (so it renders as the default-open section), then every `process.machines` contribution
+/// merged via `sync_process_machine_contributions` from runtime-installable extensions under
+/// `🏭️process/🧩️extensions/`.
+pub fn installed_catalogs() -> Vec<Box<dyn crate::artifacts::process3d::MachineCatalog>> {
+    let mut catalogs = builtin_installed_catalogs();
+    let contributed = CONTRIBUTED_MACHINE_CATALOGS.lock().expect("process contributed catalogs lock");
+    catalogs.extend(contributed.iter().map(|catalog| Box::new(catalog.clone()) as Box<dyn crate::artifacts::process3d::MachineCatalog>));
+    catalogs
+}
+
+/// 🔎️ One machine, by catalog + machine id, with `catalog_id` stamped onto the snapshot — the
+/// "install into workshop" lookup for the workshop configurator's add-machine action.
+pub fn catalog_machine(catalog_id: &str, machine_id: &str) -> Option<crate::artifacts::process3d::WorkshopMachine> {
+    let catalog = installed_catalogs().into_iter().find(|catalog| catalog.catalog_id() == catalog_id)?;
+    let mut machine = catalog.machines().into_iter().find(|machine| machine.id == machine_id)?;
+    machine.catalog_id = Some(catalog_id.to_string());
+    Some(machine)
+}
+//#endregion 🔧️Behavior
 
 //#region 🧪️Testkit
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
@@ -497,7 +763,7 @@ pub(crate) mod testkit {
             },
         ];
         let json = serde_json::to_string(&entries).unwrap();
-        crate::artifacts::process3d::engine::sync_process_machine_contributions(&json);
+        sync_process_machine_contributions(&json);
         let _ = app;
     }
 
@@ -691,6 +957,40 @@ mod tests {
     }
     //#endregion 🔖️ManifestSanity
 
+    //#region 🔖️IoTests
+    /// 🔤️ `AppIo.export_formats`/`import_formats` (unlike `ArtifactKindSpec`) have no `export_stdio_kinds`/
+    /// `import_stdio_kinds` string-id peer and are never read by `register_app_io`, so they stay empty
+    /// here in step with `artifact_kind()`'s own now-empty lists (see that fn's doc).
+    #[test]
+    fn process3d_io_mirrors_the_declared_artifact_kind() {
+        let io = process3d_io();
+        assert_eq!(io.document_schema, crate::artifacts::process3d::PROCESS_3D_SCHEMA);
+        assert_eq!(io.artifact.id, "3d.process");
+        assert!(io.export_formats.is_empty());
+        assert!(io.import_formats.is_empty());
+    }
+
+    /// 🔌️ WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe:
+    /// `geometry:in` and `brep:out` are declared with the right direction/kind/multiplicity.
+    #[test]
+    fn process3d_io_declares_geometry_in_and_brep_out_ports() {
+        let io = process3d_io();
+        let geometry_in = io.ports.iter().find(|port| port.id == "geometry:in").expect("geometry:in declared");
+        assert_eq!(geometry_in.direction, semio_framework_plugin::MediaPortDirection::In);
+        assert!(geometry_in.kind_id.is_none());
+        assert!(!geometry_in.required);
+        assert_eq!(geometry_in.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
+
+        let brep_out = io.ports.iter().find(|port| port.id == "brep:out").expect("brep:out declared");
+        assert_eq!(brep_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert_eq!(brep_out.kind_id.as_deref(), Some("3d.process"));
+        assert!(!brep_out.required);
+        assert_eq!(brep_out.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
+        assert_eq!(brep_out.media_type.class, MediaClass::ThreeD);
+        assert_eq!(brep_out.media_type.form, MediaForm::Brep);
+    }
+    //#endregion 🔖️IoTests
+
     //#region 🔖️CrossCutting
     #[test]
     fn labels_resolve_native_by_default_and_in_german() {
@@ -799,13 +1099,13 @@ mod tests {
     fn world_face_drag_end_cut_reduces_volume_end_to_end() {
         let mut app = app();
         squared_off_box_stock(&mut app);
-        let stock_volume = crate::artifacts::process3d::engine::processed_volume(&app.snapshot().expect("snapshot")).expect("stock volume");
+        let stock_volume = crate::artifacts::process3d::schema::inferences::processed_volume(&app.snapshot().expect("snapshot")).expect("stock volume");
         let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) }));
         assert!(!result.mutations.is_empty());
         let document = app.snapshot().expect("snapshot");
         assert_eq!(document.steps.len(), 1);
         assert!(matches!(document.steps[0].measure, crate::artifacts::process3d::ProcessMeasure::Cut { .. }));
-        let new_volume = crate::artifacts::process3d::engine::processed_volume(&document).expect("volume after cut");
+        let new_volume = crate::artifacts::process3d::schema::inferences::processed_volume(&document).expect("volume after cut");
         assert!(new_volume < stock_volume, "face-drag cut should reduce volume below stock ({new_volume} vs {stock_volume})");
     }
 
@@ -813,13 +1113,13 @@ mod tests {
     fn world_face_drag_end_attach_increases_volume_end_to_end() {
         let mut app = app();
         squared_off_box_stock(&mut app);
-        let stock_volume = crate::artifacts::process3d::engine::processed_volume(&app.snapshot().expect("snapshot")).expect("stock volume");
+        let stock_volume = crate::artifacts::process3d::schema::inferences::processed_volume(&app.snapshot().expect("snapshot")).expect("stock volume");
         let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: 0.5, face_extent: Some([0.2, 0.2]) }));
         assert!(!result.mutations.is_empty());
         let document = app.snapshot().expect("snapshot");
         assert_eq!(document.steps.len(), 1);
         assert!(matches!(document.steps[0].measure, crate::artifacts::process3d::ProcessMeasure::Attach { .. }));
-        let new_volume = crate::artifacts::process3d::engine::processed_volume(&document).expect("volume after attach");
+        let new_volume = crate::artifacts::process3d::schema::inferences::processed_volume(&document).expect("volume after attach");
         assert!(new_volume > stock_volume, "face-drag attach should increase volume above stock ({new_volume} vs {stock_volume})");
     }
 
@@ -880,7 +1180,7 @@ mod tests {
     #[test]
     fn export_brep_out_returns_step_text_structured_payload() {
         let app = Process3dPlayApp;
-        let document = crate::artifacts::process3d::engine::default_document();
+        let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
         let doc = ArtifactView { snapshot: &document, history: &history };
         let media = Process3dPlayApp::export_media("brep:out", &doc).expect("export brep:out");
@@ -898,7 +1198,7 @@ mod tests {
     #[test]
     fn export_unknown_port_is_not_implemented() {
         let app = Process3dPlayApp;
-        let document = crate::artifacts::process3d::engine::default_document();
+        let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
         let doc = ArtifactView { snapshot: &document, history: &history };
         assert!(matches!(Process3dPlayApp::export_media("nonsense:out", &doc), Err(MediaError::NotImplemented)));
@@ -907,12 +1207,56 @@ mod tests {
     #[test]
     fn import_geometry_in_rejects_unrecognized_schema() {
         let app = Process3dPlayApp;
-        let document = crate::artifacts::process3d::engine::default_document();
+        let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
         let doc = ArtifactView { snapshot: &document, history: &history };
         let media = semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "unknown.schema".into(), json: "irrelevant".into() } };
         assert!(matches!(Process3dPlayApp::import_media("geometry:in", &media, &doc), Err(MediaError::Payload(port, _)) if port == "geometry:in"));
     }
     //#endregion 🔖️MediaTests
+
+    //#region 🔖️BehaviorTests
+    #[test]
+    fn face_drag_orients_box_along_normal() {
+        let (axis, angle) = axis_angle_from_up_to([0.0, 1.0, 0.0]);
+        assert!((angle - std::f64::consts::FRAC_PI_2).abs() < 1e-9);
+        assert!((axis[0] - (-1.0)).abs() < 1e-9 && axis[1].abs() < 1e-9 && axis[2].abs() < 1e-9);
+    }
+
+    #[test]
+    fn face_drag_degenerate_antiparallel_normal_does_not_panic() {
+        let (_, angle) = axis_angle_from_up_to([0.0, 0.0, -1.0]);
+        assert!((angle - std::f64::consts::PI).abs() < 1e-9);
+    }
+
+    #[test]
+    fn sync_process_machine_contributions_merges_hot_installed_catalogs() {
+        use semio_framework::{ProgramContributionEntry, TopicContribution};
+        let machine = crate::artifacts::process3d::WorkshopMachine {
+            id: "hot-saw".into(),
+            label: "Hot Saw".into(),
+            icon_id: "scissors".into(),
+            catalog_id: None,
+            capabilities: vec![],
+        };
+        let entry = ProgramContributionEntry {
+            plugin_id: "process-module-test".into(),
+            topic_contribution: Some(TopicContribution::new(
+                "process.machines",
+                serde_json::json!({
+                    "appId": "process3d-play",
+                    "moduleId": "hot-catalog",
+                    "label": "Hot Catalog",
+                    "iconId": "wrench",
+                    "machinesJson": serde_json::to_string(&vec![machine]).unwrap(),
+                }),
+            )),
+        };
+        let json = serde_json::to_string(&vec![entry]).unwrap();
+        sync_process_machine_contributions(&json);
+        assert!(installed_catalogs().iter().any(|catalog| catalog.catalog_id() == "hot-catalog"));
+        sync_process_machine_contributions("[]");
+    }
+    //#endregion 🔖️BehaviorTests
 }
 //#endregion 🧪️Tests

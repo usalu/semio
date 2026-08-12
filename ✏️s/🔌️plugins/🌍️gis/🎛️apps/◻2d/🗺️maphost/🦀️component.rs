@@ -5,7 +5,7 @@
 //! `🎮️commands/*` node that has to hit-test, frame or query the live map goes through here.
 
 use crate::apps::gis2d::config::Gis2dConfig;
-use crate::artifacts::gismap::engine::gis_map_descriptor_json;
+use crate::artifacts::gismap::schema::gis_map_descriptor_json;
 use crate::artifacts::gismap::GisMapSnapshot;
 use framework_surface::tiled_map::MapHost;
 use serde_json::Value;
@@ -35,7 +35,7 @@ pub fn map_host_from(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> MapHost {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gismap::engine::default_document;
+    use crate::artifacts::gismap::schema::default_document;
 
     #[test]
     fn the_host_mirrors_the_document_features_and_the_config_camera() {

@@ -3,14 +3,14 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `ð®ï¸commands/*`, the two surfaces
 //! in `ð­ï¸modes/âï¸edit/ðªï¸windows/*`, panel trees in `ðï¸panels/*`, compliance compute in
-//! `crate::artifacts::din16798::engine`, and everything the fifteen norm apps share verbatim (config,
+//! `crate::apps::din16798`, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
 use crate::apps::din16798::commands::{evaluate, selected_check, set_snapshot};
 use crate::apps::din16798::modes::edit as edit_mode;
 use crate::apps::din16798::modes::edit::windows::{inputs, results};
 use crate::apps::din16798::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::artifacts::din16798::engine::DinEn16798Family;
+use crate::apps::din16798::DinEn16798Family;
 use crate::artifacts::din16798::op::Din16798Mutation;
 use crate::artifacts::din16798::Din16798Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
@@ -115,6 +115,28 @@ impl ArtifactApp for Din16798PlayApp {
     //#endregion ðï¸MediaPorts
 }
 //#endregion ðï¸Din16798PlayApp
+
+//#region 🧩️ComplianceFamily
+/// 🧩️ Headless `NormFamily` binding (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
+/// relocated verbatim from the deleted `⚙️engine`. This is stateful/host-facing behaviour, so it
+/// belongs to the app that edits the artifact, not the artifact's own `🧬️schema`.
+pub struct DinEn16798Family;
+
+impl crate::document::NormFamily for DinEn16798Family {
+    type Document = Din16798Snapshot;
+    type Mutation = Din16798Mutation;
+
+    fn family_id() -> crate::document::NormFamilyId {
+        crate::document::NormFamilyId::DinEn16798
+    }
+
+    fn evaluate(document: &Din16798Snapshot) -> crate::document::CheckReport {
+        crate::artifacts::din16798::standards::v1::subsets::any::schema::inferences::evaluate(document)
+    }
+}
+
+pub type Host = crate::document::NormHost<DinEn16798Family>;
+//#endregion 🧩️ComplianceFamily
 
 //#region ðï¸Manifest
 pub fn create_din16798_app() -> App {

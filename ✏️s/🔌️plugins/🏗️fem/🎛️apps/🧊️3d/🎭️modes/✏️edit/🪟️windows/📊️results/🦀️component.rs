@@ -6,9 +6,9 @@
 //!
 //! `config_result_display` (was the old ui crate's `🔖️Fem3dConfigHelpers` region) and the
 //! captioning/model-extent helpers below are results-rendering-only — their sole consumers are this
-//! file's own static/modal/buckling render functions — so they live here rather than in the artifact's
-//! `⚙️engine` (which only hosts helpers with 2+ consumer FILES, per the migration recipe's
-//! `DocumentHelpers` placement rule; see `crate::artifacts::fem3d::engine`'s `🔖️SceneRender` region doc).
+//! file's own static/modal/buckling render functions — so they live here rather than in
+//! `crate::apps::fem3d`'s shared `🎬️SceneRender` region (which only hosts helpers with 2+ consumer
+//! FILES, per the migration recipe's `DocumentHelpers` placement rule).
 
 use crate::apps::fem3d::config::Fem3dConfig;
 use crate::artifacts::fem3d::{Fem3dSnapshot, FemCamera};
@@ -90,7 +90,8 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dConfig) -> UiNode {
 /// case/combination id, falling back to the first load case when `None`/unknown. Caption names the
 /// active case.
 fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> UiNode {
-    use crate::artifacts::fem3d::engine::{fem3d_camera_json, fem3d_scene_parts, fem3d_solve_all};
+    use crate::apps::fem3d::{fem3d_camera_json, fem3d_scene_parts};
+    use crate::fem3d_engine::fem3d_solve_all;
 
     let results = match fem3d_solve_all(doc) {
         Ok(results) => results,
@@ -107,7 +108,7 @@ fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &FemCamer
     for d in &result.displacements {
         disp_map.insert(d.node_id.clone(), d.values);
     }
-    let nodal_stress = crate::artifacts::fem3d::engine::mesh_preview::fem3d_nodal_von_mises(doc, &case_id).ok();
+    let nodal_stress = crate::fem3d_engine::mesh_preview::fem3d_nodal_von_mises(doc, &case_id).ok();
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, Some(&disp_map), doc.analysis.deformation_scale, nodal_stress.as_ref());
     let scene = semio_framework_plugin::build_world_3d_scene(
         FEM3D_BODY_RESULTS,
@@ -120,7 +121,8 @@ fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &FemCamer
 /// 📊️ Modal mode-shape overlay: instances offset by the selected mode's shape, normalized to unit peak
 /// then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent, with a frequency caption.
 fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> UiNode {
-    use crate::artifacts::fem3d::engine::{fem3d_camera_json, fem3d_scene_parts, modal_buckling::fem3d_modal_mode_values};
+    use crate::apps::fem3d::{fem3d_camera_json, fem3d_scene_parts};
+    use crate::fem3d_engine::modal_buckling::fem3d_modal_mode_values;
     use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
 
     let (freq_hz, mut disp_map) = match fem3d_modal_mode_values(doc, mode_index) {
@@ -142,7 +144,8 @@ fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> U
 /// reference load case, falling back to the first load case when `None`. Caption names the mode and its
 /// load factor.
 fn render_buckling(doc: &Fem3dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
-    use crate::artifacts::fem3d::engine::{fem3d_camera_json, fem3d_scene_parts, modal_buckling::fem3d_buckling_mode_values};
+    use crate::apps::fem3d::{fem3d_camera_json, fem3d_scene_parts};
+    use crate::fem3d_engine::modal_buckling::fem3d_buckling_mode_values;
     use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
 
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {

@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn set_lod_mode_is_a_view_action_with_no_artifact_mutations() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         let before = app.snapshot().expect("snapshot");
         dispatch(&mut app, Procedural3dCommand::SetLodMode(set_lod_mode::SetLodMode { value: "wireframe".into() }));
@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn set_active_utility_switch_clears_scratch_and_emits_no_operations() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app_with_registry();
         let before = app.snapshot().expect("snapshot");
         let result = app.dispatch_typed(Procedural3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }), &semio_framework_plugin::testkit::meta("local")).expect("switch utility");

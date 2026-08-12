@@ -1,7 +1,7 @@
 //! 🌐️ Animate present app commands — grid seeding: seed-grid, reset-grid, clear-tiles.
 
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
-use crate::artifacts::present::engine::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
+use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::artifacts::present::mutations::replace_tiles::mutation::ReplaceTiles;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::PresentSnapshot;

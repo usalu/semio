@@ -26,7 +26,7 @@ use crate::apps::note::modes::edit;
 use crate::apps::note::modes::edit::windows::{composite, navigator};
 use crate::apps::note::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::note::terminology::note_play_labels;
-use crate::artifacts::note::engine::empty_note_snapshot;
+use crate::artifacts::note::schema::empty_note_snapshot;
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID};
@@ -332,7 +332,7 @@ pub fn create_note_app() -> App {
             window.options.measures = navigator::window_measures(&document, &crate::artifacts::note::NoteCamera::default(), &crate::apps::note::terminology::NotePlayLabels::NATIVE_EN);
         }
     }
-    app.example("semio", LocalizedLabel::native("Semio", "Semio"), crate::artifacts::note::engine::semio_example_json(), "sparkles").workflow("note", "Note", "document")
+    app.example("semio", LocalizedLabel::native("Semio", "Semio"), crate::artifacts::note::schema::semio_example_json(), "sparkles").workflow("note", "Note", "document")
 }
 //#endregion 🔖️Manifest
 

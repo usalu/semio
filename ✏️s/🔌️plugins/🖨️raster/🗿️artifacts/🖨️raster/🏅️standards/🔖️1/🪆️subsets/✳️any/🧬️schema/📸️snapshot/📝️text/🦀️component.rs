@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     fn semio_example_dsl_round_trips() {
-        let fixture = crate::artifacts::raster::engine::semio_fixture_snapshot();
+        let fixture = crate::artifacts::raster::schema::semio_fixture_snapshot();
         store::os_store::test_support::assert_dsl_round_trip(&fixture);
         let printed = print_dsl(&fixture);
         let reparsed = parse_dsl(&printed).expect("parse printed semio fixture");

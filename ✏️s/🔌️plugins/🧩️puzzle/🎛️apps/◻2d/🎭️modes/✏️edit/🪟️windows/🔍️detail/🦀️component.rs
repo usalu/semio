@@ -5,7 +5,7 @@ use crate::apps::puzzle2d::modes::edit;
 use crate::apps::puzzle2d::modes::edit::options;
 use crate::apps::puzzle2d::terminology::Puzzle2dLabels;
 use crate::apps::puzzle2d::{puzzle2d_localized, Puzzle2dScene, PUZZLE2D_LOD_MODE_AUTOMATIC};
-use crate::artifacts::puzzle2d::engine::BoardHost;
+use crate::apps::puzzle2d::engine::BoardHost;
 use semio_framework_plugin::{SurfaceKind, UiNode, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants

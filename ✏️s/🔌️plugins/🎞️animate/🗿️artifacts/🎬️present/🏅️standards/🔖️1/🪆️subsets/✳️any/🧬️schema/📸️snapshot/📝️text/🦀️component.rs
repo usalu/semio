@@ -30,7 +30,7 @@ pub fn print_dsl(deck: &PresentSnapshot) -> String {
 mod tests {
     use super::*;
     use crate::artifacts::present::default_present_snapshot;
-    use crate::artifacts::present::engine::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
+    use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
     use store::os_store::test_support;
 
     #[test]

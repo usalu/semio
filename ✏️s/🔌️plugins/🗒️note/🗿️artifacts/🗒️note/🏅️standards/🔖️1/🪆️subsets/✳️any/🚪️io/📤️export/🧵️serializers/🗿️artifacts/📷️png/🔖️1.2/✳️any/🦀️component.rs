@@ -10,7 +10,7 @@ use crate::artifacts::note::NoteSnapshot;
 use semio_s_plugin_stdio::artifacts::png::engine::{encode_png, empty_png_snapshot};
 pub fn register() {}
 pub fn serialize(snapshot: &NoteSnapshot) -> Result<semio_s_plugin_stdio::artifacts::png::PngSnapshot, String> {
-    let (w, h) = crate::artifacts::note::engine::note_document_bounds(snapshot);
+    let (w, h) = crate::artifacts::note::io::note_document_bounds(snapshot);
     let width = w.max(1); let height = h.max(1);
     let mut rgba = vec![255u8; (width as usize) * (height as usize) * 4];
     for px in rgba.chunks_mut(4) { px[3] = 255; }

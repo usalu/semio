@@ -2,7 +2,7 @@
 
 #![cfg(target_arch = "wasm32")]
 
-use crate::artifacts::procedural2d::engine::empty_procedural2d_snapshot;
+use crate::artifacts::procedural2d::schema::empty_procedural2d_snapshot;
 use crate::artifacts::procedural2d::mutations::{Procedural2dEnvelope, Procedural2dStore};
 use crate::artifacts::procedural2d::PROCEDURAL_2D_SCHEMA;
 use std::cell::RefCell;

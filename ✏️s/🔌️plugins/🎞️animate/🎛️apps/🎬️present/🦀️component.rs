@@ -7,9 +7,12 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the window render
 //! in `🎭️modes/🖊️main/🪟️windows/🖼️tile-editor`, panel trees in `📌️panels/*`, labels in
-//! `🦀️terminology.rs`, view state in `🦀️config.rs`, shared compute in the artifact's `⚙️engine`. This
-//! file is a routing table: `handle` → `PresentCommand::dispatch`, `render` → body-key → node, and a
-//! `🔖️Manifest` region that calls one `definition()` per node.
+//! `🦀️terminology.rs`, view state in `🦀️config.rs`, pure document helpers in
+//! `crate::artifacts::present::schema`, and stateful behaviour (the Manim-class animation core + the
+//! headless video renderer, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) in this app's
+//! own `⚙️engine`. This file is a routing table: `handle` → `PresentCommand::dispatch`, `render` →
+//! body-key → node, `🔖️Io`/`🔌️Registration` regions below, and a `🔖️Manifest` region that calls one
+//! `definition()` per node.
 
 use crate::apps::present::commands::{engagement, grid, shell, source, tile, view};
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
@@ -17,7 +20,7 @@ use crate::apps::present::modes::main;
 use crate::apps::present::modes::main::windows::tile_editor;
 use crate::apps::present::panels::{artifact, catalogue, inspection};
 use crate::apps::present::terminology::animate_present_labels;
-use crate::artifacts::present::engine::{build_tile_morph_prompt, next_frame_tile_crop, next_frame_tile_id};
+use crate::artifacts::present::schema::build_tile_morph_prompt;
 use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{default_present_snapshot, FigureTileDraft, PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
@@ -40,6 +43,132 @@ pub fn animate_present_action(action: &str, args: Option<Value>) -> ActionDescri
     semio_framework_plugin::ActionFactory::new(PRESENT_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️Io
+/// 🔌️ Relocated verbatim from the former artifact-tree `⚙️engine` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this app's typed media I/O surface
+/// (`AppDefinition.io`) — mirrors `create_animate_present_app`'s `.artifact_kind(...)` literal (schema/
+/// media type copied verbatim) plus the extra `frames:in` input port (Wave-2 port recipe).
+pub fn present_io() -> AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: PRESENT_DOCUMENT_SCHEMA.into(),
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Presentation, form: semio_framework_plugin::MediaForm::Deck },
+        ports: vec![semio_framework_plugin::MediaPortSpec {
+            id: "frames:in".into(),
+            label: "Frames".into(),
+            direction: semio_framework_plugin::MediaPortDirection::In,
+            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Raster },
+            kind_id: Some("2d.image".into()),
+            required: false,
+            multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+        }],
+        export_formats: Vec::new(),
+        import_formats: Vec::new(),
+        artifact: semio_framework_plugin::ArtifactPresentation { id: PRESENT_DOCUMENT_SCHEMA.into(), name: "Animate Present Deck".into(), dimension: "2d".into(), component_kind: "panel".into() },
+    }
+}
+
+/// 🎞️ `frames:in` placement (Wave-2 port recipe) — `PresentSnapshot` models one shared background
+/// `source` image with named crop-`tiles` over it; there is no per-tile independent raster payload in
+/// this schema, so an incoming `2d.image` frame becomes a new tile positioned in a deterministic
+/// contact-sheet grid (4 columns) rather than replacing `source` — exactly the surface `seedGrid`/
+/// `addTile` (see the app's `🎮️commands/🀄️tile`/`🎮️commands/🌐️grid`) already let a user crop/arrange
+/// candidate frames on. Pure: both functions depend only on the current tile COUNT, so repeated imports
+/// land in distinct, stable cells without needing a live host/counter.
+const FRAME_IMPORT_GRID_COLUMNS: usize = 4;
+
+pub fn next_frame_tile_id(existing_tile_count: usize) -> String {
+    format!("frame-{}", existing_tile_count + 1)
+}
+
+pub fn next_frame_tile_crop(existing_tile_count: usize) -> crate::artifacts::present::FigureTileFrame {
+    let cell = 1.0 / FRAME_IMPORT_GRID_COLUMNS as f64;
+    let column = existing_tile_count % FRAME_IMPORT_GRID_COLUMNS;
+    let row = existing_tile_count / FRAME_IMPORT_GRID_COLUMNS;
+    crate::artifacts::present::schema::clamp_tile_crop(&crate::artifacts::present::FigureTileFrame { x: column as f64 * cell, y: (row as f64 * cell).min(1.0 - cell), width: cell, height: cell })
+}
+//#endregion 🔖️Io
+
+//#region 🔌️Registration
+/// 🔌️ Relocated verbatim from the former artifact-tree `⚙️engine`'s root `component.rs` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — called by the plugin-root `📦️glue.rs`'s
+/// `semio_plugin!{}` `setup:` field (`.setup(crate::apps::present::register)`).
+pub fn register() {
+    crate::artifacts::present::io_registry::register();
+
+    register_pilot_languages();
+    register_artifact_schema();
+    register_artifact_inferences();
+    crate::apps::present::config::schema::register_app_schema();
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::present::AnimatePresentPlayApp>(PRESENT_DOCUMENT_SCHEMA);
+}
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "present.document",
+        extension: Some("present"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::present::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::present::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::present::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::present::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("present.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "present.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::present::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::present::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::present::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::present::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("present.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "present.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::present::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::present::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("present.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "present.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::present::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::present::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("present.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "present.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::present::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::present::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("present.spr"),
+    });
+}
+
+/// 📌️ Registers the twenty handcrafted schema leaves for `s.animate.present`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::present::schema::present_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.animate.present.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::present::standards::v1::subsets::any::schema::inferences::present_artifact_inference_descriptor());
+}
+//#endregion 🔌️Registration
 
 //#region 🔖️Helpers
 /// 🔢️ Mints a fresh, process-unique tile id — shared by `🎮️commands/🀄️tile::add_tile` and
@@ -161,7 +290,7 @@ impl ArtifactApp for AnimatePresentPlayApp {
     }
 
     fn io() -> Option<AppIo> {
-        Some(crate::artifacts::present::engine::present_io())
+        Some(present_io())
     }
 
     /// 🌱️ `whole_document_operation` stays the trait default (`None`): per `📓️taxonomy.md`, whole-
@@ -169,10 +298,10 @@ impl ArtifactApp for AnimatePresentPlayApp {
     /// decision — see `🎮️commands/🖼️source::set_active_example`'s `HostEffect::LoadDocument` instead).
 
     /// 🎞️ `frames:in` (Wave-2 port recipe): inserts an incoming raster frame as a new tile in a
-    /// deterministic contact-sheet grid (see `crate::artifacts::present::engine::next_frame_tile_crop`'s
-    /// doc comment for why this schema's single shared `source` means tiles, not `source`, are the
-    /// natural insertion point). Never mutates anything directly: the caller applies the returned
-    /// `Tiles(Add)` through the ordinary, undoable document store.
+    /// deterministic contact-sheet grid (see `next_frame_tile_crop`'s doc comment below for why this
+    /// schema's single shared `source` means tiles, not `source`, are the natural insertion point).
+    /// Never mutates anything directly: the caller applies the returned `Tiles(Add)` through the
+    /// ordinary, undoable document store.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, PresentSnapshot>) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "frames:in" {
             return Err(MediaError::NotImplemented);
@@ -265,7 +394,7 @@ pub fn create_animate_present_app() -> App {
             // isn't `seedGrid`/`clearTiles`.
             .app_command("animate.resetGrid", LocalizedLabel::native("Reset to Default Grid", "Auf Standardraster zurücksetzen"), "document")
             .config(AnimatePresentPlayApp::config_spec())
-            .io(crate::artifacts::present::engine::present_io()),
+            .io(present_io()),
     )
     .example_source(crate::examples::art_present_demo::source())
     .workflow("animate", "Animate", "deck")
@@ -436,7 +565,34 @@ mod tests {
 
     #[test]
     fn empty_present_snapshot_has_no_tiles() {
-        assert!(crate::artifacts::present::engine::empty_present_snapshot().tiles.is_empty());
+        assert!(crate::artifacts::present::schema::empty_present_snapshot().tiles.is_empty());
+    }
+
+    /// 🌱️ Relocated from the former artifact-tree `⚙️engine`'s own tests (ticket
+    /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) alongside `present_io`'s relocation to
+    /// this file's `🔖️Io` region.
+    #[test]
+    fn present_io_declares_the_frames_in_port() {
+        let io = present_io();
+        assert_eq!(io.document_schema, PRESENT_DOCUMENT_SCHEMA);
+        assert_eq!(io.ports.len(), 1);
+        let port = &io.ports[0];
+        assert_eq!(port.id, "frames:in");
+        assert_eq!(port.kind_id.as_deref(), Some("2d.image"));
+        assert_eq!(port.direction, semio_framework_plugin::MediaPortDirection::In);
+        assert_eq!(port.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
+        assert!(!port.required);
+    }
+
+    #[test]
+    fn frame_import_placement_is_deterministic_and_non_overlapping() {
+        let first = next_frame_tile_crop(0);
+        let second = next_frame_tile_crop(1);
+        assert_ne!(first, second);
+        assert_eq!(next_frame_tile_id(0), "frame-1");
+        assert_eq!(next_frame_tile_id(1), "frame-2");
+        // 🧮️ Pure function of the count, not a mutating counter.
+        assert_eq!(next_frame_tile_crop(0), first);
     }
     //#endregion 🔖️PortTests
 

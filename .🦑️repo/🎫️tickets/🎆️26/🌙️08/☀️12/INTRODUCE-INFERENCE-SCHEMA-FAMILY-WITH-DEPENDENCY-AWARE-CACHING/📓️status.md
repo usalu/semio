@@ -1,5 +1,172 @@
 # Status
 
+## 🏁 FINAL STATE — everything within our control is DONE. Two items remain, both gated on peers.
+
+**Closing summary is written** (`📓️summary.md`, session-2 section). Ticket is ready to close the moment
+the two items below resolve — or ready to close *without* them, documented as deferred, if they don't.
+
+### Remaining item 1 — `📜️script.ts` inference policy cluster: DRAFTED, NOT WRITTEN
+
+**Zero bytes written to `📜️script.ts` by us.** Verified repeatedly: `grep -c POLICY_INFERENCES_FACET` → 0.
+
+The full cluster is drafted and ready to apply at:
+`/private/tmp/claude-501/-Users-ueli-Documents-semio/c30f0148-727a-463d-b9c6-051475f5479a/scratchpad/inference-cluster-draft.ts`
+
+It has all four design corrections already applied:
+- `policyListInferenceDirs` reserves `📝️text`/`💾️binary`/`📚️examples` **once in the enumerator** (the omission that cost SMO 672 fabricated highs)
+- family-root completeness driven off `loadTaxonomy().schemaFormats`/`textSpecFilenames`/`binarySpecFilenames` — **no hardcoded leaf lists**
+- impl-presence accepts `InferredField<` **OR** a plain `pub fn`, with the 101-of-112 ruling cited in the docstring
+- emoji-uniqueness scoped **within one family tree only** (verified against genuine cross-family repeats: `🧭topology` on flow/graph/raster/jack, `⏱duration` on six media subsets)
+- `medium`/`low` only; `dissolveBreaches` registration only; naming collisions checked against the live file
+
+**Blocker (evidence, not inference):** `git status 📜️script.ts` → `M ` — APA's shrink-only ratchet is
+**staged and uncommitted**. Added symbols are `POLICY_APA_RATCHET_CEILINGS`, `policyApaRatchetKey`,
+`policyApaBreaches`, `policyApaRatchetApply`; **inference-related additions: 0**. Landing ours now would
+make us a concurrent second writer *and* let their permanent ceilings capture a tree containing half our
+rules. Release requested on all peer channels.
+
+**To finish:** confirm APA committed and the slot is free (`git log -- 📜️script.ts` **plus** a clean
+`git status`), apply the draft, run `bun 📜️script.ts verify gate`, diff against baseline
+**30,472 total / 24,632 high**. Expected footprint: **~50 medium** (energy's dirs) and **0 high**.
+SMO's entire ticket landed 2 highs — hundreds would mean a rule design error, not a discovery.
+
+### Remaining item 2 — `🔣️taxonomy.json` flip: HELD, correctly
+
+Energy accepted our evidence and will move their 50 strays to
+`🔋️energy/🔨️modules/⚡️simulation/⚙️engine/<domain>/`. **Not started as of the last check** — still 50
+`snake_case` dirs, destination directory not yet created.
+
+Count reconciliation confirmed: **50 moving, not 51.** `🗃entries` is energy's legitimate emoji-prefixed
+slug and stays, as do `📝️text`, `💾️binary` and the 5 root leaves. After the move energy's family should
+match the other 111 exactly, and our enumerator should read **zero non-emoji entries repo-wide**.
+
+**Two commitments made on our behalf, both binding:**
+1. **Re-run the enumerator after their move and report the ACTUAL number to energy** — never an assumed
+   zero. If anything remains visible, including something neither side predicted, say so plainly.
+2. **Ping ALL peer channels immediately before AND after the flip.** `policySchemaRepresentationBreaches`
+   is allowlist-free and hard-gating; a premature flip red-gates all six sessions at once.
+
+**The flip itself:** `schemaChildDirs += 💡️inferences`, `taxonomyLeafParentDirs += 💡️inferences`,
+`artifactSpecFilenames` += the text/binary grammar+protocol entries, `artifactSchemaSpecFilenames` +=
+`"🧬️schema/💡️inferences": "🔣️component.json"`.
+
+**If energy's move stalls:** closing with the flip documented as the single deferred step is the correct
+outcome. The flip is the *last* gate, not the work — 112 families with 100% coverage exist either way,
+and flipping early would harm five other sessions for no gain.
+
+## P3 progress
+
+### ✅ ENUMERATOR SUBTRACTION CHECK — done, and it comes back clean
+
+Ran the check across **all 112 families**, not a sample. Every distinct entry name that exists anywhere inside a `💡️inferences/`:
+
+```
+DIRECTORIES                     FILES AT FAMILY ROOT
+ 110 📝️text                      112 🦀️component.rs
+ 110 💾️binary                    112 🟦️component.ts
+  31 🧾outline                    112 🛰️component.proto
+  23 📦bounds                     112 🔣️component.json
+  20 🧭topology                   112 🔗️component.graphql
+   8 📐dimensions
+   7 ⏱duration          …and 17 further one-off emoji slugs
+   4 🗃entries / 🎛flat-position
+  50 snake_case strays  ← energy only
+```
+
+**Findings:**
+- **The only non-slug sibling directories in the entire repo are `📝️text` and `💾️binary`.** No undocumented third sibling exists — the exact class of surprise this check is for. `📚️examples` never appears inside a family; reserving it anyway is harmless.
+- **No undocumented file siblings at family root** — exactly the 5 leaves, 112 each, nothing else.
+- So the reservation set is `["📝️text","💾️binary","📚️examples"]` and it is **provably sufficient**, not merely plausible. Placed once in `policyListInferenceDirs` so every caller inherits it and a future rule cannot reintroduce the bug — the same fix shape SMO applied to `policyListMutationDirs`.
+- Energy's 50 `snake_case` strays are the **only** non-emoji entries repo-wide, confirming again that they breach honestly with zero collateral.
+
+### 🎯 Calibration target for the cluster
+Real whole-repo baseline (supersedes the older 22188 figure): **total 30,472 · high 24,632**, of which 22,077 highs are pre-existing handcrafted-grammar/spec-distinctness. Diff against those.
+SMO's entire mutation-migration ticket lands **2 highs**. **Ours should be comparable or lower. Highs in the hundreds would mean a rule design error, not a discovery about the tree.**
+
+### ✅ `✳️mesh` HAS LANDED — the taxonomy-flip blocker is half cleared
+DKM authored it; **112 families**, and every owning subset in the repo now has one. Their premature dangling `#[path]` is **gone** — verified every non-`"."` `#[path]` target in stdio's glue.rs resolves, zero dangling.
+
+Remaining stdio errors are DKM's own in-flight mesh work, not a blocker for us:
+```
+RUSTC_WRAPPER="" cargo check -p semio-s-plugin-stdio --all-targets → 9 errors
+  4  ✳️mesh/🧬️schema/🧬️mutations/   (SemioMeshSnapshot type not yet defined)
+  2  ✳️any/🧬️schema/🧬️mutations/
+  1  ✳️mesh/🚪️io/
+  0  in ANY 💡️inferences path
+```
+`✳️mesh`/`✳️brep` still lack `📝️text`/`💾️binary` (110 of 112 have both) — DKM's to finish.
+
+**Taxonomy flip now waits only on: energy relocating its 50 strays.** If that drags, close with the flip documented as the single deferred step.
+
+### 🛑 `📜️script.ts` — HALTED BEFORE ANY WRITE. Confirmed untouched.
+APA holds the writer slot and has not released. I stopped the agent mid-flight and verified from disk:
+```
+git diff --stat -- 📜️script.ts          → (empty)
+grep -c POLICY_INFERENCES_FACET…        → 0
+```
+**Nothing of ours is in that file.** Agent is parked with instructions not to resume until I confirm APA's release, and to verify with `git log --oneline -5 -- 📜️script.ts` before its first edit. Extra reason to wait: APA is landing a **shrink-only ratchet** recording per-rule breach counts as permanent ceilings — landing mid-pass would bake our half-finished state into their ceilings.
+
+### ✅ `🔍️discovery/🟦️component.ts` — DONE (two changes)
+
+**1. Added the `💡️inferences` branch** to `artifactFacetChildLevel`, mirroring mutations:
+- depth 2 → `{ kind: "fixed", dirs: [...representationDirs, "*"] }` (the `"*"` admits slug dirs)
+- depth 3 → `{ kind: "none" }` — unlike mutations there are **no** fixed child dirs; leaves sit directly in the slug dir.
+Dormant until the taxonomy flip adds `💡️inferences` to `schemaChildDirs`, which is the correct sequencing.
+
+**2. Fixed the FE0F bug the plan warned about** (`isEmojiPrefixedSlugDir`, :210). It required a U+FE0F variation selector, so it **rejected the majority of real slug dirs as undeclared** — bare-emoji slugs like `📦bounds`, `🧭topology`, `⏱duration`, `🧾outline`, and equally the *existing* mutation slugs `📄set-snapshot` and `➕create-node`. Now `/^\p{Extended_Pictographic}️?/u`: anchored at the start (matching the predicate's own name — the old form matched an emoji anywhere in the string) with the selector optional. Docstring records the reasoning and names the affected slugs. **This fixes mutations too, not just us.**
+
+### 🔬 `🔋️energy`'s 50 strays — measured exactly; the rule needs no hole
+
+Coordinator ruling accepted: they breach at `medium`, no allowlist. **The signal is mechanically clean:**
+```
+energy 💡️inferences/ non-representation subdirs: 51
+  → 1 real emoji-prefixed slug: 🗃entries
+  → 50 snake_case strays: air_exchange/ coils/ controls/ curves/ daylight/ …
+repo-wide families with ANY non-emoji subdir: exactly 1 (energy)
+repo-wide families that are clean:            111
+```
+So "non-emoji-prefixed subdir inside `💡️inferences/`" yields **exactly 50 honest breaches and zero false positives repo-wide**. No exemption, no allowlist, no special case — the same standard we held for brep/drawing/mesh. The predicate that distinguishes them is the very one I just fixed in discovery.ts.
+
+### ⚠️ Policy-cluster design corrections queued for the agent (not yet written)
+1. **Reserve `["📝️text","💾️binary","📚️examples"] ONCE in the enumerator.** SMO fabricated **672 high breaches** from exactly this omission an hour ago; all 111 of our families carry both codec dirs, so per-rule omission would fabricate ~222.
+2. **Emoji uniqueness must be scoped WITHIN one family tree, never across families.** Ours legitimately repeat by design — `⏱duration` on animation/audio/mp3/wav/mp4/avi, `🧭topology` on flow/graph/raster/jack. Cross-family uniqueness would fabricate dozens of breaches.
+3. Anchor SMO's protected region on the marker `🔧️PolicyRuleMutationArtifactEngines`, not line numbers — APA's insertions shifted them.
+
+### ⛔️ compose `flat_positions_cache` — NOT retired. Deliberate, with evidence.
+```
+RUSTC_WRAPPER="" cargo check -p semio-compose-rs → EXIT=101, 93 errors
+error[E0432]: unresolved imports semio_framework_os_kernel::os_vcs::{…6 symbols}
+error[E0433]: cannot find `dsl` in the crate root   (×many)
+```
+Three reasons, in order of weight:
+1. **The crate does not compile, for pre-existing reasons unrelated to us** — session 1 documented this same breakage (its `Cargo.toml` declares neither `dsl` nor `vcs`). Any edit here would be **unverifiable**, which is precisely the kind of blind change I have refused all session.
+2. **It is not a mechanical retirement.** `flatten_positions` caches `crate::geom::flatten::flatten_design_positions` over compose's *own* `Kit`/`Design` types. Compose is a separate product that does not use any plugin's `XSnapshot`, so "convert to inference reads" means adopting the OS `InferredField`/`InferenceCache` machinery into a foreign type system — real design work, not a deletion.
+3. The existing cache is coarse but **correct** (whole-design invalidate on every topology edit). Replacing correct-but-coarse with unverifiable-and-clever at the end of a long session is a bad trade.
+**Recorded as the deliberate deferral in the closing summary, with this evidence.**
+
+## 🎉 P2 COMPLETE — fan-out done, zero errors attributable to inference work
+
+**111 inference families on disk.** Every owning subset in the repo has one. The only subset without is `🧿️semio/✳️mesh`, which is **DKM's by agreement**.
+
+Coordinator-verified, current:
+```
+inference #[path] mounts in stdio glue.rs:   223 / 223 resolve on disk
+`pub mod inferences {` blocks:                57  = 57 distinct subsets (no duplicates)
+RUSTC_WRAPPER="" cargo check -p semio-s-plugin-stdio --all-targets
+  → 9 errors, ALL in 🧿️semio/✳️mesh/🧬️schema/🧬️mutations/ (DKM's)
+  → 0 errors in any 💡️inferences path
+```
+
+**Final gaps I closed myself** (agents had authored the files but not the mounts):
+- `📐️step/🔖️ap214` — no mount at all; added all 4 lines + slug `📦bounds`. This was also blocking S3+S4's gate (`E0433 cannot find inferences in schema` at step's engine:160), so it unblocked another batch too.
+- `🏗️ifc/🔖️4` — had 2 of 4; added `pub mod text` + `pub mod binary`. Harmless to compilation today, but a violation of our own family shape that would have failed P3's own leaf-completeness rule.
+
+**dwg schema-id collision — fixed, not mirrored.** The worker deliberately reproduced the pre-existing `s.stdio.dwg` snapshot collision into both new inference facets, and flagged it honestly. Wrong call: ticket `26/08/12/FIX-STDIO-DWG-AC1018-AND-AC1024-SCHEMA-ID-COLLISION` has already published its intended end state. ac1018's inference facet is now authored **directly in the post-fix shape** — `s.stdio.dwg.ac1018.inference` at the `#[artifact_schema]`, `inference_schema_id()`, the field-spec id and the descriptor id, with `dwg_ac1018_artifact_inference_descriptor()` renamed and its engine call site updated. ac1024 keeps `s.stdio.dwg.inference`. Both files' docstrings rewritten — the old ones documented the collision as intentional. **The collision ticket's owner never has to touch our files.**
+
+**Per-batch outcomes:** S1a 8/8 · S1b 8/8 · S2 13/13 · S3+S4 7/7 · puzzle ◻2d ✅ green (`--all-targets`, 0 errors) · D1's 4 fixes ✅.
+
+Notable honest deviations by workers, all reviewed and kept: `object → 🧩composition` and `value → 🌳census` (the rename-trap subsets — neither had geometry to bound), `table → 📐shape`, `text → 📊profile`, `deflate → 🪟window` and `binary → 📏extent` (both correctly refused to force an `entries` shape onto a non-container).
+
 ## ✅✅ stdio is GREEN — S1a fully verified (files + mounts + registration + gate)
 
 ```

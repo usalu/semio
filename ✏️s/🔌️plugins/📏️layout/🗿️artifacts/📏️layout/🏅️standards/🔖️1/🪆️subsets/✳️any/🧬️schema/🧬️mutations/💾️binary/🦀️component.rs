@@ -50,7 +50,7 @@ mod tests {
     fn document_binary_round_trips_a_store_with_applied_operations() {
         use crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
 
-        let initial = crate::artifacts::layout::engine::default_document();
+        let initial = crate::artifacts::layout::schema::default_document();
         let envelope = store::create_document_envelope(LAYOUT_DOCUMENT_SCHEMA, "layout-doc-binary-test", initial, None);
         let mut doc_store: store::ArtifactStore<LayoutSnapshot, LayoutMutation> = store::ArtifactStore::new(envelope);
         doc_store

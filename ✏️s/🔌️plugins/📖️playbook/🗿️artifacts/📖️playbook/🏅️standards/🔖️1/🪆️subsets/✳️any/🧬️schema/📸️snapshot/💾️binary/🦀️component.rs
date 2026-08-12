@@ -23,7 +23,7 @@ pub fn decode(bytes: &[u8]) -> Result<PlaybookSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::playbook::engine::empty_playbook_snapshot;
+    use crate::artifacts::playbook::empty_playbook_snapshot;
     use crate::artifacts::playbook::{dsl, PLAYBOOK_DOCUMENT_SCHEMA};
 
     #[test]

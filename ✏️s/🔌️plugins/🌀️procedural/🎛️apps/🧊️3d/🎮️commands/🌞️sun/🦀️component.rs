@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn toggle_sun_never_mutates_the_document() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         let before = app.snapshot().expect("snapshot");
         dispatch(&mut app, Procedural3dCommand::ToggleSun(toggle_sun::ToggleSun {}));

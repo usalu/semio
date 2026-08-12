@@ -52,6 +52,62 @@ pub fn tree_item_with_icon(id: impl Into<String>, label: impl Into<Label>, icon_
 }
 //#endregion 🔖️Utilities
 
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
+/// `crate::artifacts::shooting::artifact_kind` already declares (schema/media type/presentation fields
+/// copied verbatim); the sole app-specific port is `photos:out` (see `shooting_photos_out_port` below)
+/// — the implicit document in/out ports cover the rest.
+///
+/// ⚠️ `export_formats`/`import_formats` stay empty: `AppIo` (unlike `ArtifactKindSpec`) carries no
+/// `export_stdio_kinds`/`import_stdio_kinds` string peer to hold the real `["s.stdio.svg",
+/// "s.stdio.png"]` list, and its field type (a `Vec` of the framework's closed media-format enum) is
+/// framework-owned (`🧰️framework/🔨️modules/🛂️manifest`), out of this plugin's write scope. Confirmed
+/// dead as of this migration —
+/// `app.io.export_formats`/`import_formats` have no framework reader (`app.io.all_ports()`/
+/// `document_schema`/`artifact.component_kind` are the only fields anything consumes) — so emptying
+/// them drops no live behavior. `crate::artifacts::shooting::artifact_kind()`'s `export_stdio_kinds`/
+/// `import_stdio_kinds` remain the live source of truth for this artifact's real format list.
+pub fn shooting_io() -> AppIo {
+    AppIo {
+        document_schema: "shooting.scene".into(),
+        document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
+        ports: vec![shooting_photos_out_port()],
+        export_formats: vec![],
+        import_formats: vec![],
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "2d.shooting".into(), name: "2D Shooting".into(), dimension: "2d".into(), component_kind: "shooting".into() },
+    }
+}
+
+/// 🔌️ `photos:out` — the shooting document's captured photo(s), as `2d.image` raster media (workflow
+/// port surface; WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe).
+/// `Many`/optional: a shooting document may carry several shots, and downstream consumers (e.g.
+/// remodel's `photos:in`) may connect before any shot exists.
+pub fn shooting_photos_out_port() -> semio_framework_plugin::MediaPortSpec {
+    semio_framework_plugin::MediaPortSpec {
+        id: "photos:out".into(),
+        label: "Photos".into(),
+        direction: semio_framework_plugin::MediaPortDirection::Out,
+        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
+        kind_id: Some("2d.image".into()),
+        required: false,
+        multiplicity: semio_framework::PortMultiplicity::Many,
+    }
+}
+
+/// 🖼️ Exports the active shot's rendered scene as a `2d.image` `Media` payload for the `photos:out`
+/// port — reuses the same SVG-then-rasterize pipeline (`crate::artifacts::shooting::schema::shooting_scene_svg` +
+/// `rasterize_svg_to_png_base64`) as the `exportActiveShot`/PNG shell action, so there is exactly one
+/// photo renderer.
+pub fn shooting_photo_media(snapshot: &ShootingSnapshot) -> Result<Media, MediaError> {
+    let (svg, width, height) = crate::artifacts::shooting::schema::shooting_scene_svg(snapshot).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
+    let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
+    Ok(Media {
+        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
+        payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 },
+    })
+}
+//#endregion 🔖️Io
+
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
     /// 🎯️ `ShootingPlayApp::Command` — the SOLE dispatch surface for shooting's own behavior, assembled
@@ -147,20 +203,20 @@ impl ArtifactApp for ShootingPlayApp {
     }
 
     fn initial_snapshot() -> ShootingSnapshot {
-        crate::artifacts::shooting::engine::default_snapshot()
+        crate::artifacts::shooting::schema::default_snapshot()
     }
 
     fn io() -> Option<AppIo> {
-        Some(crate::artifacts::shooting::engine::shooting_io())
+        Some(shooting_io())
     }
 
-    /// 🎞️ `photos:out` (see `crate::artifacts::shooting::engine::shooting_photo_media`) plus the
+    /// 🎞️ `photos:out` (see `shooting_photo_media`) plus the
     /// inherited `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new
     /// one).
     fn export_media(port: &str, doc: &ArtifactView<'_, ShootingSnapshot>) -> Result<Media, MediaError> {
         match port {
-            "photos:out" => crate::artifacts::shooting::engine::shooting_photo_media(doc.snapshot),
+            "photos:out" => shooting_photo_media(doc.snapshot),
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
@@ -305,7 +361,7 @@ pub fn create_shooting_app() -> App {
                     export_stdio_kinds: vec!["stdio.png"],
         import_stdio_kinds: vec!["stdio.png"],
     })
-            .media_output(crate::artifacts::shooting::engine::shooting_photos_out_port())
+            .media_output(shooting_photos_out_port())
             .icon_id("camera")
             .mode_def(edit::definition())
             .default_mode_id(edit::SHOOTING_PLAY_MODE_EDIT)
@@ -384,9 +440,9 @@ pub fn create_shooting_app() -> App {
             // typed commands are dispatched via `ShootingCommand`'s `OpBinary` codec directly, not a
             // keyword-parsed text grammar).
             .config(ShootingPlayApp::config_spec())
-            .io(crate::artifacts::shooting::engine::shooting_io()),
+            .io(shooting_io()),
     )
-    .example(SHOOTING_EXAMPLE_DEFAULT_ID, LocalizedLabel::native("Default Base Icon", "Standard-Basissymbol"), crate::artifacts::shooting::engine::default_snapshot_json(), "camera")
+    .example(SHOOTING_EXAMPLE_DEFAULT_ID, LocalizedLabel::native("Default Base Icon", "Standard-Basissymbol"), crate::artifacts::shooting::schema::default_snapshot_json(), "camera")
     .workflow("shooting", "Shooting", "icon")
 }
 //#endregion 🔖️Manifest
@@ -624,7 +680,7 @@ mod tests {
             ShootingCommand::TranslateSelection(translate_selection::TranslateSelection { asset_ids: vec!["base".into()], dx: 5.0, dy: 6.0, dz: 7.0 }),
             |app| {
                 let snapshot = app.snapshot().expect("snapshot");
-                (crate::artifacts::shooting::engine::active_shot(&snapshot).unwrap().label.clone(), snapshot.assets[0].origin)
+                (crate::artifacts::shooting::schema::active_shot(&snapshot).unwrap().label.clone(), snapshot.assets[0].origin)
             },
         );
     }
@@ -632,7 +688,7 @@ mod tests {
     #[test]
     fn ingest_operations_is_idempotent_for_shooting() {
         testkit::assert_ingest_idempotent::<ShootingPlayApp, String>(ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero".into() }), |app| {
-            crate::artifacts::shooting::engine::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone()
+            crate::artifacts::shooting::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone()
         });
     }
 
@@ -642,6 +698,53 @@ mod tests {
         assert!(crate::apps::shooting::testkit::render(&mut app, "shooting.play.nope").contains("Unknown body"));
     }
     //#endregion 🔖️CrossCutting
+
+    //#region 🔖️Io
+    #[test]
+    fn shooting_io_mirrors_the_declared_artifact_kind() {
+        let io = shooting_io();
+        assert_eq!(io.document_schema, "shooting.scene");
+        assert_eq!(io.artifact.id, "2d.shooting");
+        // 🗂️ `AppIo` has no `export_stdio_kinds`/`import_stdio_kinds` string peer (see `shooting_io`'s
+        // doc comment) — the real format list lives on `artifact_kind()` instead, asserted below.
+        assert_eq!(io.export_formats.len(), 0);
+        assert_eq!(io.import_formats.len(), 0);
+        let kind = crate::artifacts::shooting::artifact_kind();
+        assert_eq!(kind.export_stdio_kinds, kind.import_stdio_kinds);
+        assert!(kind.export_stdio_kinds.contains(&"stdio.svg"));
+        assert!(kind.export_stdio_kinds.contains(&"stdio.png"));
+    }
+
+    /// 🔌️ WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe:
+    /// `photos:out` is declared, optional/`Many`, and pinned to the `2d.image` kind.
+    #[test]
+    fn shooting_io_declares_the_photos_out_port() {
+        let io = shooting_io();
+        let port = io.ports.iter().find(|port| port.id == "photos:out").expect("photos:out declared");
+        assert_eq!(port.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert_eq!(port.kind_id.as_deref(), Some("2d.image"));
+        assert!(!port.required);
+        assert_eq!(port.multiplicity, semio_framework::PortMultiplicity::Many);
+        assert_eq!(port.media_type.class, MediaClass::TwoD);
+        assert_eq!(port.media_type.form, MediaForm::Raster);
+    }
+
+    /// 🖼️ `shooting_photo_media` renders the same scene as `exportActiveShot`'s PNG (base64, non-empty).
+    #[test]
+    fn shooting_photo_media_exports_a_raster_2d_image() {
+        let snapshot = crate::artifacts::shooting::schema::default_snapshot();
+        let media = shooting_photo_media(&snapshot).expect("photo export succeeds");
+        assert_eq!(media.media_type.class, MediaClass::TwoD);
+        assert_eq!(media.media_type.form, MediaForm::Raster);
+        match media.payload {
+            MediaPayload::Structured { schema, json } => {
+                assert_eq!(schema, "2d.image");
+                assert!(!json.is_empty());
+            }
+            MediaPayload::Binary { .. } => panic!("expected a Structured payload"),
+        }
+    }
+    //#endregion 🔖️Io
 
     //#region 🔖️Export
     #[test]

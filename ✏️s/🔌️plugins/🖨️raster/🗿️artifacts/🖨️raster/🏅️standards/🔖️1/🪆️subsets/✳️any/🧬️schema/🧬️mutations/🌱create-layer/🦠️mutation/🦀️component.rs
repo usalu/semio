@@ -26,11 +26,11 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for CreateLayer {
     }
 
     fn label(&self) -> String {
-        format!("Create layer \"{}\"", crate::artifacts::raster::engine::layer_name(&self.layer))
+        format!("Create layer \"{}\"", crate::artifacts::raster::schema::layer_name(&self.layer))
     }
 
     fn target(&self) -> Vec<String> {
-        vec![crate::artifacts::raster::engine::layer_node_id(&self.layer).to_string()]
+        vec![crate::artifacts::raster::schema::layer_node_id(&self.layer).to_string()]
     }
 }
 //#endregion 🔖️CreateLayer

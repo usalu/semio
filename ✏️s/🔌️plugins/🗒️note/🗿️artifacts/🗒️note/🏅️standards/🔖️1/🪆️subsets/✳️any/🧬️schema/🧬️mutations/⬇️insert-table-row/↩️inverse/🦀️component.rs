@@ -6,7 +6,7 @@ use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &InsertTableRow, base: &NoteSnapshot) -> Vec<NoteMutation> {
-    match crate::artifacts::note::engine::find_block(&base.blocks, &payload.id) {
+    match crate::artifacts::note::schema::find_block(&base.blocks, &payload.id) {
         Some(crate::artifacts::note::NoteBlockNode::Table { .. }) => vec![NoteMutation::RemoveTableRow(RemoveTableRow { id: payload.id.clone() })],
         _ => Vec::new(),
     }

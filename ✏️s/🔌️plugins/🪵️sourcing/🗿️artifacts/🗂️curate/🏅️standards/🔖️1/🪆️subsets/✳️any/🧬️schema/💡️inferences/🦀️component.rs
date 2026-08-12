@@ -12,6 +12,7 @@ use crate::artifacts::curate::CurateSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 
 use super::entries::compute_curate_entries;
 
@@ -64,6 +65,27 @@ impl ArtifactInferrer for crate::artifacts::curate::standards::v1::subsets::any:
 }
 //#endregion 🔖️ArtifactInferrer
 
+//#region 🔖️PuzzleCatalogFragment
+/// 🌉️ Maps this app's stock (its `"catalogue.kinds"`-shaped rows) into the `s/plugin/puzzle` 3d catalog
+/// shape (`objectKinds`/`vortexKinds`/`cableKinds`/`attractionKinds`/`kindCompatibility` — see
+/// `block_3d::puzzle3d_catalog_fragment`, the sibling producer this mirrors byte-for-byte in shape), the
+/// seam puzzle imports through its `Kit×Type` `kit:in` media port. Sourcing's `ObjectKind` carries no
+/// mesh URL (geometry is a procedural `GeometryRecipe`, not an asset reference) or vortex/attachment
+/// data, so every row's `meshUrl` is `null` and `vortices` is empty — puzzle's importer treats a missing
+/// mesh as "no visual representation yet", not an error.
+pub fn sourcing_catalog_fragment(document: &CurateSnapshot) -> Value {
+    let object_kinds: Vec<Value> = document.stock.iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.name, "meshUrl": Value::Null, "vortices": Vec::<Value>::new() })).collect();
+    json!({
+        "schema": "manifest",
+        "objectKinds": object_kinds,
+        "vortexKinds": Vec::<Value>::new(),
+        "cableKinds": Vec::<Value>::new(),
+        "attractionKinds": Vec::<Value>::new(),
+        "kindCompatibility": Vec::<Value>::new(),
+    })
+}
+//#endregion 🔖️PuzzleCatalogFragment
+
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.sourcing.curate.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `curate_artifact_schema_descriptor`'s registration.
@@ -112,5 +134,27 @@ mod tests {
         assert_eq!(inferred.entries.entry_count, 2);
         assert_eq!(inferred.entries.total_count, 10);
     }
+
+    //#region 🧪️PuzzleCatalogFragment
+    fn sample_document() -> CurateSnapshot {
+        CurateSnapshot { stock: crate::artifacts::curate::schema::sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect(), ..Default::default() }
+    }
+
+    #[test]
+    fn sourcing_catalog_fragment_maps_stock_into_the_puzzle3d_kit_catalog_shape() {
+        let document = sample_document();
+        let fragment = sourcing_catalog_fragment(&document);
+        assert_eq!(fragment["schema"], "manifest");
+        let object_kinds = fragment["objectKinds"].as_array().expect("objectKinds array");
+        assert_eq!(object_kinds.len(), document.stock.len());
+        assert_eq!(object_kinds[0]["id"], document.stock[0].id);
+        assert_eq!(object_kinds[0]["meshUrl"], Value::Null);
+        assert!(object_kinds[0]["vortices"].as_array().unwrap().is_empty());
+        assert!(fragment["vortexKinds"].as_array().unwrap().is_empty());
+        assert!(fragment["cableKinds"].as_array().unwrap().is_empty());
+        assert!(fragment["attractionKinds"].as_array().unwrap().is_empty());
+        assert!(fragment["kindCompatibility"].as_array().unwrap().is_empty());
+    }
+    //#endregion 🧪️PuzzleCatalogFragment
 }
 //#endregion 🧪️Tests

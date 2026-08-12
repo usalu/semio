@@ -49,7 +49,7 @@ mod tests {
 
     #[test]
     fn procedural3d_labels_resolve_native_english_by_default() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         let json = render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_CATALOGUE);
         assert!(json.contains("\"Widgets\""));

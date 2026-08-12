@@ -33,7 +33,7 @@ mod tests {
 
     #[test]
     fn sun_elevation_measure_allows_below_horizon() {
-        let snapshot = crate::artifacts::shooting::engine::default_snapshot();
+        let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(&snapshot, labels) {
             WindowMeasure::Slider { min, max, .. } => assert_eq!((min, max), (-10.0, 90.0)),

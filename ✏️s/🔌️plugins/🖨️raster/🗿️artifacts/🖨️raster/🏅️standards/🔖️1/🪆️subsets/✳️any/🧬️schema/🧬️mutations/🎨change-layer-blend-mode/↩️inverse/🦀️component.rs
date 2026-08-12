@@ -1,7 +1,7 @@
 //! ↩️ `change-layer-blend-mode` inverse — the old `blend_mode` value from `base`. Missing target ⇒
 //! `Vec::new()`.
 
-use crate::artifacts::raster::engine::{find_layer, layer_blend_mode};
+use crate::artifacts::raster::schema::{find_layer, layer_blend_mode};
 use crate::artifacts::raster::mutations::change_layer_blend_mode::mutation::ChangeLayerBlendMode;
 use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::RasterSnapshot;

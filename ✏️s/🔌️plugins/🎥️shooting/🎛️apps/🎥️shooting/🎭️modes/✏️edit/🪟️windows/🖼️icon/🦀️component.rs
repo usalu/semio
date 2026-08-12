@@ -4,7 +4,7 @@ use crate::apps::shooting::config::ShootingConfig;
 use crate::apps::shooting::modes::edit::windows::icon::options;
 use crate::apps::shooting::terminology::ShootingLabels;
 use crate::apps::shooting::SHOOTING_PLAY_APP_ID;
-use crate::artifacts::shooting::engine::shooting_icon_render_request_json;
+use crate::artifacts::shooting::schema::shooting_icon_render_request_json;
 use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::{build_icon_render_scene, IconRenderScene, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
 
@@ -42,7 +42,7 @@ pub fn window_measures(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> 
 }
 
 pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowEngagement {
-    let shot = crate::artifacts::shooting::engine::active_shot(snapshot);
+    let shot = crate::artifacts::shooting::schema::active_shot(snapshot);
     WindowEngagement {
         session_active: Some(true),
         options: None,
@@ -66,7 +66,7 @@ pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Windo
 
 //#region 🔖️Render
 pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> UiNode {
-    let (request_json, footer) = match (crate::artifacts::shooting::engine::active_shot(snapshot), crate::artifacts::shooting::engine::active_asset(snapshot)) {
+    let (request_json, footer) = match (crate::artifacts::shooting::schema::active_shot(snapshot), crate::artifacts::shooting::schema::active_asset(snapshot)) {
         (Some(shot), Some(asset)) => (shooting_icon_render_request_json(snapshot, shot, asset, &cfg.camera), Some(format!("{} · {}×{} · {}", shot.label, shot.width, shot.height, shot.format.to_uppercase()))),
         _ => ("null".into(), None),
     };

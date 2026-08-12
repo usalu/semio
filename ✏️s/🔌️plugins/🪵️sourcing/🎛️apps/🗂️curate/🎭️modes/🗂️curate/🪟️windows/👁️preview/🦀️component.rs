@@ -3,7 +3,7 @@
 use crate::apps::curate::config::SourcingCurateConfig;
 use crate::apps::curate::terminology::SourcingLabels;
 use crate::apps::curate::SOURCING_CONTROLLER_ID;
-use crate::artifacts::curate::engine::{instance_json, kind_mesh_json};
+use crate::artifacts::curate::schema::{instance_json, kind_mesh_json};
 use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{build_world_3d_scene, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions, WorldSunConfig};
 use serde_json::json;
@@ -55,7 +55,7 @@ mod tests {
 
     #[test]
     fn preview_renders_selected_mesh_id() {
-        let document = crate::artifacts::curate::engine::default_document();
+        let document = crate::artifacts::curate::schema::default_document();
         let object_id = document.stock[0].id.clone();
         let cfg = SourcingCurateConfig { selected_object_id: Some(object_id.clone()), ..Default::default() };
         let node = render(&document, &cfg, crate::apps::curate::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
@@ -68,7 +68,7 @@ mod tests {
 
     #[test]
     fn preview_shows_placeholder_without_selection() {
-        let document = crate::artifacts::curate::engine::default_document();
+        let document = crate::artifacts::curate::schema::default_document();
         let cfg = SourcingCurateConfig::default();
         let node = render(&document, &cfg, crate::apps::curate::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
         let json = serde_json::to_string(&node).unwrap();

@@ -153,7 +153,7 @@ pub struct FemLoadCase {
 }
 
 /// 🟩️ A meshed continuum region — a polygon (with optional holes) filled with `Tri3Cst` elements at
-/// solve time (see `crate::artifacts::fem2d::engine::meshing::build_nodes_and_elements`).
+/// solve time (see `crate::fem2d_engine::meshing::build_nodes_and_elements`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct FemRegion {
@@ -225,7 +225,7 @@ pub use crate::artifacts::fem2d::schema::Fem2dArtifact;
 
 // #region 🔖️ArtifactKind
 /// 🔌️ The computed-results output artifact kind (`results:out`'s `kind_id`, see
-/// `crate::artifacts::fem2d::engine::fem2d_io`) — the OS-catalog-level resource descriptor for
+/// `crate::apps::fem2d::fem2d_io`) — the OS-catalog-level resource descriptor for
 /// `computation.fem2d`; deliberately a different `media_type` (`Computation`×`Value`) than the PORT's
 /// wire-level `Data`×`Value` (see WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE's
 /// port recipe). Lifted verbatim out of the pre-migration `fem2d_ui::create_fem2d_app`'s
@@ -260,7 +260,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.fem2d")
         .schema(crate::artifacts::fem2d::schema::fem2d_artifact_schema_descriptor())
         .inferences([crate::artifacts::fem2d::standards::v1::subsets::any::schema::inferences::fem2d_artifact_inference_descriptor()])
-        .composers(crate::artifacts::fem2d::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::fem2d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::fem2d::Fem2dPlayApp>()
         .build()
@@ -334,7 +334,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::fem2d::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::fem2d::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

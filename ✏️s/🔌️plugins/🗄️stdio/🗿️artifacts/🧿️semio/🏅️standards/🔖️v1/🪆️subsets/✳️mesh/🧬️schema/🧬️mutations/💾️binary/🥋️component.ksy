@@ -20,6 +20,6 @@ seq:
   - id: payload
     size-eos: true
     doc: |
-      UTF-8 `key=value ...` argument text (empty for `no-mutation`) — the same text
+      UTF-8 `key=value ...` argument text (never empty — all 17 mesh keywords carry >=1 argument) — the same text
       `print_semio_mesh_mutation` produces past the keyword, reused verbatim rather than
       re-derived (single source of truth for the argument encoding).

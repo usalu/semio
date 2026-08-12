@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `RenameLayer` — the OLD name looked up from BASE, never a captured id.
-use crate::artifacts::draw::engine::{find_draw_layer, layer_base};
+use crate::artifacts::draw::schema::{find_draw_layer, layer_base};
 use crate::artifacts::draw::mutations::DrawMutation;
 use crate::artifacts::draw::DrawSnapshot;
 

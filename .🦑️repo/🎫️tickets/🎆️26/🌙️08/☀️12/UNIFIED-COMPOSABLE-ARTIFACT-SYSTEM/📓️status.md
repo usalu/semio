@@ -4,6 +4,23 @@
 
 Peer session *names* rotate after session-limit restarts and I have misrouted messages three times today. **This section is the single source of truth**; any session may read it.
 
+## 🛠️ glue.rs RECOVERY — a concurrent session reverted this ticket's mounts
+
+**What happened**: commit **497** (`382ace1b27`) overwrote `📦️glue.rs` with a version derived from an older copy plus that session's own inference additions — **silently reverting every mount this ticket added** for `✳️table`/`✳️graph`/`✳️object`/`✳️kit` (36/45/39/57 mount lines). The auto-committer then made that the new HEAD, so `git show HEAD:` returned the *regressed* file. Detected only because stdio failed with `cannot find 'table' in 'subsets'` despite all five directories existing on disk.
+
+**Recovery performed** (merge, not overwrite — their work was preserved):
+1. Restored the good version from commit **496** (`20252aa16d`, 8187 lines, our mounts intact).
+2. Merged back the 4 `✳️drawing` inference mounts that only 497 had — verified by diffing inference-mount counts per subset between the two commits.
+3. Replaced the 2 stale `📄set-snapshot` blocks (dirs deleted by DKM) with **17 `✳️drawing` + 13 `✳️brep`** generated triad mounts.
+4. Mounted **31 previously-unmounted `💡️inferences` facets** found by sweeping the artifact tree rather than waiting for the compiler (many referenced only from test code, so invisible to a plain `cargo check`).
+
+**Peak result achieved: stdio `--all-targets` clean, suite 2248 run / 2246 passed / 2 failed / 5 skipped** — the only failures the two unowned `dwg`/`ifc` `fixture_honesty_law`. IIF's four inference failures had by then been fixed by them, so the baseline improved from 6 failures to 2.
+
+**Lessons recorded:**
+- **`git show HEAD:` is not a safe restore point here.** Auto-commit can promote a regressed working tree to HEAD within minutes. Restore from a *known-good commit hash*, verified by content (line count + a marker grep), never from `HEAD`.
+- **A merge, not a revert.** Blindly restoring 496 would have destroyed the peer's inference work; diffing per-subset mount counts made the merge safe.
+- Unicode normalisation defeats literal emoji filenames in scripts — detect files by listing a directory, never by comparing a hard-coded `"🦀️component.rs"`.
+
 ## ⏸️ W3+ PAUSED — stdio is red from DKM's authorized in-flight work
 
 `semio-s-plugin-stdio` currently fails (14 errors) because DKM (#2550) is mid-replacement of the banned whole-document vocabulary in `✳️brep`/`✳️drawing` — subsets **we handed them**. Their dispatch enums now reference triad modules whose `#[path]` mounts are still being added. This is expected churn from an authorized handoff, **not a defect in our work**, and every plugin depends on stdio, so W3 exemplars cannot be verified until it clears.

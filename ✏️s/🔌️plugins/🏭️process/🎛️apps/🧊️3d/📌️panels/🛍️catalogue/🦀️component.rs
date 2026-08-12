@@ -3,7 +3,8 @@
 use crate::apps::process3d::iconed_tree_item_with_action;
 use crate::apps::process3d::process3d_action;
 use crate::apps::process3d::terminology::Process3dLabels;
-use crate::artifacts::process3d::engine::{installed_catalogs, validate_capability, validation_context_for_stock, validation_reason};
+use crate::apps::process3d::installed_catalogs;
+use crate::artifacts::process3d::schema::inferences::{validate_capability, validation_context_for_stock, validation_reason};
 use crate::artifacts::process3d::{Process3dSnapshot, WorkshopMachine};
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use serde_json::json;

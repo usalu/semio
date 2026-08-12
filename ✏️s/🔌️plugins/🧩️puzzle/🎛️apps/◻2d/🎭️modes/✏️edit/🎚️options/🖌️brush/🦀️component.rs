@@ -142,7 +142,7 @@ mod tests {
     use crate::apps::puzzle2d::testkit::*;
     use crate::apps::puzzle2d::config::Puzzle2dConfig;
     use crate::apps::puzzle2d::default_empty_fixture;
-    use crate::artifacts::puzzle2d::engine::board_host::puzzle_board_host;
+    use crate::apps::puzzle2d::engine::board_host::puzzle_board_host;
     use crate::apps::puzzle2d::config::Puzzle2dPlayRuntime;
     use crate::apps::puzzle2d::modes::edit::puzzle2d_engagement;
 

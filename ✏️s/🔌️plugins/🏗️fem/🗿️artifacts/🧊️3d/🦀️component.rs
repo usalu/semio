@@ -19,7 +19,7 @@ pub const FEM_3D_SCHEMA: &str = "fem.3d";
 /// orphan rule blocks implementing a foreign `dsl::DslField` for it from here), so every DOF-typed
 /// field in the `Fem3dSnapshot` grammar (`FemSupport::fixed`, `FemLoad::Nodal::dof`) uses this local tag
 /// instead, converting to/from `crate::model::Dof` at the `crate::model::Model`/`Support`/`NodalLoad`
-/// boundary (see `crate::artifacts::fem3d::engine::meshing::resolve_geometry`, `translate_loads`).
+/// boundary (see `crate::fem3d_engine::meshing::resolve_geometry`, `translate_loads`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum FemDof {
     #[dsl(key = "Tx")]
@@ -134,7 +134,7 @@ pub struct FemSupport {
 
 /// 🏋️ A load — a concentrated nodal force/moment, a member UDL on a `Bar`/`Frame` element, or a normal
 /// pressure (Pa) over a meshed `FemSolid`'s top face, simplified as a uniform global `-Z` nodal load
-/// (see `crate::artifacts::fem3d::engine::meshing::area_load_nodal_loads_3d`) — mirrors `fem_2d::FemLoad`.
+/// (see `crate::fem3d_engine::meshing::area_load_nodal_loads_3d`) — mirrors `fem_2d::FemLoad`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FemLoad {
@@ -202,7 +202,7 @@ impl Default for FemAnalysisSettings {
 
 /// 🧱️ A meshed continuum solid — a polygon footprint (with optional holes) extruded upward from
 /// `base_z` by `height` across `layers` equal-height layers, filled with `Tet4` elements at solve time
-/// (see `crate::artifacts::fem3d::engine::meshing::resolve_geometry`) — mirrors `fem_2d::FemRegion`,
+/// (see `crate::fem3d_engine::meshing::resolve_geometry`) — mirrors `fem_2d::FemRegion`,
 /// extended into 3D via `crate::model::mesh`'s extrusion + tet-splitting.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
@@ -242,7 +242,7 @@ pub use crate::artifacts::fem3d::schema::Fem3dArtifact;
 // #region 🔖️ArtifactKind
 /// 🏷️ The `computation.fem3d` artifact kind — every load case/combination's solved
 /// `crate::model::StaticResult`, pinned to this kind by the `results:out` media port (see
-/// `crate::artifacts::fem3d::engine::fem3d_results_out_port`) and produced by
+/// `crate::apps::fem3d::fem3d_results_out_port`) and produced by
 /// `crate::apps::fem3d::Fem3dPlayApp::export_media`. Lifted verbatim out of the old ui crate's
 /// `create_fem3d_app`'s inline `.artifact_kind(...)` call so the app's manifest can reference it by name.
 pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
@@ -275,7 +275,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.fem3d")
         .schema(crate::artifacts::fem3d::schema::fem3d_artifact_schema_descriptor())
         .inferences([crate::artifacts::fem3d::standards::v1::subsets::any::schema::inferences::fem3d_artifact_inference_descriptor()])
-        .composers(crate::artifacts::fem3d::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::fem3d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::fem3d::Fem3dPlayApp>()
         .build()
@@ -383,7 +383,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::fem3d::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::fem3d::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

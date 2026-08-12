@@ -2,7 +2,7 @@
 
 use crate::apps::procedural2d::config::Procedural2dConfig;
 use crate::apps::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
-use crate::artifacts::procedural2d::engine::{fixture_to_workflow, host_from_fixture};
+use crate::artifacts::procedural2d::schema::{fixture_to_workflow, host_from_fixture};
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};

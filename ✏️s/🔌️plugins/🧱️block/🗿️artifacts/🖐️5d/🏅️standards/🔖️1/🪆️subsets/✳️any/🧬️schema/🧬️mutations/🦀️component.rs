@@ -130,7 +130,7 @@ pub fn inverse_block5d_mutation(projection: &Block5dSnapshot, mutation: &Block5d
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::block5d::engine::empty_block5d_snapshot;
+    use crate::artifacts::block5d::schema::empty_block5d_snapshot;
     use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate};
     use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};

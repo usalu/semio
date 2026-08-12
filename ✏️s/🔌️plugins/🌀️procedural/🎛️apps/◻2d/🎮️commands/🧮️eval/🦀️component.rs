@@ -1,7 +1,7 @@
 //! 🧮️ Procedural2d play app commands — off-main-thread flow evaluation driver.
 
 use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
-use crate::artifacts::procedural2d::engine::host_from_fixture_with_session;
+use crate::artifacts::procedural2d::schema::host_from_fixture_with_session;
 use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::FlowEvalSession;

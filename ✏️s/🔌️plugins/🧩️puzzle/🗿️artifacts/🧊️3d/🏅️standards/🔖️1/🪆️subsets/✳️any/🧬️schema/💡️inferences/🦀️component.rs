@@ -4,7 +4,7 @@
 //! slug dirs directly — `📦️glue.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🎛flat-position/`).
 
-use crate::artifacts::puzzle3d::standards::v1::engine::geometry::flatten::{flatten_snapshot, plane_to_orientation, FlattenPose};
+use crate::artifacts::puzzle3d::standards::v1::subsets::any::schema::inferences::flatten::{flatten_snapshot, plane_to_orientation, FlattenPose};
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 use artifact_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;

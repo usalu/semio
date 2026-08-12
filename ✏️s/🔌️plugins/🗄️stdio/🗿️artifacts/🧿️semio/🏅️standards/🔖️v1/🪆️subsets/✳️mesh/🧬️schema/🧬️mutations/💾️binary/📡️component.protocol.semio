@@ -22,4 +22,8 @@ header fixed 2
 field format u8
 field tag u8
 
+# DKM mesh-vocabulary wave: `tag` now ranges 0-16 (17 triads, `OP_KEYWORDS`/`variant_ordinal` in
+# `🧬️mutations/🦀️component.rs`) — this frame's shape (format+tag+opaque trailing bytes) is
+# unchanged, only the keyword count grew.
+
 chain payload bytes

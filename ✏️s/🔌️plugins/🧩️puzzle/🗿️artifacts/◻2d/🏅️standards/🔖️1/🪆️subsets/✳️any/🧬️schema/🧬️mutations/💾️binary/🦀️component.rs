@@ -38,7 +38,7 @@ mod tests {
 
     #[test]
     fn puzzle2d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::puzzle2d::engine::empty_puzzle2d_snapshot;
+        use crate::artifacts::puzzle2d::schema::empty_puzzle2d_snapshot;
         use crate::artifacts::puzzle2d::mutations::create_node;
         use crate::artifacts::puzzle2d::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
         use store::{create_document_envelope, ArtifactCommand};

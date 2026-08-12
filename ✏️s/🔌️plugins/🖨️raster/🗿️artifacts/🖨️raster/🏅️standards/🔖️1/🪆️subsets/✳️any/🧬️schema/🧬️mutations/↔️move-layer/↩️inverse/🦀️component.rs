@@ -1,7 +1,7 @@
 //! ↩️ `move-layer` inverse — the old `transform.x`/`.y` from `base`; `move` is its own inverse
 //! partner. Missing target ⇒ `Vec::new()`.
 
-use crate::artifacts::raster::engine::{find_layer, layer_transform};
+use crate::artifacts::raster::schema::{find_layer, layer_transform};
 use crate::artifacts::raster::mutations::move_layer::mutation::MoveLayer;
 use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::RasterSnapshot;

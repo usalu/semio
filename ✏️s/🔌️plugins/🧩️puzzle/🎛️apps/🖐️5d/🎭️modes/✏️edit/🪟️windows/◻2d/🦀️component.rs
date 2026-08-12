@@ -13,7 +13,7 @@ use crate::apps::puzzle5d::{
     puzzle5d_grip_full_id, puzzle5d_scene_mode, selection_flat_ids, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_PLAY_CONTROLLER_ID,
 };
 use crate::apps::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dRuntime};
-use crate::artifacts::puzzle5d::engine::Puzzle5dPrecomputeSession;
+use crate::apps::puzzle5d::precompute::Puzzle5dPrecomputeSession;
 use semio_framework_plugin::{build_board2d_scene, Board2dScene, SurfaceKind, UiNode, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use serde_json::{json, Value};
 

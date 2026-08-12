@@ -31,7 +31,7 @@ use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
 
-use crate::artifacts::layout::engine::scene::LayoutEngine;
+use crate::apps::layout::engine::scene::LayoutEngine;
 
 //#region 🔖️Constants
 pub const LAYOUT_PLAY_APP_ID: &str = "layout-play";
@@ -148,11 +148,11 @@ impl ArtifactApp for LayoutPlayApp {
     }
 
     fn initial_snapshot() -> LayoutSnapshot {
-        crate::artifacts::layout::engine::default_document()
+        crate::artifacts::layout::schema::default_document()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
-        Some(crate::artifacts::layout::engine::layout_io())
+        Some(crate::apps::layout::engine::layout_io())
     }
 
     /// 🏷️ Supplied wholesale by `app_commands!`'s generated `command_id()`.
@@ -180,7 +180,7 @@ impl ArtifactApp for LayoutPlayApp {
             "layout:out" => {
                 let document = doc.snapshot;
                 let page = document.pages.first().ok_or_else(|| MediaError::Payload(port.to_string(), "layout has no pages to export".into()))?;
-                let svg = crate::artifacts::layout::engine::scene::export_document_svg(document, &page.id).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let svg = crate::apps::layout::engine::scene::export_document_svg(document, &page.id).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.layout".into(), json: svg } })
             }
             _ => Err(MediaError::NotImplemented),
@@ -307,9 +307,9 @@ pub fn create_layout_app() -> App {
             // 🎯️ Typed channel surface (WORKFLOWS-END-TO-END-TYPED-PORTS) — `config_spec()`/`layout_io()`
             // are this same information's single source of truth, reused here rather than duplicated.
             .config(LayoutPlayApp::config_spec())
-            .io(crate::artifacts::layout::engine::layout_io()),
+            .io(crate::apps::layout::engine::layout_io()),
     )
-    .example("sample", LocalizedLabel::native("Sample", "Beispiel"), crate::artifacts::layout::engine::layout_sample_document_json(), "cylinder")
+    .example("sample", LocalizedLabel::native("Sample", "Beispiel"), crate::artifacts::layout::schema::layout_sample_document_json(), "cylinder")
     .workflow("layout", "Layout", "layout")
 }
 //#endregion 🔖️Manifest
@@ -616,7 +616,7 @@ mod tests {
 
     #[test]
     fn layout_io_declares_fields_in_and_layout_out_ports() {
-        let io = crate::artifacts::layout::engine::layout_io();
+        let io = crate::apps::layout::engine::layout_io();
         assert_eq!(io.document_schema, "layout.layout");
         assert_eq!(io.artifact.id, "2d.layout");
         let fields_in = io.ports.iter().find(|port| port.id == "fields:in").expect("fields:in declared");

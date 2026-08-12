@@ -2,7 +2,7 @@
 //! `RasterDiff::default()` when the addressed layer isn't an `Adjustment` (or doesn't exist).
 
 use crate::artifacts::raster::diff::{diff_patch_layer, RasterDiff};
-use crate::artifacts::raster::engine::find_layer;
+use crate::artifacts::raster::schema::find_layer;
 use crate::artifacts::raster::mutations::change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind;
 use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 

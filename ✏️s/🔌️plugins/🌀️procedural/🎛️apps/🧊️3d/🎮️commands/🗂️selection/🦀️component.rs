@@ -2,7 +2,7 @@
 //! views (config-only, never document operations).
 
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
-use crate::artifacts::procedural3d::engine::widget_id_from_instance_id;
+use crate::artifacts::procedural3d::schema::widget_id_from_instance_id;
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::FlowEvalSession;
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn set_active_utility_switch_clears_scratch_and_emits_no_operations() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app_with_registry();
         dispatch(&mut app, Procedural3dCommand::WorldHover(world_hover::WorldHover { id: Some("extrude".into()) }));
         let before = app.snapshot().expect("snapshot");

@@ -3,7 +3,7 @@
 
 use crate::apps::architect::chrome::empty_component_scene;
 use crate::apps::architect::config::ArchitectConfig;
-use crate::artifacts::program::engine::adjacency::undirected_edges;
+use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::undirected_edges;
 use crate::artifacts::program::ProgramSnapshot;
 use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 use serde::{Deserialize, Serialize};

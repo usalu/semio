@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DuplicateLayer` — `delete-layer` of the deterministic duplicate id (recomputed
 //! from BASE via the same content-addressed hash `diff` used to create it). Missing source ⇒
 //! `Vec::new()`.
-use crate::artifacts::draw::engine::{clone_draw_layer_node, find_draw_layer, layer_id};
+use crate::artifacts::draw::schema::{clone_draw_layer_node, find_draw_layer, layer_id};
 use crate::artifacts::draw::mutations::DrawMutation;
 use crate::artifacts::draw::DrawSnapshot;
 

@@ -7,7 +7,8 @@
 //! a concurrent stdio wave's S-6 canonicalization. `encode_pdf` also now returns
 //! `Result<_, PdfEngineError>` instead of `Result<_, String>`; `.to_string()`d at this leaf's own
 //! `String`-error boundary (`PdfEngineError` implements `Display`).
-use crate::artifacts::note::engine::{flatten_blocks, note_document_bounds};
+use crate::artifacts::note::schema::flatten_blocks;
+use crate::artifacts::note::io::note_document_bounds;
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use semio_s_plugin_stdio::artifacts::pdf::engine::{encode_pdf, empty_pdf_snapshot};
 use semio_s_plugin_stdio::artifacts::pdf::schema::snapshot::PdfPage;

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DuplicateLayer` — real handcrafted insert of the cloned subtree
 //! right after its source, never apply-then-capture.
 use crate::artifacts::draw::diff::{diff_create_layer, DrawDiff};
-use crate::artifacts::draw::engine::{clone_draw_layer_node, find_draw_layer, find_draw_layer_location};
+use crate::artifacts::draw::schema::{clone_draw_layer_node, find_draw_layer, find_draw_layer_location};
 use crate::artifacts::draw::DrawSnapshot;
 
 //#region 🔖️Diff

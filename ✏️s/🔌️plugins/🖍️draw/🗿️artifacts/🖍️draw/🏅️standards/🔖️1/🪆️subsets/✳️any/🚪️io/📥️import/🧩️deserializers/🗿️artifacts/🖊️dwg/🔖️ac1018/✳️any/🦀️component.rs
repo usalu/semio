@@ -5,7 +5,7 @@
 //! longer decode real DWG bytes without hand-rolling DWG parsing again (banned by this ticket).
 //! Honest degenerate stub, same shape as this subset's svg/pdf/png import siblings, until stdio
 //! grows a drawing↔dwg bridge — see `w5b-w-report.md` `stdio_gaps`.
-use crate::artifacts::draw::engine::{create_draw_id, empty_draw_snapshot};
+use crate::artifacts::draw::schema::{create_draw_id, empty_draw_snapshot};
 use crate::artifacts::draw::DrawSnapshot;
 pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<DrawSnapshot, String> {

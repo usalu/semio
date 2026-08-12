@@ -7,7 +7,7 @@
 //! in the framework plugin crate).
 
 use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
-use crate::artifacts::draw::engine::{create_draw_path_layer, create_draw_trace_layer, draw_layer_world_bounds, draw_transform_to_matrix, find_draw_layer, flatten_draw_layers, layer_base, layer_id, layer_to_path_segments};
+use crate::artifacts::draw::schema::{create_draw_path_layer, create_draw_trace_layer, draw_layer_world_bounds, draw_transform_to_matrix, find_draw_layer, flatten_draw_layers, layer_base, layer_id, layer_to_path_segments};
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawCamera, DrawSnapshot, DrawLayerNode, PathSegment};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -280,7 +280,7 @@ fn commit_shape_drag(interaction: &mut DrawConfig, doc: &DrawSnapshot, utility: 
         return Vec::new();
     }
     let layer = DrawLayerNode::Shape(crate::artifacts::draw::DrawShapeBody {
-        base: crate::artifacts::draw::engine::default_layer_base(match utility {
+        base: crate::artifacts::draw::schema::default_layer_base(match utility {
             "shapeLine" => "Line",
             "shapeEllipse" => "Ellipse",
             _ => "Rectangle",
@@ -316,7 +316,7 @@ fn commit_draft(interaction: &mut DrawConfig, doc: &DrawSnapshot, utility: &str,
         create_draw_path_layer("Path", segments)
     } else {
         DrawLayerNode::Shape(crate::artifacts::draw::DrawShapeBody {
-            base: crate::artifacts::draw::engine::default_layer_base("Polygon"),
+            base: crate::artifacts::draw::schema::default_layer_base("Polygon"),
             shape_kind: "polygon".into(),
             rect: None,
             ellipse: None,

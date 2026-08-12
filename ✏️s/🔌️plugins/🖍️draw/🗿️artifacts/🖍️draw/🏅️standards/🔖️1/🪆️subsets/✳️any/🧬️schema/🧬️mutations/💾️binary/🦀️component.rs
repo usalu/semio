@@ -26,7 +26,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<DrawMutation, protocol::ProtocolError> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::draw::engine::{create_draw_shape_layer_rect, default_draw_document, layer_id};
+    use crate::artifacts::draw::schema::{create_draw_shape_layer_rect, default_draw_document, layer_id};
     use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
 
     #[test]

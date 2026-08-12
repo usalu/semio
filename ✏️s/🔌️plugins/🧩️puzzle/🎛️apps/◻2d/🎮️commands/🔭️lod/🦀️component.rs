@@ -27,6 +27,6 @@ pub fn set_lod_mode_for_pane(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Valu
 /// 📶️ Warms the board's LOD scale table (the chrome reads it through
 /// `🎭️modes/✏️edit/🎚️options/🔭️lod`); nothing is dirtied.
 pub fn lod_scale_json(ctx: &mut Puzzle2dActionCtx<'_>) {
-    let _ = crate::artifacts::puzzle2d::engine::puzzle_2d_lod_scale_json();
+    let _ = crate::apps::puzzle2d::engine::puzzle_2d_lod_scale_json();
     *ctx.ui_scope = UiDirtyScope::None;
 }

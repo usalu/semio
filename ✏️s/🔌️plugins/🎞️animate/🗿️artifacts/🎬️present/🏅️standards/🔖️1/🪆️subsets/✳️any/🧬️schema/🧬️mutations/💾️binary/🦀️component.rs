@@ -18,7 +18,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::present::engine::{empty_present_snapshot, PresentError};
+use crate::artifacts::present::schema::{empty_present_snapshot, PresentError};
 use crate::artifacts::present::schema::mutations::text::PresentMutation;
 use crate::artifacts::present::{PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
 use protocol::OpBinary;

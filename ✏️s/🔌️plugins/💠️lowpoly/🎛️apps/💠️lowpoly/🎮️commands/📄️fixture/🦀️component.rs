@@ -56,7 +56,7 @@ mod tests {
     use crate::apps::lowpoly::config::LowpolyConfig;
     use crate::apps::lowpoly::testkit::{app, dispatch};
     use crate::apps::lowpoly::LowpolyCommand;
-    use crate::artifacts::lowpoly::engine::default_snapshot;
+    use crate::artifacts::lowpoly::schema::default_snapshot;
 
     /// 🧬️ `importSnapshotJson`/`setFixtureJson` emit a `HostEffect::LoadDocument` (outside undo
     /// history), not an `artifact_mutations` entry — driven directly through `handle` (not

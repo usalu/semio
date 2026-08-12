@@ -4,7 +4,7 @@
 
 use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::engine::adjacency::normalize_pair;
+use crate::artifacts::program::standards::v1::subsets::any::schema::normalize_pair;
 use crate::artifacts::program::kernel::EntityId;
 
 /// ↩️ If the pair already existed, undo restores its prior full value; if this connect added a

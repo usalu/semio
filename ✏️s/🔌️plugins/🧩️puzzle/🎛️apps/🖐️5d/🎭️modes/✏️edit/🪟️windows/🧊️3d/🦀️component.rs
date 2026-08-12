@@ -16,7 +16,7 @@ use crate::apps::puzzle5d::{
     collect_mesh_urls, gumball_target_world, puzzle5d_brush_target_grip, puzzle5d_grip_full_id, puzzle5d_gumball_active, puzzle5d_scene_mode, puzzle5d_transform_handle, part_scale_json, resolve_grip_world_position, resolve_part_mesh_url,
     world_grip_direction, world_grip_position, Puzzle5dDocument, Puzzle5dScene, PUZZLE5D_FALLBACK_MESH_KIND, PUZZLE5D_PLAY_CONTROLLER_ID,
 };
-use crate::artifacts::puzzle5d::engine::Puzzle5dPrecomputeSession;
+use crate::apps::puzzle5d::precompute::Puzzle5dPrecomputeSession;
 use semio_framework_plugin::{
     build_world_3d_scene, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, SurfaceKind, UiNode, WindowEngagement, WindowEngagementSlot,
     WindowKindDefinition, WindowMeasure, WindowOptions,

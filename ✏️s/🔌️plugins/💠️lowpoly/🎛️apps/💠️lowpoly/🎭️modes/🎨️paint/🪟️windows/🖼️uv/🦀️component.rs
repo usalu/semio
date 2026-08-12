@@ -6,7 +6,7 @@ use crate::apps::lowpoly::modes::edit::windows::model::LOWPOLY_TRANSFORM_UTILITY
 use crate::apps::lowpoly::terminology::LowpolyLabels;
 use crate::apps::lowpoly::view::LowpolyView;
 use crate::apps::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
-use crate::artifacts::lowpoly::engine::LowpolyDocument;
+use crate::apps::lowpoly::engine::LowpolyDocument;
 use crate::artifacts::lowpoly::LOWPOLY_PAINT_TEXTURE_SIZE;
 use semio_framework_plugin::{build_canvas_2d_scene, ActionRef, Canvas2dScene, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use serde_json::json;
@@ -23,7 +23,7 @@ pub const LOWPOLY_UV_ACTIONS: &[&str] = &["addPaintLayer", "paintStrokeEnd", "pa
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::apps::lowpoly::create_lowpoly_app`.
 pub fn definition() -> WindowKindDefinition {
-    let projection = crate::artifacts::lowpoly::engine::default_snapshot();
+    let projection = crate::artifacts::lowpoly::schema::default_snapshot();
     let config = LowpolyConfig::default();
     let labels = semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US");
     let engagement = lowpoly_window_engagement(LowpolyView { snapshot: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, labels);

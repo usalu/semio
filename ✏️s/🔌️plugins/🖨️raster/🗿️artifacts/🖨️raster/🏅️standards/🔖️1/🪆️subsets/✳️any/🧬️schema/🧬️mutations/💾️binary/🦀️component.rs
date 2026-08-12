@@ -25,7 +25,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<RasterMutation, protocol::ProtocolError
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::raster::engine::empty_raster_document;
+    use crate::artifacts::raster::schema::empty_raster_document;
     use crate::artifacts::raster::mutations::create_layer;
     use crate::artifacts::raster::{RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 

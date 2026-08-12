@@ -87,3 +87,59 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ComplianceReport
+/// 📋️ Full EN 1990 compliance-report conformance law (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
+/// `⚙️engine`. `evaluate` is the `En1990Snapshot -> CheckReport` projection; everything it composes
+/// is a pure helper living in the parent `🧬️schema`.
+use crate::document::{AnnexChoice, CheckReport, DesignSituation};
+use crate::artifacts::en1990::En1990QkEntry;
+use crate::artifacts::en1990::standards::v1::subsets::any::schema::{ActionSet, NaDe, NaEn, NationalAnnex, append_combination_set, check_reliability_index, check_seismic_situation};
+
+/// 🔁️ Convert a `En1990Snapshot`'s `q_k` entries into the plain `(category, value)` pairs `ActionSet` expects.
+fn action_set_from_document(document: &En1990Snapshot) -> ActionSet {
+    ActionSet { g_k: document.g_k, q_k: document.q_k.iter().map(|entry: &En1990QkEntry| (entry.category.clone(), entry.value)).collect() }
+}
+
+/// 📋️ `En1990Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
+pub fn evaluate(document: &En1990Snapshot) -> CheckReport {
+    let actions = action_set_from_document(document);
+    let annex: &dyn NationalAnnex = if document.annex == AnnexChoice::De { &NaDe } else { &NaEn };
+    let mut report = CheckReport::default();
+    append_combination_set(&mut report, annex, DesignSituation::Persistent, &actions, document.resistance_kn);
+    append_combination_set(&mut report, annex, DesignSituation::Accidental, &actions, document.resistance_kn);
+    report.push(check_seismic_situation(annex, &actions, document.seismic_a_ed_kn, document.resistance_kn));
+    report.push(check_reliability_index(3.9, document.consequence_class));
+    report
+}
+//#endregion 🔖️ComplianceReport
+
+//#region 🧪️ComplianceReportTests
+#[cfg(test)]
+mod compliance_report_tests {
+    use super::*;
+    use crate::artifacts::en1990::standards::v1::subsets::any::schema::{check_combination_set, combination_uls, CombinationRule};
+
+    #[test]
+    fn evaluate_accidental_situation_numeric() {
+        let doc = En1990Snapshot::default();
+        let actions = action_set_from_document(&doc);
+        let accidental_ed = combination_uls(&NaDe, DesignSituation::Accidental, CombinationRule::Uls610a, &actions, 0);
+        assert!((accidental_ed - 168.0).abs() < 1e-9);
+        let report = evaluate(&doc);
+        let persistent = check_combination_set(&NaDe, DesignSituation::Persistent, &actions, doc.resistance_kn);
+        let accidental = check_combination_set(&NaDe, DesignSituation::Accidental, &actions, doc.resistance_kn);
+        assert_eq!(report.checks.len(), persistent.checks.len() + accidental.checks.len() + 2);
+        assert!(report.checks.iter().any(|c| (c.computed.value / 1000.0 - accidental_ed).abs() < 1e-6));
+    }
+
+    #[test]
+    fn evaluate_seismic_situation_numeric() {
+        let doc = En1990Snapshot::default();
+        let report = evaluate(&doc);
+        let seismic = report.checks.iter().find(|c| c.clause.section == "6.12b").expect("seismic 6.12b check present");
+        assert!((seismic.computed.value / 1000.0 - 155.0).abs() < 1e-9);
+    }
+}
+//#endregion 🧪️ComplianceReportTests

@@ -2,7 +2,7 @@
 //! camera). The sole content-mutating entry point the ink-canvas host surface calls.
 
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
-use crate::artifacts::note::engine::{block_bounds, block_id, block_locked, block_visible, block_name, find_block, insert_block, remove_block_from_tree, update_block_in_tree};
+use crate::artifacts::note::schema::{block_bounds, block_id, block_locked, block_visible, block_name, find_block, insert_block, remove_block_from_tree, update_block_in_tree};
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::schema::mutations::{change_block_ink_width, change_block_locked, change_block_visible, create_asset, create_block, delete_block, edit_block_ink_stroke, move_block, replace_asset_payload, rename_block, resize_block};
 use crate::artifacts::note::{NoteBlockNode, NoteCamera, NoteSnapshot, NoteImageAsset};
@@ -185,7 +185,7 @@ mod tests {
     use super::*;
     use crate::apps::note::testkit::{dispatch, note_app};
     use crate::apps::note::NoteCommand;
-    use crate::artifacts::note::engine::{block_id, create_block_by_kind};
+    use crate::artifacts::note::schema::{block_id, create_block_by_kind};
     use semio_framework_plugin::PluginApp;
     use serde_json::json;
 

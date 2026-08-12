@@ -1,5 +1,23 @@
 # Durable baselines — distinguish "new breakage" from "the tree was already like this"
 
+## ⏱️ A CEILING IS A TIMESTAMP TOO
+
+The same insight as below, applied to a **threshold** rather than a result — and it is the one APA nearly got wrong at the very end.
+
+APA's seal was going to record each policy rule's current count as a shrink-only ceiling: at-or-below stays non-gating, overflow gates. That assumes **counts only fall**. They don't.
+
+A peer session was mid-wave dissolving 37 artifact `⚙️engine/` directories across nine unsequenceable agents. During each move the code exists in **both** the old and new location with imports half-updated, so a rule counting registrations legitimately reads *higher* for a few minutes. A ceiling recorded at a trough would have flipped to `high` and **gated the shared tree for six sessions — on a transient state that resolves itself, caused by the very work reducing the number the ceiling protects.**
+
+A seal meant to make progress irreversible would have punished the session making the progress.
+
+**The rule:** never set a ceiling against a tree with active writers in the rows you are ceilinged. And the cheap operational test that replaces the judgement call:
+
+> **Measure each rule twice, a few minutes apart. Any row that changes between runs is in motion and gets no ceiling.**
+
+That converts "is this settled?" from an opinion into a measurement.
+
+**Second-order lesson, which is the more embarrassing one:** APA's headline `−349` on `plugin-registration-engine-backlog` was *not APA's work at all* — it was that peer's wave, in flight, being read as a settled result and nearly frozen as an achievement. **A number falling because someone else is pushing it is not yours to bank.**
+
 ## ⏱️ A VERIFICATION IS A TIMESTAMP, NOT A PROPERTY
 
 `semio-s-plugin-stdio` was measured **green on both forms, exit 0**, at ~21:55 — by a session that deliberately double-checked the `Finished` line and exit status before broadcasting, precisely because four sessions were waiting on it. It was **red again by ~23:20**, with the same dangling-`#[path]`-after-vocabulary-rename signature, this time in `✳️brep` rather than `✳️drawing`.

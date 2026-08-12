@@ -34,7 +34,7 @@ impl MutationKind<NoteSnapshot, NoteMutation> for DuplicateBlock {
         format!("Duplicate block \"{}\"", self.source_id)
     }
     fn target(&self) -> Vec<String> {
-        vec![self.source_id.clone(), crate::artifacts::note::engine::block_id(&self.block).to_string()]
+        vec![self.source_id.clone(), crate::artifacts::note::schema::block_id(&self.block).to_string()]
     }
 }
 //#endregion 🔖️Mutation

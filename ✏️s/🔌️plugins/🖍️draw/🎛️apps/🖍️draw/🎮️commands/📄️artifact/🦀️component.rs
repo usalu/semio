@@ -3,7 +3,7 @@
 
 use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::apps::draw::DRAW_PLAY_EXAMPLE_DEFAULT_ID;
-use crate::artifacts::draw::engine::{default_draw_document, semio_draw_example_document};
+use crate::artifacts::draw::schema::{default_draw_document, semio_draw_example_document};
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
 use semio_framework_plugin::kernel::HostEffect;

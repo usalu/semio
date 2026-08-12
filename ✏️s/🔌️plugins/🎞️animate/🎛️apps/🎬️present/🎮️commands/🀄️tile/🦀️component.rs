@@ -2,7 +2,7 @@
 
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::apps::present::{new_tile_id, valid_tile_ids};
-use crate::artifacts::present::engine::clamp_tile_crop;
+use crate::artifacts::present::schema::clamp_tile_crop;
 use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
 use crate::artifacts::present::mutations::delete_tile::mutation::DeleteTile as DeleteTileMutation;
 use crate::artifacts::present::mutations::delete_tiles::mutation::DeleteTiles;

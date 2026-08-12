@@ -1,7 +1,7 @@
 //! 📄️ Note play app panel — the document tree: every block, with quick-add rows.
 
 use crate::apps::note::terminology::NotePlayLabels;
-use crate::artifacts::note::engine::{block_icon, block_kind, block_name, block_tree_row_id, block_visible, find_block};
+use crate::artifacts::note::schema::{block_icon, block_kind, block_name, block_tree_row_id, block_visible, find_block};
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use semio_framework_plugin::{tree_item, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use serde_json::json;
@@ -29,7 +29,7 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
         items: nested,
         dimmed: if block_visible(block) { None } else { Some(true) },
         menu: None,
-        ..tree_item_with_action(block_tree_row_id(block), Label::data(block_name(block)), Some(block_kind(block).into()), crate::apps::note::note_action("setSelection", Some(json!({ "ids": [crate::artifacts::note::engine::block_id(block)] }))))
+        ..tree_item_with_action(block_tree_row_id(block), Label::data(block_name(block)), Some(block_kind(block).into()), crate::apps::note::note_action("setSelection", Some(json!({ "ids": [crate::artifacts::note::schema::block_id(block)] }))))
     }
 }
 

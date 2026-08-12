@@ -145,7 +145,7 @@ pub fn inverse_procedural2d_mutation(projection: &Procedural2dSnapshot, mutation
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::procedural2d::engine::empty_procedural2d_snapshot;
+    use crate::artifacts::procedural2d::schema::empty_procedural2d_snapshot;
     use flow::{CameraJson, SynapseSpec, WidgetLayout};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::{Mutation, MutationDiff, SemanticMutation};

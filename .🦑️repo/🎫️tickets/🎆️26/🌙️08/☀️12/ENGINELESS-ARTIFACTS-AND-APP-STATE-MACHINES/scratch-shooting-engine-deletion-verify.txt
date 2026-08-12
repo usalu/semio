@@ -1,0 +1,24 @@
+Slice: shooting plugin engine deletion (ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
+
+grep -rn "::engine::\|standards::v1::engine\|subsets::any::engine" ✏️s/🔌️plugins/🎥️shooting
+-> single hit, expected false positive (semio_s_plugin_stdio's OWN engine module, different plugin, out of scope):
+✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:7:
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+
+find ✏️s/🔌️plugins/🎥️shooting -path "*🗿️artifacts*" -name "⚙️engine" -type d
+-> 0 results (directory deleted)
+
+cargo check -p semio-s-plugin-shooting --all-targets (RUSTC_WRAPPER="" CARGO_TARGET_DIR=.../🎯️target)
+-> blocked upstream:
+error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs`: No such file or directory (os error 2)
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:7024:37
+error: could not compile `semio-s-plugin-stdio` (lib) due to 1 previous error
+(confirmed: file genuinely absent on disk; unrelated to shooting; another session's concurrent stdio refactor)
+
+Fallback verification: rustfmt --edition 2021 --check on all 24 touched shooting files -> all parse
+(diffs are pure formatting/import-order, no parse errors) -- confirms no syntax breakage from this slice.
+
+Assertion counts:
+Original ⚙️engine/🦀️component.rs Tests region: 10 #[test], 34 assert!/assert_eq!/assert_ne! (16/18/0)
+After split: schema Tests region = 7 tests / 17 asserts; app Io test region = 3 tests / 17 asserts
+Total after = 10 tests / 34 asserts -- matches.

@@ -4,7 +4,10 @@
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the world window
 //! (+ its `🎚️options/*`) in `🎭️modes/✏️edit/🪟️windows/🌐️world`, panel trees in `📌️panels/*`, labels in
 //! `🦀️terminology.rs`, view state in `🦀️config.rs`, world-scene compute needing both document+config in
-//! `🦀️world.rs`, and pure document-side compute in `crate::artifacts::block3d::engine`.
+//! `🦀️world.rs`, pure document-side compute in `crate::artifacts::block3d::schema`/
+//! `crate::artifacts::block3d::schema::inferences`, and this app's own typed media I/O surface (below —
+//! constitutional: general, an artifact must never depend on an app, so it lives here rather than under
+//! `🗿️artifacts`).
 
 use crate::apps::block3d::commands::brush::{hover_surface, leave_surface, place_vortex, set_brush_flip, set_brush_radius, set_brush_vortex_kind};
 use crate::apps::block3d::commands::camera::set_camera;
@@ -39,7 +42,7 @@ pub const BLOCK3D_WORLD_OBJECT_ID: &str = "block3d-object";
 pub const BLOCK3D_UTILITY_SELECT: &str = "select";
 pub const BLOCK3D_UTILITY_SURFACE_BRUSH: &str = "surfaceBrush";
 /// 🗂️ The `s/plugin/puzzle` 3d catalog artifact kind block3d's `"catalog:out"` port produces — see
-/// `crate::artifacts::block3d::engine::block3d_io` and `Block3dPlayApp::export_media`.
+/// `block3d_io` and `Block3dPlayApp::export_media`.
 const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
@@ -72,6 +75,28 @@ fn window_id_from_args(args: Option<&Value>) -> String {
         .map_or_else(|| BLOCK3D_DEFAULT_WINDOW_ID.into(), str::to_string)
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️Io
+/// 🔌️ `Block3dPlayApp`'s typed media I/O surface (`AppDefinition.io`) — the implicit document ports
+/// (`Kit×Type`, matching the `"3d.block"` artifact kind) plus the `"catalog:out"` port: the puzzle3d
+/// seam that gives `puzzle3d_catalog_fragment` a real caller (see `export_media` below).
+pub fn block3d_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo::from_document(
+        BLOCK_3D_SCHEMA,
+        semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+        semio_framework_plugin::ArtifactPresentation { id: "3d.block".into(), name: "Object Kind".into(), dimension: "3d".into(), component_kind: "block3d".into() },
+    )
+    .with_ports(vec![semio_framework_plugin::MediaPortSpec {
+        id: "catalog:out".into(),
+        label: "Kit Catalog".into(),
+        direction: semio_framework_plugin::MediaPortDirection::Out,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+        kind_id: Some("kit.catalog".into()),
+        required: false,
+        multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+    }])
+}
+//#endregion 🔖️Io
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -137,11 +162,11 @@ impl ArtifactApp for Block3dPlayApp {
     }
 
     fn initial_snapshot() -> Block3dSnapshot {
-        crate::artifacts::block3d::engine::empty_block3d_snapshot()
+        crate::artifacts::block3d::schema::empty_block3d_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
-        Some(crate::artifacts::block3d::engine::block3d_io())
+        Some(block3d_io())
     }
 
     fn command_id(command: &Block3dCommand) -> &'static str {
@@ -255,11 +280,11 @@ impl ArtifactApp for Block3dPlayApp {
 
     /// 🌉️ The flagship seam: `puzzle3d_catalog_fragment`'s first real caller. Wraps the block-3d
     /// document's puzzle3d-shaped catalog fragment as a `kit.catalog`-schema `Media` value for the
-    /// `"catalog:out"` port declared in `crate::artifacts::block3d::engine::block3d_io`. `wanted_tags`
-    /// should come from `cfg.wanted_tags` but `ArtifactApp::export_media`'s landed signature doesn't
-    /// thread `ConfigView` through yet — see `Block3dConfig::wanted_tags`'s doc — so this always
-    /// resolves the active representation with an empty (all-tags) filter until that lands. Falls
-    /// through to the default whole-document pack export for every other port (`"document:out"`).
+    /// `"catalog:out"` port declared in `block3d_io`. `wanted_tags` should come from `cfg.wanted_tags`
+    /// but `ArtifactApp::export_media`'s landed signature doesn't thread `ConfigView` through yet —
+    /// see `Block3dConfig::wanted_tags`'s doc — so this always resolves the active representation with
+    /// an empty (all-tags) filter until that lands. Falls through to the default whole-document pack
+    /// export for every other port (`"document:out"`).
     fn export_media(port: &str, doc: &ArtifactView<'_, Block3dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
             // 🌉️ Reimplements `ArtifactApp::export_media`'s default `"document:out"` behavior
@@ -273,7 +298,7 @@ impl ArtifactApp for Block3dPlayApp {
             let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
-        let fragment = crate::artifacts::block3d::engine::puzzle3d_catalog_fragment(doc.snapshot, &[]);
+        let fragment = crate::artifacts::block3d::schema::inferences::puzzle3d_catalog_fragment(doc.snapshot, &[]);
         Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
@@ -286,7 +311,7 @@ pub fn create_block3d_app() -> App {
             .document(["semio", "block", "3d"])
             .artifact_kind(artifact_kind())
             // 🗂️ The puzzle3d catalog artifact this app's new `"catalog:out"` port produces — see
-            // `crate::artifacts::block3d::engine::block3d_io`/`Block3dPlayApp::export_media`.
+            // `block3d_io`/`Block3dPlayApp::export_media`.
             .artifact_kind(ArtifactKindSpec {
                 id: KIT_CATALOG_ARTIFACT_ID.into(),
                 name: "Kit Catalog".into(),
@@ -335,7 +360,7 @@ pub fn create_block3d_app() -> App {
             .view_action("selectVortex", LocalizedLabel::native("Select Vortex", "Wirbel auswählen"))
             .view_action("hoverVortex", LocalizedLabel::native("Hover Vortex", "Wirbel hovern"))
             .mutation("patchRepresentation", LocalizedLabel::native("Patch Representation", "Darstellung bearbeiten"))
-            .io(crate::artifacts::block3d::engine::block3d_io()),
+            .io(block3d_io()),
     )
     .example(
         crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_CAPSULE,
@@ -468,6 +493,19 @@ mod tests {
             assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
         }
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "kit.catalog"));
+    }
+
+    #[test]
+    fn block3d_io_declares_the_catalog_out_port() {
+        let io = block3d_io();
+        assert_eq!(io.document_schema, BLOCK_3D_SCHEMA);
+        let ports = io.all_ports();
+        assert!(ports.iter().any(|port| port.id == "document:in"));
+        assert!(ports.iter().any(|port| port.id == "document:out"));
+        let catalog = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");
+        assert_eq!(catalog.kind_id.as_deref(), Some("kit.catalog"));
+        assert_eq!(catalog.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert_eq!(catalog.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
     }
 
     #[test]

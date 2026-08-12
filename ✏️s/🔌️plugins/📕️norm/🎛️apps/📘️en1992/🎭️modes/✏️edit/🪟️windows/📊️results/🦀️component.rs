@@ -1,6 +1,6 @@
 //! 📊️ EN 1992 play app — the results window: every computed compliance check, one line each.
 
-use crate::artifacts::en1992::engine::En1992Family;
+use crate::apps::en1992::En1992Family;
 use crate::document::NormHost;
 use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
 

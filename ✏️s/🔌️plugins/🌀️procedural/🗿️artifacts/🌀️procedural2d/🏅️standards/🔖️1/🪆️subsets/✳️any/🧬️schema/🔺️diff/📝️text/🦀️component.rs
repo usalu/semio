@@ -209,7 +209,7 @@ pub fn diff_generation_from_ops(base: &Procedural2dSnapshot, ops: Vec<Generation
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::procedural2d::engine::empty_procedural2d_snapshot;
+    use crate::artifacts::procedural2d::schema::empty_procedural2d_snapshot;
 
     #[test]
     fn diff_absorb_prefers_incoming_fixture_and_scalars() {

@@ -2,7 +2,7 @@
 
 use crate::apps::procedural3d::config::Procedural3dConfig;
 use crate::apps::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
-use crate::artifacts::procedural3d::engine::{fixture_to_workflow, host_from_fixture};
+use crate::artifacts::procedural3d::schema::{fixture_to_workflow, host_from_fixture};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphHover, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
@@ -50,7 +50,7 @@ pub fn window_measures(lod_mode: &str, on_change: impl Fn(&str, Option<serde_jso
 //#region 🔖️Render
 pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, session: &FlowEvalSession) -> UiNode {
     let fixture = &document.fixture;
-    crate::artifacts::procedural3d::engine::sync_flow_extension_contributions(&config.contributions_json);
+    crate::apps::procedural3d::sync_flow_extension_contributions(&config.contributions_json);
     let host = host_from_fixture(fixture);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
@@ -84,14 +84,14 @@ mod tests {
 
     #[test]
     fn renders_node_graph_scene() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_MAIN).contains("node-graph"));
     }
 
     #[test]
     fn main_graph_scene_exports_flow_backed_node_graph_fields() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         let json = render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_MAIN);
         let value: serde_json::Value = serde_json::from_str(&json).expect("ui node json");

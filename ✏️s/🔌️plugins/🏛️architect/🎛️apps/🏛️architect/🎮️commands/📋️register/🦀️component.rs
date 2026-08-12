@@ -25,7 +25,7 @@ pub mod select_register {
 pub mod add_register_item {
     use crate::apps::architect::catalog::add_register_item_operation;
     use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
-    use crate::artifacts::program::engine::template::apply_template;
+    use crate::apps::architect::behavior::apply_template;
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
     use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

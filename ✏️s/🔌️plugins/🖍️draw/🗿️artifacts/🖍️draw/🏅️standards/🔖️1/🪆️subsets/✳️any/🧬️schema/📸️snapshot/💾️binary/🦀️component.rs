@@ -26,7 +26,7 @@ pub fn decode(bytes: &[u8]) -> Result<DrawSnapshot, PackError> {
 mod tests {
     use super::*;
     use crate::artifacts::draw::dsl;
-    use crate::artifacts::draw::engine::{create_draw_boolean_layer, create_draw_image_layer, create_draw_path_layer, create_draw_shape_layer_rect, create_draw_trace_layer, default_draw_document, default_layer_base, layer_id};
+    use crate::artifacts::draw::schema::{create_draw_boolean_layer, create_draw_image_layer, create_draw_path_layer, create_draw_shape_layer_rect, create_draw_trace_layer, default_draw_document, default_layer_base, layer_id};
     use crate::artifacts::draw::{DrawArtboard, DrawCircle, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawLayerNode, DrawLine, DrawPolygon, DrawShapeBody, DrawTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA};
 
     fn representative_draw_document() -> DrawSnapshot {

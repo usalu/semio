@@ -2,7 +2,7 @@
 //! `(dx, dy)`). Document-mutating.
 
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
-use crate::artifacts::note::engine::{block_id, flatten_blocks};
+use crate::artifacts::note::schema::{block_id, flatten_blocks};
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -94,7 +94,7 @@ mod tests {
     use super::*;
     use crate::apps::note::testkit::{dispatch, note_app};
     use crate::apps::note::NoteCommand;
-    use crate::artifacts::note::engine::block_bounds;
+    use crate::artifacts::note::schema::block_bounds;
 
     #[test]
     fn nudge_direction_actions_move_selection_without_args() {

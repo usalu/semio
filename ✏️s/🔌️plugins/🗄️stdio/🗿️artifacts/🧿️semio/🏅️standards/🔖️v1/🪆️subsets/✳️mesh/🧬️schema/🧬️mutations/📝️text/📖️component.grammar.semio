@@ -3,34 +3,41 @@ grammar semio.mesh.mutations
 extension semio
 start op
 
-# P2 mesh wave: real one-line `OpText::print_op`/`parse_op` shape ALREADY emitted by
+# DKM mesh-vocabulary wave: real one-line `OpText::print_op`/`parse_op` shape emitted by
 # `🧬️mutations/🦀️component.rs` (`print_semio_mesh_mutation`/`parse_semio_mesh_mutation`) —
 # "keyword arg=value ..." (space-separated; space is lexer trivia at this dialect level). Every
 # keyword/field-name token below is copied verbatim from the real `format!(...)` call sites in
-# that file's `print_semio_mesh_mutation`, not invented.
-op = no-mutation | set-snapshot | add-mesh | remove-mesh | add-primitive | remove-primitive | set-primitive-topology | set-primitive-geometry | set-primitive-material | add-material | remove-material | set-material-base-color | set-material-pbr | add-texture | remove-texture | set-texture-bytes
+# that file's `print_semio_mesh_mutation`, not invented. Replaces the prior 16-verb
+# `Add*`/`Remove*`/`Set*` alternation with the new 17-verb vocabulary derived from this subset's
+# real snapshot fields, checked against SMO's taxonomy+derivation-rules docs:
+# create/delete-{mesh,primitive,material,texture}, set-primitive-{topology,material},
+# replace-primitive-geometry, change-material-{base-color,metallic,roughness},
+# change-texture-mime, replace-texture-bytes, move-vertex.
+op = create-mesh | delete-mesh | create-primitive | delete-primitive | set-primitive-topology | replace-primitive-geometry | set-primitive-material | create-material | delete-material | change-material-base-color | change-material-metallic | change-material-roughness | create-texture | delete-texture | change-texture-mime | replace-texture-bytes | move-vertex
 
-no-mutation = "no-mutation"
-set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
-add-mesh = "add-mesh" "mesh" "=" mesh
-remove-mesh = "remove-mesh" "id" "=" hex
-add-primitive = "add-primitive" "mesh-id" "=" hex "primitive" "=" primitive
-remove-primitive = "remove-primitive" "mesh-id" "=" hex "primitive-id" "=" hex
+create-mesh = "create-mesh" "mesh" "=" mesh
+delete-mesh = "delete-mesh" "id" "=" hex
+create-primitive = "create-primitive" "mesh-id" "=" hex "primitive" "=" primitive
+delete-primitive = "delete-primitive" "mesh-id" "=" hex "primitive-id" "=" hex
 set-primitive-topology = "set-primitive-topology" "mesh-id" "=" hex "primitive-id" "=" hex "topology" "=" topology
-set-primitive-geometry = "set-primitive-geometry" "mesh-id" "=" hex "primitive-id" "=" hex "positions" "=" "[" point3-list? "]" "normals" "=" "[" point3-list? "]" "uvs" "=" "[" uv-list? "]" "colors" "=" "[" rgba-list? "]" "indices" "=" "[" index-list? "]"
+replace-primitive-geometry = "replace-primitive-geometry" "mesh-id" "=" hex "primitive-id" "=" hex "positions" "=" "[" point3-list? "]" "normals" "=" "[" point3-list? "]" "uvs" "=" "[" uv-list? "]" "colors" "=" "[" rgba-list? "]" "indices" "=" "[" index-list? "]"
 set-primitive-material = "set-primitive-material" "mesh-id" "=" hex "primitive-id" "=" hex "material-id" "=" option-hex
-add-material = "add-material" "material" "=" material
-remove-material = "remove-material" "id" "=" hex
-set-material-base-color = "set-material-base-color" "id" "=" hex "base-color" "=" rgba
-set-material-pbr = "set-material-pbr" "id" "=" hex "metallic" "=" number "roughness" "=" number
-add-texture = "add-texture" "texture" "=" texture
-remove-texture = "remove-texture" "id" "=" hex
-set-texture-bytes = "set-texture-bytes" "id" "=" hex "mime" "=" hex "bytes" "=" hex
+create-material = "create-material" "material" "=" material
+delete-material = "delete-material" "id" "=" hex
+change-material-base-color = "change-material-base-color" "id" "=" hex "new-base-color" "=" rgba
+change-material-metallic = "change-material-metallic" "id" "=" hex "new-metallic" "=" number
+change-material-roughness = "change-material-roughness" "id" "=" hex "new-roughness" "=" number
+create-texture = "create-texture" "texture" "=" texture
+delete-texture = "delete-texture" "id" "=" hex
+change-texture-mime = "change-texture-mime" "id" "=" hex "new-mime" "=" hex
+replace-texture-bytes = "replace-texture-bytes" "id" "=" hex "new-bytes" "=" hex
+move-vertex = "move-vertex" "mesh-id" "=" hex "primitive-id" "=" hex "vertex-index" "=" INT "new-point" "=" point3
 
-# `enc_mesh_snapshot`/`enc_mesh`/`enc_primitive`/`enc_material`/`enc_texture` — the same
-# full-VALUE codecs `📸️snapshot/🦀️component.rs`'s own text DSL grammar declares (restated here so
-# this leaf grammar is self-contained, matching the repo's existing per-facet convention).
-snapshot-lit = "[" hex "," "[" mesh-list? "]" "," "[" material-list? "]" "," "[" texture-list? "]" "]"
+# `enc_mesh`/`enc_primitive`/`enc_material`/`enc_texture` — the same full-VALUE codecs
+# `📸️snapshot/🦀️component.rs`'s own text DSL grammar declares (restated here so this leaf grammar
+# is self-contained, matching the repo's existing per-facet convention). No `snapshot-lit`
+# production remains — `set-snapshot` is deleted with no replacement (whole-document replace goes
+# through `ArtifactStore::reset`, outside history, per the locked decision).
 mesh-list = mesh {"," mesh}*
 mesh = "[" hex "," "[" primitive-list? "]" "]"
 primitive-list = primitive {"," primitive}*
@@ -56,5 +63,5 @@ number = INT | FLOAT
 # empty string. `Symbol::Ref` already falls back from "no production of this name" to "macro of
 # this name", so referencing `hex` with no matching production routes here automatically. Using a
 # hand-rolled `{INT|IDENT}*` production instead would be wrong: it never backtracks and would
-# silently swallow the next literal keyword token (e.g. `id=<hex> mime=<hex>` — the literal `mime`
-# tokenizes as a plain `IDENT`, exactly like a stray hex letter run would).
+# silently swallow the next literal keyword token (e.g. `id=<hex> new-mime=<hex>` — the literal
+# `new-mime` tokenizes as a plain `IDENT`, exactly like a stray hex letter run would).

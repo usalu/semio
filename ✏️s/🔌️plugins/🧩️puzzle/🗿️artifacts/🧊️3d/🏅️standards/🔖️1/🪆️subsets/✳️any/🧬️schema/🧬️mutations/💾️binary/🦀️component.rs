@@ -33,12 +33,15 @@ pub type Puzzle3dStore = ArtifactStore<Puzzle3dSnapshot, Puzzle3dMutation>;
 //#endregion 🔖️Store
 
 //#region 🔖️Puzzle3dEngineCommand
-/// 🎯️ Re-exports the puzzle 3d app-engine command envelope (`HEADLESS-ENGINE-LAW-AND-OFFENDER-FIXES`).
-/// `#[derive(dsl::DslEnum)]` is applied where the type is declared, in `⚙️engine` — not here — because
-/// the derive's generated code needs `SceneConfig`/`BrushPlacePayload` (types `⚙️engine` owns) by
-/// value; re-exporting it here plus wrapping `encode_op`/`decode_op` mirrors exactly how
-/// `Puzzle3dMutation` (declared in `🔧️op`) is surfaced above.
-pub use crate::artifacts::puzzle3d::engine::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
+/// 🎯️ Re-exports the puzzle 3d precompute command envelope. `#[derive(dsl::DslEnum)]` is applied
+/// where the type is declared, in `🧬️schema/🦀️component.rs` — not here — because the derive's
+/// generated code needs `SceneConfig`/`BrushPlacePayload` (types that file owns) by value;
+/// re-exporting it here plus wrapping `encode_op`/`decode_op` mirrors exactly how `Puzzle3dMutation`
+/// (declared in `🔧️op`) is surfaced above. Relocated off the former `⚙️engine` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — the stateful session that dispatches this
+/// envelope now lives app-side, at `crate::apps::puzzle3d::precompute`, but the envelope itself is
+/// pure data and stays schema-side.
+pub use crate::artifacts::puzzle3d::schema::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
 
 /// 📦️ Encodes a `Puzzle3dEngineCommand` to its binary command form.
 pub fn encode_engine_command(command: &Puzzle3dEngineCommand) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -58,7 +61,7 @@ mod tests {
 
     #[test]
     fn puzzle3d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::puzzle3d::engine::empty_puzzle3d_snapshot;
+        use crate::artifacts::puzzle3d::schema::empty_puzzle3d_snapshot;
         use crate::artifacts::puzzle3d::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
         use store::{create_document_envelope, ArtifactCommand};
 

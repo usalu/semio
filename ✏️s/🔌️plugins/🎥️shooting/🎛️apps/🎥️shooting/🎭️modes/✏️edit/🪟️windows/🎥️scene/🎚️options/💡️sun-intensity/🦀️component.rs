@@ -33,7 +33,7 @@ mod tests {
 
     #[test]
     fn sun_intensity_measure_matches_the_fixture_default() {
-        let snapshot = crate::artifacts::shooting::engine::default_snapshot();
+        let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(&snapshot, labels) {
             WindowMeasure::Slider { value, .. } => assert_eq!(value, 2.4),

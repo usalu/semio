@@ -245,7 +245,7 @@ impl Mutation<SourcingCurateConfig> for SourcingCurateConfigMutation {
             SourcingCurateConfigMutation::SetLocale { value } => next.locale = value.clone(),
             SourcingCurateConfigMutation::SetContributions { json } => {
                 next.contributions_json = json.clone();
-                crate::artifacts::curate::engine::sync_sourcing_module_contributions(json);
+                crate::artifacts::curate::schema::sync_sourcing_module_contributions(json);
             }
         }
         next

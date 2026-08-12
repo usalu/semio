@@ -54,7 +54,7 @@ mod tests {
     use super::*;
     use crate::artifacts::present::schema::mutations::{create_tile, delete_tile, delete_tiles, rename_tile, reorder_tiles, replace_source, replace_tiles, resize_source_frame, resize_tile_crop};
     use crate::artifacts::present::{default_figure_tile_source, default_present_snapshot, FigureTileDraft, FigureTileFrame, PresentSnapshot};
-    use crate::artifacts::present::engine::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
+    use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
     use store::os_store::test_support;
 
     fn round_trip(deck: &PresentSnapshot, operation: &PresentMutation) -> PresentSnapshot {

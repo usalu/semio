@@ -234,14 +234,14 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// Relocated from `⚙️engine/🦀️component.rs` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// reloc-g3): `⚙️engine` was removed from the taxonomy and `declaration()` describes the artifact,
 /// not engine behaviour, so its home is the artifact root alongside `artifact_kind()`. The
-/// `io_registry::entries()` call below is now qualified (`standards::v1::engine::io_registry`) since
-/// that module still lives in the engine file this function moved out of — a deviation from the
-/// plain move-both, reported per the pass's own instruction.
+/// `io_registry::entries()` call below is now re-qualified onto `subsets::any::io::io_registry`
+/// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): the whole `⚙️engine` file this
+/// function moved out of has since been dissolved into `🧬️schema/`/`🚪️io/`/the app, per rule 5.
 pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.raster")
         .schema(crate::artifacts::raster::schema::raster_artifact_schema_descriptor())
         .inferences([crate::artifacts::raster::schema::inferences::raster_artifact_inference_descriptor()])
-        .composers(crate::artifacts::raster::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::raster::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::raster::RasterPlayApp>()
         .build()
@@ -326,7 +326,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::raster::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::raster::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

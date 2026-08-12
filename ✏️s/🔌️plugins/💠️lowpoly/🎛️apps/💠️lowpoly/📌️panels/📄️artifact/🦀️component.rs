@@ -4,7 +4,7 @@
 use crate::apps::lowpoly::lowpoly_action;
 use crate::apps::lowpoly::terminology::LowpolyLabels;
 use crate::apps::lowpoly::view::{document_target_row_id, highlighted_document_ids, resolve_active_object_id, selected_document_ids, LowpolyView};
-use crate::artifacts::lowpoly::engine::LowpolyDocument;
+use crate::apps::lowpoly::engine::LowpolyDocument;
 use semio_framework_plugin::{
     IconName, Label, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };

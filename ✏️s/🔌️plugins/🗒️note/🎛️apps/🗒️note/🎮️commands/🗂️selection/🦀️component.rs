@@ -1,7 +1,7 @@
 //! 🗂️ Note play app commands — ephemeral selection/hover. View-only, never a document operation.
 
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
-use crate::artifacts::note::engine::{block_id, flatten_blocks};
+use crate::artifacts::note::schema::{block_id, flatten_blocks};
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::NoteSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

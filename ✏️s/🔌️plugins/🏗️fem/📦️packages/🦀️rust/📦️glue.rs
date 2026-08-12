@@ -27,22 +27,59 @@ extern crate semio_framework_os_kernel as vcs;
 #[allow(clippy::result_large_err)]
 
 //#region 🏗️Kernel modules
-#[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🏗️model/🦀️component.rs"]
+// 🔄️ 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES: these 7 mounts moved from the artifact
+// tree's (now-deleted) `⚙️engine` into a plugin-level module, `✏️s/🔨️modules/🏗️fem/⚙️engine/` — pure FE
+// algorithm code (element stiffness, assembly, sparse solve, mesh generation), legitimately D6 "pure
+// algorithm" and NOT snapshot-derived inference, NOT app behaviour. An artifact is a schema + io
+// system, never an engine; a MODULE may still have one (`taxonomyLeafParentDirs` already lists
+// `⚙️engine` globally). Mount NAMEs are unchanged (`crate::model`, `crate::analyses`, …), only the
+// `#[path]` TARGET moved, so every existing `crate::model::X`-style call site elsewhere in this crate
+// is unaffected.
+#[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️component.rs"]
 pub mod model;
-#[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🧮️analyses/🦀️component.rs"]
+#[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs"]
 pub mod analyses;
-#[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📏️elements2d/🦀️component.rs"]
+#[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️component.rs"]
 pub mod elements2d;
-#[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🧊️elements3d/🦀️component.rs"]
+#[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🧊️elements3d/🦀️component.rs"]
 pub mod elements3d;
-#[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/➗️formulation/🦀️component.rs"]
+#[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/➗️formulation/🦀️component.rs"]
 pub mod formulation;
-#[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🕸️mesh/🦀️component.rs"]
+#[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️component.rs"]
 pub mod mesh;
-#[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔢️sparse/🦀️component.rs"]
+#[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️component.rs"]
 pub mod sparse;
 #[path = "../../🎛️apps/◻2d/⚙️engine/🖥️app-surface/🦀️component.rs"]
 pub mod app_surface;
+
+// 🔄️ Same ticket: the fem2d/fem3d-SPECIFIC engine content (Errors + top-level solve entry points,
+// plus the artifact-specific meshing/modal-buckling/mesh-preview bridges) — also pure FE algorithm,
+// also moved out of the artifact tree, but NOT shared cross-artifact so each gets its own crate-root
+// module rather than joining the 7 above.
+#[path = "."]
+pub mod fem2d_engine {
+    #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/◻2d/🦀️component.rs"]
+    mod component;
+    pub use component::*;
+    #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/◻2d/🕸️meshing/🦀️component.rs"]
+    pub mod meshing;
+    #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/◻2d/🎵️modal-buckling/🦀️component.rs"]
+    pub mod modal_buckling;
+    #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/◻2d/🗺️mesh-preview/🦀️component.rs"]
+    pub mod mesh_preview;
+}
+#[path = "."]
+pub mod fem3d_engine {
+    #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🧊️3d/🦀️component.rs"]
+    mod component;
+    pub use component::*;
+    #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🧊️3d/🕸️meshing/🦀️component.rs"]
+    pub mod meshing;
+    #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🧊️3d/🎵️modal-buckling/🦀️component.rs"]
+    pub mod modal_buckling;
+    #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🧊️3d/🗺️mesh-preview/🦀️component.rs"]
+    pub mod mesh_preview;
+}
 
 //#endregion 🏗️Kernel modules
 
@@ -59,18 +96,6 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "."]
-                pub mod engine {
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎵️modal-buckling/🦀️component.rs"]
-                    pub mod modal_buckling;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🕸️meshing/🦀️component.rs"]
-                    pub mod meshing;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🗺️mesh-preview/🦀️component.rs"]
-                    pub mod mesh_preview;
-                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -506,9 +531,6 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v1::engine::*;
-        }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
@@ -543,18 +565,6 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "."]
-                pub mod engine {
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎵️modal-buckling/🦀️component.rs"]
-                    pub mod modal_buckling;
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🕸️meshing/🦀️component.rs"]
-                    pub mod meshing;
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🗺️mesh-preview/🦀️component.rs"]
-                    pub mod mesh_preview;
-                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -989,9 +999,6 @@ pub mod artifacts {
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod engine {
-            pub use super::standards::v1::engine::*;
         }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;

@@ -34,34 +34,34 @@ pub use super::rename_vcs::mutation::{rename_vcs, RenameVcs};
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::vcs::engine;
+    use crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot;
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::{Mutation, MutationDiff, MutationKind, SemanticMutation};
 
     #[test]
     fn vcs_demo_mutation_round_trips_store() {
-        let mut store = store::ArtifactStore::<VcsSnapshot, VcsDemoMutation>::new(store::create_document_envelope("vcs.document", "vcs", engine::empty_vcs_snapshot(), None));
+        let mut store = store::ArtifactStore::<VcsSnapshot, VcsDemoMutation>::new(store::create_document_envelope("vcs.document", "vcs", empty_vcs_snapshot(), None));
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![change_counter(3)], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").counter, 3);
     }
 
     #[test]
     fn rename_vcs_inverse_law_holds() {
-        let base = engine::empty_vcs_snapshot();
+        let base = empty_vcs_snapshot();
         let mutation = rename_vcs("Renamed".into());
         assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[test]
     fn change_counter_inverse_law_holds() {
-        let base = engine::empty_vcs_snapshot();
+        let base = empty_vcs_snapshot();
         let mutation = change_counter(42);
         assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[test]
     fn add_tag_then_remove_tag_inverse_laws_hold() {
-        let base = engine::empty_vcs_snapshot();
+        let base = empty_vcs_snapshot();
         assert_mutation_inverse_law(&base, &add_tag("wip".into()));
         let mut with_tag = base.clone();
         with_tag.tags.push("wip".into());
@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn change_notes_diff_absorb_law_holds() {
-        let base = engine::empty_vcs_snapshot();
+        let base = empty_vcs_snapshot();
         let d1 = change_notes("first".into()).diff(&base);
         let mid = d1.apply(&base);
         let d2 = change_notes("second".into()).diff(&mid);
@@ -79,7 +79,7 @@ mod tests {
 
     #[test]
     fn add_tag_is_a_noop_when_base_already_has_the_tag() {
-        let mut base = engine::empty_vcs_snapshot();
+        let mut base = empty_vcs_snapshot();
         base.tags.push("wip".into());
         let payload = AddTag { tag: "wip".into() };
         assert_eq!(MutationKind::diff(&payload, &base), crate::artifacts::vcs::VcsDiff::default());

@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `SetLayerVisible` — real logic reconstructing the undo from BASE state, never
 //! from post-state. Missing target ⇒ `Vec::new()` (the semantic replacement for `NoMutation`).
-use crate::artifacts::draw::engine::{find_draw_layer, layer_base};
+use crate::artifacts::draw::schema::{find_draw_layer, layer_base};
 use crate::artifacts::draw::mutations::DrawMutation;
 use crate::artifacts::draw::DrawSnapshot;
 

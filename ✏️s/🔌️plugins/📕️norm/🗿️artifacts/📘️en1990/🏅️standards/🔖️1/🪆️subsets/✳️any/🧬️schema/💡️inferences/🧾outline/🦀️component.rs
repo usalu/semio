@@ -1,5 +1,5 @@
 //! 🧾 `outline` — one named inference: this document's own field/section structure plus a clause
-//! summary from headless EN 1990 norm computation (`engine::evaluate`).
+//! summary from headless EN 1990 norm computation (`schema::inferences::evaluate`).
 
 use crate::artifacts::en1990::En1990Snapshot;
 use crate::document::CheckStatus;
@@ -34,7 +34,7 @@ impl En1990Outline {
         let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
         let field_count = section_outline.len() as u32;
         let entry_count = snapshot.q_k.len() as u32;
-        let report = crate::artifacts::en1990::engine::evaluate(snapshot);
+        let report = crate::artifacts::en1990::standards::v1::subsets::any::schema::inferences::evaluate(snapshot);
         let check_count = report.checks.len() as u32;
         let pass_count = report.checks.iter().filter(|check| check.status == CheckStatus::Pass).count() as u32;
         let all_pass = report.all_pass();

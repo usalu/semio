@@ -2,7 +2,7 @@
 //! generations and resets ephemeral view state).
 
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
-use crate::artifacts::procedural3d::engine::{default_snapshot, example_snapshot, is_procedural3d_example_id};
+use crate::artifacts::procedural3d::schema::{default_snapshot, example_snapshot, is_procedural3d_example_id};
 use crate::artifacts::procedural3d::op::{procedural3d_fixture_operations, Procedural3dMutation};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{CameraJson, FlowEvalSession};
@@ -62,13 +62,13 @@ mod tests {
     use super::*;
     use crate::apps::procedural3d::testkit::{app, app_with_registry, dispatch};
     use crate::apps::procedural3d::Procedural3dCommand;
-    use crate::artifacts::procedural3d::engine::PROCEDURAL_EXAMPLE_BOX_FILLET;
+    use crate::artifacts::procedural3d::schema::PROCEDURAL_EXAMPLE_BOX_FILLET;
     use flow::Widget;
     use semio_framework_plugin::PluginApp;
 
     #[test]
     fn set_active_example_via_string_action_loads_fixture() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app_with_registry();
         app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_FILLET })), &semio_framework_plugin::testkit::meta("local")).expect("set example");
         let projection = app.snapshot().expect("snapshot");
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn unknown_example_id_is_a_no_op() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         let before = app.snapshot().expect("snapshot");
         dispatch(&mut app, Procedural3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "not-a-real-example".into() }));

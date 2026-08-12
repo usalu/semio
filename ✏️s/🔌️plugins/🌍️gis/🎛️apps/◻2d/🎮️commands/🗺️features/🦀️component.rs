@@ -1,7 +1,7 @@
 //! 🗺️ GIS 2D play app commands — the document-mutating feature patches (positions and routes).
 
 use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
-use crate::artifacts::gismap::engine::{gis_map_document_from_descriptor_json, positions_operations};
+use crate::artifacts::gismap::schema::{gis_map_document_from_descriptor_json, positions_operations};
 use crate::artifacts::gismap::mutations::replace_route_data;
 use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::GisMapSnapshot;

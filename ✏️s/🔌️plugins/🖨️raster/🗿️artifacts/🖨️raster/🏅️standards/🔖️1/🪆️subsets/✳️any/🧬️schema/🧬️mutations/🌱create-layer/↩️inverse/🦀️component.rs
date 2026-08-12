@@ -1,7 +1,7 @@
 //! ↩️ `create-layer` inverse — `delete-layer` addressed by the created layer's own id (no `base`
 //! lookup needed, the id is already on the payload).
 
-use crate::artifacts::raster::engine::layer_node_id;
+use crate::artifacts::raster::schema::layer_node_id;
 use crate::artifacts::raster::mutations::create_layer::mutation::CreateLayer;
 use crate::artifacts::raster::mutations::delete_layer;
 use crate::artifacts::raster::mutations::RasterMutation;

@@ -398,12 +398,13 @@ pub mod derived_composition {
             fn infer(_snapshot: &Self::Snapshot) -> Self::Inference {}
 
             fn sample_mutations(_snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
+                // 🔧️ Mechanical fallout from DKM's mesh mutation-vocabulary rewrite: the banned
+                // `NoMutation` sentinel no longer exists (a mutation with nothing to undo returns
+                // `Vec::new()` from `inverse`, no sentinel variant needed — taxonomy.md), so every
+                // `demo_mutation_cases()` entry is now a genuine mutation; the filter that used to
+                // skip the no-op is no longer expressible (and no longer necessary).
                 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::demo_mutation_cases;
-                demo_mutation_cases()
-                    .into_iter()
-                    .filter(|m| !matches!(m, crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation::NoMutation))
-                    .take(1)
-                    .collect()
+                demo_mutation_cases().into_iter().take(1).collect()
             }
 
             fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {

@@ -1,7 +1,7 @@
 //! 🗂️ Raster play app commands — selection/hover (view actions, never a document operation).
 
 use crate::apps::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::artifacts::raster::engine::{flatten_raster_layers, layer_node_id};
+use crate::artifacts::raster::schema::{flatten_raster_layers, layer_node_id};
 use crate::artifacts::raster::op::RasterMutation;
 use crate::artifacts::raster::RasterSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

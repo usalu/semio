@@ -129,7 +129,7 @@ pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) 
 /// `source_id` selects a `fem2d_solve_all` case/combination id, falling back to the first load case
 /// when `None`/unknown (preserves v0's default behavior).
 fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> UiNode {
-    let results = match crate::artifacts::fem2d::engine::fem2d_solve_all(doc) {
+    let results = match crate::fem2d_engine::fem2d_solve_all(doc) {
         Ok(results) => results,
         Err(e) => return ui_text(Label::data(format!("Analysis error: {e}"))),
     };
@@ -190,7 +190,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamer
     }
 
     //#region 🔖️StressContour
-    let nodal_von_mises = crate::artifacts::fem2d::engine::mesh_preview::fem2d_nodal_von_mises(doc, &case_id).unwrap_or_default();
+    let nodal_von_mises = crate::fem2d_engine::mesh_preview::fem2d_nodal_von_mises(doc, &case_id).unwrap_or_default();
     let mesh_triangles = fem2d_region_mesh_triangles(doc);
     let mut valued_triangles: Vec<([(f64, f64); 3], [f64; 3])> = Vec::new();
     for (_, tri_points, node_ids) in &mesh_triangles {
@@ -232,7 +232,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamer
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a frequency caption.
 fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> UiNode {
-    let (freq_hz, mut disp_map) = match crate::artifacts::fem2d::engine::modal_buckling::fem2d_modal_mode_values(doc, mode_index) {
+    let (freq_hz, mut disp_map) = match crate::fem2d_engine::modal_buckling::fem2d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
         Err(e) => return ui_text(Label::data(format!("Modal analysis error: {e}"))),
     };
@@ -256,7 +256,7 @@ fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usi
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
         return ui_text(Label::data("No load case defined"));
     };
-    let (factor, mut disp_map) = match crate::artifacts::fem2d::engine::modal_buckling::fem2d_buckling_mode_values(doc, &case_id, mode_index) {
+    let (factor, mut disp_map) = match crate::fem2d_engine::modal_buckling::fem2d_buckling_mode_values(doc, &case_id, mode_index) {
         Ok(values) => values,
         Err(e) => return ui_text(Label::data(format!("Buckling analysis error: {e}"))),
     };
@@ -299,7 +299,7 @@ mod tests {
 
     #[test]
     fn results_window_buckling_with_no_load_case_shows_placeholder_2d() {
-        let doc = crate::artifacts::fem2d::engine::empty_fem2d_snapshot();
+        let doc = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let display = ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) };
         let camera = FemCamera::default();
         let json = serde_json::to_string(&render(&doc, &display, &camera)).unwrap();

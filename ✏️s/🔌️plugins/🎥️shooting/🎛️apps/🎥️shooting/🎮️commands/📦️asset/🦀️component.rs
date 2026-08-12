@@ -1,7 +1,7 @@
 //! 📦️ Shooting play app commands — asset activation, bulk field patches, creation and GLB import.
 
 use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::artifacts::shooting::engine::next_shooting_id;
+use crate::artifacts::shooting::schema::next_shooting_id;
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::{ShootingAsset, ShootingSnapshot};
 use crate::artifacts::shooting::mutations::change_asset_url::mutation::ChangeAssetUrl;

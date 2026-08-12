@@ -4,7 +4,7 @@ use crate::apps::shooting::config::ShootingConfig;
 use crate::apps::shooting::modes::edit::windows::scene::options;
 use crate::apps::shooting::terminology::ShootingLabels;
 use crate::apps::shooting::SHOOTING_PLAY_APP_ID;
-use crate::artifacts::shooting::engine::is_transparent_shooting_background;
+use crate::artifacts::shooting::schema::is_transparent_shooting_background;
 use crate::artifacts::shooting::{shooting_asset_scale, ShootingAsset, ShootingSnapshot, ShootingShot};
 use semio_framework_plugin::{
     build_world_3d_scene, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible,
@@ -211,7 +211,7 @@ pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> UiNode {
         SHOOTING_PLAY_APP_ID,
         World3dScene {
             environment_json: Some(shooting_environment_json(snapshot)),
-            frame_json: crate::artifacts::shooting::engine::active_shot(snapshot).map(shooting_frame_json),
+            frame_json: crate::artifacts::shooting::schema::active_shot(snapshot).map(shooting_frame_json),
             fit_json: Some(shooting_fit_json(cfg)),
             ..world3d_scene(camera_json(&cfg.camera), world_meshes_json(snapshot), world_instances_json(snapshot, cfg), world_selection_json(snapshot, cfg), &WorldSunConfig::default())
         },

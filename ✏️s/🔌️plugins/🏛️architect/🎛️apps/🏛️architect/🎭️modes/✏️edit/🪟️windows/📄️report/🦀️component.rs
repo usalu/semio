@@ -65,7 +65,7 @@ pub fn render(cfg: &ArchitectConfig) -> UiNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::engine::report::build_report;
+    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::build_report;
     use crate::artifacts::program::registers::ReportKind;
     use crate::artifacts::program::sample_plugin;
 

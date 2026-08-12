@@ -33,7 +33,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<GisMapMutation, protocol::ProtocolError
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gismap::engine::{default_document, empty_gis_map_snapshot};
+    use crate::artifacts::gismap::schema::{default_document, empty_gis_map_snapshot};
     use crate::artifacts::gismap::mutations::{create_position, create_region, create_route, delete_position, reorder_positions, reorder_regions, reorder_routes, replace_position_data};
     use crate::artifacts::gismap::GIS_MAP_SCHEMA;
     use serde_json::json;

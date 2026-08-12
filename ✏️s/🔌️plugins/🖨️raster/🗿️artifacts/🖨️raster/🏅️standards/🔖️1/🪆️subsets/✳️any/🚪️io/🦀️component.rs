@@ -5,9 +5,9 @@ pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.bmp", "stdio.d
 
 //#region 🔖️SemioBridge
 /// 🌉️ Relocated verbatim from `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES,
-/// rule 5: sniff/codec dispatch lives in `🚪️io/`). References into `semio_s_plugin_stdio::artifacts::
-/// {semio,png}::standards::v1::engine`/`::engine` are stdio's OWN engine modules (a different plugin,
-/// out of this ticket's five-plugin scope and explicitly not to be touched) — left as-is, cross-plugin
+/// rule 5: sniff/codec dispatch lives in `🚪️io/`). References below into `semio_s_plugin_stdio`'s own
+/// `semio`/`png` compute modules belong to stdio (a different plugin, out of this ticket's five-plugin
+/// scope and explicitly not to be touched) — left as-is, cross-plugin
 /// calls, not struct instantiations.
 ///
 /// ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT (W5b): raster
@@ -202,7 +202,9 @@ fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<Vec<u8>, Str
 /// 🌉️🌉️ Round-trips raw PNG bytes through `s.stdio.semio/v1/image` (import then export) via the
 /// real 2-hop `io_compose_via` seam — canonicalizes a renderer's raw output through stdio's own
 /// codec rather than trusting it verbatim.
-fn canonicalize_png_bytes(raw_png_bytes: &[u8]) -> Result<Vec<u8>, String> {
+/// 🌉️🌉️ `pub` (not `fn` as it was inside `⚙️engine`): now called cross-module from `🎛️apps/🖨️raster/
+/// 🦀️component.rs`'s `raster_composite_media` (rule 4: `AppIo`-adjacent behaviour lives in the app).
+pub fn canonicalize_png_bytes(raw_png_bytes: &[u8]) -> Result<Vec<u8>, String> {
     ensure_stdio_semio_and_png_registered();
     let png_snapshot = semio_s_plugin_stdio::artifacts::png::engine::decode_png(raw_png_bytes)?;
     let payload = IoPayload::Binary(<PngSnapshot as store::ArtifactPack>::encode_pack(&png_snapshot));

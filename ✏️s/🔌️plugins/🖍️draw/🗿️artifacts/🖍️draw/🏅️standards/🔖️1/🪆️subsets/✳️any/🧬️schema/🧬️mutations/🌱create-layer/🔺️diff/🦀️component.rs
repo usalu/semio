@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateLayer` — a real parent-aware insert (never a whole-snapshot
 //! capture), resolving a `None` index against BASE's target-list length.
 use crate::artifacts::draw::diff::{diff_create_layer, DrawDiff};
-use crate::artifacts::draw::engine::find_draw_layer;
+use crate::artifacts::draw::schema::find_draw_layer;
 use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot};
 
 //#region 🔖️Diff

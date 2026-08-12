@@ -38,7 +38,7 @@ mod tests {
 
     #[test]
     fn puzzle5d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::puzzle5d::engine::empty_puzzle5d_snapshot;
+        use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::empty_puzzle5d_snapshot;
         use crate::artifacts::puzzle5d::mutations::create_part;
         use crate::artifacts::puzzle5d::{Puzzle5dPart, PUZZLE_5D_SCHEMA};
         use store::{create_document_envelope, ArtifactCommand};

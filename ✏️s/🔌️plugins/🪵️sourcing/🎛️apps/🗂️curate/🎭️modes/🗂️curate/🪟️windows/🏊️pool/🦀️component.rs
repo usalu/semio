@@ -3,7 +3,7 @@
 use crate::apps::curate::config::{selection_json_for, SourcingCurateConfig};
 use crate::apps::curate::terminology::SourcingLabels;
 use crate::apps::curate::{sourcing_action, SOURCING_CONTROLLER_ID, SOURCING_DRAG_MIME};
-use crate::artifacts::curate::engine::{available_modules, curated_count, typology_flatten, ModuleCatalogue};
+use crate::artifacts::curate::schema::{available_modules, curated_count, typology_flatten, ModuleCatalogue};
 use crate::artifacts::curate::{CurateSnapshot, Filters, SortDirection};
 use semio_framework_plugin::{
     build_table_scene, table_row_json, ui_stack_vertical, Label, LocalizedLabel, SurfaceKind, TableCell, TableScene, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiToggleNode, WindowKindDefinition, WindowOptions,
@@ -105,7 +105,7 @@ fn pool_columns_json(labels: &SourcingLabels) -> String {
 }
 
 fn build_pool_table(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
-    let mut filtered = crate::artifacts::curate::engine::filtered_stock(document, &cfg.filters);
+    let mut filtered = crate::artifacts::curate::schema::filtered_stock(document, &cfg.filters);
     if let Some(sort) = &cfg.filters.sort {
         filtered.sort_by(|a, b| {
             let ordering = match sort.column_id.as_str() {
@@ -158,7 +158,7 @@ mod tests {
 
     #[test]
     fn pool_render_respects_query_filter() {
-        let document = crate::artifacts::curate::engine::default_document();
+        let document = crate::artifacts::curate::schema::default_document();
         let cfg = SourcingCurateConfig { filters: Filters { query: "glulam".into(), ..Default::default() }, ..Default::default() };
         let node = build_pool_table(&document, &cfg, crate::apps::curate::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
         let json = serde_json::to_string(&node).unwrap();
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn pool_stepper_cell_max_equals_availability() {
-        let document = crate::artifacts::curate::engine::default_document();
+        let document = crate::artifacts::curate::schema::default_document();
         let cfg = SourcingCurateConfig::default();
         let kind = &document.stock[0];
         let node = build_pool_table(&document, &cfg, crate::apps::curate::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));

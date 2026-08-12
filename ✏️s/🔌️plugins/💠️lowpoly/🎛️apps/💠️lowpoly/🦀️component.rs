@@ -44,6 +44,46 @@ pub fn lowpoly_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 }
 //#endregion 🔖️Constants
 
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
+/// `crate::artifacts::lowpoly::artifact_kind()` declares for `"3d.lowpoly"`, plus the two workflow
+/// ports: `mesh:in` (Many, unrequired — accepts upstream mesh producers, e.g. cad via a Brep→Mesh
+/// conversion) and `mesh:out` (Many, unrequired, `kind_id: "3d.mesh"` — the shared interchange kind
+/// `crate::artifacts::lowpoly::mesh_artifact_kind()` declares). Relocated from the deleted
+/// `🗿️artifacts/💠️lowpoly/…/⚙️engine/🦀️component.rs` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): behaviour describing this app's own IO
+/// surface belongs on the app, not the artifact.
+pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA.into(),
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+        ports: vec![
+            semio_framework_plugin::MediaPortSpec {
+                id: "mesh:in".into(),
+                label: "Mesh".into(),
+                direction: semio_framework_plugin::MediaPortDirection::In,
+                media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+                kind_id: None,
+                required: false,
+                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+            },
+            semio_framework_plugin::MediaPortSpec {
+                id: "mesh:out".into(),
+                label: "Mesh".into(),
+                direction: semio_framework_plugin::MediaPortDirection::Out,
+                media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+                kind_id: Some("3d.mesh".into()),
+                required: false,
+                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+            },
+        ],
+        export_formats: vec![],
+        import_formats: vec![],
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.lowpoly".into(), name: "3D Lowpoly".into(), dimension: "3d".into(), component_kind: "lowpoly".into() },
+    }
+}
+//#endregion 🔖️Io
+
 //#region 🔖️ScratchSlot
 thread_local! {
     /// 🖌️ Mid-gesture scratch survives across `ArtifactApp::handle` calls (associated fn has no `&mut self`).
@@ -270,11 +310,11 @@ impl ArtifactApp for LowpolyPlayApp {
     }
 
     fn initial_snapshot() -> LowpolySnapshot {
-        crate::artifacts::lowpoly::engine::default_snapshot()
+        crate::artifacts::lowpoly::schema::default_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
-        Some(crate::artifacts::lowpoly::engine::lowpoly_io())
+        Some(lowpoly_io())
     }
 
     /// 🧬️ No `whole_document_operation` override — per `📓️taxonomy.md`, whole-document replace
@@ -289,8 +329,8 @@ impl ArtifactApp for LowpolyPlayApp {
         match port {
             "mesh:out" => {
                 let document_json = serde_json::to_value(doc.snapshot).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-                let mesh = crate::artifacts::lowpoly::engine::lowpoly_mesh_from_document(&document_json).map_err(|error| MediaError::Payload(port.into(), error))?;
-                let mesh_document = crate::artifacts::lowpoly::engine::mesh_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
+                let mesh = crate::apps::lowpoly::engine::lowpoly_mesh_from_document(&document_json).map_err(|error| MediaError::Payload(port.into(), error))?;
+                let mesh_document = crate::artifacts::lowpoly::schema::mesh_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let json = serde_json::to_string(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } })
             }
@@ -313,8 +353,8 @@ impl ArtifactApp for LowpolyPlayApp {
                     return Err(MediaError::Payload(port.into(), "mesh:in importer only accepts a Structured payload".into()));
                 };
                 let mesh_document: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-                let mesh = crate::artifacts::lowpoly::engine::mesh_from_mesh_document(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error))?;
-                let projection_json = crate::artifacts::lowpoly::engine::lowpoly_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
+                let mesh = crate::artifacts::lowpoly::schema::mesh_from_mesh_document(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error))?;
+                let projection_json = crate::artifacts::lowpoly::schema::lowpoly_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let snapshot: LowpolySnapshot = serde_json::from_value(projection_json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
             }
@@ -412,7 +452,7 @@ fn lowpoly_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group
 /// Only the leaf action/keybinding/utility declarations (which have no dedicated `_def` passthrough)
 /// stay written out inline.
 pub fn create_lowpoly_app() -> App {
-    let default_example = serde_json::to_string(&crate::artifacts::lowpoly::engine::default_snapshot()).expect("lowpoly default example");
+    let default_example = serde_json::to_string(&crate::artifacts::lowpoly::schema::default_snapshot()).expect("lowpoly default example");
     App::from_builder(
         App::builder(LOWPOLY_PLAY_APP_ID, LocalizedLabel::native("Lowpoly", "Lowpoly"))
             .document(["semio", "lowpoly"])
@@ -524,7 +564,7 @@ pub fn create_lowpoly_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .config(LowpolyPlayApp::config_spec())
-            .io(crate::artifacts::lowpoly::engine::lowpoly_io()),
+            .io(lowpoly_io()),
     )
     .example("default", LocalizedLabel::native("Default", "Standard"), &default_example, "file")
     .workflow("lowpoly", "Lowpoly", "mesh")
@@ -727,10 +767,10 @@ mod tests {
     #[test]
     fn import_media_mesh_in_round_trips_into_a_reset_document_effect() {
         let mesh = semio_framework_plugin::mesh_from_kind("box");
-        let mesh_document = crate::artifacts::lowpoly::engine::mesh_document_from_mesh(&mesh).expect("mesh document");
+        let mesh_document = crate::artifacts::lowpoly::schema::mesh_document_from_mesh(&mesh).expect("mesh document");
         let json = serde_json::to_string(&mesh_document).expect("mesh document json");
         let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } };
-        let projection = crate::artifacts::lowpoly::engine::default_snapshot();
+        let projection = crate::artifacts::lowpoly::schema::default_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView { snapshot: &projection, history: &history };
         let emit = LowpolyPlayApp::import_media("mesh:in", &media, &doc).expect("import mesh:in");

@@ -11,7 +11,7 @@ use crate::apps::puzzle5d::{
     parse_brush_candidates_free, puzzle5d_action, puzzle5d_brush_target_grip, puzzle5d_kind_ids, puzzle5d_kind_weight_sum, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID, PUZZLE5D_SUGGESTION_OFFSET_MAX, PUZZLE5D_SUGGESTION_OFFSET_MIN,
     PUZZLE5D_SUGGESTION_OFFSET_STEP,
 };
-use crate::artifacts::puzzle5d::engine::Puzzle5dPrecomputeSession;
+use crate::apps::puzzle5d::precompute::Puzzle5dPrecomputeSession;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 use serde_json::json;
 use std::collections::HashMap;

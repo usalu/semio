@@ -21,7 +21,7 @@ pub fn patch_inspector(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
 
 /// 🧲️ Re-snaps every edge's handle angle onto its node-center line.
 pub fn redraw_handles(ctx: &mut Puzzle2dActionCtx<'_>) {
-    if let Ok(next) = crate::artifacts::puzzle2d::engine::apply_edge_handle_snap_to_fixture_v1_json(&ctx.scene.fixture.to_string()) {
+    if let Ok(next) = crate::apps::puzzle2d::engine::apply_edge_handle_snap_to_fixture_v1_json(&ctx.scene.fixture.to_string()) {
         if let Ok(parsed) = serde_json::from_str(&next) {
             ctx.scene.fixture = parsed;
         }
@@ -30,7 +30,7 @@ pub fn redraw_handles(ctx: &mut Puzzle2dActionCtx<'_>) {
 
 /// 🌀️ Re-runs the force-graph layout over the whole fixture — shared by `forceLayout` and `reorganize`.
 pub fn force_layout(ctx: &mut Puzzle2dActionCtx<'_>) {
-    let Ok(layout_json) = crate::artifacts::puzzle2d::engine::apply_force_graph_layout_to_fixture_v1_json(&ctx.scene.fixture.to_string(), r#"{"mode":"force-graph"}"#) else {
+    let Ok(layout_json) = crate::apps::puzzle2d::engine::apply_force_graph_layout_to_fixture_v1_json(&ctx.scene.fixture.to_string(), r#"{"mode":"force-graph"}"#) else {
         return;
     };
     if let Ok(parsed) = serde_json::from_str(&layout_json) {

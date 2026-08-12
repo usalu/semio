@@ -35,32 +35,6 @@ pub mod artifacts {
             #[path = "."]
             pub mod v1 {
                 #[path = "."]
-                pub mod engine {
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/↔️adjacency/🦀️component.rs"]
-                    pub mod adjacency;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/✅️validate/🦀️component.rs"]
-                    pub mod validate;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎁️outputs/🦀️component.rs"]
-                    pub mod outputs;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📄️report/🦀️component.rs"]
-                    pub mod report;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📊️status-summary/🦀️component.rs"]
-                    pub mod status_summary;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📐️template/🦀️component.rs"]
-                    pub mod template;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📤️exchange/🦀️component.rs"]
-                    pub mod exchange;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔍️search/🦀️component.rs"]
-                    pub mod search;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔬️analyze/🦀️component.rs"]
-                    pub mod analyze;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🧭️trace/🦀️component.rs"]
-                    pub mod trace;
-                }
-                #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
@@ -2668,9 +2642,6 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v1::engine::*;
-        }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
@@ -2795,7 +2766,7 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-pub use artifacts::program::engine::register_architect_exports;
+pub use apps::architect::register_architect_exports;
 
 #[path = "../../🦀️component.rs"]
 mod plugin;

@@ -6,7 +6,7 @@
 
 use crate::apps::raster::config::{RasterConfig, RasterConfigMutation};
 use crate::apps::raster::layer_id_from_tree_row_id;
-use crate::artifacts::raster::engine::{clone_layer, create_layer_of_kind, find_layer, layer_node_id, layer_opacity, layer_transform, layer_visible};
+use crate::artifacts::raster::schema::{clone_layer, create_layer_of_kind, find_layer, layer_node_id, layer_opacity, layer_transform, layer_visible};
 use crate::artifacts::raster::mutations::{change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, reorder_layers, rename_layer, resize_layer};
 use crate::artifacts::raster::mutations::delete_layer as layer_delete;
 use crate::artifacts::raster::mutations::move_layer as spatial_move_layer;

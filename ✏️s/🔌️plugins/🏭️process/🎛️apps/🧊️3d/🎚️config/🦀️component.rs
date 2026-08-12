@@ -292,7 +292,7 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
             Process3dConfigMutation::SetLocale { value } => next.locale = value.clone(),
             Process3dConfigMutation::SetContributions { json } => {
                 next.contributions_json = json.clone();
-                crate::artifacts::process3d::engine::sync_process_machine_contributions(json);
+                crate::apps::process3d::sync_process_machine_contributions(json);
             }
         }
         next

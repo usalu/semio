@@ -4,7 +4,7 @@
 use crate::apps::process3d::config::Process3dConfig;
 use crate::apps::process3d::process3d_action;
 use crate::apps::process3d::terminology::{process3d_measure_label, Process3dLabels};
-use crate::artifacts::process3d::engine::{find_capability, processed_volume, validate_capability, validation_context_for_stock, validation_reason};
+use crate::artifacts::process3d::schema::inferences::{find_capability, processed_volume, validate_capability, validation_context_for_stock, validation_reason};
 use crate::artifacts::process3d::{CapabilityRule, Process3dSnapshot, ProcessStep, SolidSpec, Stock, StockQuantity, WorkshopMachine};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence,

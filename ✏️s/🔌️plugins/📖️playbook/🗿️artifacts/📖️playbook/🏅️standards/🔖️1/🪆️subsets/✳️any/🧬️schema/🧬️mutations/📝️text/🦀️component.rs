@@ -55,7 +55,7 @@ impl protocol::OpBinary for PlaybookMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::playbook::engine::empty_playbook_snapshot;
+    use crate::artifacts::playbook::empty_playbook_snapshot;
 
     #[test]
     fn change_title_op_sets_title() {

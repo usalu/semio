@@ -14,7 +14,6 @@ use crate::apps::procedural2d::modes::generate::windows::{form, generations, pre
 use crate::apps::procedural2d::modes::{edit, generate};
 use crate::apps::procedural2d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::procedural2d::terminology::{procedural2d_labels, Procedural2dLabels};
-use crate::artifacts::procedural2d::engine::procedural2d_io;
 use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::{artifact_kind, Procedural2dSnapshot, PROCEDURAL_2D_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession};
@@ -31,6 +30,39 @@ pub fn procedural2d_action(action: &str, args: Option<Value>) -> ActionDescripto
     semio_framework_plugin::ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️ArtifactIo
+/// 🔌️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
+/// this app's typed media I/O surface (`AppDefinition.io`) — mirrors `create_procedural2d_app`'s
+/// `.artifact_kind(...)` document schema/media type verbatim, plus two workflow ports: `params:in`
+/// (generic Data×Value parametric input) and `drawing:out` (TwoD×Vector, tagged with draw's already-
+/// registered `2d.drawing` kind id).
+pub fn procedural2d_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo::from_document(
+        "procedural.2d",
+        semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Flow },
+        semio_framework_plugin::ArtifactPresentation { id: "2d.procedural".into(), name: "2D Procedural".into(), dimension: "2d".into(), component_kind: "procedural2d".into() },
+    )
+    .with_ports(vec![
+        semio_framework_plugin::MediaPortSpec {
+            id: "params:in".into(),
+            label: "Parameters".into(),
+            direction: semio_framework_plugin::MediaPortDirection::In,
+            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+            kind_id: None,
+            required: false,
+            multiplicity: semio_framework::PortMultiplicity::One},
+        semio_framework_plugin::MediaPortSpec {
+            id: "drawing:out".into(),
+            label: "Drawing".into(),
+            direction: semio_framework_plugin::MediaPortDirection::Out,
+            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+            kind_id: Some("2d.drawing".into()),
+            required: false,
+            multiplicity: semio_framework::PortMultiplicity::Many},
+    ])
+}
+//#endregion 🔖️ArtifactIo
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -101,7 +133,7 @@ impl ArtifactApp for Procedural2dPlayApp {
     const DOCUMENT_SCHEMA: &'static str = PROCEDURAL_2D_SCHEMA;
 
     fn initial_snapshot() -> Procedural2dSnapshot {
-        crate::artifacts::procedural2d::engine::default_snapshot()
+        crate::artifacts::procedural2d::schema::default_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -185,7 +217,7 @@ impl ArtifactApp for Procedural2dPlayApp {
     /// action re-checking.
     fn pending_effects(doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> Vec<HostEffect> {
         with_process_flow_eval_session(|session| {
-            let host = crate::artifacts::procedural2d::engine::host_from_fixture_with_session(&doc.snapshot.fixture, session);
+            let host = crate::artifacts::procedural2d::schema::host_from_fixture_with_session(&doc.snapshot.fixture, session);
             if session.sync(&host) {
                 vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
             } else {
@@ -233,8 +265,8 @@ impl ArtifactApp for Procedural2dPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, Procedural2dSnapshot>) -> Result<semio_framework_plugin::Media, semio_framework_plugin::MediaError> {
         match port {
             "drawing:out" => {
-                let eval_json = crate::artifacts::procedural2d::engine::evaluate_generation_preview(&doc.snapshot.fixture, &serde_json::Map::new());
-                let layers_json = crate::artifacts::procedural2d::engine::generation_preview_layers(&eval_json);
+                let eval_json = crate::artifacts::procedural2d::schema::evaluate_generation_preview(&doc.snapshot.fixture, &serde_json::Map::new());
+                let layers_json = crate::artifacts::procedural2d::schema::generation_preview_layers(&eval_json);
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.drawing".into(), json: layers_json } })
             }
             "document:out" => {
@@ -333,7 +365,7 @@ pub fn create_procedural2d_app() -> App {
             .config(Procedural2dPlayApp::config_spec())
             .io(procedural2d_io()),
     )
-    .example("default", LocalizedLabel::native("Default", "Standard"), serde_json::to_string(&crate::artifacts::procedural2d::engine::default_snapshot()).unwrap(), "file")
+    .example("default", LocalizedLabel::native("Default", "Standard"), serde_json::to_string(&crate::artifacts::procedural2d::schema::default_snapshot()).unwrap(), "file")
     .workflow("procedural2d", "Procedural 2D", "layout")
 }
 //#endregion 🔖️Manifest
@@ -349,12 +381,12 @@ pub(crate) mod testkit {
     pub type Procedural2dApp = VcsArtifactApp<Procedural2dPlayApp>;
 
     pub fn app() -> Procedural2dApp {
-        crate::artifacts::procedural3d::engine::ensure_linked_flow_extensions();
+        crate::apps::procedural3d::ensure_linked_flow_extensions();
         new_app::<Procedural2dPlayApp>()
     }
 
     pub fn app_with_registry() -> Procedural2dApp {
-        crate::artifacts::procedural3d::engine::ensure_linked_flow_extensions();
+        crate::apps::procedural3d::ensure_linked_flow_extensions();
         new_app_with_registry::<Procedural2dPlayApp>(create_procedural2d_app)
     }
 
@@ -594,6 +626,18 @@ mod tests {
         let drawing_out = ports.iter().find(|port| port.id == "drawing:out").expect("drawing:out declared");
         assert_eq!(drawing_out.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
         assert_eq!(drawing_out.kind_id.as_deref(), Some("2d.drawing"));
+    }
+
+    /// 🧬️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
+    /// — travels with `procedural2d_io` into its new `🔖️ArtifactIo` region above.
+    #[test]
+    fn procedural2d_io_declares_the_params_and_drawing_ports() {
+        let io = procedural2d_io();
+        assert_eq!(io.document_schema, "procedural.2d");
+        let params = io.ports.iter().find(|port| port.id == "params:in").expect("params:in declared");
+        assert!(!params.required);
+        let drawing = io.ports.iter().find(|port| port.id == "drawing:out").expect("drawing:out declared");
+        assert_eq!(drawing.kind_id.as_deref(), Some("2d.drawing"));
     }
     //#endregion 🔖️PortTests
 }

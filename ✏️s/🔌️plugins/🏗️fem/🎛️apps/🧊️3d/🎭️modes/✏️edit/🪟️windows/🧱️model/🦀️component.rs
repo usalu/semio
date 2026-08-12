@@ -15,7 +15,7 @@ pub const FEM3D_BODY_MODEL: &str = "fem3d.play.model";
 /// deforms, at deformation scale `doc.analysis.deformation_scale` with no displacement offset applied
 /// (`None` displacements) and no stress coloring.
 pub fn render(doc: &Fem3dSnapshot, camera: &FemCamera) -> semio_framework_plugin::UiNode {
-    use crate::artifacts::fem3d::engine::{fem3d_camera_json, fem3d_scene_parts};
+    use crate::apps::fem3d::{fem3d_camera_json, fem3d_scene_parts};
 
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None);
     semio_framework_plugin::build_world_3d_scene(

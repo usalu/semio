@@ -2,7 +2,9 @@
 //! label/meta/kindCatalogs/kindCompatibility/parts/fasteners), its unified 2d+3d part/grip/fastener
 //! records, the `Puzzle5dScale` scalar-or-triple pose scale, the `Puzzle5dError` that delegates to
 //! the 3d artifact's own precompute-session error, and the `artifact_kind()` spec the play app's
-//! manifest binds. Sibling nodes: `🔺️diff`, `🔧️op`, `🗣️dsl`, `🎒️pack`, `📡️spr`, `⚙️engine`.
+//! manifest binds. Sibling nodes: `🔺️diff`, `🔧️op`, `🗣️dsl`, `🎒️pack`, `📡️spr`. No `⚙️engine` node —
+//! per ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, an artifact is a `🧬️schema` +
+//! `🚪️io` system only; behaviour lives in `crate::apps::puzzle5d`.
 
 
 pub use crate::artifacts::puzzle5d::schema::snapshot::Puzzle5dSnapshot;
@@ -535,17 +537,17 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 
 //#region 🔖️Declaration
 /// 🔖️ Puzzle5d's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1, relocated off
-/// `⚙️engine` to the artifact root — `declaration()` describes the artifact itself, not engine
-/// behaviour) — replaces the `ComposerEntry` half of the old `register_io()`. The `"5d.puzzle"`
-/// OS-host mesh export/import bridge (`register_mesh_io()`, still in `⚙️engine`) has NO
-/// `ArtifactDeclaration` field — same OS media-host 14-function family flagged on puzzle2d's
-/// `declaration()` doc — so it stays wired through `🧩️puzzle/🦀️component.rs`'s own `.setup()`, not
-/// here.
+/// the former `⚙️engine` to the artifact root — `declaration()` describes the artifact itself, not
+/// engine behaviour) — replaces the `ComposerEntry` half of the old `register_io()`. The `"5d.puzzle"`
+/// OS-host mesh export/import bridge (`register_mesh_io()`, now `crate::apps::puzzle5d::register_mesh_io`
+/// per ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) has NO `ArtifactDeclaration`
+/// field — same OS media-host 14-function family flagged on puzzle2d's `declaration()` doc — so it
+/// stays wired through `🧩️puzzle/🦀️component.rs`'s own `.setup()`, not here.
 pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.puzzle5d")
         .schema(crate::artifacts::puzzle5d::schema::puzzle5d_artifact_schema_descriptor())
         .inferences([crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::puzzle5d_artifact_inference_descriptor()])
-        .composers(crate::artifacts::puzzle5d::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::puzzle5d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::puzzle5d::Puzzle5dPlayApp>()
         .build()
@@ -765,7 +767,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::puzzle5d::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::puzzle5d::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

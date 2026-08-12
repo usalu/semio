@@ -4,7 +4,7 @@
 use crate::apps::architect::architect_action;
 use crate::apps::architect::chrome::{adjacency_kind_label, element_label, stack_row, tree_item, tree_item_with_action, tree_node, tree_section};
 use crate::apps::architect::config::ArchitectConfig;
-use crate::artifacts::program::engine::adjacency::{adjacency_matrix, detect_adjacency_conflicts};
+use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::{adjacency_matrix, detect_adjacency_conflicts};
 use crate::artifacts::program::ProgramSnapshot;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 use serde_json::json;

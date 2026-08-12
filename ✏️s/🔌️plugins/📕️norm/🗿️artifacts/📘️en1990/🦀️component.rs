@@ -21,7 +21,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::en1990::standards::v1::subsets::any::engine::io_registry as v1;
+    use crate::artifacts::en1990::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -52,7 +52,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.en1990")
         .schema(crate::artifacts::en1990::schema::en1990_artifact_schema_descriptor())
         .inferences([crate::artifacts::en1990::standards::v1::subsets::any::schema::inferences::en1990_artifact_inference_descriptor()])
-        .composers(crate::artifacts::en1990::standards::v1::subsets::any::engine::io_registry::entries())
+        .composers(crate::artifacts::en1990::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .build()
 }

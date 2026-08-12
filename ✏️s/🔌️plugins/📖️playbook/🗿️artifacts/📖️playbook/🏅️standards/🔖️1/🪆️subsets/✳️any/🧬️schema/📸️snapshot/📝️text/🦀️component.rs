@@ -25,7 +25,7 @@ pub fn print_dsl(document: &PlaybookSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::playbook::engine::empty_playbook_snapshot;
+    use crate::artifacts::playbook::empty_playbook_snapshot;
 
     #[test]
     fn dsl_round_trips_the_empty_snapshot() {

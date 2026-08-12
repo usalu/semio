@@ -1,7 +1,7 @@
 //! ↩️ `rename-layer` inverse — the old name from `base`; `rename` is its own inverse partner (per
 //! `📓️taxonomy.md`). Missing target ⇒ `Vec::new()`.
 
-use crate::artifacts::raster::engine::{find_layer, layer_name};
+use crate::artifacts::raster::schema::{find_layer, layer_name};
 use crate::artifacts::raster::mutations::rename_layer::mutation::RenameLayer;
 use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::RasterSnapshot;

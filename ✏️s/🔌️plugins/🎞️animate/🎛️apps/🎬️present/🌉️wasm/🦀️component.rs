@@ -34,7 +34,7 @@ impl PresentArtifactVcs {
                 let envelope: PresentEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 PresentStore::new(envelope)
             }
-            None => PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", crate::artifacts::present::engine::empty_present_snapshot(), None)),
+            None => PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", crate::artifacts::present::schema::empty_present_snapshot(), None)),
         };
         Ok(Self { store: RefCell::new(store) })
     }

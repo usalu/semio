@@ -5,7 +5,7 @@
 use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::view::{apply_component_selection, selection_keys_for, selection_targets_from_config};
-use crate::artifacts::lowpoly::engine::LowpolyDocument;
+use crate::apps::lowpoly::engine::LowpolyDocument;
 use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolySnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

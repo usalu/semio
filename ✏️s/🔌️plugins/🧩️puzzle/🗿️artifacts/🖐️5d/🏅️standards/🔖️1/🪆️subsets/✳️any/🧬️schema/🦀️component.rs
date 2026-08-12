@@ -3,6 +3,7 @@
 use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dKindCatalogs, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dSnapshot, PUZZLE_5D_SCHEMA};
 use artifact_schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 
 //#region 🔖️Artifact
 /// 🧬️ Full puzzle5d artifact state across persistent, shared-ui, local-ui and preview classes.
@@ -260,3 +261,61 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: Puzzle5dComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️KindCompatibility
+// 🚚️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+// a pure fn over document/domain data, no app/wasm dependency — a schema-side helper, not engine behaviour.
+pub const PUZZLE5D_DEFAULT_MANIFEST_ID: &str = "puzzle5d-default";
+
+/// 🧲️ Looks up whether two grip kinds are compatible per the `puzzle5d-default` manifest's
+/// `kindCompatibility` rows — the single shared table both the 2D board and 3D world honor so
+/// brush/fill suggestions agree across projections.
+pub fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str) -> bool {
+    let Some(manifest) = math::graph::manifest::manifest_by_id(PUZZLE5D_DEFAULT_MANIFEST_ID) else {
+        return false;
+    };
+    manifest.kind_compatibility.iter().any(|row| {
+        let source = row.get("source").and_then(|value| value.as_str());
+        let target = row.get("target").and_then(|value| value.as_str());
+        let bidirectional = row.get("bidirectional").and_then(|value| value.as_bool()).unwrap_or(false);
+        (source == Some(source_kind) && target == Some(target_kind)) || (bidirectional && source == Some(target_kind) && target == Some(source_kind))
+    })
+}
+//#endregion 🔖️KindCompatibility
+
+//#region 🔖️DerivedDocumentHelpers
+// 🚚️ Relocated from the deleted `⚙️engine` — pure document constructors/helpers with no app/wasm
+// dependency, consumed by both the app's wasm bridge (`empty_puzzle5d_snapshot`) and the mutations
+// binary facet, and by the transfer helpers (`next_id`).
+pub fn empty_puzzle5d_snapshot() -> Puzzle5dSnapshot {
+    Puzzle5dSnapshot::default()
+}
+
+/// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.
+pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> String {
+    let ids: HashSet<&str> = existing.collect();
+    let mut i = ids.len();
+    loop {
+        let candidate = format!("{prefix}{i}");
+        if !ids.iter().any(|id| *id == candidate) {
+            return candidate;
+        }
+        i += 1;
+    }
+}
+//#endregion 🔖️DerivedDocumentHelpers
+
+//#region 🧪️EngineRelocationTests
+#[cfg(test)]
+mod engine_relocation_tests {
+    use super::*;
+
+    #[test]
+    fn puzzle5d_grip_kinds_compatible_reads_manifest_rows() {
+        assert!(puzzle5d_grip_kinds_compatible("port", "port"));
+        assert!(puzzle5d_grip_kinds_compatible("vortex", "vortex"));
+        assert!(!puzzle5d_grip_kinds_compatible("port", "vortex"));
+        assert!(!puzzle5d_grip_kinds_compatible("unknown-kind", "port"));
+    }
+}
+//#endregion 🧪️EngineRelocationTests

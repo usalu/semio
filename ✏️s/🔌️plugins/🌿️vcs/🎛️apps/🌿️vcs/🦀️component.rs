@@ -3,7 +3,8 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
 //! `🎭️modes/✏️edit/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`, view state in
-//! `🦀️config.rs`, shared compute in the artifact's `⚙️engine`. This file is a routing table: `handle` →
+//! `🦀️config.rs`, headless compute in the artifact's `🧬️schema` (dissolved from `⚙️engine` per ticket
+//! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES). This file is a routing table: `handle` →
 //! `VcsCommand::dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
@@ -33,6 +34,94 @@ pub fn vcs_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(VCS_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
+
+//#region 🔌️Registration
+/// 🗂️ Registers `VcsSnapshot`'s pack<->dsl codec under its real `document_schema()` string so
+/// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse vcs-play
+/// documents without depending on this crate's concrete snapshot/mutation types. Called by
+/// `semio_plugin!`'s `setup:` hook — was the old bundle crate's `register_vcs_exports()`, then
+/// `⚙️engine::register()` (dissolved per ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES:
+/// `register()`/`register_pilot_languages()` are app-constitutional, not headless-engine compute — this
+/// body calls `crate::apps::vcs::config::schema::register_app_schema()` and
+/// `register_document_codec_for_app::<VcsPlayApp>(…)`, both app types).
+pub fn register() {
+    crate::artifacts::vcs::io_registry::register();
+
+    register_artifact_schema();
+    register_artifact_inference();
+    register_pilot_languages();
+    crate::apps::vcs::config::schema::register_app_schema();
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<VcsPlayApp>(VCS_DOCUMENT_SCHEMA);
+}
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "vcs.document",
+        extension: Some("vcs"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::vcs::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::vcs::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::vcs::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::vcs::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("vcs.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "vcs.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::vcs::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::vcs::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::vcs::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::vcs::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("vcs.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "vcs.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::vcs::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::vcs::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("vcs.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "vcs.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::vcs::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::vcs::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("vcs.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "vcs.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::vcs::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::vcs::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("vcs.spr"),
+    });
+}
+//#endregion 🔌️Registration
+
+//#region 🔖️SchemaRegistry
+/// 📌️ Registers the twenty handcrafted schema leaves for `s.vcs.vcs`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::vcs::schema::vcs_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.vcs.vcs.inference`'s facet leaves into the OS-wide inference catalog — sibling
+/// to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inference() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::vcs::standards::v1::subsets::any::schema::inferences::vcs_artifact_inference_descriptor());
+}
+//#endregion 🔖️SchemaRegistry
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -177,7 +266,7 @@ impl ArtifactApp for VcsPlayApp {
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> VcsSnapshot {
-        crate::artifacts::vcs::engine::empty_vcs_snapshot()
+        crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot()
     }
 
     fn seed(store: &mut ArtifactStore<VcsSnapshot, VcsDemoMutation>) {

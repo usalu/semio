@@ -131,7 +131,7 @@ mod tests {
 
     #[test]
     fn empty_diff_is_a_no_operation() {
-        let base = crate::artifacts::vcs::engine::empty_vcs_snapshot();
+        let base = crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot();
         let diff = VcsDiff::default();
         assert_eq!(diff.apply(&base), base);
     }

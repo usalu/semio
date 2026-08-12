@@ -1,7 +1,7 @@
 //! 🧬️ Procedural3d play app commands — generation authoring and selection.
 
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
-use crate::artifacts::procedural3d::engine::evaluate_generation_preview;
+use crate::artifacts::procedural3d::schema::evaluate_generation_preview;
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::forms_bridge::flow_fixture_to_form_spec;
@@ -129,21 +129,21 @@ mod tests {
 
     #[test]
     fn add_generation_records_an_undoable_generation_operation() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         assert_undo_redo_round_trip(&mut app, Procedural3dCommand::AddGeneration(add_generation::AddGeneration {}), |app| app.snapshot().expect("snapshot").generation.generations.len(), 0, 1);
     }
 
     #[test]
     fn generate_mode_renders_surfaces() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         assert!(crate::apps::procedural3d::testkit::render(&mut app, crate::apps::procedural3d::modes::generate::windows::generations::PROCEDURAL_3D_PLAY_BODY_GENERATIONS).contains("addGeneration"));
     }
 
     #[test]
     fn select_generation_does_not_mutate_the_document() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         dispatch(&mut app, Procedural3dCommand::AddGeneration(add_generation::AddGeneration {}));
         let before = app.snapshot().expect("snapshot");

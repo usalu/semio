@@ -22,8 +22,8 @@ use semio_framework_plugin::Plugin;
 fn register_exports() {
     crate::apps::procedural2d::config::schema::register_app_schema();
     crate::apps::procedural3d::config::schema::register_app_schema();
-    crate::artifacts::procedural3d::engine::register_dwg_mesh_bridge();
-    crate::artifacts::procedural3d::engine::ensure_linked_flow_extensions();
+    crate::apps::procedural3d::register_dwg_mesh_bridge();
+    crate::apps::procedural3d::ensure_linked_flow_extensions();
 }
 
 /// 🔌️ Builds the plugin surface for host registration.

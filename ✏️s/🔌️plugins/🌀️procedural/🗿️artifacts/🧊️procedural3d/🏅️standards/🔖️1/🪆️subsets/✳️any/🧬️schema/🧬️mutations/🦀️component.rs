@@ -169,7 +169,7 @@ pub fn generation_mutation_to_procedural3d(operation: GenerationMutation) -> Pro
 //#region 🔖️FixtureDiffing
 /// 🔀️ Diffs two fixtures into a minimal, invertible, mergeable semantic mutation set — signature
 /// preserved from the pre-migration generic-vocabulary version (`🏗️builder`/app callers reach this
-/// via `crate::artifacts::procedural3d::engine::commit_fixture`, unchanged) but every pushed
+/// via `crate::artifacts::procedural3d::schema::commit_fixture`, unchanged) but every pushed
 /// mutation is now a real semantic variant.
 pub fn procedural3d_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<Procedural3dMutation> {
     let mut operations = Vec::new();
@@ -237,7 +237,7 @@ pub fn inverse_procedural3d_mutation(projection: &Procedural3dSnapshot, mutation
 mod tests {
     use super::*;
     use protocol::SemanticMutation;
-    use crate::artifacts::procedural3d::engine::empty_procedural3d_snapshot;
+    use crate::artifacts::procedural3d::schema::empty_procedural3d_snapshot;
     use change_generation_value::mutation::ChangeGenerationValue;
     use connect_synapse::mutation::ConnectSynapse;
     use create_generation::mutation::CreateGeneration;

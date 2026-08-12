@@ -4,7 +4,7 @@
 use crate::apps::draw::config::DrawConfig;
 use crate::apps::draw::draw_play_action;
 use crate::apps::draw::terminology::DrawPlayLabels;
-use crate::artifacts::draw::engine::{find_draw_layer, flatten_draw_layers, layer_base, rgba_to_hex};
+use crate::artifacts::draw::schema::{find_draw_layer, flatten_draw_layers, layer_base, rgba_to_hex};
 use crate::artifacts::draw::{DrawSnapshot, DrawLayerNode, FillStyle, DRAW_BLEND_MODES, DRAW_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, Label,
@@ -90,8 +90,8 @@ fn uniform_layers<'a>(layers: &[&'a DrawLayerNode]) -> Option<Vec<&'a DrawLayerN
     if layers.is_empty() {
         return None;
     }
-    let kind = crate::artifacts::draw::engine::layer_kind_label(layers[0]);
-    if layers.iter().all(|layer| crate::artifacts::draw::engine::layer_kind_label(layer) == kind) {
+    let kind = crate::artifacts::draw::schema::layer_kind_label(layers[0]);
+    if layers.iter().all(|layer| crate::artifacts::draw::schema::layer_kind_label(layer) == kind) {
         Some(layers.to_vec())
     } else {
         None
@@ -101,7 +101,7 @@ fn uniform_layers<'a>(layers: &[&'a DrawLayerNode]) -> Option<Vec<&'a DrawLayerN
 fn inspector_kind_group(doc: &DrawSnapshot, layers: &[&DrawLayerNode], labels: &DrawPlayLabels) -> Option<UiInspectorFieldGroup> {
     let uniform = uniform_layers(layers)?;
     let layer = uniform[0];
-    let layer_ids: Vec<String> = uniform.iter().map(|entry| crate::artifacts::draw::engine::layer_id(entry).to_string()).collect();
+    let layer_ids: Vec<String> = uniform.iter().map(|entry| crate::artifacts::draw::schema::layer_id(entry).to_string()).collect();
     let mut fields: Vec<UiNode> = Vec::new();
     match layer {
         DrawLayerNode::Boolean(_boolean) => {
@@ -268,7 +268,7 @@ fn inspector_kind_group(doc: &DrawSnapshot, layers: &[&DrawLayerNode], labels: &
 }
 
 fn inspector_appearance_group(layers: &[&DrawLayerNode], labels: &DrawPlayLabels) -> UiInspectorFieldGroup {
-    let layer_ids: Vec<String> = layers.iter().map(|entry| crate::artifacts::draw::engine::layer_id(entry).to_string()).collect();
+    let layer_ids: Vec<String> = layers.iter().map(|entry| crate::artifacts::draw::schema::layer_id(entry).to_string()).collect();
     let fill_colors: Vec<String> = layers
         .iter()
         .map(|entry| {
@@ -333,7 +333,7 @@ fn inspector_appearance_group(layers: &[&DrawLayerNode], labels: &DrawPlayLabels
 }
 
 fn inspector_layer_group(layers: &[&DrawLayerNode], labels: &DrawPlayLabels) -> UiInspectorFieldGroup {
-    let layer_ids: Vec<String> = layers.iter().map(|entry| crate::artifacts::draw::engine::layer_id(entry).to_string()).collect();
+    let layer_ids: Vec<String> = layers.iter().map(|entry| crate::artifacts::draw::schema::layer_id(entry).to_string()).collect();
     let names: Vec<String> = layers.iter().map(|entry| layer_base(entry).name.clone()).collect();
     let opacities: Vec<f64> = layers.iter().map(|entry| layer_base(entry).opacity).collect();
     let blend_modes: Vec<String> = layers.iter().map(|entry| layer_base(entry).blend_mode.clone()).collect();
@@ -407,7 +407,7 @@ fn inspector_layer_group(layers: &[&DrawLayerNode], labels: &DrawPlayLabels) -> 
 }
 
 fn inspector_orientation_group(layers: &[&DrawLayerNode], labels: &DrawPlayLabels) -> UiInspectorFieldGroup {
-    let layer_ids: Vec<String> = layers.iter().map(|entry| crate::artifacts::draw::engine::layer_id(entry).to_string()).collect();
+    let layer_ids: Vec<String> = layers.iter().map(|entry| crate::artifacts::draw::schema::layer_id(entry).to_string()).collect();
     UiInspectorFieldGroup {
         id: "draw-play-inspector.orientation".into(),
         label: labels.orientation.into(),

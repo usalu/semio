@@ -120,6 +120,255 @@ fn fem3d_results_map_json(results: &HashMap<String, crate::model::StaticResult>)
 }
 //#endregion 🔖️Fem3dResultsJson
 
+//#region 🔌️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document port pair
+/// (`fem.3d` × 3D-Any) plus `geometry:in` (importing an externally authored extruded-footprint outline
+/// as a new `FemSolid` — see `import_media` above) and `results:out` (every load case/combination's
+/// solved `crate::model::StaticResult`, pinned to the `computation.fem3d` artifact kind declared in
+/// `crate::artifacts::fem3d::computation_artifact_kind` — see `export_media` above). Moved out of the
+/// (now deleted) artifact `⚙️engine`: it returns `AppIo`, an app type, so it belongs here.
+pub fn fem3d_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: crate::artifacts::fem3d::FEM_3D_SCHEMA.into(),
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Any },
+        ports: vec![fem3d_geometry_in_port(), fem3d_results_out_port()],
+        export_formats: vec![],
+        import_formats: vec![],
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.fem".into(), name: "FEM 3D".into(), dimension: "3d".into(), component_kind: "fem3d".into() },
+    }
+}
+
+/// 🔌️ `geometry:in` — an externally authored extruded-footprint outline (polygon-with-holes,
+/// base/height/layers), imported as a new `FemSolid`.
+pub fn fem3d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
+    semio_framework_plugin::MediaPortSpec {
+        id: "geometry:in".into(),
+        label: "Geometry".into(),
+        direction: semio_framework_plugin::MediaPortDirection::In,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Any },
+        kind_id: None,
+        required: true,
+        multiplicity: semio_framework::PortMultiplicity::One,
+    }
+}
+
+/// 🔌️ `results:out` — every load case/combination's solved `crate::model::StaticResult`, pinned to the
+/// `computation.fem3d` artifact kind.
+pub fn fem3d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
+    semio_framework_plugin::MediaPortSpec {
+        id: "results:out".into(),
+        label: "Results".into(),
+        direction: semio_framework_plugin::MediaPortDirection::Out,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+        kind_id: Some("computation.fem3d".into()),
+        required: false,
+        multiplicity: semio_framework::PortMultiplicity::One,
+    }
+}
+//#endregion 🔌️Io
+
+//#region 🎬️SceneRender
+/// 🎬️ App-facing 3D scene-building bridge, moved out of the (now deleted) artifact `⚙️engine`: every fn
+/// here references `crate::app_surface` (an app type) and/or returns scene JSON consumed only by the
+/// model/results windows (`crate::apps::fem3d::modes::edit::windows::{model, results}`), per the
+/// migration recipe's `DocumentHelpers` rule — a helper with 2+ window consumers belongs at the app
+/// level, not duplicated per window.
+use crate::fem3d_engine::mesh_preview;
+
+/// 🧭️ Hamilton quaternion product `a * b`, both `[x,y,z,w]` — applying `b`'s rotation first, then `a`'s.
+fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
+    let (ax, ay, az, aw) = (a[0], a[1], a[2], a[3]);
+    let (bx, by, bz, bw) = (b[0], b[1], b[2], b[3]);
+    [aw * bx + ax * bw + ay * bz - az * by, aw * by - ax * bz + ay * bw + az * bx, aw * bz + ax * by - ay * bx + az * bw, aw * bw - ax * bx - ay * by - az * bz]
+}
+
+/// 🧭️ Rotation of `roll` radians about the LOCAL +Z axis — applied before `quat_z_to` reorients +Z to
+/// the member direction, so this spins the box prism about its own long axis (matches `Frame3`'s roll).
+fn quat_roll_z(roll: f64) -> [f64; 4] {
+    let h = roll / 2.0;
+    [0.0, 0.0, h.sin(), h.cos()]
+}
+
+/// 🧭️ Shortest-arc rotation taking local `+Z` (the `"box"` mesh's long axis) onto unit direction `dir`
+/// — the standard "rotate A onto B" quaternion (`axis = cross(from,to)`, `angle = acos(dot(from,to))`),
+/// specialized for `from = (0,0,1)` so `cross` reduces to `(-dir.y, dir.x, 0)`. Handles the antiparallel
+/// case (`dir ≈ (0,0,-1)`) with a fixed 180° flip about the X axis, since `cross` degenerates to zero there.
+fn quat_z_to(dir: [f64; 3]) -> [f64; 4] {
+    let dot = dir[2].clamp(-1.0, 1.0);
+    if dot > 0.999_999 {
+        return [0.0, 0.0, 0.0, 1.0];
+    }
+    if dot < -0.999_999 {
+        return [1.0, 0.0, 0.0, 0.0];
+    }
+    let axis = [-dir[1], dir[0], 0.0];
+    let axis_len = (axis[0] * axis[0] + axis[1] * axis[1]).sqrt();
+    let axis_n = [axis[0] / axis_len, axis[1] / axis_len, 0.0];
+    let half = dot.acos() / 2.0;
+    let s = half.sin();
+    [axis_n[0] * s, axis_n[1] * s, axis_n[2] * s, half.cos()]
+}
+
+/// 🧊️ Node-position resolver shared by every 3D instance/mesh builder: `displacements` (node id -> 6-DOF
+/// values), when present, offsets a node's position by its solved displacement scaled by `deform_scale`.
+fn fem3d_deformed_position(pos: [f64; 3], node_id: &str, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> [f64; 3] {
+    let mut p = pos;
+    if let Some(map) = displacements {
+        if let Some(d) = map.get(node_id) {
+            p[0] += d[Dof::Tx.index()] * deform_scale;
+            p[1] += d[Dof::Ty.index()] * deform_scale;
+            p[2] += d[Dof::Tz.index()] * deform_scale;
+        }
+    }
+    p
+}
+
+/// 🧊️ Half-extent-ish scale of the small box instance drawn at each node.
+const NODE_SIZE_3D: f64 = 0.05;
+/// 🧊️ Cross-section (x/y) thickness of the oriented box prism drawn for each `Bar`/`Frame` member —
+/// a fixed visual thickness, not the member's actual section dimensions (see `fem3d_structural_instances`).
+const MEMBER_THICKNESS_3D: f64 = 0.05;
+
+fn find_node_3d<'a>(nodes: &'a [crate::artifacts::fem3d::FemNode], id: &str) -> Option<&'a crate::artifacts::fem3d::FemNode> {
+    nodes.iter().find(|n| n.id == id)
+}
+
+fn fem3d_element_endpoints(element: &crate::artifacts::fem3d::FemElement) -> (&str, &str) {
+    match element {
+        crate::artifacts::fem3d::FemElement::Bar { start, end, .. } | crate::artifacts::fem3d::FemElement::Frame { start, end, .. } => (start.as_str(), end.as_str()),
+    }
+}
+
+/// 🧊️ One small box instance per node, plus one ORIENTED box prism per `Bar`/`Frame` member — position
+/// at the (possibly deformed) midpoint, `scale=[t,t,length]` so the mesh's own long (local Z) axis
+/// stretches along the member, `rotation` a quaternion aligning that axis to the member's direction
+/// (composed with a `Frame`'s own `roll` about its own axis; `Bar`s have no roll).
+fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Vec<Value> {
+    let node_pos = |node: &crate::artifacts::fem3d::FemNode| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
+
+    let mut instances: Vec<Value> = Vec::new();
+    for node in &doc.nodes {
+        let p = node_pos(node);
+        instances.push(json!({
+            "id": format!("node-{}", node.id),
+            "meshId": "box",
+            "position": p,
+            "rotation": [0.0, 0.0, 0.0, 1.0],
+            "scale": [NODE_SIZE_3D, NODE_SIZE_3D, NODE_SIZE_3D],
+            "label": node.id,
+        }));
+    }
+    for element in &doc.elements {
+        let (start, end) = fem3d_element_endpoints(element);
+        let (Some(n1), Some(n2)) = (find_node_3d(&doc.nodes, start), find_node_3d(&doc.nodes, end)) else { continue };
+        let p1 = node_pos(n1);
+        let p2 = node_pos(n2);
+        let d = [p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]];
+        let length = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt().max(1e-9);
+        let dir = [d[0] / length, d[1] / length, d[2] / length];
+        let roll = match element {
+            crate::artifacts::fem3d::FemElement::Frame { roll, .. } => *roll,
+            crate::artifacts::fem3d::FemElement::Bar { .. } => 0.0,
+        };
+        let rotation = quat_mul(quat_z_to(dir), quat_roll_z(roll));
+        let mid = [(p1[0] + p2[0]) / 2.0, (p1[1] + p2[1]) / 2.0, (p1[2] + p2[2]) / 2.0];
+        let id = crate::artifacts::fem3d::element_id(element);
+        instances.push(json!({
+            "id": format!("el-{id}"),
+            "meshId": "box",
+            "position": mid,
+            "rotation": rotation,
+            "scale": [MEMBER_THICKNESS_3D, MEMBER_THICKNESS_3D, length],
+            "label": id,
+        }));
+    }
+    instances
+}
+
+/// 🧱️ Every `FemSolid`'s boundary surface as a custom `meshes_json` entry (flat per-face normals, one
+/// duplicated vertex triple per triangle) plus its one identity-transform instance — `nodal_stress`,
+/// when present, colors each vertex by `crate::app_surface::von_mises_color` (min/max taken across ALL
+/// solids' averaged values), driving the react renderer's vertex-color contour (see
+/// `PaintTexturedMesh`). `displacements` deforms vertex positions the same way
+/// `fem3d_structural_instances` deforms node/member instances.
+fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (Vec<Value>, Vec<Value>) {
+    use crate::app_surface::{hex_to_rgb01, von_mises_color};
+
+    let mut meshes = Vec::new();
+    let mut instances = Vec::new();
+    let Ok(solid_meshes) = mesh_preview::fem3d_mesh_preview(doc) else { return (meshes, instances) };
+    let (min, max) = match nodal_stress {
+        Some(map) if !map.is_empty() => (map.values().cloned().fold(f64::INFINITY, f64::min), map.values().cloned().fold(f64::NEG_INFINITY, f64::max)),
+        _ => (0.0, 1.0),
+    };
+
+    for solid in &solid_meshes {
+        let mut positions: Vec<f64> = Vec::with_capacity(solid.boundary_tris.len() * 9);
+        let mut normals: Vec<f64> = Vec::with_capacity(solid.boundary_tris.len() * 9);
+        let mut colors: Vec<f64> = Vec::with_capacity(solid.boundary_tris.len() * 9);
+        let mut indices: Vec<u32> = Vec::with_capacity(solid.boundary_tris.len() * 3);
+
+        let vertex_pos = |idx: u32| -> [f64; 3] { fem3d_deformed_position(solid.points[idx as usize], &solid.node_ids[idx as usize], displacements, deform_scale) };
+        let vertex_color = |idx: u32| -> (f64, f64, f64) {
+            let Some(stress_map) = nodal_stress else { return (0.78, 0.78, 0.8) };
+            let value = stress_map.get(&solid.node_ids[idx as usize]).copied().unwrap_or(min);
+            hex_to_rgb01(von_mises_color(value, min, max))
+        };
+
+        for &[a, b, c] in &solid.boundary_tris {
+            let (pa, pb, pc) = (vertex_pos(a), vertex_pos(b), vertex_pos(c));
+            let e0 = [pb[0] - pa[0], pb[1] - pa[1], pb[2] - pa[2]];
+            let e1 = [pc[0] - pa[0], pc[1] - pa[1], pc[2] - pa[2]];
+            let raw = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
+            let raw_len = (raw[0] * raw[0] + raw[1] * raw[1] + raw[2] * raw[2]).sqrt().max(1e-12);
+            let n = [raw[0] / raw_len, raw[1] / raw_len, raw[2] / raw_len];
+            let base = (positions.len() / 3) as u32;
+            for (idx, p) in [(a, pa), (b, pb), (c, pc)] {
+                positions.extend_from_slice(&p);
+                normals.extend_from_slice(&n);
+                let (r, g, bl) = vertex_color(idx);
+                colors.extend_from_slice(&[r, g, bl]);
+            }
+            indices.extend_from_slice(&[base, base + 1, base + 2]);
+        }
+
+        let mesh_id = format!("solid-{}", solid.solid_id);
+        meshes.push(json!({ "id": mesh_id, "data": { "positions": positions, "normals": normals, "colors": colors, "indices": indices } }));
+        instances.push(json!({
+            "id": format!("solid-inst-{}", solid.solid_id),
+            "meshId": mesh_id,
+            "position": [0.0, 0.0, 0.0],
+            "rotation": [0.0, 0.0, 0.0, 1.0],
+            "scale": [1.0, 1.0, 1.0],
+            "label": solid.solid_id,
+        }));
+    }
+    (meshes, instances)
+}
+
+/// 🧊️ Builds the FULL `(meshes_json, instances_json)` pair for a 3D scene: the `"box"` primitive mesh
+/// plus every `FemSolid`'s custom surface mesh, and every node/member/solid instance — shared by the
+/// model window and every results view (static/modal/buckling).
+pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (String, String) {
+    let mut meshes: Vec<Value> = serde_json::from_str(&semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string()])).unwrap_or_default();
+    let mut instances = fem3d_structural_instances(doc, displacements, deform_scale);
+    let (solid_meshes, solid_instances) = fem3d_solid_mesh_entries(doc, displacements, deform_scale, nodal_stress);
+    meshes.extend(solid_meshes);
+    instances.extend(solid_instances);
+    (serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()))
+}
+
+/// 🎥️ Resolves a `FemCamera` to its JSON string, falling back to the framework's default 3D camera when
+/// the document/config still carries the sentinel empty-object placeholder.
+pub fn fem3d_camera_json(camera: &crate::artifacts::fem3d::FemCamera) -> String {
+    if camera.json == "{}" {
+        semio_framework_plugin::world3d_default_camera()
+    } else {
+        camera.json.clone()
+    }
+}
+//#endregion 🎬️SceneRender
+
 //#region 🔖️Fem3dPlayApp
 /// 🧮️ v0 design: results are recomputed fresh inside `render()`, no cache, no `RunAnalysis` operation.
 /// Unit struct — every former `RefCell` field lives in `Fem3dConfig`, written through
@@ -148,11 +397,11 @@ impl ArtifactApp for Fem3dPlayApp {
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem3d::FEM_3D_SCHEMA;
 
     fn initial_snapshot() -> Fem3dSnapshot {
-        crate::artifacts::fem3d::engine::empty_fem3d_snapshot()
+        crate::artifacts::fem3d::schema::empty_fem3d_snapshot()
     }
 
     fn io() -> Option<AppIo> {
-        Some(crate::artifacts::fem3d::engine::fem3d_io())
+        Some(fem3d_io())
     }
 
     /// 🎞️ `"document:out"` reproduces the trait's default whole-document pack (overriding
@@ -171,7 +420,7 @@ impl ArtifactApp for Fem3dPlayApp {
                 if doc.snapshot.load_cases.is_empty() {
                     return Err(MediaError::Payload("results:out".into(), "no load cases defined".into()));
                 }
-                let results = crate::artifacts::fem3d::engine::fem3d_solve_all(doc.snapshot).map_err(|error| MediaError::Payload("results:out".into(), error.to_string()))?;
+                let results = crate::fem3d_engine::fem3d_solve_all(doc.snapshot).map_err(|error| MediaError::Payload("results:out".into(), error.to_string()))?;
                 let json = fem3d_results_map_json(&results).to_string();
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.fem3d".into(), json } })
             }
@@ -349,7 +598,7 @@ pub fn create_fem3d_app() -> App {
             // 🎯️ Typed channel surface — `config_spec()`/`fem3d_io()` are this same information's single
             // source of truth, reused here rather than duplicated.
             .config(Fem3dPlayApp::config_spec())
-            .io(crate::artifacts::fem3d::engine::fem3d_io()),
+            .io(fem3d_io()),
     )
     .example("default", LocalizedLabel::native("Family House", "Einfamilienhaus"), FEM3D_EXAMPLE_DSL, "file")
     .workflow("fem3d", "FEM 3D", "structure")
@@ -580,7 +829,7 @@ mod tests {
     /// empty payload.
     #[test]
     fn export_media_results_out_errors_without_load_cases_3d() {
-        let snapshot = crate::artifacts::fem3d::engine::empty_fem3d_snapshot();
+        let snapshot = crate::artifacts::fem3d::schema::empty_fem3d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView { snapshot: &snapshot, history: &history };
         let err = Fem3dPlayApp::export_media("results:out", &doc).expect_err("no load cases should error");
@@ -625,6 +874,61 @@ mod tests {
         assert!(io.ports.iter().any(|port| port.id == "geometry:in"));
         assert!(io.ports.iter().any(|port| port.id == "results:out"));
     }
+
+    /// 🔌️ Wave-1's `required: true` unwired-input enforcement (`validate_edge_kinds`) lives in the run
+    /// crate, not here — this test only proves the port DECLARATION is correct; the cross-crate
+    /// enforcement is exercised at the run-crate level.
+    #[test]
+    fn fem3d_io_declares_geometry_in_and_results_out_ports() {
+        let io = fem3d_io();
+        assert_eq!(io.document_schema, crate::artifacts::fem3d::FEM_3D_SCHEMA);
+        assert_eq!(io.document_media_type.class, semio_framework_plugin::MediaClass::ThreeD);
+        assert_eq!(io.document_media_type.form, semio_framework_plugin::MediaForm::Any);
+        assert_eq!(io.artifact.id, "3d.fem");
+        assert_eq!(io.artifact.component_kind, "fem3d");
+
+        let geometry_in = io.ports.iter().find(|port| port.id == "geometry:in").expect("geometry:in declared");
+        assert_eq!(geometry_in.direction, semio_framework_plugin::MediaPortDirection::In);
+        assert!(geometry_in.required, "geometry:in is a required input port");
+        assert_eq!(geometry_in.media_type.class, semio_framework_plugin::MediaClass::ThreeD);
+        assert_eq!(geometry_in.media_type.form, semio_framework_plugin::MediaForm::Any);
+        assert_eq!(geometry_in.multiplicity, semio_framework::PortMultiplicity::One);
+
+        let results_out = io.ports.iter().find(|port| port.id == "results:out").expect("results:out declared");
+        assert_eq!(results_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert!(!results_out.required, "results:out is optional");
+        assert_eq!(results_out.kind_id.as_deref(), Some("computation.fem3d"));
+        assert_eq!(results_out.media_type.class, semio_framework_plugin::MediaClass::Data);
+        assert_eq!(results_out.media_type.form, semio_framework_plugin::MediaForm::Value);
+    }
     //#endregion 🔖️MediaPorts
+
+    //#region 🎬️SceneRender
+    #[test]
+    fn quat_z_to_identity_for_parallel_direction() {
+        assert_eq!(quat_z_to([0.0, 0.0, 1.0]), [0.0, 0.0, 0.0, 1.0]);
+    }
+
+    #[test]
+    fn quat_z_to_handles_antiparallel_direction() {
+        assert_eq!(quat_z_to([0.0, 0.0, -1.0]), [1.0, 0.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn fem3d_camera_json_falls_back_to_world3d_default_for_empty_object() {
+        let camera = crate::artifacts::fem3d::FemCamera::default();
+        assert_eq!(fem3d_camera_json(&camera), semio_framework_plugin::world3d_default_camera());
+        let custom = crate::artifacts::fem3d::FemCamera { json: "{\"x\":1}".into() };
+        assert_eq!(fem3d_camera_json(&custom), "{\"x\":1}");
+    }
+
+    #[test]
+    fn fem3d_scene_parts_include_solid_mesh_and_oriented_member_instances() {
+        let doc: Fem3dSnapshot = crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
+        let (meshes_json, instances_json) = fem3d_scene_parts(&doc, None, doc.analysis.deformation_scale, None);
+        assert!(meshes_json.contains("solid-sol1"), "expected a solid- mesh id for the example fixture's solid: {meshes_json}");
+        assert!(instances_json.contains("el-e1"), "expected a single oriented box instance per member (no -{{i}} sphere chain): {instances_json}");
+    }
+    //#endregion 🎬️SceneRender
 }
 //#endregion 🧪️Tests

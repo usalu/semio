@@ -210,6 +210,46 @@ pub mod derived_analysis {
 pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
+//#region 🔖️DocumentHelpers
+/// 🧱️ A blank block of the requested kind — every optional field defaulted, ready to be edited.
+/// Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
+/// — pure over `PlaybookBlock`, no app-runtime parameter.
+pub fn default_block(id: String, kind: &str) -> crate::artifacts::playbook::PlaybookBlock {
+    crate::artifacts::playbook::PlaybookBlock {
+        id,
+        label: kind.into(),
+        kind: kind.into(),
+        description: None,
+        required: None,
+        placeholder: None,
+        default: None,
+        min: None,
+        max: None,
+        step: None,
+        unit: None,
+        text: None,
+        options: None,
+        fields: None,
+        schema: None,
+        src: None,
+        accept: None,
+        fixture_slug: None,
+        params: None,
+        condition: None,
+    }
+}
+
+#[cfg(test)]
+mod document_helpers_tests {
+    use super::*;
+
+    #[test]
+    fn default_block_sets_kind_and_label() {
+        assert_eq!(default_block("b1".into(), "text").kind, "text");
+    }
+}
+//#endregion 🔖️DocumentHelpers
+
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec PlaybookBuilderFacets {

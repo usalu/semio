@@ -42,7 +42,7 @@ mod tests {
 
     #[test]
     fn curate_document_text_round_trips_through_a_vcs_store() {
-        let document = CurateSnapshot { stock: crate::artifacts::curate::engine::sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect(), ..Default::default() };
+        let document = CurateSnapshot { stock: crate::artifacts::curate::schema::sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect(), ..Default::default() };
         let envelope = store::create_document_envelope(crate::artifacts::curate::SOURCING_CURATE_SCHEMA, "sourcing-curate-test", document, None);
         let mut doc_store = store::ArtifactStore::new(envelope);
         let object_id = doc_store.snapshot().expect("snapshot").stock[0].id.clone();

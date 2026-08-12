@@ -26,9 +26,9 @@ pub mod set_active_example {
     /// (a `HostEffect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
     pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let document = if payload.example_id == "default" {
-            Fem2dSnapshot::parse_dsl(crate::apps::fem2d::FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| crate::artifacts::fem2d::engine::empty_fem2d_snapshot())
+            Fem2dSnapshot::parse_dsl(crate::apps::fem2d::FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| crate::artifacts::fem2d::schema::empty_fem2d_snapshot())
         } else {
-            crate::artifacts::fem2d::engine::empty_fem2d_snapshot()
+            crate::artifacts::fem2d::schema::empty_fem2d_snapshot()
         };
         Ok(Emit { effects: vec![crate::apps::fem2d::reset_document_effect(&document)], config_mutations: vec![Fem2dConfigMutation::Snapshot { config: Fem2dConfig::default() }], ..Default::default() })
     }
@@ -46,7 +46,7 @@ mod tests {
     /// itself, the same shape `commands::example`'s fem3d sibling tests use.
     #[test]
     fn set_active_example_loads_default_fixture_2d() {
-        let snapshot = crate::artifacts::fem2d::engine::empty_fem2d_snapshot();
+        let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView { snapshot: &snapshot, history: &history };
         let cfg_snapshot = Fem2dConfig::default();
@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn set_active_example_unknown_id_resets_to_empty_document_2d() {
-        let snapshot = crate::artifacts::fem2d::engine::empty_fem2d_snapshot();
+        let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView { snapshot: &snapshot, history: &history };
         let cfg_snapshot = Fem2dConfig::default();
@@ -72,7 +72,7 @@ mod tests {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <crate::artifacts::fem2d::Fem2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-        assert_eq!(loaded, crate::artifacts::fem2d::engine::empty_fem2d_snapshot());
+        assert_eq!(loaded, crate::artifacts::fem2d::schema::empty_fem2d_snapshot());
     }
 
     /// 🧬️ `setActiveExample` replaces document content via a `HostEffect::LoadDocument`, so it MUST be

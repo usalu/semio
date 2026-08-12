@@ -7104,3 +7104,7 @@ warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
 8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Some errors have detailed explanations: E0061, E0432.
+For more information about an error, try `rustc --explain E0061`.
+warning: `semio-s-plugin-stdio` (lib) generated 601 warnings
+error: could not compile `semio-s-plugin-stdio` (lib) due to 8 previous errors; 601 warnings emitted

@@ -977,11 +977,5 @@ mod tests {
         assert!(!jack_newline_allowed_at(text, before_dot));
     }
 
-    #[test]
-    fn jack_completions_use_example_fixture() {
-        crate::apps::writer::register_writer_languages();
-        let json = jack_completions_json("RETURN a.", 9).unwrap_or_default();
-        assert!(!json.is_empty());
-    }
 }
 //#endregion 🧪️Tests

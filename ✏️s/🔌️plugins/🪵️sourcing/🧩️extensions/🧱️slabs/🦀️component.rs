@@ -1,7 +1,7 @@
 //! 🧩️ Sourcing slabs module — contributes the slabs typology and demo catalogue kinds to the sourcing app.
 
 use semio_framework_plugin::ExtensionBundle;
-use sourcing_curate::artifacts::curate::engine::{slabs::SlabsModule, SourcingModule};
+use sourcing_curate::artifacts::curate::schema::{slabs::SlabsModule, SourcingModule};
 
 //#region 🔖️Bundle
 const EXTENSION_ID: &str = "sourcing-module-slabs";
@@ -45,7 +45,7 @@ mod tests {
         assert_eq!(topic.payload["moduleId"], "slabs");
         let typology_json = topic.payload["typologyJson"].as_str().unwrap();
         let kinds_json = topic.payload["kindsJson"].as_str().unwrap();
-        assert!(serde_json::from_str::<sourcing_curate::artifacts::curate::engine::TypologyNode>(typology_json).is_ok());
+        assert!(serde_json::from_str::<sourcing_curate::artifacts::curate::schema::TypologyNode>(typology_json).is_ok());
         assert!(serde_json::from_str::<Vec<sourcing_curate::artifacts::curate::ObjectKind>>(kinds_json).is_ok());
     }
 }

@@ -234,7 +234,7 @@ mod tests {
     #[test]
     fn select_all_then_deselect_drops_just_that_feature() {
         const PIN: &str = "p_institut_de_botanique_ulg_liege";
-        let document = crate::artifacts::gismap::engine::default_document();
+        let document = crate::artifacts::gismap::schema::default_document();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView { snapshot: &document, history: &history };
 

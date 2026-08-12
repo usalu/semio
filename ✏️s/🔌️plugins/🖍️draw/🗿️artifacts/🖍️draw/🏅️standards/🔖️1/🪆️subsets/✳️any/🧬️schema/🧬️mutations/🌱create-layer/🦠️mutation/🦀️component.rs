@@ -34,10 +34,10 @@ impl protocol::MutationKind<DrawSnapshot, DrawMutation> for CreateLayer {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> String {
-        format!("Create layer \"{}\"", crate::artifacts::draw::engine::layer_id(&self.layer))
+        format!("Create layer \"{}\"", crate::artifacts::draw::schema::layer_id(&self.layer))
     }
     fn target(&self) -> Vec<String> {
-        vec![crate::artifacts::draw::engine::layer_id(&self.layer).to_string()]
+        vec![crate::artifacts::draw::schema::layer_id(&self.layer).to_string()]
     }
 }
 //#endregion 🔖️Mutation

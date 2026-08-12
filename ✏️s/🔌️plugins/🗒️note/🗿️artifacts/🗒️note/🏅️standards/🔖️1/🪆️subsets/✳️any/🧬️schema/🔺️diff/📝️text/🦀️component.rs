@@ -3,7 +3,7 @@
 use crate::artifacts::note::schema::diff::{
     NoteAddedBlockEntry, NoteAssetsDelta, NoteBlockPatch, NoteBlockPatchEntry, NoteBlocksDelta, NoteDiff, NoteStringList,
 };
-use crate::artifacts::note::engine::{block_id, insert_block, remove_block_from_tree, update_block_in_tree};
+use crate::artifacts::note::schema::{block_id, insert_block, remove_block_from_tree, update_block_in_tree};
 use crate::artifacts::note::schema::NoteArtifact;
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use protocol::MutationDiff;

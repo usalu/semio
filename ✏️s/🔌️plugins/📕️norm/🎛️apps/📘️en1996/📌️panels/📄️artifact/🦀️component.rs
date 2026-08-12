@@ -1,6 +1,6 @@
 //! 📄️ EN 1996 play app panel — the document headline: family, check count, worst utilization, verdict.
 
-use crate::artifacts::en1996::engine::En1996Family;
+use crate::apps::en1996::En1996Family;
 use crate::document::NormHost;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, UiNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 

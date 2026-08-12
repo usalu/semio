@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReorderLayer` — a real handcrafted remove+insert at the new
 //! address, never apply-then-capture.
 use crate::artifacts::draw::diff::{diff_reorder_layer, DrawDiff};
-use crate::artifacts::draw::engine::find_draw_layer;
+use crate::artifacts::draw::schema::find_draw_layer;
 use crate::artifacts::draw::DrawSnapshot;
 
 //#region 🔖️Diff

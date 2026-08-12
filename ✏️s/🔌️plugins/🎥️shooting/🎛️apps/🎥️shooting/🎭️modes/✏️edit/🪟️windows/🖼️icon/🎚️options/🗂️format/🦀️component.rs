@@ -7,7 +7,7 @@ use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
 //#region 🔖️Measure
 pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
-    let shot = crate::artifacts::shooting::engine::active_shot(snapshot);
+    let shot = crate::artifacts::shooting::schema::active_shot(snapshot);
     WindowMeasure::Select {
         id: "shooting.measure.format".into(),
         label: Some(labels.format_select_label.into()),
@@ -30,7 +30,7 @@ mod tests {
 
     #[test]
     fn format_measure_offers_svg_and_png() {
-        let snapshot = crate::artifacts::shooting::engine::default_snapshot();
+        let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(&snapshot, labels) {
             WindowMeasure::Select { items, value, .. } => {

@@ -6,6 +6,6 @@ use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DuplicateBlock, _base: &NoteSnapshot) -> Vec<NoteMutation> {
-    vec![NoteMutation::DeleteBlock(DeleteBlock { id: crate::artifacts::note::engine::block_id(&payload.block).to_string() })]
+    vec![NoteMutation::DeleteBlock(DeleteBlock { id: crate::artifacts::note::schema::block_id(&payload.block).to_string() })]
 }
 //#endregion 🔖️Inverse

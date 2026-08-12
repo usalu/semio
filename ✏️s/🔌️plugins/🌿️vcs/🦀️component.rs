@@ -7,7 +7,7 @@ pub fn plugin() -> Plugin {
     Plugin::builder("vcs")
         .label("VCS")
         .version("0.1.0")
-        .setup(crate::artifacts::vcs::engine::register)
+        .setup(crate::apps::vcs::register)
         .register_document_app::<crate::apps::vcs::VcsPlayApp>(crate::apps::vcs::create_vcs_app())
         .build()
 }

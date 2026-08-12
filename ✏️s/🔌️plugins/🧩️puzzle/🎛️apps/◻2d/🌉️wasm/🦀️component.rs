@@ -8,12 +8,12 @@
 //! crate's own puzzle-2d engine — this module only owns the wasm session wrapper around it.
 
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
-use crate::artifacts::puzzle2d::engine::{
+use crate::apps::puzzle2d::engine::{
     apply_edge_handle_snap_to_fixture_v1_json, canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, normalize_board_descriptor_hidden_to_visible, puzzle_2d_lod_scale_json,
     BoardHost, CubicBez, Point, SceneDescriptorJson,
 };
-use crate::artifacts::puzzle2d::engine::board_host::{puzzle_board_host, puzzle_board_host_normal};
-use crate::artifacts::puzzle2d::engine::layout::redraw_layout_fixture_json;
+use crate::apps::puzzle2d::engine::board_host::{puzzle_board_host, puzzle_board_host_normal};
+use crate::apps::puzzle2d::engine::layout::redraw_layout_fixture_json;
 
 // #region 🔖️WasmHost
 #[cfg(target_arch = "wasm32")]

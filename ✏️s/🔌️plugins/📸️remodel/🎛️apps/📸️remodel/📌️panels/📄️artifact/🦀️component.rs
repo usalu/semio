@@ -3,7 +3,7 @@
 
 use crate::apps::remodel::config::RemodelConfig;
 use crate::apps::remodel::terminology::RemodelLabels;
-use crate::artifacts::remodel::engine::stage_display;
+use crate::artifacts::remodel::schema::stage_display;
 use crate::artifacts::remodel::{ReconstructionStage, RemodelSnapshot};
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 

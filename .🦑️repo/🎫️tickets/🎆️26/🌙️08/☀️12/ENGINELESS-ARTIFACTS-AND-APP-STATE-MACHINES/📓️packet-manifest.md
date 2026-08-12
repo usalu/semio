@@ -190,6 +190,52 @@ The app-side `⚙️engine` directories (`🎛️apps/<app>/⚙️engine`) are *
 - **~1,430 assertions across 39/41** engines, co-located with their regions; all must survive relocation.
 - 8 engines make cross-plugin calls (`zip`/`txt`/`csv`/`png`/`json` → `🗒️note`; `mp4`/`avi` → `📸️remodel`; `dwg ac1024` → `🏛️architect`) — calls to shared utilities, not struct instantiations, so safe during dissolution.
 
+## ⚠️ `🗄️stdio`'s `⚙️engine` is the repo's de-facto codec library — measure before dispatching
+
+Discovered while clearing `🔋️energy`'s last references. Energy's own dissolution was clean (0 dirs, 0 own-engine refs), but one surviving line was **code**, not a comment:
+
+```rust
+semio_s_plugin_stdio::artifacts::epw::standards::energyplus::engine::decode_epw(content)
+```
+
+Enumerated repo-wide (excluding stdio itself):
+
+| consumers | files | plugins |
+|---|---|---|
+| **15 plugins** | **19 files** | `🖨️raster`(14) `📸️remodel`(7) `🗒️note`(6) `📐️cad`(6) `🏗️fem`(6) `🔱️trinity`(4) `📏️layout`(3) `🌍️gis`(3) `🔋️energy`(2) `📜️imperative`(2) `🎥️shooting`(2) `🎞️animate`(2) `🧩️puzzle`(1) `🖍️draw`(1) `✒️writer`(1) |
+
+Symbols consumed: `encode_png`/`decode_png` (6 each), `parse_markdown_blocks`/`render_markdown_blocks` (3 each), `encode_stl_ascii`, `decode_epw`, `encode_jpg`/`decode_jpg`, `encode_gif`, `decode_pdf`, `encode_stl_binary`, `register`.
+
+**Consequences:**
+
+1. **Dissolving stdio's 41 engines is NOT a stdio-local change.** It breaks 15 other plugins at ~60 call sites. Any packet scoped to "stdio only" produces a green stdio and a red everything-else.
+2. **Destination is clear and the taxonomy already allows it.** These are codecs — (de)serialization — so they belong in each artifact's `🚪️io/{📥️import/🧩️deserializers,📤️export/🧵️serializers}`. Pure algorithms with no artifact of their own may instead go one level up into a module's `⚙️engine` (`🧰️framework/🔨️modules/<domain>/⚙️engine/`), which `taxonomyLeafParentDirs` keeps globally legal. Nothing here needs a new vocabulary word.
+3. **`🗄️stdio` must run LAST**, after every other packet lands — its call-site updates land in 15 plugins that other agents are editing right now. Running it concurrently guarantees collisions.
+4. It also confirms the earlier exploration's finding from the other direction: that report noted 8 stdio engines calling *out* to other plugins; this is 15 plugins calling *in*. The coupling is bidirectional and denser than either measurement alone suggested.
+
+**This is the single largest remaining risk in the ticket**, and it was invisible until a packet completed and left three references behind — two of which were comments. Enumerating rather than counting the grep is what separated them.
+
+## Cross-plugin engine consumers — a packet can break crates its own `cargo check` never builds
+
+Generalised from the `🔋️energy` discovery. Artifact engines are consumed **across plugin boundaries and by the framework itself**, so `cargo check -p <the plugin>` comes back **green while breaking someone else**.
+
+| provider | consumers | note |
+|---|---|---|
+| `🗄️stdio` (all) | **15 plugins, 19 files** | the de-facto codec library — see section above |
+| **`puzzle2d`** | **the OS renderer**, 5 refs in `📺️renderer/…/EngineCanvas/🧊️component.rs` (`:71`, `:1478`, `:1562`, `:1578`, `:1587`) | `BoardHost` + `board_host::puzzle_board_host()` — a **stateful host**, so rule 7: app-side |
+| `📐️cad` | `🎪️demonstrator` (1), `💠️lowpoly` (2) | `cad_document_from_dwg` / `cad_document_from_mesh` — deserialisation, so rule 5: `🚪️io/📥️import/🧩️deserializers/` |
+
+**The `puzzle2d` case is the sharpest**: a *framework* crate depends on a *plugin's artifact engine*. Deleting that directory breaks the OS renderer, and nothing in the puzzle plugin's own build would report it.
+
+> **RULE for every packet: before deleting an engine directory, grep the whole repo — not just your plugin — for consumers.**
+> ```
+> grep -rn "::artifacts::[a-z0-9_]*::engine::" ✏️s/🔌️plugins 🧰️framework --include="*.rs" \
+>   | grep -v "crate::artifacts::" | grep -v "semio_s_plugin_stdio::"
+> ```
+> Then `cargo check -p` **each consumer crate**, not only your own. "Checked, none" is a required result, not an optional one.
+
+**A false alarm worth recording, because it nearly became a report of breakage.** A repo-wide sweep found 22 code references to engines in plugins whose directories were already gone — apparently 22 breakages across 7 plugins. Enumerating them showed **21 were `semio_s_plugin_stdio::artifacts::<x>::engine::…`**, i.e. legitimate references into stdio's still-standing engines, and only **1** was a genuine cross-plugin case (`🎪️demonstrator` → `cad`). Counting the grep would have produced a 22× overstatement and sent several agents chasing nothing. **Grep to find, enumerate to count** — third application today, first one where it prevented a false alarm rather than catching a real defect.
+
 ## Execution plan
 
 1. **P-A2 `🧱️block` — exemplar, in flight.** Its verified diff is the pattern. Nothing else dispatches until it is green and reviewed.

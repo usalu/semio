@@ -67,7 +67,7 @@ pub enum LowpolyMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::{engine::default_snapshot, LowpolyObject};
+    use crate::artifacts::lowpoly::{schema::default_snapshot, LowpolyObject};
     use protocol::{Mutation, MutationDiff};
 
     fn tiny_object(id: &str, name: &str) -> LowpolyObject {

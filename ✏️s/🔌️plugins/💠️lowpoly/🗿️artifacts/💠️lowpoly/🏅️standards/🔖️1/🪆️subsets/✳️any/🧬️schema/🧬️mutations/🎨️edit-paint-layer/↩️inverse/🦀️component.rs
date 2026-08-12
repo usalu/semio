@@ -8,7 +8,7 @@ use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &EditPaintLayer, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
-    let pixels = crate::artifacts::lowpoly::engine::layer_pixels_at(base, &payload.object_id, payload.layer_index);
+    let pixels = crate::artifacts::lowpoly::schema::layer_pixels_at(base, &payload.object_id, payload.layer_index);
     let inverse_runs = payload
         .runs
         .iter()

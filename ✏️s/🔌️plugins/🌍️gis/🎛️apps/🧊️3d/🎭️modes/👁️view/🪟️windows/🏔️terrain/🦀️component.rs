@@ -6,7 +6,7 @@
 
 use crate::apps::gis3d::config::Gis3dConfig;
 use crate::apps::gis3d::GIS3D_PLAY_APP_ID;
-use crate::artifacts::gisterrain::engine::parse_descriptor;
+use crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::parse_descriptor;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use crate::modules::terrain::{build_terrain_scene_json, TerrainDescriptorJson};
 use framework_surface::terrain::projection;

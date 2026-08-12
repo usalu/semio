@@ -7,7 +7,7 @@ use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
 //#region 🔖️Measure
 pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
-    let shot = crate::artifacts::shooting::engine::active_shot(snapshot);
+    let shot = crate::artifacts::shooting::schema::active_shot(snapshot);
     WindowMeasure::Select {
         id: "shooting.measure.shot".into(),
         label: Some(labels.shot.into()),
@@ -27,7 +27,7 @@ mod tests {
 
     #[test]
     fn shot_measure_lists_every_shot() {
-        let snapshot = crate::artifacts::shooting::engine::default_snapshot();
+        let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(&snapshot, labels) {
             WindowMeasure::Select { items, .. } => assert_eq!(items.len(), snapshot.shots.len()),

@@ -1,7 +1,8 @@
 //! 🪜️ Process 3d play app commands — process-step lifecycle (add / remove / move / update / enable).
 
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::artifacts::process3d::engine::{capability_for_measure_kind, find_capability, insert_step_mutations, measure_for_capability, next_step_id, remove_step_mutations, validate_capability, validation_context_for_stock};
+use crate::artifacts::process3d::schema::inferences::{capability_for_measure_kind, find_capability, measure_for_capability, validate_capability, validation_context_for_stock};
+use crate::artifacts::process3d::schema::{insert_step_mutations, next_step_id, remove_step_mutations};
 use crate::artifacts::process3d::mutations::change_step_enabled::mutation::ChangeStepEnabled;
 use crate::artifacts::process3d::mutations::change_step_origin::mutation::ChangeStepOrigin;
 use crate::artifacts::process3d::mutations::rename_step::mutation::RenameStep;

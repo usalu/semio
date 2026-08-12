@@ -29,7 +29,7 @@ fn shot_mutation_for_field(id: String, field: &str, value: &Value) -> Option<Sho
 }
 
 fn active_shot_id(fixture: &crate::artifacts::shooting::ShootingSnapshot) -> Option<String> {
-    crate::artifacts::shooting::engine::active_shot(fixture).map(|shot| shot.id.clone())
+    crate::artifacts::shooting::schema::active_shot(fixture).map(|shot| shot.id.clone())
 }
 
 //#region 🔖️SetActiveShot
@@ -134,7 +134,7 @@ pub mod patch_shots {
 //#region 🔖️AddShot
 pub mod add_shot {
     use super::*;
-    use crate::artifacts::shooting::engine::next_shooting_id;
+    use crate::artifacts::shooting::schema::next_shooting_id;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "add-shot")]
@@ -167,7 +167,7 @@ mod tests {
     fn set_active_shot_label_patches_active_shot() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero Shot".into() }));
-        assert_eq!(crate::artifacts::shooting::engine::active_shot(&app.snapshot().expect("snapshot")).unwrap().label, "Hero Shot");
+        assert_eq!(crate::artifacts::shooting::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label, "Hero Shot");
     }
 
     #[test]

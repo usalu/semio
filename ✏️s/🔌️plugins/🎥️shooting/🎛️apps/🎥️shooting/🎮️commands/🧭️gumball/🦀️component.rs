@@ -106,7 +106,7 @@ mod tests {
         }
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
         let restored = app.snapshot().expect("snapshot");
-        let original = crate::artifacts::shooting::engine::default_snapshot().assets.iter().find(|asset| asset.id == asset_id).map(|asset| asset.origin).expect("original origin");
+        let original = crate::artifacts::shooting::schema::default_snapshot().assets.iter().find(|asset| asset.id == asset_id).map(|asset| asset.origin).expect("original origin");
         assert_eq!(restored.assets.iter().find(|asset| asset.id == asset_id).unwrap().origin, original, "undoing the coalesced drag restores the pre-drag origin");
     }
 

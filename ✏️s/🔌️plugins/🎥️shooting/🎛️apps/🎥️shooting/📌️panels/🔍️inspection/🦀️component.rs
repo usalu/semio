@@ -175,7 +175,7 @@ pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, labels: &Shooti
             return ui_inspector_groups_to_tree(&[asset_inspector_group(asset, labels)]);
         }
     }
-    if let Some(shot) = crate::artifacts::shooting::engine::active_shot(snapshot) {
+    if let Some(shot) = crate::artifacts::shooting::schema::active_shot(snapshot) {
         return ui_inspector_groups_to_tree(&[shot_inspector_group(shot, labels)]);
     }
     ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {

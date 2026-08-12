@@ -1,0 +1,29 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.mesh.inference/inferences.json",
+  "title": "SemioMeshInference",
+  "description": "Derived, non-persisted computation over a SemioMeshSnapshot. See the sibling 🦀️component.rs for the real source of truth. computedNormals/tessellationPreview are deliberately absent (see that file's module doc comment).",
+  "type": "object",
+  "properties": {
+    "aabb": {
+      "type": "object",
+      "description": "Keyed by \"{meshId}:{primitiveId}\".",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "object",
+            "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } },
+            "required": ["x", "y", "z"]
+          },
+          "max": {
+            "type": "object",
+            "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } },
+            "required": ["x", "y", "z"]
+          }
+        },
+        "required": ["min", "max"]
+      }
+    }
+  },
+  "required": ["aabb"]
+}

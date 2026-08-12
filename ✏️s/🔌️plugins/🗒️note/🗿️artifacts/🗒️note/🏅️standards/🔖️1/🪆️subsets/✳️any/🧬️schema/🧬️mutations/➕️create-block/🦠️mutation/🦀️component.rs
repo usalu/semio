@@ -32,10 +32,10 @@ impl MutationKind<NoteSnapshot, NoteMutation> for CreateBlock {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> String {
-        format!("Create block \"{}\"", crate::artifacts::note::engine::block_id(&self.block))
+        format!("Create block \"{}\"", crate::artifacts::note::schema::block_id(&self.block))
     }
     fn target(&self) -> Vec<String> {
-        vec![crate::artifacts::note::engine::block_id(&self.block).to_string()]
+        vec![crate::artifacts::note::schema::block_id(&self.block).to_string()]
     }
 }
 //#endregion 🔖️Mutation

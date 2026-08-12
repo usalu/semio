@@ -1,6 +1,6 @@
 //! 📄️ DIN EN 16798 play app panel — the document headline: family, check count, worst utilization, verdict.
 
-use crate::artifacts::din16798::engine::DinEn16798Family;
+use crate::apps::din16798::DinEn16798Family;
 use crate::document::NormHost;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, UiNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 

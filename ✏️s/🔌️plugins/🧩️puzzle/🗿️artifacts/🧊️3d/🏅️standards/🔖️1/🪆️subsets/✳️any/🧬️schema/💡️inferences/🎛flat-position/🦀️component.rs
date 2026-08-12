@@ -3,10 +3,11 @@
 //! (26/04/17/OPTIMIZE-FLATTEN-DESIGN-WITH-MERKLE-HASH-CACHE) — an object's flatPosition entry
 //! changes iff its own vortex, an ancestor's plane/center, or the connecting attraction's params
 //! change; nothing else. The result TYPES (`FlattenPlane`/`FlattenPose`) and the low-level per-edge
-//! math stay owned by `⚙️engine/📐️geometry/🎛flatten`; this leaf holds the `InferredField` chains
-//! that drive incremental per-entity caching over that math.
+//! math stay owned by the sibling `🎛flatten` schema/inference module (rehomed from the former
+//! `⚙️engine/📐️geometry/🎛flatten`, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES);
+//! this leaf holds the `InferredField` chains that drive incremental per-entity caching over that math.
 
-use crate::artifacts::puzzle3d::standards::v1::engine::geometry::flatten::{compute_child_plane, diagram_center, find_vortex, flatten_objects_with_assignment, orientation_to_plane, vortex_geom, FlattenParent, FlattenPlane};
+use crate::artifacts::puzzle3d::standards::v1::subsets::any::schema::inferences::flatten::{compute_child_plane, diagram_center, find_vortex, flatten_objects_with_assignment, orientation_to_plane, vortex_geom, FlattenParent, FlattenPlane};
 use crate::artifacts::puzzle3d::{Puzzle3dObjectAnchor, Puzzle3dSnapshot};
 use std::collections::HashMap;
 

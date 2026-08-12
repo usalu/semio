@@ -32,7 +32,7 @@ mod tests {
 
     #[test]
     fn pack_round_trips_and_agrees_with_dsl() {
-        let document = crate::artifacts::raster::engine::semio_fixture_snapshot();
+        let document = crate::artifacts::raster::schema::semio_fixture_snapshot();
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);
@@ -107,7 +107,7 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", crate::artifacts::raster::engine::empty_raster_document(), None);
+        let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", crate::artifacts::raster::schema::empty_raster_document(), None);
         let mut store = ArtifactStore::new(envelope);
         store
             .dispatch(ArtifactCommand::Apply {

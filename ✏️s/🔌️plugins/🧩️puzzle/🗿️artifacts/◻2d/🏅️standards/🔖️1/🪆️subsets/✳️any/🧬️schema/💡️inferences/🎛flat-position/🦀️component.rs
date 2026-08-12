@@ -2,15 +2,15 @@
 //! compose-parity fastened layout — `Fixed`-anchor nodes keep their stored coordinates, `Derived`-
 //! anchor nodes get theirs BFS-walked from their connecting edge's params (gap/shift/rise/rotation/
 //! turn/tilt/x/y), the same graph-position concept `🧊️3d`'s own `🎛flat-position/` and
-//! `🔱️trinity/🔌️jack`'s own `🎛flat-position/` carry for their artifacts. Reuses
-//! `⚙️engine/📐️layout::fastened_layout_snapshot`'s existing compose-parity math on a snapshot clone
+//! `🔱️trinity/🔌️jack`'s own `🎛flat-position/` carry for their artifacts. Reuses the inference
+//! family root's own `fastened_layout_snapshot`'s existing compose-parity math on a snapshot clone
 //! rather than re-deriving it here (this repo's own "if code is repeated, it must be close to each
 //! other" rule taken to its natural conclusion: don't repeat it at all when the source of truth
 //! already exists) — a plain whole-snapshot BFS pass, so, per the family root's own rationale
 //! (mirroring jack's `🧭topology`/`🎛flat-position` and puzzle3d's own sibling), no
 //! `InferredField`/incremental caching is needed here either.
 
-use crate::artifacts::puzzle2d::standards::v1::engine::layout::fastened_layout_snapshot;
+use super::fastened_layout_snapshot;
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;

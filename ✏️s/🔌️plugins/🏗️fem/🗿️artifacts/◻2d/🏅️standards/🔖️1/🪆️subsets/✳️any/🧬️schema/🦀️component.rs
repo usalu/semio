@@ -161,6 +161,13 @@ pub mod derived_construction {
 pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
+//#region 🌱️DerivedEmpty
+/// 🌱️ An empty `Fem2dSnapshot` — the app's genesis document and every test fixture's blank baseline.
+pub fn empty_fem2d_snapshot() -> crate::artifacts::fem2d::Fem2dSnapshot {
+    crate::artifacts::fem2d::Fem2dSnapshot::default()
+}
+//#endregion 🌱️DerivedEmpty
+
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
     use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};

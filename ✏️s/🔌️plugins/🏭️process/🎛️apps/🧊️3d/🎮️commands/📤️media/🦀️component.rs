@@ -1,7 +1,7 @@
 //! 📤️ Process 3d play app commands — shell effects: model export/import round-trips through the host.
 
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::artifacts::process3d::engine::{export_process3d_model, import_process3d_model};
+use crate::artifacts::process3d::io::{export_process3d_model, import_process3d_model};
 use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

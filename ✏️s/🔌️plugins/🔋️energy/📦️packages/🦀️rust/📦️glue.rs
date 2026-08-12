@@ -2,24 +2,31 @@
 //! whole-building simulation (EnergyPlus-class predictor-corrector kernel), no IDF/epJSON, templates,
 //! scripting, or language bindings. See `AGENTS.md` for the domain overview.
 //!
-//! WIRING ONLY. Every `pub mod` below points at exactly one
-//! `🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️<domain>.rs`
-//! taxonomy component file with a `#[path]` written in full, relative to the owner root (this file itself now
-//! lives two levels deeper, in `📦️packages/🦀️rust/`, so every path carries a `../../` prefix back out
-//! to the owner root) — do not inline any component file back into this one: the taxonomy validator and the
+//! WIRING ONLY. Every `pub mod` below points at exactly one taxonomy/module component file with a
+//! `#[path]` written in full, relative to the owner root (this file itself lives two levels deeper,
+//! in `📦️packages/🦀️rust/`, so every path carries a `../../` prefix back out to the owner root) —
+//! do not inline any component file back into this one: the taxonomy validator and the
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 //!
-//! 🧭️ Shape note: energy is a headless library plugin — no document app, no DSL/pack/spr wire
-//! codec of its own, no command surface. There is no app to receive "behaviour" (ticket
-//! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): the 50 domain modules below are the
-//! artifact's own derived compute (`Model` decoded from `EnergyModelSnapshot` → `Results`, a pure
-//! fn of the snapshot per that ticket's rule 2), so they now live under
-//! `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/<domain>/` rather than a deleted
-//! `⚙️engine/` — declared flat at the crate root (exactly as the pre-migration bundle crate
-//! declared them), one file per domain, with the flat `pub use` re-export surface preserved so
+//! 🔄️ 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES: these 50 mounts moved out of
+//! `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/<domain>/` into a plugin-level module,
+//! `🔨️modules/⚡️simulation/⚙️engine/<domain>/` — a `💡️inferences` family member must satisfy
+//! `Inference<Snapshot>` (total, deterministic, pure over a snapshot); this fallible, on-demand BEM
+//! simulation kernel (air/HVAC/plant solves, curve fits, sizing, economics, …) does not, so it was
+//! never a legitimate inference. An artifact is a schema + io system, never an engine; a MODULE may
+//! still have one (`taxonomyLeafParentDirs` already lists `⚙️engine` globally — see the
+//! `🏗️fem`/`✏️s/🔨️modules/🏗️fem/⚙️engine/` precedent under this same ticket). Energy has no document
+//! app (see the "Shape note" below), so this is a module engine, not an app engine. Mount NAMEs are
+//! unchanged (`crate::air_exchange`, `crate::kernel`, …), only the `#[path]` TARGET moved, so every
+//! existing `crate::<domain>::X`-style call site elsewhere in this crate is unaffected — declared flat
+//! at the crate root, one file per domain, with the flat `pub use` re-export surface preserved so
 //! `crate::props::…`/`crate::units::…`-style internal references and any external
 //! `semio_s_plugin_energy::<Type>` usage both keep working unchanged.
+//!
+//! 🧭️ Shape note: energy is a headless library plugin — no document app, no DSL/pack/spr wire
+//! codec of its own, no command surface. There is no app to receive "behaviour", which is why the
+//! 50 domain modules below relocated to a plugin-level `🔨️modules/` engine rather than an app engine.
 
 #![allow(clippy::too_many_arguments)]
 
@@ -29,106 +36,106 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_schema as schema;
 
 
-//#region 💡️Inferences
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/air_exchange/🦀️component.rs"]
+//#region ⚡️SimulationEngine
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/air_exchange/🦀️component.rs"]
 pub mod air_exchange;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/air_system/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/air_system/🦀️component.rs"]
 pub mod air_system;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/airflow_network/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/airflow_network/🦀️component.rs"]
 pub mod airflow_network;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/calendar/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/calendar/🦀️component.rs"]
 pub mod calendar;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/coils/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/coils/🦀️component.rs"]
 pub mod coils;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/comfort/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/comfort/🦀️component.rs"]
 pub mod comfort;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/controls/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/controls/🦀️component.rs"]
 pub mod controls;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/curves/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/curves/🦀️component.rs"]
 pub mod curves;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/daylight/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/daylight/🦀️component.rs"]
 pub mod daylight;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/dispatch/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/dispatch/🦀️component.rs"]
 pub mod dispatch;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/economics/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/economics/🦀️component.rs"]
 pub mod economics;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/electrical/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/electrical/🦀️component.rs"]
 pub mod electrical;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/envelope/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/envelope/🦀️component.rs"]
 pub mod envelope;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/error/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/error/🦀️component.rs"]
 pub mod error;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/evaporative/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/evaporative/🦀️component.rs"]
 pub mod evaporative;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/fans/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/fans/🦀️component.rs"]
 pub mod fans;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/faults/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/faults/🦀️component.rs"]
 pub mod faults;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/fenestration/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/fenestration/🦀️component.rs"]
 pub mod fenestration;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/gains/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/gains/🦀️component.rs"]
 pub mod gains;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/geometry/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/geometry/🦀️component.rs"]
 pub mod geometry;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/heat_recovery/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/heat_recovery/🦀️component.rs"]
 pub mod heat_recovery;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/humidity_eq/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/humidity_eq/🦀️component.rs"]
 pub mod humidity_eq;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/hvac_topo/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/hvac_topo/🦀️component.rs"]
 pub mod hvac_topo;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/iaq/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/iaq/🦀️component.rs"]
 pub mod iaq;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/ideal_hvac/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/ideal_hvac/🦀️component.rs"]
 pub mod ideal_hvac;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/kernel/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/kernel/🦀️component.rs"]
 pub mod kernel;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/material/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/material/🦀️component.rs"]
 pub mod material;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/meters/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/meters/🦀️component.rs"]
 pub mod meters;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/metrics/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/metrics/🦀️component.rs"]
 pub mod metrics;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/model/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/model/🦀️component.rs"]
 pub mod model;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/num/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/num/🦀️component.rs"]
 pub mod num;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/output/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/output/🦀️component.rs"]
 pub mod output;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/plant/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/plant/🦀️component.rs"]
 pub mod plant;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/precompute/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/precompute/🦀️component.rs"]
 pub mod precompute;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/props/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/props/🦀️component.rs"]
 pub mod props;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/refrigeration/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/refrigeration/🦀️component.rs"]
 pub mod refrigeration;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/results/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/results/🦀️component.rs"]
 pub mod results;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/room_air/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/room_air/🦀️component.rs"]
 pub mod room_air;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/schedule/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/schedule/🦀️component.rs"]
 pub mod schedule;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/shw/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/shw/🦀️component.rs"]
 pub mod shw;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/sim/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/sim/🦀️component.rs"]
 pub mod sim;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/site/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/site/🦀️component.rs"]
 pub mod site;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/sizing/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/sizing/🦀️component.rs"]
 pub mod sizing;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/solar/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/solar/🦀️component.rs"]
 pub mod solar;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/solar_thermal/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/solar_thermal/🦀️component.rs"]
 pub mod solar_thermal;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/terminal/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/terminal/🦀️component.rs"]
 pub mod terminal;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/units/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/units/🦀️component.rs"]
 pub mod units;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/water/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/water/🦀️component.rs"]
 pub mod water;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/zone_air/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/zone_air/🦀️component.rs"]
 pub mod zone_air;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/zone_hvac/🦀️component.rs"]
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/zone_hvac/🦀️component.rs"]
 pub mod zone_hvac;
 //#endregion 💡️Inferences
 

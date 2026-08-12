@@ -3,7 +3,7 @@
 
 use crate::apps::draw::commands::canvas::DrawSession;
 use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
-use crate::artifacts::draw::engine::{flatten_draw_layers, layer_id};
+use crate::artifacts::draw::schema::{flatten_draw_layers, layer_id};
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawCamera, DrawSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

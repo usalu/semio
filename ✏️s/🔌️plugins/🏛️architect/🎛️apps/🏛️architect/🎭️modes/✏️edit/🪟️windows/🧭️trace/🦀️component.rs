@@ -2,7 +2,8 @@
 
 use crate::apps::architect::chrome::{tree_item, tree_node, tree_section};
 use crate::apps::architect::config::ArchitectConfig;
-use crate::artifacts::program::engine::trace::{audit_trail, trace_chain, trace_impact, TraceChain};
+use crate::apps::architect::behavior::{trace_chain, trace_impact, TraceChain};
+use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::audit_trail;
 use crate::artifacts::program::{EntityId, ProgramSnapshot};
 use semio_framework_plugin::{ui_text, Label, LocalizedLabel, SurfaceKind, UiNode, UiTreeItemNode, WindowKindDefinition, WindowOptions};
 

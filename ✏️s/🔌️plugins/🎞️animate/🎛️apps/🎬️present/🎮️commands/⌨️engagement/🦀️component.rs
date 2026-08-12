@@ -2,7 +2,7 @@
 
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::apps::present::{new_tile_id, tile_morph_prompt_effect};
-use crate::artifacts::present::engine::{parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
+use crate::artifacts::present::schema::{parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
 use crate::artifacts::present::mutations::replace_tiles::mutation::ReplaceTiles;
 use crate::artifacts::present::op::PresentMutation;

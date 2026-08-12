@@ -20,6 +20,33 @@ use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
 use store::EngineHandles;
 use store::ArtifactPack;
 
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document ports (keyed off
+/// `SOURCING_CURATE_SCHEMA`, `MediaType{Kit,Kit}` matching the `"catalogue.sourcing"` `ArtifactKindSpec`)
+/// plus the extra `catalog:out` output port: this app's `stock` (its `"catalogue.kinds"`-shaped rows)
+/// mapped into the SAME `kit.catalog` JSON shape `block_3d::puzzle3d_catalog_fragment` produces, so
+/// `s/plugin/puzzle`'s `kit:in` importer can consume either producer identically without knowing which
+/// one it came from (see `crate::artifacts::curate::schema::inferences::sourcing_catalog_fragment`).
+pub fn sourcing_curate_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: SOURCING_CURATE_SCHEMA.into(),
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Kit },
+        ports: vec![semio_framework_plugin::MediaPortSpec {
+            id: "catalog:out".into(),
+            label: "Catalog".into(),
+            direction: semio_framework_plugin::MediaPortDirection::Out,
+            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+            kind_id: Some("kit.catalog".into()),
+            required: false,
+            multiplicity: semio_framework::PortMultiplicity::Many,
+        }],
+        export_formats: vec![],
+        import_formats: vec![],
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "catalogue.sourcing".into(), name: "Sourcing Curation".into(), dimension: "data".into(), component_kind: "catalogue".into() },
+    }
+}
+//#endregion 🔖️Io
+
 //#region 🔖️Constants
 pub const SOURCING_CURATE_APP_ID: &str = "sourcing-curate";
 pub const SOURCING_CONTROLLER_ID: &str = "sourcing-curate";
@@ -98,21 +125,22 @@ impl ArtifactApp for SourcingCurateApp {
     }
 
     fn initial_snapshot() -> CurateSnapshot {
-        crate::artifacts::curate::engine::default_document()
+        crate::artifacts::curate::schema::default_document()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
-        Some(crate::artifacts::curate::engine::sourcing_curate_io())
+        Some(sourcing_curate_io())
     }
 
-    /// 🎞️ `catalog:out` (see `crate::artifacts::curate::engine::sourcing_catalog_fragment`) plus the
-    /// inherited `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
-    /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
+    /// 🎞️ `catalog:out` (see `crate::artifacts::curate::schema::inferences::sourcing_catalog_fragment`)
+    /// plus the inherited `document:out` default (the pack of `doc.snapshot`, replicated inline —
+    /// overriding `export_media` shadows the trait's provided body for every port on this app, not just
+    /// the new one).
     fn export_media(port: &str, doc: &ArtifactView<'_, CurateSnapshot>) -> Result<Media, MediaError> {
         match port {
             "catalog:out" => Ok(Media {
                 media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-                payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: crate::artifacts::curate::engine::sourcing_catalog_fragment(doc.snapshot).to_string() },
+                payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: crate::artifacts::curate::schema::inferences::sourcing_catalog_fragment(doc.snapshot).to_string() },
             }),
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
@@ -152,7 +180,7 @@ impl ArtifactApp for SourcingCurateApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> UiNode {
-        crate::artifacts::curate::engine::sync_sourcing_module_contributions(&cfg.snapshot.contributions_json);
+        crate::artifacts::curate::schema::sync_sourcing_module_contributions(&cfg.snapshot.contributions_json);
         let snapshot = doc.snapshot;
         let config = cfg.snapshot;
         let labels = sourcing_curate_labels(config);
@@ -275,12 +303,12 @@ pub fn create_sourcing_curate_app() -> App {
             // `SourcingCurateCommand`'s `OpBinary` codec directly (`setLocale` deliberately left
             // undeclared above, mirroring `flow_ui`: `VcsArtifactApp`'s kind-discipline check only runs
             // when the registry actually declares a command's id).
-            .io(crate::artifacts::curate::engine::sourcing_curate_io()),
+            .io(sourcing_curate_io()),
     )
     // 📄️ `AppDefinition::example` still wants document JSON (the manifest-wide example wire format);
     // the `.curate` text is only the on-disk source of truth, re-serialized here once.
-    .example(DEMO_STOCK_EXAMPLE_ID, LocalizedLabel::native("Demo Stock", "Beispielbestand"), serde_json::to_string(&crate::artifacts::curate::engine::default_document()).unwrap_or_default(), "file-text")
-    .example(EMPTY_EXAMPLE_ID, LocalizedLabel::native("Empty Curation", "Leere Kuratierung"), serde_json::to_string(&crate::artifacts::curate::engine::empty_document()).unwrap_or_default(), "file-text")
+    .example(DEMO_STOCK_EXAMPLE_ID, LocalizedLabel::native("Demo Stock", "Beispielbestand"), serde_json::to_string(&crate::artifacts::curate::schema::default_document()).unwrap_or_default(), "file-text")
+    .example(EMPTY_EXAMPLE_ID, LocalizedLabel::native("Empty Curation", "Leere Kuratierung"), serde_json::to_string(&crate::artifacts::curate::schema::empty_document()).unwrap_or_default(), "file-text")
 }
 //#endregion 🔖️Manifest
 
@@ -451,6 +479,18 @@ mod tests {
         assert_eq!(def.window_kinds.iter().find(|entry| entry.id == pool::SOURCING_CURATE_WINDOW_POOL).expect("pool window").label.resolve(terminology, locale), "Pool");
         assert_eq!(def.window_kinds.iter().find(|entry| entry.id == curated::SOURCING_CURATE_WINDOW_CURATED).expect("curated window").label.resolve(terminology, locale), "Kuratiert");
         assert_eq!(def.modes.iter().find(|entry| entry.id == curate::SOURCING_CURATE_MODE_CURATE).expect("curate mode").label.resolve(terminology, locale), "Kuratieren");
+    }
+
+    #[test]
+    fn sourcing_curate_io_declares_the_catalog_out_port_alongside_the_implicit_document_ports() {
+        let io = sourcing_curate_io();
+        assert_eq!(io.document_schema, SOURCING_CURATE_SCHEMA);
+        let ports = io.all_ports();
+        assert_eq!(ports.len(), 3, "document:in, document:out, catalog:out");
+        let catalog_out = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");
+        assert_eq!(catalog_out.kind_id.as_deref(), Some("kit.catalog"));
+        assert_eq!(catalog_out.media_type.class, semio_framework_plugin::MediaClass::Kit);
+        assert_eq!(catalog_out.media_type.form, semio_framework_plugin::MediaForm::Type);
     }
 
     #[test]

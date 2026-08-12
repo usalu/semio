@@ -2,7 +2,7 @@
 //! import).
 
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
-use crate::artifacts::note::engine::{empty_note_snapshot, semio_example_snapshot};
+use crate::artifacts::note::schema::{empty_note_snapshot, semio_example_snapshot};
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -76,7 +76,7 @@ mod tests {
         let doc = ArtifactView { snapshot: &snapshot, history: &history };
         let cfg_snapshot = NoteConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
-        let emit = set_fixture_json::handle(&set_fixture_json::SetFixtureJson { json: crate::artifacts::note::engine::semio_example_json() }, &doc, &cfg).expect("handle");
+        let emit = set_fixture_json::handle(&set_fixture_json::SetFixtureJson { json: crate::artifacts::note::schema::semio_example_json() }, &doc, &cfg).expect("handle");
         assert!(emit.artifact_mutations.is_empty(), "whole-document load must not go through the Mutation enum");
         let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setFixtureJson must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");

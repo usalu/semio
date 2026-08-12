@@ -2,7 +2,7 @@
 
 use crate::apps::procedural3d::config::Procedural3dConfig;
 use crate::apps::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
-use crate::artifacts::procedural3d::engine::{preview_camera_json, preview_payload_from_eval_with_session, preview_scene_status_json, preview_selection_json, preview_status_json};
+use crate::apps::procedural3d::{preview_camera_json, preview_payload_from_eval_with_session, preview_scene_status_json, preview_selection_json, preview_status_json};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{build_world_3d_scene, world3d_scene, world3d_sun_measures, ActionDescriptor, LocalizedLabel, MeasureSelectItem, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
@@ -96,8 +96,8 @@ mod tests {
     #[test]
     fn renders_world_preview_scene() {
         // 🧵️ Rendering the preview body tessellates BRep geometry through the same process-wide cache
-        // `artifacts::procedural3d::engine`'s own tests serialize on — see that module's `test_support`.
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        // `apps::procedural3d`'s own tests serialize on — see that module's `test_support`.
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         crate::apps::procedural3d::testkit::drain_flow_eval_ticks(&mut app);
         let json = render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_PREVIEW);

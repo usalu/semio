@@ -2,7 +2,7 @@
 //! graph viewport/select/hover/pointer view commands.
 
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
-use crate::artifacts::procedural3d::engine::{commit_fixture, host_from_fixture};
+use crate::artifacts::procedural3d::schema::{commit_fixture, host_from_fixture};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{CameraJson, FlowEvalSession, FlowFixture};
@@ -170,7 +170,7 @@ mod tests {
 
     #[test]
     fn set_lod_mode_is_a_view_action_with_no_artifact_mutations_via_reorganize_baseline() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
         dispatch(&mut app, Procedural3dCommand::Reorganize(reorganize::Reorganize {}));

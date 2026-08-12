@@ -40,7 +40,7 @@ impl protocol::OpBinary for LowpolyMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::engine::default_snapshot;
+    use crate::artifacts::lowpoly::schema::default_snapshot;
     use crate::artifacts::lowpoly::mutations::{create_object, delete_object, edit_paint_layer, insert_paint_layer, rename_object};
     use protocol::{OpBinary, OpText};
 

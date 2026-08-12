@@ -4,7 +4,7 @@
 //! single-page `PageDoc` -> multi-page `pages: Vec<PdfPage>`/`media_box` shape plus
 //! `decode_pdf`'s error type change). Only the first page is mapped — the same single-page scope
 //! the old reader covered.
-use crate::artifacts::note::engine::{create_note_id, empty_note_snapshot};
+use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot};
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
 use semio_s_plugin_stdio::artifacts::pdf::schema::snapshot::PdfPage;
 use semio_s_plugin_stdio::artifacts::pdf::PdfSnapshot;

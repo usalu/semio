@@ -1,7 +1,7 @@
 //! 🌐️ Block 3D play app — world-scene compute that needs both the document (`Block3dSnapshot`) and
 //! this app's view state (`Block3dConfig`/`Block3dWindowView`). Kept out of
-//! `crate::artifacts::block3d::engine` on purpose: an artifact must never depend on an app, and every
-//! function here takes at least one app-only type.
+//! `crate::artifacts::block3d::schema`/`crate::artifacts::block3d::schema::inferences` on purpose: an
+//! artifact must never depend on an app, and every function here takes at least one app-only type.
 
 use crate::apps::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::artifacts::block3d::{Block3dBrushPreview, Block3dWindowView};

@@ -88,7 +88,7 @@ pub fn semio_mesh_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
 pub mod derived_construction {
     use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::{SemioMeshMutation, apply_semio_mesh_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
     #[derive(Clone, Debug, Default)]
@@ -107,7 +107,8 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<SemioMeshSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
-            let diff = apply_semio_mesh_mutation(&mut self.snapshot, &mutation);
+            let diff = <Self::Mutation as protocol::Mutation<SemioMeshSnapshot>>::diff(&mutation, &self.snapshot);
+            self.snapshot = <Self::Diff as protocol::MutationDiff<SemioMeshSnapshot>>::apply(&diff, &self.snapshot);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> Self {

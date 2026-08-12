@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `UpdateLayerTraceParams` — the OLD params captured from BASE. Missing target or a
 //! non-trace layer ⇒ `Vec::new()`.
-use crate::artifacts::draw::engine::find_draw_layer;
+use crate::artifacts::draw::schema::find_draw_layer;
 use crate::artifacts::draw::mutations::DrawMutation;
 use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot};
 

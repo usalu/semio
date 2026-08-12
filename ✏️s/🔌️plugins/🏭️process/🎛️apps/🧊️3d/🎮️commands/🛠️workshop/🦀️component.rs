@@ -1,7 +1,7 @@
 //! 🛠️ Process 3d play app commands — workshop machine lifecycle (add / remove / update).
 
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::artifacts::process3d::engine::catalog_machine;
+use crate::apps::process3d::catalog_machine;
 use crate::artifacts::process3d::mutations::change_machine_icon::mutation::ChangeMachineIcon;
 use crate::artifacts::process3d::mutations::create_machine::mutation::CreateMachine;
 use crate::artifacts::process3d::mutations::delete_machine::mutation::DeleteMachine;

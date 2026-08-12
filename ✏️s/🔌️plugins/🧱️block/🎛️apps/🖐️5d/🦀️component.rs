@@ -3,7 +3,10 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the board/world
 //! windows in `🎭️modes/✏️edit/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`,
-//! view state in `🦀️config.rs`, and document-side compute in `crate::artifacts::block5d::engine`.
+//! view state in `🦀️config.rs`, document-side compute in `crate::artifacts::block5d::schema`/
+//! `crate::artifacts::block5d::schema::inferences`, and this app's own typed media I/O surface (below —
+//! constitutional: general, an artifact must never depend on an app, so it lives here rather than under
+//! `🗿️artifacts`).
 
 use crate::apps::block5d::commands::example::{edit, set_active_example};
 use crate::apps::block5d::commands::grip::{add_grip, remove_grip};
@@ -26,7 +29,7 @@ use serde_json::Value;
 //#region 🔖️Constants
 pub const BLOCK5D_PLAY_APP_ID: &str = "block5d-play";
 /// 🗂️ The `s/plugin/puzzle` 5d catalog artifact kind block5d's `"catalog:out"` port produces — see
-/// `crate::artifacts::block5d::engine::block5d_io` and `Block5dPlayApp::export_media`.
+/// `block5d_io` and `Block5dPlayApp::export_media`.
 const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
@@ -35,6 +38,28 @@ pub fn block5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(BLOCK5D_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️Io
+/// 🔌️ `Block5dPlayApp`'s typed media I/O surface (`AppDefinition.io`) — the implicit document ports
+/// (`Kit×Type`, matching the `"5d.block"` artifact kind) plus a `"catalog:out"` port giving
+/// `puzzle5d_catalog_fragment` a real caller (see `export_media` below).
+pub fn block5d_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo::from_document(
+        BLOCK_5D_SCHEMA,
+        semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+        semio_framework_plugin::ArtifactPresentation { id: "5d.block".into(), name: "Part Kind".into(), dimension: "5d".into(), component_kind: "block5d".into() },
+    )
+    .with_ports(vec![semio_framework_plugin::MediaPortSpec {
+        id: "catalog:out".into(),
+        label: "Kit Catalog".into(),
+        direction: semio_framework_plugin::MediaPortDirection::Out,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+        kind_id: Some("kit.catalog".into()),
+        required: false,
+        multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+    }])
+}
+//#endregion 🔖️Io
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -81,11 +106,11 @@ impl ArtifactApp for Block5dPlayApp {
     }
 
     fn initial_snapshot() -> Block5dSnapshot {
-        crate::artifacts::block5d::engine::empty_block5d_snapshot()
+        crate::artifacts::block5d::schema::empty_block5d_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
-        Some(crate::artifacts::block5d::engine::block5d_io())
+        Some(block5d_io())
     }
 
     fn command_id(command: &Block5dCommand) -> &'static str {
@@ -136,9 +161,9 @@ impl ArtifactApp for Block5dPlayApp {
 
     /// 🌉️ `puzzle5d_catalog_fragment`'s first real caller — wraps the block-5d document's
     /// puzzle5d-shaped catalog fragment (`parts`/`grips`/`fasteners`/`ropes`/`kindCompatibility`) as
-    /// a `kit.catalog`-schema `Media` value for the `"catalog:out"` port declared in
-    /// `crate::artifacts::block5d::engine::block5d_io`. Falls through to the default whole-document
-    /// pack export for every other port (`"document:out"`).
+    /// a `kit.catalog`-schema `Media` value for the `"catalog:out"` port declared in `block5d_io`.
+    /// Falls through to the default whole-document pack export for every other port
+    /// (`"document:out"`).
     fn export_media(port: &str, doc: &ArtifactView<'_, Block5dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
             // 🌉️ Reimplements `ArtifactApp::export_media`'s default `"document:out"` behavior
@@ -152,7 +177,7 @@ impl ArtifactApp for Block5dPlayApp {
             let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
-        let fragment = crate::artifacts::block5d::engine::puzzle5d_catalog_fragment(doc.snapshot);
+        let fragment = crate::artifacts::block5d::schema::inferences::puzzle5d_catalog_fragment(doc.snapshot);
         Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
@@ -165,7 +190,7 @@ pub fn create_block5d_app() -> App {
             .document(["semio", "block", "5d"])
             .artifact_kind(artifact_kind())
             // 🗂️ The puzzle5d catalog artifact this app's new `"catalog:out"` port produces — see
-            // `crate::artifacts::block5d::engine::block5d_io`/`Block5dPlayApp::export_media`.
+            // `block5d_io`/`Block5dPlayApp::export_media`.
             .artifact_kind(ArtifactKindSpec {
                 id: KIT_CATALOG_ARTIFACT_ID.into(),
                 name: "Kit Catalog".into(),
@@ -196,7 +221,7 @@ pub fn create_block5d_app() -> App {
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .default_layout(edit_mode::layout())
-            .io(crate::artifacts::block5d::engine::block5d_io()),
+            .io(block5d_io()),
     )
     .example(
         crate::apps::block5d::commands::example::BLOCK5D_EXAMPLE_FOREST_LEFT,
@@ -311,6 +336,16 @@ mod tests {
             assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
         }
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "kit.catalog"));
+    }
+
+    #[test]
+    fn block5d_io_declares_the_catalog_out_port() {
+        let io = block5d_io();
+        assert_eq!(io.document_schema, BLOCK_5D_SCHEMA);
+        let ports = io.all_ports();
+        let catalog = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");
+        assert_eq!(catalog.kind_id.as_deref(), Some("kit.catalog"));
+        assert_eq!(catalog.direction, semio_framework_plugin::MediaPortDirection::Out);
     }
 
     #[test]

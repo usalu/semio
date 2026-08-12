@@ -2,7 +2,7 @@
 //! Dispatched as VCS operations with a true inverse (see `crate::artifacts::layout::op`).
 
 use crate::apps::layout::config::{LayoutConfig, LayoutConfigMutation};
-use crate::artifacts::layout::engine::text_to_rgba;
+use crate::artifacts::layout::schema::text_to_rgba;
 use crate::artifacts::layout::mutations::change_frame_columns::mutation::ChangeFrameColumns;
 use crate::artifacts::layout::mutations::change_frame_fill::mutation::ChangeFrameFill;
 use crate::artifacts::layout::mutations::change_frame_stroke::mutation::ChangeFrameStroke;

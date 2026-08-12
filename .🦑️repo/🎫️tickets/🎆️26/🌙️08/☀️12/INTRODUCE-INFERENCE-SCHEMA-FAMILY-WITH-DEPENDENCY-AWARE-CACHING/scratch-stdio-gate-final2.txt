@@ -8671,3 +8671,390 @@ help: provide the argument
 159 |             SemioMeshMutation::RemoveTexture { id } => diff_remove_texture(/* &semio::standards::v1::subsets::mesh::schema::snapshot::component::SemioMeshSnapshot */, id),
     |                                                                            +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🚪️io/🦀️component.rs:9:30
+  |
+9 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️component.rs:10:9
+   |
+10 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, Io...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, Io...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🚪️io/🦀️component.rs:19:30
+   |
+19 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Stand...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::OpBinary`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:34:5
+   |
+34 | use protocol::OpBinary;
+   |     ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, Io...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/🚪️io/🦀️component.rs:13:30
+   |
+13 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, I...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:10:30
+   |
+10 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Stand...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🚪️io/🦀️component.rs:11:30
+   |
+11 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, I...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, Io...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🚪️io/🦀️component.rs:11:30
+   |
+11 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, I...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🚪️io/🦀️component.rs:12:30
+   |
+12 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, I...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/🚪️io/🦀️component.rs:12:30
+   |
+12 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, I...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🚪️io/🦀️component.rs:22:30
+   |
+22 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Stand...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🚪️io/🦀️component.rs:19:30
+   |
+19 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Stand...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🚪️io/🦀️component.rs:7:30
+  |
+7 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, Io...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🧪️tests/🦀️test.rs:8:45
+  |
+8 | use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactBuilder};
+  |                                             ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🌱️metabolism/🧪️tests/🦀️test.rs:13:45
+   |
+13 | use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactBuilder};
+   |                                             ^^^^^^^^^^^^^^^^
+
+warning: unused variable: `mid2`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🔺️diff/🦀️component.rs:859:13
+    |
+859 |         let mid2 = d2.apply(&mid1);
+    |             ^^^^ help: if this is intentional, prefix it with an underscore: `_mid2`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `base`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs:445:13
+    |
+445 |         let base = fixture();
+    |             ^^^^ help: if this is intentional, prefix it with an underscore: `_base`
+
+Some errors have detailed explanations: E0061, E0432.
+For more information about an error, try `rustc --explain E0061`.
+warning: `semio-s-plugin-stdio` (lib) generated 601 warnings
+error: could not compile `semio-s-plugin-stdio` (lib) due to 8 previous errors; 601 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+warning: `semio-s-plugin-stdio` (lib test) generated 737 warnings (561 duplicates)
+error: could not compile `semio-s-plugin-stdio` (lib test) due to 8 previous errors; 737 warnings emitted

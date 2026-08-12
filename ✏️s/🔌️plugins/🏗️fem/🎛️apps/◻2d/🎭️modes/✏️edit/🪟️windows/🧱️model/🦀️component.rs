@@ -100,7 +100,7 @@ pub(crate) fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line
 /// mesh failure for one region silently yields fewer triangles rather than failing the whole render.
 pub(crate) fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3])> {
     let mut out = Vec::new();
-    let Ok(meshes) = crate::artifacts::fem2d::engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
+    let Ok(meshes) = crate::fem2d_engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
     for mesh in &meshes {
         for (tri_index, tri) in mesh.tris.iter().enumerate() {
             let id = format!("{}_t{}", mesh.region_id, tri_index);
@@ -118,7 +118,7 @@ pub(crate) fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64,
 /// `fem2d_nodal_von_mises`'s node-keyed map for banded contour rendering.
 pub(crate) fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3], [String; 3])> {
     let mut out = Vec::new();
-    let Ok(meshes) = crate::artifacts::fem2d::engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
+    let Ok(meshes) = crate::fem2d_engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
     for mesh in &meshes {
         for (tri_index, tri) in mesh.tris.iter().enumerate() {
             let id = format!("{}_t{}", mesh.region_id, tri_index);
@@ -197,7 +197,7 @@ mod tests {
 
     #[test]
     fn fem2d_model_extent_degenerate_model_returns_one() {
-        assert_eq!(fem2d_model_extent(&crate::artifacts::fem2d::engine::empty_fem2d_snapshot()), 1.0);
+        assert_eq!(fem2d_model_extent(&crate::artifacts::fem2d::schema::empty_fem2d_snapshot()), 1.0);
     }
 }
 //#endregion 🧪️Tests

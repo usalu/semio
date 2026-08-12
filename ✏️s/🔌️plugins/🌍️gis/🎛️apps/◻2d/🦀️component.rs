@@ -4,7 +4,10 @@
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the map canvas
 //! and its chrome in `🎭️modes/✏️edit/🪟️windows/🗺️map` (+ its `🎚️options/*`), panel trees in
 //! `📌️panels/*`, labels in `🦀️terminology.rs`, view state in `🦀️config.rs`, the shared `MapHost`
-//! projection in `🦀️maphost.rs`, and document-side compute in `crate::artifacts::gismap::engine`.
+//! projection in `🦀️maphost.rs`, and document-side compute in `crate::artifacts::gismap::schema`.
+//! This app's typed media I/O surface (`gis2d_io`/ports/`gis2d_map_media`) lives below in `🔖️Io` —
+//! relocated from the artifact's `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES),
+//! since an `AppIo` surface is app behaviour, not artifact data.
 
 use crate::apps::gis2d::commands::{example, features, locale, selection, shell, view};
 use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
@@ -12,7 +15,7 @@ use crate::apps::gis2d::modes::edit;
 use crate::apps::gis2d::modes::edit::windows::map;
 use crate::apps::gis2d::panels::{artifact as document_panel, catalogue as catalogue_panel, inspection as inspection_panel};
 use crate::apps::gis2d::terminology::gis2d_labels;
-use crate::artifacts::gismap::engine::{gis2d_features_in_port, gis2d_io, gis2d_map_media, gis2d_map_out_port, gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
+use crate::artifacts::gismap::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
 use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::{artifact_kind, GisMapSnapshot, GIS_MAP_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
@@ -56,6 +59,71 @@ pub fn gis2d_layer_tree_item(id: String, label: impl Into<Label>, description: O
     UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None, ..tree_item_with_action(id, label, description, action) }
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️Io
+/// 🧭️ Relocated from the artifact's `⚙️engine` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this app's typed media I/O surface
+/// (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` `crate::artifacts::gismap::artifact_kind()`
+/// declares (schema/media type/export+import formats/presentation fields copied verbatim), plus the
+/// two app-specific workflow ports (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE
+/// Wave 2 port recipe): `features:in` (any TwoD×Vector producer feeds new/patched
+/// positions/routes/regions) and `map:out` (this document's own feature layers, the `2d.map`
+/// interchange kind gis3d's `map:in` consumes).
+pub fn gis2d_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: GIS_MAP_SCHEMA.into(),
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        ports: vec![gis2d_features_in_port(), gis2d_map_out_port()],
+        // 🚮️ V7 deprecated-codec-enum retirement (SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT):
+        // `AppIo.{export,import}_formats` stays framework-owned and carries no `&'static str`
+        // stdio-kind-id peer field to move real values onto (unlike `ArtifactKindSpec`) — emptied,
+        // mirroring the sibling `gis3d_io()` (gis3d app) fix already applied in this ticket.
+        export_formats: Vec::new(),
+        import_formats: Vec::new(),
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "2d.map".into(), name: "2D Map".into(), dimension: "2d".into(), component_kind: "gismap".into() },
+    }
+}
+
+/// 🔌️ `features:in` — accepts any TwoD×Vector producer (draw's `vector:out`, another gis2d's
+/// `map:out`, …); no `kind_id` pin since it's a generic vector-features sink, not one specific kind.
+/// `Many`/optional: several producers may fan into one map, and a map with no upstream edge is valid.
+pub fn gis2d_features_in_port() -> semio_framework_plugin::MediaPortSpec {
+    semio_framework_plugin::MediaPortSpec {
+        id: "features:in".into(),
+        label: "Features".into(),
+        direction: semio_framework_plugin::MediaPortDirection::In,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        kind_id: None,
+        required: false,
+        multiplicity: semio_framework::PortMultiplicity::Many,
+    }
+}
+
+/// 🔌️ `map:out` — this document's positions/routes/regions as the `2d.map` interchange kind (gis3d's
+/// `map:in` consumes it). `Many`/optional: several downstream consumers may fan out from one map, and a
+/// map with no downstream edge is valid.
+pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
+    semio_framework_plugin::MediaPortSpec {
+        id: "map:out".into(),
+        label: "Map".into(),
+        direction: semio_framework_plugin::MediaPortDirection::Out,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        kind_id: Some("2d.map".into()),
+        required: false,
+        multiplicity: semio_framework::PortMultiplicity::Many,
+    }
+}
+
+/// 🎞️ `map:out`'s `Media` value — this document's positions/routes/regions as a `2d.map` structured
+/// payload; reuses the exact descriptor JSON shape the ◻2d window's renderer/`MapHost` already consume,
+/// so there is exactly one "gis map as JSON" shape in the whole app.
+pub fn gis2d_map_media(document: &GisMapSnapshot) -> semio_framework_plugin::Media {
+    semio_framework_plugin::Media {
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.map".into(), json: crate::artifacts::gismap::schema::gis_map_descriptor_json(document) },
+    }
+}
+//#endregion 🔖️Io
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -155,7 +223,7 @@ impl ArtifactApp for Gis2dPlayApp {
     }
 
     fn initial_snapshot() -> GisMapSnapshot {
-        crate::artifacts::gismap::engine::default_document()
+        crate::artifacts::gismap::schema::default_document()
     }
 
     /// 🔌️ `features:in`/`map:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the
@@ -170,7 +238,7 @@ impl ArtifactApp for Gis2dPlayApp {
     // document-replacing gesture) goes through `positions_operations`/`routes_operations`/
     // `regions_operations` instead, diffing into batched create/delete/replace-data operations.
 
-    /// 🎞️ `map:out` (see `crate::artifacts::gismap::engine::gis2d_map_media`) plus the inherited
+    /// 🎞️ `map:out` (see `gis2d_map_media` in `🔖️Io` below) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
     fn export_media(port: &str, doc: &ArtifactView<'_, GisMapSnapshot>) -> Result<Media, MediaError> {
@@ -422,7 +490,7 @@ pub fn create_gis2d_app() -> App {
             .config(Gis2dPlayApp::config_spec())
             .io(gis2d_io()),
     )
-    .example("reuse-map", LocalizedLabel::native("Reuse Map", "Karte wiederverwenden"), serde_json::to_string(&crate::artifacts::gismap::engine::default_document()).unwrap_or_default(), "file-text")
+    .example("reuse-map", LocalizedLabel::native("Reuse Map", "Karte wiederverwenden"), serde_json::to_string(&crate::artifacts::gismap::schema::default_document()).unwrap_or_default(), "file-text")
     .workflow("gis2d", "GIS 2D", "map")
 }
 //#endregion 🔖️Manifest
@@ -629,6 +697,31 @@ mod tests {
         let ports = Gis2dPlayApp::media_ports();
         assert!(ports.iter().any(|port| port.id == "features:in"));
         assert!(ports.iter().any(|port| port.id == "map:out"));
+    }
+
+    /// 🧭️ Relocated from the artifact's `⚙️engine` tests (ticket
+    /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) alongside `gis2d_io`/`gis2d_map_media`.
+    #[test]
+    fn gis2d_io_declares_the_features_in_and_map_out_ports() {
+        let io = gis2d_io();
+        assert_eq!(io.document_schema, GIS_MAP_SCHEMA);
+        assert_eq!(io.artifact.id, "2d.map");
+        let ports = io.all_ports();
+        assert!(ports.iter().any(|port| port.id == "features:in" && port.direction == semio_framework_plugin::MediaPortDirection::In));
+        let map_out = ports.iter().find(|port| port.id == "map:out").expect("map:out declared");
+        assert_eq!(map_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert_eq!(map_out.kind_id.as_deref(), Some("2d.map"));
+    }
+
+    #[test]
+    fn gis2d_map_media_exports_the_document_descriptor() {
+        let document = crate::artifacts::gismap::schema::default_document();
+        let media = gis2d_map_media(&document);
+        let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else {
+            panic!("expected a structured map:out payload");
+        };
+        assert_eq!(schema, "2d.map");
+        assert!(json.contains("positions"));
     }
     //#endregion 🔖️Media
 

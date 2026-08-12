@@ -126,7 +126,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::block5d::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::block5d::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -159,7 +159,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.block5d")
         .schema(crate::artifacts::block5d::schema::block5d_artifact_schema_descriptor())
         .inferences([crate::artifacts::block5d::standards::v1::subsets::any::schema::inferences::block5d_artifact_inference_descriptor()])
-        .composers(crate::artifacts::block5d::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::block5d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::block5d::Block5dPlayApp>()
         .build()

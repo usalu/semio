@@ -15,7 +15,7 @@ pub mod add_grip {
         let Some(grip_kind_id) = doc.snapshot.grip_kinds.first().map(|kind| kind.id.clone()) else {
             return Ok(Emit::default());
         };
-        let id = crate::artifacts::block5d::engine::next_id(doc.snapshot.grips.iter().map(|grip| grip.id.as_str()), "grip-");
+        let id = crate::artifacts::block5d::schema::next_id(doc.snapshot.grips.iter().map(|grip| grip.id.as_str()), "grip-");
         let grip = Block5dGripTemplate { id, grip_kind: grip_kind_id, angle: 0.0, radius_2d: 0.36, position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.36 };
         Ok(Emit::mutations(vec![crate::artifacts::block5d::mutations::create_grip(grip)]))
     }

@@ -21,8 +21,8 @@ use crate::apps::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::apps::puzzle2d::panels::{catalogue, document, inspection};
 use crate::apps::puzzle2d::terminology::{is_de_locale, puzzle2d_labels, Puzzle2dLabels};
 use crate::artifacts::puzzle2d::dsl as puzzle2d_dsl;
-use crate::artifacts::puzzle2d::engine::board_host::puzzle_board_host;
-use crate::artifacts::puzzle2d::engine::{BoardHost, Puzzle2dExtension};
+use crate::apps::puzzle2d::engine::board_host::puzzle_board_host;
+use crate::apps::puzzle2d::engine::{BoardHost, Puzzle2dExtension};
 use crate::artifacts::puzzle2d::op::{puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
@@ -1024,7 +1024,7 @@ impl ArtifactApp for Puzzle2dPlayApp {
             .flat_map(|pane| {
                 window_instance_ids(pane).into_iter().map(|wid| {
                     let envelope = Self::scene_for(doc.snapshot.0.clone(), config, Some(&wid));
-                    (wid, edit::puzzle2d_engagement(&envelope, &crate::artifacts::puzzle2d::engine::board_host::puzzle_board_host(), pane, labels))
+                    (wid, edit::puzzle2d_engagement(&envelope, &crate::apps::puzzle2d::engine::board_host::puzzle_board_host(), pane, labels))
                 })
             })
             .collect()
@@ -1190,7 +1190,7 @@ pub fn create_puzzle2d_app() -> App {
 fn puzzle2d_snapshot_to_drawing(
     snapshot: &Puzzle2dSnapshot,
 ) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot {
-    use crate::artifacts::puzzle2d::engine::{handle_position_on_circle, handle_position_on_rectangle, Point};
+    use crate::apps::puzzle2d::engine::{handle_position_on_circle, handle_position_on_rectangle, Point};
     use crate::artifacts::puzzle2d::Puzzle2dNode;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::{SemioPoint2, SemioRgba, SemioTransform};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
@@ -1367,14 +1367,27 @@ pub(crate) fn puzzle2d_document_json_from_dwg(_drawing: &semio_framework::DwgDra
 // 🗂️ `Puzzle2dPlaySnapshot`'s pack<->dsl codec (so `framework/sync`'s `FolderEndpoint::Pack` can
 // print/parse puzzle-2d play documents without depending on this crate's concrete
 // `Projection`/`Mutation` types) is now declared via `.document_codec::<Puzzle2dPlayApp>()` on
-// `crate::artifacts::puzzle2d::standards::v1::engine::declaration()` (ticket
-// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE` M1) — the old side-effecting
-// `register_puzzle2d_exports()` wrapper (this app file's only caller of
-// `register_document_codec_for_app`) is gone. The 2d media export/import OS-host registration lives
-// at `crate::artifacts::puzzle2d::standards::v1::engine::register_media_io`, still wired through
-// `🧩️puzzle/🦀️component.rs`'s `.setup()` — APA: OS-host registration belongs to the owning
-// artifact's own engine, never to an app file.
+// `crate::artifacts::puzzle2d::declaration()` (ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`
+// M1) — the old side-effecting `register_puzzle2d_exports()` wrapper (this app file's only caller of
+// `register_document_codec_for_app`) is gone.
 //#endregion 🔖️Manifest
+
+//#region 🔖️Register
+/// 🖼️ Registers the `"2d.puzzle"` SVG/DWG media export-import bridge with the OS host — no
+/// `ArtifactDeclaration` field covers this OS-host media registry (see `declaration()`'s own doc in
+/// the artifact root), so it stays wired through `🧩️puzzle/🦀️component.rs`'s `.setup()`. Rehomed
+/// here from the deleted artifact-side `⚙️engine` (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1e: `register_media_io` reaches this app's own
+/// `puzzle2d_document_json_to_svg`/`puzzle2d_document_json_from_dwg` callbacks directly, so it now
+/// lives beside them instead of crossing an artifact→app boundary).
+pub fn register_media_io() {
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    {
+        semio_framework_os::register_2d_export_handlers("2d.puzzle", "puzzle2d", crate::apps::puzzle2d::puzzle2d_document_json_to_svg);
+        semio_framework_os::register_dwg_import_handler("2d.puzzle", crate::apps::puzzle2d::puzzle2d_document_json_from_dwg);
+    }
+}
+//#endregion 🔖️Register
 
 //#region 🧪️Testkit
 /// 🧪️ The one puzzle2d-app test harness — every other taxonomy node's `🧪️Tests` region builds on it

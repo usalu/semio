@@ -33,7 +33,7 @@ mod tests {
 
     #[test]
     fn sun_azimuth_measure_spans_a_full_turn() {
-        let snapshot = crate::artifacts::shooting::engine::default_snapshot();
+        let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(&snapshot, labels) {
             WindowMeasure::Slider { min, max, .. } => assert_eq!((min, max), (0.0, 360.0)),

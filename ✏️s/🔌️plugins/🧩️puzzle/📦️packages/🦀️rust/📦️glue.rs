@@ -576,16 +576,6 @@ pub mod artifacts {
             #[path = "."]
             pub mod v1 {
                 #[path = "."]
-                pub mod engine {
-                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/✂️transfer/🦀️component.rs"]
-                    pub mod transfer;
-                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📐️flatten/🦀️component.rs"]
-                    pub mod flatten;
-                }
-                #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
@@ -893,6 +883,12 @@ pub mod artifacts {
                                     pub mod inverse;
                                 }
                             }
+                            #[path = "."]
+                            pub mod transfer {
+                                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✂️transfer/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                            }
                         }
                         #[path = "."]
                         pub mod io {
@@ -1070,9 +1066,6 @@ pub mod artifacts {
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod engine {
-            pub use super::standards::v1::engine::*;
         }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
@@ -2042,6 +2035,13 @@ pub mod apps {
         pub mod terminology;
         #[path = "../../🎛️apps/🖐️5d/🌉️wasm/🦀️component.rs"]
         pub mod wasm;
+
+        #[path = "."]
+        pub mod precompute {
+            #[path = "../../🎛️apps/🖐️5d/🧠️precompute/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+        }
 
         #[path = "."]
         pub mod commands {

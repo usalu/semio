@@ -4,7 +4,9 @@
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::apps::process3d::terminology::{process3d_labels, Process3dLabels};
 use crate::apps::process3d::set_active_utility_effect;
-use crate::artifacts::process3d::engine::{axis_angle_from_up_to, capability_for_measure_kind, insert_step_mutations, next_step_id};
+use crate::apps::process3d::axis_angle_from_up_to;
+use crate::artifacts::process3d::schema::inferences::capability_for_measure_kind;
+use crate::artifacts::process3d::schema::{insert_step_mutations, next_step_id};
 use crate::artifacts::process3d::{op::Process3dMutation, MeasureKind, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, SolidSpec, StepOrigin};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -66,7 +68,7 @@ pub mod world_pointer_down {
             label: capability.label.clone(),
             enabled: true,
             origin: Some(origin),
-            measure: crate::artifacts::process3d::engine::measure_for_capability(&capability, Some(payload.position)),
+            measure: crate::artifacts::process3d::schema::inferences::measure_for_capability(&capability, Some(payload.position)),
         };
         let step_id = step.id.clone();
         Ok(Emit { artifact_mutations: insert_step_mutations(fixture, step), config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: Some(step_id) }], effects: vec![set_active_utility_effect("select")], ..Default::default() })

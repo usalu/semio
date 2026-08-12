@@ -309,7 +309,7 @@ pub mod toggle_smooth {
 mod tests {
     use crate::apps::lowpoly::testkit::{app, dispatch, face_selection};
     use crate::apps::lowpoly::LowpolyCommand;
-    use crate::artifacts::lowpoly::engine::LowpolyDocument;
+    use crate::apps::lowpoly::engine::LowpolyDocument;
     use crate::artifacts::lowpoly::LowpolySelection;
 
     #[test]

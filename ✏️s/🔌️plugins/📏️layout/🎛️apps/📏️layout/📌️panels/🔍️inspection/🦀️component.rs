@@ -3,7 +3,7 @@
 use crate::apps::layout::config::LayoutConfig;
 use crate::apps::layout::layout_action;
 use crate::apps::layout::terminology::LayoutLabels;
-use crate::artifacts::layout::engine::rgba_to_text;
+use crate::artifacts::layout::schema::rgba_to_text;
 use crate::artifacts::layout::{Frame, LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence,

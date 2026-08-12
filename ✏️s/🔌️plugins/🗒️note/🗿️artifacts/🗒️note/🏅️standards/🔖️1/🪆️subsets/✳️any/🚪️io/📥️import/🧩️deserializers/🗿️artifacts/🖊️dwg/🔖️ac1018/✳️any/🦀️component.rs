@@ -8,6 +8,6 @@ pub fn deserialize(from: &DwgSnapshot) -> Result<NoteSnapshot, String> { deseria
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<NoteSnapshot, String> {
     let _meta = decode_dwg(bytes)?;
     let drawing: DwgDrawing = dwg_from_bytes(bytes)?;
-    let value = crate::artifacts::note::engine::note_document_json_from_dwg(&drawing)?;
+    let value = crate::artifacts::note::io::note_document_json_from_dwg(&drawing)?;
     serde_json::from_value(value).map_err(|e| e.to_string())
 }

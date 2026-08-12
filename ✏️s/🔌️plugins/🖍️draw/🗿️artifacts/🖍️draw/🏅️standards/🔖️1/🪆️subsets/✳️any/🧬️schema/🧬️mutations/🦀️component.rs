@@ -4,7 +4,7 @@
 //! and `impl protocol::SemanticMutation<DrawSnapshot>` from those payloads — no hand-written
 //! apply/diff/inverse dispatch here.
 
-use crate::artifacts::draw::engine::{find_draw_layer, hex_to_rgba, layer_base};
+use crate::artifacts::draw::schema::{find_draw_layer, hex_to_rgba, layer_base};
 use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot, FillStyle, StrokeStyle};
 use serde::{Deserialize, Serialize};
 
@@ -116,7 +116,7 @@ pub use super::update_layer_transform::mutation::{update_layer_transform, Update
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::draw::engine::{create_draw_path_layer, create_draw_shape_layer_rect, default_draw_document};
+    use crate::artifacts::draw::schema::{create_draw_path_layer, create_draw_shape_layer_rect, default_draw_document};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
@@ -129,7 +129,7 @@ mod tests {
     #[test]
     fn set_layer_visible_inverse_law() {
         let base = base_document();
-        let layer_id = crate::artifacts::draw::engine::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
         let mutation = set_layer_visible(layer_id, false);
         assert_mutation_inverse_law(&base, &mutation);
     }
@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn rename_layer_inverse_law() {
         let base = base_document();
-        let layer_id = crate::artifacts::draw::engine::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
         let mutation = rename_layer(layer_id, "Renamed".into());
         assert_mutation_inverse_law(&base, &mutation);
     }
@@ -152,7 +152,7 @@ mod tests {
     #[test]
     fn delete_layer_inverse_law() {
         let base = base_document();
-        let layer_id = crate::artifacts::draw::engine::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
         let mutation = delete_layer(layer_id);
         assert_mutation_inverse_law(&base, &mutation);
     }
@@ -160,7 +160,7 @@ mod tests {
     #[test]
     fn duplicate_layer_inverse_law() {
         let base = base_document();
-        let layer_id = crate::artifacts::draw::engine::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
         let mutation = duplicate_layer(layer_id);
         assert_mutation_inverse_law(&base, &mutation);
     }
@@ -169,7 +169,7 @@ mod tests {
     fn reorder_layer_inverse_law() {
         let mut base = base_document();
         base.layers.push(create_draw_path_layer("Second", Vec::new()));
-        let layer_id = crate::artifacts::draw::engine::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
         let mutation = reorder_layer(layer_id, None, 1);
         assert_mutation_inverse_law(&base, &mutation);
     }
@@ -177,7 +177,7 @@ mod tests {
     #[test]
     fn set_layer_opacity_diff_absorb_law() {
         let base = base_document();
-        let layer_id = crate::artifacts::draw::engine::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
         let d1 = set_layer_opacity(layer_id.clone(), 0.5).diff(&base);
         let mid = d1.apply(&base);
         let d2 = set_layer_opacity(layer_id, 0.25).diff(&mid);

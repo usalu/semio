@@ -2,7 +2,7 @@
 
 use crate::apps::curate::config::{selected_ids, SourcingCurateConfig};
 use crate::apps::curate::SOURCING_CONTROLLER_ID;
-use crate::artifacts::curate::engine::{filtered_stock, grid_placement, grid_scale, instance_json, kind_mesh_json};
+use crate::artifacts::curate::schema::{filtered_stock, grid_placement, grid_scale, instance_json, kind_mesh_json};
 use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{build_world_3d_scene, world3d_default_camera, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions, WorldSunConfig};
 use serde_json::json;
@@ -65,7 +65,7 @@ mod tests {
 
     #[test]
     fn grid_instance_count_matches_filtered_stock_and_normalizes_scale() {
-        let document = crate::artifacts::curate::engine::default_document();
+        let document = crate::artifacts::curate::schema::default_document();
         let cfg = SourcingCurateConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
         let node = render(&document, &cfg);
         let json = serde_json::to_value(&node).unwrap();

@@ -3,7 +3,7 @@
 use crate::artifacts::draw::schema::diff::{
     DrawAssetsDelta, DrawDiff, DrawLayerAddition, DrawLayerPatch, DrawLayerPatchEntry, DrawLayersDelta, DrawStringList,
 };
-use crate::artifacts::draw::engine::{insert_layer, layer_base_mut, remove_layer_from_tree, update_layer_in_tree};
+use crate::artifacts::draw::schema::{insert_layer, layer_base_mut, remove_layer_from_tree, update_layer_in_tree};
 use crate::artifacts::draw::schema::DrawArtifact;
 use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot, FillStyle, StrokeStyle};
 use protocol::MutationDiff;
@@ -95,7 +95,7 @@ pub fn apply_layers_delta(layers: &[DrawLayerNode], delta: &DrawLayersDelta) -> 
     if let Some(order) = &delta.reordered {
         let mut by_id: std::collections::BTreeMap<_, _> = next
             .into_iter()
-            .map(|layer| (crate::artifacts::draw::engine::layer_id(&layer).to_string(), layer))
+            .map(|layer| (crate::artifacts::draw::schema::layer_id(&layer).to_string(), layer))
             .collect();
         let mut ordered = Vec::with_capacity(order.len());
         for id in order {

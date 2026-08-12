@@ -12,7 +12,37 @@
 | Banned vocabulary in real (non-comment) code | **1 file** — flow's kernel bridge, staged, blocked on DKM |
 | Unresolved `include_str!`/`include_bytes!` targets in scope | **0** |
 | Compile (`--all-targets --keep-going`, sccache off) | **0 errors in any migrated facet** |
-| Wave R3 policy trueing | edits landed; breach counts unverified (policy command was crashing on another ticket's rule) |
+| Wave R3 policy trueing | **complete and VERIFIED** — see below |
+
+### Wave R3 final state (verified against a runnable `bun ./📜️script.ts policy`)
+
+| `mutation-migration` kind | count |
+|---|---|
+| `semantic-vocabulary` **[high]** | **2** — both in deferred stdio subsets (`✳️flow`, `✳️value`) |
+| `dispatch-coverage` [medium] | 64 |
+| `emoji-uniqueness` [medium] | 55 |
+| `impl-presence` [medium] | 1424 |
+| `semantic-vocabulary` [medium/low] | 331 / 154 |
+| `ts-mirror` [low] | 1280 |
+
+**A regression I introduced and then caught — worth keeping as the cautionary case.** Repointing
+the three rules onto the real deep taxonomy produced **672 fabricated `triad-completeness` highs**.
+`policyListMutationDirs` reserved `🦠️mutation`/`🔺️diff`/`↩️inverse`/`📚️examples` but **not**
+`💾️binary` and `📝️text` — the facet's OpBinary/OpText **codec** dirs, which are siblings of the
+mutation triads and own no triad leaves. Harmless while the rules walked a path matching nothing;
+six false highs per facet the moment they walked the real one. Fixed by reserving both, once, in
+the shared helper:
+
+```
+triad-completeness [high]   672 → 0
+dispatch-coverage [medium]  112 → 64      (same cause, also inflated)
+total breaches           31,148 → 30,452
+```
+
+I had already recorded "Wave R3 landed" and reported it as done. It was a peer sending me the
+breach histogram — unprompted, and explicitly *without* asserting the highs were mine — that
+surfaced it. **A rule repointed onto a larger population must have its exclusions re-checked
+against that population**; the old, broken scope was hiding the gap rather than satisfying it.
 
 ## Repairs made along the way (none of which were the planned work)
 

@@ -15,7 +15,7 @@ pub mod add_vortex {
         let Some(vortex_kind_id) = doc.snapshot.vortex_kinds.first().map(|kind| kind.id.clone()) else {
             return Ok(Emit::default());
         };
-        let id = crate::artifacts::block3d::engine::next_id(doc.snapshot.vortices.iter().map(|vortex| vortex.id.as_str()), "vortex-");
+        let id = crate::artifacts::block3d::schema::next_id(doc.snapshot.vortices.iter().map(|vortex| vortex.id.as_str()), "vortex-");
         let vortex = Block3dVortexTemplate { id, vortex_kind: vortex_kind_id, position: [0.0, 0.0, 0.0], direction: [0.0, 0.0, 1.0], radius: 0.3, label: None };
         Ok(Emit::mutations(vec![crate::artifacts::block3d::mutations::create_vortex(vortex)]))
     }

@@ -19,7 +19,7 @@ use crate::apps::puzzle5d::modes::edit;
 use crate::apps::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::apps::puzzle5d::panels::{catalogue, document as document_panel, inspection};
 use crate::apps::puzzle5d::terminology::{puzzle5d_is_de_locale, puzzle5d_labels, puzzle5d_localized, Puzzle5dLabels};
-use crate::artifacts::puzzle5d::engine::{BrushPlacePayload, Puzzle5dPrecomputeSession};
+use crate::apps::puzzle5d::precompute::{BrushPlacePayload, Puzzle5dPrecomputeSession};
 use crate::artifacts::puzzle5d::op::{puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlaySnapshot};
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement};
@@ -936,7 +936,7 @@ fn rewrite_grip_ref_local(grip_ref: &str, id_map: &HashMap<String, String>) -> S
 /// 🧮️ Closure-selects a copy fragment: expands the part set to include every selected fastener's
 /// endpoint parts, then expands the fastener set to include every fastener whose BOTH endpoints are
 /// now in the part set — the untyped structural-twin twin of
-/// `crate::artifacts::puzzle5d::engine::copy_selection`.
+/// `crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::transfer::copy_selection`.
 fn copy_selection_local(document: &Puzzle5dDocument, part_ids: &[String], fastener_ids: &[String]) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
     let mut part_set: HashSet<String> = part_ids.iter().cloned().collect();
     for fastener in &document.fasteners {
@@ -2003,14 +2003,38 @@ pub(crate) fn puzzle5d_document_from_mesh(_mesh: &semio_framework_plugin::MeshDa
 // 🗂️ `Puzzle5dPlaySnapshot`'s pack<->dsl codec (so `framework/sync`'s `FolderEndpoint::Pack` can
 // print/parse puzzle-5d play documents without depending on this crate's concrete
 // `Projection`/`Mutation` types) is now declared via `.document_codec::<Puzzle5dPlayApp>()` on
-// `crate::artifacts::puzzle5d::standards::v1::engine::declaration()` (ticket
-// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE` M1) — the old side-effecting
-// `register_puzzle5d_exports()` wrapper (this app file's only caller of
-// `register_document_codec_for_app`) is gone. The 5d mesh export/import OS-host registration lives
-// at `crate::artifacts::puzzle5d::standards::v1::engine::register_mesh_io`, still wired through
-// `🧩️puzzle/🦀️component.rs`'s `.setup()` — APA: OS-host registration belongs to the owning
-// artifact's own engine, never to an app file.
+// `crate::artifacts::puzzle5d::declaration()` (ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`
+// M1) — the old side-effecting `register_puzzle5d_exports()` wrapper (this app file's only caller of
+// `register_document_codec_for_app`) is gone. The 5d mesh export/import OS-host registration is
+// `register_mesh_io()` below (moved app-ward from the deleted artifact-side `⚙️engine` per ticket
+// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES — an artifact is schema + io only, this
+// registration is genuine host-wiring behaviour), still wired through `🧩️puzzle/🦀️component.rs`'s
+// `.setup()` since no `ArtifactDeclaration` field covers this OS-host media registry.
 //#endregion 🔖️Manifest
+
+//#region 🚪️OsHostMeshIo
+/// 🖼️ Registers the `"5d.puzzle"` OS-host mesh export/import bridge.
+///
+/// 🚚️ Relocated from the deleted artifact-side `⚙️engine` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): OS-host registration wiring is app/host
+/// behaviour, not artifact schema — no `ArtifactDeclaration` field covers this OS-host media registry
+/// (see `crate::artifacts::puzzle5d::declaration()`'s own doc), so it stays wired through
+/// `🧩️puzzle/🦀️component.rs`'s `.setup()`. `puzzle5d_document_from_mesh` (above) stays its importer/
+/// dwg callback, now a same-file sibling instead of a cross-node `pub(crate)` reach.
+pub fn register_mesh_io() {
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    {
+        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::ObjExporter));
+        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
+        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::StlExporter));
+        semio_framework_os::register_mesh_importer("5d.puzzle", crate::apps::puzzle5d::puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
+        semio_framework_os::register_mesh_importer("5d.puzzle", crate::apps::puzzle5d::puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
+        semio_framework_os::register_mesh_importer("5d.puzzle", crate::apps::puzzle5d::puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
+        semio_framework_os::register_mesh_dwg_export_handler("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
+        semio_framework_os::register_mesh_dwg_import_handler("5d.puzzle", crate::apps::puzzle5d::puzzle5d_document_from_mesh);
+    }
+}
+//#endregion 🚪️OsHostMeshIo
 
 //#region 🧪️Testkit
 /// 🧪️ The one puzzle5d-app test harness — every other taxonomy node's `🧪️Tests` region builds on it

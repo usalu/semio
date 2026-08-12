@@ -5,7 +5,7 @@
 //! consumers it has, because artifacts must never depend on apps.
 
 use crate::apps::layout::config::LayoutConfig;
-use crate::artifacts::layout::engine::scene::{LayoutEngine, build_display_list_for_page};
+use crate::apps::layout::engine::scene::{LayoutEngine, build_display_list_for_page};
 use crate::artifacts::layout::{LayoutSnapshot, Page};
 use serde_json::{json, Value};
 
@@ -71,7 +71,7 @@ fn drop_preview_fill(kind: &str) -> [f32; 4] {
 const LAYOUT_DROP_PREVIEW_WIDTH: f64 = 200.0;
 const LAYOUT_DROP_PREVIEW_HEIGHT: f64 = 120.0;
 
-fn display_list_to_host_layers(list: &crate::artifacts::layout::engine::scene::DisplayList, blueprint: bool, drop_preview: &crate::artifacts::layout::LayoutDropPreviewState) -> Vec<Value> {
+fn display_list_to_host_layers(list: &crate::apps::layout::engine::scene::DisplayList, blueprint: bool, drop_preview: &crate::artifacts::layout::LayoutDropPreviewState) -> Vec<Value> {
     let mut layers = Vec::new();
 
     let page_bg = if blueprint { [0.97, 0.97, 0.98, 1.0] } else { [1.0, 1.0, 1.0, 1.0] };
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn active_page_falls_back_to_first_page_when_config_id_unresolved() {
-        let doc = crate::artifacts::layout::engine::default_document();
+        let doc = crate::artifacts::layout::schema::default_document();
         let config = LayoutConfig { active_page_id: "no-such-page".into(), ..LayoutConfig::default() };
         let page = active_page(&doc, &config).expect("falls back to first page");
         assert_eq!(page.id, doc.pages[0].id);
@@ -172,7 +172,7 @@ mod tests {
 
     #[test]
     fn canvas_layers_renders_the_page_background() {
-        let doc = crate::artifacts::layout::engine::default_document();
+        let doc = crate::artifacts::layout::schema::default_document();
         let config = LayoutConfig::default();
         let mut engine = LayoutEngine::new();
         let json = canvas_layers(&mut engine, &doc, &config, true);

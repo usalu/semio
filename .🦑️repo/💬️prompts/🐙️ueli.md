@@ -377,6 +377,25 @@ The process models need to be
 
 ---
 
+Every window must have actions, utilities, options folder. 
+e.g. ✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/👁️preview
+
+```
+s
+  plugins
+    <plugin>
+      <app>
+        <mode>
+          <window>
+            actions
+              <action>
+            utilities
+              <utility>
+            options
+              <option>
+```
+---
+
 Artifacts must not have an engine but only a schema, snapshot, diff, mutations, inferences, io system.
 Evera app has a an engine which is a state machine that is controlled by the app. The communication between the app and the machine is bidirectional.
 machine is a core framework-provided full blown state machine implementation.

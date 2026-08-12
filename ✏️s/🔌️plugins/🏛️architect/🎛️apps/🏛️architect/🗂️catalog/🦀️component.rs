@@ -7,9 +7,9 @@
 //! consumer that would benefit from owning them.
 
 use crate::apps::architect::chrome::{element_label, entity_to_json};
-use crate::artifacts::program::engine::adjacency::normalize_pair;
-use crate::artifacts::program::engine::analyze::AnalysisResult;
-use crate::artifacts::program::engine::report::ProgramReport;
+use crate::artifacts::program::standards::v1::subsets::any::schema::normalize_pair;
+use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::AnalysisResult;
+use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::ProgramReport;
 use crate::artifacts::program::op::ProgramMutation;
 use crate::artifacts::program::registers::{
     Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, EngagementLevel, Function, FunctionKind, InfluenceLevel, Issue, IssueSeverity, ProgramElement, ProgramElementKind, ReportKind,

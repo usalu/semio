@@ -2,7 +2,7 @@
 //!
 //! 🩹️ `stdio_gap`/foreign-lag fix — see the paired export leaf's doc comment (same wave,
 //! `PngSnapshot`'s `RasterImage` wrapper -> direct `width`/`height`/`pixels` fields).
-use crate::artifacts::note::engine::{create_note_id, empty_note_snapshot};
+use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot};
 use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteSnapshot};
 use semio_s_plugin_stdio::artifacts::png::engine::encode_png;
 use semio_s_plugin_stdio::artifacts::png::PngSnapshot;

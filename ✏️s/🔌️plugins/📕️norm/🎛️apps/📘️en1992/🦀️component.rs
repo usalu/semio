@@ -3,14 +3,14 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `ð®ï¸commands/*`, the two surfaces
 //! in `ð­ï¸modes/âï¸edit/ðªï¸windows/*`, panel trees in `ðï¸panels/*`, compliance compute in
-//! `crate::artifacts::en1992::engine`, and everything the fifteen norm apps share verbatim (config,
+//! `crate::apps::en1992`, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
 use crate::apps::en1992::commands::{evaluate, selected_check, set_snapshot};
 use crate::apps::en1992::modes::edit as edit_mode;
 use crate::apps::en1992::modes::edit::windows::{inputs, results};
 use crate::apps::en1992::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::artifacts::en1992::engine::En1992Family;
+use crate::apps::en1992::En1992Family;
 use crate::artifacts::en1992::op::En1992Mutation;
 use crate::artifacts::en1992::En1992Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
@@ -115,6 +115,28 @@ impl ArtifactApp for En1992PlayApp {
     //#endregion ðï¸MediaPorts
 }
 //#endregion ðï¸En1992PlayApp
+
+//#region 🧩️ComplianceFamily
+/// 🧩️ Headless `NormFamily` binding (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
+/// relocated verbatim from the deleted `⚙️engine`. This is stateful/host-facing behaviour, so it
+/// belongs to the app that edits the artifact, not the artifact's own `🧬️schema`.
+pub struct En1992Family;
+
+impl crate::document::NormFamily for En1992Family {
+    type Document = En1992Snapshot;
+    type Mutation = En1992Mutation;
+
+    fn family_id() -> crate::document::NormFamilyId {
+        crate::document::NormFamilyId::En1992
+    }
+
+    fn evaluate(document: &En1992Snapshot) -> crate::document::CheckReport {
+        crate::artifacts::en1992::standards::v1::subsets::any::schema::inferences::evaluate(document)
+    }
+}
+
+pub type Host = crate::document::NormHost<En1992Family>;
+//#endregion 🧩️ComplianceFamily
 
 //#region ðï¸Manifest
 pub fn create_en1992_app() -> App {

@@ -227,10 +227,9 @@ semio_framework_plugin::derive_artifact_facets!(
 
 //#region 🔖️DocumentHelpers
 /// 🌱️ Relocated verbatim from `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES,
-/// rule 3: pure helpers over document types live in `🧬️schema/`). Every external call site previously
-/// spelled `crate::artifacts::raster::engine::…` now spells `crate::artifacts::raster::schema::…`
-/// (the artifact root's own pre-existing `pub mod schema { pub use super::standards::v1::subsets::
-/// any::schema::*; }` shim keeps that path resolving).
+/// rule 3: pure helpers over document types live in `🧬️schema/`). Every external call site now reads
+/// `crate::artifacts::raster::schema::…` (the artifact root's own pre-existing `pub mod schema { pub
+/// use super::standards::v1::subsets::any::schema::*; }` shim keeps that path resolving).
 use crate::artifacts::raster::{RasterSnapshot, RasterTransform};
 
 /// 📄️ The `semio` example document, handcrafted in the `.raster` DSL — {@link semio_example_document}/

@@ -69,7 +69,7 @@ fn resolve_run_style(doc: &LayoutSnapshot, paragraph_style_id: Option<&str>, cha
 pub fn run_layout_preflight(doc: &LayoutSnapshot, labels: &LayoutLabels) -> Vec<PreflightIssue> {
     let mut issues = Vec::new();
     for page in &doc.pages {
-        let resolved = crate::artifacts::layout::engine::resolve_page(doc, page);
+        let resolved = crate::artifacts::layout::schema::resolve_page(doc, page);
         for entry in resolved {
             let frame = &entry.frame;
             if !frame.visible() {
@@ -217,7 +217,7 @@ mod tests {
 
     #[test]
     fn preflight_finds_missing_asset() {
-        let issues = run_layout_preflight(&crate::artifacts::layout::engine::default_document(), LayoutLabels::labels(semio_framework_plugin::Locale::En, semio_framework_plugin::Terminology::Native));
+        let issues = run_layout_preflight(&crate::artifacts::layout::schema::default_document(), LayoutLabels::labels(semio_framework_plugin::Locale::En, semio_framework_plugin::Terminology::Native));
         assert!(issues.iter().any(|issue| issue.code == "asset.missing"));
         let mut app = layout_app();
         let json = render_body(&mut app, LAYOUT_PLAY_BODY_PREFLIGHT);

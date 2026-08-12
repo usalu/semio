@@ -63,7 +63,7 @@ pub struct RemodelFrameCursor {
 /// 🧮️ Remodel's `ArtifactApp::Config` — absorbs every former `RemodelPlayRuntime` view/session field
 /// (camera/selection/layers/frame cursor/report table selection) plus the two `ViewModel`-sourced
 /// fields the UI actually reads (`active_utility_id`/`locale`).
-/// The live `engine::reconstruction::ReconstructionEngine` and the video-import blur-gate rolling
+/// The live `engine::reconstruction::ReconstructionEngine` (now `crate::apps::remodel::engine::reconstruction::ReconstructionEngine`) and the video-import blur-gate rolling
 /// window are deliberately NOT here: neither is `Clone + Serialize + Deserialize` in a way that
 /// round-trips through a pure `&self` `handle()`. Both are rebuilt from already-persisted document
 /// state instead of carried as hidden interior-mutable scratch — see `🎮️commands/🚀️reconstruction`

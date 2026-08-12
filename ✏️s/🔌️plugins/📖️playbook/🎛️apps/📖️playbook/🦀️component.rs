@@ -11,7 +11,9 @@ use crate::apps::playbook::commands::{block, contribution, selection, step, loca
 use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::apps::playbook::modes::builder;
 use crate::apps::playbook::modes::builder::windows::builder as builder_window;
-use crate::artifacts::playbook::engine::{default_block, flatten_playbook_blocks, playbook_io, PlaybookChapterPayload};
+use crate::artifacts::playbook::flatten_playbook_blocks;
+use crate::artifacts::playbook::schema::default_block;
+use crate::apps::playbook::engine::{playbook_io, PlaybookChapterPayload};
 use crate::artifacts::playbook::op::{AddStep, PlaybookMutation};
 use crate::artifacts::playbook::{artifact_kind, PlaybookSnapshot, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
@@ -83,7 +85,7 @@ impl ArtifactApp for PlaybookPlayApp {
     }
 
     fn initial_snapshot() -> PlaybookSnapshot {
-        crate::artifacts::playbook::engine::empty_playbook_snapshot()
+        crate::artifacts::playbook::empty_playbook_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -165,7 +167,7 @@ pub fn create_playbook_play_app() -> App {
                 .default_value("text"),
             ])
             // 🎯️ Typed channel surface (mirrors `writer_ui::create_writer_app`'s identical wiring) —
-            // `crate::artifacts::playbook::engine::playbook_io()` is the single source of truth for both
+            // `crate::apps::playbook::engine::playbook_io()` is the single source of truth for both
             // the trait's `io()` override and this manifest declaration.
             .config(PlaybookPlayApp::config_spec())
             .io(playbook_io()),
@@ -339,7 +341,7 @@ mod tests {
     #[test]
     fn import_media_creates_the_imported_step_and_a_note_block() {
         let app = PlaybookPlayApp;
-        let spec = crate::artifacts::playbook::engine::empty_playbook_snapshot();
+        let spec = crate::artifacts::playbook::empty_playbook_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView { snapshot: &spec, history: &history };
         let media = chapter_media("MATCH (a) RETURN a", "Jack Query");
@@ -360,7 +362,7 @@ mod tests {
     #[test]
     fn import_media_reuses_the_imported_step_on_a_second_import() {
         let app = PlaybookPlayApp;
-        let mut spec = crate::artifacts::playbook::engine::empty_playbook_snapshot();
+        let mut spec = crate::artifacts::playbook::empty_playbook_snapshot();
         spec.steps.push(PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() });
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView { snapshot: &spec, history: &history };
@@ -373,7 +375,7 @@ mod tests {
     #[test]
     fn import_media_rejects_unknown_ports_and_malformed_payloads() {
         let app = PlaybookPlayApp;
-        let spec = crate::artifacts::playbook::engine::empty_playbook_snapshot();
+        let spec = crate::artifacts::playbook::empty_playbook_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView { snapshot: &spec, history: &history };
         assert!(matches!(PlaybookPlayApp::import_media("nonsense:in", &chapter_media("x", "y"), &doc_view), Err(MediaError::NotImplemented)));

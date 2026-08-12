@@ -1,7 +1,7 @@
 //! ↩️ `reorder-layers` inverse — the layer's pre-move tree address from `base`. Missing target ⇒
 //! `Vec::new()`.
 
-use crate::artifacts::raster::engine::locate_layer;
+use crate::artifacts::raster::schema::locate_layer;
 use crate::artifacts::raster::mutations::reorder_layers::mutation::ReorderLayers;
 use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::RasterSnapshot;

@@ -20,7 +20,7 @@ mod tests {
 
     #[test]
     fn sun_enabled_measure_mirrors_the_fixture_default_off() {
-        let snapshot = crate::artifacts::shooting::engine::default_snapshot();
+        let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(&snapshot, labels) {
             WindowMeasure::Toggle { pressed, .. } => assert!(!pressed),

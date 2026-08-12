@@ -1,7 +1,7 @@
 //! 🧩️ Procedural3d play app commands — widget add/remove/patch and selection delete.
 
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
-use crate::artifacts::procedural3d::engine::{commit_fixture, host_from_fixture};
+use crate::artifacts::procedural3d::schema::{commit_fixture, host_from_fixture};
 use crate::artifacts::procedural3d::op::{procedural3d_fixture_operations, Procedural3dMutation};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{FlowEvalSession, Widget};
@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn add_widget_action_appends_widget() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
         dispatch(&mut app, Procedural3dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), x: None, y: None }));
@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn patch_flow_widgets_edits_slider_value() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         dispatch(&mut app, Procedural3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) }));
         let value = app.snapshot().expect("snapshot").fixture.widgets.iter().find_map(|widget| match widget {
@@ -153,7 +153,7 @@ mod tests {
 
     #[test]
     fn remove_widget_action_deletes_by_id() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let _serial = crate::apps::procedural3d::test_support::lock();
         let mut app = app();
         assert!(app.snapshot().expect("snapshot").fixture.widgets.iter().any(|widget| crate::artifacts::procedural3d::widget_id(widget) == "sides"));
         dispatch(&mut app, Procedural3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "sides".into() }));

@@ -113,17 +113,18 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// app-scope config/presence schema, the same exception note's exemplar documents; the other the
 /// genuine DWG-bridge gap `register_dwg_mesh_bridge`'s own doc names).
 ///
-/// DEVIATION (26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g1): the `.composers(...)` argument is
-/// qualified to `standards::v1::engine::io_registry::entries()` rather than left as the bare
-/// `io_registry::entries()` this body used while it still lived in the `⚙️engine` file. Left bare it
-/// would now resolve to THIS file's own `io_registry` module below, which has a different, incompatible
-/// return type (`&'static [&'static ComposerEntry]`, wrapping the engine's owned entries) — not the
-/// `&'static [ComposerEntry]` `.composers()` expects.
+/// DEVIATION (26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): the `⚙️engine` file this
+/// `io_registry` (and its `.composers(...)` argument) used to live in is now deleted — the registry
+/// moved into `🚪️io/🦀️component.rs` alongside the rest of this artifact's IO surface. The
+/// `.composers(...)` argument stays fully qualified to `io::io_registry::entries()` rather than the
+/// bare `io_registry::entries()` name: left bare it would resolve to THIS file's own `io_registry`
+/// module below, which has a different, incompatible return type (`&'static [&'static ComposerEntry]`,
+/// wrapping the owned entries) — not the `&'static [ComposerEntry]` `.composers()` expects.
 pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.procedural3d")
         .schema(crate::artifacts::procedural3d::schema::procedural3d_artifact_schema_descriptor())
         .inferences([crate::artifacts::procedural3d::standards::v1::subsets::any::schema::inferences::procedural3d_artifact_inference_descriptor()])
-        .composers(crate::artifacts::procedural3d::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::procedural3d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::procedural3d::Procedural3dPlayApp>()
         .build()
@@ -162,7 +163,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::procedural3d::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::procedural3d::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

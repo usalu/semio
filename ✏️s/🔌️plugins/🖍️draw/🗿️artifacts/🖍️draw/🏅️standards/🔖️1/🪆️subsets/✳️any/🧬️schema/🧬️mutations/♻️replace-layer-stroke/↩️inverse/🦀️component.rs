@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `ReplaceLayerStroke` — the OLD stroke payload captured from BASE.
-use crate::artifacts::draw::engine::{find_draw_layer, layer_base};
+use crate::artifacts::draw::schema::{find_draw_layer, layer_base};
 use crate::artifacts::draw::mutations::DrawMutation;
 use crate::artifacts::draw::DrawSnapshot;
 

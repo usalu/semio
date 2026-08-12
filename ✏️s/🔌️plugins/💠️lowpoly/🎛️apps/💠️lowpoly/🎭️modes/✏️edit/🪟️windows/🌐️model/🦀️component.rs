@@ -6,7 +6,8 @@ use crate::apps::lowpoly::config::LowpolyConfig;
 use crate::apps::lowpoly::terminology::LowpolyLabels;
 use crate::apps::lowpoly::view::{euler_degrees_to_quaternion, resolve_active_object_id, LowpolyView};
 use crate::apps::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
-use crate::artifacts::lowpoly::engine::{mesh_data_from_transfer, LowpolyDocument};
+use crate::apps::lowpoly::engine::LowpolyDocument;
+use crate::artifacts::lowpoly::schema::mesh_data_from_transfer;
 use semio_framework_plugin::{
     build_world_3d_scene, world3d_camera_json, world3d_scene, world3d_selection_json, ActionRef, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
 };
@@ -31,7 +32,7 @@ pub const LOWPOLY_MAIN_ACTIONS: &[&str] = &[
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::apps::lowpoly::create_lowpoly_app`.
 pub fn definition() -> WindowKindDefinition {
-    let projection = crate::artifacts::lowpoly::engine::default_snapshot();
+    let projection = crate::artifacts::lowpoly::schema::default_snapshot();
     let config = LowpolyConfig::default();
     let labels = semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US");
     let engagement = lowpoly_window_engagement(LowpolyView { snapshot: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, labels);

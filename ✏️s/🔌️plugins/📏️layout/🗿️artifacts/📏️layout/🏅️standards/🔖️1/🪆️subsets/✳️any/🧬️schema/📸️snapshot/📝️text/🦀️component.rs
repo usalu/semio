@@ -94,7 +94,7 @@ mod tests {
 
     #[test]
     fn demo_dsl_snapshot() {
-        let text = print_dsl(&crate::artifacts::layout::engine::default_document());
+        let text = print_dsl(&crate::artifacts::layout::schema::default_document());
         assert!(parse_dsl(&text).is_ok());
         if std::env::var("LAYOUT_EMIT_DEMO_DSL").is_ok() {
             eprintln!("{text}");
@@ -103,7 +103,7 @@ mod tests {
 
     #[test]
     fn example_fixture_matches_engine_demo() {
-        let demo = crate::artifacts::layout::engine::default_document();
+        let demo = crate::artifacts::layout::schema::default_document();
         let from_example = parse_dsl(LAYOUT_SAMPLE_TEXT).expect("example dsl");
         assert_eq!(from_example.pages.len(), demo.pages.len());
         assert_eq!(from_example.pages[0].frames.len(), demo.pages[0].frames.len());

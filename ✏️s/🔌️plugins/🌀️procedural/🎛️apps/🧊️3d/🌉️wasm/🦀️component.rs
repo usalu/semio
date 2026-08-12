@@ -2,7 +2,7 @@
 
 #![cfg(target_arch = "wasm32")]
 
-use crate::artifacts::procedural3d::engine::empty_procedural3d_snapshot;
+use crate::artifacts::procedural3d::schema::empty_procedural3d_snapshot;
 use crate::artifacts::procedural3d::mutations::{Procedural3dEnvelope, Procedural3dStore};
 use crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA;
 use std::cell::RefCell;

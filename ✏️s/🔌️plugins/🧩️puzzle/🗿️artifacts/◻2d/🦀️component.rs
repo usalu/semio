@@ -1,7 +1,11 @@
 //! 🧩️ Puzzle 2d artifact — the `puzzle.2d.fixture` document schema: the `Puzzle2dSnapshot`
 //! (schema/camera/nodes/edges/meta), its node/handle/edge/kind-compatibility records, and the
 //! `artifact_kind()` spec the play app's manifest binds. Sibling nodes: `🔺️diff`, `🔧️op`, `🗣️dsl`,
-//! `🎒️pack`, `📡️spr`, `⚙️engine`.
+//! `🎒️pack`, `📡️spr`. No `⚙️engine` sibling anymore (ticket
+//! 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1e): an artifact is a `🧬️schema` plus a `🚪️io`
+//! system, never an engine — the old `⚙️engine`'s pure/document-only pieces moved into `🧬️schema`
+//! and `🚪️io` (this file's own `declaration()` and `io_registry` shim below), and its genuinely
+//! stateful `BoardHost` facade moved to `🎛️apps/◻2d/⚙️engine`.
 
 
 pub use crate::artifacts::puzzle2d::schema::snapshot::Puzzle2dSnapshot;
@@ -442,9 +446,11 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// **W1d update.** `register_app_schemas()` is GONE — it was never a genuine coverage gap, just
 /// category-1 app-scope schema under a different name; `Puzzle2dPlayApp::app_schema()` (see that
 /// impl's own doc) now covers it, auto-registered by `.register_document_app()` on the plugin root.
-/// `register_media_io()` (`register_2d_export_handlers`/`register_dwg_import_handler`, still in
-/// `⚙️engine`) is a genuinely DIFFERENT case and is still kept on `🧩️puzzle/🦀️component.rs`'s own
-/// `.setup()` — it is the OS media-host registry, an entirely separate 14-function family
+/// `register_media_io()` (`register_2d_export_handlers`/`register_dwg_import_handler`, now on
+/// `crate::apps::puzzle2d::register_media_io` — ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+/// W1e moved it off the deleted `⚙️engine` to the app that owns its callback bodies) is a genuinely
+/// DIFFERENT case and is still kept on `🧩️puzzle/🦀️component.rs`'s own `.setup()` — it is the OS
+/// media-host registry, an entirely separate 14-function family
 /// (`register_2d_export_handlers`/`register_mesh_exporter`/…) from the nine §6 registrars
 /// `ArtifactDeclaration` covers, keyed by a legacy OS-kind string this declaration's own `kind` isn't
 /// — see `🧩️puzzle/🦀️component.rs`'s `plugin()` doc for the full judgement.
@@ -452,7 +458,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.puzzle2d")
         .schema(crate::artifacts::puzzle2d::schema::puzzle2d_artifact_schema_descriptor())
         .inferences([crate::artifacts::puzzle2d::standards::v1::subsets::any::schema::inferences::puzzle2d_artifact_inference_descriptor()])
-        .composers(crate::artifacts::puzzle2d::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::puzzle2d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::puzzle2d::Puzzle2dPlayApp>()
         .build()
@@ -673,7 +679,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::puzzle2d::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::puzzle2d::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

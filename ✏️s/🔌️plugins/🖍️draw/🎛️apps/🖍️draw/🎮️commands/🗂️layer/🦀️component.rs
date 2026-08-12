@@ -3,7 +3,7 @@
 
 use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::apps::draw::commands::canvas::DrawSession;
-use crate::artifacts::draw::engine::{create_draw_boolean_layer, create_layer_by_kind, find_draw_layer, find_draw_layer_location, layer_id};
+use crate::artifacts::draw::schema::{create_draw_boolean_layer, create_layer_by_kind, find_draw_layer, find_draw_layer_location, layer_id};
 use crate::artifacts::draw::op::{draw_op_for_layer_field, DrawMutation};
 use crate::artifacts::draw::DrawSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -15,7 +15,7 @@ fn resolve_reorder_target(document: &DrawSnapshot, target_row_id: &str, drop_pos
     if target_row_id == "draw-play-layers" || target_row_id == "draw-play-layers.empty" {
         return (None, document.layers.len());
     }
-    if let Some(layer_id_value) = crate::artifacts::draw::engine::draw_play_layer_id_from_tree_row_id(target_row_id) {
+    if let Some(layer_id_value) = crate::artifacts::draw::schema::draw_play_layer_id_from_tree_row_id(target_row_id) {
         if let Some(layer) = find_draw_layer(document, &layer_id_value) {
             if drop_position == "inside" {
                 if let crate::artifacts::draw::DrawLayerNode::Group(group) = layer {
@@ -160,7 +160,7 @@ pub mod toggle_layer_visible {
         let document = doc.snapshot;
         match find_draw_layer(document, &payload.layer_id) {
             Some(layer) => {
-                let visible = !crate::artifacts::draw::engine::layer_base(layer).visible;
+                let visible = !crate::artifacts::draw::schema::layer_base(layer).visible;
                 Ok(Emit::mutations(vec![crate::artifacts::draw::mutations::set_layer_visible(payload.layer_id.clone(), visible)]))
             }
             None => Ok(Emit::default()),

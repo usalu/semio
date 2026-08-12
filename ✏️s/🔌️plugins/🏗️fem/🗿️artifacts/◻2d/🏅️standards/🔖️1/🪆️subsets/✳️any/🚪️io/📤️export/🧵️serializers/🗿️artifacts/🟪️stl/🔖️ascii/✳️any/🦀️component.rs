@@ -1,7 +1,7 @@
 //! 📤️ Export Fem2dSnapshot as real ASCII .stl text — bridges through the real semio mesh subset
 //! instead of hand-rolled bytes. Every `FemRegion`'s footprint is triangulated, extruded by its
 //! own real `thickness`, and reduced to its outward surface
-//! (`engine::meshing::build_semio_mesh_snapshot` — the honest-geometry replacement for the old
+//! (`crate::fem2d_engine::meshing::build_semio_mesh_snapshot` — the honest-geometry replacement for the old
 //! JsonCodec-under-.stl leaf this file used to be), then handed to stdio's real, tested
 //! `SemioMeshToStl` bridge + `stl::standards::v_ascii::engine::encode_stl_ascii` grammar.
 //! `FemElement::Bar`/`Beam` line members have no honest 3D solid (see the bridge fn's own doc)
@@ -13,7 +13,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::ex
 
 //#region 🔖️Export
 pub fn export(snapshot: &crate::artifacts::fem2d::Fem2dSnapshot) -> Result<Vec<u8>, IoError> {
-    let mesh = crate::artifacts::fem2d::engine::meshing::build_semio_mesh_snapshot(snapshot);
+    let mesh = crate::fem2d_engine::meshing::build_semio_mesh_snapshot(snapshot);
     let stl = SemioMeshToStl::serialize(&mesh).map_err(|e| IoError::Payload(e.to_string()))?;
     Ok(encode_stl_ascii(&stl).into_bytes())
 }

@@ -47,7 +47,7 @@ pub type GisMapStore = ArtifactStore<GisMapSnapshot, GisMapMutation>;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gismap::engine::{empty_gis_map_snapshot, gis_map_descriptor_json, gis_map_document_from_descriptor_json};
+    use crate::artifacts::gismap::schema::{empty_gis_map_snapshot, gis_map_descriptor_json, gis_map_document_from_descriptor_json};
     use crate::artifacts::gismap::GIS_MAP_SCHEMA;
     use serde_json::json;
     use store::{create_document_envelope, ArtifactCommand};

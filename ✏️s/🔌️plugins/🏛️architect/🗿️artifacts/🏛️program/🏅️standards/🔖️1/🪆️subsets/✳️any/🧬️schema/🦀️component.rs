@@ -5,6 +5,7 @@ use crate::artifacts::program::registers::*;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use crate::artifacts::program::ProgramSnapshot;
+use math::graph::{orient_endpoints, Undirected};
 
 //#region 🔖️Artifact
 /// 🧬️ Full program artifact state across persistent, shared-ui, local-ui and preview classes.
@@ -414,3 +415,28 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: ProgramComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+/// 📐️ Canonical undirected endpoint order for an adjacency pair — dissolved out of the former
+/// `⚙️engine/↔️adjacency` topic (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): a
+/// pure document helper with no `&mut` and no app coupling, so it lands on the schema root
+/// alongside the artifact's other handcrafted document primitives.
+pub fn normalize_pair(a: &EntityId, b: &EntityId) -> (EntityId, EntityId) {
+    let (left, right) = orient_endpoints::<&str, Undirected>(&a.0, &b.0);
+    (EntityId(left.to_string()), EntityId(right.to_string()))
+}
+//#endregion 🔖️DocumentHelpers
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normalize_pair_orders_endpoints() {
+        let a = EntityId("element-2".into());
+        let b = EntityId("element-10".into());
+        assert_eq!(normalize_pair(&b, &a), (b, a));
+    }
+}
+//#endregion 🧪️Tests

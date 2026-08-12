@@ -6,7 +6,7 @@
 //! concurrent stdio wave. Fixed as a minimal lagging-call-site update: each ink stroke segment
 //! becomes one `DxfEntity::Line` (same per-segment shape the old `DxfLine` chain built), and
 //! `print_dxf_document` replaces the old free `write_dxf_text(&[DxfLine])`.
-use crate::artifacts::note::engine::flatten_blocks;
+use crate::artifacts::note::schema::flatten_blocks;
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use semio_s_plugin_stdio::artifacts::dxf::schema::snapshot::{print_dxf_document, DxfEntity};
 use semio_s_plugin_stdio::artifacts::dxf::{DxfSnapshot, STDIO_DXF_DOCUMENT_SCHEMA};

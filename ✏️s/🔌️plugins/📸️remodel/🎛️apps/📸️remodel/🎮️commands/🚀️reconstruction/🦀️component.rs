@@ -10,8 +10,10 @@
 //! pivot removed.
 
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
-use crate::artifacts::remodel::engine::{build_engine_params, build_qc_snapshot, camera_pose_preview, decode_still_image, next_remodel_id, raster_to_png_asset, reconstruction as remodel_engine, watertight_snapshot};
+use crate::apps::remodel::engine::{build_engine_params, build_qc_snapshot, camera_pose_preview, raster_to_png_asset, reconstruction as remodel_engine, watertight_snapshot};
+use crate::apps::remodel::decode_still_image;
 use crate::artifacts::remodel::mutations::{create_asset, replace_geo_products, replace_job, replace_mesh_result, replace_qc, replace_sparse, replace_trajectory};
+use crate::artifacts::remodel::schema::next_remodel_id;
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{CameraPosePreview, CameraTrajectory, GeoProducts, ImageAsset, MeshSource, PackedF32, ReconstructionJob, ReconstructionStage, RemodelMesh, RemodelSnapshot, SparseCloud};
 use base64::Engine as _;

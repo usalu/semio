@@ -3,7 +3,7 @@
 
 pub mod export_registers_csv {
     use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::artifacts::program::engine::exchange::export_registers_csv;
+    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::export_registers_csv;
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
     use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
@@ -22,7 +22,7 @@ pub mod export_registers_csv {
 
 pub mod import_registers_csv {
     use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::artifacts::program::engine::exchange::{import_registers_csv, MergeStrategy};
+    use crate::apps::architect::behavior::{import_registers_csv, MergeStrategy};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
     use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

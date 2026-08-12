@@ -2,7 +2,7 @@
 
 use crate::apps::draw::commands::canvas::{draft_preview_segments, draw_gesture, shape_preview_segments};
 use crate::apps::draw::config::DrawConfig;
-use crate::artifacts::draw::engine::{draw_layer_descendant_leaf_ids, find_draw_layer, flatten_draw_document_to_scene_nodes, resolve_draw_artboard, DrawSceneNode};
+use crate::artifacts::draw::schema::{draw_layer_descendant_leaf_ids, find_draw_layer, flatten_draw_document_to_scene_nodes, resolve_draw_artboard, DrawSceneNode};
 use crate::artifacts::draw::{DrawArtboard, DrawSnapshot, PathSegment};
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, UiNode};
 use serde_json::{json, Value};

@@ -1,7 +1,7 @@
 //! 🧩️ Procedural2d play app commands — widget add/remove.
 
 use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
-use crate::artifacts::procedural2d::engine::host_from_fixture;
+use crate::artifacts::procedural2d::schema::host_from_fixture;
 use crate::artifacts::procedural2d::op::{procedural2d_fixture_operations, Procedural2dMutation};
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::FlowEvalSession;
@@ -39,7 +39,7 @@ pub mod add_widget {
 //#region 🔖️RemoveWidget
 pub mod remove_widget {
     use super::*;
-    use crate::artifacts::procedural2d::engine::host_operations;
+    use crate::artifacts::procedural2d::schema::host_operations;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "remove-widget")]

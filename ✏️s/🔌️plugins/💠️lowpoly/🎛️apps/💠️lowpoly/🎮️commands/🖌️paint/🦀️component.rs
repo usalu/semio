@@ -5,7 +5,7 @@
 use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::view::resolve_active_object_id;
-use crate::artifacts::lowpoly::engine::{composite_layer_pixels, sample_pixel_from};
+use crate::artifacts::lowpoly::schema::{composite_layer_pixels, sample_pixel_from};
 use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::{LowpolyPaintLayer, LowpolySnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

@@ -1,45 +1,48 @@
-# 🧬️ SemioMeshMutation schema — real mirror of `🦀️component.rs`. Discriminated union on the
-# `mutation` tag.
-union SemioMeshMutation =
-    NoMutation
-  | SetSnapshot
-  | AddMesh
-  | RemoveMesh
-  | AddPrimitive
-  | RemovePrimitive
-  | SetPrimitiveTopology
-  | SetPrimitiveGeometry
-  | SetPrimitiveMaterial
-  | AddMaterial
-  | RemoveMaterial
-  | SetMaterialBaseColor
-  | SetMaterialPbr
-  | AddTexture
-  | RemoveTexture
-  | SetTextureBytes
+# 🧬️ SemioMeshMutation facet mirror — see the `🦀️component.rs` sibling for the real source of
+# truth. Seventeen-verb mesh vocabulary; `replacePrimitiveGeometry` is SMO's approved rename of
+# the old `setPrimitiveGeometry`, completed by DKM after SMO wound down.
 
-type NoMutation { mutation: String! }
-type SetSnapshot { mutation: String! snapshot: SemioMeshSnapshot! }
-type AddMesh { mutation: String! mesh: SemioMesh! }
-type RemoveMesh { mutation: String! id: String! }
-type AddPrimitive { mutation: String! meshId: String! primitive: SemioPrimitive! }
-type RemovePrimitive { mutation: String! meshId: String! primitiveId: String! }
-type SetPrimitiveTopology { mutation: String! meshId: String! primitiveId: String! topology: SemioTopology! }
-type SetPrimitiveGeometry {
-  mutation: String!
-  meshId: String!
-  primitiveId: String!
-  positions: [SemioPoint3!]!
-  normals: [SemioPoint3!]!
-  uvs: [SemioUv!]!
-  colors: [SemioRgba!]!
-  indices: [Int!]!
+enum MeshMutationKind {
+  CREATE_MESH
+  DELETE_MESH
+  CREATE_PRIMITIVE
+  DELETE_PRIMITIVE
+  SET_PRIMITIVE_TOPOLOGY
+  REPLACE_PRIMITIVE_GEOMETRY
+  SET_PRIMITIVE_MATERIAL
+  CREATE_MATERIAL
+  DELETE_MATERIAL
+  CHANGE_MATERIAL_BASE_COLOR
+  CHANGE_MATERIAL_METALLIC
+  CHANGE_MATERIAL_ROUGHNESS
+  CREATE_TEXTURE
+  DELETE_TEXTURE
+  CHANGE_TEXTURE_MIME
+  REPLACE_TEXTURE_BYTES
+  MOVE_VERTEX
 }
-type SetPrimitiveMaterial { mutation: String! meshId: String! primitiveId: String! materialId: String }
-type AddMaterial { mutation: String! material: SemioMaterial! }
-type RemoveMaterial { mutation: String! id: String! }
-type SetMaterialBaseColor { mutation: String! id: String! baseColor: SemioRgba! }
-type SetMaterialPbr { mutation: String! id: String! metallic: Float! roughness: Float! }
-type AddTexture { mutation: String! texture: SemioTexture! }
-type RemoveTexture { mutation: String! id: String! }
-type SetTextureBytes { mutation: String! id: String! mime: String! bytes: [Int!]! }
+
+type SemioMeshMutation {
+  mutation: MeshMutationKind!
+  id: String
+  meshId: String
+  primitiveId: String
+  vertexIndex: Int
+  mesh: SemioMesh
+  primitive: SemioPrimitive
+  material: SemioMaterial
+  texture: SemioTexture
+  topology: SemioTopology
+  positions: [SemioPoint3!]
+  normals: [SemioPoint3!]
+  uvs: [SemioUv!]
+  colors: [SemioRgba!]
+  indices: [Int!]
+  materialId: String
+  newBaseColor: SemioRgba
+  newMetallic: Float
+  newRoughness: Float
+  newMime: String
+  newBytes: [Int!]
+  newPoint: SemioPoint3
+}

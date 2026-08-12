@@ -3,7 +3,7 @@
 
 pub mod run_validation {
     use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
-    use crate::artifacts::program::engine::validate::validate_plugin;
+    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::validate_plugin;
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
     use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -24,7 +24,7 @@ pub mod run_validation {
 pub mod run_analysis {
     use crate::apps::architect::catalog::{analysis_kind_from_str, analysis_record_from};
     use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
-    use crate::artifacts::program::engine::analyze::run_analysis;
+    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::run_analysis;
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::ProgramSnapshot;
@@ -57,7 +57,7 @@ pub mod run_analysis {
 pub mod run_report {
     use crate::apps::architect::catalog::{report_kind_from_str, report_record_from};
     use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
-    use crate::artifacts::program::engine::report::build_report;
+    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::build_report;
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::ProgramSnapshot;
