@@ -150,3 +150,149 @@ pub fn png_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
         },
     }
 }
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::png::{PngDiff, PngMutation, PngSnapshot};
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.png` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct PngBuilderConstruction {
+        snapshot: PngSnapshot,
+        diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for PngBuilderConstruction {
+        type Snapshot = PngSnapshot;
+        type Mutation = PngMutation;
+        type Diff = PngDiff;
+        fn empty() -> Self {
+            Self { snapshot: PngSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<PngSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<PngSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let diff = crate::artifacts::png::schema::mutations::apply_png_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <PngDiff as protocol::MutationDiff<PngSnapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::png::PngSnapshot;
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.png` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct PngParts {
+        pub snapshot: Option<PngSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.png` (1.2/✳️any) sources.
+    pub struct PngAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for PngAnalyzerAnalysis {
+        type Parts = PngParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            const SIG: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    if bytes.len() >= 8 && bytes[0..8] == SIG { IoConfidence::High } else { IoConfidence::Low }
+                }
+                AnalyzeSource::Text(text) => {
+                    // 🔍 stdio.png's text envelope is a hex dump of the raw bytes after the
+                    // `semio ...` preamble line — decode the first 8 bytes to sniff the real signature.
+                    let body = match store::semio_format::split_text_preamble(text) {
+                        Ok((_, rest)) => rest,
+                        Err(_) => text,
+                    };
+                    let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(16).collect();
+                    if hex.len() < 16 {
+                        return IoConfidence::Low;
+                    }
+                    let mut decoded = [0u8; 8];
+                    for (i, byte) in decoded.iter_mut().enumerate() {
+                        match u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16) {
+                            Ok(b) => *byte = b,
+                            Err(_) => return IoConfidence::Low,
+                        }
+                    }
+                    if decoded == SIG { IoConfidence::High } else { IoConfidence::Low }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = PngParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <PngSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error(
+                                "stdio.analyze.text",
+                                dsl::TextSpan::at(1, 1),
+                                err.to_string(),
+                            ));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <PngSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error(
+                                "stdio.analyze.binary",
+                                dsl::TextSpan::at(1, 1),
+                                err.to_string(),
+                            ));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec PngBuilderFacets {
+        construction: derived_construction::PngBuilderConstruction,
+        analysis: derived_analysis::PngAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::PngComposerComposition,
+    }
+    builder: PngBuilder,
+    analyzer: PngAnalyzer,
+    composer: PngComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

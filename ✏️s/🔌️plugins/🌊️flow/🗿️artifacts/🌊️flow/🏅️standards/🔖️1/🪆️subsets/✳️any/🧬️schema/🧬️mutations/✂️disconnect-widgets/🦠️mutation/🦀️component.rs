@@ -1,0 +1,30 @@
+//! ✂️ Removes a synapse edge by id.
+use crate::artifacts::flow::schema::mutations::FlowMutation;
+use crate::artifacts::flow::{FlowDiff, FlowSnapshot};
+use protocol::{MutationKind, SemanticDescriptor};
+use serde::{Deserialize, Serialize};
+
+//#region ✂️DisconnectWidgets
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DisconnectWidgets {
+    pub id: String,
+}
+
+impl MutationKind<FlowSnapshot, FlowMutation> for DisconnectWidgets {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "disconnect", entity: "synapse", kind: "disconnect-widgets", record: "DisconnectedWidgets" };
+
+    fn diff(&self, base: &FlowSnapshot) -> FlowDiff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Disconnect \"{}\"", self.id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+//#endregion ✂️DisconnectWidgets

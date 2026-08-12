@@ -186,7 +186,7 @@ pub fn encode_epw(snap: &EpwSnapshot) -> String {
 /// standard's handcrafted grammar/protocol (mirrors csv's own `⚙️engine::register` — the single
 /// standard `energyplus` is this artifact's whole registration entrypoint).
 pub fn register() {
-    crate::artifacts::epw::standards::energyplus::subsets::any::composer::register();
+    crate::artifacts::epw::standards::energyplus::subsets::any::io::register();
     register_pilot_languages();
 }
 
@@ -267,3 +267,16 @@ mod tests {
     //#endregion 🔖️CodecRetentionLaw
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::EpwComposer as EpwRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<EpwRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

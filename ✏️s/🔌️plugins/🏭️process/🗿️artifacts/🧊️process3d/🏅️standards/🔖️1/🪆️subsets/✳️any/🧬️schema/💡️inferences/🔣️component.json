@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/process/process3d/inference.json",
+  "title": "Process3dInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["stockBounds", "stepCount"],
+  "properties": {
+    "stockBounds": { "$ref": "#/$defs/BoundingBox", "x-semio-state": "inferred" },
+    "stepCount": { "type": "integer", "minimum": 0, "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "BoundingBox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+      }
+    }
+  }
+}

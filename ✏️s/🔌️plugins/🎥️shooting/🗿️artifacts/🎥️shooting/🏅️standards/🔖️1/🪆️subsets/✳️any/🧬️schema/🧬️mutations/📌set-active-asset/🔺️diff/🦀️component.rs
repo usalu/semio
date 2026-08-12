@@ -1,21 +1,12 @@
-//! 🔺️ Diff fragment yielded by `SetActiveAsset`.
+//! 🔺 Diff constructor for `SetActiveAsset`. `ShootingSnapshot::active_asset_id` is a required
+//! (non-`Option`) `String` field, empty meaning "none" — `None` encodes to the empty string.
+
+use super::mutation::SetActiveAsset;
 use crate::artifacts::shooting::diff::ShootingDiff;
-use serde::{Deserialize, Serialize};
+use crate::artifacts::shooting::ShootingSnapshot;
 
-//#region 🔖️Diff
-/// 🔺️ Diff produced by one mutation — a sparse [`ShootingDiff`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct SetActiveAssetDiff {
-    pub diff: ShootingDiff,
+//#region 📌️SetActiveAsset
+pub fn diff_set_active_asset(payload: &SetActiveAsset, _base: &ShootingSnapshot) -> ShootingDiff {
+    ShootingDiff { active_asset_id: Some(payload.asset_id.clone().unwrap_or_default()), ..Default::default() }
 }
-
-impl SetActiveAssetDiff {
-    pub fn from_diff(diff: ShootingDiff) -> Self {
-        Self { diff }
-    }
-
-    pub fn into_shooting_diff(self) -> ShootingDiff {
-        self.diff
-    }
-}
-//#endregion 🔖️Diff
+//#endregion 📌️SetActiveAsset

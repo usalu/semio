@@ -652,7 +652,7 @@ pub fn demo_zip_snapshot() -> ZipSnapshot {
 //#region Register
 /// 🗂️ Registers codecs and the artifact schema descriptor.
 pub fn register() {
-    crate::artifacts::zip::composer::register();
+    crate::artifacts::zip::io_registry::register();
     register_artifact_schema();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<ZipSnapshot, ZipMutation>(
@@ -661,7 +661,7 @@ pub fn register() {
     // 🛡️ D5's generic validate-on-build hook: registers the real ✳️iso21320 subset's
     // SubsetValidator. The ComposerEntry itself is registered separately via this standard's own
     // `composer::entries()` aggregation (see that module).
-    crate::artifacts::zip::standards::v2_0::subsets::iso21320::composer::register();
+    crate::artifacts::zip::standards::v2_0::subsets::iso21320::io::register();
 }
 
 /// 📌️ P2-P2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per note's exemplar
@@ -1306,3 +1306,17 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipComposer as ZipRawAnyComposer;
+    use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::ZipIso21320Composer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<ZipRawAnyComposer>(), composer_entry_of::<ZipIso21320Composer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

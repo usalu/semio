@@ -8,8 +8,8 @@
 use crate::artifacts::gltf::engine::{decode_accessor, decode_glb, encode_glb, GltfAccessorType, GltfComponentType};
 use crate::artifacts::gltf::examples::metabolism::{decoded_snapshot, BASE_GLB_BYTES};
 use crate::artifacts::gltf::schema::snapshot::{GltfAlphaMode, GltfMesh, GltfNode, GltfScene};
-use crate::artifacts::gltf::standards::v2_0::subsets::any::analyzer::GltfAnalyzer;
-use crate::artifacts::gltf::standards::v2_0::subsets::any::builder::{GltfAccessorSpec, GltfBuilder};
+use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::GltfAnalyzer;
+use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::{GltfAccessorSpec, GltfBuilder};
 use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactBuilder};
 
 //#region 🔖️(a) RealDecode

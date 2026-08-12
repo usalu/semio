@@ -1,0 +1,3 @@
+; abnf reasoning.wires.inference
+document = payload
+payload = *OCTET

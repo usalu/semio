@@ -31,7 +31,7 @@ pub fn demo_dwg_snapshot() -> crate::artifacts::dwg::standards::v_ac1018::subset
 //#region 🔖️Register
 /// 🗂️ Registers codecs and the artifact schema descriptor.
 pub fn register() {
-    crate::artifacts::dwg::composer::register();
+    crate::artifacts::dwg::io_registry::register();
     register_artifact_schema();
     register_pilot_languages();
     register_schema_specs();
@@ -295,3 +295,16 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::DwgComposer as DwgRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<DwgRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

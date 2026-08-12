@@ -1,0 +1,33 @@
+{
+  "$id": "https://semio.tech/schema/s/block/block5d/inference.json",
+  "title": "Block5dInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bounds"],
+  "properties": {
+    "bounds": {
+      "$ref": "#/$defs/Block5dBounds",
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "BoundingBox3d": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+      }
+    },
+    "Block5dBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["boundingBox", "vertexCount"],
+      "properties": {
+        "boundingBox": { "anyOf": [{ "$ref": "#/$defs/BoundingBox3d" }, { "type": "null" }] },
+        "vertexCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

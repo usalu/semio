@@ -81,3 +81,106 @@ pub fn playground_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
     }
 }
 //#endregion 🔖️Descriptor
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::playground::schema::diff::PlaygroundDiff;
+    use crate::artifacts::playground::schema::mutations::PlaygroundMutation;
+    use crate::artifacts::playground::schema::snapshot::PlaygroundSnapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct PlaygroundBuilderConstruction {
+        snapshot: PlaygroundSnapshot,
+        diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for PlaygroundBuilderConstruction {
+        type Snapshot = PlaygroundSnapshot;
+        type Mutation = PlaygroundMutation;
+        type Diff = PlaygroundDiff;
+        fn empty() -> Self { Self { snapshot: PlaygroundSnapshot::default(), diagnostics: Vec::new() } }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<PlaygroundSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<PlaygroundSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let d = <PlaygroundMutation as protocol::Mutation<PlaygroundSnapshot>>::diff(&mutation, &self.snapshot);
+            self.snapshot = protocol::MutationDiff::apply(&d, &self.snapshot);
+            (self, d)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <PlaygroundDiff as protocol::MutationDiff<PlaygroundSnapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+        }
+    }
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::playground::PlaygroundSnapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct PlaygroundParts {
+        pub snapshot: Option<PlaygroundSnapshot>,
+    }
+
+    pub struct PlaygroundAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for PlaygroundAnalyzerAnalysis {
+        type Parts = PlaygroundParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.playground", standard: StandardId("1"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            IoConfidence::Medium
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = PlaygroundParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <PlaygroundSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <PlaygroundSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec PlaygroundBuilderFacets {
+        construction: derived_construction::PlaygroundBuilderConstruction,
+        analysis: derived_analysis::PlaygroundAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::PlaygroundComposerComposition,
+    }
+    builder: PlaygroundBuilder,
+    analyzer: PlaygroundAnalyzer,
+    composer: PlaygroundComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

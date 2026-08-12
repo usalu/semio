@@ -471,16 +471,16 @@ pub fn demo_docx_snapshot() -> DocxSnapshot {
 }
 
 pub fn register() {
-    crate::artifacts::docx::composer::register();
+    crate::artifacts::docx::io_registry::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::docx::schema::docx_artifact_schema_descriptor());
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA));
     // 🛡️ D5's generic validate-on-build hook: registers the ✳️strict/✳️transitional subsets'
     // SubsetValidators so `io_dispatch`/`wire_artifact_compose` re-check them for free. Each
     // ComposerEntry itself is registered separately via this standard's own `composer::entries()`
-    // aggregation (called above via `crate::artifacts::docx::composer::register()`).
-    crate::artifacts::docx::standards::v_ecma_376::subsets::strict::composer::register();
-    crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::composer::register();
+    // aggregation (called above via `crate::artifacts::docx::io_registry::register()`).
+    crate::artifacts::docx::standards::v_ecma_376::subsets::strict::io::register();
+    crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::io::register();
 }
 
 /// 📌️ FG-wave: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per
@@ -860,3 +860,26 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::DocxComposer as DocxRawAnyComposer;
+    use crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::DocxStrictComposer;
+    use crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::DocxTransitionalComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<DocxRawAnyComposer>(),
+                    composer_entry_of::<DocxStrictComposer>(),
+                    composer_entry_of::<DocxTransitionalComposer>(),
+                ]
+            })
+            .as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

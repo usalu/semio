@@ -1,0 +1,13 @@
+# 💡️ Architect program inference schema — topology (hierarchy shape of elements via parentId).
+
+type ProgramInference {
+  topology: ProgramTopology! @state(class: INFERRED)
+}
+
+type ProgramTopology {
+  nodeCount: Int!
+  rootCount: Int!
+  maxDepth: Int!
+  cycleFree: Boolean!
+  topoOrder: [String!]!
+}

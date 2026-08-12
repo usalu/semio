@@ -1,22 +1,42 @@
-//! 📋 Process3d mutation — `Steps` collection edit.
+//! 📋 Process3d mutation — `CreateStep` (repurposes the pre-migration `📋steps/` triad dir; glue.rs
+//! path-includes this exact directory and this facet's writable boundary excludes glue.rs, so the
+//! directory name stays `📋steps` — see the migration report's `sharedFileRequests` for the rename
+//! once a later pass can touch `📦️glue.rs`).
+
+use crate::artifacts::process3d::diff::Process3dDiff;
 use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::{Process3dSnapshot, ProcessStep, ProcessStepPatch};
-use protocol::{apply_collection_mutation, CollectionMutation};
+use crate::artifacts::process3d::{Process3dSnapshot, ProcessStep};
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️Mutation
-/// @emoji 📋 `Steps` mutation payload.
+//#region 🔖️CreateStep
+/// 📋 Full initial payload for a new [`ProcessStep`] appended to the document's ordered timeline.
+/// `index` is carried for label/provenance purposes only — the underlying `Process3dStepsDelta`
+/// engine (`apply_steps_delta`) always appends `added` entries, matching this facet's
+/// pre-migration `CollectionMutation::Add` behavior.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Steps {
-    pub collection: CollectionMutation<String, ProcessStep, ProcessStepPatch>,
+pub struct CreateStep {
+    pub index: usize,
+    pub step: ProcessStep,
 }
 
-pub fn steps(collection: CollectionMutation<String, ProcessStep, ProcessStepPatch>) -> Process3dMutation {
-    Process3dMutation::Steps { collection }
-}
+impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for CreateStep {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "step", kind: "create-step", record: "CreatedStep" };
 
-pub fn apply(doc: &mut Process3dSnapshot, collection: &CollectionMutation<String, ProcessStep, ProcessStepPatch>) {
-    apply_collection_mutation(&mut doc.steps, collection);
+    fn diff(&self, base: &Process3dSnapshot) -> Process3dDiff {
+        crate::artifacts::process3d::mutations::steps::diff::diff(self, base)
+    }
+
+    fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+        crate::artifacts::process3d::mutations::steps::inverse::inverse(self, base)
+    }
+
+    fn label(&self) -> String {
+        format!("Create step \"{}\"", self.step.label)
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.step.id.clone()]
+    }
 }
-//#endregion 🔖️Mutation
+//#endregion 🔖️CreateStep

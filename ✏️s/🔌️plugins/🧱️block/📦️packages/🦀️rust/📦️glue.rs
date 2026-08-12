@@ -41,12 +41,6 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
                 pub mod engine;
-                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🏗️builder/🦀️component.rs"]
-                pub mod builder;
-                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🧐️analyzer/🦀️component.rs"]
-                pub mod analyzer;
-                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🎹️composer/🦀️component.rs"]
-                pub mod composer;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -65,6 +59,22 @@ pub mod artifacts {
                                 pub mod text;
                                 #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod bounds {
+                                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
                             }
                             #[path = "."]
                             pub mod diff {
@@ -214,12 +224,6 @@ pub mod artifacts {
                                 }
                             }
                         }
-                        #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
-                        pub mod builder;
-                        #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
-                        pub mod analyzer;
-                        #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
-                        pub mod composer;
                         #[path = "."]
                         pub mod io {
                             #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
@@ -413,12 +417,6 @@ pub mod artifacts {
         pub use crate::artifacts::block2d::standards::v1::subsets::any::schema::mutations::Block2dMutation;
         pub use crate::artifacts::block2d::standards::v1::subsets::any::schema::diff::Block2dDiff;
 
-        #[path = "../../🗿️artifacts/◻2d/🏗️builder/🦀️component.rs"]
-        pub mod builder;
-        #[path = "../../🗿️artifacts/◻2d/🧐️analyzer/🦀️component.rs"]
-        pub mod analyzer;
-        #[path = "../../🗿️artifacts/◻2d/🎹️composer/🦀️component.rs"]
-        pub mod composer;
 
     }
     #[path = "."]
@@ -433,12 +431,6 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
                 pub mod engine;
-                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🏗️builder/🦀️component.rs"]
-                pub mod builder;
-                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🧐️analyzer/🦀️component.rs"]
-                pub mod analyzer;
-                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🎹️composer/🦀️component.rs"]
-                pub mod composer;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -457,6 +449,22 @@ pub mod artifacts {
                                 pub mod text;
                                 #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod bounds {
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
                             }
                             #[path = "."]
                             pub mod diff {
@@ -642,12 +650,6 @@ pub mod artifacts {
                                 }
                             }
                         }
-                        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
-                        pub mod builder;
-                        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
-                        pub mod analyzer;
-                        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
-                        pub mod composer;
                         #[path = "."]
                         pub mod io {
                             #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
@@ -841,12 +843,6 @@ pub mod artifacts {
         pub use crate::artifacts::block5d::standards::v1::subsets::any::schema::mutations::Block5dMutation;
         pub use crate::artifacts::block5d::standards::v1::subsets::any::schema::diff::Block5dDiff;
 
-        #[path = "../../🗿️artifacts/🖐️5d/🏗️builder/🦀️component.rs"]
-        pub mod builder;
-        #[path = "../../🗿️artifacts/🖐️5d/🧐️analyzer/🦀️component.rs"]
-        pub mod analyzer;
-        #[path = "../../🗿️artifacts/🖐️5d/🎹️composer/🦀️component.rs"]
-        pub mod composer;
 
     }
     #[path = "."]
@@ -861,12 +857,6 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
                 pub mod engine;
-                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🏗️builder/🦀️component.rs"]
-                pub mod builder;
-                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🧐️analyzer/🦀️component.rs"]
-                pub mod analyzer;
-                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🎹️composer/🦀️component.rs"]
-                pub mod composer;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -885,6 +875,22 @@ pub mod artifacts {
                                 pub mod text;
                                 #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod bounds {
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
                             }
                             #[path = "."]
                             pub mod diff {
@@ -1043,12 +1049,6 @@ pub mod artifacts {
                                 }
                             }
                         }
-                        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
-                        pub mod builder;
-                        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
-                        pub mod analyzer;
-                        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
-                        pub mod composer;
                         #[path = "."]
                         pub mod io {
                             #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
@@ -1242,12 +1242,6 @@ pub mod artifacts {
         pub use crate::artifacts::block3d::standards::v1::subsets::any::schema::mutations::Block3dMutation;
         pub use crate::artifacts::block3d::standards::v1::subsets::any::schema::diff::Block3dDiff;
 
-        #[path = "../../🗿️artifacts/🧊️3d/🏗️builder/🦀️component.rs"]
-        pub mod builder;
-        #[path = "../../🗿️artifacts/🧊️3d/🧐️analyzer/🦀️component.rs"]
-        pub mod analyzer;
-        #[path = "../../🗿️artifacts/🧊️3d/🎹️composer/🦀️component.rs"]
-        pub mod composer;
 
     }
 }
@@ -1515,14 +1509,23 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 pub mod examples {
     #[path = "../../🗿️artifacts/◻2d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"]
     pub mod art_2d_hexagonal_cut_concrete_forest_left;
+    #[cfg(test)]
+    #[path = "../../🗿️artifacts/◻2d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🧪️tests/🦀️test.rs"]
+    mod art_2d_hexagonal_cut_concrete_forest_left_tests;
     #[path = "../../🗿️artifacts/◻2d/📚️examples/🎬️hexagonal-cut-concrete-forest-right/🦀️component.rs"]
     pub mod art_2d_hexagonal_cut_concrete_forest_right;
     #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"]
     pub mod art_5d_hexagonal_cut_concrete_forest_left;
+    #[cfg(test)]
+    #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🧪️tests/🦀️test.rs"]
+    mod art_5d_hexagonal_cut_concrete_forest_left_tests;
     #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🎬️nakagin-capsule/🦀️component.rs"]
     pub mod art_5d_nakagin_capsule;
     #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"]
     pub mod art_3d_hexagonal_cut_concrete_forest_left;
+    #[cfg(test)]
+    #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🧪️tests/🦀️test.rs"]
+    mod art_3d_hexagonal_cut_concrete_forest_left_tests;
     #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🎬️nakagin-capsule/🦀️component.rs"]
     pub mod art_3d_nakagin_capsule;
     #[path = "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🦀️component.rs"]

@@ -38,7 +38,8 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = MathematicalMutation::SetGraph { graph: crate::artifacts::mathematical::MathematicalGraph::default() };
+        use crate::artifacts::mathematical::mutations::change_graph_directed::mutation::ChangeGraphDirected;
+        let operation = MathematicalMutation::ChangeGraphDirected(ChangeGraphDirected { new_directed: false });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -46,11 +47,12 @@ mod tests {
 
     #[test]
     fn math_document_text_round_trips_through_store() {
+        use crate::artifacts::mathematical::mutations::update_graph_algorithm::mutation::UpdateGraphAlgorithm;
         let initial = MathematicalSnapshot::default();
         let envelope = store::create_document_envelope(crate::artifacts::mathematical::MATH_DOCUMENT_SCHEMA, "math-demo", initial, None);
         let mut store = store::ArtifactStore::new(envelope);
-        let graph = crate::artifacts::mathematical::MathematicalGraph { algorithm: "components".into(), ..crate::artifacts::mathematical::MathematicalGraph::default() };
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![MathematicalMutation::SetGraph { graph }], description: None }).expect("apply");
+        let mutation = UpdateGraphAlgorithm { new_algorithm: "components".into(), new_algorithm_seed: None };
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![MathematicalMutation::UpdateGraphAlgorithm(mutation)], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }

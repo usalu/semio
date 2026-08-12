@@ -10,7 +10,6 @@ export * as block2d_mutations from "../../🗿️artifacts/◻2d/🧬️schema/�
 export * as block2d_mutations_text from "../../🗿️artifacts/◻2d/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as block2d_mutations_binary from "../../🗿️artifacts/◻2d/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as block2d_io from "../../🗿️artifacts/◻2d/🚪️io/🟦️component.ts";
-export * as block2d_builder from "../../🗿️artifacts/◻2d/🏗️builder/🟦️component.ts";
 export * as block2d_decomposer from "../../🗿️artifacts/◻2d/🪓️decomposer/🟦️component.ts";
 export * as block5d_schema from "../../🗿️artifacts/🖐️5d/🧬️schema/🟦️component.ts";
 export * as block5d_snapshot from "../../🗿️artifacts/🖐️5d/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -23,7 +22,6 @@ export * as block5d_mutations from "../../🗿️artifacts/🖐️5d/🧬️sche
 export * as block5d_mutations_text from "../../🗿️artifacts/🖐️5d/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as block5d_mutations_binary from "../../🗿️artifacts/🖐️5d/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as block5d_io from "../../🗿️artifacts/🖐️5d/🚪️io/🟦️component.ts";
-export * as block5d_builder from "../../🗿️artifacts/🖐️5d/🏗️builder/🟦️component.ts";
 export * as block5d_decomposer from "../../🗿️artifacts/🖐️5d/🪓️decomposer/🟦️component.ts";
 export * as block3d_schema from "../../🗿️artifacts/🧊️3d/🧬️schema/🟦️component.ts";
 export * as block3d_snapshot from "../../🗿️artifacts/🧊️3d/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -36,5 +34,4 @@ export * as block3d_mutations from "../../🗿️artifacts/🧊️3d/🧬️sche
 export * as block3d_mutations_text from "../../🗿️artifacts/🧊️3d/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as block3d_mutations_binary from "../../🗿️artifacts/🧊️3d/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as block3d_io from "../../🗿️artifacts/🧊️3d/🚪️io/🟦️component.ts";
-export * as block3d_builder from "../../🗿️artifacts/🧊️3d/🏗️builder/🟦️component.ts";
 export * as block3d_decomposer from "../../🗿️artifacts/🧊️3d/🪓️decomposer/🟦️component.ts";

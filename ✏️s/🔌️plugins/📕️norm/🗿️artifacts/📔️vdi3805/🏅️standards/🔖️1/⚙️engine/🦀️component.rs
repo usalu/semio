@@ -874,10 +874,32 @@ use std::sync::{Mutex, OnceLock};
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::vdi3805::schema::vdi3805_artifact_schema_descriptor());
 }
+
+/// 💡️ Registers `s.norm.vdi3805.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::vdi3805::standards::v1::subsets::any::schema::inferences::vdi3805_artifact_inference_descriptor());
+}
 //#endregion 🔖️SchemaRegistry
 
 //#region 🔖️IoFacet
 pub fn register_io() {
-    crate::artifacts::vdi3805::composer::register();
+    crate::artifacts::vdi3805::io_registry::register();
 }
 //#endregion 🔖️IoFacet
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::vdi3805::standards::v1::subsets::any::schema::Vdi3805Composer as Vdi3805AnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![
+            composer_entry_of::<Vdi3805AnyComposer>(),
+        ]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

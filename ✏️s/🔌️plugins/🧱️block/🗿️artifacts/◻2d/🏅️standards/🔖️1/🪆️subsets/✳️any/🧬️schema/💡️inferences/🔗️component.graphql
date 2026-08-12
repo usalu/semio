@@ -1,0 +1,15 @@
+# 💡️ Block2d inference schema — bounds (bounding box + vertex count) over the node kind's rim handle templates.
+
+type Block2dInference {
+  bounds: Block2dBounds! @state(class: INFERRED)
+}
+
+type Block2dBounds {
+  boundingBox: BoundingBox2d
+  vertexCount: Int!
+}
+
+type BoundingBox2d {
+  min: [Float!]!
+  max: [Float!]!
+}

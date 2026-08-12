@@ -1,0 +1,3 @@
+; abnf architect.program.inference
+document = payload
+payload = *OCTET

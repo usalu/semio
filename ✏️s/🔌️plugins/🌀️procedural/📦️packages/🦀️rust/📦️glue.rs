@@ -36,12 +36,6 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
                 pub mod engine;
-                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🏗️builder/🦀️component.rs"]
-                pub mod builder;
-                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🧐️analyzer/🦀️component.rs"]
-                pub mod analyzer;
-                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🎹️composer/🦀️component.rs"]
-                pub mod composer;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -155,12 +149,6 @@ pub mod artifacts {
                                 }
                             }
                         }
-                        #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
-                        pub mod builder;
-                        #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
-                        pub mod analyzer;
-                        #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
-                        pub mod composer;
                         #[path = "."]
                         pub mod io {
                             #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
@@ -378,12 +366,6 @@ pub mod artifacts {
         pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::Procedural2dMutation;
         pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::diff::Procedural2dDiff;
 
-        #[path = "../../🗿️artifacts/🌀️procedural2d/🏗️builder/🦀️component.rs"]
-        pub mod builder;
-        #[path = "../../🗿️artifacts/🌀️procedural2d/🧐️analyzer/🦀️component.rs"]
-        pub mod analyzer;
-        #[path = "../../🗿️artifacts/🌀️procedural2d/🎹️composer/🦀️component.rs"]
-        pub mod composer;
 
         #[path = "."]
         pub mod examples {
@@ -407,12 +389,6 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
                 pub mod engine;
-                #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🏗️builder/🦀️component.rs"]
-                pub mod builder;
-                #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🧐️analyzer/🦀️component.rs"]
-                pub mod analyzer;
-                #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🎹️composer/🦀️component.rs"]
-                pub mod composer;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -526,12 +502,6 @@ pub mod artifacts {
                                 }
                             }
                         }
-                        #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
-                        pub mod builder;
-                        #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
-                        pub mod analyzer;
-                        #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
-                        pub mod composer;
                         #[path = "."]
                         pub mod io {
                             #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
@@ -797,12 +767,6 @@ pub mod artifacts {
         pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::Procedural3dMutation;
         pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::diff::Procedural3dDiff;
 
-        #[path = "../../🗿️artifacts/🧊️procedural3d/🏗️builder/🦀️component.rs"]
-        pub mod builder;
-        #[path = "../../🗿️artifacts/🧊️procedural3d/🧐️analyzer/🦀️component.rs"]
-        pub mod analyzer;
-        #[path = "../../🗿️artifacts/🧊️procedural3d/🎹️composer/🦀️component.rs"]
-        pub mod composer;
 
     }
 }

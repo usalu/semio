@@ -64,7 +64,7 @@ pub fn demo_step_snapshot() -> StepSnapshot {
 //#region 🔖️Register
 /// 🗂️ Registers codecs and the artifact schema descriptor.
 pub fn register() {
-    crate::artifacts::step::composer::register();
+    crate::artifacts::step::io_registry::register();
     register_artifact_schema();
     register_pilot_languages();
     register_subset_validators();
@@ -74,12 +74,12 @@ pub fn register() {
 /// 📌️ Registers the `SubsetValidator` of every real (non-`✳️any`) ap214 subset — the six ISO
 /// 10303-214 conformance classes (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES).
 pub fn register_subset_validators() {
-    crate::artifacts::step::standards::v_ap214::subsets::cc1::composer::register();
-    crate::artifacts::step::standards::v_ap214::subsets::cc2::composer::register();
-    crate::artifacts::step::standards::v_ap214::subsets::cc3::composer::register();
-    crate::artifacts::step::standards::v_ap214::subsets::cc4::composer::register();
-    crate::artifacts::step::standards::v_ap214::subsets::cc5::composer::register();
-    crate::artifacts::step::standards::v_ap214::subsets::cc6::composer::register();
+    crate::artifacts::step::standards::v_ap214::subsets::cc1::io::register();
+    crate::artifacts::step::standards::v_ap214::subsets::cc2::io::register();
+    crate::artifacts::step::standards::v_ap214::subsets::cc3::io::register();
+    crate::artifacts::step::standards::v_ap214::subsets::cc4::io::register();
+    crate::artifacts::step::standards::v_ap214::subsets::cc5::io::register();
+    crate::artifacts::step::standards::v_ap214::subsets::cc6::io::register();
 }
 
 /// 📌️ P2-FG1: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the recipe's
@@ -314,3 +314,33 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::step::standards::v_ap214::subsets::any::schema::StepComposer as StepRawAnyComposer;
+    use crate::artifacts::step::standards::v_ap214::subsets::cc1::schema::StepCc1Composer;
+    use crate::artifacts::step::standards::v_ap214::subsets::cc2::schema::StepCc2Composer;
+    use crate::artifacts::step::standards::v_ap214::subsets::cc3::schema::StepCc3Composer;
+    use crate::artifacts::step::standards::v_ap214::subsets::cc4::schema::StepCc4Composer;
+    use crate::artifacts::step::standards::v_ap214::subsets::cc5::schema::StepCc5Composer;
+    use crate::artifacts::step::standards::v_ap214::subsets::cc6::schema::StepCc6Composer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| {
+            vec![
+                composer_entry_of::<StepRawAnyComposer>(),
+                composer_entry_of::<StepCc1Composer>(),
+                composer_entry_of::<StepCc2Composer>(),
+                composer_entry_of::<StepCc3Composer>(),
+                composer_entry_of::<StepCc4Composer>(),
+                composer_entry_of::<StepCc5Composer>(),
+                composer_entry_of::<StepCc6Composer>(),
+            ]
+        })
+        .as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

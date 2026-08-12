@@ -522,7 +522,7 @@ pub fn demo_bcf_snapshot() -> BcfSnapshot {
 }
 
 pub fn register() {
-    crate::artifacts::bcf::composer::register();
+    crate::artifacts::bcf::io_registry::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::bcf::schema::bcf_artifact_schema_descriptor());
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<BcfSnapshot, BcfMutation>(STDIO_BCF_DOCUMENT_SCHEMA));
@@ -1296,3 +1296,16 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::BcfComposer as BcfRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<BcfRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

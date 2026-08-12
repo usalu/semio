@@ -1,0 +1,18 @@
+//! ↩️ Undo mutation for `update-synapse-endpoints`: restore the synapse's prior `base` endpoints.
+use crate::artifacts::flow::schema::mutations::FlowMutation;
+use crate::artifacts::flow::FlowSnapshot;
+
+use super::mutation::UpdateSynapseEndpoints;
+
+pub fn inverse(payload: &UpdateSynapseEndpoints, base: &FlowSnapshot) -> Vec<FlowMutation> {
+    match base.synapses.iter().find(|synapse| synapse.id == payload.id) {
+        Some(previous) => vec![FlowMutation::UpdateSynapseEndpoints(UpdateSynapseEndpoints {
+            id: payload.id.clone(),
+            from: previous.from.clone(),
+            from_port: previous.from_port.clone(),
+            to: previous.to.clone(),
+            to_port: previous.to_port.clone(),
+        })],
+        None => Vec::new(),
+    }
+}

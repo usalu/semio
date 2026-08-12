@@ -1155,6 +1155,19 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.artifactChildDirs.filter((dir) => !taxonomy.artifactComponentDirs.includes(dir))).toEqual(["📚️examples"]);
   });
 
+  test("derives lifecycle capabilities instead of declaring artifact facet directories", () => {
+    const taxonomy = loadTaxonomy();
+    const lifecycleDirs = ["🏗️builder", "🧐️analyzer", "🎹️composer"];
+    expect(taxonomy.newArtifactComponentDirs).toEqual(["🏅️standards"]);
+    expect(taxonomy.standardComponentDirs).toEqual(["⚙️engine", "🪆️subsets"]);
+    expect(taxonomy.subsetComponentDirs).toEqual(["🧬️schema", "🚪️io"]);
+    expect([
+      ...taxonomy.newArtifactChildDirs,
+      ...taxonomy.standardChildDirs,
+      ...taxonomy.subsetChildDirs,
+    ].filter((dir) => lifecycleDirs.includes(dir))).toEqual([]);
+  });
+
   test("describes the per-example assets/tests shape instead of plural facet dirs", () => {
     const taxonomy = loadTaxonomy();
     expect(taxonomy.exampleAssetsDirName).toBe("🖼️assets");

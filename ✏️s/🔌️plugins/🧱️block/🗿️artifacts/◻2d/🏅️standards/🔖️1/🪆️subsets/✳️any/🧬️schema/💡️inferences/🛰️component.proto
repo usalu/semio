@@ -1,0 +1,19 @@
+syntax = "proto3";
+package semio.s.block.block2d.inference;
+
+// 💡️ Block2d inference schema — bounds (bounding box + vertex count) over the node kind's rim handle templates.
+
+message Block2dInference {
+  // @state inferred
+  Block2dBounds bounds = 1;
+}
+
+message Block2dBounds {
+  BoundingBox2d bounding_box = 1;
+  uint32 vertex_count = 2;
+}
+
+message BoundingBox2d {
+  repeated double min = 1;
+  repeated double max = 2;
+}

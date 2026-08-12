@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/demonstrator/playground/inference/text.json",
+  "title": "PlaygroundInferenceText",
+  "type": "object"
+}

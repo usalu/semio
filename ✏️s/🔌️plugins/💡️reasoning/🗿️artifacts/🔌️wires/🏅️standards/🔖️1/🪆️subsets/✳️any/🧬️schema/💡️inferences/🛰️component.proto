@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.reasoning.wires.inference;
+
+// 💡️ Wires inference schema — topology (node/edge/component counts + cycle-freedom) over the board graph.
+
+message WiresInference {
+  // @state inferred
+  WiresTopology topology = 1;
+}
+
+message WiresTopology {
+  uint32 node_count = 1;
+  uint32 edge_count = 2;
+  uint32 component_count = 3;
+  bool cycle_free = 4;
+}

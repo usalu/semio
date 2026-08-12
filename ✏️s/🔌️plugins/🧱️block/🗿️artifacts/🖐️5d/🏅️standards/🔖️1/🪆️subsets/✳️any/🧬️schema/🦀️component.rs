@@ -132,3 +132,104 @@ pub fn block5d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
     }
 }
 //#endregion 🔖️Descriptor
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::block5d::{Block5dDiff, Block5dMutation, Block5dSnapshot};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct Block5dBuilderConstruction {
+        snapshot: Block5dSnapshot,
+        diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for Block5dBuilderConstruction {
+        type Snapshot = Block5dSnapshot;
+        type Mutation = Block5dMutation;
+        type Diff = Block5dDiff;
+        fn empty() -> Self { Self { snapshot: Block5dSnapshot::default(), diagnostics: Vec::new() } }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<Block5dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<Block5dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
+            crate::artifacts::block5d::schema::mutations::apply_block5d_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <Block5dDiff as protocol::MutationDiff<Block5dSnapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+        }
+    }
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::block5d::Block5dSnapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct Block5dParts {
+        pub snapshot: Option<Block5dSnapshot>,
+    }
+
+    pub struct Block5dAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for Block5dAnalyzerAnalysis {
+        type Parts = Block5dParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.block5d", standard: StandardId("1"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            IoConfidence::Medium
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = Block5dParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <Block5dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <Block5dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec Block5dBuilderFacets {
+        construction: derived_construction::Block5dBuilderConstruction,
+        analysis: derived_analysis::Block5dAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::Block5dComposerComposition,
+    }
+    builder: Block5dBuilder,
+    analyzer: Block5dAnalyzer,
+    composer: Block5dComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

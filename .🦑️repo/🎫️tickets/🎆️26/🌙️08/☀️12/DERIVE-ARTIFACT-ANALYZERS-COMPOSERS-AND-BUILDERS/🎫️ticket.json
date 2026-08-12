@@ -1,0 +1,13 @@
+{
+  "title": "Derive Artifact Analyzers Composers and Builders",
+  "emoji": "🧬",
+  "status": "open",
+  "description": "Remove all explicit analyzer, composer and builder folders and files from artifacts. Derive them instead.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2547"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪326203e437f94765b240f9768c971c72"
+  ]
+}

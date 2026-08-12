@@ -198,12 +198,6 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
                 pub mod engine;
-                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🏗️builder/🦀️component.rs"]
-                pub mod builder;
-                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🧐️analyzer/🦀️component.rs"]
-                pub mod analyzer;
-                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🎹️composer/🦀️component.rs"]
-                pub mod composer;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -263,12 +257,6 @@ pub mod artifacts {
                                 }
                             }
                         }
-                        #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
-                        pub mod builder;
-                        #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
-                        pub mod analyzer;
-                        #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
-                        pub mod composer;
                         #[path = "."]
                         pub mod io {
                             #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
@@ -438,12 +426,6 @@ pub mod artifacts {
         pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::EnergyModelMutation;
         pub use crate::artifacts::model::standards::v1::subsets::any::schema::diff::EnergyModelDiff;
 
-        #[path = "../../🗿️artifacts/🔋️model/🏗️builder/🦀️component.rs"]
-        pub mod builder;
-        #[path = "../../🗿️artifacts/🔋️model/🧐️analyzer/🦀️component.rs"]
-        pub mod analyzer;
-        #[path = "../../🗿️artifacts/🔋️model/🎹️composer/🦀️component.rs"]
-        pub mod composer;
 
         #[path = "."]
         pub mod examples {

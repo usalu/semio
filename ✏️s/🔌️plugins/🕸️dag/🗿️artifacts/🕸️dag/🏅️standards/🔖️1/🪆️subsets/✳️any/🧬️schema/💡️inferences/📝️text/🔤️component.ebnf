@@ -1,0 +1,3 @@
+(* ebnf dag.dag.inference *)
+document = header, body ;
+header = 'schema', space, 'dag.dag.inference', newline ;

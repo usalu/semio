@@ -1,0 +1,4 @@
+module Puzzle_puzzle3d_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

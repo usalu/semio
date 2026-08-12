@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.shooting.shooting.inference;
+
+// 💡️ Shooting inference schema — topology derived from the shot→camera reference graph.
+
+message ShootingInference {
+  // @state inferred
+  ShootingTopology topology = 1;
+}
+
+message ShootingTopology {
+  repeated string topo_order = 1;
+  map<string, uint32> depth = 2;
+  bool cycle_free = 3;
+  uint32 node_count = 4;
+}

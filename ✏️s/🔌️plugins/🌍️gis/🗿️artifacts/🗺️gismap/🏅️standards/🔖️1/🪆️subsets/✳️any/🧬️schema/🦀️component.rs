@@ -117,3 +117,104 @@ pub fn gismap_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     }
 }
 //#endregion 🔹Descriptor
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::gismap::{GisMapDiff, GisMapMutation, GisMapSnapshot};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct GismapBuilderConstruction {
+        snapshot: GisMapSnapshot,
+        diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for GismapBuilderConstruction {
+        type Snapshot = GisMapSnapshot;
+        type Mutation = GisMapMutation;
+        type Diff = GisMapDiff;
+        fn empty() -> Self { Self { snapshot: GisMapSnapshot::default(), diagnostics: Vec::new() } }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<GisMapSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<GisMapSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
+            crate::artifacts::gismap::schema::mutations::apply_gis_map_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <GisMapDiff as protocol::MutationDiff<GisMapSnapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+        }
+    }
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::gismap::GisMapSnapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct GisMapParts {
+        pub snapshot: Option<GisMapSnapshot>,
+    }
+
+    pub struct GisMapAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for GisMapAnalyzerAnalysis {
+        type Parts = GisMapParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.gismap", standard: StandardId("1"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            IoConfidence::Medium
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = GisMapParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <GisMapSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <GisMapSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec GismapBuilderFacets {
+        construction: derived_construction::GismapBuilderConstruction,
+        analysis: derived_analysis::GisMapAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::GisMapComposerComposition,
+    }
+    builder: GismapBuilder,
+    analyzer: GisMapAnalyzer,
+    composer: GisMapComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

@@ -1,0 +1,3 @@
+; abnf raster.raster.inference
+document = payload
+payload = *OCTET

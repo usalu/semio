@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.process.process3d.inference;
+
+// 💡️ Process3d inference schema — stockBounds (world-space AABB) + stepCount.
+
+message Process3dInference {
+  // @state inferred
+  BoundingBox stock_bounds = 1;
+  // @state inferred
+  uint64 step_count = 2;
+}
+
+message BoundingBox {
+  repeated double min = 1;
+  repeated double max = 2;
+}

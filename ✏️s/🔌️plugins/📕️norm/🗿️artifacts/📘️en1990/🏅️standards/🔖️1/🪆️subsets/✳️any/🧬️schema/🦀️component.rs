@@ -92,3 +92,104 @@ pub fn en1990_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     }
 }
 //#endregion 🔖️Descriptor
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::en1990::{En1990Diff, En1990Mutation, En1990Snapshot};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct En1990BuilderConstruction {
+        snapshot: En1990Snapshot,
+        diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for En1990BuilderConstruction {
+        type Snapshot = En1990Snapshot;
+        type Mutation = En1990Mutation;
+        type Diff = En1990Diff;
+        fn empty() -> Self { Self { snapshot: En1990Snapshot::default(), diagnostics: Vec::new() } }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<En1990Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<En1990Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let d = <En1990Mutation as protocol::Mutation<En1990Snapshot>>::diff(&mutation, &self.snapshot);
+            self.snapshot = <En1990Diff as protocol::MutationDiff<En1990Snapshot>>::apply(&d, &self.snapshot);
+            (self, d)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <En1990Diff as protocol::MutationDiff<En1990Snapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+        }
+    }
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::en1990::En1990Snapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct En1990Parts {
+        pub snapshot: Option<En1990Snapshot>,
+    }
+
+    pub struct En1990AnalyzerAnalysis;
+
+    impl ArtifactAnalysis for En1990AnalyzerAnalysis {
+        type Parts = En1990Parts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.en1990", standard: StandardId("1"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            IoConfidence::Medium
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = En1990Parts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <En1990Snapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <En1990Snapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec En1990BuilderFacets {
+        construction: derived_construction::En1990BuilderConstruction,
+        analysis: derived_analysis::En1990AnalyzerAnalysis,
+        composition: super::super::io::derived_composition::En1990ComposerComposition,
+    }
+    builder: En1990Builder,
+    analyzer: En1990Analyzer,
+    composer: En1990Composer,
+);
+//#endregion 🧬️DerivedArtifactFacets

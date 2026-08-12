@@ -1,21 +1,11 @@
-//! 🔺️ Diff fragment yielded by `ClearAdjacency`.
-use crate::artifacts::program::diff::ProgramDiff;
-use serde::{Deserialize, Serialize};
+//! 🔺️ Sparse diff construction for `DisconnectAdjacency`.
 
-//#region 🔖️Diff
-/// @emoji 🔺️ Diff produced by one `ClearAdjacency` mutation — a sparse [`ProgramDiff`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct ClearAdjacencyDiff {
-    pub diff: ProgramDiff,
+use super::mutation::DisconnectAdjacency;
+use crate::artifacts::program::diff::ProgramAdjacenciesDelta;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
+
+/// ✂️ `removed = [id]`.
+pub fn diff_disconnect(payload: &DisconnectAdjacency, _base: &ProgramSnapshot) -> ProgramDiff {
+    ProgramDiff { adjacencies: Some(ProgramAdjacenciesDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() }
 }
-
-impl ClearAdjacencyDiff {
-    pub fn from_diff(diff: ProgramDiff) -> Self {
-        Self { diff }
-    }
-
-    pub fn into_program_diff(self) -> ProgramDiff {
-        self.diff
-    }
-}
-//#endregion 🔖️Diff

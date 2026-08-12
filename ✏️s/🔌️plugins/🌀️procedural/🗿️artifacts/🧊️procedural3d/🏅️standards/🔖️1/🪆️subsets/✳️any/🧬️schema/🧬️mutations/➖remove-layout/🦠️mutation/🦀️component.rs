@@ -1,7 +1,38 @@
-//! ➖ Procedural3d mutation — `RemoveLayout` apply delegate.
-use crate::artifacts::procedural3d::Procedural3dSnapshot;
-use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
+//! 🗑️ `delete-widget-position` payload — removes a widget's per-widget canvas-position override.
+//!
+//! Directory kept at its pre-migration `➖remove-layout` path — see `➖remove-widget/🦠️mutation`'s
+//! docstring for why.
 
-pub fn apply(projection: &mut Procedural3dSnapshot, mutation: &Procedural3dMutation) {
-    crate::artifacts::procedural3d::mutations::apply_procedural3d_mutation(projection, mutation);
+use crate::artifacts::procedural3d::diff::Procedural3dDiff;
+use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
+use crate::artifacts::procedural3d::Procedural3dSnapshot;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️DeleteWidgetPosition
+/// 🗑️ Removes the position override for `id`; diff/inverse leaves capture the removed position
+/// from `base` so undo is a real `move-widget`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteWidgetPosition {
+    pub id: String}
+
+impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for DeleteWidgetPosition {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "widget-position", kind: "delete-widget-position", record: "DeletedWidgetPosition" };
+
+    fn diff(&self, base: &Procedural3dSnapshot) -> Procedural3dDiff {
+        crate::artifacts::procedural3d::mutations::remove_layout::diff::diff(self, base)
+    }
+
+    fn inverse(&self, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+        crate::artifacts::procedural3d::mutations::remove_layout::inverse::inverse(self, base)
+    }
+
+    fn label(&self) -> String {
+        format!("Delete widget position \"{}\"", self.id)
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
 }
+//#endregion 🔖️DeleteWidgetPosition

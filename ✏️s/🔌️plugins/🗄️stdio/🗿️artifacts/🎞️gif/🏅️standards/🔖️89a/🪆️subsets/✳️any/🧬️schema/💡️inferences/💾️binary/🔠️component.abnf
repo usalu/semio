@@ -1,0 +1,3 @@
+; abnf stdio.gif.89a.inference
+document = payload
+payload = *OCTET

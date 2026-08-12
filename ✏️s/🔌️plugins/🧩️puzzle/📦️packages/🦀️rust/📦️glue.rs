@@ -55,12 +55,6 @@ pub mod artifacts {
                     #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/⚙️engine/🖌️brush/🦀️component.rs"]
                     pub mod brush;
                 }
-                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🏗️builder/🦀️component.rs"]
-                pub mod builder;
-                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🧐️analyzer/🦀️component.rs"]
-                pub mod analyzer;
-                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🎹️composer/🦀️component.rs"]
-                pub mod composer;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -156,12 +150,6 @@ pub mod artifacts {
                                 }
                             }
                         }
-                        #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
-                        pub mod builder;
-                        #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
-                        pub mod analyzer;
-                        #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
-                        pub mod composer;
                         #[path = "."]
                         pub mod io {
                             #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
@@ -379,12 +367,6 @@ pub mod artifacts {
         pub use crate::artifacts::puzzle2d::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
         pub use crate::artifacts::puzzle2d::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 
-        #[path = "../../🗿️artifacts/◻2d/🏗️builder/🦀️component.rs"]
-        pub mod builder;
-        #[path = "../../🗿️artifacts/◻2d/🧐️analyzer/🦀️component.rs"]
-        pub mod analyzer;
-        #[path = "../../🗿️artifacts/◻2d/🎹️composer/🦀️component.rs"]
-        pub mod composer;
 
     }
     #[path = "."]
@@ -407,12 +389,6 @@ pub mod artifacts {
                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/⚙️engine/📐️flatten/🦀️component.rs"]
                     pub mod flatten;
                 }
-                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🏗️builder/🦀️component.rs"]
-                pub mod builder;
-                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🧐️analyzer/🦀️component.rs"]
-                pub mod analyzer;
-                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🎹️composer/🦀️component.rs"]
-                pub mod composer;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -508,12 +484,6 @@ pub mod artifacts {
                                 }
                             }
                         }
-                        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
-                        pub mod builder;
-                        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
-                        pub mod analyzer;
-                        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
-                        pub mod composer;
                         #[path = "."]
                         pub mod io {
                             #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
@@ -707,12 +677,6 @@ pub mod artifacts {
         pub use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
         pub use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 
-        #[path = "../../🗿️artifacts/🖐️5d/🏗️builder/🦀️component.rs"]
-        pub mod builder;
-        #[path = "../../🗿️artifacts/🖐️5d/🧐️analyzer/🦀️component.rs"]
-        pub mod analyzer;
-        #[path = "../../🗿️artifacts/🖐️5d/🎹️composer/🦀️component.rs"]
-        pub mod composer;
 
     }
     #[path = "."]
@@ -745,12 +709,6 @@ pub mod artifacts {
                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/🪣️fill/🦀️component.rs"]
                     pub mod fill;
                 }
-                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🏗️builder/🦀️component.rs"]
-                pub mod builder;
-                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🧐️analyzer/🦀️component.rs"]
-                pub mod analyzer;
-                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🎹️composer/🦀️component.rs"]
-                pub mod composer;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -771,10 +729,20 @@ pub mod artifacts {
                                 pub mod binary;
                             }
                             #[path = "."]
-                            pub mod inference {
-                                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inference/🦀️component.rs"]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod flat_position {
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛flat-position/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
                             }
                             #[path = "."]
                             pub mod diff {
@@ -888,12 +856,6 @@ pub mod artifacts {
                                 }
                             }
                         }
-                        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
-                        pub mod builder;
-                        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
-                        pub mod analyzer;
-                        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
-                        pub mod composer;
                         #[path = "."]
                         pub mod io {
                             #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
@@ -1159,12 +1121,6 @@ pub mod artifacts {
         pub use crate::artifacts::puzzle3d::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
         pub use crate::artifacts::puzzle3d::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
 
-        #[path = "../../🗿️artifacts/🧊️3d/🏗️builder/🦀️component.rs"]
-        pub mod builder;
-        #[path = "../../🗿️artifacts/🧊️3d/🧐️analyzer/🦀️component.rs"]
-        pub mod analyzer;
-        #[path = "../../🗿️artifacts/🧊️3d/🎹️composer/🦀️component.rs"]
-        pub mod composer;
 
     }
 }

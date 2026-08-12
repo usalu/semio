@@ -1,0 +1,14 @@
+syntax = "proto3";
+package semio.s.stdio.svg.inference;
+
+// 💡️ Svg inference schema — root `<svg>` intrinsic size.
+
+message SvgInference {
+  // @state inferred
+  SvgDimensions dimensions = 1;
+}
+
+message SvgDimensions {
+  double width = 1;
+  double height = 2;
+}

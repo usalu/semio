@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.tiff.inference
+extension tiff.inference
+start document
+
+document = header body
+header = "schema" SP "stdio.tiff.inference" NL
+body = payload NL?
+payload = OCTET+

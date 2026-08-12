@@ -98,3 +98,106 @@ pub fn semio_brep_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
         },
     }
 }
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::SemioBrepDiff;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation, apply_semio_brep_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioBrepBuilderConstruction { snapshot: SemioBrepSnapshot }
+
+    impl ArtifactBuilder for SemioBrepBuilderConstruction {
+        type Snapshot = SemioBrepSnapshot;
+        type Mutation = SemioBrepMutation;
+        type Diff = SemioBrepDiff;
+        fn empty() -> Self { Self { snapshot: SemioBrepSnapshot::default() } }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SemioBrepSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let diff = apply_semio_brep_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <SemioBrepDiff as protocol::MutationDiff<SemioBrepSnapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+    }
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioBrepParts { pub snapshot: Option<SemioBrepSnapshot> }
+
+    pub struct SemioBrepAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for SemioBrepAnalyzerAnalysis {
+        type Parts = SemioBrepParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("brep") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    let marker = STDIO_SEMIOBREP_DOCUMENT_SCHEMA.as_bytes();
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                }
+                AnalyzeSource::Text(text) => {
+                    if text.contains(STDIO_SEMIOBREP_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = SemioBrepParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <SemioBrepSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec SemioBrepBuilderFacets {
+        construction: derived_construction::SemioBrepBuilderConstruction,
+        analysis: derived_analysis::SemioBrepAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::SemioBrepComposerComposition,
+    }
+    builder: SemioBrepBuilder,
+    analyzer: SemioBrepAnalyzer,
+    composer: SemioBrepComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

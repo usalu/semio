@@ -1,24 +1,12 @@
-//! 🖼️ Playground mutation — `SetSnapshot` payload + builder + apply.
-use crate::artifacts::playground::mutations::PlaygroundMutation;
+//! 🪦️ Orphaned by 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL — `PlaygroundMutation::SetSnapshot` is
+//! banned outright (whole-document replace has NO mutation-enum replacement, see
+//! `📓️taxonomy.md`; `store::ArtifactStore::reset` is the sanctioned non-history path). This file
+//! stays present only because `📦️glue.rs` (plugin-shared, outside this facet's boundary) still
+//! `#[path]`-wires it; see this ticket's wave2 report `sharedFileRequests` for the glue.rs cleanup
+//! this orphaning needs (delete the `set_snapshot` module block entirely).
+
 use crate::artifacts::playground::PlaygroundSnapshot;
-use serde::{Deserialize, Serialize};
 
-//#region 🔖️Mutation
-/// 🖼️ `SetSnapshot` mutation payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct SetSnapshot {
-    #[dsl(block)]
-    pub snapshot: PlaygroundSnapshot,
+pub fn apply(snapshot: &mut PlaygroundSnapshot, replacement: &PlaygroundSnapshot) {
+    *snapshot = replacement.clone();
 }
-
-/// 🏗️ Builds a `SetSnapshot` mutation.
-pub fn set_snapshot(snapshot: PlaygroundSnapshot) -> PlaygroundMutation {
-    PlaygroundMutation::SetSnapshot { snapshot }
-}
-
-/// 🧬️ Applies a snapshot replacement.
-pub fn apply(doc: &mut PlaygroundSnapshot, snapshot: &PlaygroundSnapshot) {
-    *doc = snapshot.clone();
-}
-//#endregion 🔖️Mutation

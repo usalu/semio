@@ -1,6 +1,9 @@
-use crate::artifacts::procedural2d::Procedural2dSnapshot;
-use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
+//! ↩️ Inverse for `CreateWidget` — the `delete-widget` of the id it created (the payload itself
+//! carries the id, so no BASE lookup is needed to know what to undo).
 
-pub fn inverse(base: &Procedural2dSnapshot, mutation: &Procedural2dMutation) -> Vec<Procedural2dMutation> {
-    <Procedural2dMutation as protocol::Mutation<Procedural2dSnapshot>>::inverse(mutation, base)
+use crate::artifacts::procedural2d::mutations::{delete_widget, Procedural2dMutation};
+use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
+
+pub fn inverse(payload: &super::mutation::CreateWidget, _base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+    vec![delete_widget(widget_id(&payload.widget).to_string())]
 }

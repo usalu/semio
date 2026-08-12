@@ -1,0 +1,22 @@
+syntax = "proto3";
+package semio.s.gis.gismap.inference;
+
+// 💡️ GIS map inference schema — per-collection feature counts + geographic bounding box.
+
+message GisMapInference {
+  // @state inferred
+  uint64 position_count = 1;
+  // @state inferred
+  uint64 route_count = 2;
+  // @state inferred
+  uint64 region_count = 3;
+  // @state inferred
+  GisMapBounds bounds = 4;
+}
+
+message GisMapBounds {
+  double lon_min = 1;
+  double lon_max = 2;
+  double lat_min = 3;
+  double lat_max = 4;
+}

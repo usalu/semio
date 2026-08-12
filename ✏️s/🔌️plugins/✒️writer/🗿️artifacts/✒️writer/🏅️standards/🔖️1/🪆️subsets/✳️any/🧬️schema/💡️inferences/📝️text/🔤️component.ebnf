@@ -1,0 +1,3 @@
+(* ebnf writer.writer.inference *)
+document = header, body ;
+header = 'schema', space, 'writer.writer.inference', newline ;

@@ -824,7 +824,7 @@ fn render_inline(inline: &MdInline, out: &mut String) {
 //#region 🔖️Register
 /// 🗂️ Registers codecs and the artifact schema descriptor.
 pub fn register() {
-    crate::artifacts::md::composer::register();
+    crate::artifacts::md::io_registry::register();
     register_artifact_schema();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<MdSnapshot, MdMutation>(STDIO_MD_DOCUMENT_SCHEMA));
@@ -1598,3 +1598,16 @@ mod tests {
     //#endregion 🔖️FieldSweep
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::MdComposer as MdRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<MdRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

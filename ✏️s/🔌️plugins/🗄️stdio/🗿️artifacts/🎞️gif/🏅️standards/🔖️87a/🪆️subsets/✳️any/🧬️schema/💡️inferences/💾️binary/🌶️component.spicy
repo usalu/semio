@@ -1,0 +1,4 @@
+module Stdio_gif_87a_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

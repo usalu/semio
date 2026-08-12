@@ -608,16 +608,16 @@ pub fn demo_xlsx_snapshot() -> XlsxSnapshot {
 }
 
 pub fn register() {
-    crate::artifacts::xlsx::composer::register();
+    crate::artifacts::xlsx::io_registry::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::xlsx::schema::xlsx_artifact_schema_descriptor());
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA));
     // 🛡️ D5's generic validate-on-build hook: registers the ✳️strict/✳️transitional subsets'
     // SubsetValidators so `io_dispatch`/`wire_artifact_compose` re-check them for free. Their
     // ComposerEntry values are registered separately via this standard's own `composer::entries()`
-    // aggregation (see `crate::artifacts::xlsx::composer::register()` above).
-    crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::composer::register();
-    crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::composer::register();
+    // aggregation (see `crate::artifacts::xlsx::io_registry::register()` above).
+    crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::io::register();
+    crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::io::register();
 }
 
 /// 📌️ FG-wave: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per docx's own
@@ -1105,3 +1105,20 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::XlsxComposer as XlsxRawAnyComposer;
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::XlsxStrictComposer;
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::XlsxTransitionalComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES
+            .get_or_init(|| vec![composer_entry_of::<XlsxRawAnyComposer>(), composer_entry_of::<XlsxStrictComposer>(), composer_entry_of::<XlsxTransitionalComposer>()])
+            .as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

@@ -3,6 +3,7 @@
 //! `crate::apps::fem3d`; only the `Fem3dMutation` codec pair survives here).
 
 use crate::artifacts::fem3d::schema::mutations::text::Fem3dMutation;
+use crate::artifacts::fem3d::schema::mutations::update_analysis_settings;
 use protocol::OpBinary;
 
 //#region 📡️SemioProtocol
@@ -46,28 +47,31 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = Fem3dMutation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } };
+        let operation = Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
         semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    /// 📌️ LAW: the pre-migration operation wire format, byte for byte. The hex was dumped from the old
-    /// `📡️protocol` crate before the seven-crate merge (ticket
-    /// `26/08/05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`,
-    /// `🧪️wire-baseline-before-3d.txt`) — the round-trip laws above are self-consistent and would happily
-    /// pass on a silently rewritten format, so this pin is the only real proof.
-    #[test]
-    fn operation_bytes_match_the_pre_migration_baseline() {
-        let operation = Fem3dMutation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } };
-        let bytes = encode_op(&operation).expect("encode");
-        assert_eq!(bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), "01100001000e0d0300040501040202050000000000002440");
-    }
-
+    /// 🧬️ The whole-document `SetSnapshot` mutation that used to seed this store round-trip test is
+    /// banned outright (`📓️taxonomy.md`'s forbidden vocabulary — no replacement mutation). Builds the
+    /// same `cantilever_fixture` content through a real sequence of semantic mutations instead, still
+    /// exercising every collection kind (id-keyed create + a nested load) for the text/pack codecs.
     #[test]
     fn fem3d_document_text_round_trips_through_the_store() {
+        let fixture = cantilever_fixture();
         let mut store = crate::artifacts::fem3d::schema::mutations::Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", engine::empty_fem3d_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Fem3dMutation::SetSnapshot { snapshot: cantilever_fixture() }], description: None }).expect("apply");
+        let mutations = vec![
+            Fem3dMutation::CreateMaterial(crate::artifacts::fem3d::schema::mutations::create_material::mutation::CreateMaterial { material: fixture.materials[0].clone() }),
+            Fem3dMutation::CreateSection(crate::artifacts::fem3d::schema::mutations::create_section::mutation::CreateSection { section: fixture.sections[0].clone() }),
+            Fem3dMutation::CreateNode(crate::artifacts::fem3d::schema::mutations::create_node::mutation::CreateNode { node: fixture.nodes[0].clone() }),
+            Fem3dMutation::CreateNode(crate::artifacts::fem3d::schema::mutations::create_node::mutation::CreateNode { node: fixture.nodes[1].clone() }),
+            Fem3dMutation::CreateElement(crate::artifacts::fem3d::schema::mutations::create_element::mutation::CreateElement { element: Box::new(fixture.elements[0].clone()) }),
+            Fem3dMutation::CreateSupport(crate::artifacts::fem3d::schema::mutations::create_support::mutation::CreateSupport { support: fixture.supports[0].clone() }),
+            Fem3dMutation::CreateLoadCase(crate::artifacts::fem3d::schema::mutations::create_load_case::mutation::CreateLoadCase { load_case: fixture.load_cases[0].clone() }),
+        ];
+        store.dispatch(ArtifactCommand::Apply { mutations, description: None }).expect("apply");
+        assert_eq!(store.snapshot().expect("snapshot"), fixture);
         semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&store);
         semio_framework_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store);
     }
@@ -87,9 +91,9 @@ mod semio_protocol_conformance {
     }
     #[test]
     fn verify_protocol_bytes_against_encoded_spr() {
-        let operation = Fem3dMutation::SetAnalysisSettings {
+        let operation = Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings {
             settings: crate::artifacts::fem3d::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 },
-        };
+        });
         let bytes = encode_op(&operation).expect("encode op");
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");

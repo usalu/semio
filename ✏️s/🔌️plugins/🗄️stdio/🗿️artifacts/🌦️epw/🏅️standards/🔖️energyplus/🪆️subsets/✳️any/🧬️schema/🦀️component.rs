@@ -119,3 +119,114 @@ pub fn epw_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
         },
     }
 }
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::diff::EpwDiff;
+    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::{EpwMutation, apply_epw_mutation};
+    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct EpwBuilderConstruction { snapshot: EpwSnapshot }
+
+    impl ArtifactBuilder for EpwBuilderConstruction {
+        type Snapshot = EpwSnapshot;
+        type Mutation = EpwMutation;
+        type Diff = EpwDiff;
+        fn empty() -> Self { Self { snapshot: EpwSnapshot::default() } }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<EpwSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<EpwSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let diff = apply_epw_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <EpwDiff as protocol::MutationDiff<EpwSnapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+    }
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA};
+    use crate::artifacts::epw::standards::energyplus::engine as engine;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct EpwParts { pub snapshot: Option<EpwSnapshot> }
+
+    pub struct EpwAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for EpwAnalyzerAnalysis {
+        type Parts = EpwParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.epw", standard: StandardId("energyplus"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    if engine::sniff_real_bytes(bytes) {
+                        return IoConfidence::High;
+                    }
+                    let marker = STDIO_EPW_DOCUMENT_SCHEMA.as_bytes();
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                }
+                AnalyzeSource::Text(text) => {
+                    if engine::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_EPW_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = EpwParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <EpwSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <EpwSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec EpwBuilderFacets {
+        construction: derived_construction::EpwBuilderConstruction,
+        analysis: derived_analysis::EpwAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::EpwComposerComposition,
+    }
+    builder: EpwBuilder,
+    analyzer: EpwAnalyzer,
+    composer: EpwComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

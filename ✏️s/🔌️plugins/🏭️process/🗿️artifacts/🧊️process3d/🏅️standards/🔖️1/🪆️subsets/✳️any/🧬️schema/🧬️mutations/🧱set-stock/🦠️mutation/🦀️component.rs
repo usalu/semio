@@ -1,21 +1,36 @@
-//! 🧱 Process3d mutation — `SetStock`.
+//! 🧱 Process3d mutation — `MoveStock` (repurposes the pre-migration `🧱set-stock/` triad dir —
+//! glue.rs path-includes this exact directory outside this facet's writable boundary, so the
+//! directory name stays `🧱set-stock`; see the migration report's `sharedFileRequests` for the
+//! rename once a later pass can touch `📦️glue.rs`).
+
+use crate::artifacts::process3d::diff::Process3dDiff;
 use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::{Process3dSnapshot, Stock};
+use crate::artifacts::process3d::{Pose, Process3dSnapshot};
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️Mutation
-/// @emoji 🧱 `SetStock` mutation payload.
+//#region 🔖️MoveStock
+/// 🧱 Absolute spatial reposition of the document's single [`crate::artifacts::process3d::Stock`]
+/// workpiece — the `stock` field's `pose` sub-value, addressed implicitly (the document has exactly
+/// one stock, so `target()` is empty per `MutationKind::target`'s whole-artifact-scope default).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SetStock {
-    pub stock: Stock,
+pub struct MoveStock {
+    pub new_pose: Pose,
 }
 
-pub fn set_stock(stock: Stock) -> Process3dMutation {
-    Process3dMutation::SetStock { stock }
-}
+impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for MoveStock {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "stock", kind: "move-stock", record: "MovedStock" };
 
-pub fn apply(doc: &mut Process3dSnapshot, stock: &Stock) {
-    doc.stock = stock.clone();
+    fn diff(&self, base: &Process3dSnapshot) -> Process3dDiff {
+        crate::artifacts::process3d::mutations::set_stock::diff::diff(self, base)
+    }
+
+    fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+        crate::artifacts::process3d::mutations::set_stock::inverse::inverse(self, base)
+    }
+
+    fn label(&self) -> String {
+        "Move stock".to_string()
+    }
 }
-//#endregion 🔖️Mutation
+//#endregion 🔖️MoveStock

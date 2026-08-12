@@ -10,5 +10,4 @@ export * as vcs_mutations from "../../🗿️artifacts/🌿️vcs/🧬️schema/
 export * as vcs_mutations_text from "../../🗿️artifacts/🌿️vcs/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as vcs_mutations_binary from "../../🗿️artifacts/🌿️vcs/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as vcs_io from "../../🗿️artifacts/🌿️vcs/🚪️io/🟦️component.ts";
-export * as vcs_builder from "../../🗿️artifacts/🌿️vcs/🏗️builder/🟦️component.ts";
 export * as vcs_decomposer from "../../🗿️artifacts/🌿️vcs/🪓️decomposer/🟦️component.ts";

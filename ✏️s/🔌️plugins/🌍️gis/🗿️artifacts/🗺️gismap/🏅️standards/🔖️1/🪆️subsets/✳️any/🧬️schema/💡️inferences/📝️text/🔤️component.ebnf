@@ -1,0 +1,3 @@
+(* ebnf gis.gismap.inference *)
+document = header, body ;
+header = 'schema', space, 'gis.gismap.inference', newline ;

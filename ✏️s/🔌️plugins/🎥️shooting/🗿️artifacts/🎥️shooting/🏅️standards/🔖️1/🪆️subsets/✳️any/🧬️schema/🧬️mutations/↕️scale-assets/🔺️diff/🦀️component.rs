@@ -1,21 +1,24 @@
-//! 🔺️ Diff fragment yielded by `ScaleAssets`.
-use crate::artifacts::shooting::diff::ShootingDiff;
-use serde::{Deserialize, Serialize};
+//! 🔺 Diff constructor for `ScaleAssets` — multiplies each targeted asset's current per-axis scale
+//! (identity when absent) by the payload factors.
 
-//#region 🔖️Diff
-/// 🔺️ Diff produced by one mutation — a sparse [`ShootingDiff`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct ScaleAssetsDiff {
-    pub diff: ShootingDiff,
-}
+use super::mutation::ScaleAssets;
+use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
+use crate::artifacts::shooting::{shooting_asset_scale, ShootingAssetPatch, ShootingSnapshot};
 
-impl ScaleAssetsDiff {
-    pub fn from_diff(diff: ShootingDiff) -> Self {
-        Self { diff }
+//#region ↕️ScaleAssets
+pub fn diff_scale_assets(payload: &ScaleAssets, base: &ShootingSnapshot) -> ShootingDiff {
+    let patched: Vec<ShootingAssetPatchEntry> = base
+        .assets
+        .iter()
+        .filter(|asset| payload.asset_ids.contains(&asset.id))
+        .map(|asset| {
+            let current = shooting_asset_scale(asset);
+            ShootingAssetPatchEntry { id: asset.id.clone(), patch: ShootingAssetPatch { scale: Some([current[0] * payload.sx, current[1] * payload.sy, current[2] * payload.sz]), ..Default::default() } }
+        })
+        .collect();
+    if patched.is_empty() {
+        return ShootingDiff::default();
     }
-
-    pub fn into_shooting_diff(self) -> ShootingDiff {
-        self.diff
-    }
+    ShootingDiff { assets: Some(ShootingAssetsDelta { patched, ..Default::default() }), ..Default::default() }
 }
-//#endregion 🔖️Diff
+//#endregion ↕️ScaleAssets

@@ -2,21 +2,35 @@
 //! and the self-weight toggle.
 
 use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use crate::artifacts::fem3d::mutations::{add_load, change_load_case_self_weight, create_combination, create_load_case};
 use crate::artifacts::fem3d::op::Fem3dMutation;
-use crate::artifacts::fem3d::{Fem3dSnapshot, FemLoadCase};
+use crate::artifacts::fem3d::{Fem3dSnapshot, FemLoad, FemLoadCase};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🔎️ Resolves the target load case for a load-adding command: the named `case_id` if given and
-/// found, else the document's first load case, else a synthesized `"case-1"` placeholder (never
-/// inserted — the caller's `SetLoadCase` operation does that). Returns `(index, load_case)`, where
-/// `index` is the case's position if it already exists, or `doc.load_cases.len()` if it doesn't (the
-/// position a `SetLoadCase` should insert the synthesized case at).
-fn resolve_load_case(doc: &Fem3dSnapshot, case_id: Option<&str>) -> (usize, FemLoadCase) {
-    let named = case_id.and_then(|id| doc.load_cases.iter().find(|lc| lc.id == id).cloned());
-    let load_case = named.or_else(|| doc.load_cases.first().cloned()).unwrap_or_else(|| FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: Vec::new(), self_weight: false });
-    let index = doc.load_cases.iter().position(|lc| lc.id == load_case.id).unwrap_or(doc.load_cases.len());
-    (index, load_case)
+/// found, else the document's first load case, else `None` — a missing case is not resolved here,
+/// the caller decides between `add-load` (existing case) and `create-load-case` (pre-seeded with the
+/// new load, synthesized `"case-1"`/`"Load Case 1"`) once it knows which branch it's in.
+fn resolve_load_case(doc: &Fem3dSnapshot, case_id: Option<&str>) -> Option<FemLoadCase> {
+    case_id.and_then(|id| doc.load_cases.iter().find(|lc| lc.id == id).cloned()).or_else(|| doc.load_cases.first().cloned())
+}
+
+/// 🌉️ Shared resolve-or-create gesture behind `add-nodal-load`/`add-member-udl`/`add-area-load`:
+/// attaches `load` to the named/first load case via `add-load` if one exists, else synthesizes a
+/// fresh `"case-1"`/`"Load Case 1"` case pre-seeded with `load` via `create-load-case`.
+fn add_load_mutation(doc: &Fem3dSnapshot, case_id: Option<&str>, load: FemLoad) -> Fem3dMutation {
+    match resolve_load_case(doc, case_id) {
+        Some(existing) => Fem3dMutation::AddLoad(add_load::mutation::AddLoad { case_id: existing.id, load: Box::new(load) }),
+        None => Fem3dMutation::CreateLoadCase(create_load_case::mutation::CreateLoadCase { load_case: FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: vec![load], self_weight: false } }),
+    }
+}
+
+/// 🌉️ The load id a new load on the (possibly not-yet-existing) target case should get — reads the
+/// existing case's loads for `next_id` continuity, or starts fresh for a synthesized case.
+fn next_load_id(doc: &Fem3dSnapshot, case_id: Option<&str>) -> String {
+    let loads = resolve_load_case(doc, case_id).map(|lc| lc.loads).unwrap_or_default();
+    crate::app_surface::next_id(loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l")
 }
 
 //#region 🔖️AddNodalLoad
@@ -34,10 +48,9 @@ pub mod add_nodal_load {
     }
 
     pub fn handle(payload: &AddNodalLoad, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
-        let (index, mut load_case) = resolve_load_case(doc.snapshot, payload.case_id.as_deref());
-        let load_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l");
-        load_case.loads.push(crate::artifacts::fem3d::FemLoad::Nodal { id: load_id, node_id: payload.node_id.clone(), dof: payload.dof, value: payload.value });
-        Ok(Emit::mutations(vec![Fem3dMutation::SetLoadCase { index, load_case }]))
+        let load_id = next_load_id(doc.snapshot, payload.case_id.as_deref());
+        let load = FemLoad::Nodal { id: load_id, node_id: payload.node_id.clone(), dof: payload.dof, value: payload.value };
+        Ok(Emit::mutations(vec![add_load_mutation(doc.snapshot, payload.case_id.as_deref(), load)]))
     }
 }
 //#endregion 🔖️AddNodalLoad
@@ -58,10 +71,9 @@ pub mod add_member_udl {
     }
 
     pub fn handle(payload: &AddMemberUdl, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
-        let (index, mut load_case) = resolve_load_case(doc.snapshot, payload.case_id.as_deref());
-        let load_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l");
-        load_case.loads.push(crate::artifacts::fem3d::FemLoad::MemberUdl { id: load_id, element_id: payload.element_id.clone(), wx: payload.wx, wy: payload.wy, wz: payload.wz });
-        Ok(Emit::mutations(vec![Fem3dMutation::SetLoadCase { index, load_case }]))
+        let load_id = next_load_id(doc.snapshot, payload.case_id.as_deref());
+        let load = FemLoad::MemberUdl { id: load_id, element_id: payload.element_id.clone(), wx: payload.wx, wy: payload.wy, wz: payload.wz };
+        Ok(Emit::mutations(vec![add_load_mutation(doc.snapshot, payload.case_id.as_deref(), load)]))
     }
 }
 //#endregion 🔖️AddMemberUdl
@@ -80,10 +92,9 @@ pub mod add_area_load {
     }
 
     pub fn handle(payload: &AddAreaLoad, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
-        let (index, mut load_case) = resolve_load_case(doc.snapshot, payload.case_id.as_deref());
-        let load_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l");
-        load_case.loads.push(crate::artifacts::fem3d::FemLoad::Area { id: load_id, solid_id: payload.solid_id.clone(), pressure: payload.pressure });
-        Ok(Emit::mutations(vec![Fem3dMutation::SetLoadCase { index, load_case }]))
+        let load_id = next_load_id(doc.snapshot, payload.case_id.as_deref());
+        let load = FemLoad::Area { id: load_id, solid_id: payload.solid_id.clone(), pressure: payload.pressure };
+        Ok(Emit::mutations(vec![add_load_mutation(doc.snapshot, payload.case_id.as_deref(), load)]))
     }
 }
 //#endregion 🔖️AddAreaLoad
@@ -103,8 +114,7 @@ pub mod add_load_case {
     pub fn handle(payload: &AddLoadCase, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.load_cases.iter().map(|lc| lc.id.clone()), "case-");
-        let index = snapshot.load_cases.len();
-        Ok(Emit::mutations(vec![Fem3dMutation::SetLoadCase { index, load_case: FemLoadCase { id, name: payload.name.clone(), loads: Vec::new(), self_weight: payload.self_weight } }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::CreateLoadCase(create_load_case::mutation::CreateLoadCase { load_case: FemLoadCase { id, name: payload.name.clone(), loads: Vec::new(), self_weight: payload.self_weight } })]))
     }
 }
 //#endregion 🔖️AddLoadCase
@@ -130,8 +140,7 @@ pub mod add_combination {
             Ok(parsed) => {
                 let terms: std::collections::BTreeMap<String, f64> = parsed.into_iter().collect();
                 let id = crate::app_surface::next_id(snapshot.combinations.iter().map(|c| c.id.clone()), "c");
-                let index = snapshot.combinations.len();
-                Ok(Emit::mutations(vec![Fem3dMutation::SetCombination { index, combination: crate::artifacts::fem3d::FemCombination { id, name: payload.name.clone(), terms } }]))
+                Ok(Emit::mutations(vec![Fem3dMutation::CreateCombination(create_combination::mutation::CreateCombination { combination: crate::artifacts::fem3d::FemCombination { id, name: payload.name.clone(), terms } })]))
             }
             Err(_) => Ok(Emit::default()),
         }
@@ -153,13 +162,9 @@ pub mod set_self_weight {
 
     pub fn handle(payload: &SetSelfWeight, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
-        match snapshot.load_cases.iter().position(|lc| lc.id == payload.case_id) {
-            Some(index) => {
-                let mut load_case = snapshot.load_cases[index].clone();
-                load_case.self_weight = payload.enabled;
-                Ok(Emit::mutations(vec![Fem3dMutation::SetLoadCase { index, load_case }]))
-            }
-            None => Ok(Emit::default()),
+        match snapshot.load_cases.iter().any(|lc| lc.id == payload.case_id) {
+            true => Ok(Emit::mutations(vec![Fem3dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: payload.case_id.clone(), new_self_weight: payload.enabled })])),
+            false => Ok(Emit::default()),
         }
     }
 }
@@ -179,11 +184,19 @@ mod tests {
     }
 
     #[test]
-    fn resolve_load_case_synthesizes_case_when_none_exist() {
+    fn resolve_load_case_returns_none_when_none_exist() {
         let snapshot = Fem3dSnapshot::default();
-        let (index, load_case) = resolve_load_case(&snapshot, None);
-        assert_eq!(index, 0);
-        assert_eq!(load_case.id, "case-1");
+        assert!(resolve_load_case(&snapshot, None).is_none());
+    }
+
+    #[test]
+    fn add_nodal_load_with_no_existing_case_creates_one() {
+        let mut app = fem3d_app();
+        dispatch(&mut app, Fem3dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n2".into(), dof: crate::artifacts::fem3d::FemDof::Tz, value: -5000.0, case_id: None }));
+        let snapshot = app.snapshot().expect("snapshot");
+        assert_eq!(snapshot.load_cases.len(), 1);
+        assert_eq!(snapshot.load_cases[0].id, "case-1");
+        assert!(matches!(snapshot.load_cases[0].loads[0], crate::artifacts::fem3d::FemLoad::Nodal { .. }));
     }
 
     #[test]

@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.s.sequence.sequence.inference;
+
+// 💡️ Sequence inference schema — topology is a real Kahn's-algorithm topological sort over the
+// step DAG (steps + edges).
+
+message SequenceInference {
+  // @state inferred
+  SequenceTopology topology = 1;
+}
+
+message SequenceTopology {
+  repeated string topo_order = 1;
+  map<string, uint32> depth = 2;
+  bool cycle_free = 3;
+  uint32 node_count = 4;
+}

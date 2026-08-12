@@ -1,0 +1,13 @@
+# 💡️ Gif (87a) inference schema — logical screen geometry.
+
+type GifInference {
+  dimensions: GifDimensions! @state(class: INFERRED)
+}
+
+type GifDimensions {
+  width: Int!
+  height: Int!
+  bitDepth: Int!
+  hasAlpha: Boolean!
+  pixelCount: Int!
+}

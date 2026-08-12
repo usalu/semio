@@ -1,0 +1,3 @@
+(* ebnf lowpoly.lowpoly.inference *)
+document = header, body ;
+header = 'schema', space, 'lowpoly.lowpoly.inference', newline ;

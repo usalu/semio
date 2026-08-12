@@ -1,0 +1,3 @@
+(* ebnf animate.present.inference *)
+document = header, body ;
+header = 'schema', space, 'animate.present.inference', newline ;

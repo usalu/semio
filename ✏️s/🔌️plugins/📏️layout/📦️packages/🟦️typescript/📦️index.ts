@@ -10,5 +10,4 @@ export * as layout_mutations from "../../🗿️artifacts/📏️layout/🧬️s
 export * as layout_mutations_text from "../../🗿️artifacts/📏️layout/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as layout_mutations_binary from "../../🗿️artifacts/📏️layout/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as layout_io from "../../🗿️artifacts/📏️layout/🚪️io/🟦️component.ts";
-export * as layout_builder from "../../🗿️artifacts/📏️layout/🏗️builder/🟦️component.ts";
 export * as layout_decomposer from "../../🗿️artifacts/📏️layout/🪓️decomposer/🟦️component.ts";

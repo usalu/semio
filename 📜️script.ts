@@ -7348,7 +7348,6 @@ export function policyAppSchemaBreaches(repoRoot: string): BreachRecord[] {
 const POLICY_STDIO_OWNER_TABLE_REL = "✏️s/🔌️plugins/🗄️stdio/📇️registry/📇️catalog.json";
 const POLICY_STDIO_PLUGIN_REL = "✏️s/🔌️plugins/🗄️stdio";
 const POLICY_STDIO_ARTIFACTS_REL = `${POLICY_STDIO_PLUGIN_REL}/🗿️artifacts`;
-const POLICY_STDIO_FACET_BUILDER = "🏗️builder";
 const POLICY_STDIO_FACET_DECOMPOSER = "🪓️decomposer";
 const POLICY_STDIO_FACET_TEXT = "📝️text";
 const POLICY_STDIO_FACET_BINARY = "💾️binary";
@@ -7358,7 +7357,7 @@ const POLICY_STDIO_IO_IMPORT = "📥️import";
 const POLICY_STDIO_IO_EXPORT = "📤️export";
 const POLICY_STDIO_SCHEMA_CHILD_FALLBACK = ["📸️snapshot", "🔺️diff", "🧬️mutations"] as const;
 const POLICY_STDIO_REPRESENTATION_FALLBACK = [POLICY_STDIO_FACET_TEXT, POLICY_STDIO_FACET_BINARY] as const;
-const POLICY_STDIO_ARTIFACT_FACET_FALLBACK = ["🧬️schema", "⚙️engine", "🚪️io", POLICY_STDIO_FACET_BUILDER, POLICY_STDIO_FACET_DECOMPOSER] as const;
+const POLICY_STDIO_ARTIFACT_FACET_FALLBACK = ["🧬️schema", "⚙️engine", "🚪️io", POLICY_STDIO_FACET_DECOMPOSER] as const;
 const POLICY_STDIO_LEGACY_ARTIFACT_FACETS = new Set(["🗣️dsl", "🔧️op", "📡️spr", "🔺️diff", "📸️snapshot"]);
 const POLICY_STDIO_TEXT_SPEC_LEAVES = [
   "📖️component.grammar.semio",
@@ -7662,20 +7661,22 @@ function policyArtifactIsMigrated(repoRoot: string, artRel: string): boolean {
   return existsSync(join(repoRoot, `${artRel}/${standardsDirName}`));
 }
 
-/** ⚖️Every not-yet-migrated plugin artifact exposes 🏗️builder with rs+ts implementing ArtifactBuilder. */
+/** ⚖️Legacy artifacts no longer own an explicit builder facet. */
 export function policyArtifactBuilderBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
     if (policyArtifactIsMigrated(repoRoot, artRel)) continue;
-    breaches.push(
-      ...policyStdioFacetRsTsBreaches(
-        repoRoot,
-        `${artRel}/${POLICY_STDIO_FACET_BUILDER}`,
-        artRel,
-        "stdio-artifacts/builder",
-        "ArtifactBuilder",
-      ),
-    );
+    const facetRel = `${artRel}/🏗️builder`;
+    if (!existsSync(join(repoRoot, facetRel))) continue;
+    breaches.push({
+      id: `artifact-derived-builder-${artRel}`,
+      summary: `"${artRel}" has a forbidden explicit builder facet`,
+      kind: "stdio-artifacts/derived-facets",
+      scope: artRel,
+      priority: "high",
+      reason: "Artifact lifecycle capabilities are derived from schema and IO hooks.",
+      solution: `Remove ${facetRel}/ and derive its builder from the subset schema.`,
+    });
   }
   return breaches;
 }
@@ -7708,8 +7709,11 @@ export function policyArtifactDecomposerBreaches(repoRoot: string): BreachRecord
  */
 const POLICY_STANDARDS_DIR = "🏅️standards";
 const POLICY_SUBSETS_DIR = "🪆️subsets";
-const POLICY_FACET_ANALYZER = "🧐️analyzer";
-const POLICY_FACET_COMPOSER = "🎹️composer";
+const POLICY_DERIVED_FACETS = [
+  { dir: "🏗️builder", hook: "construction:", name: "builder" },
+  { dir: "🧐️analyzer", hook: "analysis:", name: "analyzer" },
+  { dir: "🎹️composer", hook: "composition:", name: "composer" },
+] as const;
 
 type PolicyArtifactDialect = {
   artRel: string;
@@ -7765,7 +7769,7 @@ function policyListArtifactDialectDirs(repoRoot: string): PolicyArtifactDialect[
   return out;
 }
 
-/** ⚖️Every migrated standard/subset dir carries its required builder+analyzer+composer(+engine/schema/io) children. */
+/** ⚖️Every migrated standard/subset dir carries its required engine/schema/IO children. */
 export function policyStandardsCoverageBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const taxonomy = loadTaxonomy();
@@ -7817,7 +7821,7 @@ export function policyStandardsCoverageBreaches(repoRoot: string): BreachRecord[
         kind: "stdio-artifacts/standards-coverage",
         scope: dialect.artRel,
         priority: "high",
-        reason: "Every standard carries builder/analyzer/composer/engine/subsets per 🔣️taxonomy.json standardChildDirs.",
+        reason: "Every standard carries engine/subsets per 🔣️taxonomy.json standardChildDirs.",
         solution: `Add ${dialect.standardRel}/${child}/.`,
       });
     }
@@ -7829,7 +7833,7 @@ export function policyStandardsCoverageBreaches(repoRoot: string): BreachRecord[
         kind: "stdio-artifacts/standards-coverage",
         scope: dialect.artRel,
         priority: "high",
-        reason: "Every subset carries schema/builder/analyzer/composer/io per 🔣️taxonomy.json subsetChildDirs.",
+        reason: "Every subset carries schema/io; lifecycle capabilities are derived from their hooks.",
         solution: `Add ${dialect.subsetRel}/${child}/.`,
       });
     }
@@ -7837,116 +7841,55 @@ export function policyStandardsCoverageBreaches(repoRoot: string): BreachRecord[
   return breaches;
 }
 
-/** ⚖️Every migrated artifact exposes 🏗️builder (artifact/standard/subset level) with rs+ts implementing ArtifactBuilder. */
+function policyDerivedArtifactFacetBreaches(repoRoot: string, facet: (typeof POLICY_DERIVED_FACETS)[number]): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const checkedOwners = new Set<string>();
+  for (const dialect of policyListArtifactDialectDirs(repoRoot)) {
+    for (const owner of [dialect.artRel, dialect.standardRel, dialect.subsetRel]) {
+      if (checkedOwners.has(owner)) continue;
+      checkedOwners.add(owner);
+      const explicitRel = `${owner}/${facet.dir}`;
+      if (!existsSync(join(repoRoot, explicitRel))) continue;
+      breaches.push({
+        id: `artifact-derived-${facet.name}-explicit-${owner}`,
+        summary: `"${owner}" has forbidden explicit ${facet.name} facet ${facet.dir}/`,
+        kind: "stdio-artifacts/derived-facets",
+        scope: dialect.artRel,
+        priority: "high",
+        reason: "Builder, analyzer, and composer are derived types, not artifact taxonomy nodes.",
+        solution: `Remove ${explicitRel}/ and keep the ${facet.name} hook in schema or IO.`,
+      });
+    }
+    const schemaRel = `${dialect.subsetRel}/🧬️schema/${POLICY_RS_COMPONENT_LEAF}`;
+    const schemaAbs = join(repoRoot, schemaRel);
+    const body = existsSync(schemaAbs) ? readFileSync(schemaAbs, "utf8") : "";
+    if (body.includes("derive_artifact_facets!") && body.includes(facet.hook)) continue;
+    breaches.push({
+      id: `artifact-derived-${facet.name}-missing-${dialect.subsetRel}`,
+      summary: `"${schemaRel}" does not derive its ${facet.name}`,
+      kind: "stdio-artifacts/derived-facets",
+      scope: dialect.artRel,
+      priority: "high",
+      reason: "Every subset schema derives the uniform lifecycle types from construction, analysis, and composition hooks.",
+      solution: `Invoke derive_artifact_facets! in ${schemaRel} with a ${facet.hook} hook.`,
+    });
+  }
+  return breaches;
+}
+
+/** ⚖️Every migrated subset derives its builder from schema-owned construction. */
 export function policyArtifactBuilderMigratedBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  const migratedArtifacts = new Set(policyListArtifactDialectDirs(repoRoot).map((d) => d.artRel));
-  for (const artRel of migratedArtifacts) {
-    breaches.push(
-      ...policyStdioFacetRsTsBreaches(
-        repoRoot,
-        `${artRel}/${POLICY_STDIO_FACET_BUILDER}`,
-        artRel,
-        "stdio-artifacts/builder",
-        "ArtifactBuilder",
-      ),
-    );
-  }
-  for (const dialect of policyListArtifactDialectDirs(repoRoot)) {
-    breaches.push(
-      ...policyStdioFacetRsTsBreaches(
-        repoRoot,
-        `${dialect.standardRel}/${POLICY_STDIO_FACET_BUILDER}`,
-        dialect.artRel,
-        "stdio-artifacts/builder",
-        "ArtifactBuilder",
-      ),
-      ...policyStdioFacetRsTsBreaches(
-        repoRoot,
-        `${dialect.subsetRel}/${POLICY_STDIO_FACET_BUILDER}`,
-        dialect.artRel,
-        "stdio-artifacts/builder",
-        "ArtifactBuilder",
-      ),
-    );
-  }
-  return breaches;
+  return policyDerivedArtifactFacetBreaches(repoRoot, POLICY_DERIVED_FACETS[0]);
 }
 
-/** ⚖️Every migrated artifact exposes 🧐️analyzer (artifact/standard/subset level) with rs+ts implementing ArtifactAnalyzer. */
+/** ⚖️Every migrated subset derives its analyzer from schema-owned analysis. */
 export function policyArtifactAnalyzerBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  const migratedArtifacts = new Set(policyListArtifactDialectDirs(repoRoot).map((d) => d.artRel));
-  for (const artRel of migratedArtifacts) {
-    breaches.push(
-      ...policyStdioFacetRsTsBreaches(
-        repoRoot,
-        `${artRel}/${POLICY_FACET_ANALYZER}`,
-        artRel,
-        "stdio-artifacts/analyzer",
-        "ArtifactAnalyzer",
-      ),
-    );
-  }
-  for (const dialect of policyListArtifactDialectDirs(repoRoot)) {
-    breaches.push(
-      ...policyStdioFacetRsTsBreaches(
-        repoRoot,
-        `${dialect.standardRel}/${POLICY_FACET_ANALYZER}`,
-        dialect.artRel,
-        "stdio-artifacts/analyzer",
-        "ArtifactAnalyzer",
-      ),
-      ...policyStdioFacetRsTsBreaches(
-        repoRoot,
-        `${dialect.subsetRel}/${POLICY_FACET_ANALYZER}`,
-        dialect.artRel,
-        "stdio-artifacts/analyzer",
-        "ArtifactAnalyzer",
-      ),
-    );
-  }
-  return breaches;
+  return policyDerivedArtifactFacetBreaches(repoRoot, POLICY_DERIVED_FACETS[1]);
 }
 
-/** ⚖️Every migrated artifact exposes 🎹️composer at all three levels: the subset level implements the
- * ArtifactComposer trait directly (the real, typed unit); artifact/standard levels aggregate subset
- * entries value-level (ComposerEntry rows), by design -- see the ticket's normative design doc §2.4 --
- * so they're checked for that aggregation shape (ComposerEntry) rather than the trait name. */
+/** ⚖️Every migrated subset derives its composer from IO-owned composition. */
 export function policyArtifactComposerBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  const AGGREGATION_MARKER = "ComposerEntry";
-  const migratedArtifacts = new Set(policyListArtifactDialectDirs(repoRoot).map((d) => d.artRel));
-  for (const artRel of migratedArtifacts) {
-    breaches.push(
-      ...policyStdioFacetRsTsBreaches(
-        repoRoot,
-        `${artRel}/${POLICY_FACET_COMPOSER}`,
-        artRel,
-        "stdio-artifacts/composer",
-        AGGREGATION_MARKER,
-      ),
-    );
-  }
-  for (const dialect of policyListArtifactDialectDirs(repoRoot)) {
-    breaches.push(
-      ...policyStdioFacetRsTsBreaches(
-        repoRoot,
-        `${dialect.standardRel}/${POLICY_FACET_COMPOSER}`,
-        dialect.artRel,
-        "stdio-artifacts/composer",
-        AGGREGATION_MARKER,
-      ),
-      ...policyStdioFacetRsTsBreaches(
-        repoRoot,
-        `${dialect.subsetRel}/${POLICY_FACET_COMPOSER}`,
-        dialect.artRel,
-        "stdio-artifacts/composer",
-        "ArtifactComposer",
-      ),
-    );
-  }
-  return breaches;
+  return policyDerivedArtifactFacetBreaches(repoRoot, POLICY_DERIVED_FACETS[2]);
 }
 
 /** 🔣 One row per (migrated artifact, standard) — the manifest a `policyStandardSubsetVocabularyBreaches` group checks. */
@@ -8108,7 +8051,7 @@ export function policyStandardSubsetVocabularyBreaches(repoRoot: string): Breach
     if (isStdio) {
       for (const dialect of group.dialects) {
         if (dialect.subsetId === anyId) continue;
-        const composerRel = `${dialect.subsetRel}/${POLICY_FACET_COMPOSER}/${POLICY_RS_COMPONENT_LEAF}`;
+        const composerRel = `${dialect.subsetRel}/🚪️io/${POLICY_RS_COMPONENT_LEAF}`;
         const composerAbs = join(repoRoot, composerRel);
         const body = existsSync(composerAbs) ? readFileSync(composerAbs, "utf8") : "";
         const hasValidatorImpl = policyRustFileHasRealTraitImpl(body, "SubsetValidator");
@@ -8116,7 +8059,7 @@ export function policyStandardSubsetVocabularyBreaches(repoRoot: string): Breach
         if (!hasValidatorImpl || !hasRegisterCall) {
           breaches.push({
             id: `standards-subset-vocabulary-validator-missing-${dialect.subsetRel}`,
-            summary: `"${dialect.subsetRel}" is a real subset but its composer does not ${!hasValidatorImpl ? "implement SubsetValidator" : "call register_subset_validator"}`,
+            summary: `"${dialect.subsetRel}" is a real subset but its IO hook does not ${!hasValidatorImpl ? "implement SubsetValidator" : "call register_subset_validator"}`,
             kind: "stdio-artifacts/standards-subset-vocabulary",
             scope: dialect.artRel,
             priority: "high",
@@ -8828,7 +8771,7 @@ function policyRoundTripTestBreaches(repoRoot: string): BreachRecord[] {
 
 /**
  * 🎫 Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 6
- * (scoped): every `🎹️composer` declares its cross-artifact dependencies as `const DEP_<NAME>:
+ * (scoped): every derived composition hook declares its cross-artifact dependencies as `const DEP_<NAME>:
  * Dialect = Dialect { artifact_kind: "s.stdio.<dep>", standard: StandardId("<std>"), subset:
  * SubsetId(...) }` (confirmed the universal pattern across every stdio composer this session
  * touched). This rule verifies each declared dependency's (artifact, standard) pair actually
@@ -8852,7 +8795,7 @@ function policyComposerDependencyBreaches(repoRoot: string): BreachRecord[] {
     dirByKey.set(key, entry.dir);
   }
   for (const relPath of policyAllRustFiles(repoRoot)) {
-    if (!relPath.endsWith(`🎹️composer/${POLICY_RS_COMPONENT_LEAF}`)) continue;
+    if (!relPath.endsWith(`🚪️io/${POLICY_RS_COMPONENT_LEAF}`)) continue;
     if (!relPath.startsWith(`${POLICY_STDIO_ARTIFACTS_REL}/`)) continue;
     const content = readFileSync(join(repoRoot, relPath), "utf8");
     POLICY_DEP_DIALECT_RE.lastIndex = 0;

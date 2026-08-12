@@ -1,0 +1,9 @@
+dialect grammar
+grammar shooting.shooting.inference
+extension shooting.inference
+start document
+
+document = header body
+header = "schema" SP "shooting.shooting.inference" NL
+body = payload NL?
+payload = OCTET+

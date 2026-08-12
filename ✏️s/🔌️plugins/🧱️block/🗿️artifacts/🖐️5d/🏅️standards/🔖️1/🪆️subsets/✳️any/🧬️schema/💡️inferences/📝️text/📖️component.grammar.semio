@@ -1,0 +1,9 @@
+dialect grammar
+grammar block.block5d.inference
+extension block5d.inference
+start document
+
+document = header body
+header = "schema" SP "block.block5d.inference" NL
+body = payload NL?
+payload = OCTET+

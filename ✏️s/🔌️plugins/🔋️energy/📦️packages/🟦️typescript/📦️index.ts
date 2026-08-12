@@ -10,5 +10,4 @@ export * as model_mutations from "../../🗿️artifacts/🔋️model/🧬️sch
 export * as model_mutations_text from "../../🗿️artifacts/🔋️model/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as model_mutations_binary from "../../🗿️artifacts/🔋️model/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as model_io from "../../🗿️artifacts/🔋️model/🚪️io/🟦️component.ts";
-export * as model_builder from "../../🗿️artifacts/🔋️model/🏗️builder/🟦️component.ts";
 export * as model_decomposer from "../../🗿️artifacts/🔋️model/🪓️decomposer/🟦️component.ts";

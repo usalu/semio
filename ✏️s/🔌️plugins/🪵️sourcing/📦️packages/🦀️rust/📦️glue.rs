@@ -42,12 +42,6 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
                 pub mod engine;
-                #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🏗️builder/🦀️component.rs"]
-                pub mod builder;
-                #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🧐️analyzer/🦀️component.rs"]
-                pub mod analyzer;
-                #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🎹️composer/🦀️component.rs"]
-                pub mod composer;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -98,12 +92,6 @@ pub mod artifacts {
                                 }
                             }
                         }
-                        #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
-                        pub mod builder;
-                        #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
-                        pub mod analyzer;
-                        #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
-                        pub mod composer;
                         #[path = "."]
                         pub mod io {
                             #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
@@ -294,12 +282,6 @@ pub mod artifacts {
         pub mod mutations { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::mutations::*; pub mod schema { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::mutations::*; } pub mod text { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::mutations::text::*; } pub mod pack { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::mutations::binary::*; } pub mod binary { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::mutations::binary::*; } }
         pub mod snapshot { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::snapshot::*; pub mod schema { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::snapshot::*; } pub mod text { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::snapshot::text::*; } pub mod pack { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::snapshot::binary::*; } pub mod binary { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::snapshot::binary::*; } }
 
-        #[path = "../../🗿️artifacts/🗂️curate/🏗️builder/🦀️component.rs"]
-        pub mod builder;
-        #[path = "../../🗿️artifacts/🗂️curate/🧐️analyzer/🦀️component.rs"]
-        pub mod analyzer;
-        #[path = "../../🗿️artifacts/🗂️curate/🎹️composer/🦀️component.rs"]
-        pub mod composer;
 
         #[path = "."]
         pub mod examples {

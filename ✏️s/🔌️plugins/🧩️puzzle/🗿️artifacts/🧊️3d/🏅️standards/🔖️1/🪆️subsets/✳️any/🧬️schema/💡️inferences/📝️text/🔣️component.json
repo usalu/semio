@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle3d/inference/text.json",
+  "title": "Puzzle3dInferenceText",
+  "type": "object"
+}

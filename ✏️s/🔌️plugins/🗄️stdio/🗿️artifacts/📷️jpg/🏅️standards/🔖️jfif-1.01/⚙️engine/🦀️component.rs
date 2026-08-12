@@ -1033,8 +1033,9 @@ fn decode_scan(
 pub fn empty_jpg_snapshot() -> JpgSnapshot { JpgSnapshot::default() }
 
 pub fn register() {
-    crate::artifacts::jpg::composer::register();
+    crate::artifacts::jpg::io_registry::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::jpg::schema::jpg_artifact_schema_descriptor());
+    register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA));
@@ -1042,7 +1043,14 @@ pub fn register() {
     // (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES) so `io_dispatch`/
     // `wire_artifact_compose` re-check it for free. The baseline ComposerEntry itself is
     // registered separately via this standard's own `composer::entries()` aggregation.
-    crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::composer::register();
+    crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::io::register();
+}
+
+/// 💡️ Registers `s.stdio.jpg.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema_descriptor` above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::inferences::jpg_artifact_inference_descriptor());
 }
 
 /// 📌️ P2-FG2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per
@@ -1468,3 +1476,17 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::JpgComposer as JpgRawAnyComposer;
+    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::JpgBaselineComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<JpgRawAnyComposer>(), composer_entry_of::<JpgBaselineComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

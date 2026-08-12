@@ -349,7 +349,7 @@ pub fn encode_avi(snapshot: &AviSnapshot) -> Vec<u8> {
 //#region 🔖️Register
 /// 📌️ Registers this standard's single (✳️any) subset.
 pub fn register() {
-    crate::artifacts::avi::standards::v1_0::subsets::any::composer::register();
+    crate::artifacts::avi::standards::v1_0::subsets::any::io::register();
 }
 //#endregion 🔖️Register
 
@@ -466,3 +466,16 @@ mod tests {
     }
     //#endregion codec_retention_law
 }
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::avi::standards::v1_0::subsets::any::schema::AviComposer as AviRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<AviRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

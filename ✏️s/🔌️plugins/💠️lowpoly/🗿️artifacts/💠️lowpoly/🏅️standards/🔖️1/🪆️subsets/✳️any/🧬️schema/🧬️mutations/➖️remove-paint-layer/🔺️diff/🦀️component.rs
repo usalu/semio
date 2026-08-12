@@ -1,23 +1,12 @@
-//! 🔺️ Diff fragment yielded by `RemovePaintLayer`.
-use crate::artifacts::lowpoly::diff::LowpolyDiff;
-use crate::artifacts::lowpoly::LowpolySnapshot;
-use serde::{Deserialize, Serialize};
+//! 🔺️ `remove-paint-layer` — sparse diff construction (delegates to the existing remove-paint-layer
+//! field-delta constructor).
+
+use super::mutation::RemovePaintLayer;
+use crate::artifacts::lowpoly::diff::diff_remove_paint_layer;
+use crate::artifacts::lowpoly::{LowpolyDiff, LowpolySnapshot};
 
 //#region 🔖️Diff
-/// @emoji 🔺️ Diff produced by one `RemovePaintLayer` mutation — a sparse [`LowpolyDiff`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct RemovePaintLayerDiff {
-    pub diff: LowpolyDiff,
+pub fn diff(payload: &RemovePaintLayer, _base: &LowpolySnapshot) -> LowpolyDiff {
+    diff_remove_paint_layer(payload.object_id.clone(), payload.index)
 }
-
-impl RemovePaintLayerDiff {
-    pub fn from_diff(diff: LowpolyDiff) -> Self {
-        Self { diff }
-    }
-
-    pub fn into_lowpoly_diff(self) -> LowpolyDiff {
-        self.diff
-    }
-}
-
 //#endregion 🔖️Diff

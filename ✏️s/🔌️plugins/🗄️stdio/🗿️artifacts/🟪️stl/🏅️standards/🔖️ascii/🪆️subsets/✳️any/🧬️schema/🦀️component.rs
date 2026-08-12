@@ -92,3 +92,175 @@ pub fn stl_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     }
 }
 //#endregion 🔖️Descriptor
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::stl::{StlDiff, StlMutation, StlSnapshot};
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.stl` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct StlBuilderConstruction {
+        snapshot: StlSnapshot,
+        diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for StlBuilderConstruction {
+        type Snapshot = StlSnapshot;
+        type Mutation = StlMutation;
+        type Diff = StlDiff;
+        fn empty() -> Self {
+            Self { snapshot: StlSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<StlSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<StlSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let diff = crate::artifacts::stl::schema::mutations::apply_stl_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <StlDiff as protocol::MutationDiff<StlSnapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::stl::StlSnapshot;
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.stl` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct StlParts {
+        pub snapshot: Option<StlSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.stl` (ascii/✳️any) sources.
+    pub struct StlAnalyzerAnalysis;
+
+    /// 🔍 ASCII STL starts with a `solid` keyword and a real body has `facet`/`vertex`
+    /// structure; binary STL has no fixed magic, so a plausible triangle-count framing
+    /// (`84 + count*50 == len`) is the best available signal.
+    fn looks_like_stl(bytes: &[u8]) -> IoConfidence {
+        if bytes.starts_with(b"solid") {
+            if let Ok(text) = std::str::from_utf8(bytes) {
+                if text.contains("facet") && text.contains("vertex") && text.contains("endsolid") {
+                    return IoConfidence::High;
+                }
+            }
+            return IoConfidence::Medium;
+        }
+        if bytes.len() >= 84 {
+            let count = u32::from_le_bytes(bytes[80..84].try_into().unwrap()) as usize;
+            if 84 + count * 50 == bytes.len() {
+                return IoConfidence::High;
+            }
+        }
+        IoConfidence::Low
+    }
+
+    impl ArtifactAnalysis for StlAnalyzerAnalysis {
+        type Parts = StlParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Text(text) => {
+                    let body = match store::semio_format::split_text_preamble(text) {
+                        Ok((_, rest)) => rest,
+                        Err(_) => text,
+                    };
+                    looks_like_stl(body.as_bytes())
+                }
+                AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
+                    Ok((_, inner)) => looks_like_stl(&inner),
+                    Err(_) => looks_like_stl(bytes),
+                },
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = StlParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <StlSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error(
+                                "stdio.analyze.text",
+                                dsl::TextSpan::at(1, 1),
+                                err.to_string(),
+                            ));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <StlSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error(
+                                "stdio.analyze.binary",
+                                dsl::TextSpan::at(1, 1),
+                                err.to_string(),
+                            ));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+
+    //#region 🧪️Tests
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn sniff_real_ascii_stl_is_high() {
+            let text = "solid mesh\n  facet normal 0 0 1\n    outer loop\n      vertex 0 0 0\n      vertex 1 0 0\n      vertex 0 1 0\n    endloop\n  endfacet\nendsolid mesh\n";
+            assert_eq!(StlAnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::High);
+        }
+
+        #[test]
+        fn sniff_unrelated_text_is_low() {
+            assert_eq!(StlAnalyzerAnalysis::sniff(&AnalyzeSource::Text("not an stl file")), IoConfidence::Low);
+        }
+    }
+    //#endregion 🧪️Tests
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec StlBuilderFacets {
+        construction: derived_construction::StlBuilderConstruction,
+        analysis: derived_analysis::StlAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::StlComposerComposition,
+    }
+    builder: StlBuilder,
+    analyzer: StlAnalyzer,
+    composer: StlComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

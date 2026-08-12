@@ -1,0 +1,9 @@
+dialect grammar
+grammar process.process3d.inference
+extension process3d.inference
+start document
+
+document = header body
+header = "schema" SP "process.process3d.inference" NL
+body = payload NL?
+payload = OCTET+

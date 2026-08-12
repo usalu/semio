@@ -1,7 +1,22 @@
-use crate::artifacts::forms::FormsSnapshot;
-use crate::artifacts::forms::mutations::FormMutation;
-use protocol::Mutation;
+//! ↩️ `move-block-to-step` — undo moves the block back from its new (destination) step to its
+//! BASE-state step, at its BASE-state index; missing source step or block ⇒ `Vec::new()`.
 
-pub fn inverse(base: &FormsSnapshot, mutation: &FormMutation) -> Vec<FormMutation> {
-    <FormMutation as Mutation<FormsSnapshot>>::inverse(mutation, base)
+use super::mutation::MoveBlockToStep;
+use crate::artifacts::forms::{FormMutation, FormsSnapshot};
+
+//#region 🔖️Inverse
+pub fn inverse_move_block_to_step(payload: &MoveBlockToStep, base: &FormsSnapshot) -> Vec<FormMutation> {
+    let Some(source_step) = base.steps.iter().find(|step| step.id == payload.step_id) else {
+        return Vec::new();
+    };
+    let Some(original_index) = source_step.blocks.iter().position(|block| block.id == payload.block_id) else {
+        return Vec::new();
+    };
+    vec![FormMutation::MoveBlockToStep(MoveBlockToStep {
+        step_id: payload.to_step_id.clone(),
+        block_id: payload.block_id.clone(),
+        to_step_id: payload.step_id.clone(),
+        index: original_index,
+    })]
 }
+//#endregion 🔖️Inverse

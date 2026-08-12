@@ -1,0 +1,11 @@
+//! ↩️ Inverse reconstruction for `replace-tiles` — reads the BASE tiles, never the diff.
+use super::mutation::ReplaceTiles;
+use crate::artifacts::present::mutations::PresentMutation;
+use crate::artifacts::present::PresentSnapshot;
+
+//#region 🔹Inverse
+/// ↩️ Undo restores `base.tiles` wholesale — captured from pre-state, never from the applied diff.
+pub fn inverse(_payload: &ReplaceTiles, base: &PresentSnapshot) -> Vec<PresentMutation> {
+    vec![PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: base.tiles.clone() })]
+}
+//#endregion 🔹Inverse

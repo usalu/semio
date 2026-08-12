@@ -1,0 +1,3 @@
+(* ebnf sequence.sequence.inference *)
+document = header, body ;
+header = 'schema', space, 'sequence.sequence.inference', newline ;

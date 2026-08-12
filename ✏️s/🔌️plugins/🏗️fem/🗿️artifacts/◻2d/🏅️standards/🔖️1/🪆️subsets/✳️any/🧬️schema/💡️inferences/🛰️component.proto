@@ -1,0 +1,20 @@
+syntax = "proto3";
+package semio.s.fem.fem2d.inference;
+
+// 💡️ Fem2d inference schema — bounds (plan-view extent + node/element counts).
+
+message Fem2dInference {
+  // @state inferred
+  Fem2dBounds bounds = 1;
+}
+
+message Fem2dBoundingBox {
+  repeated double min = 1;
+  repeated double max = 2;
+}
+
+message Fem2dBounds {
+  Fem2dBoundingBox bounding_box = 1;
+  uint32 node_count = 2;
+  uint32 element_count = 3;
+}

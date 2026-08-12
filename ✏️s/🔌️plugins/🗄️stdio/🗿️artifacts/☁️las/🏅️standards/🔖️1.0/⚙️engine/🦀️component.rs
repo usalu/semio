@@ -449,7 +449,7 @@ pub fn demo_las_snapshot() -> LasSnapshot {
 //#region 🔖️Register
 /// 🗂️ Registers codecs and the artifact schema descriptor.
 pub fn register() {
-    crate::artifacts::las::composer::register();
+    crate::artifacts::las::io_registry::register();
     register_artifact_schema();
     register_pilot_languages();
     register_schema_specs();
@@ -962,3 +962,16 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::las::standards::v1_0::subsets::any::schema::LasComposer as LasRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<LasRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

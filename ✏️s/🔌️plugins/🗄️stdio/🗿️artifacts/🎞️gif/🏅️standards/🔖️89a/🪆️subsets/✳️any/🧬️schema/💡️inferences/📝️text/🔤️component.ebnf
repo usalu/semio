@@ -1,0 +1,3 @@
+(* ebnf stdio.gif.89a.inference *)
+document = header, body ;
+header = 'schema', space, 'stdio.gif.89a.inference', newline ;

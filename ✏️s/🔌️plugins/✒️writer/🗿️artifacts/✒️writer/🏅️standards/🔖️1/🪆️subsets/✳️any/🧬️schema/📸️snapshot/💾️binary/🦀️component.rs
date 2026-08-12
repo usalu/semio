@@ -55,7 +55,7 @@ mod tests {
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let mut store: ArtifactStore<WriterSnapshot, WriterMutation> = ArtifactStore::new(create_document_envelope("writer.document", "writer", engine::empty_writer_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![WriterMutation::SetText { text: "hello".into() }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: "hello".into() })], description: None }).expect("apply");
         let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }

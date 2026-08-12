@@ -1,0 +1,3 @@
+(* ebnf stdio.tiff.inference *)
+document = header, body ;
+header = 'schema', space, 'stdio.tiff.inference', newline ;

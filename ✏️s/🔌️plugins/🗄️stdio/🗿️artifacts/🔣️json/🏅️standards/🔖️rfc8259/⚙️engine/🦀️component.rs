@@ -47,14 +47,14 @@ pub fn demo_json_snapshot() -> JsonSnapshot {
 //#region 🔖️Register
 /// 🗂️ Registers codecs and the artifact schema descriptor.
 pub fn register() {
-    crate::artifacts::json::composer::register();
+    crate::artifacts::json::io_registry::register();
     register_artifact_schema();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<JsonSnapshot, JsonMutation>(STDIO_JSON_DOCUMENT_SCHEMA));
     // 🛡️ D5's generic validate-on-build hook: registers the ✳️i-json subset's SubsetValidator so
     // the wire-level `io_dispatch`/`wire_artifact_compose` hook can re-check it. The ComposerEntry
     // itself is registered separately via this standard's own `composer::entries()` aggregation.
-    crate::artifacts::json::standards::v_rfc8259::subsets::i_json::composer::register();
+    crate::artifacts::json::standards::v_rfc8259::subsets::i_json::io::register();
 }
 
 /// 📌️ P2-P1: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per note's exemplar
@@ -305,3 +305,17 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::JsonComposer as JsonRawAnyComposer;
+    use crate::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::JsonIJsonComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<JsonRawAnyComposer>(), composer_entry_of::<JsonIJsonComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

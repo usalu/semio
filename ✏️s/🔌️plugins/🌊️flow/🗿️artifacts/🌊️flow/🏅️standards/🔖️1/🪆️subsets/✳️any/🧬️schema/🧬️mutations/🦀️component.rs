@@ -1,4 +1,8 @@
-//! 🧬️ Flow artifact — typed invertible mutations over [`FlowSnapshot`].
+//! 🧬️ Flow artifact — typed invertible semantic mutations over [`FlowSnapshot`]. Verbs drawn from
+//! the closed taxonomy (`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️taxonomy.md`);
+//! every variant wraps a `MutationKind<FlowSnapshot, FlowMutation>` payload from its own
+//! `🧬️mutations/<kind>/` triad leaf. `impl Mutation`/`impl SemanticMutation` are
+//! `#[derive(protocol::Mutations)]`-generated — never hand-written.
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -6,77 +10,27 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::flow::schema::diff::text::{
-    diff_set_snapshot, synapses_delta_from_collection_mutation, widgets_delta_from_collection_mutation, FlowDiff,
-    FlowLayoutMapDelta,
-};
+use crate::artifacts::flow::schema::diff::text::FlowDiff;
 use crate::artifacts::flow::FlowSnapshot;
-use flow::{FlowLayoutEntry, SynapseSpec, Widget};
-use protocol::{inverse_collection_mutation, CollectionMutation, Mutation, MutationDiff};
+use protocol::{CollectionMutation, Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
 use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔹Operation
-/// 🌊️ Typed, invertible flow-document operation owned by this plugin.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// 🌊️ Typed, invertible flow-document semantic mutations.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, protocol::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
+#[mutations(snapshot = FlowSnapshot, diff = FlowDiff, schema = "flow.flow")]
 pub enum FlowMutation {
-    Widgets(CollectionMutation<String, Widget, Widget>),
-    Synapses(CollectionMutation<String, SynapseSpec, SynapseSpec>),
-    SetLayout { entries: Vec<FlowLayoutEntry> },
-    SetSnapshot { snapshot: FlowSnapshot },
-}
-
-impl Mutation<FlowSnapshot> for FlowMutation {
-    type Diff = FlowDiff;
-
-    fn diff(&self, snapshot: &FlowSnapshot) -> FlowDiff {
-        match self {
-            FlowMutation::Widgets(operation) => FlowDiff {
-                widgets: Some(widgets_delta_from_collection_mutation(&snapshot.widgets, operation)),
-                ..Default::default()
-            },
-            FlowMutation::Synapses(operation) => FlowDiff {
-                synapses: Some(synapses_delta_from_collection_mutation(&snapshot.synapses, operation)),
-                ..Default::default()
-            },
-            FlowMutation::SetLayout { entries } => FlowDiff {
-                layout: Some(FlowLayoutMapDelta {
-                    entries: entries
-                        .iter()
-                        .map(|entry| (entry.id.clone(), entry.layout.clone()))
-                        .collect(),
-                }),
-                ..Default::default()
-            },
-            FlowMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
-        }
-    }
-
-    fn inverse(&self, snapshot: &FlowSnapshot) -> Vec<Self> {
-        match self {
-            FlowMutation::Widgets(operation) => {
-                vec![FlowMutation::Widgets(inverse_collection_mutation(&snapshot.widgets, operation))]
-            }
-            FlowMutation::Synapses(operation) => {
-                vec![FlowMutation::Synapses(inverse_collection_mutation(&snapshot.synapses, operation))]
-            }
-            FlowMutation::SetLayout { entries } => vec![FlowMutation::SetLayout {
-                entries: entries
-                    .iter()
-                    .map(|entry| FlowLayoutEntry {
-                        id: entry.id.clone(),
-                        layout: snapshot.layout.get(&entry.id).cloned(),
-                    })
-                    .collect(),
-            }],
-            FlowMutation::SetSnapshot { .. } => {
-                vec![FlowMutation::SetSnapshot {
-                    snapshot: snapshot.clone(),
-                }]
-            }
-        }
-    }
+    CreateWidget(super::create_widget::mutation::CreateWidget),
+    DeleteWidget(super::delete_widget::mutation::DeleteWidget),
+    ReorderWidgets(super::reorder_widgets::mutation::ReorderWidgets),
+    ReplaceWidget(super::replace_widget::mutation::ReplaceWidget),
+    ConnectWidgets(super::connect_widgets::mutation::ConnectWidgets),
+    DisconnectWidgets(super::disconnect_widgets::mutation::DisconnectWidgets),
+    ReorderSynapses(super::reorder_synapses::mutation::ReorderSynapses),
+    UpdateSynapseEndpoints(super::update_synapse_endpoints::mutation::UpdateSynapseEndpoints),
+    MoveWidgets(super::move_widgets::mutation::MoveWidgets),
 }
 
 pub type FlowEnvelope = ArtifactEnvelope<FlowSnapshot, FlowMutation>;
@@ -91,34 +45,70 @@ pub fn apply_flow_mutation(snapshot: &mut FlowSnapshot, mutation: &FlowMutation)
 pub fn inverse_flow_mutation(snapshot: &FlowSnapshot, mutation: &FlowMutation) -> Vec<FlowMutation> {
     <FlowMutation as Mutation<FlowSnapshot>>::inverse(mutation, snapshot)
 }
-
-/// 🌎️ Converts a framework kernel mutation into this plugin's mutation enum.
-pub fn from_framework_mutation(mutation: flow::FlowMutation) -> FlowMutation {
-    match mutation {
-        flow::FlowMutation::Widgets(op) => FlowMutation::Widgets(op),
-        flow::FlowMutation::Synapses(op) => FlowMutation::Synapses(op),
-        flow::FlowMutation::SetLayout { entries } => FlowMutation::SetLayout { entries },
-        flow::FlowMutation::SetFixture { fixture } => FlowMutation::SetSnapshot {
-            snapshot: FlowSnapshot::from_fixture(fixture),
-        },
-    }
-}
-
-/// 🌎️ Converts this plugin mutation into the framework kernel mutation enum.
-pub fn to_framework_mutation(mutation: &FlowMutation) -> flow::FlowMutation {
-    match mutation {
-        FlowMutation::Widgets(op) => flow::FlowMutation::Widgets(op.clone()),
-        FlowMutation::Synapses(op) => flow::FlowMutation::Synapses(op.clone()),
-        FlowMutation::SetLayout { entries } => flow::FlowMutation::SetLayout {
-            entries: entries.clone(),
-        },
-        FlowMutation::SetSnapshot { snapshot } => flow::FlowMutation::SetFixture {
-            fixture: snapshot.to_fixture(),
-        },
-    }
-}
 //#endregion 🔹Operation
 
+//#region 🌉️FrameworkBridge
+/// 🌎️ Converts a framework kernel mutation into this plugin's semantic mutation vocabulary.
+/// `SetFixture` (whole-fixture replace) has no semantic-mutation representation — banned per the
+/// taxonomy's `set-snapshot` ruling, "it has NO replacement mutation" — so it returns `None`;
+/// callers route that case through `store::ArtifactStore::reset` instead of the `Mutation` enum.
+/// The framework's own diffing helper (`flow::flow_fixture_operations`) never emits `SetFixture`
+/// (only `Widgets`/`Synapses`/`SetLayout`), so this arm is unreachable on the live host-bridge path
+/// and only matters for a hand-authored/decoded `flow.op` line.
+pub fn from_framework_mutation(mutation: flow::FlowMutation) -> Option<FlowMutation> {
+    Some(match mutation {
+        flow::FlowMutation::Widgets(operation) => match operation {
+            CollectionMutation::Add { index, item } => FlowMutation::CreateWidget(super::create_widget::mutation::CreateWidget { index, widget: item }),
+            CollectionMutation::Remove { id } => FlowMutation::DeleteWidget(super::delete_widget::mutation::DeleteWidget { id }),
+            CollectionMutation::Move { id, to_index } => FlowMutation::ReorderWidgets(super::reorder_widgets::mutation::ReorderWidgets { id, to_index }),
+            CollectionMutation::Patch { id, patch } => FlowMutation::ReplaceWidget(super::replace_widget::mutation::ReplaceWidget { id, widget: patch }),
+        },
+        flow::FlowMutation::Synapses(operation) => match operation {
+            CollectionMutation::Add { index, item } => FlowMutation::ConnectWidgets(super::connect_widgets::mutation::ConnectWidgets {
+                index,
+                id: item.id,
+                from: item.from,
+                from_port: item.from_port,
+                to: item.to,
+                to_port: item.to_port,
+            }),
+            CollectionMutation::Remove { id } => FlowMutation::DisconnectWidgets(super::disconnect_widgets::mutation::DisconnectWidgets { id }),
+            CollectionMutation::Move { id, to_index } => FlowMutation::ReorderSynapses(super::reorder_synapses::mutation::ReorderSynapses { id, to_index }),
+            CollectionMutation::Patch { id, patch } => FlowMutation::UpdateSynapseEndpoints(super::update_synapse_endpoints::mutation::UpdateSynapseEndpoints {
+                id,
+                from: patch.from,
+                from_port: patch.from_port,
+                to: patch.to,
+                to_port: patch.to_port,
+            }),
+        },
+        flow::FlowMutation::SetLayout { entries } => FlowMutation::MoveWidgets(super::move_widgets::mutation::MoveWidgets { entries }),
+        flow::FlowMutation::SetFixture { .. } => return None,
+    })
+}
+
+/// 🌎️ Converts this plugin's semantic mutation into the framework kernel mutation enum — always
+/// total, since every semantic variant has an exact framework-generic counterpart.
+pub fn to_framework_mutation(mutation: &FlowMutation) -> flow::FlowMutation {
+    match mutation {
+        FlowMutation::CreateWidget(payload) => flow::FlowMutation::Widgets(CollectionMutation::Add { index: payload.index, item: payload.widget.clone() }),
+        FlowMutation::DeleteWidget(payload) => flow::FlowMutation::Widgets(CollectionMutation::Remove { id: payload.id.clone() }),
+        FlowMutation::ReorderWidgets(payload) => flow::FlowMutation::Widgets(CollectionMutation::Move { id: payload.id.clone(), to_index: payload.to_index }),
+        FlowMutation::ReplaceWidget(payload) => flow::FlowMutation::Widgets(CollectionMutation::Patch { id: payload.id.clone(), patch: payload.widget.clone() }),
+        FlowMutation::ConnectWidgets(payload) => flow::FlowMutation::Synapses(CollectionMutation::Add {
+            index: payload.index,
+            item: flow::SynapseSpec { id: payload.id.clone(), from: payload.from.clone(), from_port: payload.from_port.clone(), to: payload.to.clone(), to_port: payload.to_port.clone() },
+        }),
+        FlowMutation::DisconnectWidgets(payload) => flow::FlowMutation::Synapses(CollectionMutation::Remove { id: payload.id.clone() }),
+        FlowMutation::ReorderSynapses(payload) => flow::FlowMutation::Synapses(CollectionMutation::Move { id: payload.id.clone(), to_index: payload.to_index }),
+        FlowMutation::UpdateSynapseEndpoints(payload) => flow::FlowMutation::Synapses(CollectionMutation::Patch {
+            id: payload.id.clone(),
+            patch: flow::SynapseSpec { id: payload.id.clone(), from: payload.from.clone(), from_port: payload.from_port.clone(), to: payload.to.clone(), to_port: payload.to_port.clone() },
+        }),
+        FlowMutation::MoveWidgets(payload) => flow::FlowMutation::SetLayout { entries: payload.entries.clone() },
+    }
+}
+//#endregion 🌉️FrameworkBridge
 
 //#region 🔹WireCodecs
 impl protocol::OpBinary for FlowMutation {
@@ -126,12 +116,23 @@ impl protocol::OpBinary for FlowMutation {
         protocol::OpBinary::encode_op(&to_framework_mutation(self))
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        <flow::FlowMutation as protocol::OpBinary>::decode_op(bytes).map(from_framework_mutation)
+        let framework_mutation = <flow::FlowMutation as protocol::OpBinary>::decode_op(bytes)?;
+        from_framework_mutation(framework_mutation).ok_or_else(|| protocol::ProtocolError::Malformed {
+            what: "flow.op",
+            offset: 0,
+            detail: "set-fixture has no semantic mutation representation (whole-document replace is banned; route through ArtifactStore::reset)".into(),
+        })
     }
 }
 impl protocol::OpText for FlowMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        <flow::FlowMutation as protocol::OpText>::parse_op(line).map(from_framework_mutation)
+        let framework_mutation = <flow::FlowMutation as protocol::OpText>::parse_op(line)?;
+        from_framework_mutation(framework_mutation).ok_or_else(|| {
+            store::TextError::new(
+                "set-fixture has no semantic mutation representation (whole-document replace is banned; route through ArtifactStore::reset)",
+                store::TextSpan::at(1, 1),
+            )
+        })
     }
     fn print_op(&self) -> String {
         protocol::OpText::print_op(&to_framework_mutation(self))

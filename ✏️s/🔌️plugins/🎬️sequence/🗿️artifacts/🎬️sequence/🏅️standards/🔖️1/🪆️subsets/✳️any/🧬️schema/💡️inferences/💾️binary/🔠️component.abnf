@@ -1,0 +1,3 @@
+; abnf sequence.sequence.inference
+document = payload
+payload = *OCTET

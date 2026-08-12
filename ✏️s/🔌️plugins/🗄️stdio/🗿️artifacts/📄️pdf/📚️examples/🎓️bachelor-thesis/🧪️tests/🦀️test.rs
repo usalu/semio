@@ -25,7 +25,7 @@
 
 use crate::artifacts::pdf::examples::bachelor_thesis::{source, FIXTURE_BYTES};
 use crate::artifacts::pdf::standards::v1_7::engine::{decode_pdf, encode_pdf};
-use crate::artifacts::pdf::standards::v1_7::builder::PdfBuilder;
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfBuilder;
 use semio_framework_plugin::ArtifactBuilder;
 
 #[test]

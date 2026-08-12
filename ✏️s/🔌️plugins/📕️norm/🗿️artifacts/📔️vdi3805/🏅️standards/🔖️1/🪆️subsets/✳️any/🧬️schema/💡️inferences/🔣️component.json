@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/vdi3805/inference.json",
+  "title": "Vdi3805Inference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/Vdi3805Outline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "Vdi3805Outline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sectionOutline", "fieldCount", "entryCount"],
+      "properties": {
+        "sectionOutline": { "type": "array", "items": { "type": "string" } },
+        "fieldCount": { "type": "integer" },
+        "entryCount": { "type": "integer" }
+      }
+    }
+  }
+}

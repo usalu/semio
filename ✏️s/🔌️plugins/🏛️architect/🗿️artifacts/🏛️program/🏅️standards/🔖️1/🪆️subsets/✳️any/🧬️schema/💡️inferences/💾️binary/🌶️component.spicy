@@ -1,0 +1,4 @@
+module Architect_program_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

@@ -1,0 +1,4 @@
+module Fem_fem3d_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

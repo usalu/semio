@@ -1,0 +1,9 @@
+dialect grammar
+grammar cad.cad.inference
+extension cad.inference
+start document
+
+document = header body
+header = "schema" SP "cad.cad.inference" NL
+body = payload NL?
+payload = OCTET+

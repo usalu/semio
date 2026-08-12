@@ -1,0 +1,3 @@
+; abnf block.block2d.inference
+document = payload
+payload = *OCTET

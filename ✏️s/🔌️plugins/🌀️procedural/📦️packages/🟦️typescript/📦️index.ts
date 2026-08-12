@@ -10,7 +10,6 @@ export * as procedural2d_mutations from "../../🗿️artifacts/🌀️procedura
 export * as procedural2d_mutations_text from "../../🗿️artifacts/🌀️procedural2d/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as procedural2d_mutations_binary from "../../🗿️artifacts/🌀️procedural2d/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as procedural2d_io from "../../🗿️artifacts/🌀️procedural2d/🚪️io/🟦️component.ts";
-export * as procedural2d_builder from "../../🗿️artifacts/🌀️procedural2d/🏗️builder/🟦️component.ts";
 export * as procedural2d_decomposer from "../../🗿️artifacts/🌀️procedural2d/🪓️decomposer/🟦️component.ts";
 export * as procedural3d_schema from "../../🗿️artifacts/🧊️procedural3d/🧬️schema/🟦️component.ts";
 export * as procedural3d_snapshot from "../../🗿️artifacts/🧊️procedural3d/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -23,5 +22,4 @@ export * as procedural3d_mutations from "../../🗿️artifacts/🧊️procedura
 export * as procedural3d_mutations_text from "../../🗿️artifacts/🧊️procedural3d/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as procedural3d_mutations_binary from "../../🗿️artifacts/🧊️procedural3d/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as procedural3d_io from "../../🗿️artifacts/🧊️procedural3d/🚪️io/🟦️component.ts";
-export * as procedural3d_builder from "../../🗿️artifacts/🧊️procedural3d/🏗️builder/🟦️component.ts";
 export * as procedural3d_decomposer from "../../🗿️artifacts/🧊️procedural3d/🪓️decomposer/🟦️component.ts";

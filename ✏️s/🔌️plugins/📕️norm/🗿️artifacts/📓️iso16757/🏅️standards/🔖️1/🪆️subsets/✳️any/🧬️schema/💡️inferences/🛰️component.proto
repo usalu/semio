@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.norm.iso16757.inference;
+
+// 💡️ Iso16757 inference schema — document outline (field/section list + entry count).
+
+message Iso16757Inference {
+  // @state inferred
+  Iso16757Outline outline = 1;
+}
+
+message Iso16757Outline {
+  repeated string section_outline = 1;
+  uint32 field_count = 2;
+  uint32 entry_count = 3;
+}

@@ -343,16 +343,19 @@ mod tests {
     use protocol::Mutation;
 
     #[test]
-    fn set_layout_diff_applies_onto_the_base_snapshot() {
+    fn move_widgets_diff_touches_only_the_layout_slot() {
         let base = FlowSnapshot::default();
-        let operation = FlowMutation::SetLayout { entries: Vec::new() };
+        let operation = FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets {
+            entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 3.0, y: 4.0 }) }],
+        });
         let diff: FlowDiff = operation.diff(&base);
-        assert!(diff.layout.is_some(), "SetLayout must produce a layout diff: {diff:?}");
+        assert!(diff.layout.is_some(), "MoveWidgets must produce a layout diff: {diff:?}");
         assert!(
             diff.artifact.is_none() && diff.widgets.is_none() && diff.synapses.is_none(),
-            "SetLayout must touch only the layout slot: {diff:?}"
+            "MoveWidgets must touch only the layout slot: {diff:?}"
         );
-        assert_eq!(diff.apply(&base), base, "an empty layout diff is a no-operation on the snapshot");
+        let after = diff.apply(&base);
+        assert_eq!(after.layout.get("slider"), Some(&flow::WidgetLayout { x: 3.0, y: 4.0 }));
     }
 
     #[test]

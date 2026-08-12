@@ -1,0 +1,34 @@
+{
+  "$id": "https://semio.tech/schema/s/cad/cad/inference.json",
+  "title": "CadInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["objectCount", "vertexCount", "bounds"],
+  "properties": {
+    "objectCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "inferred"
+    },
+    "vertexCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "inferred"
+    },
+    "bounds": {
+      "oneOf": [{ "$ref": "#/$defs/CadBounds" }, { "type": "null" }],
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "CadBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+      }
+    }
+  }
+}

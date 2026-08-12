@@ -5,10 +5,8 @@ use crate::artifacts::layout::schema::diff::{
     LayoutStoryPatchEntry, LayoutStringList,
 };
 use crate::artifacts::layout::schema::LayoutArtifact;
-use crate::artifacts::layout::{
-    ImageLink, ImageLinkPatch, Page, PagePatch, TextStory, TextStoryPatch, LayoutSnapshot,
-};
-use protocol::{CollectionMutation, Identified, MutationDiff, Patchable};
+use crate::artifacts::layout::{ImageLink, Page, TextStory, LayoutSnapshot};
+use protocol::{Identified, MutationDiff, Patchable};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -257,110 +255,6 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-pub fn pages_delta_from_collection_mutation(
-    base: &[Page],
-    op: &CollectionMutation<String, Page, PagePatch>,
-) -> LayoutPagesDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => LayoutPagesDelta {
-            added: vec![item.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Remove { id } => LayoutPagesDelta {
-            removed: vec![id.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Patch { id, patch } => LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry { id: id.clone(), patch: patch.clone() }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|item| item.id.clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            LayoutPagesDelta {
-                reordered: Some(ids),
-                ..Default::default()
-            }
-        }
-    }
-}
-
-pub fn stories_delta_from_collection_mutation(
-    base: &[TextStory],
-    op: &CollectionMutation<String, TextStory, TextStoryPatch>,
-) -> LayoutStoriesDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => LayoutStoriesDelta {
-            added: vec![item.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Remove { id } => LayoutStoriesDelta {
-            removed: vec![id.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Patch { id, patch } => LayoutStoriesDelta {
-            patched: vec![LayoutStoryPatchEntry { id: id.clone(), patch: patch.clone() }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|item| item.id.clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            LayoutStoriesDelta {
-                reordered: Some(ids),
-                ..Default::default()
-            }
-        }
-    }
-}
-
-pub fn links_delta_from_collection_mutation(
-    base: &[ImageLink],
-    op: &CollectionMutation<String, ImageLink, ImageLinkPatch>,
-) -> LayoutLinksDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => LayoutLinksDelta {
-            added: vec![item.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Remove { id } => LayoutLinksDelta {
-            removed: vec![id.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Patch { id, patch } => LayoutLinksDelta {
-            patched: vec![LayoutLinkPatchEntry { id: id.clone(), patch: patch.clone() }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|item| item.id.clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            LayoutLinksDelta {
-                reordered: Some(ids),
-                ..Default::default()
-            }
-        }
-    }
-}
-
-pub fn pages_replace_delta(before: &[Page], after: &[Page]) -> LayoutPagesDelta {
-    LayoutPagesDelta {
-        removed: before.iter().map(|p| p.id.clone()).collect(),
-        added: after.to_vec(),
-        ..Default::default()
-    }
-}
-
 /// 🖼️ Whole-snapshot replacement diff.
 pub fn diff_set_snapshot(snapshot: &LayoutSnapshot) -> LayoutDiff {
     LayoutDiff {
@@ -392,7 +286,9 @@ mod tests {
             print_target: None,
             data_fields_json: None,
         };
-        let operation = crate::artifacts::layout::mutations::LayoutMutation::SetDataFields { json: Some("{}".into()) };
+        let operation = crate::artifacts::layout::mutations::LayoutMutation::ChangeDataFields(
+            crate::artifacts::layout::mutations::change_data_fields::mutation::ChangeDataFields { new_json: Some("{}".into()) },
+        );
         let diff: LayoutDiff = operation.diff(&base);
         let applied = diff.apply(&base);
         assert_eq!(applied.data_fields_json.as_deref(), Some("{}"));

@@ -1,0 +1,19 @@
+syntax = "proto3";
+package semio.s.block.block3d.inference;
+
+// 💡️ Block3d inference schema — bounds (bounding box + vertex count) over the object kind's rim vortex templates.
+
+message Block3dInference {
+  // @state inferred
+  Block3dBounds bounds = 1;
+}
+
+message Block3dBounds {
+  BoundingBox3d bounding_box = 1;
+  uint32 vertex_count = 2;
+}
+
+message BoundingBox3d {
+  repeated double min = 1;
+  repeated double max = 2;
+}

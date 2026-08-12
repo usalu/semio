@@ -1,0 +1,4 @@
+module demonstrator_playground_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

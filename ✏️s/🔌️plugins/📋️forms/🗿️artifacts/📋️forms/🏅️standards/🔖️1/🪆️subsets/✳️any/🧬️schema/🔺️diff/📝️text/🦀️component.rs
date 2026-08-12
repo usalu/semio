@@ -33,6 +33,9 @@ pub fn apply_steps_delta(items: &[FormStep], delta: &FormsStepsDelta) -> Vec<For
             if let Some(description) = &entry.patch.description {
                 step.description = description.clone();
             }
+            if let Some(blocks) = &entry.patch.blocks {
+                step.blocks = blocks.clone();
+            }
         }
     }
     if let Some(order) = &delta.reordered {
@@ -227,16 +230,13 @@ fn steps_collection_delta(before: &[FormStep], after: &[FormStep]) -> FormsSteps
     FormsStepsDelta { added, removed, patched, reordered }
 }
 
-pub fn diff_from_mutation(base: &FormsSnapshot, mutation: &crate::artifacts::forms::mutations::FormMutation) -> FormsDiff {
-    let next = crate::artifacts::forms::mutations::apply_form_edit_mutation(base, mutation);
-    sparse_diff_between(base, &next)
-}
 //#endregion 🔖️Helpers
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::forms::mutations::add_step;
     use crate::artifacts::forms::{mutations::FormMutation, FormStep, FORMS_DOCUMENT_SCHEMA};
     use protocol::Mutation;
 
@@ -248,10 +248,10 @@ mod tests {
     }
 
     #[test]
-    fn add_step_diff_applies_onto_the_base_snapshot() {
+    fn create_step_diff_applies_onto_the_base_snapshot() {
         let base = FormsSnapshot { schema: FORMS_DOCUMENT_SCHEMA.into(), id: "forms".into(), version: "1".into(), title: None, steps: Vec::new() };
         let step = FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() };
-        let operation = FormMutation::AddStep { step, index: None };
+        let operation = FormMutation::CreateStep(add_step::mutation::CreateStep { step, index: None });
         let diff: FormsDiff = operation.diff(&base);
         assert_eq!(diff.apply(&base).steps.len(), 1);
     }

@@ -1,0 +1,11 @@
+# 💡️ En1990 inference schema — document outline (field/section list + entry count).
+
+type En1990Inference {
+  outline: En1990Outline! @state(class: INFERRED)
+}
+
+type En1990Outline {
+  sectionOutline: [String!]!
+  fieldCount: Int!
+  entryCount: Int!
+}

@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/reasoning/wires/inference/text.json",
+  "title": "WiresInferenceText",
+  "type": "object"
+}

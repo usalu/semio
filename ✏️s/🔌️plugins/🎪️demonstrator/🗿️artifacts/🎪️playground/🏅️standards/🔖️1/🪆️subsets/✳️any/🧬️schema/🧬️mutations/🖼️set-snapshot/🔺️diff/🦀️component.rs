@@ -1,23 +1,5 @@
-//! 🔺️ Diff fragment yielded by `SetSnapshot`.
-use crate::artifacts::playground::diff::PlaygroundDiff;
-use serde::{Deserialize, Serialize};
-
-//#region 🔖️Diff
-/// 🔺️ Diff produced by one `SetSnapshot` mutation — a sparse [`PlaygroundDiff`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct SetSnapshotDiff {
-    pub diff: PlaygroundDiff,
-}
-
-impl SetSnapshotDiff {
-    /// 🏗️ Wraps a sparse field delta.
-    pub fn from_diff(diff: PlaygroundDiff) -> Self {
-        Self { diff }
-    }
-
-    /// 📤 Unwraps the sparse field delta.
-    pub fn into_playground_diff(self) -> PlaygroundDiff {
-        self.diff
-    }
-}
-//#endregion 🔖️Diff
+//! 🪦️ Orphaned by 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL — `PlaygroundMutation::SetSnapshot` is
+//! banned outright (see `../🦠️mutation/🦀️component.rs`'s doc comment). This file stays present
+//! only because `📦️glue.rs` (plugin-shared, outside this facet's boundary) still `#[path]`-wires
+//! it; see this ticket's wave2 report `sharedFileRequests` for the glue.rs cleanup this orphaning
+//! needs (delete the `set_snapshot` module block entirely).

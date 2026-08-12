@@ -1,0 +1,19 @@
+syntax = "proto3";
+package semio.s.gis.gisterrain.inference;
+
+// 💡️ GIS terrain inference schema — geographic bounding box + position count of the `map:in`
+// overlay decoded from `importedFeaturesJson`.
+
+message GisTerrainInference {
+  // @state inferred
+  uint64 position_count = 1;
+  // @state inferred
+  GisTerrainBounds bounds = 2;
+}
+
+message GisTerrainBounds {
+  double lon_min = 1;
+  double lon_max = 2;
+  double lat_min = 3;
+  double lat_max = 4;
+}

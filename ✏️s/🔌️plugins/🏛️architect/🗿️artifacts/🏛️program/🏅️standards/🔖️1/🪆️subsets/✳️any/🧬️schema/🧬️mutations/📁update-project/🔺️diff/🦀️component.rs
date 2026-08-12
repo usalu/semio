@@ -1,21 +1,17 @@
-//! 🔺️ Diff fragment yielded by `UpdateProject`.
-use crate::artifacts::program::diff::ProgramDiff;
-use serde::{Deserialize, Serialize};
+//! 🔺️ Sparse diff construction for the `update_project` mutation leaf.
 
-//#region 🔖️Diff
-/// @emoji 🔺️ Diff produced by one `UpdateProject` mutation — a sparse [`ProgramDiff`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct UpdateProjectDiff {
-    pub diff: ProgramDiff,
+use super::mutation::{RenameProject, ReplaceProject};
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
+
+/// ✏️ New `ProjectDefinition` with only `code` changed.
+pub fn diff_rename(payload: &RenameProject, base: &ProgramSnapshot) -> ProgramDiff {
+    let mut value = base.project.clone();
+    value.code = payload.new_code.clone();
+    ProgramDiff { project: Some(value), ..Default::default() }
 }
 
-impl UpdateProjectDiff {
-    pub fn from_diff(diff: ProgramDiff) -> Self {
-        Self { diff }
-    }
-
-    pub fn into_program_diff(self) -> ProgramDiff {
-        self.diff
-    }
+/// 🔁️ New `ProjectDefinition` wholesale.
+pub fn diff_replace(payload: &ReplaceProject, _base: &ProgramSnapshot) -> ProgramDiff {
+    ProgramDiff { project: Some(payload.new_project.clone()), ..Default::default() }
 }
-//#endregion 🔖️Diff

@@ -10,5 +10,4 @@ export * as writer_mutations from "../../🗿️artifacts/✒️writer/🧬️sc
 export * as writer_mutations_text from "../../🗿️artifacts/✒️writer/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as writer_mutations_binary from "../../🗿️artifacts/✒️writer/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as writer_io from "../../🗿️artifacts/✒️writer/🚪️io/🟦️component.ts";
-export * as writer_builder from "../../🗿️artifacts/✒️writer/🏗️builder/🟦️component.ts";
 export * as writer_decomposer from "../../🗿️artifacts/✒️writer/🪓️decomposer/🟦️component.ts";

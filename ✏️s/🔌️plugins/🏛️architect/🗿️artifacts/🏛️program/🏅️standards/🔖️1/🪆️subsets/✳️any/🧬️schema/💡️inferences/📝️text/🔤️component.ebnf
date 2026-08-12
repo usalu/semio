@@ -1,0 +1,3 @@
+(* ebnf architect.program.inference *)
+document = header, body ;
+header = 'schema', space, 'architect.program.inference', newline ;

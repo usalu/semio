@@ -50,7 +50,7 @@ pub fn encode_tsv(snap: &TsvSnapshot) -> String {
 /// 🗂️ Registers codecs, the artifact schema descriptor (via the ✳️any subset composer) and this
 /// standard's handcrafted grammar/protocol.
 pub fn register() {
-    crate::artifacts::tsv::standards::iana::subsets::any::composer::register();
+    crate::artifacts::tsv::standards::iana::subsets::any::io::register();
     register_pilot_languages();
 }
 
@@ -143,3 +143,16 @@ mod tests {
     //#endregion 🔖️CodecRetentionLaw
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::tsv::standards::iana::subsets::any::schema::TsvComposer as TsvRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<TsvRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

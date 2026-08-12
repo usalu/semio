@@ -1,6 +1,8 @@
-//! 🔧 VCS artifact — OpText/OpBinary for `VcsDemoMutation`.
+//! 🔧 VCS artifact — OpText/OpBinary for `VcsDemoMutation`. Mutation apply/inverse live in the
+//! `🧬️mutations/<slug>` triad leaves (derive-generated dispatch); this facet only handcrafts the
+//! op wire forms (derive no longer emits these traits).
 
-pub use crate::artifacts::vcs::schema::mutations::{apply_vcs_demo_mutation, inverse_vcs_demo_mutation, VcsDemoMutation};
+pub use crate::artifacts::vcs::schema::mutations::VcsDemoMutation;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
@@ -49,7 +51,7 @@ mod tests {
 
     #[test]
     fn vcs_demo_mutation_op_text_round_trips() {
-        store::os_store::test_support::assert_op_line_round_trip(&VcsDemoMutation::SetCounter { counter: 3 });
+        store::os_store::test_support::assert_op_line_round_trip(&crate::artifacts::vcs::mutations::change_counter(3));
     }
 }
 //#endregion 🧪️Tests

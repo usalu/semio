@@ -1,0 +1,3 @@
+; abnf process.process3d.inference
+document = payload
+payload = *OCTET

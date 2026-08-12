@@ -1,2 +1,0 @@
-/** 🧩 fem3d ➖remove-support/↩️inverse facade stub. */
-export {};

@@ -1,0 +1,9 @@
+dialect grammar
+grammar space.home.inference
+extension home.inference
+start document
+
+document = header body
+header = "schema" SP "space.home.inference" NL
+body = payload NL?
+payload = OCTET+

@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.s.demonstrator.playground.inference;
+
+// 💡️ Playground inference schema — topology is always the vacuous empty graph today (no domain
+// entities exist yet on PlaygroundSnapshot).
+
+message PlaygroundInference {
+  // @state inferred
+  PlaygroundTopology topology = 1;
+}
+
+message PlaygroundTopology {
+  repeated string topo_order = 1;
+  map<string, uint32> depth = 2;
+  bool cycle_free = 3;
+  uint32 node_count = 4;
+}

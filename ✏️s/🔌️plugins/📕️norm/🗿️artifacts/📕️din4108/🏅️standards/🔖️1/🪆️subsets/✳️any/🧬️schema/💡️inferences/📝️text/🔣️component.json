@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/din4108/inference/text.json",
+  "title": "Din4108InferenceText",
+  "type": "object"
+}

@@ -1,0 +1,3 @@
+; abnf note.note.inference
+document = payload
+payload = *OCTET

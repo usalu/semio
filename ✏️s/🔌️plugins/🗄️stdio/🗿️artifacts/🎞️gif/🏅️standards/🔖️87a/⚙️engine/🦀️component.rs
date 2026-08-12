@@ -605,11 +605,19 @@ pub fn sniff_magic(source: &semio_framework_plugin::AnalyzeSource<'_>, magic: &[
 //#endregion Sniff
 
 pub fn register() {
-    crate::artifacts::gif::composer::register();
+    crate::artifacts::gif::io_registry::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::standards::v87a::subsets::any::schema::gif_artifact_schema_descriptor());
+    register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA));
+}
+
+/// 💡️ Registers `s.stdio.gif.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema_descriptor` above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::gif::standards::v87a::subsets::any::schema::inferences::gif_artifact_inference_descriptor());
 }
 
 //#region Registration
@@ -1033,3 +1041,16 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::gif::standards::v87a::subsets::any::schema::GifComposer as GifRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<GifRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

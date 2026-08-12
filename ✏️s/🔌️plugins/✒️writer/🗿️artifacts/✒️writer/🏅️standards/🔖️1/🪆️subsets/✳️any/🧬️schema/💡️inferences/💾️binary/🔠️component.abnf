@@ -1,0 +1,3 @@
+; abnf writer.writer.inference
+document = payload
+payload = *OCTET

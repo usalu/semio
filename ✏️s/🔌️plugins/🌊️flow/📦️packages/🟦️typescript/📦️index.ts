@@ -10,5 +10,4 @@ export * as flow_mutations from "../../🗿️artifacts/🌊️flow/🧬️schem
 export * as flow_mutations_text from "../../🗿️artifacts/🌊️flow/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as flow_mutations_binary from "../../🗿️artifacts/🌊️flow/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as flow_io from "../../🗿️artifacts/🌊️flow/🚪️io/🟦️component.ts";
-export * as flow_builder from "../../🗿️artifacts/🌊️flow/🏗️builder/🟦️component.ts";
 export * as flow_decomposer from "../../🗿️artifacts/🌊️flow/🪓️decomposer/🟦️component.ts";

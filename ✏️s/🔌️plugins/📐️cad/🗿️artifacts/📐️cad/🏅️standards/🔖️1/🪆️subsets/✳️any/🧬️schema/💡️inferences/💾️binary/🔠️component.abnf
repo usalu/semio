@@ -1,0 +1,3 @@
+; abnf cad.cad.inference
+document = payload
+payload = *OCTET

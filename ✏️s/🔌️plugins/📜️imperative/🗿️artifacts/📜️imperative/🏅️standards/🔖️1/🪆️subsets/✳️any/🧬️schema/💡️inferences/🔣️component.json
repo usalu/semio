@@ -1,0 +1,23 @@
+{
+  "$id": "https://semio.tech/schema/s/imperative/imperative/inference.json",
+  "title": "ImperativeInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topology"],
+  "properties": {
+    "topology": { "$ref": "#/$defs/ImperativeTopology", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "ImperativeTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topoOrder", "depth", "cycleFree", "nodeCount"],
+      "properties": {
+        "topoOrder": { "type": "array", "items": { "type": "string" } },
+        "depth": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "cycleFree": { "type": "boolean" },
+        "nodeCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

@@ -10,7 +10,6 @@ export * as rewrite_mutations from "../../🗿️artifacts/♻️rewrite/🧬️
 export * as rewrite_mutations_text from "../../🗿️artifacts/♻️rewrite/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as rewrite_mutations_binary from "../../🗿️artifacts/♻️rewrite/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as rewrite_io from "../../🗿️artifacts/♻️rewrite/🚪️io/🟦️component.ts";
-export * as rewrite_builder from "../../🗿️artifacts/♻️rewrite/🏗️builder/🟦️component.ts";
 export * as rewrite_decomposer from "../../🗿️artifacts/♻️rewrite/🪓️decomposer/🟦️component.ts";
 export * as jack_schema from "../../🗿️artifacts/🔌️jack/🧬️schema/🟦️component.ts";
 export * as jack_snapshot from "../../🗿️artifacts/🔌️jack/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -23,5 +22,4 @@ export * as jack_mutations from "../../🗿️artifacts/🔌️jack/🧬️schem
 export * as jack_mutations_text from "../../🗿️artifacts/🔌️jack/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as jack_mutations_binary from "../../🗿️artifacts/🔌️jack/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as jack_io from "../../🗿️artifacts/🔌️jack/🚪️io/🟦️component.ts";
-export * as jack_builder from "../../🗿️artifacts/🔌️jack/🏗️builder/🟦️component.ts";
 export * as jack_decomposer from "../../🗿️artifacts/🔌️jack/🪓️decomposer/🟦️component.ts";

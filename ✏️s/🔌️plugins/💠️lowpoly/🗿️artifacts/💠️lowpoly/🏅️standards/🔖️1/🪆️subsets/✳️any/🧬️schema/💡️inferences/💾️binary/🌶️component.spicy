@@ -1,0 +1,4 @@
+module Lowpoly_lowpoly_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

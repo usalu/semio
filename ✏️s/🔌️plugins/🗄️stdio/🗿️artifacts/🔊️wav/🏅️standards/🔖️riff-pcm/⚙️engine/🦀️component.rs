@@ -291,6 +291,19 @@ mod tests {
 /// `ArtifactPack` impls; schema descriptor + document codec registration is the subset
 /// composer's own job (see that module).
 pub fn register() {
-    crate::artifacts::wav::standards::riff_pcm::subsets::any::composer::register();
+    crate::artifacts::wav::standards::riff_pcm::subsets::any::io::register();
 }
 //#endregion 🔖️Register
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::WavComposer as WavRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<WavRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

@@ -1,0 +1,23 @@
+{
+  "$id": "https://semio.tech/schema/s/animate/present/inference.json",
+  "title": "PresentInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topology"],
+  "properties": {
+    "topology": { "$ref": "#/$defs/PresentTopology", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "PresentTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topoOrder", "depth", "cycleFree", "nodeCount"],
+      "properties": {
+        "topoOrder": { "type": "array", "items": { "type": "string" } },
+        "depth": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "cycleFree": { "type": "boolean" },
+        "nodeCount": { "type": "integer" }
+      }
+    }
+  }
+}

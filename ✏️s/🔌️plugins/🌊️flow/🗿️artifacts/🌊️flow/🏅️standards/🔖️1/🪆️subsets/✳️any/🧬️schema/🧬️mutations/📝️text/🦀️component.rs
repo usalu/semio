@@ -11,17 +11,58 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 mod tests {
     use super::*;
     use crate::artifacts::flow::FlowSnapshot;
-    use protocol::{Mutation, MutationDiff};
+    use protocol::{Identified, Mutation, MutationDiff};
 
     #[test]
-    fn set_layout_inverse_restores_base() {
+    fn move_widgets_inverse_restores_base() {
         let base = FlowSnapshot::default();
-        let mutation = FlowMutation::SetLayout { entries: Vec::new() };
+        let mutation = FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets {
+            entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 10.0, y: 20.0 }) }],
+        });
         let forward = mutation.diff(&base).apply(&base);
+        assert_eq!(forward.layout.get("slider"), Some(&flow::WidgetLayout { x: 10.0, y: 20.0 }));
         let restored = mutation.inverse(&base).iter().fold(forward, |snapshot, inverse| {
             inverse.diff(&snapshot).apply(&snapshot)
         });
         assert_eq!(restored, base);
+    }
+
+    #[test]
+    fn create_widget_then_delete_widget_round_trips_to_base() {
+        let base = FlowSnapshot::default();
+        let widget = flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
+        let create = FlowMutation::CreateWidget(crate::artifacts::flow::schema::mutations::create_widget::mutation::CreateWidget { index: base.widgets.len(), widget });
+        let after_create = create.diff(&base).apply(&base);
+        assert!(after_create.widgets.iter().any(|widget| widget.id() == "note-1"));
+
+        let delete = FlowMutation::DeleteWidget(crate::artifacts::flow::schema::mutations::delete_widget::mutation::DeleteWidget { id: "note-1".into() });
+        let after_delete = delete.diff(&after_create).apply(&after_create);
+        assert_eq!(after_delete, base);
+
+        let restored = delete.inverse(&after_create).iter().fold(after_delete, |snapshot, inverse| inverse.diff(&snapshot).apply(&snapshot));
+        assert_eq!(restored, after_create);
+    }
+
+    #[test]
+    fn connect_widgets_then_disconnect_widgets_round_trips_to_base() {
+        let base = FlowSnapshot::default();
+        let connect = FlowMutation::ConnectWidgets(crate::artifacts::flow::schema::mutations::connect_widgets::mutation::ConnectWidgets {
+            index: base.synapses.len(),
+            id: "s3".into(),
+            from: "slider".into(),
+            from_port: "number".into(),
+            to: "add".into(),
+            to_port: "b".into(),
+        });
+        let after_connect = connect.diff(&base).apply(&base);
+        assert!(after_connect.synapses.iter().any(|synapse| synapse.id == "s3"));
+
+        let disconnect = FlowMutation::DisconnectWidgets(crate::artifacts::flow::schema::mutations::disconnect_widgets::mutation::DisconnectWidgets { id: "s3".into() });
+        let after_disconnect = disconnect.diff(&after_connect).apply(&after_connect);
+        assert_eq!(after_disconnect, base);
+
+        let restored = disconnect.inverse(&after_connect).iter().fold(after_disconnect, |snapshot, inverse| inverse.diff(&snapshot).apply(&snapshot));
+        assert_eq!(restored, after_connect);
     }
 }
 //#endregion 🧪️Tests

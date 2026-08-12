@@ -1,0 +1,9 @@
+dialect grammar
+grammar flow.flow.inference
+extension flow.inference
+start document
+
+document = header body
+header = "schema" SP "flow.flow.inference" NL
+body = payload NL?
+payload = OCTET+

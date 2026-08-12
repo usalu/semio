@@ -1,0 +1,17 @@
+# 💡️ Present inference schema — topology derived from the persisted tile order.
+
+type PresentInference {
+  topology: PresentTopology! @state(class: INFERRED)
+}
+
+type PresentTopology {
+  topoOrder: [String!]!
+  depth: [PresentTopologyDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type PresentTopologyDepthEntry {
+  id: String!
+  depth: Int!
+}

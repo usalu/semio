@@ -1,3 +1,1 @@
-//! ↩️ Inverse leaf for `SetSnapshot`.
-//#region 🔖️Inverse
-//#endregion 🔖️Inverse
+//! ↩ Retired alongside `../🦠️mutation/🦀️component.rs` — see that file's doc comment.

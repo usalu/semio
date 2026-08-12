@@ -117,3 +117,106 @@ pub fn imperative_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
     }
 }
 //#endregion 🔖️Descriptor
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::imperative::schema::diff::ImperativeDiff;
+    use crate::artifacts::imperative::schema::mutations::ImperativeMutation;
+    use crate::artifacts::imperative::schema::snapshot::ImperativeSnapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct ImperativeBuilderConstruction {
+        snapshot: ImperativeSnapshot,
+        diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for ImperativeBuilderConstruction {
+        type Snapshot = ImperativeSnapshot;
+        type Mutation = ImperativeMutation;
+        type Diff = ImperativeDiff;
+        fn empty() -> Self { Self { snapshot: ImperativeSnapshot::default(), diagnostics: Vec::new() } }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<ImperativeSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let d = <ImperativeMutation as protocol::Mutation<ImperativeSnapshot>>::diff(&mutation, &self.snapshot);
+            self.snapshot = protocol::MutationDiff::apply(&d, &self.snapshot);
+            (self, d)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <ImperativeDiff as protocol::MutationDiff<ImperativeSnapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+        }
+    }
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::imperative::ImperativeSnapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct ImperativeParts {
+        pub snapshot: Option<ImperativeSnapshot>,
+    }
+
+    pub struct ImperativeAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for ImperativeAnalyzerAnalysis {
+        type Parts = ImperativeParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.imperative", standard: StandardId("1"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            IoConfidence::Medium
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = ImperativeParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <ImperativeSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec ImperativeBuilderFacets {
+        construction: derived_construction::ImperativeBuilderConstruction,
+        analysis: derived_analysis::ImperativeAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::ImperativeComposerComposition,
+    }
+    builder: ImperativeBuilder,
+    analyzer: ImperativeAnalyzer,
+    composer: ImperativeComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

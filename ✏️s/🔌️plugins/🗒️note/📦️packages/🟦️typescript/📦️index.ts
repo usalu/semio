@@ -10,5 +10,4 @@ export * as note_mutations from "../../🗿️artifacts/🗒️note/🧬️schem
 export * as note_mutations_text from "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as note_mutations_binary from "../../🗿️artifacts/🗒️note/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as note_io from "../../🗿️artifacts/🗒️note/🚪️io/🟦️component.ts";
-export * as note_builder from "../../🗿️artifacts/🗒️note/🏗️builder/🟦️component.ts";
 export * as note_decomposer from "../../🗿️artifacts/🗒️note/🪓️decomposer/🟦️component.ts";

@@ -1,0 +1,3 @@
+(* ebnf note.note.inference *)
+document = header, body ;
+header = 'schema', space, 'note.note.inference', newline ;

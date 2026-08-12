@@ -1,0 +1,3 @@
+; abnf animate.present.inference
+document = payload
+payload = *OCTET

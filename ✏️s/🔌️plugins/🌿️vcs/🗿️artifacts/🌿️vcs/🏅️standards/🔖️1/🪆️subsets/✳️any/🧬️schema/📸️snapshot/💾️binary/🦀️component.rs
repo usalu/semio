@@ -48,7 +48,7 @@ mod tests {
 
         let mut store: ArtifactStore<VcsSnapshot, VcsDemoMutation> =
             ArtifactStore::new(create_document_envelope(VCS_DOCUMENT_SCHEMA, "vcs-demo", crate::artifacts::vcs::engine::empty_vcs_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetTitle { title: "Renamed".into() }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::vcs::mutations::rename_vcs("Renamed".into())], description: None }).expect("apply");
         let edit: &Edit<VcsDemoMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<VcsSnapshot, VcsDemoMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }

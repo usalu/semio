@@ -1,0 +1,17 @@
+# 💡️ Shooting inference schema — topology derived from the shot→camera reference graph.
+
+type ShootingInference {
+  topology: ShootingTopology! @state(class: INFERRED)
+}
+
+type ShootingTopology {
+  topoOrder: [String!]!
+  depth: [ShootingTopologyDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type ShootingTopologyDepthEntry {
+  id: String!
+  depth: Int!
+}

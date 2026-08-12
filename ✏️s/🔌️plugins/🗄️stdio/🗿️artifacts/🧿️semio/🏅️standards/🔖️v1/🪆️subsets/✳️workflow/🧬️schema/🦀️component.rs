@@ -78,3 +78,106 @@ pub fn semio_workflow_artifact_schema_descriptor() -> schema::ArtifactSchemaDesc
         },
     }
 }
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::semio::standards::v1::subsets::workflow::schema::diff::SemioWorkflowDiff;
+    use crate::artifacts::semio::standards::v1::subsets::workflow::schema::mutations::{SemioWorkflowMutation, apply_semio_workflow_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::SemioWorkflowSnapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioWorkflowBuilderConstruction { snapshot: SemioWorkflowSnapshot }
+
+    impl ArtifactBuilder for SemioWorkflowBuilderConstruction {
+        type Snapshot = SemioWorkflowSnapshot;
+        type Mutation = SemioWorkflowMutation;
+        type Diff = SemioWorkflowDiff;
+        fn empty() -> Self { Self { snapshot: SemioWorkflowSnapshot::default() } }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<SemioWorkflowSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SemioWorkflowSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let diff = apply_semio_workflow_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <SemioWorkflowDiff as protocol::MutationDiff<SemioWorkflowSnapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+    }
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::{SemioWorkflowSnapshot, STDIO_SEMIOWORKFLOW_DOCUMENT_SCHEMA};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioWorkflowParts { pub snapshot: Option<SemioWorkflowSnapshot> }
+
+    pub struct SemioWorkflowAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for SemioWorkflowAnalyzerAnalysis {
+        type Parts = SemioWorkflowParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("workflow") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    let marker = STDIO_SEMIOWORKFLOW_DOCUMENT_SCHEMA.as_bytes();
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                }
+                AnalyzeSource::Text(text) => {
+                    if text.contains(STDIO_SEMIOWORKFLOW_DOCUMENT_SCHEMA) { IoConfidence::High } else { IoConfidence::Low }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = SemioWorkflowParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <SemioWorkflowSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <SemioWorkflowSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec SemioWorkflowBuilderFacets {
+        construction: derived_construction::SemioWorkflowBuilderConstruction,
+        analysis: derived_analysis::SemioWorkflowAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::SemioWorkflowComposerComposition,
+    }
+    builder: SemioWorkflowBuilder,
+    analyzer: SemioWorkflowAnalyzer,
+    composer: SemioWorkflowComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

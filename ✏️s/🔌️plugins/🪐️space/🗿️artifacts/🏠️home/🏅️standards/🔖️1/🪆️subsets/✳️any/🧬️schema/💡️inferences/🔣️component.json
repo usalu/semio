@@ -1,0 +1,13 @@
+{
+  "$id": "https://semio.tech/schema/s/space/home/inference.json",
+  "title": "SHomeInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contentDigest"],
+  "properties": {
+    "contentDigest": {
+      "type": "string",
+      "x-semio-state": "inferred"
+    }
+  }
+}

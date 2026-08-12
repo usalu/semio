@@ -1,0 +1,3 @@
+(* ebnf norm.en1997.inference *)
+document = header, body ;
+header = 'schema', space, 'norm.en1997.inference', newline ;

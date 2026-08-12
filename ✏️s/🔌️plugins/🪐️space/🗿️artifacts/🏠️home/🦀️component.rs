@@ -14,6 +14,7 @@ pub use crate::artifacts::home::snapshot::schema::SHomeSnapshot;
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
     crate::artifacts::home::engine::register_artifact_schema();
+    crate::artifacts::home::engine::register_artifact_inference();
     dsl::register_language(dsl::LanguageSpec {
         id: "space.shome",
         extension: Some("shome"),
@@ -86,3 +87,28 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     }
 }
 //#endregion 🔖️ArtifactKind
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
+    use crate::artifacts::home::standards::v1::engine::io_registry as v1;
+
+    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [&'static ComposerEntry] {
+        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
+    }
+
+    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let entry = entries()
+            .iter()
+            .find(|e| e.writes == target)
+            .ok_or_else(|| ComposeError { message: format!("SHomeComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        (entry.compose)(sources)
+    }
+
+    pub fn register() {
+        register_composer_entries(v1::entries());
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

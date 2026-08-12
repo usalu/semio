@@ -1,0 +1,9 @@
+dialect grammar
+grammar norm.din4108.inference
+extension din4108.inference
+start document
+
+document = header body
+header = "schema" SP "norm.din4108.inference" NL
+body = payload NL?
+payload = OCTET+

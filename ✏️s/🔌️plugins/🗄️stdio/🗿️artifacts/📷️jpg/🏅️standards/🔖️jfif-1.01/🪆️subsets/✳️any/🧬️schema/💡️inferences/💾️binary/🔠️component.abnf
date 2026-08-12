@@ -1,0 +1,3 @@
+; abnf stdio.jpg.inference
+document = payload
+payload = *OCTET

@@ -1,21 +1,17 @@
-//! 🔺️ Diff fragment yielded by `UpdateGovernance`.
-use crate::artifacts::program::diff::ProgramDiff;
-use serde::{Deserialize, Serialize};
+//! 🔺️ Sparse diff construction for the `update_governance` mutation leaf.
 
-//#region 🔖️Diff
-/// @emoji 🔺️ Diff produced by one `UpdateGovernance` mutation — a sparse [`ProgramDiff`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct UpdateGovernanceDiff {
-    pub diff: ProgramDiff,
+use super::mutation::{RenameGovernance, ReplaceGovernance};
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
+
+/// ✏️ New `Governance` with only `framework` changed.
+pub fn diff_rename(payload: &RenameGovernance, base: &ProgramSnapshot) -> ProgramDiff {
+    let mut value = base.governance.clone();
+    value.framework = payload.new_framework.clone();
+    ProgramDiff { governance: Some(value), ..Default::default() }
 }
 
-impl UpdateGovernanceDiff {
-    pub fn from_diff(diff: ProgramDiff) -> Self {
-        Self { diff }
-    }
-
-    pub fn into_program_diff(self) -> ProgramDiff {
-        self.diff
-    }
+/// 🔁️ New `Governance` wholesale.
+pub fn diff_replace(payload: &ReplaceGovernance, _base: &ProgramSnapshot) -> ProgramDiff {
+    ProgramDiff { governance: Some(payload.new_governance.clone()), ..Default::default() }
 }
-//#endregion 🔖️Diff

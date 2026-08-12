@@ -200,14 +200,15 @@ mod tests {
     use super::*;
     use crate::artifacts::present::default_present_snapshot;
     use crate::artifacts::present::op::PresentMutation;
+    use crate::artifacts::present::schema::mutations::replace_source;
     use protocol::Mutation;
 
     #[test]
-    fn set_source_diff_applies_onto_the_base_snapshot() {
+    fn replace_source_diff_applies_onto_the_base_snapshot() {
         let base = default_present_snapshot();
         let mut next_source = base.source.clone();
         next_source.kind = "video".into();
-        let operation = PresentMutation::SetSource { source: next_source.clone() };
+        let operation = PresentMutation::ReplaceSource(replace_source::mutation::ReplaceSource { new_source: next_source.clone() });
         let diff: PresentDiff = operation.diff(&base);
         assert_eq!(diff.source, Some(next_source));
         assert!(diff.artifact.is_none() && diff.tiles.is_none());

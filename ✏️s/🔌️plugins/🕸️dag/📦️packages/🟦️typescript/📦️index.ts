@@ -10,5 +10,4 @@ export * as dag_mutations from "../../🗿️artifacts/🕸️dag/🧬️schema/
 export * as dag_mutations_text from "../../🗿️artifacts/🕸️dag/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as dag_mutations_binary from "../../🗿️artifacts/🕸️dag/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as dag_io from "../../🗿️artifacts/🕸️dag/🚪️io/🟦️component.ts";
-export * as dag_builder from "../../🗿️artifacts/🕸️dag/🏗️builder/🟦️component.ts";
 export * as dag_decomposer from "../../🗿️artifacts/🕸️dag/🪓️decomposer/🟦️component.ts";

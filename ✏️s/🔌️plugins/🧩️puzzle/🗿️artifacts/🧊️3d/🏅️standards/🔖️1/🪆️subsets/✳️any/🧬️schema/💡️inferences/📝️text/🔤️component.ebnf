@@ -1,0 +1,3 @@
+(* ebnf puzzle.puzzle3d.inference *)
+document = header, body ;
+header = 'schema', space, 'puzzle.puzzle3d.inference', newline ;

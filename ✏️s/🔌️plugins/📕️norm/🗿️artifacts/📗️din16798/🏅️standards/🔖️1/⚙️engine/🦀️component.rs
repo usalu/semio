@@ -1177,10 +1177,32 @@ use std::sync::{Mutex, OnceLock};
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::din16798::schema::din16798_artifact_schema_descriptor());
 }
+
+/// 💡️ Registers `s.norm.din16798.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::din16798::standards::v1::subsets::any::schema::inferences::din16798_artifact_inference_descriptor());
+}
 //#endregion 🔖️SchemaRegistry
 
 //#region 🔖️IoFacet
 pub fn register_io() {
-    crate::artifacts::din16798::composer::register();
+    crate::artifacts::din16798::io_registry::register();
 }
 //#endregion 🔖️IoFacet
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::din16798::standards::v1::subsets::any::schema::Din16798Composer as Din16798AnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![
+            composer_entry_of::<Din16798AnyComposer>(),
+        ]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

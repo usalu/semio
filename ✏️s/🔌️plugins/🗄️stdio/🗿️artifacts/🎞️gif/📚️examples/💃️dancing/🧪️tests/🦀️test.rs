@@ -1,12 +1,17 @@
 //! 🧪️ Tests for example `💃️dancing` — the real animated GIF89a fixture. Ticket
 //! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION's core acceptance bar:
 //! (a) real-file decode invariants, (b) decode→encode→decode snapshot equality, (c) analyzer→
-//! builder round trip using ONLY the 89a builder's typed constructors.
+//! builder round trip using ONLY the 89a builder's typed constructors. (d)/(e) ticket
+//! 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING's inference laws,
+//! exercised against this same real fixture.
 
 use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactBuilder};
 use crate::artifacts::gif::standards::v89a::engine::{decode_gif, encode_gif};
-use crate::artifacts::gif::standards::v89a::subsets::any::analyzer::GifAnalyzer;
-use crate::artifacts::gif::standards::v89a::subsets::any::builder::GifBuilder;
+use crate::artifacts::gif::standards::v89a::subsets::any::schema::GifAnalyzer;
+use crate::artifacts::gif::standards::v89a::subsets::any::schema::GifBuilder;
+use crate::artifacts::gif::standards::v89a::subsets::any::schema::inferences::GifInference;
+use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
+use protocol::Inference;
 
 const DANCING_GIF_BYTES: &[u8] = include_bytes!("../🖼️assets/🖼️dancing.gif");
 
@@ -71,4 +76,33 @@ fn analyzer_builder_round_trip_matches() {
 
     assert_eq!(parts_a, parts_b, "analyzer(original) and analyzer(builder-rebuilt-from-analyzer-output) must match");
     assert_eq!(parts_b.frames.len(), 54, "rebuild must preserve every frame from the real fixture");
+}
+
+/// 🧪️ (d) `infer` on the real animated fixture is deterministic — two calls over the same
+/// decoded snapshot produce byte-equal results.
+#[test]
+fn inference_determinism_law() {
+    let snapshot = decode_gif(DANCING_GIF_BYTES).expect("decode real fixture");
+    assert_eq!(GifInference::infer(&snapshot), GifInference::infer(&snapshot));
+}
+
+/// 🧪️ (e) `infer(&GifSnapshot::default())` matches `GifInference::default()` — the hand-written
+/// `Default` impl (`💡️inferences/🦀️component.rs`) must stay in lockstep with `infer` itself.
+#[test]
+fn inference_default_law() {
+    assert_eq!(GifInference::infer(&GifSnapshot::default()), GifInference::default());
+}
+
+/// 🧪️ `dimensions` on the real animated fixture matches the independently-verified 800x800
+/// geometry `decodes_real_fixture_with_nontrivial_invariants` above already asserts, plus
+/// `hasAlpha` agreeing exactly with a direct scan of every frame's `transparent_index`.
+#[test]
+fn dimensions_matches_real_fixture_geometry() {
+    let snapshot = decode_gif(DANCING_GIF_BYTES).expect("decode real fixture");
+    let inferred = GifInference::infer(&snapshot);
+    assert_eq!(inferred.dimensions.width, 800);
+    assert_eq!(inferred.dimensions.height, 800);
+    assert_eq!(inferred.dimensions.pixel_count, 800 * 800);
+    let any_transparent = snapshot.frames.iter().any(|frame| frame.transparent_index.is_some());
+    assert_eq!(inferred.dimensions.has_alpha, any_transparent);
 }

@@ -1,6 +1,9 @@
-use crate::artifacts::procedural2d::Procedural2dSnapshot;
-use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
+//! ↩️ Inverse for `UpdateCamera` — restores the captured BASE camera. The camera always exists (it
+//! is not optional on the fixture), so this is unconditional, unlike the id-keyed leaves above.
 
-pub fn inverse(base: &Procedural2dSnapshot, mutation: &Procedural2dMutation) -> Vec<Procedural2dMutation> {
-    <Procedural2dMutation as protocol::Mutation<Procedural2dSnapshot>>::inverse(mutation, base)
+use crate::artifacts::procedural2d::mutations::{update_camera, Procedural2dMutation};
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
+
+pub fn inverse(_payload: &super::mutation::UpdateCamera, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+    vec![update_camera(base.fixture.camera.clone())]
 }

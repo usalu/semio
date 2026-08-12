@@ -175,16 +175,17 @@ impl ArtifactApp for Fem3dPlayApp {
         }
     }
 
-    fn whole_document_operation(snapshot: Fem3dSnapshot) -> Option<Fem3dMutation> {
-        Some(Fem3dMutation::SetSnapshot { snapshot: snapshot })
-    }
-
-    /// 🎞️ `"document:in"` reproduces the trait's default whole-document-pack importer (overriding
-    /// `import_media` shadows it for every port). `"geometry:in"` decodes a minimal, app-owned
-    /// `{"outline": [[f64;2]...], "holes": [[[f64;2]...]...], "baseZ"?: f64, "height"?: f64, "layers"?:
-    /// usize}` extruded-footprint contract into a new `FemSolid`, defaulted to the document's first
-    /// existing material if any, else an `"unassigned"` placeholder id — the solid simply won't solve
-    /// until a real material is assigned.
+    /// 🧬️ No `whole_document_operation` override on this impl — per `📓️taxonomy.md`, whole-document
+    /// replace (`SetSnapshot`) is banned outright with NO replacement mutation, so this falls back to
+    /// the trait's own default (`None`).
+    ///
+    /// 🎞️ `"document:in"` swaps the whole live document via `reset_document_effect` (a
+    /// `HostEffect::LoadDocument`, the sanctioned non-history whole-doc-replace path — see
+    /// `reset_document_effect`'s own doc comment) instead of routing through `whole_document_operation`.
+    /// `"geometry:in"` decodes a minimal, app-owned `{"outline": [[f64;2]...], "holes": [[[f64;2]...]...],
+    /// "baseZ"?: f64, "height"?: f64, "layers"?: usize}` extruded-footprint contract into a new
+    /// `FemSolid`, defaulted to the document's first existing material if any, else an `"unassigned"`
+    /// placeholder id — the solid simply won't solve until a real material is assigned.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Fem3dSnapshot>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "document:in" => {
@@ -193,10 +194,7 @@ impl ArtifactApp for Fem3dPlayApp {
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let snapshot = <Fem3dSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                match Self::whole_document_operation(snapshot) {
-                    Some(operation) => Ok(Emit::mutations(vec![operation])),
-                    None => Err(MediaError::NotImplemented),
-                }
+                Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
             }
             "geometry:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -213,9 +211,8 @@ impl ArtifactApp for Fem3dPlayApp {
                 let layers = value.get("layers").and_then(Value::as_u64).map(|v| v as usize).unwrap_or(1);
                 let material_id = doc.snapshot.materials.first().map(|material| material.id.clone()).unwrap_or_else(|| "unassigned".into());
                 let id = crate::app_surface::next_id(doc.snapshot.solids.iter().map(|s| s.id.clone()), "sol");
-                let index = doc.snapshot.solids.len();
                 let solid = crate::artifacts::fem3d::FemSolid { id, name: "Imported Geometry".into(), outline, holes, base_z, height, layers, mesh_size: 0.5, material_id };
-                Ok(Emit::mutations(vec![Fem3dMutation::SetSolid { index, solid }]))
+                Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::mutation::CreateSolid { solid })]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -246,6 +243,22 @@ impl ArtifactApp for Fem3dPlayApp {
     }
 }
 //#endregion 🔖️Fem3dPlayApp
+
+//#region 🔖️ResetDocument
+/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
+/// history — the sanctioned non-mutation path for a whole-document replace (file import,
+/// load-example). Per `📓️taxonomy.md`, `SetSnapshot` is banned outright with NO replacement
+/// mutation: whole-document replace is not expressible as an in-history `Mutation` at all. Every
+/// former "replace the whole document" gesture in this package (`import_media`'s `"document:in"`,
+/// `commands::example::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
+/// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
+pub fn reset_document_effect(scene: &Fem3dSnapshot) -> semio_framework::kernel::HostEffect {
+    let pack = <Fem3dSnapshot as store::ArtifactPack>::encode_pack(scene);
+    let envelope = store::create_document_envelope::<Fem3dSnapshot, Fem3dMutation>(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", scene.clone(), None);
+    let spr = store::print_document_spr(&envelope).expect("fem3d document spr encode is infallible for a fresh, edit-free envelope");
+    semio_framework::kernel::HostEffect::LoadDocument { pack, spr }
+}
+//#endregion 🔖️ResetDocument
 
 //#region 🔖️Manifest
 /// 🧱️ The manifest stitch: one call per taxonomy node. fem3d's mode/windows are all scalar
@@ -590,14 +603,14 @@ mod tests {
         let emit = Fem3dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
         assert_eq!(emit.artifact_mutations.len(), 1);
         match &emit.artifact_mutations[0] {
-            Fem3dMutation::SetSolid { solid, .. } => {
+            Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::mutation::CreateSolid { solid }) => {
                 assert_eq!(solid.outline, vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]);
                 assert_eq!(solid.base_z, 0.5);
                 assert_eq!(solid.height, 3.0);
                 assert_eq!(solid.layers, 2);
                 assert_eq!(solid.material_id, "m0");
             }
-            _ => panic!("expected SetSolid"),
+            _ => panic!("expected CreateSolid"),
         }
     }
 

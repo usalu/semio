@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/block/block2d/inference/text.json",
+  "title": "Block2dInferenceText",
+  "type": "object"
+}

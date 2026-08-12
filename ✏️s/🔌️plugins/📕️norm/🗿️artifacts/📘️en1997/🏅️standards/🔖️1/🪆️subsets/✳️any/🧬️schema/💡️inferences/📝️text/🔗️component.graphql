@@ -1,0 +1,3 @@
+# norm.en1997.inference text grammar schema
+scalar Bytes
+type Document { schema: String! payload: String! }

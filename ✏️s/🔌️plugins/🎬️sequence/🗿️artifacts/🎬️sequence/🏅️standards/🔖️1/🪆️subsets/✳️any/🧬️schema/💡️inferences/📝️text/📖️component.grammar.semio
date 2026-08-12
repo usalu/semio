@@ -1,0 +1,9 @@
+dialect grammar
+grammar sequence.sequence.inference
+extension sequence.inference
+start document
+
+document = header body
+header = "schema" SP "sequence.sequence.inference" NL
+body = payload NL?
+payload = OCTET+

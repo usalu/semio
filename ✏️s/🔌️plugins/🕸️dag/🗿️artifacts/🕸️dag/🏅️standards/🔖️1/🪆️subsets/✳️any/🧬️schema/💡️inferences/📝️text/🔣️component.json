@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/dag/dag/inference/text.json",
+  "title": "DagInferenceText",
+  "type": "object"
+}

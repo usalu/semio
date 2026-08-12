@@ -1,0 +1,4 @@
+module Norm_en1994_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

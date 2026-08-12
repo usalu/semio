@@ -1,16 +1,12 @@
-//! 🔺️ Diff fragment yielded by `SetStock`.
+//! 🔺️ `move-stock` sparse diff construction — a whole-`Stock` value with only `pose` replaced from
+//! `base`, never a snapshot clone.
+
 use crate::artifacts::process3d::diff::Process3dDiff;
-use serde::{Deserialize, Serialize};
+use crate::artifacts::process3d::mutations::set_stock::mutation::MoveStock;
+use crate::artifacts::process3d::{Process3dSnapshot, Stock};
 
 //#region 🔖️Diff
-/// 🔺️ Diff produced by one mutation — a sparse [`Process3dDiff`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct SetStockDiff {
-    pub diff: Process3dDiff,
-}
-
-impl SetStockDiff {
-    pub fn from_diff(diff: Process3dDiff) -> Self { Self { diff } }
-    pub fn into_process3d_diff(self) -> Process3dDiff { self.diff }
+pub fn diff(payload: &MoveStock, base: &Process3dSnapshot) -> Process3dDiff {
+    Process3dDiff { stock: Some(Stock { pose: payload.new_pose.clone(), ..base.stock.clone() }), ..Default::default() }
 }
 //#endregion 🔖️Diff

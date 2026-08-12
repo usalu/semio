@@ -2,6 +2,7 @@
 //! collection.
 
 use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use crate::artifacts::fem3d::mutations::{delete_combination, delete_element, delete_load_case, delete_material, delete_node, delete_section, delete_solid, delete_support};
 use crate::artifacts::fem3d::op::Fem3dMutation;
 use crate::artifacts::fem3d::Fem3dSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -25,21 +26,21 @@ pub mod remove_selection {
         let mut operations = Vec::new();
         for id in &payload.ids {
             if snapshot.nodes.iter().any(|n| &n.id == id) {
-                operations.push(Fem3dMutation::RemoveNode { id: id.clone() });
+                operations.push(Fem3dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: id.clone() }));
             } else if snapshot.elements.iter().any(|e| crate::artifacts::fem3d::element_id(e) == id) {
-                operations.push(Fem3dMutation::RemoveElement { id: id.clone() });
+                operations.push(Fem3dMutation::DeleteElement(delete_element::mutation::DeleteElement { id: id.clone() }));
             } else if snapshot.materials.iter().any(|m| &m.id == id) {
-                operations.push(Fem3dMutation::RemoveMaterial { id: id.clone() });
+                operations.push(Fem3dMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: id.clone() }));
             } else if snapshot.sections.iter().any(|s| &s.id == id) {
-                operations.push(Fem3dMutation::RemoveSection { id: id.clone() });
+                operations.push(Fem3dMutation::DeleteSection(delete_section::mutation::DeleteSection { id: id.clone() }));
             } else if snapshot.supports.iter().any(|s| &s.id == id) {
-                operations.push(Fem3dMutation::RemoveSupport { id: id.clone() });
+                operations.push(Fem3dMutation::DeleteSupport(delete_support::mutation::DeleteSupport { id: id.clone() }));
             } else if snapshot.load_cases.iter().any(|l| &l.id == id) {
-                operations.push(Fem3dMutation::RemoveLoadCase { id: id.clone() });
+                operations.push(Fem3dMutation::DeleteLoadCase(delete_load_case::mutation::DeleteLoadCase { id: id.clone() }));
             } else if snapshot.solids.iter().any(|s| &s.id == id) {
-                operations.push(Fem3dMutation::RemoveSolid { id: id.clone() });
+                operations.push(Fem3dMutation::DeleteSolid(delete_solid::mutation::DeleteSolid { id: id.clone() }));
             } else if snapshot.combinations.iter().any(|c| &c.id == id) {
-                operations.push(Fem3dMutation::RemoveCombination { id: id.clone() });
+                operations.push(Fem3dMutation::DeleteCombination(delete_combination::mutation::DeleteCombination { id: id.clone() }));
             }
         }
         if operations.is_empty() {

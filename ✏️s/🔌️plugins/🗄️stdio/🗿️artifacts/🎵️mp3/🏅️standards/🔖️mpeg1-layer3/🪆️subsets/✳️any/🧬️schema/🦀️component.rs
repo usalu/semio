@@ -84,3 +84,114 @@ pub fn mp3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
         },
     }
 }
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::diff::Mp3Diff;
+    use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::{Mp3Mutation, apply_mp3_mutation};
+    use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct Mp3BuilderConstruction { snapshot: Mp3Snapshot }
+
+    impl ArtifactBuilder for Mp3BuilderConstruction {
+        type Snapshot = Mp3Snapshot;
+        type Mutation = Mp3Mutation;
+        type Diff = Mp3Diff;
+        fn empty() -> Self { Self { snapshot: Mp3Snapshot::default() } }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot } }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<Mp3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<Mp3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let diff = apply_mp3_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <Mp3Diff as protocol::MutationDiff<Mp3Snapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { Ok(self.snapshot) }
+    }
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Mp3Snapshot, STDIO_MP3_DOCUMENT_SCHEMA};
+    use crate::artifacts::mp3::standards::mpeg1_layer3::engine as engine;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct Mp3Parts { pub snapshot: Option<Mp3Snapshot> }
+
+    pub struct Mp3AnalyzerAnalysis;
+
+    impl ArtifactAnalysis for Mp3AnalyzerAnalysis {
+        type Parts = Mp3Parts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    if engine::sniff_real_bytes(bytes) {
+                        return IoConfidence::High;
+                    }
+                    let marker = STDIO_MP3_DOCUMENT_SCHEMA.as_bytes();
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
+                }
+                AnalyzeSource::Text(text) => {
+                    if engine::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_MP3_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = Mp3Parts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <Mp3Snapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <Mp3Snapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec Mp3BuilderFacets {
+        construction: derived_construction::Mp3BuilderConstruction,
+        analysis: derived_analysis::Mp3AnalyzerAnalysis,
+        composition: super::super::io::derived_composition::Mp3ComposerComposition,
+    }
+    builder: Mp3Builder,
+    analyzer: Mp3Analyzer,
+    composer: Mp3Composer,
+);
+//#endregion 🧬️DerivedArtifactFacets

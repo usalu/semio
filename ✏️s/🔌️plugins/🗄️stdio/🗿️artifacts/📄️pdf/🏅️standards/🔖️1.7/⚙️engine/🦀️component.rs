@@ -1480,12 +1480,12 @@ pub fn register() {
     // 🛡️ D5's generic validate-on-build hook: registers each real subset's SubsetValidator so
     // `io_dispatch`/`wire_artifact_compose` re-check them for free. Each ComposerEntry itself is
     // registered separately via this standard's own `composer::entries()` aggregation.
-    crate::artifacts::pdf::standards::v1_7::subsets::a::composer::register();
-    crate::artifacts::pdf::standards::v1_7::subsets::x::composer::register();
-    crate::artifacts::pdf::standards::v1_7::subsets::e::composer::register();
-    crate::artifacts::pdf::standards::v1_7::subsets::ua::composer::register();
-    crate::artifacts::pdf::standards::v1_7::subsets::vt::composer::register();
-    crate::artifacts::pdf::standards::v1_7::subsets::h::composer::register();
+    crate::artifacts::pdf::standards::v1_7::subsets::a::io::register();
+    crate::artifacts::pdf::standards::v1_7::subsets::x::io::register();
+    crate::artifacts::pdf::standards::v1_7::subsets::e::io::register();
+    crate::artifacts::pdf::standards::v1_7::subsets::ua::io::register();
+    crate::artifacts::pdf::standards::v1_7::subsets::vt::io::register();
+    crate::artifacts::pdf::standards::v1_7::subsets::h::io::register();
 }
 
 /// 📌️ P2-FG3: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr) for `stdio.pdf.1.7`
@@ -2057,3 +2057,33 @@ mod tests {
     //#endregion PageTreeInheritance
 }
 //#endregion Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfComposer as PdfRawAnyComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::PdfAComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::x::schema::PdfXComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::e::schema::PdfEComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::ua::schema::PdfUaComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::vt::schema::PdfVtComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::h::schema::PdfHComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| {
+            vec![
+                composer_entry_of::<PdfRawAnyComposer>(),
+                composer_entry_of::<PdfAComposer>(),
+                composer_entry_of::<PdfXComposer>(),
+                composer_entry_of::<PdfEComposer>(),
+                composer_entry_of::<PdfUaComposer>(),
+                composer_entry_of::<PdfVtComposer>(),
+                composer_entry_of::<PdfHComposer>(),
+            ]
+        })
+        .as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

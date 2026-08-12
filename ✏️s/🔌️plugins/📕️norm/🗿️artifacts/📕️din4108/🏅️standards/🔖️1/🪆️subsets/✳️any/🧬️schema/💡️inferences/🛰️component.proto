@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.norm.din4108.inference;
+
+// 💡️ Din4108 inference schema — document outline (field/section list + entry count).
+
+message Din4108Inference {
+  // @state inferred
+  Din4108Outline outline = 1;
+}
+
+message Din4108Outline {
+  repeated string section_outline = 1;
+  uint32 field_count = 2;
+  uint32 entry_count = 3;
+}

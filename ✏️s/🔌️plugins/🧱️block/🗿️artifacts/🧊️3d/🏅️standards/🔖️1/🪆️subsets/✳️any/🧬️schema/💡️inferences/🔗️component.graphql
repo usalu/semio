@@ -1,0 +1,15 @@
+# 💡️ Block3d inference schema — bounds (bounding box + vertex count) over the object kind's rim vortex templates.
+
+type Block3dInference {
+  bounds: Block3dBounds! @state(class: INFERRED)
+}
+
+type Block3dBounds {
+  boundingBox: BoundingBox3d
+  vertexCount: Int!
+}
+
+type BoundingBox3d {
+  min: [Float!]!
+  max: [Float!]!
+}

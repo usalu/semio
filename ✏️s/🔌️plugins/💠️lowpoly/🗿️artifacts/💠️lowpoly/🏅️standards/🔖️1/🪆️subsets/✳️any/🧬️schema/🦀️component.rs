@@ -158,3 +158,106 @@ pub fn lowpoly_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
     }
 }
 //#endregion 🔖️Descriptor
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::lowpoly::schema::diff::LowpolyDiff;
+    use crate::artifacts::lowpoly::schema::mutations::LowpolyMutation;
+    use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct LowpolyBuilderConstruction {
+        snapshot: LowpolySnapshot,
+        diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for LowpolyBuilderConstruction {
+        type Snapshot = LowpolySnapshot;
+        type Mutation = LowpolyMutation;
+        type Diff = LowpolyDiff;
+        fn empty() -> Self { Self { snapshot: LowpolySnapshot::default(), diagnostics: Vec::new() } }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<LowpolySnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<LowpolySnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let d = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation, &self.snapshot);
+            self.snapshot = protocol::MutationDiff::apply(&d, &self.snapshot);
+            (self, d)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <LowpolyDiff as protocol::MutationDiff<LowpolySnapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+        }
+    }
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::lowpoly::LowpolySnapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct LowpolyParts {
+        pub snapshot: Option<LowpolySnapshot>,
+    }
+
+    pub struct LowpolyAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for LowpolyAnalyzerAnalysis {
+        type Parts = LowpolyParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.lowpoly", standard: StandardId("1"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            IoConfidence::Medium
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = LowpolyParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <LowpolySnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <LowpolySnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec LowpolyBuilderFacets {
+        construction: derived_construction::LowpolyBuilderConstruction,
+        analysis: derived_analysis::LowpolyAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::LowpolyComposerComposition,
+    }
+    builder: LowpolyBuilder,
+    analyzer: LowpolyAnalyzer,
+    composer: LowpolyComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

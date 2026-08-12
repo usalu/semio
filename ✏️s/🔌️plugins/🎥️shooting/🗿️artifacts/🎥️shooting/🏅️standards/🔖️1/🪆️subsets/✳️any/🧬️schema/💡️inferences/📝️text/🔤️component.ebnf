@@ -1,0 +1,3 @@
+(* ebnf shooting.shooting.inference *)
+document = header, body ;
+header = 'schema', space, 'shooting.shooting.inference', newline ;

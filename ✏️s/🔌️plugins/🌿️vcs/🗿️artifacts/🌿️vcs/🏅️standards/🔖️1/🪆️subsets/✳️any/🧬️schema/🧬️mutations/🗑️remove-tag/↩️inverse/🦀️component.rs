@@ -1,8 +1,13 @@
-use crate::artifacts::vcs::{VcsSnapshot, mutations::VcsDemoMutation};
-pub fn inverse(base: &VcsSnapshot, tag: &str) -> Vec<VcsDemoMutation> {
-    if base.tags.iter().any(|t| t == tag) {
-        vec![VcsDemoMutation::AddTag { tag: tag.to_string() }]
+//! ↩️ Inverse for `RemoveTag` — `add-tag` if BASE had it, else nothing to undo.
+use crate::artifacts::vcs::mutations::VcsDemoMutation;
+use crate::artifacts::vcs::VcsSnapshot;
+
+//#region 🔖️Inverse
+pub fn inverse(payload: &super::mutation::RemoveTag, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
+    if base.tags.iter().any(|existing| existing == &payload.tag) {
+        vec![super::super::add_tag::mutation::add_tag(payload.tag.clone())]
     } else {
-        vec![VcsDemoMutation::AddTag { tag: tag.to_string() }]
+        Vec::new()
     }
 }
+//#endregion 🔖️Inverse

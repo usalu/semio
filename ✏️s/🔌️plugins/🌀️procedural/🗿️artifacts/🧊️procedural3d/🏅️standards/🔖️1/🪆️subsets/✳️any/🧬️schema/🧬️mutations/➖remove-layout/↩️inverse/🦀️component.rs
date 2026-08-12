@@ -1,6 +1,14 @@
-use crate::artifacts::procedural3d::Procedural3dSnapshot;
-use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
+//! ↩️ `delete-widget-position` inverse — reconstructs a `move-widget` from BASE state; a position
+//! already absent from `base` has nothing to undo.
 
-pub fn inverse(base: &Procedural3dSnapshot, mutation: &Procedural3dMutation) -> Vec<Procedural3dMutation> {
-    <Procedural3dMutation as protocol::Mutation<Procedural3dSnapshot>>::inverse(mutation, base)
+use crate::artifacts::procedural3d::mutations::remove_layout::mutation::DeleteWidgetPosition;
+use crate::artifacts::procedural3d::mutations::set_layout::mutation::MoveWidget;
+use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
+use crate::artifacts::procedural3d::Procedural3dSnapshot;
+
+/// ↩️ Missing id in `base` ⇒ `Vec::new()`.
+pub fn inverse(payload: &DeleteWidgetPosition, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+    match base.fixture.layout.get(&payload.id) {
+        Some(previous) => vec![Procedural3dMutation::MoveWidget(MoveWidget { id: payload.id.clone(), layout: previous.clone() })],
+        None => Vec::new()}
 }

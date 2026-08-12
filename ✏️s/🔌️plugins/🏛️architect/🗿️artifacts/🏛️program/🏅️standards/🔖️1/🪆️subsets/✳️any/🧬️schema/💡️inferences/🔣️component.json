@@ -1,0 +1,24 @@
+{
+  "$id": "https://semio.tech/schema/s/architect/program/inference.json",
+  "title": "ProgramInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topology"],
+  "properties": {
+    "topology": { "$ref": "#/$defs/ProgramTopology", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "ProgramTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeCount", "rootCount", "maxDepth", "cycleFree", "topoOrder"],
+      "properties": {
+        "nodeCount": { "type": "integer", "minimum": 0 },
+        "rootCount": { "type": "integer", "minimum": 0 },
+        "maxDepth": { "type": "integer", "minimum": 0 },
+        "cycleFree": { "type": "boolean" },
+        "topoOrder": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

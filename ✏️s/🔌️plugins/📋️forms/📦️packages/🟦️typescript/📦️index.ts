@@ -10,5 +10,4 @@ export * as forms_mutations from "../../🗿️artifacts/📋️forms/🧬️sch
 export * as forms_mutations_text from "../../🗿️artifacts/📋️forms/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as forms_mutations_binary from "../../🗿️artifacts/📋️forms/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as forms_io from "../../🗿️artifacts/📋️forms/🚪️io/🟦️component.ts";
-export * as forms_builder from "../../🗿️artifacts/📋️forms/🏗️builder/🟦️component.ts";
 export * as forms_decomposer from "../../🗿️artifacts/📋️forms/🪓️decomposer/🟦️component.ts";

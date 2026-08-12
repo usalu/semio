@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.dag.dag.inference;
+
+// 💡️ Dag inference schema — topology (topological order + depth + cycle-freedom) over nodes/edges.
+
+message DagInference {
+  // @state inferred
+  DagTopology topology = 1;
+}
+
+message DagTopology {
+  repeated string topo_order = 1;
+  map<string, uint32> depth = 2;
+  bool cycle_free = 3;
+  uint32 node_count = 4;
+}

@@ -48,19 +48,16 @@ mod tests {
 
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use crate::artifacts::mathematical::mutations::update_graph_algorithm::mutation::UpdateGraphAlgorithm;
         use crate::artifacts::mathematical::op::MathematicalMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let mut store: ArtifactStore<MathematicalSnapshot, MathematicalMutation> =
             ArtifactStore::new(create_document_envelope("semio.mathematical/v1", "math-demo", MathematicalSnapshot::default(), None));
-        let graph = MathematicalGraph {
-            algorithm: "components".into(),
-            ..MathematicalGraph::default()
-        };
         store
             .dispatch(ArtifactCommand::Apply {
-                mutations: vec![MathematicalMutation::SetGraph { graph }],
+                mutations: vec![MathematicalMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: "components".into(), new_algorithm_seed: None })],
                 description: None,
             })
             .expect("apply");

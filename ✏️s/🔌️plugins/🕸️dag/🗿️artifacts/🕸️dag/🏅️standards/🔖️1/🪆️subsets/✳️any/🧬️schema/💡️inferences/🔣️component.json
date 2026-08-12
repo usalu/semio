@@ -1,0 +1,23 @@
+{
+  "$id": "https://semio.tech/schema/s/dag/dag/inference.json",
+  "title": "DagInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topology"],
+  "properties": {
+    "topology": { "$ref": "#/$defs/DagTopology", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "DagTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topoOrder", "depth", "cycleFree", "nodeCount"],
+      "properties": {
+        "topoOrder": { "type": "array", "items": { "type": "string" } },
+        "depth": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "cycleFree": { "type": "boolean" },
+        "nodeCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

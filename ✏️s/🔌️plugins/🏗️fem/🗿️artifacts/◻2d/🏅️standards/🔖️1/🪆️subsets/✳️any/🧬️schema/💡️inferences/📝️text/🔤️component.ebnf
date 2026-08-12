@@ -1,0 +1,3 @@
+(* ebnf fem.fem2d.inference *)
+document = header, body ;
+header = 'schema', space, 'fem.fem2d.inference', newline ;

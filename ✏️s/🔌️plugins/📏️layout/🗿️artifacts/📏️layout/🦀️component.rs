@@ -360,8 +360,29 @@ impl Identified<String> for ImageLink {
     }
 }
 
-/// 📄️ Sparse scalar patch for a {@link Page} (name, size, margins, columns).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+/// 🌱️ Sparse "one frame was inserted into this page" fragment of a {@link PagePatch} — carries the
+/// `create-frame` semantic mutation's payload verbatim plus the FINAL-state insertion index.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PageFrameAdded {
+    pub frame: Frame,
+    pub index: Option<usize>,
+    pub layer_id: Option<String>,
+}
+
+/// 🩹️ Sparse "one frame inside this page was field-patched" fragment of a {@link PagePatch} — carries
+/// the `move-frame`/`resize-frame`/`change-frame-*` semantic mutations' shared payload shape.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PageFramePatched {
+    pub frame_id: String,
+    pub patch: FramePatch,
+}
+
+/// 📄️ Sparse scalar patch for a {@link Page} (name, size, margins, columns, one nested frame
+/// add/remove/field-patch). Never derives `dsl::DslRecord` — `frame_patched.patch` nests a
+/// {@link FramePatch}, which itself can't bind (its doubly-optional `fill`/`stroke` fields have no
+/// direct DSL-field mapping; see `🧬️mutations/📝️text/🦀️component.rs`'s doc comment), so this type is
+/// JSON-only like `FramePatch` itself.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct PagePatch {
     pub name: Option<String>,
     pub width: Option<f64>,
@@ -372,6 +393,50 @@ pub struct PagePatch {
     pub margin_left: Option<f64>,
     pub columns_count: Option<u32>,
     pub columns_gutter: Option<f64>,
+    pub frame_added: Option<PageFrameAdded>,
+    pub frame_removed: Option<String>,
+    pub frame_patched: Option<PageFramePatched>,
+}
+
+/// 🩹️ Pure field-apply for a {@link FramePatch} onto a {@link Frame} — no inverse capture (every
+/// semantic mutation computes its own inverse from `base` directly; see `↩️inverse` triad leaves).
+fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
+    {
+        let bounds = match frame {
+            Frame::Rect { bounds, .. } | Frame::Text { bounds, .. } | Frame::Image { bounds, .. } => bounds,
+        };
+        if let Some(value) = patch.x {
+            bounds.x = value;
+        }
+        if let Some(value) = patch.y {
+            bounds.y = value;
+        }
+        if let Some(value) = patch.width {
+            bounds.width = value;
+        }
+        if let Some(value) = patch.height {
+            bounds.height = value;
+        }
+    }
+    match frame {
+        Frame::Rect { fill, stroke, .. } => {
+            if let Some(new) = patch.fill {
+                *fill = new;
+            }
+            if let Some(new) = patch.stroke {
+                *stroke = new;
+            }
+        }
+        Frame::Text { wrap_mode, columns, .. } => {
+            if let Some(new) = &patch.wrap_mode {
+                *wrap_mode = new.clone();
+            }
+            if let Some(new) = patch.columns {
+                *columns = new;
+            }
+        }
+        Frame::Image { .. } => {}
+    }
 }
 
 impl Patchable<PagePatch> for Page {
@@ -402,6 +467,26 @@ impl Patchable<PagePatch> for Page {
         }
         if let Some(value) = patch.columns_gutter {
             self.columns.gutter = value;
+        }
+        if let Some(added) = &patch.frame_added {
+            let at = added.index.unwrap_or(self.frames.len()).min(self.frames.len());
+            self.frames.insert(at, added.frame.clone());
+            if let Some(layer_id) = &added.layer_id {
+                if let Some(layer) = self.layers.iter_mut().find(|layer| layer.id == *layer_id) {
+                    layer.object_ids.push(added.frame.id().to_string());
+                }
+            }
+        }
+        if let Some(frame_id) = &patch.frame_removed {
+            self.frames.retain(|frame| frame.id() != frame_id);
+            for layer in &mut self.layers {
+                layer.object_ids.retain(|id| id != frame_id);
+            }
+        }
+        if let Some(entry) = &patch.frame_patched {
+            if let Some(frame) = self.frames.iter_mut().find(|frame| frame.id() == entry.frame_id) {
+                apply_frame_field_patch(frame, &entry.patch);
+            }
         }
     }
 
@@ -551,3 +636,28 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
+    use crate::artifacts::layout::standards::v1::engine::io_registry as v1;
+
+    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [&'static ComposerEntry] {
+        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
+    }
+
+    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let entry = entries()
+            .iter()
+            .find(|e| e.writes == target)
+            .ok_or_else(|| ComposeError { message: format!("LayoutComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        (entry.compose)(sources)
+    }
+
+    pub fn register() {
+        register_composer_entries(v1::entries());
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

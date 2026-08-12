@@ -1,0 +1,3 @@
+; abnf norm.en1996.inference
+document = payload
+payload = *OCTET

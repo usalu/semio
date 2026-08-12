@@ -1,0 +1,4 @@
+module Cad_cad_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

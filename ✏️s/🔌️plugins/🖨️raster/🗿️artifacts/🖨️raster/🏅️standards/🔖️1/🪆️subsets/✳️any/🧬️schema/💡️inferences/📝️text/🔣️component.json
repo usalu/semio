@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/raster/raster/inference/text.json",
+  "title": "RasterInferenceText",
+  "type": "object"
+}

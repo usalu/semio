@@ -1,0 +1,23 @@
+{
+  "$id": "https://semio.tech/schema/s/demonstrator/playground/inference.json",
+  "title": "PlaygroundInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topology"],
+  "properties": {
+    "topology": { "$ref": "#/$defs/PlaygroundTopology", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "PlaygroundTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topoOrder", "depth", "cycleFree", "nodeCount"],
+      "properties": {
+        "topoOrder": { "type": "array", "items": { "type": "string" } },
+        "depth": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "cycleFree": { "type": "boolean" },
+        "nodeCount": { "type": "integer" }
+      }
+    }
+  }
+}

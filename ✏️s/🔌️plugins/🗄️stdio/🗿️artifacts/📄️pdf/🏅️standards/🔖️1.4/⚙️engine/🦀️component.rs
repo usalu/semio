@@ -77,7 +77,7 @@ pub fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
 pub fn empty_pdf_snapshot() -> PdfSnapshot { PdfSnapshot::default() }
 
 pub fn register() {
-    crate::artifacts::pdf::composer::register();
+    crate::artifacts::pdf::io_registry::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor());
     store::register_document_codec(store::ArtifactCodec::of::<PdfSnapshot, PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA));
     register_pilot_languages();
@@ -85,8 +85,8 @@ pub fn register() {
     // 🛡️ D5's generic validate-on-build hook: registers the ✳️a/✳️x subsets' SubsetValidators so
     // `io_dispatch`/`wire_artifact_compose` re-check them for free. Their ComposerEntrys are
     // registered separately via this standard's own `composer::entries()` aggregation.
-    crate::artifacts::pdf::standards::v1_4::subsets::a::composer::register();
-    crate::artifacts::pdf::standards::v1_4::subsets::x::composer::register();
+    crate::artifacts::pdf::standards::v1_4::subsets::a::io::register();
+    crate::artifacts::pdf::standards::v1_4::subsets::x::io::register();
 }
 
 /// 📌️ P2-FG3: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr) for `stdio.pdf`
@@ -319,3 +319,18 @@ mod tests {
     }
     //#endregion 🔖️ConformanceLaws
 }
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::PdfComposer as PdfRawAnyComposer;
+    use crate::artifacts::pdf::standards::v1_4::subsets::a::schema::PdfAComposer;
+    use crate::artifacts::pdf::standards::v1_4::subsets::x::schema::PdfXComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<PdfRawAnyComposer>(), composer_entry_of::<PdfAComposer>(), composer_entry_of::<PdfXComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

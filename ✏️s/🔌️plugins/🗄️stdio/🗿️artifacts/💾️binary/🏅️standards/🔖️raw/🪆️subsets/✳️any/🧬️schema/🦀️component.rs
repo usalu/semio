@@ -86,3 +86,125 @@ pub fn binary_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     }
 }
 //#endregion 🔖️Descriptor
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::binary::{BinaryDiff, BinaryMutation, BinarySnapshot};
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.binary` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct BinaryBuilderConstruction {
+        snapshot: BinarySnapshot,
+        diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for BinaryBuilderConstruction {
+        type Snapshot = BinarySnapshot;
+        type Mutation = BinaryMutation;
+        type Diff = BinaryDiff;
+        fn empty() -> Self {
+            Self { snapshot: BinarySnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<BinarySnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<BinarySnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let diff = crate::artifacts::binary::schema::mutations::apply_binary_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <BinaryDiff as protocol::MutationDiff<BinarySnapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::binary::BinarySnapshot;
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.binary` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct BinaryParts {
+        pub snapshot: Option<BinarySnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.binary` (raw/✳️any) sources.
+    pub struct BinaryAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for BinaryAnalyzerAnalysis {
+        type Parts = BinaryParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            // 👃️ Any byte sequence is a valid stdio.binary payload -- terminal format, always High.
+            IoConfidence::High
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = BinaryParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <BinarySnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error(
+                                "stdio.analyze.text",
+                                dsl::TextSpan::at(1, 1),
+                                err.to_string(),
+                            ));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <BinarySnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error(
+                                "stdio.analyze.binary",
+                                dsl::TextSpan::at(1, 1),
+                                err.to_string(),
+                            ));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec BinaryBuilderFacets {
+        construction: derived_construction::BinaryBuilderConstruction,
+        analysis: derived_analysis::BinaryAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::BinaryComposerComposition,
+    }
+    builder: BinaryBuilder,
+    analyzer: BinaryAnalyzer,
+    composer: BinaryComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

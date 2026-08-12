@@ -1,13 +1,35 @@
 dialect grammar
-grammar mathematical.op
+grammar mathematical.mutation
 extension mathematical
 use family-embed
 start mutation
 
-artifact-mark = "mathematical.mathematical-op"
-mutation = artifact-mark text-op+
-text-op = "insert-text" text-field+ | "replace-range" range-field+ | "set-fence" fence-field+
-text-field = "text" "=" TEXT
-range-field = "start" "=" INT | "end" "=" INT
-fence-field = "lang" "=" IDENT | "body" "=" TEXT
-fence = "```" IDENT TEXT "```"
+mutation = "change-graph-directed" directed-field
+         | "update-graph-algorithm" algorithm-field seed-field
+         | "replace-graph" graph-field
+         | "create-node" id-field label-field x-field y-field
+         | "delete-node" id-field
+         | "delete-nodes" ids-field
+         | "change-node-label" id-field new-label-field
+         | "move-node" id-field x-field y-field
+         | "connect-nodes" id-field source-field target-field
+         | "disconnect-nodes" id-field
+         | "replace-points" points-field
+         | "insert-point" index-field x-field y-field
+         | "remove-point" index-field
+         | "move-point" index-field x-field y-field
+
+directed-field = "new-directed" "=" BOOL
+algorithm-field = "new-algorithm" "=" TEXT
+seed-field = "new-algorithm-seed" "=" TEXT
+graph-field = "graph" "=" TEXT
+id-field = "id" "=" TEXT
+label-field = "label" "=" TEXT
+new-label-field = "new-label" "=" TEXT
+ids-field = "ids" "=" TEXT
+source-field = "source" "=" TEXT
+target-field = "target" "=" TEXT
+points-field = "points" "=" TEXT
+index-field = "index" "=" INT
+x-field = "x" "=" FLOAT
+y-field = "y" "=" FLOAT

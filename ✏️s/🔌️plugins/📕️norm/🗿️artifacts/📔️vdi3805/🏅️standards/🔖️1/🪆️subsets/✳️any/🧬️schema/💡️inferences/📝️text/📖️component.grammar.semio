@@ -1,0 +1,9 @@
+dialect grammar
+grammar norm.vdi3805.inference
+extension vdi3805.inference
+start document
+
+document = header body
+header = "schema" SP "norm.vdi3805.inference" NL
+body = payload NL?
+payload = OCTET+

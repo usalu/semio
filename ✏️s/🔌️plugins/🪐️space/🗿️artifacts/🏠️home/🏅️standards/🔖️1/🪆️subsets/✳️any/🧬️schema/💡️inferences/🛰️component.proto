@@ -1,0 +1,9 @@
+syntax = "proto3";
+package semio.s.space.home.inference;
+
+// 💡️ SHome inference schema — contentDigest fingerprint of the persisted document.
+
+message SHomeInference {
+  // @state inferred
+  string content_digest = 1;
+}

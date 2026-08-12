@@ -1,16 +1,13 @@
-//! 🔺️ Diff fragment yielded by `Steps`.
-use crate::artifacts::process3d::diff::Process3dDiff;
-use serde::{Deserialize, Serialize};
+//! 🔺️ `create-step` sparse diff construction — a single `Process3dStepsDelta.added` entry, never
+//! a snapshot clone.
+
+use crate::artifacts::process3d::diff::{Process3dDiff, Process3dStepsDelta};
+use crate::artifacts::process3d::mutations::steps::mutation::CreateStep;
+use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Diff
-/// 🔺️ Diff produced by one mutation — a sparse [`Process3dDiff`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct StepsDiff {
-    pub diff: Process3dDiff,
-}
-
-impl StepsDiff {
-    pub fn from_diff(diff: Process3dDiff) -> Self { Self { diff } }
-    pub fn into_process3d_diff(self) -> Process3dDiff { self.diff }
+/// 🏗️ Builds the sparse steps delta for one `create-step` payload.
+pub fn diff(payload: &CreateStep, _base: &Process3dSnapshot) -> Process3dDiff {
+    Process3dDiff { steps: Some(Process3dStepsDelta { added: vec![payload.step.clone()], ..Default::default() }), ..Default::default() }
 }
 //#endregion 🔖️Diff

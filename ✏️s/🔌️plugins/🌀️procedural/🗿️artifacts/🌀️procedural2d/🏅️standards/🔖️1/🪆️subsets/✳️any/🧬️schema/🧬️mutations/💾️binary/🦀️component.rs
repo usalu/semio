@@ -12,47 +12,54 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 use crate::artifacts::procedural2d::dsl::{
     camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl};
 use crate::artifacts::procedural2d::schema::mutations::text::Procedural2dMutation;
-use flow::playbook::GenerationMutation;
 use protocol::OpBinary;
 
 //#region 🔖️OpTextMirror
-/// ⚡️ Local twin of `Procedural2dMutation` — flattens the `Generation(GenerationMutation)` newtype
-/// variant into its own four top-level keyword variants since a `#[derive(dsl::DslEnum)]` enum's
-/// variants are each their own tagged record, not a nested enum-in-enum.
+/// ⚡️ Local twin of `Procedural2dMutation` — one flattened, `#[derive(dsl::DslEnum)]`-friendly
+/// keyword variant per semantic mutation (each payload struct embeds a foreign `flow` type —
+/// `Widget`/`SynapseSpec`/`WidgetLayout`/`CameraJson`/`FormGeneration` — that can't itself derive
+/// `dsl::DslRecord`, so this mirror + the existing `*_to_dsl`/`*_from_dsl` bridge functions do the
+/// wire conversion instead of deriving the codec straight off the payload structs).
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum Procedural2dOperationDsl {
-    SetWidget {
+    CreateWidget {
         index: usize,
         #[dsl(statements)]
         widget: Box<WidgetDsl>},
-    RemoveWidget {
+    ReplaceWidget {
+        #[dsl(statements)]
+        widget: Box<WidgetDsl>},
+    DeleteWidget {
         id: String},
-    SetSynapse {
+    ConnectSynapse {
         index: usize,
         #[dsl(block)]
         synapse: SynapseSpecDsl},
-    RemoveSynapse {
+    ReplaceSynapse {
+        #[dsl(block)]
+        synapse: SynapseSpecDsl},
+    DisconnectSynapse {
         id: String},
-    SetLayout {
+    MoveWidget {
         id: String,
         #[dsl(block)]
         layout: WidgetLayoutDsl},
-    RemoveLayout {
+    ClearWidgetLayout {
         id: String},
-    SetCamera {
+    UpdateCamera {
         #[dsl(block)]
         camera: CameraJsonDsl},
-    SetSchema {
+    ChangeSchema {
         schema: String},
-    GenerationAdd {
+    CreateGeneration {
         #[dsl(block)]
         generation: FormGenerationDsl},
-    GenerationRemove {
+    DeleteGeneration {
         id: String},
-    GenerationRename {
+    RenameGeneration {
         id: String,
         name: String},
-    GenerationUpdateValues {
+    ChangeGenerationValue {
         id: String,
         question_id: String,
         value: dsl::DslValue}}
@@ -97,37 +104,44 @@ impl protocol::OpBinary for Procedural2dOperationDsl {
 
 fn procedural2d_operation_to_dsl(operation: &Procedural2dMutation) -> Procedural2dOperationDsl {
     match operation {
-        Procedural2dMutation::SetWidget { index, widget } => Procedural2dOperationDsl::SetWidget { index: *index, widget: Box::new(widget_to_dsl(widget)) },
-        Procedural2dMutation::RemoveWidget { id } => Procedural2dOperationDsl::RemoveWidget { id: id.clone() },
-        Procedural2dMutation::SetSynapse { index, synapse } => Procedural2dOperationDsl::SetSynapse { index: *index, synapse: synapse_to_dsl(synapse) },
-        Procedural2dMutation::RemoveSynapse { id } => Procedural2dOperationDsl::RemoveSynapse { id: id.clone() },
-        Procedural2dMutation::SetLayout { id, layout } => Procedural2dOperationDsl::SetLayout { id: id.clone(), layout: layout_to_dsl(layout) },
-        Procedural2dMutation::RemoveLayout { id } => Procedural2dOperationDsl::RemoveLayout { id: id.clone() },
-        Procedural2dMutation::SetCamera { camera } => Procedural2dOperationDsl::SetCamera { camera: camera_to_dsl(camera) },
-        Procedural2dMutation::SetSchema { schema } => Procedural2dOperationDsl::SetSchema { schema: schema.clone() },
-        Procedural2dMutation::Generation(GenerationMutation::Add { generation }) => Procedural2dOperationDsl::GenerationAdd { generation: form_generation_to_dsl(generation) },
-        Procedural2dMutation::Generation(GenerationMutation::Remove { id }) => Procedural2dOperationDsl::GenerationRemove { id: id.clone() },
-        Procedural2dMutation::Generation(GenerationMutation::Rename { id, name }) => Procedural2dOperationDsl::GenerationRename { id: id.clone(), name: name.clone() },
-        Procedural2dMutation::Generation(GenerationMutation::UpdateValues { id, question_id, value }) => {
-            Procedural2dOperationDsl::GenerationUpdateValues { id: id.clone(), question_id: question_id.clone(), value: dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null) }
+        Procedural2dMutation::CreateWidget(payload) => Procedural2dOperationDsl::CreateWidget { index: payload.index, widget: Box::new(widget_to_dsl(&payload.widget)) },
+        Procedural2dMutation::ReplaceWidget(payload) => Procedural2dOperationDsl::ReplaceWidget { widget: Box::new(widget_to_dsl(&payload.widget)) },
+        Procedural2dMutation::DeleteWidget(payload) => Procedural2dOperationDsl::DeleteWidget { id: payload.id.clone() },
+        Procedural2dMutation::ConnectSynapse(payload) => Procedural2dOperationDsl::ConnectSynapse { index: payload.index, synapse: synapse_to_dsl(&payload.synapse) },
+        Procedural2dMutation::ReplaceSynapse(payload) => Procedural2dOperationDsl::ReplaceSynapse { synapse: synapse_to_dsl(&payload.synapse) },
+        Procedural2dMutation::DisconnectSynapse(payload) => Procedural2dOperationDsl::DisconnectSynapse { id: payload.id.clone() },
+        Procedural2dMutation::MoveWidget(payload) => Procedural2dOperationDsl::MoveWidget { id: payload.id.clone(), layout: layout_to_dsl(&payload.layout) },
+        Procedural2dMutation::ClearWidgetLayout(payload) => Procedural2dOperationDsl::ClearWidgetLayout { id: payload.id.clone() },
+        Procedural2dMutation::UpdateCamera(payload) => Procedural2dOperationDsl::UpdateCamera { camera: camera_to_dsl(&payload.camera) },
+        Procedural2dMutation::ChangeSchema(payload) => Procedural2dOperationDsl::ChangeSchema { schema: payload.schema.clone() },
+        Procedural2dMutation::CreateGeneration(payload) => Procedural2dOperationDsl::CreateGeneration { generation: form_generation_to_dsl(&payload.generation) },
+        Procedural2dMutation::DeleteGeneration(payload) => Procedural2dOperationDsl::DeleteGeneration { id: payload.id.clone() },
+        Procedural2dMutation::RenameGeneration(payload) => Procedural2dOperationDsl::RenameGeneration { id: payload.id.clone(), name: payload.name.clone() },
+        Procedural2dMutation::ChangeGenerationValue(payload) => {
+            Procedural2dOperationDsl::ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), value: dsl::to_dsl_value(&payload.value).unwrap_or(dsl::DslValue::Null) }
         }
     }
 }
 
 fn procedural2d_operation_from_dsl(operation: Procedural2dOperationDsl) -> Result<Procedural2dMutation, store::TextError> {
+    use crate::artifacts::procedural2d::mutations::{
+        change_generation_value, change_schema, clear_widget_layout, connect_synapse, create_generation, create_widget, delete_generation, delete_widget, disconnect_synapse, move_widget,
+        rename_generation, replace_synapse, replace_widget, update_camera};
     Ok(match operation {
-        Procedural2dOperationDsl::SetWidget { index, widget } => Procedural2dMutation::SetWidget { index, widget: widget_from_dsl(*widget)? },
-        Procedural2dOperationDsl::RemoveWidget { id } => Procedural2dMutation::RemoveWidget { id },
-        Procedural2dOperationDsl::SetSynapse { index, synapse } => Procedural2dMutation::SetSynapse { index, synapse: synapse_from_dsl(synapse) },
-        Procedural2dOperationDsl::RemoveSynapse { id } => Procedural2dMutation::RemoveSynapse { id },
-        Procedural2dOperationDsl::SetLayout { id, layout } => Procedural2dMutation::SetLayout { id, layout: layout_from_dsl(&layout) },
-        Procedural2dOperationDsl::RemoveLayout { id } => Procedural2dMutation::RemoveLayout { id },
-        Procedural2dOperationDsl::SetCamera { camera } => Procedural2dMutation::SetCamera { camera: camera_from_dsl(&camera) },
-        Procedural2dOperationDsl::SetSchema { schema } => Procedural2dMutation::SetSchema { schema },
-        Procedural2dOperationDsl::GenerationAdd { generation } => Procedural2dMutation::Generation(GenerationMutation::Add { generation: form_generation_from_dsl(generation) }),
-        Procedural2dOperationDsl::GenerationRemove { id } => Procedural2dMutation::Generation(GenerationMutation::Remove { id }),
-        Procedural2dOperationDsl::GenerationRename { id, name } => Procedural2dMutation::Generation(GenerationMutation::Rename { id, name }),
-        Procedural2dOperationDsl::GenerationUpdateValues { id, question_id, value } => Procedural2dMutation::Generation(GenerationMutation::UpdateValues { id, question_id, value: dsl::from_dsl_value(value).unwrap_or(serde_json::Value::Null) })})
+        Procedural2dOperationDsl::CreateWidget { index, widget } => create_widget(index, widget_from_dsl(*widget)?),
+        Procedural2dOperationDsl::ReplaceWidget { widget } => replace_widget(widget_from_dsl(*widget)?),
+        Procedural2dOperationDsl::DeleteWidget { id } => delete_widget(id),
+        Procedural2dOperationDsl::ConnectSynapse { index, synapse } => connect_synapse(index, synapse_from_dsl(synapse)),
+        Procedural2dOperationDsl::ReplaceSynapse { synapse } => replace_synapse(synapse_from_dsl(synapse)),
+        Procedural2dOperationDsl::DisconnectSynapse { id } => disconnect_synapse(id),
+        Procedural2dOperationDsl::MoveWidget { id, layout } => move_widget(id, layout_from_dsl(&layout)),
+        Procedural2dOperationDsl::ClearWidgetLayout { id } => clear_widget_layout(id),
+        Procedural2dOperationDsl::UpdateCamera { camera } => update_camera(camera_from_dsl(&camera)),
+        Procedural2dOperationDsl::ChangeSchema { schema } => change_schema(schema),
+        Procedural2dOperationDsl::CreateGeneration { generation } => create_generation(form_generation_from_dsl(generation)),
+        Procedural2dOperationDsl::DeleteGeneration { id } => delete_generation(id),
+        Procedural2dOperationDsl::RenameGeneration { id, name } => rename_generation(id, name),
+        Procedural2dOperationDsl::ChangeGenerationValue { id, question_id, value } => change_generation_value(id, question_id, dsl::from_dsl_value(value).unwrap_or(serde_json::Value::Null))})
 }
 
 /// ⚡️ `Procedural2dMutation`'s compact single-line op encoding — derive-engine grammar via
@@ -174,57 +188,38 @@ pub fn decode_op(bytes: &[u8]) -> Result<Procedural2dMutation, protocol::Protoco
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::procedural2d::mutations::{change_schema, connect_synapse, create_generation, create_widget, delete_widget};
     use crate::artifacts::procedural2d::{Procedural2dSnapshot, PROCEDURAL_2D_SCHEMA};
-    use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
+    use flow::{SynapseSpec, Widget};
     use protocol::OpText;
     use semio_framework_os_kernel::os_store::test_support;
     use store::{create_document_envelope, ArtifactCommand};
 
     //#region 🔖️OpTextTests
     #[test]
-    fn op_text_round_trip_set_widget() {
-        test_support::assert_op_line_round_trip(&Procedural2dMutation::SetWidget { index: 2, widget: Widget::InputNote { id: "note-9".into(), text: "hello \"world\"".into() } });
+    fn op_text_round_trip_create_widget() {
+        test_support::assert_op_line_round_trip(&create_widget(2, Widget::InputNote { id: "note-9".into(), text: "hello \"world\"".into() }));
     }
 
     #[test]
-    fn op_text_round_trip_remove_widget() {
-        test_support::assert_op_line_round_trip(&Procedural2dMutation::RemoveWidget { id: "note-9".into() });
+    fn op_text_round_trip_delete_widget() {
+        test_support::assert_op_line_round_trip(&delete_widget("note-9".into()));
     }
 
     #[test]
-    fn op_text_round_trip_set_synapse() {
-        test_support::assert_op_line_round_trip(&Procedural2dMutation::SetSynapse { index: 1, synapse: SynapseSpec { id: "s1".into(), from: "rect".into(), to: "fill".into(), from_port: "draw.drawing".into(), to_port: String::new() } });
+    fn op_text_round_trip_connect_synapse() {
+        test_support::assert_op_line_round_trip(&connect_synapse(1, SynapseSpec { id: "s1".into(), from: "rect".into(), to: "fill".into(), from_port: "draw.drawing".into(), to_port: String::new() }));
     }
 
     #[test]
-    fn op_text_round_trip_remove_synapse() {
-        test_support::assert_op_line_round_trip(&Procedural2dMutation::RemoveSynapse { id: "s1".into() });
+    fn op_text_round_trip_change_schema() {
+        test_support::assert_op_line_round_trip(&change_schema("flow.fixture".into()));
     }
 
     #[test]
-    fn op_text_round_trip_set_layout() {
-        test_support::assert_op_line_round_trip(&Procedural2dMutation::SetLayout { id: "rect".into(), layout: WidgetLayout { x: 12.5, y: -8.25 } });
-    }
-
-    #[test]
-    fn op_text_round_trip_remove_layout() {
-        test_support::assert_op_line_round_trip(&Procedural2dMutation::RemoveLayout { id: "rect".into() });
-    }
-
-    #[test]
-    fn op_text_round_trip_set_camera() {
-        test_support::assert_op_line_round_trip(&Procedural2dMutation::SetCamera { camera: CameraJson { x: 1.5, y: -2.5, zoom: 1.2 } });
-    }
-
-    #[test]
-    fn op_text_round_trip_set_schema() {
-        test_support::assert_op_line_round_trip(&Procedural2dMutation::SetSchema { schema: "flow.fixture".into() });
-    }
-
-    #[test]
-    fn op_text_round_trip_generation() {
+    fn op_text_round_trip_create_generation() {
         let generation = flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
-        test_support::assert_op_line_round_trip(&Procedural2dMutation::Generation(GenerationMutation::Add { generation }));
+        test_support::assert_op_line_round_trip(&create_generation(generation));
     }
     //#endregion 🔖️OpTextTests
 
@@ -237,14 +232,14 @@ mod tests {
 
     #[test]
     fn op_text_parse_rejects_non_integer_index() {
-        let error = Procedural2dMutation::parse_op("set-widget index=abc note text=\"\" id=\"x\"").unwrap_err();
+        let error = Procedural2dMutation::parse_op("create-widget index=abc note text=\"\" id=\"x\"").unwrap_err();
         assert!(error.message.contains("expected Int"), "unexpected error: {}", error.message);
     }
     //#endregion 🔖️OpTextErrorTests
 
     #[test]
     fn op_binary_round_trips_via_wrapper_fns() {
-        let operation = Procedural2dMutation::SetSchema { schema: "flow.fixture".into() };
+        let operation = change_schema("flow.fixture".into());
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
@@ -252,7 +247,7 @@ mod tests {
     #[test]
     fn document_text_round_trip_with_operation_applied() {
         let mut store = store::ArtifactStore::<Procedural2dSnapshot, Procedural2dMutation>::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dSnapshot::default(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Procedural2dMutation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![create_widget(3, Widget::InputNote { id: "note-9".into(), text: String::new() })], description: None }).expect("apply");
         test_support::assert_document_text_round_trip(&store);
         test_support::assert_document_pack_round_trip(&store);
     }

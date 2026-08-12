@@ -1,5 +1,112 @@
-//! 🐛 ProgramSnapshot mutation — `Issues` leaf.
-//#region 🔖️Mutation
-// Apply/inverse for `Issues` is dispatched from the root `ProgramMutation` component.
-//#endregion 🔖️Mutation
+//! 🦠️ ProgramSnapshot mutation — `issues` leaf: create/delete/rename/replace issue rows.
+//! Semantic vocabulary derived from `🗄️registers/🦀️component.rs`'s `Issue` shape per
+//! `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` rule 2
+//! (per id-keyed collection): create/delete the row, rename its identity field, replace its
+//! remaining content as one sparse patch. `diff`/`inverse` delegate to the sibling `🔺️diff`/
+//! `↩️inverse` leaves — never hand-computed here.
+
+use crate::artifacts::program::registers::Issue;
+use crate::artifacts::program::kernel::EntityId;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
+use protocol::{MutationKind, SemanticDescriptor};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️CreateIssue
+/// 🌱️ Brings a new issue row into existence in `program.issues`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateIssue {
+    pub issue: Issue,
+}
+impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateIssue {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "issue", kind: "create-issue", record: "CreatedIssue" };
+    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+        super::diff::diff_create(self, base)
+    }
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+        super::inverse::inverse_create(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Create issue \"{}\"", self.issue.header.name)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.issue.header.id.0.clone()]
+    }
+}
+//#endregion 🔖️CreateIssue
+
+//#region 🔖️DeleteIssue
+/// 🗑️ Removes a issue row by id (captures the removed row for undo via `↩️inverse`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteIssue {
+    pub id: EntityId,
+}
+impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteIssue {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "issue", kind: "delete-issue", record: "DeletedIssue" };
+    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+        super::diff::diff_delete(self, base)
+    }
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+        super::inverse::inverse_delete(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Delete issue \"{}\"", self.id.0)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.0.clone()]
+    }
+}
+//#endregion 🔖️DeleteIssue
+
+//#region 🔖️RenameIssue
+/// ✏️ Sets the identity `name` field of one issue row, addressed by id.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RenameIssue {
+    pub id: EntityId,
+    pub new_name: String,
+}
+impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameIssue {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "issue", kind: "rename-issue", record: "RenamedIssue" };
+    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+        super::diff::diff_rename(self, base)
+    }
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+        super::inverse::inverse_rename(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Rename issue to \"{}\"", self.new_name)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.0.clone()]
+    }
+}
+//#endregion 🔖️RenameIssue
+
+//#region 🔖️ReplaceIssue
+/// 🔁️ Whole-value swap of one issue row's non-identity content, addressed by
+/// `issue.header.id`. Missing target ⇒ an empty diff (nothing to change).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReplaceIssue {
+    pub issue: Issue,
+}
+impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceIssue {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "issue", kind: "replace-issue", record: "ReplacedIssue" };
+    fn diff(&self, base: &ProgramSnapshot) -> ProgramDiff {
+        super::diff::diff_replace(self, base)
+    }
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+        super::inverse::inverse_replace(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Replace issue \"{}\"", self.issue.header.name)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.issue.header.id.0.clone()]
+    }
+}
+//#endregion 🔖️ReplaceIssue

@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.s.stdio.png.inference;
+
+// 💡️ Png inference schema — IHDR-derived raster geometry.
+
+message PngInference {
+  // @state inferred
+  PngDimensions dimensions = 1;
+}
+
+message PngDimensions {
+  uint32 width = 1;
+  uint32 height = 2;
+  uint32 bit_depth = 3;
+  bool has_alpha = 4;
+  uint64 pixel_count = 5;
+}

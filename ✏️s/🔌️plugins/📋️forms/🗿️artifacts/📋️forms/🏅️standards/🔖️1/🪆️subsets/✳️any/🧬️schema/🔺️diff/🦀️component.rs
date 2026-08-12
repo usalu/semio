@@ -1,6 +1,6 @@
 //! 🧬️ Forms diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::forms::{FormStep, schema::FormsArtifact};
+use crate::artifacts::forms::{FormQuestion, FormStep, schema::FormsArtifact};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -61,11 +61,16 @@ pub struct FormsStepPatchEntry {
     pub patch: FormsStepPatch,
 }
 
-/// 🩹 Partial step replacement.
+/// 🩹 Partial step replacement. `blocks`, when set, is the step's FULL new `blocks` list — a
+/// bounded, single-step-scoped whole-value swap (mirrors how a sibling facet's `MathematicalDiff`
+/// replaces a whole bounded sub-collection rather than diffing every element field-by-field), never
+/// a whole-DOCUMENT replacement: every `🧬️mutations/*create-block/*delete-block/*move-block-to-step`
+/// triad leaf builds this by cloning only the touched step(s)' own `blocks` Vec, not `FormsSnapshot`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct FormsStepPatch {
     pub title: Option<String>,
     pub description: Option<Option<String>>,
+    pub blocks: Option<Vec<FormQuestion>>,
 }
 //#endregion 🔖️DeltaHelpers

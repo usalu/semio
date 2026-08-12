@@ -1,0 +1,20 @@
+syntax = "proto3";
+package semio.s.fem.fem3d.inference;
+
+// 💡️ Fem3d inference schema — bounds (3d extent + node/element counts).
+
+message Fem3dInference {
+  // @state inferred
+  Fem3dBounds bounds = 1;
+}
+
+message Fem3dBoundingBox {
+  repeated double min = 1;
+  repeated double max = 2;
+}
+
+message Fem3dBounds {
+  Fem3dBoundingBox bounding_box = 1;
+  uint32 node_count = 2;
+  uint32 element_count = 3;
+}

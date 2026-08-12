@@ -1,0 +1,31 @@
+{
+  "$id": "https://semio.tech/schema/s/gis/gisterrain/inference.json",
+  "title": "GisTerrainInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["positionCount", "bounds"],
+  "properties": {
+    "positionCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "inferred"
+    },
+    "bounds": {
+      "oneOf": [{ "$ref": "#/$defs/GisTerrainBounds" }, { "type": "null" }],
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "GisTerrainBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lonMin", "lonMax", "latMin", "latMax"],
+      "properties": {
+        "lonMin": { "type": "number" },
+        "lonMax": { "type": "number" },
+        "latMin": { "type": "number" },
+        "latMax": { "type": "number" }
+      }
+    }
+  }
+}

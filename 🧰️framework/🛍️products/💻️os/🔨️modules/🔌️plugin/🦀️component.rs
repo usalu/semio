@@ -640,6 +640,157 @@ pub mod app {
         fn analyze(sources: &[AnalyzeSource]) -> Analysis<Self::Parts>;
     }
 
+    //#region 🧬️DerivedArtifactFacets
+    /// 🧐️ Schema-owned analysis hook used by the derived analyzer.
+    pub trait ArtifactAnalysis: 'static {
+        type Parts;
+
+        const DIALECT: Dialect;
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence;
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts>;
+    }
+
+    /// 🎹️ IO-owned composition hook used by the derived composer.
+    pub trait ArtifactComposition: 'static {
+        type Snapshot;
+
+        const WRITES: Dialect;
+
+        fn reads() -> &'static [Dialect];
+
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError>;
+    }
+
+    /// 🧬️ Hook bundle from which all public artifact lifecycle types are derived.
+    pub trait DerivedArtifactSpec: Sized + 'static {
+        type Snapshot;
+        type Mutation: protocol::Mutation<Self::Snapshot, Diff = Self::Diff>;
+        type Diff: protocol::MutationDiff<Self::Snapshot>;
+        type Construction: ArtifactBuilder<Snapshot = Self::Snapshot, Mutation = Self::Mutation, Diff = Self::Diff>;
+        type Analysis: ArtifactAnalysis;
+        type Composition: ArtifactComposition<Snapshot = Self::Snapshot>;
+    }
+
+    /// 📦️ Analyzer output derived from the artifact snapshot codec.
+    #[derive(Clone, Debug, Default)]
+    pub struct DerivedArtifactParts<Snapshot> {
+        pub snapshot: Option<Snapshot>,
+    }
+
+    /// 🏗️ Generic materializer derived from a snapshot, semantic mutation, diff, and optional
+    /// subset validation hook.
+    pub struct DerivedArtifactBuilder<Spec: DerivedArtifactSpec> {
+        construction: Spec::Construction,
+    }
+
+    impl<Spec: DerivedArtifactSpec> Clone for DerivedArtifactBuilder<Spec>
+    where
+        Spec::Construction: Clone,
+    {
+        fn clone(&self) -> Self {
+            Self { construction: self.construction.clone() }
+        }
+    }
+
+    impl<Spec: DerivedArtifactSpec> std::fmt::Debug for DerivedArtifactBuilder<Spec>
+    where
+        Spec::Construction: std::fmt::Debug,
+    {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            formatter.debug_tuple("DerivedArtifactBuilder").field(&self.construction).finish()
+        }
+    }
+
+    impl<Spec: DerivedArtifactSpec> Default for DerivedArtifactBuilder<Spec> {
+        fn default() -> Self {
+            Self::empty()
+        }
+    }
+
+    impl<Spec: DerivedArtifactSpec> ArtifactBuilder for DerivedArtifactBuilder<Spec> {
+        type Snapshot = Spec::Snapshot;
+        type Mutation = Spec::Mutation;
+        type Diff = Spec::Diff;
+
+        fn empty() -> Self {
+            Self { construction: Spec::Construction::empty() }
+        }
+
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { construction: Spec::Construction::from_snapshot(snapshot) }
+        }
+
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self { construction: Spec::Construction::from_text(text)? })
+        }
+
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self { construction: Spec::Construction::from_binary(bytes)? })
+        }
+
+        fn mutate(self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let (construction, diff) = self.construction.mutate(mutation);
+            (Self { construction }, diff)
+        }
+
+        fn absorb(self, diff: Self::Diff) -> Self {
+            Self { construction: self.construction.absorb(diff) }
+        }
+
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            self.construction.build()
+        }
+    }
+
+    impl<Spec: DerivedArtifactSpec> std::ops::Deref for DerivedArtifactBuilder<Spec> {
+        type Target = Spec::Construction;
+
+        fn deref(&self) -> &Self::Target {
+            &self.construction
+        }
+    }
+
+    impl<Spec: DerivedArtifactSpec> std::ops::DerefMut for DerivedArtifactBuilder<Spec> {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.construction
+        }
+    }
+
+    /// 🧐️ Codec-backed analyzer derived from the artifact snapshot and dialect coordinate.
+    pub struct DerivedArtifactAnalyzer<Spec: DerivedArtifactSpec>(std::marker::PhantomData<Spec>);
+
+    impl<Spec: DerivedArtifactSpec> ArtifactAnalyzer for DerivedArtifactAnalyzer<Spec> {
+        type Parts = <Spec::Analysis as ArtifactAnalysis>::Parts;
+        const DIALECT: Dialect = <Spec::Analysis as ArtifactAnalysis>::DIALECT;
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            <Spec::Analysis as ArtifactAnalysis>::sniff(source)
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            <Spec::Analysis as ArtifactAnalysis>::analyze(sources)
+        }
+    }
+
+    /// 🎹️ Composer derived from native snapshot codecs plus directed foreign IO hooks.
+    pub struct DerivedArtifactComposer<Spec: DerivedArtifactSpec>(std::marker::PhantomData<Spec>);
+
+    impl<Spec: DerivedArtifactSpec> ArtifactComposer for DerivedArtifactComposer<Spec> {
+        type Snapshot = Spec::Snapshot;
+        const WRITES: Dialect = <Spec::Composition as ArtifactComposition>::WRITES;
+
+        fn reads() -> &'static [Dialect] {
+            <Spec::Composition as ArtifactComposition>::reads()
+        }
+
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            <Spec::Composition as ArtifactComposition>::compose(sources)
+        }
+    }
+    //#endregion 🧬️DerivedArtifactFacets
+
     /// 💡️ Read-side inference surface — one per artifact standard, sibling of `ArtifactAnalyzer`
     /// (not a widening of `ArtifactBuilder`: inference is read-only and cache-aware, unlike the
     /// authoring lifecycle `ArtifactBuilder` models). `infer`/`infer_cached` must stay
@@ -9479,7 +9630,7 @@ pub mod engagement {
 pub use app::testkit;
 pub use app::ActionFactory;
 pub use app::{
-    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactBuilder, ArtifactDecomposer, ArtifactAnalyzer, ArtifactComposer, ArtifactInferrer, ArtifactSerializer, ArtifactDeserializer, composer_entry_of, deserializer_entry_of, serializer_entry_of, ArtifactKindSpec, Confidence, Decomposition, DecomposeSource, ConfigView, ArtifactApp, ArtifactView, DraftView, Emit, ExampleSource, HistoryView,
+    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactBuilder, ArtifactDecomposer, ArtifactAnalyzer, ArtifactComposer, ArtifactAnalysis, ArtifactComposition, ArtifactInferrer, ArtifactSerializer, ArtifactDeserializer, DerivedArtifactSpec, DerivedArtifactParts, DerivedArtifactBuilder, DerivedArtifactAnalyzer, DerivedArtifactComposer, composer_entry_of, deserializer_entry_of, serializer_entry_of, ArtifactKindSpec, Confidence, Decomposition, DecomposeSource, ConfigView, ArtifactApp, ArtifactView, DraftView, Emit, ExampleSource, HistoryView,
     KeybindingSpec, MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsArtifactApp,
     WindowKindSpec,
 };
@@ -9506,5 +9657,75 @@ pub use ui_wgpu::wgpu::*;
 macro_rules! register_plugin {
     ($bundle:expr) => {
         $crate::plugin_runtime::install_plugin_bundle($bundle);
+    };
+}
+
+/// 🧬️ Declares uniform artifact lifecycle types from schema and IO hooks.
+#[macro_export]
+macro_rules! derive_artifact_facets {
+    (
+        $visibility:vis spec $spec:ident {
+            construction: $construction:ty,
+            analysis: $analysis:ty,
+            composition: $composition:ty $(,)?
+        }
+        builder: $builder:ident,
+        analyzer: $analyzer:ident,
+        composer: $composer:ident $(,)?
+    ) => {
+        $visibility struct $spec;
+
+        impl $crate::DerivedArtifactSpec for $spec {
+            type Snapshot = <$construction as $crate::ArtifactBuilder>::Snapshot;
+            type Mutation = <$construction as $crate::ArtifactBuilder>::Mutation;
+            type Diff = <$construction as $crate::ArtifactBuilder>::Diff;
+            type Construction = $construction;
+            type Analysis = $analysis;
+            type Composition = $composition;
+        }
+
+        #[derive(Clone, Debug, Default)]
+        $visibility struct $builder($crate::DerivedArtifactBuilder<$spec>);
+
+        impl $crate::ArtifactBuilder for $builder {
+            type Snapshot = <$spec as $crate::DerivedArtifactSpec>::Snapshot;
+            type Mutation = <$spec as $crate::DerivedArtifactSpec>::Mutation;
+            type Diff = <$spec as $crate::DerivedArtifactSpec>::Diff;
+
+            fn empty() -> Self { Self(<$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::empty()) }
+            fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self(<$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::from_snapshot(snapshot)) }
+            fn from_text(text: &str) -> Result<Self, store::TextError> { Ok(Self(<$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::from_text(text)?)) }
+            fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(<$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::from_binary(bytes)?)) }
+            fn mutate(self, mutation: Self::Mutation) -> (Self, Self::Diff) { let (builder, diff) = <$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::mutate(self.0, mutation); (Self(builder), diff) }
+            fn absorb(self, diff: Self::Diff) -> Self { Self(<$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::absorb(self.0, diff)) }
+            fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { <$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::build(self.0) }
+        }
+
+        $visibility struct $analyzer;
+
+        impl $crate::ArtifactAnalyzer for $analyzer {
+            type Parts = <$analysis as $crate::ArtifactAnalysis>::Parts;
+            const DIALECT: $crate::Dialect = <$analysis as $crate::ArtifactAnalysis>::DIALECT;
+            fn sniff(source: &$crate::AnalyzeSource<'_>) -> $crate::IoConfidence { <$analysis as $crate::ArtifactAnalysis>::sniff(source) }
+            fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<Self::Parts> { <$analysis as $crate::ArtifactAnalysis>::analyze(sources) }
+        }
+
+        impl $analyzer {
+            pub fn sniff(source: &$crate::AnalyzeSource<'_>) -> $crate::IoConfidence { <Self as $crate::ArtifactAnalyzer>::sniff(source) }
+            pub fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<<Self as $crate::ArtifactAnalyzer>::Parts> { <Self as $crate::ArtifactAnalyzer>::analyze(sources) }
+        }
+
+        $visibility struct $composer;
+
+        impl $crate::ArtifactComposer for $composer {
+            type Snapshot = <$spec as $crate::DerivedArtifactSpec>::Snapshot;
+            const WRITES: $crate::Dialect = <$composition as $crate::ArtifactComposition>::WRITES;
+            fn reads() -> &'static [$crate::Dialect] { <$composition as $crate::ArtifactComposition>::reads() }
+            fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<Self::Snapshot>, $crate::ComposeError> { <$composition as $crate::ArtifactComposition>::compose(sources) }
+        }
+
+        impl $composer {
+            pub fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<<Self as $crate::ArtifactComposer>::Snapshot>, $crate::ComposeError> { <Self as $crate::ArtifactComposer>::compose(sources) }
+        }
     };
 }

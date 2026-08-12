@@ -562,7 +562,7 @@ pub fn encode_mp4(snapshot: &Mp4Snapshot) -> Vec<u8> {
 //#region 🔖️Register
 /// 📌️ Registers this standard's single (✳️any) subset.
 pub fn register() {
-    crate::artifacts::mp4::standards::isobmff::subsets::any::composer::register();
+    crate::artifacts::mp4::standards::isobmff::subsets::any::io::register();
 }
 //#endregion 🔖️Register
 
@@ -680,3 +680,16 @@ mod tests {
     }
     //#endregion codec_retention_law
 }
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::Mp4Composer as Mp4RawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<Mp4RawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

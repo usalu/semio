@@ -1,0 +1,3 @@
+(* ebnf demonstrator.playground.inference *)
+document = header, body ;
+header = 'schema', space, 'demonstrator.playground.inference', newline ;

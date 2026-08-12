@@ -95,9 +95,9 @@ pub fn register() {
     // 🛡️ D5's generic validate-on-build hook: registers each real subset's `SubsetValidator` so
     // `io_dispatch`/`wire_artifact_compose` re-check them for free. Each subset's `ComposerEntry`
     // is registered separately via this standard's own `composer::entries()` aggregation.
-    crate::artifacts::ifc::standards::v2x3::subsets::cv20::composer::register();
-    crate::artifacts::ifc::standards::v2x3::subsets::sav::composer::register();
-    crate::artifacts::ifc::standards::v2x3::subsets::cobie::composer::register();
+    crate::artifacts::ifc::standards::v2x3::subsets::cv20::io::register();
+    crate::artifacts::ifc::standards::v2x3::subsets::sav::io::register();
+    crate::artifacts::ifc::standards::v2x3::subsets::cobie::io::register();
 }
 
 /// 📌️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: 5-role
@@ -352,3 +352,28 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::Ifc2x3Composer as Ifc2x3RawAnyComposer;
+    use crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::Ifc2x3Cv20Composer;
+    use crate::artifacts::ifc::standards::v2x3::subsets::sav::schema::Ifc2x3SavComposer;
+    use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::Ifc2x3CobieComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<Ifc2x3RawAnyComposer>(),
+                    composer_entry_of::<Ifc2x3Cv20Composer>(),
+                    composer_entry_of::<Ifc2x3SavComposer>(),
+                    composer_entry_of::<Ifc2x3CobieComposer>(),
+                ]
+            })
+            .as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

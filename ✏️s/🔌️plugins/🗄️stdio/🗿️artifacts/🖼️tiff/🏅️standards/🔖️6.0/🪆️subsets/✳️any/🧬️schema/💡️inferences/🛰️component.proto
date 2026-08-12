@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.s.stdio.tiff.inference;
+
+// 💡️ Tiff inference schema — IFD 0 baseline-tag-derived raster geometry.
+
+message TiffInference {
+  // @state inferred
+  TiffDimensions dimensions = 1;
+}
+
+message TiffDimensions {
+  uint32 width = 1;
+  uint32 height = 2;
+  uint32 bit_depth = 3;
+  bool has_alpha = 4;
+  uint64 pixel_count = 5;
+}

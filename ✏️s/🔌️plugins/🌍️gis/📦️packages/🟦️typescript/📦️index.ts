@@ -10,7 +10,6 @@ export * as gisterrain_mutations from "../../🗿️artifacts/🏔️gisterrain/
 export * as gisterrain_mutations_text from "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as gisterrain_mutations_binary from "../../🗿️artifacts/🏔️gisterrain/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as gisterrain_io from "../../🗿️artifacts/🏔️gisterrain/🚪️io/🟦️component.ts";
-export * as gisterrain_builder from "../../🗿️artifacts/🏔️gisterrain/🏗️builder/🟦️component.ts";
 export * as gisterrain_decomposer from "../../🗿️artifacts/🏔️gisterrain/🪓️decomposer/🟦️component.ts";
 export * as gismap_schema from "../../🗿️artifacts/🗺️gismap/🧬️schema/🟦️component.ts";
 export * as gismap_snapshot from "../../🗿️artifacts/🗺️gismap/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -23,5 +22,4 @@ export * as gismap_mutations from "../../🗿️artifacts/🗺️gismap/🧬️s
 export * as gismap_mutations_text from "../../🗿️artifacts/🗺️gismap/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as gismap_mutations_binary from "../../🗿️artifacts/🗺️gismap/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as gismap_io from "../../🗿️artifacts/🗺️gismap/🚪️io/🟦️component.ts";
-export * as gismap_builder from "../../🗿️artifacts/🗺️gismap/🏗️builder/🟦️component.ts";
 export * as gismap_decomposer from "../../🗿️artifacts/🗺️gismap/🪓️decomposer/🟦️component.ts";

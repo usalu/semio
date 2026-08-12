@@ -1,27 +1,32 @@
-//! ➖️ Lowpoly mutation — `RemovePaintLayer` payload + builder + apply.
-use crate::artifacts::lowpoly::LowpolySnapshot;
-use crate::artifacts::lowpoly::mutations::LowpolyMutation;
+//! ➖️ `remove-paint-layer` — takes a paint layer out of an object's ordered (compositing-order)
+//! layer list at a BASE-state index. Reuses this directory's pre-existing path (glue.rs still
+//! `#[path]`-wires it) — same kebab slug survives the semantic-mutations rewrite unchanged.
+
+use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
 use serde::{Deserialize, Serialize};
 
-
-//#region 🔖️Mutation
-/// @emoji ➖️ `RemovePaintLayer` mutation payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+//#region 🔖️Payload
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RemovePaintLayer {
     pub object_id: String,
     pub index: usize,
 }
 
-pub fn remove_paint_layer(object_id: impl Into<String>, index: usize) -> LowpolyMutation {
-    LowpolyMutation::RemovePaintLayer { object_id: object_id.into(), index }
-}
+impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for RemovePaintLayer {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "paint-layer", kind: "remove-paint-layer", record: "RemovedPaintLayer" };
 
-pub fn apply(projection: &mut LowpolySnapshot, object_id: &str, index: usize) {
-    if let Some(object) = crate::artifacts::lowpoly::engine::object_mut(projection, object_id) {
-        if index < object.paint_layers.len() {
-            object.paint_layers.remove(index);
-        }
+    fn diff(&self, base: &LowpolySnapshot) -> <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Remove paint layer {} from object \"{}\"", self.index, self.object_id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.object_id.clone()]
     }
 }
-//#endregion 🔖️Mutation
+//#endregion 🔖️Payload

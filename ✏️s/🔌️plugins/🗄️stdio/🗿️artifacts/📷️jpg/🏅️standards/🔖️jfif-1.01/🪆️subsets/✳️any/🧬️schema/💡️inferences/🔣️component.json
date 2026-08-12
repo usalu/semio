@@ -1,0 +1,24 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/jpg/inference.json",
+  "title": "JpgInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dimensions"],
+  "properties": {
+    "dimensions": { "$ref": "#/$defs/JpgDimensions", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "JpgDimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "bitDepth", "hasAlpha", "pixelCount"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 0 },
+        "height": { "type": "integer", "minimum": 0 },
+        "bitDepth": { "type": "integer", "minimum": 0 },
+        "hasAlpha": { "type": "boolean" },
+        "pixelCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

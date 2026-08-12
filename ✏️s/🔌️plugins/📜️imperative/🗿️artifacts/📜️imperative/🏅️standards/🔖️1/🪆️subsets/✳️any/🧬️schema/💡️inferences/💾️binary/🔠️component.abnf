@@ -1,0 +1,3 @@
+; abnf imperative.imperative.inference
+document = payload
+payload = *OCTET

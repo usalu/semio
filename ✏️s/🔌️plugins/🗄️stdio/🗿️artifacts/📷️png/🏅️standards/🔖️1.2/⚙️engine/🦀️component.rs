@@ -875,10 +875,18 @@ pub fn demo_png_snapshot() -> PngSnapshot {
 
 //#region Registration
 pub fn register() {
-    crate::artifacts::png::composer::register();
+    crate::artifacts::png::io_registry::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::png::schema::png_artifact_schema_descriptor());
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA));
+}
+
+/// 💡️ Registers `s.stdio.png.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema_descriptor` above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor());
 }
 
 /// 📌️ P2-P2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per note's
@@ -1422,3 +1430,16 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion EngineTests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::png::standards::v1_2::subsets::any::schema::PngComposer as PngRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<PngRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

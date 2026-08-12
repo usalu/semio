@@ -1,0 +1,17 @@
+//! ↩️ Inverse reconstruction for `delete-tile` — reads the BASE tile, never the diff.
+use super::mutation::DeleteTile;
+use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
+use crate::artifacts::present::mutations::PresentMutation;
+use crate::artifacts::present::PresentSnapshot;
+
+//#region 🔹Inverse
+/// ↩️ Undo re-creates the tile at its pre-deletion index, captured from `base` — missing target
+/// (already absent) returns `Vec::new()`, the taxonomy's replacement for the banned `NoMutation`
+/// sentinel.
+pub fn inverse(payload: &DeleteTile, base: &PresentSnapshot) -> Vec<PresentMutation> {
+    let Some(index) = base.tiles.iter().position(|tile| tile.id == payload.id) else {
+        return Vec::new();
+    };
+    vec![PresentMutation::CreateTile(CreateTile { index, tile: base.tiles[index].clone() })]
+}
+//#endregion 🔹Inverse

@@ -34,7 +34,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = WriterMutation::SetText { text: "hello".into() };
+        let operation = WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: "hello".into() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -45,10 +45,25 @@ mod tests {
         WriterSnapshot { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
     }
 
+    /// 🧬️ Reaches `jack_snapshot()` from `empty_writer_snapshot()` via the semantic vocabulary —
+    /// `SetSnapshot` (whole-document replace) is banned, so what used to be one mutation is now the
+    /// sequence of scalar mutations that actually differ between the two documents (`schema` is
+    /// identical in both, so it gets no mutation).
+    fn jack_mutations() -> Vec<WriterMutation> {
+        let jack = jack_snapshot();
+        vec![
+            WriterMutation::RenameWriter(crate::artifacts::writer::schema::mutations::RenameWriter { new_id: jack.id }),
+            WriterMutation::ChangeLanguage(crate::artifacts::writer::schema::mutations::ChangeLanguage { new_language_id: jack.language_id }),
+            WriterMutation::ChangeUri(crate::artifacts::writer::schema::mutations::ChangeUri { new_uri: jack.uri }),
+            WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: jack.text }),
+        ]
+    }
+
     #[test]
     fn writer_document_text_round_trips_through_the_store() {
         let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", engine::empty_writer_snapshot(), None));
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::SetSnapshot { snapshot: jack_snapshot() }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).expect("apply");
+        assert_eq!(store.snapshot().expect("snapshot"), jack_snapshot());
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
@@ -62,7 +77,7 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
 
         let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", engine::empty_writer_snapshot(), None));
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::SetSnapshot { snapshot: jack_snapshot() }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).expect("apply");
         let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
@@ -84,7 +99,7 @@ mod semio_protocol_conformance {
 
     #[test]
     fn verify_protocol_bytes_against_encoded_spr() {
-        let operation = WriterMutation::SetText { text: "hello".into() };
+        let operation = WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: "hello".into() });
         let bytes = encode_op(&operation).expect("encode op");
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");

@@ -1,0 +1,3 @@
+(* ebnf raster.raster.inference *)
+document = header, body ;
+header = 'schema', space, 'raster.raster.inference', newline ;

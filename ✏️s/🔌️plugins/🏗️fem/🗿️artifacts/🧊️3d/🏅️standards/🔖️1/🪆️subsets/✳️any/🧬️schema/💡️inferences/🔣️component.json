@@ -1,0 +1,34 @@
+{
+  "$id": "https://semio.tech/schema/s/fem/fem3d/inference.json",
+  "title": "Fem3dInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bounds"],
+  "properties": {
+    "bounds": {
+      "$ref": "#/$defs/Fem3dBounds",
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "Fem3dBoundingBox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+      }
+    },
+    "Fem3dBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["boundingBox", "nodeCount", "elementCount"],
+      "properties": {
+        "boundingBox": { "$ref": "#/$defs/Fem3dBoundingBox" },
+        "nodeCount": { "type": "integer", "minimum": 0 },
+        "elementCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

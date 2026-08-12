@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/shooting/shooting/inference/text.json",
+  "title": "ShootingInferenceText",
+  "type": "object"
+}

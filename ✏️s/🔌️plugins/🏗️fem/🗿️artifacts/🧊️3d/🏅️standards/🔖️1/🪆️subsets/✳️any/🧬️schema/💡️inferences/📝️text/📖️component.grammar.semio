@@ -1,0 +1,9 @@
+dialect grammar
+grammar fem.fem3d.inference
+extension fem3d.inference
+start document
+
+document = header body
+header = "schema" SP "fem.fem3d.inference" NL
+body = payload NL?
+payload = OCTET+

@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.flow.flow.inference;
+
+// 💡️ Flow inference schema — topology (topological order + depth + cycle-freedom) over widgets/synapses.
+
+message FlowInference {
+  // @state inferred
+  FlowTopology topology = 1;
+}
+
+message FlowTopology {
+  repeated string topo_order = 1;
+  map<string, uint32> depth = 2;
+  bool cycle_free = 3;
+  uint32 node_count = 4;
+}

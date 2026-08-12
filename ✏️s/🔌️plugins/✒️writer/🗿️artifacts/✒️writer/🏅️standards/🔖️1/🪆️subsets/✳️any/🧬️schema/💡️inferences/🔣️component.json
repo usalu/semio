@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/writer/writer/inference.json",
+  "title": "WriterInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/WriterOutline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "WriterOutline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sectionOutline", "wordCount", "lineCount"],
+      "properties": {
+        "sectionOutline": { "type": "array", "items": { "type": "string" } },
+        "wordCount": { "type": "integer" },
+        "lineCount": { "type": "integer" }
+      }
+    }
+  }
+}

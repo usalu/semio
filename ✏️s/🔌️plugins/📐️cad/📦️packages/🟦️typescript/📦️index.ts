@@ -10,6 +10,5 @@ export * as cad_pack from "../../🗿️artifacts/📐️cad/🧬️schema/📸�
 export * as cad_op from "../../🗿️artifacts/📐️cad/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as cad_mutations from "../../🗿️artifacts/📐️cad/🧬️schema/🧬️mutations/🟦️component.ts";
 export * as cad_spr from "../../🗿️artifacts/📐️cad/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
-export * as cad_builder from "../../🗿️artifacts/📐️cad/🏗️builder/🟦️component.ts";
 export * as cad_decomposer from "../../🗿️artifacts/📐️cad/🪓️decomposer/🟦️component.ts";
 export * as cad_io from "../../🗿️artifacts/📐️cad/🚪️io/🟦️component.ts";

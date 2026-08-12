@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/iso16757/inference.json",
+  "title": "Iso16757Inference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/Iso16757Outline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "Iso16757Outline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sectionOutline", "fieldCount", "entryCount"],
+      "properties": {
+        "sectionOutline": { "type": "array", "items": { "type": "string" } },
+        "fieldCount": { "type": "integer" },
+        "entryCount": { "type": "integer" }
+      }
+    }
+  }
+}

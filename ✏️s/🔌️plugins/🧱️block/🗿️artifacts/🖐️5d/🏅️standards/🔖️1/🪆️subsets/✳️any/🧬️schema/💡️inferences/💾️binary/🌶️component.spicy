@@ -1,0 +1,4 @@
+module Block_block5d_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

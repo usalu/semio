@@ -182,9 +182,10 @@ pub struct FemCombination {
 /// (meter-scale) displacements only; modal/buckling mode shapes are dimensionless (mass/Kg-
 /// orthonormalized) and the viewer normalizes them to a fixed fraction of the model's own extent
 /// instead of using this factor.
-// No `#[dsl(keyword = ...)]` here: the only field embedding this type (`Fem3dSnapshot::analysis`,
-// `Fem3dMutation::SetAnalysisSettings::settings`) is itself `#[dsl(block)]`, which already supplies
-// the bare leading keyword from the FIELD's own name — an inner keyword too would double it.
+// No `#[dsl(keyword = ...)]` here: the only fields embedding this type (`Fem3dSnapshot::analysis`,
+// `mutations::update_analysis_settings::mutation::UpdateAnalysisSettings::settings`) are themselves
+// `#[dsl(block)]`, which already supplies the bare leading keyword from the FIELD's own name — an
+// inner keyword too would double it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct FemAnalysisSettings {
@@ -296,3 +297,28 @@ mod tests {
     }
 }
 // #endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
+    use crate::artifacts::fem3d::standards::v1::engine::io_registry as v1;
+
+    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [&'static ComposerEntry] {
+        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
+    }
+
+    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let entry = entries()
+            .iter()
+            .find(|e| e.writes == target)
+            .ok_or_else(|| ComposeError { message: format!("Fem3dComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
+        (entry.compose)(sources)
+    }
+
+    pub fn register() {
+        register_composer_entries(v1::entries());
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

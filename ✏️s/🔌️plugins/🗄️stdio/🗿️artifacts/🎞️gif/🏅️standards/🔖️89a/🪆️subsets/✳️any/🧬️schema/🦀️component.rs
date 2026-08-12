@@ -117,3 +117,169 @@ pub fn gif_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
         },
     }
 }
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::gif::standards::v89a::subsets::any::schema::diff::GifDiff;
+    use crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::GifMutation;
+    use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifFrame, GifSnapshot};
+
+    //#region 🔖️Builder
+    #[derive(Clone, Debug, Default)]
+    pub struct GifBuilderConstruction {
+        snapshot: GifSnapshot,
+        diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    //#region 🔖️TypedConstructors
+    impl GifBuilderConstruction {
+        /// 🏗️ Starts a fresh 89a document at the given logical screen size.
+        pub fn new(width: u32, height: u32) -> Self {
+            Self { snapshot: GifSnapshot { width, height, ..GifSnapshot::default() }, diagnostics: Vec::new() }
+        }
+        /// 🏗️ Appends one animation frame, in order.
+        pub fn add_frame(mut self, frame: GifFrame) -> Self {
+            self.snapshot.frames.push(frame);
+            self
+        }
+        /// 🏗️ Sets the NETSCAPE2.0 loop count (`None` = no loop extension, plays once).
+        pub fn set_loop_count(mut self, loop_count: Option<u16>) -> Self {
+            self.snapshot.loop_count = loop_count;
+            self
+        }
+        /// 🏗️ Sets the Global Color Table.
+        pub fn set_global_color_table(mut self, gct: Option<GifColorTable>) -> Self {
+            self.snapshot.gct = gct;
+            self
+        }
+        /// 🏗️ Sets the logical screen's background color index.
+        pub fn set_background_color_index(mut self, index: u8) -> Self {
+            self.snapshot.background_color_index = index;
+            self
+        }
+        /// 🏗️ Sets the logical screen's pixel aspect ratio byte.
+        pub fn set_pixel_aspect_ratio(mut self, ratio: u8) -> Self {
+            self.snapshot.pixel_aspect_ratio = ratio;
+            self
+        }
+        /// 🏗️ Appends one comment extension.
+        pub fn add_comment(mut self, text: String) -> Self {
+            self.snapshot.comments.push(text);
+            self
+        }
+        /// 🏗️ Appends one non-NETSCAPE application extension verbatim.
+        pub fn add_app_extension(mut self, extension: GifAppExtension) -> Self {
+            self.snapshot.app_extensions.push(extension);
+            self
+        }
+    }
+    //#endregion 🔖️TypedConstructors
+
+    impl ArtifactBuilder for GifBuilderConstruction {
+        type Snapshot = GifSnapshot;
+        type Mutation = GifMutation;
+        type Diff = GifDiff;
+        fn empty() -> Self {
+            Self { snapshot: GifSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<GifSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<GifSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let diff = crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::apply_gif_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <GifDiff as protocol::MutationDiff<GifSnapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.gif` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct GifParts {
+        pub snapshot: Option<GifSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.gif` (89a/✳️any) sources.
+    pub struct GifAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for GifAnalyzerAnalysis {
+        type Parts = GifParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            crate::artifacts::gif::standards::v87a::engine::sniff_magic(source, b"GIF89a")
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = GifParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <GifSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error(
+                                "stdio.analyze.text",
+                                dsl::TextSpan::at(1, 1),
+                                err.to_string(),
+                            ));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <GifSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error(
+                                "stdio.analyze.binary",
+                                dsl::TextSpan::at(1, 1),
+                                err.to_string(),
+                            ));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec GifBuilderFacets {
+        construction: derived_construction::GifBuilderConstruction,
+        analysis: derived_analysis::GifAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::GifComposerComposition,
+    }
+    builder: GifBuilder,
+    analyzer: GifAnalyzer,
+    composer: GifComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

@@ -1,0 +1,3 @@
+; abnf gis.gismap.inference
+document = payload
+payload = *OCTET

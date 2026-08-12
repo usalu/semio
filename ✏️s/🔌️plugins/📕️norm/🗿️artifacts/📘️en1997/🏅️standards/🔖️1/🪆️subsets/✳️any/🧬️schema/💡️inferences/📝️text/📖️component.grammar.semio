@@ -1,0 +1,9 @@
+dialect grammar
+grammar norm.en1997.inference
+extension en1997.inference
+start document
+
+document = header body
+header = "schema" SP "norm.en1997.inference" NL
+body = payload NL?
+payload = OCTET+

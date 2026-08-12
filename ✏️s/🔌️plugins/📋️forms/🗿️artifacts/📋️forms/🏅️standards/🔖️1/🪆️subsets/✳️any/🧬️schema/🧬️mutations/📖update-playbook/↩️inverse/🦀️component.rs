@@ -1,7 +1,11 @@
-use crate::artifacts::forms::FormsSnapshot;
-use crate::artifacts::forms::mutations::FormMutation;
-use protocol::Mutation;
+//! ↩️ `change-form-title` — undo restores the BASE-state title. Always has an inverse (the document
+//! always has a `title` field, even when `None`).
 
-pub fn inverse(base: &FormsSnapshot, mutation: &FormMutation) -> Vec<FormMutation> {
-    <FormMutation as Mutation<FormsSnapshot>>::inverse(mutation, base)
+use super::mutation::ChangeFormTitle;
+use crate::artifacts::forms::{FormMutation, FormsSnapshot};
+
+//#region 🔖️Inverse
+pub fn inverse_change_form_title(_payload: &ChangeFormTitle, base: &FormsSnapshot) -> Vec<FormMutation> {
+    vec![FormMutation::ChangeFormTitle(ChangeFormTitle { new_title: base.title.clone() })]
 }
+//#endregion 🔖️Inverse

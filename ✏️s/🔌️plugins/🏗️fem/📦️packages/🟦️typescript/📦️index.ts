@@ -10,7 +10,6 @@ export * as fem2d_mutations from "../../🗿️artifacts/◻2d/🧬️schema/�
 export * as fem2d_mutations_text from "../../🗿️artifacts/◻2d/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as fem2d_mutations_binary from "../../🗿️artifacts/◻2d/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as fem2d_io from "../../🗿️artifacts/◻2d/🚪️io/🟦️component.ts";
-export * as fem2d_builder from "../../🗿️artifacts/◻2d/🏗️builder/🟦️component.ts";
 export * as fem2d_decomposer from "../../🗿️artifacts/◻2d/🪓️decomposer/🟦️component.ts";
 export * as fem3d_schema from "../../🗿️artifacts/🧊️3d/🧬️schema/🟦️component.ts";
 export * as fem3d_snapshot from "../../🗿️artifacts/🧊️3d/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -23,5 +22,4 @@ export * as fem3d_mutations from "../../🗿️artifacts/🧊️3d/🧬️schema
 export * as fem3d_mutations_text from "../../🗿️artifacts/🧊️3d/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as fem3d_mutations_binary from "../../🗿️artifacts/🧊️3d/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as fem3d_io from "../../🗿️artifacts/🧊️3d/🚪️io/🟦️component.ts";
-export * as fem3d_builder from "../../🗿️artifacts/🧊️3d/🏗️builder/🟦️component.ts";
 export * as fem3d_decomposer from "../../🗿️artifacts/🧊️3d/🪓️decomposer/🟦️component.ts";

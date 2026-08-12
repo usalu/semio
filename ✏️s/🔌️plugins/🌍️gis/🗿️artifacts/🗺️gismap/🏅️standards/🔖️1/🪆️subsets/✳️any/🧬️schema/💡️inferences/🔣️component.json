@@ -1,0 +1,41 @@
+{
+  "$id": "https://semio.tech/schema/s/gis/gismap/inference.json",
+  "title": "GisMapInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["positionCount", "routeCount", "regionCount", "bounds"],
+  "properties": {
+    "positionCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "inferred"
+    },
+    "routeCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "inferred"
+    },
+    "regionCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "inferred"
+    },
+    "bounds": {
+      "oneOf": [{ "$ref": "#/$defs/GisMapBounds" }, { "type": "null" }],
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "GisMapBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lonMin", "lonMax", "latMin", "latMax"],
+      "properties": {
+        "lonMin": { "type": "number" },
+        "lonMax": { "type": "number" },
+        "latMin": { "type": "number" },
+        "latMax": { "type": "number" }
+      }
+    }
+  }
+}

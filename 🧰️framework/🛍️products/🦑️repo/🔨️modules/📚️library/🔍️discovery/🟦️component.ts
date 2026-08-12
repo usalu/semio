@@ -104,10 +104,19 @@ export interface Taxonomy {
   readonly subsetAnyDirName?: string;
   /** 🔣️ Filename of the per-standard subset vocabulary manifest at `🏅️standards/🔖️<slug>/🪆️subsets/<this>`. */
   readonly subsetsManifestFilename?: string;
-  /** ✅️ COMPLETENESS set: every `🗿️artifacts/<a>/` must carry each of these as a leaf. Never merge with `artifactChildDirs`. Includes `🧬️schema`, `⚙️engine`, `🚪️io`, builder, decomposer. */
+  /** ✅️ COMPLETENESS set: every legacy artifact carries schema, engine, and IO. Lifecycle capabilities are schema-derived. */
   readonly artifactComponentDirs: readonly string[];
   /** 🌳️ STRUCTURAL set: every dir allowed as a child of an artifact (superset of `artifactComponentDirs`; the structural-only extra is `📚️examples`). */
   readonly artifactChildDirs: readonly string[];
+  /** 🧬️ Required children of a standards-based artifact. */
+  readonly newArtifactComponentDirs: readonly string[];
+  readonly newArtifactChildDirs: readonly string[];
+  /** 🏅️ Required and allowed children of a standard. */
+  readonly standardComponentDirs: readonly string[];
+  readonly standardChildDirs: readonly string[];
+  /** 🪆️ Required and allowed children of a subset. */
+  readonly subsetComponentDirs: readonly string[];
+  readonly subsetChildDirs: readonly string[];
   /** 🧬️ Required children of each `🧬️mutations/<mutation>/` dir: mutation struct, per-mutation diff, inverse. */
   readonly mutationChildDirs: readonly string[];
   /** 🧬️ Required children of each `🧬️schema/` facet: snapshot, diff, mutations. */
@@ -374,11 +383,22 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
     }
   }
   //#endregion StandardsSubsetsShapeContract
+  //#region DerivedArtifactFacetsContract
+  for (const [name, dirs] of [
+    ["newArtifactChildDirs", taxonomy.newArtifactChildDirs],
+    ["standardChildDirs", taxonomy.standardChildDirs],
+    ["subsetChildDirs", taxonomy.subsetChildDirs],
+  ] as const) {
+    for (const forbidden of ["🏗️builder", "🧐️analyzer", "🎹️composer"] as const) {
+      if (dirs.includes(forbidden)) problems.push(`${name} must not include derived lifecycle facet "${forbidden}".`);
+    }
+  }
+  //#endregion DerivedArtifactFacetsContract
   for (const dir of taxonomy.artifactComponentDirs) {
     if (!taxonomy.artifactChildDirs.includes(dir)) problems.push(`artifactComponentDirs member "${dir}" is missing from artifactChildDirs — the structural set must be a superset of the completeness set.`);
   }
   //#region MutationFacetContract
-  for (const required of ["🧬️schema", "⚙️engine", "🚪️io", "\ud83c\udfd7\ufe0fbuilder", "\ud83e\ude93\ufe0fdecomposer"] as const) {
+  for (const required of ["🧬️schema", "⚙️engine", "🚪️io"] as const) {
     if (!taxonomy.artifactComponentDirs.includes(required)) {
       problems.push(`artifactComponentDirs must include "${required}".`);
     }
@@ -467,7 +487,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
   if (!Array.isArray(taxonomy.binarySpecFilenames) || taxonomy.binarySpecFilenames.length !== 6) {
     problems.push(`binarySpecFilenames must list exactly 6 leaves.`);
   }
-  for (const required of ["\ud83c\udfd7\ufe0fbuilder", "\ud83e\ude93\ufe0fdecomposer", "⚙️engine", "🧬️schema"] as const) {
+  for (const required of ["⚙️engine", "🧬️schema"] as const) {
     if (!taxonomy.taxonomyLeafParentDirs.includes(required)) {
       problems.push(`taxonomyLeafParentDirs must include "${required}".`);
     }

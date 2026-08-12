@@ -1,0 +1,3 @@
+; abnf dag.dag.inference
+document = payload
+payload = *OCTET

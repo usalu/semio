@@ -1,0 +1,3 @@
+(* ebnf reasoning.wires.inference *)
+document = header, body ;
+header = 'schema', space, 'reasoning.wires.inference', newline ;

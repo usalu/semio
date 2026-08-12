@@ -63,16 +63,17 @@ pub fn demo_svg_snapshot() -> SvgSnapshot {
 //#region 🔖️Register
 /// 🗂️ Registers codecs and the artifact schema descriptor.
 pub fn register() {
-    crate::artifacts::svg::composer::register();
+    crate::artifacts::svg::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA));
     // 🛡️ D5's generic validate-on-build hook: registers the ✳️tiny/✳️basic subsets'
     // SubsetValidators so `io_dispatch`/`wire_artifact_compose` re-check them for free. Each
     // ComposerEntry itself is registered separately via this standard's own `composer::entries()`
     // aggregation (called above via the artifact-level `composer::register()`).
-    crate::artifacts::svg::standards::v1_1::subsets::tiny::composer::register();
-    crate::artifacts::svg::standards::v1_1::subsets::basic::composer::register();
+    crate::artifacts::svg::standards::v1_1::subsets::tiny::io::register();
+    crate::artifacts::svg::standards::v1_1::subsets::basic::io::register();
 }
 
 /// 📌️ P2-FG3: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per
@@ -148,6 +149,13 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.svg`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::svg::schema::svg_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.stdio.svg.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::svg::standards::v1_1::subsets::any::schema::inferences::svg_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 
@@ -314,3 +322,18 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgComposer as SvgRawAnyComposer;
+    use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::SvgTinyComposer;
+    use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::SvgBasicComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<SvgRawAnyComposer>(), composer_entry_of::<SvgTinyComposer>(), composer_entry_of::<SvgBasicComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

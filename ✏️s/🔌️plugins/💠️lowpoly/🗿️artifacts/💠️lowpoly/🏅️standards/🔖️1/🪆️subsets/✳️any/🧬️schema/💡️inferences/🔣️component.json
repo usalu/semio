@@ -1,0 +1,29 @@
+{
+  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/inference.json",
+  "title": "LowpolyInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["objectCount", "bounds"],
+  "properties": {
+    "objectCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "inferred"
+    },
+    "bounds": {
+      "oneOf": [{ "$ref": "#/$defs/LowpolyBounds" }, { "type": "null" }],
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "LowpolyBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+      }
+    }
+  }
+}

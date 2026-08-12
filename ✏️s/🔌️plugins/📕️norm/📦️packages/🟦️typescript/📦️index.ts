@@ -10,7 +10,6 @@ export * as iso16757_mutations from "../../🗿️artifacts/📓️iso16757/🧬
 export * as iso16757_mutations_text from "../../🗿️artifacts/📓️iso16757/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as iso16757_mutations_binary from "../../🗿️artifacts/📓️iso16757/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as iso16757_io from "../../🗿️artifacts/📓️iso16757/🚪️io/🟦️component.ts";
-export * as iso16757_builder from "../../🗿️artifacts/📓️iso16757/🏗️builder/🟦️component.ts";
 export * as iso16757_decomposer from "../../🗿️artifacts/📓️iso16757/🪓️decomposer/🟦️component.ts";
 export * as vdi3805_schema from "../../🗿️artifacts/📔️vdi3805/🧬️schema/🟦️component.ts";
 export * as vdi3805_snapshot from "../../🗿️artifacts/📔️vdi3805/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -23,7 +22,6 @@ export * as vdi3805_mutations from "../../🗿️artifacts/📔️vdi3805/🧬�
 export * as vdi3805_mutations_text from "../../🗿️artifacts/📔️vdi3805/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as vdi3805_mutations_binary from "../../🗿️artifacts/📔️vdi3805/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as vdi3805_io from "../../🗿️artifacts/📔️vdi3805/🚪️io/🟦️component.ts";
-export * as vdi3805_builder from "../../🗿️artifacts/📔️vdi3805/🏗️builder/🟦️component.ts";
 export * as vdi3805_decomposer from "../../🗿️artifacts/📔️vdi3805/🪓️decomposer/🟦️component.ts";
 export * as din4108_schema from "../../🗿️artifacts/📕️din4108/🧬️schema/🟦️component.ts";
 export * as din4108_snapshot from "../../🗿️artifacts/📕️din4108/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -36,7 +34,6 @@ export * as din4108_mutations from "../../🗿️artifacts/📕️din4108/🧬�
 export * as din4108_mutations_text from "../../🗿️artifacts/📕️din4108/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as din4108_mutations_binary from "../../🗿️artifacts/📕️din4108/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as din4108_io from "../../🗿️artifacts/📕️din4108/🚪️io/🟦️component.ts";
-export * as din4108_builder from "../../🗿️artifacts/📕️din4108/🏗️builder/🟦️component.ts";
 export * as din4108_decomposer from "../../🗿️artifacts/📕️din4108/🪓️decomposer/🟦️component.ts";
 export * as din16798_schema from "../../🗿️artifacts/📗️din16798/🧬️schema/🟦️component.ts";
 export * as din16798_snapshot from "../../🗿️artifacts/📗️din16798/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -49,7 +46,6 @@ export * as din16798_mutations from "../../🗿️artifacts/📗️din16798/🧬
 export * as din16798_mutations_text from "../../🗿️artifacts/📗️din16798/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as din16798_mutations_binary from "../../🗿️artifacts/📗️din16798/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as din16798_io from "../../🗿️artifacts/📗️din16798/🚪️io/🟦️component.ts";
-export * as din16798_builder from "../../🗿️artifacts/📗️din16798/🏗️builder/🟦️component.ts";
 export * as din16798_decomposer from "../../🗿️artifacts/📗️din16798/🪓️decomposer/🟦️component.ts";
 export * as en1990_schema from "../../🗿️artifacts/📘️en1990/🧬️schema/🟦️component.ts";
 export * as en1990_snapshot from "../../🗿️artifacts/📘️en1990/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -62,7 +58,6 @@ export * as en1990_mutations from "../../🗿️artifacts/📘️en1990/🧬️s
 export * as en1990_mutations_text from "../../🗿️artifacts/📘️en1990/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as en1990_mutations_binary from "../../🗿️artifacts/📘️en1990/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as en1990_io from "../../🗿️artifacts/📘️en1990/🚪️io/🟦️component.ts";
-export * as en1990_builder from "../../🗿️artifacts/📘️en1990/🏗️builder/🟦️component.ts";
 export * as en1990_decomposer from "../../🗿️artifacts/📘️en1990/🪓️decomposer/🟦️component.ts";
 export * as en1991_schema from "../../🗿️artifacts/📘️en1991/🧬️schema/🟦️component.ts";
 export * as en1991_snapshot from "../../🗿️artifacts/📘️en1991/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -75,7 +70,6 @@ export * as en1991_mutations from "../../🗿️artifacts/📘️en1991/🧬️s
 export * as en1991_mutations_text from "../../🗿️artifacts/📘️en1991/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as en1991_mutations_binary from "../../🗿️artifacts/📘️en1991/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as en1991_io from "../../🗿️artifacts/📘️en1991/🚪️io/🟦️component.ts";
-export * as en1991_builder from "../../🗿️artifacts/📘️en1991/🏗️builder/🟦️component.ts";
 export * as en1991_decomposer from "../../🗿️artifacts/📘️en1991/🪓️decomposer/🟦️component.ts";
 export * as en1992_schema from "../../🗿️artifacts/📘️en1992/🧬️schema/🟦️component.ts";
 export * as en1992_snapshot from "../../🗿️artifacts/📘️en1992/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -88,7 +82,6 @@ export * as en1992_mutations from "../../🗿️artifacts/📘️en1992/🧬️s
 export * as en1992_mutations_text from "../../🗿️artifacts/📘️en1992/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as en1992_mutations_binary from "../../🗿️artifacts/📘️en1992/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as en1992_io from "../../🗿️artifacts/📘️en1992/🚪️io/🟦️component.ts";
-export * as en1992_builder from "../../🗿️artifacts/📘️en1992/🏗️builder/🟦️component.ts";
 export * as en1992_decomposer from "../../🗿️artifacts/📘️en1992/🪓️decomposer/🟦️component.ts";
 export * as en1993_schema from "../../🗿️artifacts/📘️en1993/🧬️schema/🟦️component.ts";
 export * as en1993_snapshot from "../../🗿️artifacts/📘️en1993/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -101,7 +94,6 @@ export * as en1993_mutations from "../../🗿️artifacts/📘️en1993/🧬️s
 export * as en1993_mutations_text from "../../🗿️artifacts/📘️en1993/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as en1993_mutations_binary from "../../🗿️artifacts/📘️en1993/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as en1993_io from "../../🗿️artifacts/📘️en1993/🚪️io/🟦️component.ts";
-export * as en1993_builder from "../../🗿️artifacts/📘️en1993/🏗️builder/🟦️component.ts";
 export * as en1993_decomposer from "../../🗿️artifacts/📘️en1993/🪓️decomposer/🟦️component.ts";
 export * as en1994_schema from "../../🗿️artifacts/📘️en1994/🧬️schema/🟦️component.ts";
 export * as en1994_snapshot from "../../🗿️artifacts/📘️en1994/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -114,7 +106,6 @@ export * as en1994_mutations from "../../🗿️artifacts/📘️en1994/🧬️s
 export * as en1994_mutations_text from "../../🗿️artifacts/📘️en1994/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as en1994_mutations_binary from "../../🗿️artifacts/📘️en1994/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as en1994_io from "../../🗿️artifacts/📘️en1994/🚪️io/🟦️component.ts";
-export * as en1994_builder from "../../🗿️artifacts/📘️en1994/🏗️builder/🟦️component.ts";
 export * as en1994_decomposer from "../../🗿️artifacts/📘️en1994/🪓️decomposer/🟦️component.ts";
 export * as en1995_schema from "../../🗿️artifacts/📘️en1995/🧬️schema/🟦️component.ts";
 export * as en1995_snapshot from "../../🗿️artifacts/📘️en1995/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -127,7 +118,6 @@ export * as en1995_mutations from "../../🗿️artifacts/📘️en1995/🧬️s
 export * as en1995_mutations_text from "../../🗿️artifacts/📘️en1995/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as en1995_mutations_binary from "../../🗿️artifacts/📘️en1995/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as en1995_io from "../../🗿️artifacts/📘️en1995/🚪️io/🟦️component.ts";
-export * as en1995_builder from "../../🗿️artifacts/📘️en1995/🏗️builder/🟦️component.ts";
 export * as en1995_decomposer from "../../🗿️artifacts/📘️en1995/🪓️decomposer/🟦️component.ts";
 export * as en1996_schema from "../../🗿️artifacts/📘️en1996/🧬️schema/🟦️component.ts";
 export * as en1996_snapshot from "../../🗿️artifacts/📘️en1996/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -140,7 +130,6 @@ export * as en1996_mutations from "../../🗿️artifacts/📘️en1996/🧬️s
 export * as en1996_mutations_text from "../../🗿️artifacts/📘️en1996/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as en1996_mutations_binary from "../../🗿️artifacts/📘️en1996/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as en1996_io from "../../🗿️artifacts/📘️en1996/🚪️io/🟦️component.ts";
-export * as en1996_builder from "../../🗿️artifacts/📘️en1996/🏗️builder/🟦️component.ts";
 export * as en1996_decomposer from "../../🗿️artifacts/📘️en1996/🪓️decomposer/🟦️component.ts";
 export * as en1997_schema from "../../🗿️artifacts/📘️en1997/🧬️schema/🟦️component.ts";
 export * as en1997_snapshot from "../../🗿️artifacts/📘️en1997/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -153,7 +142,6 @@ export * as en1997_mutations from "../../🗿️artifacts/📘️en1997/🧬️s
 export * as en1997_mutations_text from "../../🗿️artifacts/📘️en1997/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as en1997_mutations_binary from "../../🗿️artifacts/📘️en1997/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as en1997_io from "../../🗿️artifacts/📘️en1997/🚪️io/🟦️component.ts";
-export * as en1997_builder from "../../🗿️artifacts/📘️en1997/🏗️builder/🟦️component.ts";
 export * as en1997_decomposer from "../../🗿️artifacts/📘️en1997/🪓️decomposer/🟦️component.ts";
 export * as en1998_schema from "../../🗿️artifacts/📘️en1998/🧬️schema/🟦️component.ts";
 export * as en1998_snapshot from "../../🗿️artifacts/📘️en1998/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -166,7 +154,6 @@ export * as en1998_mutations from "../../🗿️artifacts/📘️en1998/🧬️s
 export * as en1998_mutations_text from "../../🗿️artifacts/📘️en1998/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as en1998_mutations_binary from "../../🗿️artifacts/📘️en1998/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as en1998_io from "../../🗿️artifacts/📘️en1998/🚪️io/🟦️component.ts";
-export * as en1998_builder from "../../🗿️artifacts/📘️en1998/🏗️builder/🟦️component.ts";
 export * as en1998_decomposer from "../../🗿️artifacts/📘️en1998/🪓️decomposer/🟦️component.ts";
 export * as en1999_schema from "../../🗿️artifacts/📘️en1999/🧬️schema/🟦️component.ts";
 export * as en1999_snapshot from "../../🗿️artifacts/📘️en1999/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -179,7 +166,6 @@ export * as en1999_mutations from "../../🗿️artifacts/📘️en1999/🧬️s
 export * as en1999_mutations_text from "../../🗿️artifacts/📘️en1999/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as en1999_mutations_binary from "../../🗿️artifacts/📘️en1999/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as en1999_io from "../../🗿️artifacts/📘️en1999/🚪️io/🟦️component.ts";
-export * as en1999_builder from "../../🗿️artifacts/📘️en1999/🏗️builder/🟦️component.ts";
 export * as en1999_decomposer from "../../🗿️artifacts/📘️en1999/🪓️decomposer/🟦️component.ts";
 export * as din18599_schema from "../../🗿️artifacts/📙️din18599/🧬️schema/🟦️component.ts";
 export * as din18599_snapshot from "../../🗿️artifacts/📙️din18599/🧬️schema/📸️snapshot/🟦️component.ts";
@@ -192,5 +178,4 @@ export * as din18599_mutations from "../../🗿️artifacts/📙️din18599/🧬
 export * as din18599_mutations_text from "../../🗿️artifacts/📙️din18599/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as din18599_mutations_binary from "../../🗿️artifacts/📙️din18599/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as din18599_io from "../../🗿️artifacts/📙️din18599/🚪️io/🟦️component.ts";
-export * as din18599_builder from "../../🗿️artifacts/📙️din18599/🏗️builder/🟦️component.ts";
 export * as din18599_decomposer from "../../🗿️artifacts/📙️din18599/🪓️decomposer/🟦️component.ts";

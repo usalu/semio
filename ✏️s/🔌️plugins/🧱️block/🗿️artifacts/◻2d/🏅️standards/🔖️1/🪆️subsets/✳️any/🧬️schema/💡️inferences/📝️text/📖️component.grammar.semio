@@ -1,0 +1,9 @@
+dialect grammar
+grammar block.block2d.inference
+extension block2d.inference
+start document
+
+document = header body
+header = "schema" SP "block.block2d.inference" NL
+body = payload NL?
+payload = OCTET+

@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.s.lowpoly.lowpoly.inference;
+
+// 💡️ Lowpoly inference schema — object count + 3d bounding box across every object's transform
+// position.
+
+message LowpolyInference {
+  // @state inferred
+  uint64 object_count = 1;
+  // @state inferred
+  LowpolyBounds bounds = 2;
+}
+
+message LowpolyBounds {
+  repeated float min = 1;
+  repeated float max = 2;
+}

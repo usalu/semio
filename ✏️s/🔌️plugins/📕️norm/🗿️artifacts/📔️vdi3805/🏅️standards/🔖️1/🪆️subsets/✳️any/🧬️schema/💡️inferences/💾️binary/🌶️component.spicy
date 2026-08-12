@@ -1,0 +1,4 @@
+module Norm_vdi3805_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

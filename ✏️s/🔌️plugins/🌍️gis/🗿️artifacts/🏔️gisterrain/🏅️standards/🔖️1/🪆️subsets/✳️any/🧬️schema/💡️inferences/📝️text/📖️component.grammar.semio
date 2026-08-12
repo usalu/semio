@@ -1,0 +1,9 @@
+dialect grammar
+grammar gis.gisterrain.inference
+extension gisterrain.inference
+start document
+
+document = header body
+header = "schema" SP "gis.gisterrain.inference" NL
+body = payload NL?
+payload = OCTET+

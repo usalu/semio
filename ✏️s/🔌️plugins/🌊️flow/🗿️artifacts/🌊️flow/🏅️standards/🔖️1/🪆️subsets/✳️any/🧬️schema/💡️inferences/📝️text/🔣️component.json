@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/flow/flow/inference/text.json",
+  "title": "FlowInferenceText",
+  "type": "object"
+}

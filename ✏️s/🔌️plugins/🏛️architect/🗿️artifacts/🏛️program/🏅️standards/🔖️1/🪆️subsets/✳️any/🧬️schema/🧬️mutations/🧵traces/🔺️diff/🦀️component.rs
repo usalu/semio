@@ -1,21 +1,23 @@
-//! 🔺️ Diff fragment yielded by `Traces`.
-use crate::artifacts::program::diff::ProgramDiff;
-use serde::{Deserialize, Serialize};
+//! 🔺️ Sparse diff construction for the `traces` mutation leaf.
 
-//#region 🔖️Diff
-/// @emoji 🔺️ Diff produced by one `Traces` mutation — a sparse [`ProgramDiff`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct TracesDiff {
-    pub diff: ProgramDiff,
-}
+use super::mutation::{ConnectTrace, DisconnectTrace};
+use crate::artifacts::program::diff::ProgramTracesDelta;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
+use protocol::Patchable;
 
-impl TracesDiff {
-    pub fn from_diff(diff: ProgramDiff) -> Self {
-        Self { diff }
-    }
-
-    pub fn into_program_diff(self) -> ProgramDiff {
-        self.diff
+/// 🔌️ `added = [trace]` if the id is new, else `patched = [{id, full patch}]`.
+pub fn diff_connect(payload: &ConnectTrace, base: &ProgramSnapshot) -> ProgramDiff {
+    match base.traces.iter().find(|row| row.id == payload.trace.id) {
+        Some(existing) => {
+            let patch = existing.diff_patch(&payload.trace).expect("diff_patch always produces a full patch");
+            ProgramDiff { traces: Some(ProgramTracesDelta { patched: vec![crate::artifacts::program::diff::ProgramTracesPatchEntry { id: payload.trace.id.0.clone(), patch }], ..Default::default() }), ..Default::default() }
+        }
+        None => ProgramDiff { traces: Some(ProgramTracesDelta { added: vec![payload.trace.clone()], ..Default::default() }), ..Default::default() },
     }
 }
-//#endregion 🔖️Diff
+
+/// ✂️ `removed = [id]`.
+pub fn diff_disconnect(payload: &DisconnectTrace, _base: &ProgramSnapshot) -> ProgramDiff {
+    ProgramDiff { traces: Some(ProgramTracesDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() }
+}

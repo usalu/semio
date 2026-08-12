@@ -374,15 +374,23 @@ pub fn demo_gif_snapshot() -> GifSnapshot {
 /// two-level registry is future work); reusing 87a's ids here would silently overwrite its
 /// registration instead of coexisting. Not currently wired into plugin bootstrap (out of this
 /// ticket's scope) — 89a is reachable today via its own standard-scoped types directly and via
-/// the artifact-level composer's dialect-keyed aggregation (`crate::artifacts::gif::composer`,
+/// the artifact-level composer's dialect-keyed aggregation (`crate::artifacts::gif::io_registry`,
 /// which already chains `standards::v89a::composer::entries()` regardless of whether this
 /// function itself ever runs — composer entries are NOT registered here to avoid a redundant
 /// second registration attempt).
 pub fn register() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::standards::v89a::subsets::any::schema::gif_artifact_schema_descriptor());
+    register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF89A_DOCUMENT_SCHEMA));
+}
+
+/// 💡️ Registers `s.stdio.gif.89a.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema_descriptor` above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::gif::standards::v89a::subsets::any::schema::inferences::gif89a_artifact_inference_descriptor());
 }
 
 /// 📌️ P2-FG2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr) — same shape as
@@ -766,3 +774,16 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::gif::standards::v89a::subsets::any::schema::GifComposer as GifRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<GifRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

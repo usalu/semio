@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/fem/fem3d/inference/text.json",
+  "title": "Fem3dInferenceText",
+  "type": "object"
+}

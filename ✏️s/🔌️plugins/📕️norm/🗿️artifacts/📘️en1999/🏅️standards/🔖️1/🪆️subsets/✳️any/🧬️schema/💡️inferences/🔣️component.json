@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1999/inference.json",
+  "title": "En1999Inference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/En1999Outline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "En1999Outline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sectionOutline", "fieldCount", "entryCount"],
+      "properties": {
+        "sectionOutline": { "type": "array", "items": { "type": "string" } },
+        "fieldCount": { "type": "integer" },
+        "entryCount": { "type": "integer" }
+      }
+    }
+  }
+}

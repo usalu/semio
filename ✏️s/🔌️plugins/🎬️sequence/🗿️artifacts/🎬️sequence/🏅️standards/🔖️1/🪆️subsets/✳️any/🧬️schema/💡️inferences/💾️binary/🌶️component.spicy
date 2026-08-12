@@ -1,0 +1,4 @@
+module sequence_sequence_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

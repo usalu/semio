@@ -58,12 +58,12 @@ pub fn materialize_present_projection_json(envelope_json: &str) -> Result<Presen
 mod tests {
     use super::*;
     use crate::artifacts::present::schema::mutations::text::PresentMutation;
-    use protocol::CollectionMutation;
+    use crate::artifacts::present::schema::mutations::{create_tile, replace_tiles};
     use store::{os_store::test_support, ArtifactCommand};
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = PresentMutation::SetTiles { tiles: Vec::new() };
+        let operation = PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() });
         test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -83,7 +83,7 @@ mod tests {
         let mut store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", empty_present_snapshot(), None));
         store
             .dispatch(ArtifactCommand::Apply {
-                mutations: vec![PresentMutation::Tiles(CollectionMutation::Add { index: 0, item: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
+                mutations: vec![PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
                 description: None,
             })
             .expect("apply");
@@ -96,7 +96,7 @@ mod tests {
         let mut store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", crate::artifacts::present::default_present_snapshot(), None));
         store
             .dispatch(ArtifactCommand::Apply {
-                mutations: vec![PresentMutation::Tiles(CollectionMutation::Add { index: 0, item: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
+                mutations: vec![PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
                 description: None,
             })
             .expect("apply");

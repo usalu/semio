@@ -29,6 +29,19 @@ mod tests {
 /// `parse_minimal` above are used by the subset's analyzer; schema descriptor + document codec
 /// registration is the subset composer's own job (see that module).
 pub fn register() {
-    crate::artifacts::html::standards::v5::subsets::any::composer::register();
+    crate::artifacts::html::standards::v5::subsets::any::io::register();
 }
 //#endregion 🔖️Register
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::html::standards::v5::subsets::any::schema::HtmlComposer as HtmlRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<HtmlRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

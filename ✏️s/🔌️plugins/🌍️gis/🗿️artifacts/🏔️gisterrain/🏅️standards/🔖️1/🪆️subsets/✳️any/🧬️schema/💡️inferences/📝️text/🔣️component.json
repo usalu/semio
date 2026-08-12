@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/gis/gisterrain/inference/text.json",
+  "title": "GisTerrainInferenceText",
+  "type": "object"
+}

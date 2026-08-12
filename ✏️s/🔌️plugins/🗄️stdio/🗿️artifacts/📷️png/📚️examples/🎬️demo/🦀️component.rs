@@ -16,4 +16,24 @@ mod tests {
         assert!(!PRIMARY_TEXT.is_empty());
         let _ = source();
     }
+
+    /// 🧪️ Ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING's
+    /// inference laws, exercised against this example's own real fixture (`PRIMARY_TEXT`,
+    /// parsed through the real `ArtifactDsl` codec — not a hand-built stub).
+    #[test]
+    fn inference_determinism_law() {
+        use crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::PngInference;
+        use crate::artifacts::png::PngSnapshot;
+        use protocol::Inference;
+        let snapshot = <PngSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
+        assert_eq!(PngInference::infer(&snapshot), PngInference::infer(&snapshot));
+    }
+
+    #[test]
+    fn inference_default_law() {
+        use crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::PngInference;
+        use crate::artifacts::png::PngSnapshot;
+        use protocol::Inference;
+        assert_eq!(PngInference::infer(&PngSnapshot::default()), PngInference::default());
+    }
 }

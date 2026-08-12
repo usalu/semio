@@ -1,0 +1,3 @@
+(* ebnf norm.vdi3805.inference *)
+document = header, body ;
+header = 'schema', space, 'norm.vdi3805.inference', newline ;

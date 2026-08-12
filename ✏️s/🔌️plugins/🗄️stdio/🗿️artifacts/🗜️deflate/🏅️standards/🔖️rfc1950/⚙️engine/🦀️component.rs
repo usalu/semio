@@ -674,7 +674,7 @@ pub fn demo_deflate_snapshot() -> DeflateSnapshot {
 //#region Register
 /// 🗂️ Registers codecs and the artifact schema descriptor.
 pub fn register() {
-    crate::artifacts::deflate::composer::register();
+    crate::artifacts::deflate::io_registry::register();
     register_artifact_schema();
     register_pilot_languages();
     register_schema_specs();
@@ -1055,3 +1055,16 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::DeflateComposer as DeflateRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<DeflateRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

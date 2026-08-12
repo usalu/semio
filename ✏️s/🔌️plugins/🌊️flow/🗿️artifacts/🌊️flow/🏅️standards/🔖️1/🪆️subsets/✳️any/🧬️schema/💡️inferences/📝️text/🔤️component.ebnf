@@ -1,0 +1,3 @@
+(* ebnf flow.flow.inference *)
+document = header, body ;
+header = 'schema', space, 'flow.flow.inference', newline ;

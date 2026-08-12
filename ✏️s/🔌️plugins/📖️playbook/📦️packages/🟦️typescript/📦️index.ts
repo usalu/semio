@@ -10,5 +10,4 @@ export * as playbook_mutations from "../../🗿️artifacts/📖️playbook/🧬
 export * as playbook_mutations_text from "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as playbook_mutations_binary from "../../🗿️artifacts/📖️playbook/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as playbook_io from "../../🗿️artifacts/📖️playbook/🚪️io/🟦️component.ts";
-export * as playbook_builder from "../../🗿️artifacts/📖️playbook/🏗️builder/🟦️component.ts";
 export * as playbook_decomposer from "../../🗿️artifacts/📖️playbook/🪓️decomposer/🟦️component.ts";

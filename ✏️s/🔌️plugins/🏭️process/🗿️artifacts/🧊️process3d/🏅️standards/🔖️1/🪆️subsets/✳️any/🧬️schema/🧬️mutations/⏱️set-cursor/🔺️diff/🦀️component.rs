@@ -1,16 +1,11 @@
-//! 🔺️ Diff fragment yielded by `SetCursor`.
+//! 🔺️ `change-cursor` sparse diff construction.
+
 use crate::artifacts::process3d::diff::Process3dDiff;
-use serde::{Deserialize, Serialize};
+use crate::artifacts::process3d::mutations::set_cursor::mutation::ChangeCursor;
+use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Diff
-/// 🔺️ Diff produced by one mutation — a sparse [`Process3dDiff`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct SetCursorDiff {
-    pub diff: Process3dDiff,
-}
-
-impl SetCursorDiff {
-    pub fn from_diff(diff: Process3dDiff) -> Self { Self { diff } }
-    pub fn into_process3d_diff(self) -> Process3dDiff { self.diff }
+pub fn diff(payload: &ChangeCursor, _base: &Process3dSnapshot) -> Process3dDiff {
+    Process3dDiff { resolved_up_to: Some(payload.new_resolved_up_to), ..Default::default() }
 }
 //#endregion 🔖️Diff

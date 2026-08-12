@@ -1,0 +1,3 @@
+(* ebnf gis.gisterrain.inference *)
+document = header, body ;
+header = 'schema', space, 'gis.gisterrain.inference', newline ;

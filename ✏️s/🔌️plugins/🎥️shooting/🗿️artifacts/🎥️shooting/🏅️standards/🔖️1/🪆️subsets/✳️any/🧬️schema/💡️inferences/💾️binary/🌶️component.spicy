@@ -1,0 +1,4 @@
+module shooting_shooting_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

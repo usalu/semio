@@ -1,0 +1,11 @@
+# 💡️ Process3d inference schema — stockBounds (world-space AABB) + stepCount.
+
+type Process3dInference {
+  stockBounds: BoundingBox! @state(class: INFERRED)
+  stepCount: Int! @state(class: INFERRED)
+}
+
+type BoundingBox {
+  min: [Float!]!
+  max: [Float!]!
+}

@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.s.architect.program.inference;
+
+// 💡️ Architect program inference schema — topology (hierarchy shape of elements via parentId).
+
+message ProgramInference {
+  // @state inferred
+  ProgramTopology topology = 1;
+}
+
+message ProgramTopology {
+  uint64 node_count = 1;
+  uint64 root_count = 2;
+  uint64 max_depth = 3;
+  bool cycle_free = 4;
+  repeated string topo_order = 5;
+}

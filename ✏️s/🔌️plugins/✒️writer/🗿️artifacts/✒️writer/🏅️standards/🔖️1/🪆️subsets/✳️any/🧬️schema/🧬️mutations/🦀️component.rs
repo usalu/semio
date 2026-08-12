@@ -1,56 +1,45 @@
-//! 🧬️ Writer artifact — document mutation dispatch enum.
+//! 🧬️ Writer artifact — semantic document mutation dispatch enum. Every variant is a single-field
+//! tuple wrapping a handcrafted `protocol::MutationKind` payload (see the `🧬️mutations/<slug>/`
+//! triad leaves); `#[derive(dsl::Mutations)]` generates `impl protocol::Mutation<WriterSnapshot>`
+//! and `impl protocol::SemanticMutation<WriterSnapshot>` from those payloads — no hand-written
+//! apply/diff/inverse dispatch here. `WriterSnapshot` has exactly five persistent scalar fields
+//! (`schema`, `id`, `language_id`, `uri`, `text`) and no id-keyed collections, ordered lists,
+//! relationships or hierarchy — the whole vocabulary is document-level scalars per
+//! `📓️derivation-rules.md` recipe §1. `schema` is the fixed artifact-schema-id constant
+//! (`WRITER_DOCUMENT_SCHEMA`), never user-authored, so it gets no mutation.
 
-use crate::artifacts::writer::schema::diff::text::{diff_set_snapshot, diff_set_text};
+use crate::artifacts::writer::schema::mutations::{change_language, change_uri, edit_text, rename_writer};
 use crate::artifacts::writer::WriterDiff;
 use crate::artifacts::writer::WriterSnapshot;
-use protocol::Mutation;
+use protocol::{Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
-/// @emoji 🧬️ Typed writer document mutation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+/// @emoji 🧬️ Typed, invertible, semantic writer document mutation vocabulary.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
+#[mutations(snapshot = WriterSnapshot, diff = WriterDiff, schema = "writer.writer")]
 pub enum WriterMutation {
-    SetText {
-        text: String,
-    },
-    SetSnapshot {
-        #[dsl(block)]
-        snapshot: WriterSnapshot,
-    },
+    RenameWriter(rename_writer::mutation::RenameWriter),
+    ChangeUri(change_uri::mutation::ChangeUri),
+    ChangeLanguage(change_language::mutation::ChangeLanguage),
+    EditText(edit_text::mutation::EditText),
 }
 
+/// 🧮️ Diff-first apply — matches every other migrated facet (`operation.diff(base).apply(base)`,
+/// per wave 0's confirmation that `vcs::apply_mutation` is already diff-first under the hood).
 pub fn apply_writer_mutation(snapshot: &mut WriterSnapshot, mutation: &WriterMutation) {
-    match mutation {
-        WriterMutation::SetText { text } => super::set_text::mutation::apply(snapshot, text),
-        WriterMutation::SetSnapshot { snapshot: replacement } => super::set_snapshot::mutation::apply(snapshot, replacement),
-    }
+    *snapshot = mutation.diff(snapshot).apply(snapshot);
 }
 
 pub fn inverse_writer_mutation(snapshot: &WriterSnapshot, mutation: &WriterMutation) -> Vec<WriterMutation> {
-    match mutation {
-        WriterMutation::SetText { text } => super::set_text::inverse::inverse(snapshot, text),
-        WriterMutation::SetSnapshot { snapshot: replacement } => super::set_snapshot::inverse::inverse(snapshot, replacement),
-    }
+    mutation.inverse(snapshot)
 }
 
-impl Mutation<WriterSnapshot> for WriterMutation {
-    type Diff = WriterDiff;
-
-    fn diff(&self, snapshot: &WriterSnapshot) -> Self::Diff {
-        match self {
-            WriterMutation::SetText { text } => diff_set_text(text),
-            WriterMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
-        }
-    }
-
-    fn inverse(&self, snapshot: &WriterSnapshot) -> Vec<Self> {
-        inverse_writer_mutation(snapshot, self)
-    }
-}
-
-pub use super::set_text::mutation::{set_text, SetText};
-pub use super::set_snapshot::mutation::{set_snapshot, SetSnapshot};
+pub use rename_writer::mutation::{rename_writer, RenameWriter};
+pub use change_uri::mutation::{change_uri, ChangeUri};
+pub use change_language::mutation::{change_language, ChangeLanguage};
+pub use edit_text::mutation::{edit_text, EditText};
 //#endregion 🔖️Mutations
 
 //#region 🧪️Tests
@@ -68,16 +57,55 @@ mod tests {
     #[test]
     fn writer_document_vcs_replays_text_mutations() {
         let mut store = seeded_store();
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::SetText { text: "hello".into() }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").text, "hello");
     }
 
     #[test]
     fn writer_document_vcs_undoes_text_mutation() {
         let mut store = seeded_store();
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::SetText { text: "hello".into() }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None }).expect("apply");
         store.dispatch(store::ArtifactCommand::Undo).expect("undo");
         assert_eq!(store.snapshot().expect("snapshot").text, "");
     }
+
+    //#region 🔖️MutationLaws
+    #[test]
+    fn rename_writer_and_edit_text_invert_to_the_prior_field_value() {
+        let snapshot = WriterSnapshot { id: "old-id".into(), text: "old text".into(), ..engine::empty_writer_snapshot() };
+        assert_eq!(
+            WriterMutation::RenameWriter(RenameWriter { new_id: "new-id".into() }).inverse(&snapshot),
+            vec![WriterMutation::RenameWriter(RenameWriter { new_id: "old-id".into() })]
+        );
+        assert_eq!(
+            WriterMutation::EditText(EditText { text: "new text".into() }).inverse(&snapshot),
+            vec![WriterMutation::EditText(EditText { text: "old text".into() })]
+        );
+    }
+
+    #[test]
+    fn change_uri_and_change_language_obey_the_inverse_and_diff_absorb_laws() {
+        let base = WriterSnapshot { uri: "writer://a".into(), language_id: "plaintext".into(), ..engine::empty_writer_snapshot() };
+
+        let uri_mutation = WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://b".into() });
+        protocol::testkit::assert_mutation_inverse_law(&base, &uri_mutation);
+        let d1 = uri_mutation.diff(&base);
+        let d2 = WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://c".into() }).diff(&base);
+        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+
+        let language_mutation = WriterMutation::ChangeLanguage(ChangeLanguage { new_language_id: "jack".into() });
+        protocol::testkit::assert_mutation_inverse_law(&base, &language_mutation);
+    }
+
+    #[test]
+    fn edit_text_obeys_the_inverse_and_diff_absorb_laws() {
+        let base = WriterSnapshot { text: "first".into(), ..engine::empty_writer_snapshot() };
+        let mutation = WriterMutation::EditText(EditText { text: "second".into() });
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        let d1 = mutation.diff(&base);
+        let d2 = WriterMutation::EditText(EditText { text: "third".into() }).diff(&base);
+        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+    //#endregion 🔖️MutationLaws
 }
 //#endregion 🧪️Tests

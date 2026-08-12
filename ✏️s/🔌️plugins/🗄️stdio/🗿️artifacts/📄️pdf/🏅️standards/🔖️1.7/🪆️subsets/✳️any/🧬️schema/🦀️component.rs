@@ -95,3 +95,154 @@ pub fn pdf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
         },
     }
 }
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{PdfMutation, apply_pdf_mutation};
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.pdf.1.7` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct PdfBuilderConstruction {
+        snapshot: PdfSnapshot,
+        diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    impl PdfBuilderConstruction {
+        /// ➕ Typed construction: appends a page (the analyzer→builder round-trip acceptance test's
+        /// primary entry point -- requirement #8's `InsertPage`, exposed ergonomically).
+        pub fn add_page(self, page: PdfPage) -> Self {
+            let index = self.snapshot.pages.len();
+            let (next, _diff) = self.mutate(PdfMutation::InsertPage { index, page });
+            next
+        }
+        pub fn set_info(self, info: PdfInfo) -> Self {
+            let (next, _diff) = self.mutate(PdfMutation::SetInfo { info });
+            next
+        }
+    }
+
+    impl ArtifactBuilder for PdfBuilderConstruction {
+        type Snapshot = PdfSnapshot;
+        type Mutation = PdfMutation;
+        type Diff = PdfDiff;
+        fn empty() -> Self {
+            Self { snapshot: PdfSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.pdf.1.7` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct PdfParts {
+        pub snapshot: Option<PdfSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.pdf` (1.7/✳️any) sources.
+    pub struct PdfAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for PdfAnalyzerAnalysis {
+        type Parts = PdfParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
+
+        /// 🔍️ Real sniff (requirement #9): inspects `%PDF-` magic + version probe via
+        /// `engine::sniff_pdf`, does not discard its argument.
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => match crate::artifacts::pdf::standards::v1_7::engine::sniff_pdf(bytes) {
+                    Some(_version) => IoConfidence::High,
+                    None => IoConfidence::Low,
+                },
+                AnalyzeSource::Text(text) => {
+                    let body = match store::semio_format::split_text_preamble(text) {
+                        Ok((_, rest)) => rest,
+                        Err(_) => text,
+                    };
+                    let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(10).collect();
+                    let magic: Vec<u8> = (0..hex.len().min(10)).step_by(2)
+                        .filter_map(|i| hex.get(i..i + 2))
+                        .filter_map(|h| u8::from_str_radix(h, 16).ok())
+                        .collect();
+                    match crate::artifacts::pdf::standards::v1_7::engine::sniff_pdf(&magic) {
+                        Some(_) => IoConfidence::Medium,
+                        None => IoConfidence::Low,
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = PdfParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec PdfBuilderFacets {
+        construction: derived_construction::PdfBuilderConstruction,
+        analysis: derived_analysis::PdfAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::PdfComposerComposition,
+    }
+    builder: PdfBuilder,
+    analyzer: PdfAnalyzer,
+    composer: PdfComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

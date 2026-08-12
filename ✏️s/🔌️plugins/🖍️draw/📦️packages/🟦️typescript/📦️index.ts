@@ -10,5 +10,4 @@ export * as draw_mutations from "../../🗿️artifacts/🖍️draw/🧬️schem
 export * as draw_mutations_text from "../../🗿️artifacts/🖍️draw/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as draw_mutations_binary from "../../🗿️artifacts/🖍️draw/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as draw_io from "../../🗿️artifacts/🖍️draw/🚪️io/🟦️component.ts";
-export * as draw_builder from "../../🗿️artifacts/🖍️draw/🏗️builder/🟦️component.ts";
 export * as draw_decomposer from "../../🗿️artifacts/🖍️draw/🪓️decomposer/🟦️component.ts";

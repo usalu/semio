@@ -10,5 +10,4 @@ export * as raster_mutations from "../../🗿️artifacts/🖨️raster/🧬️s
 export * as raster_mutations_text from "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as raster_mutations_binary from "../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as raster_io from "../../🗿️artifacts/🖨️raster/🚪️io/🟦️component.ts";
-export * as raster_builder from "../../🗿️artifacts/🖨️raster/🏗️builder/🟦️component.ts";
 export * as raster_decomposer from "../../🗿️artifacts/🖨️raster/🪓️decomposer/🟦️component.ts";

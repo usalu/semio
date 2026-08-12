@@ -124,16 +124,6 @@ impl MutationDiff<VcsSnapshot> for VcsDiff {
 }
 //#endregion 🔖️Apply
 
-//#region 🔖️Helpers
-/// 🖼️ Whole-snapshot replacement diff.
-pub fn diff_set_snapshot(snapshot: &VcsSnapshot) -> VcsDiff {
-    VcsDiff {
-        artifact: Some(Box::new(VcsArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
-}
-//#endregion 🔖️Helpers
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

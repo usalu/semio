@@ -1,0 +1,3 @@
+(* ebnf space.home.inference *)
+document = header, body ;
+header = 'schema', space, 'space.home.inference', newline ;

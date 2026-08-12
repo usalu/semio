@@ -22,8 +22,7 @@ pub mod add_node {
     pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.nodes.iter().map(|n| n.id.clone()), "n");
-        let index = snapshot.nodes.len();
-        Ok(Emit::mutations(vec![Fem3dMutation::SetNode { index, node: crate::artifacts::fem3d::FemNode { id, x: payload.x, y: payload.y, z: payload.z } }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::CreateNode(crate::artifacts::fem3d::mutations::create_node::mutation::CreateNode { node: crate::artifacts::fem3d::FemNode { id, x: payload.x, y: payload.y, z: payload.z } })]))
     }
 }
 //#endregion 🔖️AddNode
@@ -45,9 +44,8 @@ pub mod add_bar {
     pub fn handle(payload: &AddBar, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| crate::artifacts::fem3d::element_id(e).to_string()), "e");
-        let index = snapshot.elements.len();
         let element = crate::artifacts::fem3d::FemElement::Bar { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
-        Ok(Emit::mutations(vec![Fem3dMutation::SetElement { index, element: Box::new(element) }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::CreateElement(crate::artifacts::fem3d::mutations::create_element::mutation::CreateElement { element: Box::new(element) })]))
     }
 }
 //#endregion 🔖️AddBar
@@ -70,9 +68,8 @@ pub mod add_frame {
     pub fn handle(payload: &AddFrame, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| crate::artifacts::fem3d::element_id(e).to_string()), "e");
-        let index = snapshot.elements.len();
         let element = crate::artifacts::fem3d::FemElement::Frame { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone(), roll: payload.roll };
-        Ok(Emit::mutations(vec![Fem3dMutation::SetElement { index, element: Box::new(element) }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::CreateElement(crate::artifacts::fem3d::mutations::create_element::mutation::CreateElement { element: Box::new(element) })]))
     }
 }
 //#endregion 🔖️AddFrame
@@ -94,8 +91,7 @@ pub mod add_material {
     pub fn handle(payload: &AddMaterial, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.materials.iter().map(|m| m.id.clone()), "m");
-        let index = snapshot.materials.len();
-        Ok(Emit::mutations(vec![Fem3dMutation::SetMaterial { index, material: crate::artifacts::fem3d::FemMaterial { id, name: payload.name.clone(), e: payload.e, g: payload.g, nu: 0.3, rho: 7850.0 } }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::CreateMaterial(crate::artifacts::fem3d::mutations::create_material::mutation::CreateMaterial { material: crate::artifacts::fem3d::FemMaterial { id, name: payload.name.clone(), e: payload.e, g: payload.g, nu: 0.3, rho: 7850.0 } })]))
     }
 }
 //#endregion 🔖️AddMaterial
@@ -117,8 +113,7 @@ pub mod add_section {
     pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.sections.iter().map(|s| s.id.clone()), "s");
-        let index = snapshot.sections.len();
-        Ok(Emit::mutations(vec![Fem3dMutation::SetSection { index, section: crate::artifacts::fem3d::FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy, iz: payload.iz, j: payload.j } }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::CreateSection(crate::artifacts::fem3d::mutations::create_section::mutation::CreateSection { section: crate::artifacts::fem3d::FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy, iz: payload.iz, j: payload.j } })]))
     }
 }
 //#endregion 🔖️AddSection
@@ -138,8 +133,7 @@ pub mod add_support {
     pub fn handle(payload: &AddSupport, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.supports.iter().map(|s| s.id.clone()), "sup");
-        let index = snapshot.supports.len();
-        Ok(Emit::mutations(vec![Fem3dMutation::SetSupport { index, support: crate::artifacts::fem3d::FemSupport { id, node_id: payload.node_id.clone(), fixed: payload.fixed.clone() } }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::CreateSupport(crate::artifacts::fem3d::mutations::create_support::mutation::CreateSupport { support: crate::artifacts::fem3d::FemSupport { id, node_id: payload.node_id.clone(), fixed: payload.fixed.clone() } })]))
     }
 }
 //#endregion 🔖️AddSupport
@@ -168,7 +162,6 @@ pub mod add_solid {
     pub fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.solids.iter().map(|s| s.id.clone()), "sol");
-        let index = snapshot.solids.len();
         let outline = vec![[payload.x, payload.y], [payload.x + payload.width, payload.y], [payload.x + payload.width, payload.y + payload.depth], [payload.x, payload.y + payload.depth]];
         let solid = crate::artifacts::fem3d::FemSolid {
             id,
@@ -181,7 +174,7 @@ pub mod add_solid {
             mesh_size: payload.mesh_size.unwrap_or(0.5),
             material_id: payload.material_id.clone(),
         };
-        Ok(Emit::mutations(vec![Fem3dMutation::SetSolid { index, solid }]))
+        Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::mutation::CreateSolid { solid })]))
     }
 }
 //#endregion 🔖️AddSolid

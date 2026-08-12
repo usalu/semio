@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.norm.din18599.inference;
+
+// 💡️ Din18599 inference schema — document outline (field/section list + entry count).
+
+message Din18599Inference {
+  // @state inferred
+  Din18599Outline outline = 1;
+}
+
+message Din18599Outline {
+  repeated string section_outline = 1;
+  uint32 field_count = 2;
+  uint32 entry_count = 3;
+}

@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.gif.89a.inference
+extension gif.89a.inference
+start document
+
+document = header body
+header = "schema" SP "stdio.gif.89a.inference" NL
+body = payload NL?
+payload = OCTET+

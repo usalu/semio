@@ -26,9 +26,10 @@ const PROCESS3D_KERNEL_MEMO_CAP: usize = 128;
 /// 🔌️ Registers this app's document exporters/import handlers and codec with the OS runtime — the
 /// `setup` hook `📦️glue.rs`'s `semio_plugin!{}` invocation calls.
 pub fn register() {
-    crate::artifacts::process3d::composer::register();
+    crate::artifacts::process3d::io_registry::register();
 
     register_artifact_schema();
+    register_artifact_inference();
     crate::apps::process3d::config::schema::register_app_schema();
     register_pilot_languages();
     fn process3d_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
@@ -643,19 +644,22 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSna
 /// `&Process3dSnapshot` keeps every handler free of manual mutation, since the VCS store applies them.
 pub fn insert_step_mutations(fixture: &Process3dSnapshot, step: ProcessStep) -> Vec<crate::artifacts::process3d::op::Process3dMutation> {
     use crate::artifacts::process3d::op::Process3dMutation;
-    use protocol::CollectionMutation;
+    use crate::artifacts::process3d::schema::mutations::{set_cursor, steps};
     let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len()).min(fixture.steps.len());
-    vec![Process3dMutation::Steps { collection: CollectionMutation::Add { index: cursor, item: step } }, Process3dMutation::SetCursor { resolved_up_to: Some(cursor + 1) }]
+    vec![
+        Process3dMutation::CreateStep(steps::mutation::CreateStep { index: cursor, step }),
+        Process3dMutation::ChangeCursor(set_cursor::mutation::ChangeCursor { new_resolved_up_to: Some(cursor + 1) }),
+    ]
 }
 
 pub fn remove_step_mutations(fixture: &Process3dSnapshot, id: &str) -> Option<Vec<crate::artifacts::process3d::op::Process3dMutation>> {
     use crate::artifacts::process3d::op::Process3dMutation;
-    use protocol::CollectionMutation;
+    use crate::artifacts::process3d::schema::mutations::{delete_step, set_cursor};
     let index = fixture.steps.iter().position(|step| step.id == id)?;
-    let mut operations = vec![Process3dMutation::Steps { collection: CollectionMutation::Remove { id: id.to_string() } }];
+    let mut operations = vec![Process3dMutation::DeleteStep(delete_step::mutation::DeleteStep { id: id.to_string() })];
     if let Some(cursor) = fixture.resolved_up_to {
         if cursor > index {
-            operations.push(Process3dMutation::SetCursor { resolved_up_to: Some(cursor - 1) });
+            operations.push(Process3dMutation::ChangeCursor(set_cursor::mutation::ChangeCursor { new_resolved_up_to: Some(cursor - 1) }));
         }
     }
     Some(operations)
@@ -903,6 +907,15 @@ pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::process3d::schema::process3d_artifact_schema_descriptor());
 }
 
+/// 💡️ Registers the process3d artifact `💡️inference` descriptor into the OS-wide inference
+/// catalog — sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inference() {
+    ::schema::register_artifact_inference_descriptor(
+        crate::artifacts::process3d::standards::v1::subsets::any::schema::inferences::process3d_artifact_inference_descriptor(),
+    );
+}
+
 //#region 🔖️ArtifactEngine
 /// ⚙️ UI-independent artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct Process3dEngine {
@@ -923,4 +936,113 @@ impl Process3dEngine {
     }
 }
 //#endregion 🔖️ArtifactEngine
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ArtifactBuilder, ComposerEntry, ComposedArtifact, ComposeError, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload, IoConfidence, composer_entry_of};
+    use crate::artifacts::process3d::standards::v1::subsets::any::schema::Process3dComposer as Process3dAnyComposer;
+    use crate::artifacts::process3d::standards::v1::subsets::any::schema::Process3dBuilder as Process3dAnyBuilder;
 
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    //#region 🔖️ExportEntries
+    /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: the typed registry (W11-W14) only ever grew
+    /// IMPORT-direction entries (each composer's own `reads()`) -- nothing registers the REVERSE
+    /// ("this domain artifact can be exported AS format Y"), because `ArtifactComposer` only models
+    /// "produce my own snapshot." These entries wrap the artifact's EXISTING `🚪️io/📤️export/🧵️serializers`
+    /// leaves (which already convert this artifact's snapshot straight to target-format bytes/text) as
+    /// their own `ComposerEntry` rows: `writes` = the target format's dialect, `reads` = just this
+    /// artifact's own dialect. `register_composer_entries` already inserts BOTH an Import key (target
+    /// reads from us) and an Export key (we export to target) per entry, so no framework change was
+    /// needed, only populating the missing direction. Generated by generators/w15_add_export_entries.py
+    /// -- hand-validated pattern on note/json first (see that file's own tests), pilot kept as reference.
+    const PROCESS3D_DIALECT: Dialect = Dialect { artifact_kind: "s.process3d", standard: StandardId("1"), subset: SubsetId("*") };
+    const PROCESS3D_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
+
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::process3d::Process3dSnapshot, ComposeError> {
+        if let Some(source) = sources.iter().find(|s| s.dialect == PROCESS3D_DIALECT) {
+            let builder = match &source.payload {
+                IoPayload::Text(t) => Process3dAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Binary(b) => Process3dAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+            };
+            return builder.build().map_err(|diagnostics| ComposeError { message: "Process3dComposer export: build() failed".into(), diagnostics });
+        }
+        if let Some(source) = sources.iter().find(|s| s.dialect == PROCESS3D_JSON_BRIDGE_DIALECT) {
+            // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
+            // deserialized `serde_json::Value`, not this artifact's own wire text/binary -- json
+            // is the universal bridge dialect every domain artifact already imports from.
+            let bytes: Vec<u8> = match &source.payload {
+                IoPayload::Text(t) => t.as_bytes().to_vec(),
+                IoPayload::Binary(b) => b.clone(),
+            };
+            return crate::artifacts::process3d::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
+        }
+        Err(ComposeError { message: "Process3dComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
+    }
+
+    const EXPORT_IFC_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("4"), subset: SubsetId("*") };
+    fn compose_export_ifc(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let snapshot = rebuild_native_snapshot(sources)?;
+        let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::ifc::v4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+        Ok(ComposedArtifact { dialect: EXPORT_IFC_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+    }
+    const EXPORT_STEP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
+    fn compose_export_step(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let snapshot = rebuild_native_snapshot(sources)?;
+        let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::step::v_ap214::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+        Ok(ComposedArtifact { dialect: EXPORT_STEP_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+    }
+    const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
+    fn compose_export_png(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let snapshot = rebuild_native_snapshot(sources)?;
+        let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+        Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+    }
+    const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
+    fn compose_export_json(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let snapshot = rebuild_native_snapshot(sources)?;
+        let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+        Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+    }
+    const EXPORT_DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
+    fn compose_export_dwg(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let snapshot = rebuild_native_snapshot(sources)?;
+        let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+        Ok(ComposedArtifact { dialect: EXPORT_DWG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+    }
+    const EXPORT_STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
+    fn compose_export_stl(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let snapshot = rebuild_native_snapshot(sources)?;
+        let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::stl::v_ascii::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+        Ok(ComposedArtifact { dialect: EXPORT_STL_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+    }
+    const EXPORT_GLTF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
+    fn compose_export_gltf(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let snapshot = rebuild_native_snapshot(sources)?;
+        let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::gltf::v2_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+        Ok(ComposedArtifact { dialect: EXPORT_GLTF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+    }
+    const EXPORT_OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
+    fn compose_export_obj(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+        let snapshot = rebuild_native_snapshot(sources)?;
+        let bytes = crate::artifacts::process3d::io::export::serializers::artifacts::obj::v3_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+        Ok(ComposedArtifact { dialect: EXPORT_OBJ_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+    }
+    //#endregion 🔖️ExportEntries
+
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![
+            composer_entry_of::<Process3dAnyComposer>(),
+            ComposerEntry { writes: EXPORT_IFC_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_ifc },
+            ComposerEntry { writes: EXPORT_STEP_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_step },
+            ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_png },
+            ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_json },
+            ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_dwg },
+            ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_stl },
+            ComposerEntry { writes: EXPORT_GLTF_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_gltf },
+            ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[PROCESS3D_DIALECT], compose: compose_export_obj },
+        ]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

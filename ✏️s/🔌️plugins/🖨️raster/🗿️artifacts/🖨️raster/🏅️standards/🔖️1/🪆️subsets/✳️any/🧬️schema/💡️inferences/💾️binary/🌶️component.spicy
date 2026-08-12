@@ -1,0 +1,4 @@
+module Raster_raster_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

@@ -1,0 +1,9 @@
+dialect grammar
+grammar lowpoly.lowpoly.inference
+extension lowpoly.inference
+start document
+
+document = header body
+header = "schema" SP "lowpoly.lowpoly.inference" NL
+body = payload NL?
+payload = OCTET+

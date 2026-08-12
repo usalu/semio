@@ -366,7 +366,18 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
-
+The current artifact system is adhoc.
+Every artifact must be composable (and appear as child) or referenceable (and appear only as link).
+Hence every artifact can depend on other artifacts.
+e.g.
+procdudure3d uses flow and brep (inferred artifact)
+cad uses brep
+fem uses meshes
+lowpoly uses meshes
+document uses text, image, video, audio, etc
+video uses images, audio, etc
+etc
+Everything must be fully integrated with version control, history, collaboration, etc over cqrs mutation-based event-sourcing, etc
 
 ---
 

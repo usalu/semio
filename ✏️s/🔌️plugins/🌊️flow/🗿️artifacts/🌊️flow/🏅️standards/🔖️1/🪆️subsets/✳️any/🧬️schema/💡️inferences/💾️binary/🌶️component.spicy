@@ -1,0 +1,4 @@
+module Flow_flow_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

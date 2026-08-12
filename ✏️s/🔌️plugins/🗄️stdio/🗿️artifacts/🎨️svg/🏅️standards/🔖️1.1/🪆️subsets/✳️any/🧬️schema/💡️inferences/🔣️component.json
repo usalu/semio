@@ -1,0 +1,21 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/svg/inference.json",
+  "title": "SvgInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dimensions"],
+  "properties": {
+    "dimensions": { "$ref": "#/$defs/SvgDimensions", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "SvgDimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "number" },
+        "height": { "type": "number" }
+      }
+    }
+  }
+}

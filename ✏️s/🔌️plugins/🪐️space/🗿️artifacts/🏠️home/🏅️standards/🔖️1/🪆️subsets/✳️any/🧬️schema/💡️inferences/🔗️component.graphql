@@ -1,0 +1,5 @@
+# 💡️ SHome inference schema — contentDigest fingerprint of the persisted document.
+
+type SHomeInference {
+  contentDigest: String! @state(class: INFERRED)
+}

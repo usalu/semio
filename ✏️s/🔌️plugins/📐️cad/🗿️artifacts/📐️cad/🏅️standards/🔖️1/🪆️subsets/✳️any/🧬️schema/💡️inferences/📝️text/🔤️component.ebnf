@@ -1,0 +1,3 @@
+(* ebnf cad.cad.inference *)
+document = header, body ;
+header = 'schema', space, 'cad.cad.inference', newline ;

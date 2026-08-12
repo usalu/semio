@@ -110,3 +110,106 @@ pub fn sequence_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor
     }
 }
 //#endregion 🔖️Descriptor
+//#region 🏗️DerivedConstruction
+pub mod derived_construction {
+    use semio_framework_plugin::ArtifactBuilder;
+    use crate::artifacts::sequence::schema::diff::SequenceDiff;
+    use crate::artifacts::sequence::schema::mutations::SequenceMutation;
+    use crate::artifacts::sequence::schema::snapshot::SequenceSnapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SequenceBuilderConstruction {
+        snapshot: SequenceSnapshot,
+        diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for SequenceBuilderConstruction {
+        type Snapshot = SequenceSnapshot;
+        type Mutation = SequenceMutation;
+        type Diff = SequenceDiff;
+        fn empty() -> Self { Self { snapshot: SequenceSnapshot::default(), diagnostics: Vec::new() } }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<SequenceSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SequenceSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+            let d = <SequenceMutation as protocol::Mutation<SequenceSnapshot>>::diff(&mutation, &self.snapshot);
+            self.snapshot = protocol::MutationDiff::apply(&d, &self.snapshot);
+            (self, d)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> Self {
+            self.snapshot = <SequenceDiff as protocol::MutationDiff<SequenceSnapshot>>::apply(&diff, &self.snapshot);
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+        }
+    }
+}
+pub use derived_construction::*;
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+pub mod derived_analysis {
+    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::sequence::SequenceSnapshot;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SequenceParts {
+        pub snapshot: Option<SequenceSnapshot>,
+    }
+
+    pub struct SequenceAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for SequenceAnalyzerAnalysis {
+        type Parts = SequenceParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.sequence", standard: StandardId("1"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            IoConfidence::Medium
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = SequenceParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <SequenceSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <SequenceSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec SequenceBuilderFacets {
+        construction: derived_construction::SequenceBuilderConstruction,
+        analysis: derived_analysis::SequenceAnalyzerAnalysis,
+        composition: super::super::io::derived_composition::SequenceComposerComposition,
+    }
+    builder: SequenceBuilder,
+    analyzer: SequenceAnalyzer,
+    composer: SequenceComposer,
+);
+//#endregion 🧬️DerivedArtifactFacets

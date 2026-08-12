@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/vdi3805/inference/text.json",
+  "title": "Vdi3805InferenceText",
+  "type": "object"
+}

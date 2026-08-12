@@ -51,14 +51,14 @@ pub fn demo_xml_snapshot() -> XmlSnapshot {
 //#region 🔖️Register
 /// 🗂️ Registers codecs and the artifact schema descriptor.
 pub fn register() {
-    crate::artifacts::xml::composer::register();
+    crate::artifacts::xml::io_registry::register();
     register_artifact_schema();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<XmlSnapshot, XmlMutation>(STDIO_XML_DOCUMENT_SCHEMA));
     // 🛡️ D5's generic validate-on-build hook: registers the ✳️valid subset's SubsetValidator so
     // the wire-level `io_dispatch`/`wire_artifact_compose` hook can re-check it. The ComposerEntry
     // itself is registered separately via this standard's own `composer::entries()` aggregation.
-    crate::artifacts::xml::standards::v1_0::subsets::valid::composer::register();
+    crate::artifacts::xml::standards::v1_0::subsets::valid::io::register();
 }
 
 /// 📌️ P2-FG1: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per note's exemplar
@@ -653,3 +653,17 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::xml::standards::v1_0::subsets::any::schema::XmlComposer as XmlRawAnyComposer;
+    use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::XmlValidComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<XmlRawAnyComposer>(), composer_entry_of::<XmlValidComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

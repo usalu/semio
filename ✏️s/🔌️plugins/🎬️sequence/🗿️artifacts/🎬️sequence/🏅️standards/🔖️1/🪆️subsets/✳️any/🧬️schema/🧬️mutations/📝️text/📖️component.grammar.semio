@@ -1,9 +1,23 @@
 dialect grammar
 grammar sequence.mutations
 extension sequence
-start document
+start line
 
-document = header body
-header = "schema" SP "stdio.json" NL
-body = payload NL?
-payload = OCTET+
+line = create-step / delete-step / move-step / edit-step-params / change-step-collapsed
+     / connect-steps / disconnect-steps / duplicate-step
+
+create-step = "create-step" SP step-block
+delete-step = "delete-step" SP id
+move-step = "move-step" SP id SP number SP number
+edit-step-params = "edit-step-params" SP id SP text
+change-step-collapsed = "change-step-collapsed" SP id SP boolean
+connect-steps = "connect-steps" SP id SP id SP id
+disconnect-steps = "disconnect-steps" SP id
+duplicate-step = "duplicate-step" SP id SP id SP number SP number
+
+step-block = "{" NL step-fields "}"
+step-fields = OCTET+
+id = OCTET+
+number = OCTET+
+text = OCTET+
+boolean = "true" / "false"

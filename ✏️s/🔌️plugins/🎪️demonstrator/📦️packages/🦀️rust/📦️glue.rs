@@ -34,12 +34,6 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
                 pub mod engine;
-                #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🏗️builder/🦀️component.rs"]
-                pub mod builder;
-                #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🧐️analyzer/🦀️component.rs"]
-                pub mod analyzer;
-                #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🎹️composer/🦀️component.rs"]
-                pub mod composer;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -49,6 +43,22 @@ pub mod artifacts {
                             #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
                             mod component;
                             pub use component::*;
+                            #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod topology {
+                                    #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                            }
                             #[path = "."]
                             pub mod snapshot {
                                 #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
@@ -99,12 +109,6 @@ pub mod artifacts {
                                 }
                             }
                         }
-                        #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🏗️builder/🦀️component.rs"]
-                        pub mod builder;
-                        #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧐️analyzer/🦀️component.rs"]
-                        pub mod analyzer;
-                        #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/🦀️component.rs"]
-                        pub mod composer;
                         #[path = "."]
                         pub mod io {
                             #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
@@ -271,12 +275,6 @@ pub mod artifacts {
         pub mod mutations { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::*; pub mod schema { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::*; } pub mod text { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::text::*; } pub mod pack { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::binary::*; } pub mod binary { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::binary::*; } }
         pub mod snapshot { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::*; pub mod schema { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::*; } pub mod text { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::text::*; } pub mod pack { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::binary::*; } pub mod binary { pub use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::binary::*; } }
 
-        #[path = "../../🗿️artifacts/🎪️playground/🏗️builder/🦀️component.rs"]
-        pub mod builder;
-        #[path = "../../🗿️artifacts/🎪️playground/🧐️analyzer/🦀️component.rs"]
-        pub mod analyzer;
-        #[path = "../../🗿️artifacts/🎪️playground/🎹️composer/🦀️component.rs"]
-        pub mod composer;
 
         #[path = "."]
         pub mod examples {
@@ -285,6 +283,8 @@ pub mod artifacts {
                 #[path = "../../🗿️artifacts/🎪️playground/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
+                #[path = "../../🗿️artifacts/🎪️playground/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+                mod tests;
             }
         }
     }

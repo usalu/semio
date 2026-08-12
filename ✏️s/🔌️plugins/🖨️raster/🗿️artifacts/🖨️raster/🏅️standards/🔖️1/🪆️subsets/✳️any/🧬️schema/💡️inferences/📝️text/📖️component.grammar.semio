@@ -1,0 +1,9 @@
+dialect grammar
+grammar raster.raster.inference
+extension raster.inference
+start document
+
+document = header body
+header = "schema" SP "raster.raster.inference" NL
+body = payload NL?
+payload = OCTET+

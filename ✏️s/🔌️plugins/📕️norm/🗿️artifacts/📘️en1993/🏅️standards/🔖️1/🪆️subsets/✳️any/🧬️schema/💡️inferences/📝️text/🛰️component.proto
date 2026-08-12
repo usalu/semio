@@ -1,0 +1,3 @@
+syntax = "proto3";
+package semio.s.norm.en1993.inference_text;
+message Artifact { string schema = 1; bytes payload = 2; }

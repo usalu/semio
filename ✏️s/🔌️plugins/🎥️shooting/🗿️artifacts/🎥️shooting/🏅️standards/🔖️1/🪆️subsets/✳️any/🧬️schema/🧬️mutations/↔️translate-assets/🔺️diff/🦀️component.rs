@@ -1,21 +1,23 @@
-//! 🔺️ Diff fragment yielded by `TranslateAssets`.
-use crate::artifacts::shooting::diff::ShootingDiff;
-use serde::{Deserialize, Serialize};
+//! 🔺 Diff constructor for `DragAssets` — patches every targeted asset's `origin` by the offset.
 
-//#region 🔖️Diff
-/// 🔺️ Diff produced by one mutation — a sparse [`ShootingDiff`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct TranslateAssetsDiff {
-    pub diff: ShootingDiff,
-}
+use super::mutation::DragAssets;
+use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
+use crate::artifacts::shooting::{ShootingAssetPatch, ShootingSnapshot};
 
-impl TranslateAssetsDiff {
-    pub fn from_diff(diff: ShootingDiff) -> Self {
-        Self { diff }
+//#region ↔️DragAssets
+pub fn diff_drag_assets(payload: &DragAssets, base: &ShootingSnapshot) -> ShootingDiff {
+    let patched: Vec<ShootingAssetPatchEntry> = base
+        .assets
+        .iter()
+        .filter(|asset| payload.asset_ids.contains(&asset.id))
+        .map(|asset| ShootingAssetPatchEntry {
+            id: asset.id.clone(),
+            patch: ShootingAssetPatch { origin: Some([asset.origin[0] + payload.dx, asset.origin[1] + payload.dy, asset.origin[2] + payload.dz]), ..Default::default() },
+        })
+        .collect();
+    if patched.is_empty() {
+        return ShootingDiff::default();
     }
-
-    pub fn into_shooting_diff(self) -> ShootingDiff {
-        self.diff
-    }
+    ShootingDiff { assets: Some(ShootingAssetsDelta { patched, ..Default::default() }), ..Default::default() }
 }
-//#endregion 🔖️Diff
+//#endregion ↔️DragAssets

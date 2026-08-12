@@ -1,0 +1,18 @@
+# 💡️ Playground inference schema — topology is always the vacuous empty graph today (no domain
+# entities exist yet on PlaygroundSnapshot).
+
+type PlaygroundInference {
+  topology: PlaygroundTopology! @state(class: INFERRED)
+}
+
+type PlaygroundTopology {
+  topoOrder: [String!]!
+  depth: [PlaygroundTopologyDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type PlaygroundTopologyDepthEntry {
+  id: String!
+  depth: Int!
+}

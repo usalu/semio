@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/inference/text.json",
+  "title": "LowpolyInferenceText",
+  "type": "object"
+}

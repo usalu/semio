@@ -1,0 +1,13 @@
+# 💡️ Png inference schema — IHDR-derived raster geometry.
+
+type PngInference {
+  dimensions: PngDimensions! @state(class: INFERRED)
+}
+
+type PngDimensions {
+  width: Int!
+  height: Int!
+  bitDepth: Int!
+  hasAlpha: Boolean!
+  pixelCount: Int!
+}

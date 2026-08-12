@@ -1,21 +1,19 @@
-//! 🔺️ Diff fragment yielded by `UpdateMeta`.
-use crate::artifacts::program::diff::ProgramDiff;
-use serde::{Deserialize, Serialize};
+//! 🔺️ Sparse diff construction for the `update_meta` mutation leaf. `program.meta`'s diff slot
+//! is a plain `Option<ProgramMeta>` whole-value field (no add/remove/patch delta shape), so the
+//! diff is just "the new full value of meta".
 
-//#region 🔖️Diff
-/// @emoji 🔺️ Diff produced by one `UpdateMeta` mutation — a sparse [`ProgramDiff`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct UpdateMetaDiff {
-    pub diff: ProgramDiff,
+use super::mutation::{RenameMeta, ReplaceMeta};
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
+
+/// ✏️ New `ProgramMeta` with only `title` changed.
+pub fn diff_rename(payload: &RenameMeta, base: &ProgramSnapshot) -> ProgramDiff {
+    let mut value = base.meta.clone();
+    value.title = payload.new_title.clone();
+    ProgramDiff { meta: Some(value), ..Default::default() }
 }
 
-impl UpdateMetaDiff {
-    pub fn from_diff(diff: ProgramDiff) -> Self {
-        Self { diff }
-    }
-
-    pub fn into_program_diff(self) -> ProgramDiff {
-        self.diff
-    }
+/// 🔁️ New `ProgramMeta` wholesale.
+pub fn diff_replace(payload: &ReplaceMeta, _base: &ProgramSnapshot) -> ProgramDiff {
+    ProgramDiff { meta: Some(payload.new_meta.clone()), ..Default::default() }
 }
-//#endregion 🔖️Diff

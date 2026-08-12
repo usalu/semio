@@ -1,11 +1,8 @@
 //! 🔺️ Shooting artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::shooting::schema::ShootingArtifact;
-use crate::artifacts::shooting::{
-    ShootingAsset, ShootingAssetPatch, ShootingSavedCamera, ShootingSavedCameraPatch, ShootingShot,
-    ShootingShotPatch, ShootingSnapshot,
-};
-use protocol::{CollectionMutation, MutationDiff, Patchable};
+use crate::artifacts::shooting::{ShootingAsset, ShootingSavedCamera, ShootingShot, ShootingSnapshot};
+use protocol::{MutationDiff, Patchable};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -276,121 +273,12 @@ impl MutationDiff<ShootingSnapshot> for ShootingDiff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-/// 🧩 Builds a collection delta from a [`CollectionMutation`].
-pub fn assets_delta_from_collection_mutation(
-    base: &[ShootingAsset],
-    op: &CollectionMutation<String, ShootingAsset, ShootingAssetPatch>,
-) -> ShootingAssetsDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => ShootingAssetsDelta {
-            added: vec![item.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Remove { id } => ShootingAssetsDelta {
-            removed: vec![id.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Patch { id, patch } => ShootingAssetsDelta {
-            patched: vec![ShootingAssetPatchEntry {
-                id: id.clone(),
-                patch: patch.clone(),
-            }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|item| item.id.clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            ShootingAssetsDelta {
-                reordered: Some(ids),
-                ..Default::default()
-            }
-        }
-    }
-}
-
-/// 🧩 Builds a shots collection delta from a [`CollectionMutation`].
-pub fn shots_delta_from_collection_mutation(
-    base: &[ShootingShot],
-    op: &CollectionMutation<String, ShootingShot, ShootingShotPatch>,
-) -> ShootingShotsDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => ShootingShotsDelta {
-            added: vec![item.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Remove { id } => ShootingShotsDelta {
-            removed: vec![id.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Patch { id, patch } => ShootingShotsDelta {
-            patched: vec![ShootingShotPatchEntry {
-                id: id.clone(),
-                patch: patch.clone(),
-            }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|item| item.id.clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            ShootingShotsDelta {
-                reordered: Some(ids),
-                ..Default::default()
-            }
-        }
-    }
-}
-
-/// 🧩 Builds a saved-cameras collection delta from a [`CollectionMutation`].
-pub fn saved_cameras_delta_from_collection_mutation(
-    base: &[ShootingSavedCamera],
-    op: &CollectionMutation<String, ShootingSavedCamera, ShootingSavedCameraPatch>,
-) -> ShootingSavedCamerasDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => ShootingSavedCamerasDelta {
-            added: vec![item.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Remove { id } => ShootingSavedCamerasDelta {
-            removed: vec![id.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Patch { id, patch } => ShootingSavedCamerasDelta {
-            patched: vec![ShootingSavedCameraPatchEntry {
-                id: id.clone(),
-                patch: patch.clone(),
-            }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|item| item.id.clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            ShootingSavedCamerasDelta {
-                reordered: Some(ids),
-                ..Default::default()
-            }
-        }
-    }
-}
-
-/// 🖼️ Whole-snapshot replacement diff.
-pub fn diff_set_snapshot(snapshot: &ShootingSnapshot) -> ShootingDiff {
-    ShootingDiff {
-        artifact: Some(Box::new(ShootingArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
-}
+// 🗑️ The pre-migration `*_delta_from_collection_mutation` helpers and `diff_set_snapshot` lived
+// here to serve the generic `CollectionMutation`/`SetSnapshot` dispatch that `../../🧬️mutations`
+// deleted outright (banned per `📓️taxonomy.md`'s "Forbidden vocabulary" — whole-document replace
+// has no in-history mutation, see `ArtifactStore::reset`). Every triad leaf under `🧬️mutations/`
+// now builds its `ShootingAssetsDelta`/`ShootingShotsDelta`/`ShootingSavedCamerasDelta` sparsely
+// and directly from its own payload instead.
 //#endregion 🔖️Helpers
 
 //#region 🧪️Tests

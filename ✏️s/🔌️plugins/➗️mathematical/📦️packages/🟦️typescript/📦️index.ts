@@ -10,5 +10,4 @@ export * as mathematical_mutations from "../../🗿️artifacts/➗️mathematic
 export * as mathematical_mutations_text from "../../🗿️artifacts/➗️mathematical/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
 export * as mathematical_mutations_binary from "../../🗿️artifacts/➗️mathematical/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
 export * as mathematical_io from "../../🗿️artifacts/➗️mathematical/🚪️io/🟦️component.ts";
-export * as mathematical_builder from "../../🗿️artifacts/➗️mathematical/🏗️builder/🟦️component.ts";
 export * as mathematical_decomposer from "../../🗿️artifacts/➗️mathematical/🪓️decomposer/🟦️component.ts";

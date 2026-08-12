@@ -1,0 +1,9 @@
+dialect grammar
+grammar gis.gismap.inference
+extension gismap.inference
+start document
+
+document = header body
+header = "schema" SP "gis.gismap.inference" NL
+body = payload NL?
+payload = OCTET+

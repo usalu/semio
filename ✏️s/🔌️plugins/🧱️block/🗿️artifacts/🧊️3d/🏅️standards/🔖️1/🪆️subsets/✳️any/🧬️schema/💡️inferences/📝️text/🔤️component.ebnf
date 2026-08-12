@@ -1,0 +1,3 @@
+(* ebnf block.block3d.inference *)
+document = header, body ;
+header = 'schema', space, 'block.block3d.inference', newline ;

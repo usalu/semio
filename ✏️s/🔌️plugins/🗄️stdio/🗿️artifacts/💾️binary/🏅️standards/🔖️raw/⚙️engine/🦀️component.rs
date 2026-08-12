@@ -22,7 +22,7 @@ pub fn demo_binary_snapshot() -> BinarySnapshot {
 /// 🗂️ Registers codecs, the artifact schema descriptor, and every composer entry (which supersedes
 /// the pre-migration per-leaf `io::register()` no-ops -- see `🎹️composer::register`).
 pub fn register() {
-    crate::artifacts::binary::composer::register();
+    crate::artifacts::binary::io_registry::register();
     register_artifact_schema();
     register_pilot_languages();
     register_schema_specs();
@@ -357,3 +357,17 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 }
 //#endregion 🧪️Tests
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::binary::standards::v_raw::subsets::any::schema::BinaryComposer as BinaryRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    /// 🎹️ Every composer entry this standard can serve.
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<BinaryRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

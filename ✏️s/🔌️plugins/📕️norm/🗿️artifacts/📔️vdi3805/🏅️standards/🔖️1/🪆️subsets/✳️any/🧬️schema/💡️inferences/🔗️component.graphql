@@ -1,0 +1,11 @@
+# 💡️ Vdi3805 inference schema — document outline (field/section list + entry count).
+
+type Vdi3805Inference {
+  outline: Vdi3805Outline! @state(class: INFERRED)
+}
+
+type Vdi3805Outline {
+  sectionOutline: [String!]!
+  fieldCount: Int!
+  entryCount: Int!
+}

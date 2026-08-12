@@ -1,0 +1,14 @@
+# 💡️ GIS terrain inference schema — geographic bounding box + position count of the `map:in`
+# overlay decoded from `importedFeaturesJson`.
+
+type GisTerrainInference {
+  positionCount: Int! @state(class: INFERRED)
+  bounds: GisTerrainBounds @state(class: INFERRED)
+}
+
+type GisTerrainBounds {
+  lonMin: Float!
+  lonMax: Float!
+  latMin: Float!
+  latMax: Float!
+}
