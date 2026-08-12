@@ -2,12 +2,12 @@
 
 %#region 🧭 Einordnung
 
-Der Anhang bestimmt das minimale, unsicherheitsbewusste Eingangsmodell, mit dem eine strukturelle Vorbemessung und eine orientierende Ökobilanz wiederverwendeter Baukomponenten in der Vorplanung (Leistungsphase~2 nach HOAI) automatisch rechnen. Die Herleitung erfolgt am linearen Element, der Stütze; Divergenzen anderer Typologiefamilien sind vermerkt. Sie schließt an Typologie und Entwurfsrollen an (vgl.\ \appendixref{anlage:typologie}).
+Der Anhang bestimmt das minimale, unsicherheitsbewusste Eingangsmodell, mit dem eine strukturelle Vorbemessung und eine orientierende Ökobilanz wiederverwendeter Baukomponenten in der Vorplanung (Leistungsphase~2 nach HOAI) automatisch rechnen -- hergeleitet am linearen Element, der Stütze, im Anschluss an Typologie und Entwurfsrollen (vgl.\ \appendixref{anlage:typologie}).
 
-Die Gliederung folgt der Kette Ergebnis, Regel, Eingang, Beleg, Lücke. Eingangsgrößen, die beide Analysen lesen, stehen genau einmal in \tableref{tab:em-gemeinsam}: Sie bilden den Synchronisationspunkt, an dem eine Änderung gleichzeitig auf Tragwerks- und Lebenszyklusmodell wirkt. Erst danach folgt, was jede Analyse zusätzlich benötigt.
+Die Gliederung folgt der Kette Ergebnis, Regel, Eingang, Beleg, Lücke. Eingangsgrößen, die beide Analysen lesen, stehen einmal in \tableref{tab:em-gemeinsam} und bilden den Synchronisationspunkt, an dem eine Änderung gleichzeitig auf Tragwerks- und Lebenszyklusmodell wirkt.
 
 \begin{Window}[title=Hinweis zur Vorplanung (Leistungsphase 2 nach HOAI)]
-Die ausgewiesenen Kennwerte und die daraus erzeugten GWP- und Tragwerksaussagen sind orientierende Überschlagswerte zum Variantenvergleich. Sie beruhen teils auf abgeleiteten, angenommenen oder offenen Eingangsdaten und ersetzen weder einen prüfbaren Standsicherheitsnachweis nach §~66 MBO/LBO noch eine verifizierte Ökobilanz nach DIN~EN~15978 / DIN~EN~15804. Eine Aussage zur bauaufsichtlichen Verwendbarkeit wird nicht getroffen; die dafür erforderlichen Wege sind in \tableref{tab:em-scope} benannt. Verantwortung für Bemessung, Nachweis und Verwendbarkeit verbleibt bei der Tragwerksplanung beziehungsweise den prüfenden Stellen. Alle Werte ohne Gewähr.
+Die ausgewiesenen Kennwerte sind orientierende Überschlagswerte zum Variantenvergleich und ersetzen weder einen Standsicherheitsnachweis nach §~66 MBO/LBO noch eine verifizierte Ökobilanz nach DIN~EN~15978 / DIN~EN~15804 (vgl.\ \tableref{tab:em-scope}). Verantwortung für Bemessung, Nachweis und Verwendbarkeit verbleibt bei der Tragwerksplanung beziehungsweise den prüfenden Stellen; alle Werte ohne Gewähr.
 \end{Window}
 
 %#endregion
@@ -16,7 +16,7 @@ Die ausgewiesenen Kennwerte und die daraus erzeugten GWP- und Tragwerksaussagen 
 
 \subsection{Abgrenzung Vorplanung gegen Nachweisebene}
 
-Maßgeblich ist die Eingangsobergrenze: Verlangt werden dürfen nur Daten, die verhältnismäßig und ohne formale Nachweishandlung beschaffbar sind, also aus Metadaten, zerstörungsfreier oder visueller Erfassung und begründeter Annahme. Kein Pflichtfeld darf eine Handlung erzwingen, die bereits den Nachweis konstituiert -- Materialprüfung, prüfbare Berechnung mit vollständigen Teilsicherheitsbeiwerten, Absenken von $\gamma_\mathrm{M}$ über Stichprobe und $k_\mathrm{n}$, verifizierte EPD oder Zulassungsverfahren. Geprüft und verworfen wurde SIA~269 und 269/3 als Pflichtquelle; ein daraus abgeleitetes Pflichtfeld läge bereits auf der Nachweisebene.
+Maßgeblich ist die Eingangsobergrenze: Verlangt werden dürfen nur Daten, die verhältnismäßig und ohne formale Nachweishandlung beschaffbar sind -- Metadaten, zerstörungsfreie oder visuelle Erfassung, begründete Annahme. Kein Pflichtfeld darf eine Handlung erzwingen, die bereits den Nachweis konstituiert: Materialprüfung, vollständige Teilsicherheitsbemessung, Absenken von $\gamma_\mathrm{M}$ über Stichprobe und $k_\mathrm{n}$, verifizierte EPD oder Zulassungsverfahren.
 
 \SemioTableLong[text-size=8pt, key=tab:em-scope]{Zulässige und unzulässige Aussagen}{0.44,0.44,0.12}{Zulässig (Vorplanung) & Unzulässig (Nachweisebene) & Bezug}{%
   \SemioTableRow{Orientierende GWP-Schätzung als Größenordnung und Variantenvergleich (Screening) & Belastbarer, zertifizierungsfähiger Ökobilanz-Nachweis (EPD, DGNB/BNB/QNG) & EN15978; EN15804; Levels}
@@ -31,7 +31,7 @@ Maßgeblich ist die Eingangsobergrenze: Verlangt werden dürfen nur Daten, die v
 
 \subsection{Nachweiszustand, Mindestzustand und Fallback}
 
-Jede Eingangsgröße trägt genau einen Nachweiszustand. Der Mindestzustand legt fest, ab wann die Analyse für diese Größe rechnen darf; der Fallback regelt den Fall darunter. \tableref{tab:em-nachweiszustaende} ist damit die vollständige Rechenregel des Modells.
+Jede Eingangsgröße trägt einen Nachweiszustand mit Mindestzustand (ab wann die Analyse rechnen darf) und Fallback (Regel darunter) -- vollständig in \tableref{tab:em-nachweiszustaende}.
 
 \SemioTableLong[key=tab:em-nachweiszustaende]{Nachweiszustand, Mindestzustand und Fallback}{0.22,0.78}{Begriff & Bedeutung}{%
   \SemioTableRow{vorhanden & Angabe belegt (Bestandsunterlage, Messung, Kennzeichnung).}
@@ -63,7 +63,7 @@ Jede Eingangsgröße trägt genau einen Nachweiszustand. Der Mindestzustand legt
   \SemioTableRow{Ökobilanz (Ö) & GWP-Differenz Wiederverwendung gegen Referenzprodukt, als Bandbreite zwischen Cut-off-Untergrenze und Modul-D-Obergrenze & G1--G5 und Ö1--Ö7}
 }
 
-G kennzeichnet den gemeinsamen Eingang beider Analysen, V den nur für die Vorbemessung, Ö den nur für die Ökobilanz. Der Annahmeschwellenwert für den Ausnutzungsgrad ist eine Projektentscheidung und keine Eingangsgröße.
+G kennzeichnet den gemeinsamen Eingang beider Analysen, V nur die Vorbemessung, Ö nur die Ökobilanz; der Annahmeschwellenwert für den Ausnutzungsgrad ist Projektentscheidung, keine Eingangsgröße.
 
 \subsection{Gemeinsame Eingangsgrößen}
 
@@ -77,7 +77,7 @@ G kennzeichnet den gemeinsamen Eingang beider Analysen, V den nur für die Vorbe
 
 \subsection{Zusätzlich für die Vorbemessung}
 
-G1, G2 und V1--V6 bilden zusammen den vollständigen Eingangsvektor des Knicknachweises: $A$, $I$, $i$, $L_\mathrm{cr}$, $f_\mathrm{y}$, $E$, $\alpha$ und $N_\mathrm{Ed}$.
+G1, G2 und V1--V6 bilden den Eingangsvektor des Knicknachweises: $A$, $I$, $i$, $L_\mathrm{cr}$, $f_\mathrm{y}$, $E$, $\alpha$, $N_\mathrm{Ed}$.
 
 \SemioTableLong[text-size=7.2pt, key=tab:em-tragwerk]{Zusätzliche Eingangsgrößen der Vorbemessung}{0.05,0.29,0.12,0.37,0.17}{ID & Eingangsgröße & Mindestzustand & Fallback bei „offen“ & Quelle}{%
   \SemioTableRow{V1 & Repräsentative Werkstoffkennwerte $f_\mathrm{y}$ bzw.\ $f_\mathrm{c}$ und $E$ (keine geprüften charakteristischen Werte) & angenommen & konservativer Default mit Bandbreite, $E$ als Normwert; Probenahme nie Pflicht & EC3; ISO13822; Sar26; B20a}
@@ -102,7 +102,7 @@ G1, G2 und V1--V6 bilden zusammen den vollständigen Eingangsvektor des Knicknac
 
 \subsection{Datenherkunft}
 
-Ob eine Bauteilbörse die genannten Größen überhaupt liefern kann, ist plattformweise in \appendixref{anlage:integrationsreife} bewertet; die dortige Spalte der Objektdaten beschreibt denselben Eingang aus Sicht der Datenquelle. Für das Eingangsmodell sind daraus zwei Befunde bindend. Erstens wird die Werkstofffestigkeit (V1) von keinem der untersuchten Börsen- und Passport-Schemata geführt; sie erscheint erst in der Detailstufe nach DIN~SPEC~91484 als Fachgutachten und bleibt damit im Screening dauerhaft eine angenommene Größe. Zweitens liefern die Umweltfelder der Schemata ausschließlich Screening-Werte und keine verifizierte EPD, was die Ergebnisgröße der Ökobilanz auf den Variantenvergleich begrenzt.
+Ob eine Bauteilbörse die genannten Größen liefern kann, ist plattformweise in \appendixref{anlage:integrationsreife} bewertet. Zwei Befunde daraus sind bindend: Erstens führt kein untersuchtes Schema die Werkstofffestigkeit (V1); sie erscheint erst als Fachgutachten in der SPEC-91484-Detailstufe und bleibt im Screening angenommen. Zweitens liefern die Umweltfelder nur Screening-Werte, keine verifizierte EPD -- die Ergebnisgröße der Ökobilanz bleibt auf den Variantenvergleich begrenzt.
 
 %#endregion
 
@@ -112,7 +112,7 @@ Ob eine Bauteilbörse die genannten Größen überhaupt liefern kann, ist plattf
 
 \appendixsection[Q]{Quellenregister}
 
-Einzige Quelle der Wahrheit für die Kurzzeichen der Eingangstabellen. Tier~1 (normativ, primär) und Tier~2 (fachlich sekundär) dürfen einen Pflichtbedarf definieren; Tier~3 ist deskriptiv und beschreibt nur vorhandene Felder.
+Kurzzeichen der Eingangstabellen werden hier aufgelöst. Tier~1 (normativ) und Tier~2 (fachlich sekundär) dürfen einen Pflichtbedarf definieren, Tier~3 ist deskriptiv und beschreibt nur vorhandene Felder.
 
 \SemioTableLong[text-size=7.5pt, key=tab:em-quellen]{Quellenregister}{0.10,0.07,0.83}{Kürzel & Tier & Quelle (Ausgabe, maßgebliche Klausel)}{%
   \SemioTableRow{EC0 & T1 & DIN~EN~1990:2021-10 (6.4.3.2, Tab.~A1.2(B))}
@@ -142,7 +142,7 @@ Einzige Quelle der Wahrheit für die Kurzzeichen der Eingangstabellen. Tier~1 (n
   \SemioTableRow{Typ & T3 & Anhang Typologische Zuordnung (\appendixref{anlage:typologie})}
 }
 
-Alle Einträge wurden gegen Originalnorm beziehungsweise Originalpublikation geprüft. Klausel- und Abschnittsangaben bei EC0, EN15978, EN15804, ISO14044 und CPR wurden gegenüber der Vorfassung korrigiert oder geschärft. Nicht verifiziert und daher ausgeschlossen: Warmuth et al., Structures~2026.
+Alle Einträge wurden gegen Originalnorm beziehungsweise -publikation geprüft. Nicht verifiziert und daher ausgeschlossen: Warmuth et al., Structures~2026.
 
 %#endregion
 
@@ -152,7 +152,7 @@ Alle Einträge wurden gegen Originalnorm beziehungsweise Originalpublikation gep
 
 \appendixsection[L]{Lückenliste}
 
-Punkte, die keine belastbare Tier-1/2-Quelle so beantwortet, dass ein verlässlicher, vorplanungskonformer Default folgt. Sie bilden die empirischen Fragen für das Referenzbauteil-Experiment. Die letzte Spalte nennt die betroffenen Eingangsgrößen.
+Punkte, die keine belastbare Tier-1/2-Quelle beantwortet; sie bilden die empirischen Fragen für das Referenzbauteil-Experiment. Die letzte Spalte nennt die betroffenen Eingangsgrößen.
 
 \SemioTableLong[text-size=8pt, key=tab:em-luecken]{Offene Fragen}{0.07,0.71,0.22}{Nr.\ & Offene Frage und empirischer Bezug & Bezug}{%
   \SemioTableRow{L1 & Belastbare konservative Default-Festigkeiten je Baualter und Profilreihe fehlen; prior am Referenzbauteil kalibrieren; Trefferquote der Güte-Ableitung aus Metadaten prüfen & G3, V1}

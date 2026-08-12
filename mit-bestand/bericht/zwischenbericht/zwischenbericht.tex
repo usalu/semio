@@ -150,6 +150,16 @@
   semio edge synth/.style={semio edge, dash pattern=on 2.25pt off 1.5pt},
   semio bar/.style={draw=semio-chrome-border-normal,
     line width=\semio@stroke@hairline, fill=semio-chrome-panel},
+  % Baumdarstellung (phylogenetische Bäume): Tiefe über Strichstärke und
+  % Flächenton, nicht über Farbe. Ergänzt die Vokabel oben, ändert nichts daran.
+  semio tree root/.style={draw=semio-chrome-border-emphasized,
+    line width=\semio@stroke@focus, fill=semio-chrome-panel,
+    text=semio-chrome-foreground, align=left},
+  semio tree group/.style={draw=semio-chrome-border-normal,
+    line width=\semio@stroke@default, fill=semio-chrome-window,
+    text=semio-chrome-foreground, align=left},
+  semio tree branch/.style={draw=semio-chrome-border-normal,
+    line width=\semio@stroke@hairline},
 }
 \makeatother
 
@@ -635,6 +645,22 @@ Entwurfsstudio.
         \int_compare:nNnT \l_tmpa_int > 1 { \par \noindent }
         \hangindent=0.8em \hangafter=1
         \textcolor{semio-chrome-border-normal}{\textendash}~%
+        \tl_trim_spaces:n {##1}%
+      }
+  }
+% \SemioCellListInline — Geschwister-Variante von \SemioCellList: gleiche
+% Argumentform, aber laufender statt gestapelter Satz. Für Zellen mit vielen
+% kurzen Kennungen, wo die gestapelte Liste die Spalte unnötig hoch macht.
+% \SemioCellList bleibt unverändert; bestehende Anlagen sind nicht betroffen.
+\ProvideDocumentCommand \SemioCellListInline { O{;} m }
+  {
+    \seq_set_split:Nnn \l_tmpa_seq {#1} {#2}
+    \int_zero:N \l_tmpa_int
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        \int_incr:N \l_tmpa_int
+        \int_compare:nNnT \l_tmpa_int > 1
+          { \textcolor{semio-chrome-border-normal}{~\textperiodcentered}~ }
         \tl_trim_spaces:n {##1}%
       }
   }
