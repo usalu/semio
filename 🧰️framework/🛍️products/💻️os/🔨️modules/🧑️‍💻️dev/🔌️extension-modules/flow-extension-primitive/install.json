@@ -4,6 +4,6 @@
   "label": "flow-extension-primitive",
   "extends": "flow",
   "moduleUrl": "/extensions/flow-extension-primitive/semio_s_plugin_flow_extension_primitive.js",
-  "packageHash": "dev:1786381108370",
-  "installedAt": 1786381108370
+  "packageHash": "dev:1786546640531",
+  "installedAt": 1786546640531
 }

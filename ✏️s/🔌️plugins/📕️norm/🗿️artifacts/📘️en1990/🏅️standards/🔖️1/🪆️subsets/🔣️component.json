@@ -3,7 +3,25 @@
   "standard": "1",
   "subsets": {
     "*": {
-      "name": "Unconstrained en1990 1"
+      "name": "Unconstrained en1990 1",
+      "kind": "owning",
+      "ioFidelity": "canonical",
+      "import": ["s.en1990"],
+      "export": ["s.en1990"],
+      "inferences": ["outline"],
+      "partialMutations": [
+        "insert-variable-action",
+        "remove-variable-action",
+        "change-resistance",
+        "change-permanent-action",
+        "change-consequence-class",
+        "change-seismic-action",
+        "change-variable-action-category",
+        "change-variable-action-value",
+        "reorder-variable-actions",
+        "set-snapshot"
+      ],
+      "examples": ["high-consequence-office"]
     }
   }
 }

@@ -7,10 +7,10 @@ import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️product
 import { defineLint } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
-/** 🔌️Dependency-boundary lint across all 6 folded domain files (former per-package `policyFile` checks merged: renderer + stately each carried their own single-file variant). */
+/** 🔌️Dependency-boundary lint across the folded domain files (former per-package `policyFile` checks merged: renderer + stately each carried their own single-file variant). Scoped to the artifact-engine home of the compute modules; `📺️renderer` moved to the app's own `⚙️engine` as app-surface UI and is out of this compute-boundary lint's scope. */
 export const policy = defineLint("@semio-tech/cad-js-modules", (_l: BundleLinter) => {
   const repoRoot = getWorkspaceRoot();
-  return dependencyBoundaryBreachesForBundleDir(repoRoot, "✏️s/🔌️plugins/📐️cad/🔨️modules");
+  return dependencyBoundaryBreachesForBundleDir(repoRoot, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine");
 });
 
 class TestScript extends BundleScript {
@@ -30,11 +30,11 @@ class FixtureScript extends BundleScript {
 
 class GenerateScript extends BundleScript {
   async run(extra: string[]): Promise<void> {
-    const { bootstrapCadModules } = await import("../../🔨️modules/🏃️runtime/🟦️component.ts");
-    const { defaultModelDefinitionId } = await import("../../🔨️modules/🟦️index.ts");
-    const { buildSpatialStatelyMachineCatalogView } = await import("../../🔨️modules/🎰️stately/🟦️component.ts");
+    const { bootstrapCadModules } = await import("../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🏃️runtime/🟦️component.ts");
+    const { defaultModelDefinitionId } = await import("../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🟦️index.ts");
+    const { buildSpatialStatelyMachineCatalogView } = await import("../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎰️stately/🟦️component.ts");
     bootstrapCadModules();
-    let outPath = join(this.root, "../../🔣️machine.json");
+    let outPath = join(this.root, "../../🗿️artifacts/📐️cad/📚️examples/🔣️machine.json");
     let modelDefinitionId = defaultModelDefinitionId();
     const interactionIds: string[] = [];
     for (let i = 0; i < extra.length; i++) {

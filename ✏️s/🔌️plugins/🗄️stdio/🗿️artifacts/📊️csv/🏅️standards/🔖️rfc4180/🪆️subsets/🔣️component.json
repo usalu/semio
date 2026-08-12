@@ -3,7 +3,12 @@
   "standard": "rfc4180",
   "subsets": {
     "*": {
-      "name": "Unconstrained csv rfc4180"
+      "name": "Unconstrained csv rfc4180",
+      "archetype": "owning",
+      "examples": ["demo"],
+      "ioFidelity": { "class": "exact", "drops": [] },
+      "import": ["txt/utf-8/*"],
+      "export": ["txt/utf-8/*"]
     }
   }
 }

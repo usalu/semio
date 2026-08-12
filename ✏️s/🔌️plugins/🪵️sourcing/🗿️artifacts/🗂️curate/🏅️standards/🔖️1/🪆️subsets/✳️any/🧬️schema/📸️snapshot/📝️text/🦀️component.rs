@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::curate::CurateSnapshot;
 
 /// 📄️ The demo-stock example, handcrafted in the `.curate` DSL.
-pub const DEMO_STOCK_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const DEMO_STOCK_TEXT: &str = include_str!("../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📄️ The empty-curation example — empty stock and curated table.
 pub const EMPTY_CURATION_TEXT: &str = r#"semio curate.curate.dsl v1

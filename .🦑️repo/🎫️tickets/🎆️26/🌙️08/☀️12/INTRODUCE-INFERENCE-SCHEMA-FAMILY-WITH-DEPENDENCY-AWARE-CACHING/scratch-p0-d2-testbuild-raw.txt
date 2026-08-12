@@ -1,1 +1,5 @@
     Blocking waiting for file lock on build directory
+error: failed to link or copy `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING/🎯️target/debug/build/proc-macro2-06b0ba31cf55c6cc/build_script_build-06b0ba31cf55c6cc` to `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING/🎯️target/debug/build/proc-macro2-06b0ba31cf55c6cc/build-script-build`
+
+Caused by:
+  No space left on device (os error 28)

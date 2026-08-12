@@ -2,7 +2,7 @@
 
 use crate::artifacts::sequence::schema::SequenceArtifact;
 use crate::artifacts::sequence::{SequenceEdge, SequenceEdgePatch, SequenceSnapshot, SequenceStep, SequenceStepPatch};
-use protocol::{CollectionMutation, MutationDiff, Patchable};
+use protocol::{MutationDiff, Patchable};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -175,96 +175,22 @@ impl MutationDiff<SequenceSnapshot> for SequenceDiff {
 }
 //#endregion 🔖️Apply
 
-//#region 🔖️Helpers
-pub fn steps_delta_from_collection_mutation(
-    base: &[SequenceStep],
-    op: &CollectionMutation<String, SequenceStep, SequenceStepPatch>,
-) -> SequenceStepsDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => SequenceStepsDelta {
-            added: vec![item.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Remove { id } => SequenceStepsDelta {
-            removed: vec![id.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Patch { id, patch } => SequenceStepsDelta {
-            patched: vec![SequenceStepPatchEntry { id: id.clone(), patch: patch.clone() }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|item| item.id.clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            SequenceStepsDelta {
-                reordered: Some(ids),
-                ..Default::default()
-            }
-        }
-    }
-}
-
-pub fn edges_delta_from_collection_mutation(
-    base: &[SequenceEdge],
-    op: &CollectionMutation<String, SequenceEdge, SequenceEdgePatch>,
-) -> SequenceEdgesDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => SequenceEdgesDelta {
-            added: vec![item.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Remove { id } => SequenceEdgesDelta {
-            removed: vec![id.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Patch { id, patch } => SequenceEdgesDelta {
-            patched: vec![SequenceEdgePatchEntry { id: id.clone(), patch: patch.clone() }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|item| item.id.clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            SequenceEdgesDelta {
-                reordered: Some(ids),
-                ..Default::default()
-            }
-        }
-    }
-}
-
-/// 🖼️ Whole-snapshot replacement diff.
-pub fn diff_set_snapshot(snapshot: &SequenceSnapshot) -> SequenceDiff {
-    SequenceDiff {
-        artifact: Some(Box::new(SequenceArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
-}
-//#endregion 🔖️Helpers
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::sequence::mutations::SequenceMutation;
     use crate::artifacts::sequence::{default_snapshot, StepParams};
     use protocol::Mutation;
 
     #[test]
-    fn steps_add_diff_applies_onto_the_base_snapshot() {
+    fn create_step_diff_applies_onto_the_base_snapshot() {
         let base = default_snapshot();
         let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
-        let operation = SequenceMutation::StepsAdd { index: 2, item: step };
+        let operation = crate::artifacts::sequence::mutations::create_step::mutation::create_step(step);
         let diff: SequenceDiff = operation.diff(&base);
-        assert!(diff.steps.is_some(), "StepsAdd must produce a steps diff: {diff:?}");
-        assert!(diff.edges.is_none(), "StepsAdd must touch only the steps slot: {diff:?}");
+        assert!(diff.steps.is_some(), "CreateStep must produce a steps diff: {diff:?}");
+        assert!(diff.edges.is_none(), "CreateStep must touch only the steps slot: {diff:?}");
         assert_eq!(diff.apply(&base).steps.len(), base.steps.len() + 1);
     }
 }

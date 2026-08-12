@@ -11,6 +11,15 @@ Updated: 2026-08-12, after `cargo check --workspace` → 0 errors.
 in-plugin mutation call sites are rewritten, and the workspace compiles. Take it freely.
 **HELD** = a lane is mid-flight or not yet launched; editing it will collide.
 
+> ⚠️ **ABSENCE FROM THIS FILE MEANS FREE, NOT HELD.** This ledger lists only plugins SMO has
+> actually had a lane on. A plugin named in neither list was never claimed by this ticket and needs
+> no clearance from it — proceed. Only an explicit entry under **HELD** blocks you.
+>
+> This wording exists because the omission had a real cost: five APA agents read "not in RELEASED"
+> as "held" and skipped `📐️cad`, `🏗️fem`, `🖍️draw`, `🌀️procedural` and `📋️forms`, none of which
+> were ever anyone's to hold. A ledger that is silent about its own default is a derived artifact
+> pretending to be a predicate — the same trap that has caught every session in this tree.
+
 ## RELEASED
 
 | plugin | facets | evidence |

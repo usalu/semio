@@ -1,0 +1,664 @@
+bun test v1.3.14 (0d9b296a)
+
+🧪️index.test.ts:
+(pass) Neo4j graph database registry > joins name segments with hyphen [0.68ms]
+(pass) Neo4j graph database registry > partitions argv into name segments and uvx passthrough [0.52ms]
+(pass) Neo4j graph database registry > product graphs are fixed four joined names [0.03ms]
+(pass) Neo4j graph database registry > NEO4J_EXTRA_GRAPH_DATABASES extends export specs [0.22ms]
+(pass) isDevPortInUse > returns false for a high ephemeral port [50.00ms]
+(pass) isDevPortInUse > returns true when puzzle 3d play port is listening [75.69ms]
+(pass) resolveDevPort > returns preferred port when free [36.21ms]
+(pass) resolveDevPort > skips occupied ports [140.69ms]
+(pass) resolveDevPort > honors skipPorts [35.98ms]
+(pass) devServerUrl > maps 0.0.0.0 to loopback [0.18ms]
+(pass) wgpuDevPlayUrl > builds root and legacy play urls [0.06ms]
+(pass) canReuseDevPort > returns true for an active dev HTTP server [112.01ms]
+(pass) describeDevPortOccupant > returns undefined for a free port [166.40ms]
+(pass) bundle-script > ScriptRouter usage lists registered commands [0.26ms]
+(pass) bundle-script > gitRepoRoot uses monorepo toplevel from repo/lib/js [43.51ms]
+(pass) bundle-script > findRepoRoot reaches monorepo from repo/lib/js [0.13ms]
+(pass) bundle-script > dispatchSubcommand invokes handler for first segment [0.09ms]
+(pass) defineLint > returns same function [0.04ms]
+(pass) dependency-boundary > detects adapter region marker [0.09ms]
+(pass) dependency-boundary > parseTsImportSpecs extracts module [0.08ms]
+161 | 
+162 |   test("flags direct third-party import outside adapter", () => {
+163 |     const content = `import { z } from "zod";\nexport const a = 1;\n`;
+164 |     const file = "compose/client/lib/js/boundary-probe.ts";
+165 |     const breachs = dependencyBoundaryBreachesForFile(new URL("../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"), file, content, file);
+166 |     expect(breachs.length).toBeGreaterThan(0);
+                                 ^
+error: expect(received).toBeGreaterThan(expected)
+
+Expected: > 0
+Received: 0
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:166:28)
+(fail) dependency-boundary > flags direct third-party import outside adapter [0.90ms]
+(pass) dependency-boundary > dependencyBoundaryBreachesForBundleDir walks nested tsx [0.17ms]
+(pass) dependency-boundary > allows third-party import inside adapter region [0.07ms]
+183 | });
+184 | 
+185 | describe("ui scrollbar styling", () => {
+186 |   test("🎨️ui.css defines scrollbar tokens and native plus Scrollable rules", () => {
+187 |     const repoRoot = findRepoRoot(import.meta.dir);
+188 |     const css = readFileSync(join(repoRoot, "framework/module/ui/styling/js/🎨️ui.css"), "utf8");
+                      ^
+error: ENOENT: no such file or directory, open '/Users/ueli/Documents/semio/framework/module/ui/styling/js/🎨️ui.css'
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:188:17)
+(fail) ui scrollbar styling > 🎨️ui.css defines scrollbar tokens and native plus Scrollable rules [0.41ms]
+(pass) micro-commit > safeGitEnv replaces an unusable configured global Git config [0.25ms]
+(pass) micro-commit > branchValidationError distinguishes lookup failure, detached HEAD, and a wrong branch [0.40ms]
+(pass) micro-commit > extractCounterFromSubject reads formatted subject lines [0.19ms]
+(pass) micro-commit > extractNumericCounterFromSubject reads GitKraken numeric subjects [0.09ms]
+(pass) micro-commit > line1BaseFromBundleTag reads WIP epoch from squash tag [0.08ms]
+(pass) micro-commit > bumpCounterFromHistory uses max across formatted commits [0.32ms]
+248 |   test("bumpCounterFromHistory preserves selector-free history with canonical output", async () => {
+249 |     const { bumpCounterFromHistory } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+250 |     const contributor = { alias: "ueli", emoji: "🐙️", name: "Ueli", email: "u@example.com" };
+251 |     const bumped = bumpCounterFromHistory(["🦢️other🎆️26🌙️07☀️31🚩️999", "🐙️ueli🎆️26🌙️06☀️04🚩️397", "🐙️ueli🎆️26🌙️06☀️04🚩️396"], contributor, new Date("2026-07-31T12:00:00"));
+252 |     expect(bumped).toEqual({ line1Base: "🐙️ueli🎆️26🌙️06☀️04", nnn: "398" });
+253 |     expect(() => bumpCounterFromHistory(["🐙️ueli🎆️26🌙️6☀️04🚩️397"], contributor, new Date("2026-07-31T12:00:00"))).toThrow("refusing to reset counter to 001");
+                                                                                                                            ^
+error: expect(received).toThrow(expected)
+
+Expected substring: "refusing to reset counter to 001"
+
+Received function did not throw
+Received value: {
+  line1Base: "🐙️ueli🎆️26🌙️07☀️31",
+  nnn: "001",
+}
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:253:119)
+(fail) micro-commit > bumpCounterFromHistory preserves selector-free history with canonical output [0.83ms]
+(pass) micro-commit > bumpCounterFromHistory continues numeric GitKraken subjects with WIP epoch [0.12ms]
+(pass) micro-commit > normalizeBulletLines strips uloc block lines [0.40ms]
+(pass) micro-commit > bulletEmojiValidationError rejects fireworks emoji on bullets [0.23ms]
+(pass) micro-commit > normalizeBulletLines enforces compact {emoji}{description} format [0.44ms]
+(pass) micro-commit > buildMicroCommitMessage separates GitKraken summary and description [133.21ms]
+(pass) micro-commit > buildMicroCommitMessage rejects output without the required uloc footer [101.94ms]
+(pass) micro-commit > formatMicroCommitMetricsLines uses compact loc and delta counts [0.40ms]
+(pass) micro-commit > formatMicroCommitMetricsLines totals all languages on the first row [0.09ms]
+(pass) micro-commit > buildMicroCommitMetrics merges uloc and git numstat by language [255.11ms]
+(pass) micro-commit > isUlocCachePlausible rejects partial caches [163.41ms]
+(pass) micro-commit > shouldSkipPathForUloc skips dot paths license templates and .🦑️repo [0.41ms]
+(pass) micro-commit > countJsonKeys counts nested object keys [0.17ms]
+(pass) micro-commit > appendGitDeltaSuffix formats legacy delta-only suffixes [0.17ms]
+(pass) micro-commit > splitGitNumstatDelta separates replaced lines from net added and removed [0.14ms]
+(pass) micro-commit > countUnifiedLocForFile uses physical lines for code and keys for json [0.34ms]
+(pass) micro-commit > classifyPathForMetrics maps TeX ecosystem extensions [0.16ms]
+(pass) micro-commit > uncoveredStagedAreas flags missing cursor-plans and product coverage [0.62ms]
+(pass) micro-commit > validateBulletsAgainstStaged rejects bullets that ignore staged product code [112.07ms]
+(pass) micro-commit > installMicroCommitGitHooks writes portable hooks and bun pin [27.15ms]
+(pass) micro-commit > handlePrepareCommitMsg inactive does not clear commit message file [303.83ms]
+(pass) micro-commit > wipeAfterCommit clears all GK templates and prepare state [508.12ms]
+(pass) micro-commit > writeMicroCommitTemplates uses single gkcommittemplate.txt [449.71ms]
+(pass) micro-commit > shouldRefreshPreparedCommitMessage keeps user edits [1.41ms]
+1892 | });
+1893 | 
+1894 | /** @emoji 🔌️ Local dev port for a playground host. */
+1895 | export function playgroundDevPort(kind: PlaygroundHostKind): number {
+1896 |   const spec = resolvePlaygroundPorts()[kind];
+1897 |   if (!spec) throw new Error(`unknown playground host kind: ${kind}`);
+                                                                           ^
+error: unknown playground host kind: cad
+      at playgroundDevPort (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1897:69)
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:568:12)
+(fail) playground static sites > PLAYGROUND_PORTS keeps cad and dag on distinct reserved dev ports [3.14ms]
+(pass) playground static sites > resolveFrameworkOsPlaygroundPlugin maps CLI segments to OS plugin ids [1.16ms]
+585 |   });
+586 | 
+587 |   test("frameworkOsPlaygroundDevEnv defaults wgpu renderer and resolves catalog dev port", () => {
+588 |     const catalog = loadFrameworkOsPlaygroundCatalog();
+589 |     const dagEnv = frameworkOsPlaygroundDevEnv(catalog, "dag", {}, {});
+590 |     expect(dagEnv.SEMIO_RENDERER).toBe("wgpu");
+                                        ^
+error: expect(received).toBe(expected)
+
+Expected: "wgpu"
+Received: "react"
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:590:35)
+(fail) playground static sites > frameworkOsPlaygroundDevEnv defaults wgpu renderer and resolves catalog dev port [18.36ms]
+(pass) playground static sites > assigns a unique port per dev and test slot [0.18ms]
+(pass) playground static sites > playgroundPlayViteDefine embeds locked fixture env [0.47ms]
+(pass) playground static sites > playgroundStaticSiteBuildOptions uses relative-base dist output [0.08ms]
+(pass) package boundary guards > vite and vitest configs avoid cross-package @semio-tech aliases [1374.39ms]
+(pass) package boundary guards > legacy package aliases are absent from source imports [771.86ms]
+673 |     expect(files).toEqual([]);
+674 |   });
+675 | 
+676 |   test("framework renderer host has no per-technology registerUi surface host APIs", () => {
+677 |     const indexPath = join(repoRoot, "framework/product/os/module/renderer/js/react/index.tsx");
+678 |     const indexSource = readFileSync(indexPath, "utf8");
+                              ^
+error: ENOENT: no such file or directory, open '/Users/ueli/Documents/semio/framework/product/os/module/renderer/js/react/index.tsx'
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:678:25)
+(fail) package boundary guards > framework renderer host has no per-technology registerUi surface host APIs [0.80ms]
+(pass) commit > parseCommitBundleBody reads emoji scopes dates and bullets [2.06ms]
+(pass) commit > parseCommitBundleBody rejects path prefixes and reserved emojis [1.63ms]
+(pass) commit > normalizeBundleScopeLabel strips reserved and uloc suffix [0.14ms]
+(pass) commit > isBundleScopeLine accepts area and technology root labels [0.19ms]
+(pass) commit > extractBundleDateLineFromSubject reads calendar day from micro-commit subject [0.19ms]
+(pass) commit > extractBundleDateLineFromCommit prefers body timestamp over subject checkpoint day [0.23ms]
+(pass) commit > pathsFromNumstatRow expands rename paths [0.84ms]
+(pass) commit > pathMatchesBundleIndex does not treat empty prefix set as match-all [1.13ms]
+(pass) commit > formatBundleDateLine appends per-day uloc suffix [0.29ms]
+(pass) commit > commitBundleBodyError rejects per-day uloc on stdin [0.52ms]
+(pass) commit > validateMicroCommitLangMetricsDeltaSum passes when language rows sum to footer [0.37ms]
+(pass) commit > validateBundleCommitAttribution requires bundle headers to sum to range total [218.24ms]
+(pass) commit > validateBundleCommitAttribution rejects listed days when micro-commit churn does not net to range [510.09ms]
+(pass) commit > validateBundleDayDeltasAttribution rejects when listed days do not sum to bundle total [0.37ms]
+(pass) commit > buildCommitMessage appends per-day uloc from micro-commit dates [1084.09ms]
+(pass) commit > sortCommitBundlesByEditTotal orders bundles by descending gitDeltaLineTotal [531.92ms]
+(pass) commit > buildCommitMessage renders bundle subject and footer [4336.75ms]
+(pass) commit > formatBundleTagName and formatBundleSubject use contributor date emojis [0.23ms]
+(pass) commit > formatCommitPrepareCommands emits four fenced git blocks [0.14ms]
+(pass) commit > formatCommitPrepareAgentReply ends with tag name and commit message blocks [0.15ms]
+(pass) commit > parseCommitSteps treats cs as squash without tag [0.14ms]
+(pass) commit > bulletMatchesCommitHistory detects verbatim prior commit lines [0.08ms]
+1000 | 
+1001 |   test("kills a command that exceeds its explicit budget", () => {
+1002 |     const start = Date.now();
+1003 |     const result = spawnBudgetedSleep(250);
+1004 |     expect(result.status).not.toBe(0);
+1005 |     expect(result.stderr).toContain("[budget]");
+                                 ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "[budget]"
+Received: "error: Cannot find module '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/index.ts' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/[eval]'\n\nBun v1.3.14 (macOS arm64)\n"
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1005:27)
+(fail) command budgets > kills a command that exceeds its explicit budget [43.34ms]
+1007 |   });
+1008 | 
+1009 |   test("SEMIO_CMD_BUDGET_MS env override kills a command with no explicit budget", () => {
+1010 |     const result = spawnBudgetedSleep(-1, { SEMIO_CMD_BUDGET_MS: "250" });
+1011 |     expect(result.status).not.toBe(0);
+1012 |     expect(result.stderr).toContain("[budget]");
+                                 ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "[budget]"
+Received: "error: Cannot find module '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/index.ts' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/[eval]'\n\nBun v1.3.14 (macOS arm64)\n"
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1012:27)
+(fail) command budgets > SEMIO_CMD_BUDGET_MS env override kills a command with no explicit budget [46.48ms]
+(pass) command budgets > orchestratorBudgetOpts supplies a bounded orchestrator budget [21.82ms]
+(pass) command budgets > daemonBudgetOpts returns the daemon budget class [0.12ms]
+(pass) command budgets > goLevelTestArgs includes -timeout derived from the level budget [0.23ms]
+(pass) command budgets > vitestLevelArgs returns per-test timeout flags [0.04ms]
+(pass) command budgets > orchestratorBudgetMs defaults to 4h and honors SEMIO_ORCHESTRATOR_BUDGET_MS [0.04ms]
+(pass) command budgets > daemonBudgetMs defaults to 24h and honors SEMIO_DAEMON_BUDGET_MS [0.02ms]
+(pass) command budgets > testLevelBudgetMs maps levels and honors SEMIO_TEST_BUDGET_MS [0.13ms]
+(pass) command budgets > runProbe captures stdout under budget [21.83ms]
+(pass) command budgets > runCmdStatus returns the exit status instead of throwing [28.33ms]
+(pass) command budgets > budgetTimeoutHint defaults cargo to the target-dir lock-contention hint [0.09ms]
+(pass) command budgets > budgetTimeoutHint honors an explicit override [0.01ms]
+(pass) command budgets > budgetTimeoutHint gives non-cargo commands a generic hint
+1097 | });
+1098 | 
+1099 | describe("resolveCargoPackageName", () => {
+1100 |   test("resolves short lib names to full package names", () => {
+1101 |     const root = process.cwd();
+1102 |     expect(resolveCargoPackageName("db_actor", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/📦️packages/🦀️rust"))).toBe("semio-framework-os-kernel-db-actor");
+                                                                                                                                                  ^
+error: expect(received).toBe(expected)
+
+Expected: "semio-framework-os-kernel-db-actor"
+Received: "db_actor"
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1102:140)
+(fail) resolveCargoPackageName > resolves short lib names to full package names [932.49ms]
+1105 |   });
+1106 | 
+1107 |   test("resolves empty package list to local Cargo.toml package name", () => {
+1108 |     const root = process.cwd();
+1109 |     const dbActorDir = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/📦️packages/🦀️rust");
+1110 |     expect(resolveCargoPackageNames([], dbActorDir)).toEqual(["semio-framework-os-kernel-db-actor"]);
+                                                            ^
+error: expect(received).toEqual(expected)
+
+- [
+-   "semio-framework-os-kernel-db-actor",
+- ]
++ []
+
+- Expected  - 3
++ Received  + 1
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1110:54)
+(fail) resolveCargoPackageName > resolves empty package list to local Cargo.toml package name [0.81ms]
+1114 | describe("loadTaxonomy", () => {
+1115 |   test("parses 🔣️taxonomy.json into the expected shape", () => {
+1116 |     const taxonomy = loadTaxonomy();
+1117 |     expect(taxonomy.artifactComponentDirs).toEqual(["🧬️schema", "⚙️engine", "🚪️io"]);
+1118 |     expect(taxonomy.mutationChildDirs).toEqual(["🦠️mutation", "🔺️diff", "↩️inverse"]);
+1119 |     expect(taxonomy.snapshotChildDirs).toEqual(["🧬️schema", "🎒️pack"]);
+                                              ^
+error: expect(received).toEqual(expected)
+
+- [
+-   "🧬️schema",
+-   "🎒️pack",
+- ]
++ undefined
+
+- Expected  - 4
++ Received  + 1
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1119:40)
+(fail) loadTaxonomy > parses 🔣️taxonomy.json into the expected shape [0.21ms]
+(pass) loadTaxonomy > declares direct plugin-root facets without a nested directory taxonomy field [0.02ms]
+1149 |   });
+1150 | 
+1151 |   test("keeps the artifact completeness set and the artifact structural set as two separate lists", () => {
+1152 |     const taxonomy = loadTaxonomy();
+1153 |     // ⚙️ Completeness includes 🧬️mutations + ⚙️engine; structural-only extra is 📚️examples.
+1154 |     expect(taxonomy.artifactChildDirs).toEqual(["🧬️mutations", "🔺️diff", "🗣️dsl", "🧬️schema", "📸️snapshot", "🔧️op", "📡️spr", "⚙️engine", "📚️examples"]);
+                                              ^
+error: expect(received).toEqual(expected)
+
+  [
+-   "🧬️mutations",
+-   "🔺️diff",
+-   "🗣️dsl",
+    "🧬️schema",
+-   "📸️snapshot",
+-   "🔧️op",
+-   "📡️spr",
+    "⚙️engine",
++   "🚪️io",
+    "📚️examples",
+  ]
+
+- Expected  - 6
++ Received  + 1
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1154:40)
+(fail) loadTaxonomy > keeps the artifact completeness set and the artifact structural set as two separate lists [0.12ms]
+(pass) loadTaxonomy > derives lifecycle capabilities instead of declaring artifact facet directories [0.07ms]
+1176 |   test("describes the per-example assets/tests shape instead of plural facet dirs", () => {
+1177 |     const taxonomy = loadTaxonomy();
+1178 |     expect(taxonomy.exampleAssetsDirName).toBe("🖼️assets");
+1179 |     expect(taxonomy.exampleTestsDirName).toBe("🧪️tests");
+1180 |     expect(taxonomy.exampleSlugPattern).toBe("^.+\\uFE0F[a-z0-9]+(?:-[a-z0-9]+)*$");
+1181 |     expect(taxonomy.exampleAssetKindPrefixes).toEqual({
+                                                     ^
+error: expect(received).toEqual(expected)
+
+  {
+    "cmd": "🎮️",
+-   "diff": "🔺️",
+-   "dsl": "🗣️",
+-   "op": "🔧️",
+-   "pack": "🎒️",
+-   "spr": "📡️",
++   "diff-text": "🔺️",
++   "mutations-binary": "📡️",
++   "mutations-text": "🔧️",
++   "snapshot-binary": "🎒️",
++   "snapshot-text": "🗣️",
+  }
+
+- Expected  - 5
++ Received  + 5
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1181:47)
+(fail) loadTaxonomy > describes the per-example assets/tests shape instead of plural facet dirs [0.21ms]
+(pass) loadTaxonomy > forbids both the plural and singular implementations spellings [0.01ms]
+(pass) loadTaxonomy > describes every declared lang with a manifest/marker/leaf contract [0.30ms]
+(pass) loadTaxonomy > encodes Shape V2 entry location and both valid rust #[path] base conventions [0.08ms]
+(pass) loadTaxonomy > declares the area-state enum that replaces LEGACY_LAYOUT_TOLERANT [0.02ms]
+(pass) validateTaxonomy > the shipped vocabulary is internally consistent [0.75ms]
+(pass) validateTaxonomy > reports an area state outside the declared enum [0.10ms]
+1266 |   });
+1267 | 
+1268 |   test("reports a completeness dir missing from the structural set", () => {
+1269 |     const taxonomy = loadTaxonomy();
+1270 |     const broken = { ...taxonomy, artifactChildDirs: taxonomy.artifactChildDirs.filter((dir) => dir !== "📡️spr") };
+1271 |     expect(validateTaxonomy(broken).some((problem) => problem.includes("📡️spr"))).toBe(true);
+                                                                                         ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1271:83)
+(fail) validateTaxonomy > reports a completeness dir missing from the structural set [0.24ms]
+(pass) validateTaxonomy > rejects explicit artifact lifecycle directories [0.43ms]
+(pass) validateTaxonomy > reports mutationChildDirs missing from taxonomyLeafParentDirs [0.33ms]
+(pass) validateTaxonomy > reports empty mutationChildDirs [0.28ms]
+(pass) validateTaxonomy > reports empty pluginChildDirs [0.30ms]
+(pass) validateTaxonomy > rejects empty direct plugin-root facet declarations [0.19ms]
+(pass) validateTaxonomy > rejects plural example component dirs in taxonomyLeafParentDirs [0.09ms]
+(pass) validateTaxonomy > rejects missing example slug pattern [0.06ms]
+(pass) validateTaxonomy > reports empty snapshotChildDirs [0.08ms]
+(pass) validateTaxonomy > reports empty diffChildDirs [0.08ms]
+(pass) validateTaxonomy > rejects bare pack in artifactComponentDirs [0.05ms]
+(pass) validateTaxonomy > rejects bare pack key in artifactSpecFilenames [0.05ms]
+(pass) validateTaxonomy > reports schemaFormats leafFilename/extension mismatch [0.05ms]
+(pass) validateTaxonomy > reports artifactSchemaSpecFilenames drift from jsonschema leaf [0.04ms]
+(pass) areaOf > longest-prefix matches a plugin path to its declared area [0.02ms]
+(pass) areaOf > longest-prefix matches framework paths to mixed [0.01ms]
+(pass) areaOf > returns undefined outside every declared area [0.01ms]
+(pass) readSemioMarker > reads role = "plugin" from the writer plugin's migrated Cargo.toml [0.41ms]
+(pass) readSemioMarker > returns undefined for a non-existent manifest [0.12ms]
+(pass) readSemioMarker > reads role + id from a typescript package.json's "semio" key [0.16ms]
+(pass) readSemioMarker > returns undefined for a non-existent manifest [0.10ms]
+(pass) readSemioMarker > does not mistake one ecosystem's manifest for another's [0.20ms]
+(pass) readSemioMarker > reads the go and python marker contracts those ecosystems will carry [0.90ms]
+1444 |     const root = getWorkspaceRoot();
+1445 |     const catalog = discoverPackages(root);
+1446 |     const pluginOwners = [...new Set(catalog.filter((pkg) => pkg.role === "plugin").map((pkg) => pkg.ownerRel))].sort();
+1447 |     expect(pluginOwners).toEqual(migratedPluginDirs(root));
+1448 |     const writerEntry = catalog.find((pkg) => pkg.ownerRel === "✏️s/🔌️plugins/✒️writer");
+1449 |     expect(writerEntry?.area).toBe("mixed");
+                                     ^
+error: expect(received).toBe(expected)
+
+Expected: "mixed"
+Received: "clean"
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1449:31)
+(fail) discoverPackages > finds every migrated plugin under the real repo root [0.72ms]
+(pass) discoverPackages > only ever reports roles from the declared vocabulary [0.19ms]
+1459 |   });
+1460 | 
+1461 |   test("resolves the three-level 🎯️targets shape for framework ui", () => {
+1462 |     const catalog = discoverPackages(getWorkspaceRoot());
+1463 |     const uiTargets = catalog.filter((pkg) => pkg.ownerRel === "🧰️framework/🔨️modules/🖱️ui").map((pkg) => pkg.target).sort();
+1464 |     expect(uiTargets).toEqual(["⌨️tui", "⚛️react", "🧊️wgpu"]);
+                             ^
+error: expect(received).toEqual(expected)
+
+  [
+-   "⌨️tui",
+    "⚛️react",
+-   "🧊️wgpu",
+  ]
+
+- Expected  - 2
++ Received  + 0
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1464:23)
+(fail) discoverPackages > resolves the three-level 🎯️targets shape for framework ui [0.24ms]
+1474 |     const owners = discoverOwners(root);
+1475 |     const fem = owners.find((owner) => owner.ownerRel === "✏️s/🔌️plugins/🏗️fem");
+1476 |     expect(fem).toBeDefined();
+1477 |     expect(fem?.roles).toEqual(["plugin"]);
+1478 |     expect(fem?.maturity).toBe(fem!.residualImplDirs === 0 && fem!.entryFilesAtOwnerRoot.length === 0 ? "clean" : "mixed");
+1479 |     expect(discoverPackageProblems(root).filter((problem) => problem.path.startsWith("✏️s/🔌️plugins/🏗️fem"))).toEqual([]);
+                                                                                                                      ^
+error: expect(received).toEqual(expected)
+
+- []
++ [
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json",
++   },
++ ]
+
+- Expected  - 1
++ Received  + 7
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1479:112)
+(fail) discoverPackages > an in-flight plugin is discovered as mixed, never as a problem [0.41ms]
+1478 |     expect(fem?.maturity).toBe(fem!.residualImplDirs === 0 && fem!.entryFilesAtOwnerRoot.length === 0 ? "clean" : "mixed");
+1479 |     expect(discoverPackageProblems(root).filter((problem) => problem.path.startsWith("✏️s/🔌️plugins/🏗️fem"))).toEqual([]);
+1480 |   });
+1481 | 
+1482 |   test("the real repo raises no discovery problems", () => {
+1483 |     expect(discoverPackageProblems(getWorkspaceRoot())).toEqual([]);
+                                                               ^
+error: expect(received).toEqual(expected)
+
+- []
++ [
++   {
++     "kind": "ambiguous-lang-shape",
++     "message": ""🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust" has both a direct manifest and a 🎯️targets/ dir — a lang is either two-level or three-level, never both.",
++     "path": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📦️packages/🐹️go/📋️project.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📦️packages/🐹️go/📋️project.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🐹️go/📋️project.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🐹️go/📋️project.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🔱️trinity/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🕸️dag/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🕸️dag/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/💡️reasoning/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/💡️reasoning/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🪐️space/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🪐️space/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🌍️gis/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🌍️gis/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🗒️note/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🗒️note/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📋️forms/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📋️forms/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🏛️architect/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🏛️architect/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "ambiguous-lang-shape",
++     "message": ""✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript" has both a direct manifest and a 🎯️targets/ dir — a lang is either two-level or three-level, never both.",
++     "path": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust/Cargo.toml" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📖️playbook/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📖️playbook/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript/package.json",
++   },
++ ]
+
+- Expected  - 1
++ Received  + 232
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1483:57)
+(fail) discoverPackages > the real repo raises no discovery problems [0.37ms]
+(pass) discoverOwners > every owner groups its own packages and derives maturity from its residuals [0.31ms]
+(pass) discoverOwners > nested owners are their own rows, not folded into the enclosing plugin [0.13ms]
+(pass) discoverBurndown > counts residual ⚡️implementations dirs the same way an independent walk does [428.12ms]
+(pass) discoverBurndown > owner residual counts add up to their area total [0.44ms]
+(pass) discoverBurndown > markerless package manifests stay visible even where they are a silent skip [0.37ms]
+[budget] /Users/ueli/.bun/bin/bun test ./🧪️index.test.ts exceeded 15000ms — killed. Trim it, or assign it to a higher level (quick/long/exhaustive).

@@ -39,7 +39,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -537,7 +537,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -1170,7 +1170,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -2020,26 +2020,26 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/◻2d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"]
     pub mod art_2d_hexagonal_cut_concrete_forest_left;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/◻2d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🧪️tests/🦀️test.rs"]
+    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🧪️tests/🦀️test.rs"]
     mod art_2d_hexagonal_cut_concrete_forest_left_tests;
-    #[path = "../../🗿️artifacts/◻2d/📚️examples/🎬️hexagonal-cut-concrete-forest-right/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️hexagonal-cut-concrete-forest-right/🦀️component.rs"]
     pub mod art_2d_hexagonal_cut_concrete_forest_right;
-    #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"]
     pub mod art_5d_hexagonal_cut_concrete_forest_left;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🧪️tests/🦀️test.rs"]
+    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🧪️tests/🦀️test.rs"]
     mod art_5d_hexagonal_cut_concrete_forest_left_tests;
-    #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🎬️nakagin-capsule/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️nakagin-capsule/🦀️component.rs"]
     pub mod art_5d_nakagin_capsule;
-    #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🦀️component.rs"]
     pub mod art_3d_hexagonal_cut_concrete_forest_left;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🧪️tests/🦀️test.rs"]
+    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️hexagonal-cut-concrete-forest-left/🧪️tests/🦀️test.rs"]
     mod art_3d_hexagonal_cut_concrete_forest_left_tests;
-    #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🎬️nakagin-capsule/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️nakagin-capsule/🦀️component.rs"]
     pub mod art_3d_nakagin_capsule;
     #[path = "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_2d_demo_session;

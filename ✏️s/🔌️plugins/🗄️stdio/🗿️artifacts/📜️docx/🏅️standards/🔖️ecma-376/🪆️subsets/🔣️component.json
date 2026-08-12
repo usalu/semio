@@ -3,7 +3,12 @@
   "standard": "ecma-376",
   "subsets": {
     "*": {
-      "name": "Unconstrained docx ecma-376"
+      "name": "Unconstrained docx ecma-376",
+      "archetype": "owning",
+      "examples": ["demo"],
+      "ioFidelity": { "class": "exact", "drops": [] },
+      "import": ["zip/2.0/*"],
+      "export": ["zip/2.0/*"]
     },
     "strict": {
       "name": "ISO/IEC 29500-1:2016 Strict"

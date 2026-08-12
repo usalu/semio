@@ -1,5 +1,63 @@
 # Status
 
+## 🚨🚨 MACHINE-WIDE BLOCKER — DISK IS 100% FULL. NO BUILD CAN RUN, IN ANY SESSION.
+
+```
+/dev/disk3s5   926Gi   860Gi   5.2Gi   100%   /System/Volumes/Data
+```
+
+Every cargo invocation now dies with `No space left on device (os error 28)` — confirmed live in our
+own `scratch-puzzle-verify-for-apa.txt` (failed to link `crc32fast`, failed to write `rmeta` for
+`libm`/`arrayvec`/`smallvec`/`serde_core`/`log`/`zerofrom`/`bytemuck`/`simd-adler32`, and sccache
+failing to write `deps.d` under `/var/folders/...`). This is not our ticket, not contention, not churn.
+
+**Cause, measured:**
+
+| path | size |
+|---|---|
+| **`target/` (repo root)** | **428 G** |
+| `.🦑️repo/` (all tickets) | 31 G |
+| ↳ `SUBSET-CONFORMANCE-AND-INTEGRATED-ROUNDTRIPS` ticket (a 6th session) | 13 G — `🎯️target-w3-stdio` 5.5G, `-w3-cad` 3.8G, `-w3-en1990` 2.4G, `-w1-harness` 809M, `-w3-stdio-check` 642M |
+| our ticket folder | 124 K |
+
+The repo-root `target/` is **93% of the problem** and is pure regenerable build cache. Repo policy is
+that everyone uses a per-ticket `CARGO_TARGET_DIR`, so root `target/` is almost certainly stale
+accumulation nobody is writing to — but it is shared state and 5+ sessions have builds in flight.
+
+**NOT deleting it unilaterally.** Escalated to the parent session for a user decision. Deleting is a
+one-line fix that frees ~428 G instantly; the cost is a full cold rebuild for everyone. Needs an owner,
+not a coordinator guessing.
+
+**⏳ IT IS GETTING WORSE, FAST.** Free space measured twice, minutes apart: **5.2 GiB → 2.7 GiB**, with
+~10 cargo processes still running and still writing. At this rate the machine runs out entirely within
+the hour, at which point failures stop being confined to builds. This is now time-critical, not merely
+blocking.
+
+**Our own ticket contributes nothing** — our `🎯️target` does not even exist on disk (the failed builds
+never materialised one) and the entire ticket folder is 128 K. There is nothing for us to clean up;
+the space has to come from root `target/` or another session's dirs.
+
+All three reachable peer sessions have been alerted with the measurements and the "do not delete
+unilaterally" caveat, plus the warning that all cargo evidence in this window is worthless.
+
+**Until it is resolved, treat ALL cargo output repo-wide as meaningless** — including any red result
+peers report. Nothing can be verified by building.
+
+## Upstream compile blocker — `semio-framework-plugin` is RED, and it is NOT OURS
+
+3 errors: E0499 `self.children` double-mutable-borrow (UCAS's composition round), E0560 `TutorialBase`
+missing `document_dsl`, E0609 `ExampleDefinition` missing `document_json` (a stale rename call-site
+pair; the symbol lives in `semio-framework`, not the plugin SDK).
+
+**Every plugin crate depends on this crate**, so every scoped `cargo check -p semio-s-plugin-*` in the
+repo is red for this reason alone. Our own plain check confirms it verbatim:
+`error: could not compile 'semio-framework-plugin' (lib) due to 1 previous error; 38 warnings emitted`.
+
+Our only historical touch to `🔌️plugin/🦀️component.rs` is the session-1 `ArtifactInferrer` trait
+addition — compiling at the time, unrelated to all three symbols, and that file is UCAS-frozen to us.
+**Do not self-blame or blame APA's relocation when a red check trace leads here. Check against this
+first.** (Recorded in `scratch-puzzle-baseline-check.txt`.)
+
 Coordinator: Opus 5 session. Executors: Sonnet 5 agents. Explorers: Haiku 4.5 agents. Plan authored by a Fable session at `/Users/ueli/.claude/plans/finish-introduce-inference-schema-family-iridescent-sprout.md`.
 **Only the coordinator edits this file.** Agents append to their own report files.
 
@@ -13,8 +71,14 @@ Coordinator: Opus 5 session. Executors: Sonnet 5 agents. Explorers: Haiku 4.5 ag
 | (5th, uds:/tmp/cc-socks/53352.sock) | DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS #2550 | DKM |
 | this session | INTRODUCE-INFERENCE-SCHEMA-FAMILY #2546 | IIF (us) |
 
-**`📜️script.ts` / `🔣️taxonomy.json` write-slot queue (5-deep, confirmed):**
-APA → UCAS-W6 → SMO → **US (position 4)** → DKM (position 5). DKM is waiting on us: their `policyEngineRepEscapeBreaches` / `policyEngineConsumptionOutsideFacetBreaches` name the inference facet as the sanctioned home for derived compute.
+**`📜️script.ts` / `🔣️taxonomy.json` write-slot queue — UPDATED:**
+**APA IS DONE AND OUT.** New queue: UCAS-W6 → SMO → **US (position 3)** → DKM. APA's write landed 5 report-mode policy rules / 1727 breaches, all `priority: "medium"`, nothing gates. DKM is waiting on us: their `policyEngineRepEscapeBreaches` / `policyEngineConsumptionOutsideFacetBreaches` name the inference facet as the sanctioned home for derived compute.
+
+**`🔣️taxonomy.json` `pluginChildDirs` → `["🎛️apps"]` is CONFIRMED LANDED** (no longer in flight). Any P3 discovery.ts reasoning must read the live file, not the design doc's stale value.
+
+**Lane-clearance rule correction (from APA, worth internalising):** absence from SMO's release ledger means **FREE**, not held — that ledger only lists plugins SMO ever had a lane on. APA had 5 agents wrongly stop on plugins that were never anyone's. Does **not** change trinity/puzzle (both explicitly IN the ledger as released, so the existing hold/verify logic stands), but for any plugin SMO never mentions, treat silence as free.
+
+**APA's socket moved to `uds:/tmp/cc-socks/40638.sock`** (old 3026 went stale after a session-limit hit).
 
 **P3 taxonomy-flip protocol (widened):** `schemaChildDirs += 💡️inferences` is allowlist-free, so flipping it before every owning subset complies would red-gate SMO's ~21 lanes, UCAS's stdio work and APA's plugin migration simultaneously. Announce on ALL FOUR peer channels immediately before and after the flip — not just script.ts writes. Open question for DKM: does "fan-out complete" include `✳️brep`/`✳️drawing`/`✳️mesh`, or do we structure the completeness check to exclude subsets DKM has not authored yet? DKM's call — ask them directly, it affects P3 timing.
 

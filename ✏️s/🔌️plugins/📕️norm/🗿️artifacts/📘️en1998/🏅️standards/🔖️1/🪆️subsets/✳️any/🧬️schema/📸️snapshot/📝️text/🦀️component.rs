@@ -17,7 +17,7 @@ use crate::artifacts::en1998::En1998Snapshot;
 /// distinct from `En1998Snapshot::default()`'s DE-annex/CC2/moment-frame/KL2/significant-damage values so the
 /// grammar's non-default branches (annex, importance class, structural system, ground types, spectrum
 /// type, retrofit knowledge level and limit state, redundancy and chimney booleans) are exercised too.
-pub const EN1998_SEISMIC_RC_FRAME_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/📕️seismic-rc-frame/🖼️assets/🗣️seismic-rc-frame.dsl.semio");
+pub const EN1998_SEISMIC_RC_FRAME_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/📕️seismic-rc-frame/🖼️assets/🗣️seismic-rc-frame.dsl.semio");
 
 /// 📖️ Parses `.en1998` DSL text into a `En1998Snapshot`.
 pub fn parse_dsl(text: &str) -> Result<En1998Snapshot, store::TextError> {

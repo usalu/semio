@@ -34,7 +34,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -387,7 +387,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🌀️procedural2d/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -403,7 +403,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -1013,21 +1013,21 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/🌀️procedural2d/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_procedural2d_demo;
-    #[path = "../../🗿️artifacts/🧊️procedural3d/📚️examples/🎬️box-fillet-preview/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️box-fillet-preview/🦀️component.rs"]
     pub mod art_procedural3d_box_fillet_preview;
-    #[path = "../../🗿️artifacts/🧊️procedural3d/📚️examples/🎬️box-shell-preview/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️box-shell-preview/🦀️component.rs"]
     pub mod art_procedural3d_box_shell_preview;
-    #[path = "../../🗿️artifacts/🧊️procedural3d/📚️examples/🎬️face-sweep-extrude/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️face-sweep-extrude/🦀️component.rs"]
     pub mod art_procedural3d_face_sweep_extrude;
-    #[path = "../../🗿️artifacts/🧊️procedural3d/📚️examples/🎬️rectangle-extrude-volume/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️rectangle-extrude-volume/🦀️component.rs"]
     pub mod art_procedural3d_rectangle_extrude_volume;
-    #[path = "../../🗿️artifacts/🧊️procedural3d/📚️examples/🎬️rectangle-wire-preview/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️rectangle-wire-preview/🦀️component.rs"]
     pub mod art_procedural3d_rectangle_wire_preview;
-    #[path = "../../🗿️artifacts/🧊️procedural3d/📚️examples/🎬️sphere-box-fuse/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️sphere-box-fuse/🦀️component.rs"]
     pub mod art_procedural3d_sphere_box_fuse;
-    #[path = "../../🗿️artifacts/🧊️procedural3d/📚️examples/🎬️sphere-cut-with-torus/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️sphere-cut-with-torus/🦀️component.rs"]
     pub mod art_procedural3d_sphere_cut_with_torus;
     #[path = "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_2d_demo_session;

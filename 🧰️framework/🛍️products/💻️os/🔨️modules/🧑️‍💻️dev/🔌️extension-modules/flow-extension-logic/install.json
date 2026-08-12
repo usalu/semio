@@ -4,6 +4,6 @@
   "label": "flow-extension-logic",
   "extends": "flow",
   "moduleUrl": "/extensions/flow-extension-logic/semio_s_plugin_flow_extension_logic.js",
-  "packageHash": "dev:1786381108308",
-  "installedAt": 1786381108308
+  "packageHash": "dev:1786546640520",
+  "installedAt": 1786546640520
 }

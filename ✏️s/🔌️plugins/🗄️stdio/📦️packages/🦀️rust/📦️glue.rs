@@ -48,7 +48,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_raw {
-                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -168,7 +168,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/💾️binary/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -185,7 +185,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_utf_8 {
-                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -321,7 +321,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📄txt/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -338,7 +338,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_rfc8259 {
-                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -489,7 +489,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🔣️json/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -506,12 +506,21 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1_0 {
-                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/⚙️engine/🦀️component.rs"]
-                pub mod engine;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
+                        #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
+                        pub mod engine;
+                        #[path = "."]
+                        pub mod examples {
+                            #[path = "."]
+                            pub mod demo {
+                                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                            }
+                        }
                         #[path = "."]
                         pub mod schema {
                             #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
@@ -636,7 +645,19 @@ pub mod artifacts {
                             mod component;
                             pub use component::*;
                         }
+                        #[path = "."]
+                        pub mod examples {
+                            #[path = "."]
+                            pub mod no_doctype {
+                                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/📚️examples/🚫️no-doctype/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                            }
+                        }
                     }
+                }
+                pub mod engine {
+                    pub use super::subsets::any::engine::*;
                 }
             }
         }
@@ -646,7 +667,7 @@ pub mod artifacts {
             pub use super::standards::v1_0::subsets::any::schema::*;
         }
         pub mod engine {
-            pub use super::standards::v1_0::engine::*;
+            pub use super::standards::v1_0::subsets::any::engine::*;
         }
         pub mod io {
             pub use super::standards::v1_0::subsets::any::io::*;
@@ -657,7 +678,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📰xml/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -674,12 +695,21 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_rfc4180 {
-                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/⚙️engine/🦀️component.rs"]
-                pub mod engine;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
+                        #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
+                        pub mod engine;
+                        #[path = "."]
+                        pub mod examples {
+                            #[path = "."]
+                            pub mod demo {
+                                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                            }
+                        }
                         #[path = "."]
                         pub mod schema {
                             #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
@@ -791,6 +821,9 @@ pub mod artifacts {
                         }
                     }
                 }
+                pub mod engine {
+                    pub use super::subsets::any::engine::*;
+                }
             }
         }
 
@@ -799,7 +832,7 @@ pub mod artifacts {
             pub use super::standards::v_rfc4180::subsets::any::schema::*;
         }
         pub mod engine {
-            pub use super::standards::v_rfc4180::engine::*;
+            pub use super::standards::v_rfc4180::subsets::any::engine::*;
         }
         pub mod io {
             pub use super::standards::v_rfc4180::subsets::any::io::*;
@@ -810,7 +843,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📊️csv/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -827,7 +860,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_commonmark {
-                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -963,7 +996,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📝️md/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -980,7 +1013,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_rfc1950 {
-                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -1100,7 +1133,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🗜️deflate/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -1117,7 +1150,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v2_0 {
-                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -1285,7 +1318,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🎒️zip/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -1308,7 +1341,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_ap214 {
-                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -1494,7 +1527,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📐️step/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -1510,7 +1543,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v4 {
-                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -1638,7 +1671,7 @@ pub mod artifacts {
             }
             #[path = "."]
             pub mod v2x3 {
-                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -1811,7 +1844,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🏗️ifc/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -1827,7 +1860,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1_0 {
-                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -1947,7 +1980,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/☁️las/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -1963,7 +1996,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v2_0 {
-                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -2083,17 +2116,17 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🧊️gltf/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
             #[path = "."]
             pub mod metabolism {
-                #[path = "../../🗿️artifacts/🧊️gltf/📚️examples/🌱️metabolism/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🌱️metabolism/🦀️component.rs"]
                 mod component;
                 pub use component::*;
                 #[cfg(test)]
-                #[path = "../../🗿️artifacts/🧊️gltf/📚️examples/🌱️metabolism/🧪️tests/🦀️test.rs"]
+                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🌱️metabolism/🧪️tests/🦀️test.rs"]
                 mod metabolism_tests;
             }
         }
@@ -2108,7 +2141,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v3_0 {
-                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -2228,7 +2261,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🧊️obj/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -2244,7 +2277,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1_0 {
-                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -2364,7 +2397,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/☁️ply/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -2380,7 +2413,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_r12 {
-                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -2500,7 +2533,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🖊️dxf/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -2516,7 +2549,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_ascii {
-                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -2660,7 +2693,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🟪️stl/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -2676,7 +2709,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1_1 {
-                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -2833,7 +2866,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🎨️svg/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -2849,7 +2882,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_v3 {
-                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -2985,7 +3018,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🖼️bmp/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -3001,7 +3034,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_ac1018 {
-                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -3105,7 +3138,7 @@ pub mod artifacts {
             }
             #[path = "."]
             pub mod v_ac1024 {
-                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -3230,17 +3263,17 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🖊️dwg/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
             #[path = "."]
             pub mod architectural {
-                #[path = "../../🗿️artifacts/🖊️dwg/📚️examples/🏛️architectural/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🦀️component.rs"]
                 mod component;
                 pub use component::*;
                 #[cfg(test)]
-                #[path = "../../🗿️artifacts/🖊️dwg/📚️examples/🏛️architectural/🧪️tests/🦀️test.rs"]
+                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🧪️tests/🦀️test.rs"]
                 mod architectural_tests;
             }
         }
@@ -3255,7 +3288,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1_2 {
-                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -3415,7 +3448,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📷️png/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -3439,7 +3472,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1_4 {
-                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -3604,7 +3637,7 @@ pub mod artifacts {
 
             #[path = "."]
             pub mod v1_7 {
-                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -3840,17 +3873,17 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📄️pdf/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
             #[path = "."]
             pub mod bachelor_thesis {
-                #[path = "../../🗿️artifacts/📄️pdf/📚️examples/🎓️bachelor-thesis/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🦀️component.rs"]
                 mod component;
                 pub use component::*;
                 #[cfg(test)]
-                #[path = "../../🗿️artifacts/📄️pdf/📚️examples/🎓️bachelor-thesis/🧪️tests/🦀️test.rs"]
+                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🧪️tests/🦀️test.rs"]
                 mod bachelor_thesis_tests;
             }
         }
@@ -3873,7 +3906,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_jfif_1_01 {
-                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -4024,7 +4057,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📷️jpg/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -4042,7 +4075,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v87a {
-                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -4163,7 +4196,7 @@ pub mod artifacts {
 
             #[path = "."]
             pub mod v89a {
-                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🧬️migrations/🦀️component.rs"]
                 pub mod migrations;
@@ -4311,17 +4344,17 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🎞️gif/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
             #[path = "."]
             pub mod dancing {
-                #[path = "../../🗿️artifacts/🎞️gif/📚️examples/💃️dancing/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🦀️component.rs"]
                 mod component;
                 pub use component::*;
                 #[cfg(test)]
-                #[path = "../../🗿️artifacts/🎞️gif/📚️examples/💃️dancing/🧪️tests/🦀️test.rs"]
+                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🧪️tests/🦀️test.rs"]
                 mod dancing_tests;
             }
         }
@@ -4338,12 +4371,21 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v6_0 {
-                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/⚙️engine/🦀️component.rs"]
-                pub mod engine;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
+                        #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
+                        pub mod engine;
+                        #[path = "."]
+                        pub mod examples {
+                            #[path = "."]
+                            pub mod demo {
+                                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                            }
+                        }
                         #[path = "."]
                         pub mod schema {
                             #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
@@ -4466,6 +4508,9 @@ pub mod artifacts {
                         pub mod io;
                     }
                 }
+                pub mod engine {
+                    pub use super::subsets::any::engine::*;
+                }
             }
         }
 
@@ -4474,7 +4519,7 @@ pub mod artifacts {
             pub use super::standards::v6_0::subsets::any::schema::*;
         }
         pub mod engine {
-            pub use super::standards::v6_0::engine::*;
+            pub use super::standards::v6_0::subsets::any::engine::*;
         }
         pub mod io {
             pub use super::standards::v6_0::subsets::any::io::*;
@@ -4485,7 +4530,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🖼️tiff/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -4503,7 +4548,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_ecma_376 {
-                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -4677,7 +4722,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📜️docx/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -4701,7 +4746,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_ecma_376 {
-                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -4885,7 +4930,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🎞️pptx/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -4909,7 +4954,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_ecma_376 {
-                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -5091,7 +5136,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📕️xlsx/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -5115,7 +5160,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v2_1 {
-                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -5259,7 +5304,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/💬️bcf/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -5278,12 +5323,12 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "."]
                 pub mod engine {
-                    #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/⚙️engine/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/⚙️engine/🧮️geometry/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/⚙️engine/🧮️geometry/🦀️component.rs"]
                     pub mod geometry;
-                    #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/⚙️engine/🧰️triples/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/⚙️engine/🧰️triples/🦀️component.rs"]
                     pub mod triples;
                 }
                 #[path = "."]
@@ -6184,6 +6229,8 @@ pub mod artifacts {
                     }
                     #[path = "."]
                     pub mod mesh {
+                        #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/⚙️engine/🦀️component.rs"]
+                        pub mod engine;
                         #[path = "."]
                         pub mod io {
                             #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/🦀️component.rs"]
@@ -6371,6 +6418,15 @@ pub mod artifacts {
                                 }
                                 #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
                                 pub mod text;
+                            }
+                        }
+                        #[path = "."]
+                        pub mod examples {
+                            #[path = "."]
+                            pub mod cube {
+                                #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/📚️examples/🧊️cube/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
                             }
                         }
                     }
@@ -6989,9 +7045,9 @@ pub mod artifacts {
         }
         #[path = "."]
         pub mod examples {
-            #[path = "../../🗿️artifacts/🧿️semio/📚️examples/🎬️demo/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
             pub mod demo;
-            #[path = "../../🗿️artifacts/🧿️semio/📚️examples/📃️note/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📃️note/🦀️component.rs"]
             pub mod note;
         }
     }
@@ -7005,7 +7061,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod isobmff {
-                #[path = "../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -7064,7 +7120,7 @@ pub mod artifacts {
         }
         #[path = "."]
         pub mod examples {
-            #[path = "../../🗿️artifacts/🎥️mp4/📚️examples/🎬️demo/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
             pub mod demo;
         }
     }
@@ -7078,7 +7134,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1_0 {
-                #[path = "../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -7137,7 +7193,7 @@ pub mod artifacts {
         }
         #[path = "."]
         pub mod examples {
-            #[path = "../../🗿️artifacts/📼️avi/📚️examples/🎬️demo/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
             pub mod demo;
         }
     }
@@ -7151,7 +7207,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod mpeg1_layer3 {
-                #[path = "../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -7210,7 +7266,7 @@ pub mod artifacts {
         }
         #[path = "."]
         pub mod examples {
-            #[path = "../../🗿️artifacts/🎵️mp3/📚️examples/🎬️demo/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
             pub mod demo;
         }
     }
@@ -7224,7 +7280,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod riff_pcm {
-                #[path = "../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -7283,7 +7339,7 @@ pub mod artifacts {
         }
         #[path = "."]
         pub mod examples {
-            #[path = "../../🗿️artifacts/🔊️wav/📚️examples/🎬️demo/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
             pub mod demo;
         }
     }
@@ -7297,7 +7353,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod energyplus {
-                #[path = "../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -7356,7 +7412,7 @@ pub mod artifacts {
         }
         #[path = "."]
         pub mod examples {
-            #[path = "../../🗿️artifacts/🌦️epw/📚️examples/🎬️demo/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
             pub mod demo;
         }
     }
@@ -7370,7 +7426,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod iana {
-                #[path = "../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -7445,7 +7501,7 @@ pub mod artifacts {
         }
         #[path = "."]
         pub mod examples {
-            #[path = "../../🗿️artifacts/📑️tsv/📚️examples/🎬️demo/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
             pub mod demo;
         }
     }
@@ -7459,7 +7515,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v5 {
-                #[path = "../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -7534,7 +7590,7 @@ pub mod artifacts {
         }
         #[path = "."]
         pub mod examples {
-            #[path = "../../🗿️artifacts/🌐️html/📚️examples/🎬️demo/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
             pub mod demo;
         }
     }

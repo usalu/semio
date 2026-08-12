@@ -21,6 +21,16 @@ A plugin consists of **exactly two things: `🎛️apps` and `🗿️artifacts`*
 10. **Docstrings start with a unique fitting emoji.** No comments inside definitions.
 11. **Never claim a test passed without running it.** Never claim a feature works without confirming runtime behaviour. Paste the real command and the real output into your report.
 
+## ⛔ NEVER move a directory containing a `Cargo.toml` — it breaks cargo for the whole machine
+
+Before relocating any directory, run `find <dir> -name Cargo.toml`. **If it returns anything, STOP and inventory instead of moving.**
+
+A dangling `#[path]` mount is a *local* compile error in one crate. A dangling **workspace member** is a *global* failure: cargo refuses to load the workspace graph at all, so **every cargo command in every session on this machine fails before compiling anything**, with an error naming a plugin most of those sessions have never touched.
+
+This happened. A W3 agent began relocating `✏️s/🔌️plugins/🖍️draw/🔄️fsm/`, which is a separate crate with **two** workspace-member entries (root `Cargo.toml:66-67`) and a path dependency (`🖍️draw/📦️packages/🦀️rust/Cargo.toml:27`). It correctly reverted on discovering the crate boundary, but during the window a peer session hit `failed to load manifest for workspace member` and reasonably diagnosed it as a permanent break. The agent's judgment was right; **the packet instructions were incomplete** — they carried this exception for `🧩️extensions` but did not generalize it to every crate-bearing directory.
+
+The rule, generalized: a directory is **inventory-only, never moved**, if it contains a `Cargo.toml`. Relocating it is a workspace-topology change (members, path dependencies, crate names), which is a different and much larger operation than moving source files, and it is never in scope for a per-plugin packet.
+
 ## Repo gotchas that cost other sessions real time
 
 12. **Derive crates keep two byte-identical copies**: `<module>/✨️derive/🦀️component.rs` **and** `<module>/✨️derive/📦️packages/🦀️rust/📦️glue.rs`. Cargo compiles the **glue** copy — editing only `component.rs` silently does nothing. Edit one, mirror it exactly, then `diff -q` the pair before reporting done. (`mcp__repo__file_integrate` has corrupted this mirroring before — mirror by hand.)
@@ -54,6 +64,16 @@ A plugin consists of **exactly two things: `🎛️apps` and `🗿️artifacts`*
 `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️plugin-release-status.md`
 
 **Read it at dispatch time. Do not trust any clearance list written in this ticket** — including in `📓️status.md`, `📓️w0-e-peer-state.md`, or an agent's own dispatch prompt. Those are snapshots, and clearance changes by the hour.
+
+### How to read that file — ABSENCE MEANS FREE, not held
+
+The predicate has four sections: RELEASED, HELD (lane in flight), HELD (between waves), and NOT SMO'S TO RELEASE. **A plugin that appears in none of them was never in SMO's scope at all, and is therefore free.** SMO confirmed this directly about `📐️cad`: *"cad is not in my held list at all, so it's been free the whole time."*
+
+The gate is therefore: **proceed unless the plugin is explicitly HELD or explicitly listed as someone else's.** Not "proceed only if explicitly RELEASED."
+
+This correction exists because the stricter reading cost a whole wave: five agents (`📐️cad`, `🏗️fem`, `🖍️draw`, `🌀️procedural`, `📋️forms`) correctly followed a dispatch prompt that said "if not RELEASED, stop", found their plugin absent from the ledger, and stopped without editing. They obeyed the instruction exactly; **the instruction was wrong**, and every one of them flagged the gap in their report rather than guessing — which is precisely the behaviour to keep. The failure mode to avoid is not caution, it is a gate that cannot distinguish "held by someone" from "never anyone's".
+
+Known-free-by-absence at the time of writing: `📐️cad`, `🏗️fem`, `🖍️draw`, `🌀️procedural`, `📋️forms`. Re-derive rather than trusting this list.
 
 This rule exists because it already went wrong: an earlier version of this file said "do not take note", `📓️status.md` said note was released, and `📓️w0-e-peer-state.md` ruled it LATER — three documents in one ticket, all disagreeing, because each froze a fact that had since moved. A W3 agent hit the contradiction and correctly refused to touch the plugin rather than guess. **It was right to stop, and the fault was the duplication, not the agent.**
 

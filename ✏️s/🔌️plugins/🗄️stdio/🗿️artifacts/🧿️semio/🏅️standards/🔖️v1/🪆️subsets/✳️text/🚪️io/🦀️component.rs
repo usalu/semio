@@ -190,8 +190,8 @@ pub mod derived_composition {
             /// GENUINE `print_dsl`/`encode_pack` output of `snapshot::demo_text_snapshot()`.
             #[test]
             fn fixture_honesty_law() {
-                const FIXTURE_DSL: &str = include_str!("../../../../../📚️examples/📃️note/🖼️assets/🗣️example.dsl.semio");
-                const FIXTURE_PACK: &[u8] = include_bytes!("../../../../../📚️examples/📃️note/🖼️assets/🎒️example.pack.semio");
+                const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/📃️note/🖼️assets/🗣️example.dsl.semio");
+                const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/📃️note/🖼️assets/🎒️example.pack.semio");
 
                 let demo = snapshot::demo_text_snapshot();
 

@@ -569,32 +569,7 @@ impl store::ArtifactPack for SemioMeshSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🔖️Demo
-/// 🌱 The demo `s.stdio.semio.mesh` document — one mesh (one triangle primitive with a full
-/// position/normal/uv/color/index sweep, keyed to a material) + one material + one texture —
-/// exercising every collection/leaf shape at least once. Single source of truth for
-/// `📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` and for the
-/// conformance-law tests in `🎹️composer/🦀️component.rs`.
-#[cfg(test)]
-pub(crate) fn demo_mesh_snapshot() -> SemioMeshSnapshot {
-    SemioMeshSnapshot {
-        schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(),
-        meshes: vec![SemioMesh {
-            id: "mesh-1".into(),
-            primitives: vec![SemioPrimitive {
-                id: "prim-1".into(),
-                topology: SemioTopology::Triangles,
-                positions: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }],
-                normals: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }; 3],
-                uvs: vec![SemioUv { u: 0.0, v: 0.0 }, SemioUv { u: 1.0, v: 0.0 }, SemioUv { u: 0.0, v: 1.0 }],
-                colors: vec![SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }; 3],
-                indices: vec![0, 1, 2],
-                material_id: Some("mat-1".into()),
-            }],
-        }],
-        materials: vec![SemioMaterial { id: "mat-1".into(), base_color: SemioRgba { r: 0.8, g: 0.2, b: 0.2, a: 1.0 }, metallic: 0.1, roughness: 0.6 }],
-        textures: vec![SemioTexture { id: "tex-1".into(), mime: "image/png".into(), bytes: vec![0x89, 0x50, 0x4e, 0x47] }],
-    }
-}
+pub use crate::artifacts::semio::standards::v1::subsets::mesh::engine::demo_mesh_snapshot;
 //#endregion 🔖️Demo
 
 //#region 🔖️Tests

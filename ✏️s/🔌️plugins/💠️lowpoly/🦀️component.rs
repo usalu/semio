@@ -7,7 +7,7 @@ pub fn plugin() -> Plugin {
     Plugin::builder("lowpoly")
         .label("Lowpoly")
         .version("0.1.0")
-        .setup(crate::register_lowpoly_exports)
+        .setup(crate::artifacts::lowpoly::engine::register)
         .register_document_app::<crate::apps::lowpoly::LowpolyPlayApp>(crate::apps::lowpoly::create_lowpoly_app())
         .build()
 }

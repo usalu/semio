@@ -1,0 +1,40 @@
+     |
+6237 |                 let VcsArtifactApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6495:34
+     |
+6495 |             let VcsArtifactApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6273:38
+     |
+6273 |                 let VcsArtifactApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6153:42
+     |
+6153 |                     let VcsArtifactApp { app, cache, .. } = self;
+     |                                          ^^^ help: try ignoring the field: `app: _`
+
+error[E0499]: cannot borrow `self.children` as mutable more than once at a time
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5790:41
+     |
+5790 | ...ber) = self.children.get_mut(&key).ok_or_else(|| {
+     |           ^^^^^^^^^^^^^ `self.children` was mutably borrowed here in the previous iteration of the loop
+...
+5807 | ...parent_ref, &mut self.store as &mut dyn SpaceMember, &mut dispatches, parent_ops, Vec::new(), group_meta)
+     |                                                         --------------- first borrow used here, in later iteration of loop
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2412:17
+     |
+2412 |             let app = A::default();
+     |                 ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+For more information about this error, try `rustc --explain E0499`.
+warning: `semio-framework-plugin` (lib) generated 38 warnings
+error: could not compile `semio-framework-plugin` (lib) due to 1 previous error; 38 warnings emitted

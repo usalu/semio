@@ -4,6 +4,6 @@
   "label": "flow-extension-brep",
   "extends": "flow",
   "moduleUrl": "/extensions/flow-extension-brep/semio_s_plugin_flow_extension_brep.js",
-  "packageHash": "dev:1786381108272",
-  "installedAt": 1786381108272
+  "packageHash": "dev:1786546640483",
+  "installedAt": 1786546640483
 }

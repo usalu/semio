@@ -21,7 +21,7 @@ Add a fourth schema family — `💡️inferences` (plural, slug-dir shape mirro
 10. **Never claim a test passed without running it.** Paste real command + real output into your report.
 11. **Derive dual-copy mirroring**: `✨️derive/🦀️component.rs` and `✨️derive/📦️packages/🦀️rust/📦️glue.rs` must stay byte-identical — cargo compiles the glue copy.
 12. **Grammar-honesty**: no placeholder/lorem text in 📝️text or 💾️binary grammar leaves — real, artifact-specific vocabulary only.
-13. **No empty inference families** — every `💡️inferences/` ships ≥1 slug dir with a real `InferredField` (honest `dep_input` covering everything `compute` reads).
+13. **No empty inference families** — every `💡️inferences/` ships ≥1 slug dir with a real derivation: either an `InferredField` impl (honest `dep_input` covering everything `compute` reads) **or** a pure-fn leaf reading the snapshot directly (architect `🧭topology` is the sanctioned exemplar). **`InferredField` is required only where the derivation is genuinely per-entity and DAG-shaped** (a merkle dep-chain over a flat whole-snapshot record costs more than the fold it would cache) — see the P0 ruling in `📓️status.md` for the resolved 8-vs-72 question; this line originally overstated the requirement and is corrected to match the approved plan's P2 checklist wording ("real `InferredField`/pure-fn leaf").
 
 ## Live concurrency — THREE other sessions are in this tree
 

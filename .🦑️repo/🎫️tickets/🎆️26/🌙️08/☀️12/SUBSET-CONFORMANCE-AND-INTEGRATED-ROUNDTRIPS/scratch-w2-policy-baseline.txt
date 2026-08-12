@@ -1,0 +1,9 @@
+breaches 676
+{
+  "subset-conformance/facet-totality": 276,
+  "subset-conformance/engine-presence": 232,
+  "subset-conformance/example-placement": 95,
+  "subset-conformance/phantom-standards": 2,
+  "subset-conformance/ts-parity": 38,
+  "subset-conformance/no-glue-shim-blocks": 33
+}

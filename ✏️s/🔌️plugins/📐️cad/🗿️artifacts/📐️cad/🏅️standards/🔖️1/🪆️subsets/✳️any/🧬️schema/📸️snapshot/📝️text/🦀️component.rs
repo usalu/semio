@@ -12,7 +12,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// 📄️ The `default` example scene, handcrafted in the `.cad` DSL — a small structural column with
 /// a two-vertex/one-edge/one-wire/one-face/one-shell/one-solid brep, a site-photo reference, and
 /// objects across the shape/building/structure-classic panes.
-pub const CAD_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const CAD_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.cad` DSL text into a `CadSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<CadSnapshot, store::TextError> {

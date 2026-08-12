@@ -36,10 +36,10 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "."]
                 pub mod engine {
-                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/⚙️engine/🎬️scene/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎬️scene/🦀️component.rs"]
                     pub mod scene;
                 }
                 #[path = "."]
@@ -519,7 +519,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📏️layout/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -622,10 +622,10 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/📏️layout/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_layout_demo;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/📏️layout/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_layout_demo_tests;
     #[path = "../../🎛️apps/📏️layout/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_layout_demo_session;

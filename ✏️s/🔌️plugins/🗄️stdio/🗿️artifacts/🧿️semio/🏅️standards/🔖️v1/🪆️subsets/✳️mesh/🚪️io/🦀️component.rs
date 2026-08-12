@@ -278,7 +278,7 @@ pub mod derived_composition {
             fn grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
-                let text = store::ArtifactDsl::print_dsl(&snapshot::demo_mesh_snapshot());
+                let text = crate::artifacts::semio::standards::v1::subsets::mesh::engine::print_mesh_dsl(&crate::artifacts::semio::standards::v1::subsets::mesh::engine::demo_mesh_snapshot());
                 let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
                 let reconstructed = format!("{}\n{body}", envelope.envelope_id());
                 assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
@@ -315,7 +315,7 @@ pub mod derived_composition {
             #[test]
             fn protocol_walk_law() {
                 let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-                let packed = store::ArtifactPack::encode_pack(&snapshot::demo_mesh_snapshot());
+                let packed = crate::artifacts::semio::standards::v1::subsets::mesh::engine::encode_mesh_pack(&crate::artifacts::semio::standards::v1::subsets::mesh::engine::demo_mesh_snapshot());
                 let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
                 let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
@@ -336,15 +336,15 @@ pub mod derived_composition {
             }
 
             /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
-            /// `print_dsl`/`encode_pack` output of `snapshot::demo_mesh_snapshot()` —
+            /// `print_dsl`/`encode_pack` output of `engine::demo_mesh_snapshot()` —
             /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the
             /// pack twin — so the fixtures can never silently drift back to a fake.
             #[test]
             fn fixture_honesty_law() {
-                const FIXTURE_DSL: &str = include_str!("../../../../../📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio");
-                const FIXTURE_PACK: &[u8] = include_bytes!("../../../../../📚️examples/🧊️cube/🖼️assets/🎒️example.pack.semio");
+                const FIXTURE_DSL: &str = include_str!("../📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio");
+                const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🧊️cube/🖼️assets/🎒️example.pack.semio");
 
-                let demo = snapshot::demo_mesh_snapshot();
+                let demo = crate::artifacts::semio::standards::v1::subsets::mesh::engine::demo_mesh_snapshot();
 
                 let parsed = <snapshot::SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
                 assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_mesh_snapshot()");
@@ -356,6 +356,83 @@ pub mod derived_composition {
             }
         }
         //#endregion 🔖️ConformanceLaws
+
+        //#region 🧪️SubsetRoundtrip
+        struct SemioMeshRoundtrip;
+
+        impl store::os_store::test_support::SubsetRoundtripSpec for SemioMeshRoundtrip {
+            type Snapshot = SemioMeshSnapshot;
+            type Mutation = crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
+            type Inference = ();
+
+            fn dialect() -> store::os_io::ArtifactDialect {
+                store::os_io::ArtifactDialect {
+                    artifact_kind: "s.stdio.semio".into(),
+                    standard: "v1".into(),
+                    subset: "mesh".into(),
+                }
+            }
+
+            fn fidelity() -> store::os_store::test_support::IoFidelityClass {
+                store::os_store::test_support::IoFidelityClass::Canonical
+            }
+
+            fn drops() -> &'static [&'static str] {
+                &[]
+            }
+
+            fn parse_native(asset: &store::os_store::test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
+                let text = asset.text.ok_or_else(|| "mesh cube requires dsl text".to_string())?;
+                crate::artifacts::semio::standards::v1::subsets::mesh::engine::parse_mesh_dsl(text).map_err(|e| e.to_string())
+            }
+
+            fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
+                Ok(crate::artifacts::semio::standards::v1::subsets::mesh::engine::print_mesh_dsl(snapshot).into_bytes())
+            }
+
+            fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
+                let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
+                crate::artifacts::semio::standards::v1::subsets::mesh::engine::parse_mesh_dsl(text).map_err(|e| e.to_string())
+            }
+
+            fn infer(_snapshot: &Self::Snapshot) -> Self::Inference {}
+
+            fn sample_mutations(_snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
+                use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::demo_mutation_cases;
+                demo_mutation_cases()
+                    .into_iter()
+                    .filter(|m| !matches!(m, crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation::NoMutation))
+                    .take(1)
+                    .collect()
+            }
+
+            fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
+                let text = std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()])?;
+                let snapshot = <SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| vec![e.to_string()])?;
+                let hard: Vec<String> = check_mesh_referential_invariants(&snapshot)
+                    .into_iter()
+                    .filter(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal))
+                    .map(|d| d.code.0)
+                    .collect();
+                if hard.is_empty() { Ok(()) } else { Err(hard) }
+            }
+
+            fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {
+                Err("SKIP:owning subset has no negative fixture".into())
+            }
+        }
+
+        #[test]
+        fn cube_subset_integrated_roundtrip() {
+            let text = include_str!("../📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio");
+            let asset = store::os_store::test_support::ExampleAsset {
+                bytes: text.as_bytes(),
+                text: Some(text),
+                provenance: "✳️mesh/📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio",
+            };
+            store::os_store::test_support::assert_subset_roundtrip::<SemioMeshRoundtrip>(&asset, None);
+        }
+        //#endregion 🧪️SubsetRoundtrip
     }
     //#endregion 🔖️Tests
 }

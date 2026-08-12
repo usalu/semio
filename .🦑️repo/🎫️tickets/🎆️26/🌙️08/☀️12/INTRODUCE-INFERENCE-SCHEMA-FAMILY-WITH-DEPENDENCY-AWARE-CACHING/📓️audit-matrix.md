@@ -107,6 +107,76 @@ snapshot — always true, proves nothing. This one is credible and matches the s
 `outline_is_deterministic` (also over `::default()`). Not verified family-by-family by the coordinator
 yet. Low-cost fix (build a non-empty fixture, assert real values); fold into P1's small-fixes lane.
 
+## RULING (from the parent session) — the 8-of-72 question is CLOSED
+
+**Pure-fn leaves are legal repo-wide. `InferredField` is required only where the derivation is
+genuinely per-entity and DAG-shaped.** This was not a new decision but the resolution of a
+contradiction between two governing documents: `📌️important.md` rule 13 overstated the requirement and
+**has been corrected by the parent** (re-read it before writing P3 policy); the approved plan's fan-out
+checklist already said "real `InferredField`/**pure-fn** leaf", and the original design doc explicitly
+prescribes "🧭topology … or the closest honest derived stat" as a whole-snapshot pure function for
+workflow/dag artifacts. Architect's topology leaf is that doc's own sanctioned shape.
+
+Binding rationale, to be cited in the P3 policy cluster's doc comments: *a merkle dep-chain over a
+6-field flat record costs more than the fold it caches.*
+
+**P3 policy consequence:** slug-dir impl presence must accept EITHER `impl … InferredField<` OR a plain
+`pub fn` reading the snapshot. Do not gate on `InferredField` universally.
+
+**Law naming — also ruled:** check law BEHAVIOURS, not literal names. Do not rename the ~10 correctly
+named descriptive tests. Do **not** manufacture `cache_transparency`/`incrementality` laws on the 64
+pure-fn families — they have no cache, and a vacuous test is worse than no test. Pure-fn families owe
+only `inference_determinism_law` + `inference_default_law` (both already present on all 72). Optional
+polish: canonical-named alias tests on just the 8 `InferredField` families for policy grep-ability.
+
+## A3 (wiring audit) — VERIFIED, and its headline is FALSE
+
+| A3 claim | Verdict | Evidence |
+|---|---|---|
+| "55 of 72 families have NO glue mount — their code never compiles" | **FALSE** | Every one of the 33 plugins shows an exact **4:1** ratio of `💡️inferences` references in its `📦️glue.rs` to families on disk (writer 1→4, norm 15→60, stdio 19→76, block 3→12, …). The 4 are family-root + `📝️text` + `💾️binary` + slug submodule. |
+| broken `#[path]` strings | **NONE** | All **288** `#[path = "…💡️inferences…"]` strings across every plugin glue.rs resolve to a real file on disk. Checked exhaustively, zero misses. |
+| mount shape deviates from the mutations pattern | **FALSE** | Verified on `🖨️raster/📦️glue.rs:59-73` — `#[path="."] pub mod inferences { mod component; pub use component::*; pub mod text; pub mod binary; #[path="."] pub mod topology { mod component; pub use component::*; } }`. Exactly the mutations shape. |
+| "TS index export VERDICT: REQUIRED, per `POLICY_TS_FACADE_CONSTITUTIONAL_FACETS`" | **MISREADING** | That constant (`📜️script.ts:2433`) is the set of facets whose `🟦️component.ts` **stubs are ACCEPTED without an allowlist** — stub *tolerance*, the opposite of an export requirement. It is consumed only by `policyIsConstitutionalTsFacadePath` (:3312), which tests the **parent dir of a `🟦️component.ts`**, and never looks at `📦️index.ts` at all. |
+
+That makes **four of four** P0 explorer audits wrong on their headline finding. Every substantive P0
+conclusion in this document is coordinator-verified; none rests on an explorer report.
+
+## 🚨 NEW FINDING — the plugin TS facades are 91% dead, repo-wide
+
+While settling the TS-export question:
+
+```
+repo-wide 📦️index.ts export paths:  517 MISS / 50 OK
+```
+
+Of 567 `export … from "…"` paths across the 33 plugin `📦️packages/🟦️typescript/📦️index.ts` files,
+**517 point at files that do not exist.** `🖨️raster` is representative — all 12 of its exports are dead:
+
+```
+MISS ../../🗿️artifacts/🖨️raster/🧬️schema/📸️snapshot/🟦️component.ts
+MISS ../../🗿️artifacts/🖨️raster/🧬️schema/🧬️mutations/🟦️component.ts
+…
+```
+
+The cause is structural: they use **pre-standards paths** (`🗿️artifacts/<a>/🧬️schema/…`) while the real
+tree has been migrated to `🗿️artifacts/<a>/🏅️standards/🔖️<v>/🪆️subsets/✳️<s>/🧬️schema/…`. The approved
+plan already knew of one instance ("repair stale pre-standards paths while there, mandatory for
+🌀️procedural") — it is in fact near-total.
+
+**There is no `📜️script.ts` policy on `📦️index.ts`** — the only two mentions in the whole file are an
+unrelated import (:51) and a raw-spawn exemption (:3802). Nothing enforces these facades, which is
+precisely why 517 dead paths went unnoticed.
+
+### Verdict on W-C step 5: **CANCELLED — do not add inference exports to `📦️index.ts`**
+
+Adding 3 inference exports per plugin would contribute ~99 more dead paths to a facade that is already
+91% dead, enforced by nothing, and broken for reasons wholly outside this ticket. Repairing all 517 is
+someone else's migration debt (the `🏅️standards`/`🪆️subsets` restructure — APA/UCAS territory), far
+outside our scope, and would collide head-on with APA's live plugin migration.
+
+**Action:** report the 517 to the peer sessions as an unowned repo-wide breakage; do not touch it.
+Removes step 5 from the per-subset P2 checklist — a real scope reduction across every remaining subset.
+
 ## Not-yet-consolidated
 
 `📓️p0-a3-wiring-audit.md` (glue mounts / registration / descriptor fns / TS-index-export verdict) and

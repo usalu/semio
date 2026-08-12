@@ -3149,7 +3149,7 @@ pub mod app {
                 description: None,
                 duration_ms: 10_000,
                 chapters: vec![],
-                base: TutorialBase { document_dsl: None, example_id: None, ui: TutorialUiSnapshot::default(), cameras: vec![] },
+                base: TutorialBase { artifact_dsl: None, example_id: None, ui: TutorialUiSnapshot::default(), cameras: vec![] },
                 tracks: TutorialTracks::default(),
                 recorded_at: None,
             }
@@ -3436,7 +3436,7 @@ pub mod app {
             assert_eq!(source.payload(), source.document_json());
             let definition = ExampleDefinition::from(&source);
             assert_eq!(definition.id, "nakagin");
-            assert_eq!(definition.document_json, "{\"kind\":\"demo\"}");
+            assert_eq!(definition.artifact_json, "{\"kind\":\"demo\"}");
             assert!(definition.app_id.is_empty());
             let app = App::from_builder(App::builder("puzzle2d-play", LocalizedLabel::data("Puzzle")).document(["semio", "puzzle"]).mode("edit", LocalizedLabel::data("Edit"), "pencil").window_kind("main", LocalizedLabel::data("Main"), "puzzle.main", SurfaceKind::Canvas2d, IconName::AppWindow)).example_source(&source);
             assert_eq!(app.examples.len(), 1);
@@ -5784,9 +5784,16 @@ pub mod app {
             let parent_ops: Vec<Vec<u8>> = artifact_mutations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect();
 
             self.store.set_local_actor_id(Some(meta.actor.clone()));
-            let mut dispatches: Vec<(&mut dyn SpaceMember, ChildDispatch)> = Vec::with_capacity(child_emits.len());
+            let mut seen_keys = ::std::collections::HashSet::with_capacity(child_emits.len());
+            let mut child_ptrs: Vec<(*mut dyn SpaceMember, ChildDispatch)> = Vec::with_capacity(child_emits.len());
             for child_emit in &child_emits {
                 let key = (child_emit.slot.clone(), child_emit.child_id.clone());
+                if !seen_keys.insert(key.clone()) {
+                    return Err(plugin_sdk_fault(format!(
+                        "dispatch_emit: verb {verb:?} emitted duplicate ChildEmit for slot {:?} child {:?}",
+                        child_emit.slot, child_emit.child_id
+                    )));
+                }
                 let (dialect, member) = self.children.get_mut(&key).ok_or_else(|| {
                     plugin_sdk_fault(format!(
                         "dispatch_emit: verb {verb:?} emitted a ChildEmit for slot {:?} child {:?} with no live child store — call VcsArtifactApp::open_child/register_child first",
@@ -5794,8 +5801,16 @@ pub mod app {
                     ))
                 })?;
                 let target = ArtifactRef { artifact_id: child_emit.child_id.clone(), dialect: dialect.clone() };
-                dispatches.push((member.as_mut(), ChildDispatch { child: target, ops: child_emit.ops.clone(), op_schema: child_emit.op_schema.clone(), labels: child_emit.labels.clone() }));
+                let member_ptr: *mut dyn SpaceMember = member.as_mut();
+                child_ptrs.push((member_ptr, ChildDispatch { child: target, ops: child_emit.ops.clone(), op_schema: child_emit.op_schema.clone(), labels: child_emit.labels.clone() }));
             }
+            // 🛡️ Keys are unique and `self.children` is not resized until after `dispatch_group`, so
+            // these entry pointers stay valid and non-aliasing for the simultaneous child borrows
+            // `dispatch_group` requires.
+            let mut dispatches: Vec<(&mut dyn SpaceMember, ChildDispatch)> = child_ptrs
+                .into_iter()
+                .map(|(ptr, dispatch)| (unsafe { &mut *ptr }, dispatch))
+                .collect();
 
             // 🎛️ `meta.actor`/`description` are honored; `coalesce_key` is intentionally dropped here
             // — `GroupMeta.coalesce_key` is accepted-but-not-wired by `dispatch_group` itself today
@@ -10179,4 +10194,187 @@ macro_rules! derive_artifact_facets {
             pub fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<<Self as $crate::ArtifactComposer>::Snapshot>, $crate::ComposeError> { <Self as $crate::ArtifactComposer>::compose(sources) }
         }
     };
+}
+
+/// 🪆️ Whether a subset owns snapshot/diff/mutation types or derives behavior from a base dialect.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SubsetKind {
+    Owning,
+    Derived,
+}
+
+/// 🪆️ Declares one subset's lifecycle facets, runtime registration, and inline conformance tests.
+#[macro_export]
+macro_rules! subset {
+    (
+        $vis:vis owning dialect $artifact:literal / $standard:literal / $subset:literal {
+            spec $spec:ident {
+                construction: $construction:ty,
+                analysis: $analysis:ty,
+                composition: $composition:ty,
+            }
+            builder: $builder:ident,
+            analyzer: $analyzer:ident,
+            composer: $composer:ident,
+            $(io: [$($io_entry:expr),+ $(,)?],)?
+            $(validator: $validator:ty,)?
+            $(examples: [$($example:expr),+ $(,)?],)?
+        }
+    ) => {
+        $crate::derive_artifact_facets! {
+            $vis spec $spec {
+                construction: $construction,
+                analysis: $analysis,
+                composition: $composition,
+            }
+            builder: $builder,
+            analyzer: $analyzer,
+            composer: $composer,
+        }
+
+        #[doc(hidden)]
+        pub mod __subset_registration {
+            use super::*;
+            use std::sync::{Once, OnceLock};
+
+            pub const SUBSET_DIALECT: $crate::Dialect = $crate::Dialect {
+                artifact_kind: $artifact,
+                standard: $crate::StandardId($standard),
+                subset: $crate::SubsetId($subset),
+            };
+            pub const KIND: $crate::SubsetKind = $crate::SubsetKind::Owning;
+            static REGISTERED: Once = Once::new();
+            $(static VALIDATOR_ENTRY: OnceLock<$crate::SubsetValidatorEntry> = OnceLock::new();)?
+
+            $(fn validator_entry() -> &'static $crate::SubsetValidatorEntry {
+                VALIDATOR_ENTRY.get_or_init(|| $crate::subset_validator_entry_of::<$validator>())
+            })?
+
+            pub fn register() {
+                REGISTERED.call_once(|| {
+                    let mut entries = vec![$crate::composer_entry_of::<$composer>()];
+                    $(entries.extend([$($io_entry),+]);)?
+                    $crate::register_composer_entries(&entries);
+                    $($crate::register_subset_validator(validator_entry());)?
+                });
+            }
+
+            $(pub const EXAMPLES: &'static [$crate::ExampleSource] = &[$($example),+];)?
+
+            #[cfg(test)]
+            mod conformance {
+                use super::*;
+
+                #[test]
+                fn subset_macro_owning_dialect_matches_spec() {
+                    assert_eq!(SUBSET_DIALECT, <$composition as $crate::ArtifactComposition>::WRITES);
+                }
+            }
+        }
+
+        $vis use __subset_registration::{register as register_subset, KIND, SUBSET_DIALECT};
+    };
+
+    (
+        $vis:vis derived dialect $artifact:literal / $standard:literal / $subset:literal {
+            validator: $validator:ty,
+            $(io: [$($io_entry:expr),+ $(,)?],)?
+            $(positive: [$($pos_example:expr),+ $(,)?],)?
+            $(negative: [$($neg_example:expr),+ $(,)?],)?
+        }
+    ) => {
+        #[doc(hidden)]
+        pub mod __subset_registration {
+            use super::*;
+            use std::sync::{Once, OnceLock};
+
+            pub const SUBSET_DIALECT: $crate::Dialect = $crate::Dialect {
+                artifact_kind: $artifact,
+                standard: $crate::StandardId($standard),
+                subset: $crate::SubsetId($subset),
+            };
+            pub const KIND: $crate::SubsetKind = $crate::SubsetKind::Derived;
+            static REGISTERED: Once = Once::new();
+            static VALIDATOR_ENTRY: OnceLock<$crate::SubsetValidatorEntry> = OnceLock::new();
+
+            fn validator_entry() -> &'static $crate::SubsetValidatorEntry {
+                VALIDATOR_ENTRY.get_or_init(|| $crate::subset_validator_entry_of::<$validator>())
+            }
+
+            pub fn register() {
+                REGISTERED.call_once(|| {
+                    $crate::register_subset_validator(validator_entry());
+                    $( $crate::register_composer_entries(&[$($io_entry),+]); )?
+                });
+            }
+
+            $(pub const POSITIVE_EXAMPLES: &'static [$crate::ExampleSource] = &[$($pos_example),+];)?
+            $(pub const NEGATIVE_EXAMPLES: &'static [$crate::ExampleSource] = &[$($neg_example),+];)?
+
+            #[cfg(test)]
+            mod conformance {
+                use super::*;
+
+                #[test]
+                fn subset_macro_derived_dialect_is_non_any() {
+                    assert_ne!(SUBSET_DIALECT.subset, $crate::SubsetId::ANY);
+                }
+
+                #[test]
+                fn subset_macro_derived_validator_registers() {
+                    register();
+                    let payload = $crate::IoPayload::Text(String::new());
+                    let _ = <$validator as $crate::SubsetValidator>::validate(&payload);
+                }
+            }
+        }
+
+        $vis use __subset_registration::{register as register_subset, KIND, SUBSET_DIALECT};
+    };
+}
+
+#[cfg(test)]
+mod subset_macro_tests {
+    use super::*;
+    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+
+    struct MacroDerivedValidator;
+
+    impl SubsetValidator for MacroDerivedValidator {
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.test.subset-macro", standard: StandardId("1"), subset: SubsetId("derived") };
+
+        fn validate(_payload: &IoPayload) -> Vec<Diagnostic> {
+            vec![Diagnostic {
+                code: FaultCode::new("test.subset-macro.ok"),
+                severity: Severity::Hint,
+                span: TextSpan::at(1, 1),
+                message: "subset! macro derived validator smoke".into(),
+                expected: None,
+                scope: dsl::FaultScope::default(),
+            }]
+        }
+    }
+
+    subset! {
+        pub derived dialect "s.test.subset-macro" / "1" / "derived" {
+            validator: MacroDerivedValidator,
+        }
+    }
+
+    #[test]
+    fn subset_macro_derived_register_is_idempotent() {
+        register_subset();
+        register_subset();
+        let diagnostics = MacroDerivedValidator::validate(&IoPayload::Text(String::new()));
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].code.0, "test.subset-macro.ok");
+    }
+
+    #[test]
+    fn subset_macro_derived_kind_and_dialect() {
+        assert_eq!(KIND, SubsetKind::Derived);
+        assert_eq!(SUBSET_DIALECT.artifact_kind, "s.test.subset-macro");
+        assert_eq!(SUBSET_DIALECT.standard.0, "1");
+        assert_eq!(SUBSET_DIALECT.subset.0, "derived");
+    }
 }

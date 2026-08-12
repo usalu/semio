@@ -2,7 +2,7 @@
 //! whole-building simulation (EnergyPlus-class predictor-corrector kernel), no IDF/epJSON, templates,
 //! scripting, or language bindings. See `AGENTS.md` for the domain overview.
 //!
-//! WIRING ONLY. Every `pub mod` below points at exactly one `🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/🦀️<domain>.rs`
+//! WIRING ONLY. Every `pub mod` below points at exactly one `🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️<domain>.rs`
 //! taxonomy component file with a `#[path]` written in full, relative to the owner root (this file itself now
 //! lives two levels deeper, in `📦️packages/🦀️rust/`, so every path carries a `../../` prefix back out
 //! to the owner root) — do not inline any component file back into this one: the taxonomy validator and the
@@ -13,7 +13,7 @@
 //! codec of its own, no command surface. Its single artifact (`s.energy.model`) owns the compute
 //! engine, which is why the 50 domain modules below are declared flat at the crate root (exactly
 //! as the pre-migration bundle crate declared them) but physically live under the artifact's
-//! `🏅️standards/🔖️1/⚙️engine/<domain>/` (ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`
+//! `🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/<domain>/` (ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`
 //! relocation out of the plugin root — engine code belongs to the artifact that owns it, never to
 //! the plugin facet), one file per domain, with the flat `pub use` re-export surface preserved so
 //! `crate::props::…`/`crate::units::…`-style internal references and any external
@@ -28,105 +28,105 @@ extern crate semio_framework_schema as schema;
 
 
 //#region ⚙️Engine
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/air_exchange/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/air_exchange/🦀️component.rs"]
 pub mod air_exchange;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/air_system/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/air_system/🦀️component.rs"]
 pub mod air_system;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/airflow_network/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/airflow_network/🦀️component.rs"]
 pub mod airflow_network;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/calendar/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/calendar/🦀️component.rs"]
 pub mod calendar;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/coils/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/coils/🦀️component.rs"]
 pub mod coils;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/comfort/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/comfort/🦀️component.rs"]
 pub mod comfort;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/controls/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/controls/🦀️component.rs"]
 pub mod controls;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/curves/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/curves/🦀️component.rs"]
 pub mod curves;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/daylight/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/daylight/🦀️component.rs"]
 pub mod daylight;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/dispatch/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/dispatch/🦀️component.rs"]
 pub mod dispatch;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/economics/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/economics/🦀️component.rs"]
 pub mod economics;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/electrical/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/electrical/🦀️component.rs"]
 pub mod electrical;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/envelope/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/envelope/🦀️component.rs"]
 pub mod envelope;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/error/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/error/🦀️component.rs"]
 pub mod error;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/evaporative/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/evaporative/🦀️component.rs"]
 pub mod evaporative;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/fans/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/fans/🦀️component.rs"]
 pub mod fans;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/faults/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/faults/🦀️component.rs"]
 pub mod faults;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/fenestration/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/fenestration/🦀️component.rs"]
 pub mod fenestration;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/gains/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/gains/🦀️component.rs"]
 pub mod gains;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/geometry/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/geometry/🦀️component.rs"]
 pub mod geometry;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/heat_recovery/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/heat_recovery/🦀️component.rs"]
 pub mod heat_recovery;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/humidity_eq/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/humidity_eq/🦀️component.rs"]
 pub mod humidity_eq;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/hvac_topo/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/hvac_topo/🦀️component.rs"]
 pub mod hvac_topo;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/iaq/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/iaq/🦀️component.rs"]
 pub mod iaq;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/ideal_hvac/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/ideal_hvac/🦀️component.rs"]
 pub mod ideal_hvac;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/kernel/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/kernel/🦀️component.rs"]
 pub mod kernel;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/material/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/material/🦀️component.rs"]
 pub mod material;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/meters/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/meters/🦀️component.rs"]
 pub mod meters;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/metrics/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/metrics/🦀️component.rs"]
 pub mod metrics;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/model/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/model/🦀️component.rs"]
 pub mod model;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/num/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/num/🦀️component.rs"]
 pub mod num;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/output/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/output/🦀️component.rs"]
 pub mod output;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/plant/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/plant/🦀️component.rs"]
 pub mod plant;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/precompute/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/precompute/🦀️component.rs"]
 pub mod precompute;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/props/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/props/🦀️component.rs"]
 pub mod props;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/refrigeration/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/refrigeration/🦀️component.rs"]
 pub mod refrigeration;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/results/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/results/🦀️component.rs"]
 pub mod results;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/room_air/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/room_air/🦀️component.rs"]
 pub mod room_air;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/schedule/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/schedule/🦀️component.rs"]
 pub mod schedule;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/shw/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/shw/🦀️component.rs"]
 pub mod shw;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/sim/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/sim/🦀️component.rs"]
 pub mod sim;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/site/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/site/🦀️component.rs"]
 pub mod site;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/sizing/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/sizing/🦀️component.rs"]
 pub mod sizing;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/solar/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/solar/🦀️component.rs"]
 pub mod solar;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/solar_thermal/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/solar_thermal/🦀️component.rs"]
 pub mod solar_thermal;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/terminal/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/terminal/🦀️component.rs"]
 pub mod terminal;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/units/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/units/🦀️component.rs"]
 pub mod units;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/water/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/water/🦀️component.rs"]
 pub mod water;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/zone_air/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/zone_air/🦀️component.rs"]
 pub mod zone_air;
-#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/zone_hvac/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/zone_hvac/🦀️component.rs"]
 pub mod zone_hvac;
 //#endregion ⚙️Engine
 
@@ -197,7 +197,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -439,7 +439,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🔋️model/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -457,7 +457,7 @@ pub mod plugin_apps;
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/🔋️model/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_model_demo;
 }
 //#endregion 📚️Examples

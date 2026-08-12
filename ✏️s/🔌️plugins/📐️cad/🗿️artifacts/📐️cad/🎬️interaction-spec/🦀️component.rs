@@ -586,7 +586,7 @@ mod tests {
 
     #[test]
     fn interaction_spec_parses_box_asset() {
-        let raw = include_str!("../../../🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️box.json");
+        let raw = include_str!("../📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️box.json");
         let spec: InteractionSpec = serde_json::from_str(raw).expect("🔣️box.json parses as InteractionSpec");
         assert_eq!(spec.id, "primitive.box");
         assert_eq!(spec.machine.initial, "idle");
@@ -601,7 +601,7 @@ mod tests {
 
     #[test]
     fn interaction_spec_parses_sphere_asset_with_command_finish() {
-        let raw = include_str!("../../../🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️sphere.json");
+        let raw = include_str!("../📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️sphere.json");
         let spec: InteractionSpec = serde_json::from_str(raw).expect("🔣️sphere.json parses as InteractionSpec");
         assert_eq!(spec.id, "solid.sphere");
         assert_eq!(spec.commit.operation.action, "command.finish");
@@ -611,15 +611,15 @@ mod tests {
     #[test]
     fn interaction_spec_parses_all_energy_and_structure_classic_assets() {
         let sources = [
-            include_str!("../../../🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructBasePlate.json"),
-            include_str!("../../../🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructExternalWall.json"),
-            include_str!("../../../🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructHull.json"),
-            include_str!("../../../🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructRoof.json"),
-            include_str!("../../../🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructWindows.json"),
-            include_str!("../../../🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructOneWayReinforcedConcreteSlab.json"),
-            include_str!("../../../🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteColumn.json"),
-            include_str!("../../../🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteExternalWall.json"),
-            include_str!("../../../🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteInternalWall.json"),
+            include_str!("../📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructBasePlate.json"),
+            include_str!("../📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructExternalWall.json"),
+            include_str!("../📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructHull.json"),
+            include_str!("../📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructRoof.json"),
+            include_str!("../📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructWindows.json"),
+            include_str!("../📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructOneWayReinforcedConcreteSlab.json"),
+            include_str!("../📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteColumn.json"),
+            include_str!("../📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteExternalWall.json"),
+            include_str!("../📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteInternalWall.json"),
         ];
         for raw in sources {
             let spec: InteractionSpec = serde_json::from_str(raw).expect("asset parses as InteractionSpec");
@@ -635,7 +635,7 @@ mod tests {
     /// `InteractionSpec` — catches schema drift between the JSON assets and these Rust types.
     #[test]
     fn every_interaction_asset_on_disk_parses_as_interaction_spec() {
-        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🖼️assets/🏗️modelDefinitions");
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📐️cad/📚️examples/🖼️assets/🏗️modelDefinitions");
         fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
             let Ok(entries) = std::fs::read_dir(dir) else { return };
             for entry in entries.flatten() {
@@ -692,7 +692,7 @@ mod tests {
 
     #[test]
     fn interaction_spec_guard_evaluates_against_context() {
-        let raw = include_str!("../../../🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructExternalWall.json");
+        let raw = include_str!("../📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructExternalWall.json");
         let spec: InteractionSpec = serde_json::from_str(raw).expect("parses");
         let mut context = std::collections::HashMap::new();
         let env_without = ExprEnv { context: &context, event: None };

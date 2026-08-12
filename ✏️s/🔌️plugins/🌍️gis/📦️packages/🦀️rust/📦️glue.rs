@@ -22,14 +22,6 @@ extern crate semio_framework_os_kernel as vcs;
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
 
-//#region 🔨️Modules
-#[path = "."]
-pub mod modules {
-    #[path = "../../🔨️modules/🏔️terrain/🦀️component.rs"]
-    pub mod terrain;
-}
-//#endregion 🔨️Modules
-
 //#region 🗿️Artifacts
 #[path = "."]
 pub mod artifacts {
@@ -43,8 +35,15 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                #[path = "."]
+                pub mod engine {
+                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+
+                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/terrain/🦀️component.rs"]
+                    pub mod terrain;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -390,7 +389,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🏔️gisterrain/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -406,7 +405,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -795,7 +794,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🗺️gismap/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -961,10 +960,6 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-#[path = "../../🔧️setup/🦀️component.rs"]
-mod setup;
-pub use setup::register_gis_exports;
-
 #[path = "../../🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
@@ -972,15 +967,15 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/🏔️gisterrain/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_gisterrain_demo;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/🏔️gisterrain/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_gisterrain_demo_tests;
-    #[path = "../../🗿️artifacts/🗺️gismap/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_gismap_demo;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/🗺️gismap/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_gismap_demo_tests;
     #[path = "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_2d_demo_session;

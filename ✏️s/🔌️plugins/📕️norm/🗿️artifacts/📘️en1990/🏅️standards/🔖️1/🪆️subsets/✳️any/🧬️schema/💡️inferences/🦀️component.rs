@@ -37,7 +37,10 @@ impl protocol::InferenceSpec<En1990Snapshot> for En1990Inference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.norm.en1990.inference.outline", reads: &["q_k"] }]
+        &[protocol::InferenceFieldSpec {
+            id: "s.norm.en1990.inference.outline",
+            reads: &["g_k", "q_k", "resistance_kn", "consequence_class", "annex", "seismic_a_ed_kn"],
+        }]
     }
 }
 //#endregion 🔖️Inference

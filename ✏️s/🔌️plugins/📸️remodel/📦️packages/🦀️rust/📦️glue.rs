@@ -39,28 +39,28 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "."]
                 pub mod engine {
-                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/⚙️engine/🌟️feature/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🌟️feature/🦀️component.rs"]
                     pub mod feature;
-                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/⚙️engine/🌫️dense/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🌫️dense/🦀️component.rs"]
                     pub mod dense;
-                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/⚙️engine/🎥️video/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎥️video/🦀️component.rs"]
                     pub mod video;
-                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/⚙️engine/🏃️motion/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🏃️motion/🦀️component.rs"]
                     pub mod motion;
-                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/⚙️engine/🏭️reconstruction/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🏭️reconstruction/🦀️component.rs"]
                     pub mod reconstruction;
-                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/⚙️engine/📷️camera/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📷️camera/🦀️component.rs"]
                     pub mod camera;
-                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/⚙️engine/📸️sfm/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📸️sfm/🦀️component.rs"]
                     pub mod sfm;
-                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/⚙️engine/🖼️images/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🖼️images/🦀️component.rs"]
                     pub mod images;
-                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/⚙️engine/🗺️geo/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🗺️geo/🦀️component.rs"]
                     pub mod geo;
-                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/⚙️engine/🥽️mesh/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🥽️mesh/🦀️component.rs"]
                     pub mod mesh;
                 }
                 #[path = "."]
@@ -694,7 +694,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📸️remodel/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -833,7 +833,7 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/📸️remodel/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_remodel_demo;
     #[path = "../../🎛️apps/📸️remodel/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_remodel_demo_session;

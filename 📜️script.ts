@@ -612,6 +612,10 @@ export class GenerateScript extends Script {
       new Neo4jCypherExport(this.root).runFromArgv(segments.slice(1));
       return;
     }
+    if (segments[0] === "plugin-glue") {
+      this.generatePluginGlue(segments.slice(1));
+      return;
+    }
     let successes = 0;
     let failures = 0;
     const exporter = new Neo4jCypherExport(this.root);
@@ -638,6 +642,40 @@ export class GenerateScript extends Script {
       console.error(`[generate] partial success (${successes} ok, ${failures} failed).`);
     }
     console.log(`[generate] Neo4j Cypher export finished (${successes} ok, ${failures} skipped/failed) under .🦑️repo/🛂️manifest.`);
+  }
+
+  /** 🧬️ Emit deterministic #[path] wiring comments for subset/example modules (dry by default). */
+  private generatePluginGlue(args: string[]): void {
+    const dry = args.includes("--dry") || args.includes("--dry-run") || args.length === 0;
+    const pluginFilter = args.find((a) => !a.startsWith("--"));
+    const pluginsRoot = join(this.root, "✏️s/🔌️plugins");
+    const plugins = readdirSync(pluginsRoot, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
+    let emitted = 0;
+    for (const plugin of plugins) {
+      if (pluginFilter && plugin !== pluginFilter && !plugin.includes(pluginFilter)) continue;
+      const owned = policyListTopLevelSubsetDirs(this.root).filter((s) => s.split("/")[2] === plugin);
+      const lines: string[] = [
+        `// GENERATED-BY: bun ./📜️script.ts generate plugin-glue ${plugin}`,
+        `// subsets=${owned.length} (registration body still hand-authored until serializer wave; this command validates discoverability)`,
+      ];
+      for (const sub of owned) {
+        lines.push(`// subset: ${sub}`);
+        emitted += 1;
+      }
+      const glue = join(pluginsRoot, plugin, "📦️packages/🦀️rust/📦️glue.rs");
+      if (!existsSync(glue)) {
+        console.warn(`[generate plugin-glue] skip ${plugin}: missing glue.rs`);
+        continue;
+      }
+      if (dry) {
+        console.log(`[generate plugin-glue] dry ${plugin}: ${owned.length} subsets`);
+      } else {
+        const inv = join(pluginsRoot, plugin, "📦️packages/🦀️rust/🤖️generated-subset-inventory.txt");
+        writeFileSync(inv, lines.join("\n") + "\n");
+        console.log(`[generate plugin-glue] wrote ${inv}`);
+      }
+    }
+    console.log(`[generate plugin-glue] ${dry ? "dry-run" : "wrote"} inventory for ${emitted} subset refs`);
   }
 }
 //#endregion 🔖️GenerateScript
@@ -5528,6 +5566,253 @@ function policyEffectCapabilityParityBreaches(repoRoot: string): BreachRecord[] 
 //#endregion 🔧️PolicyRuleEffectCapabilityParity
 
 //#endregion 🔧️PolicyRuleArtifactsOnlyPluginArchitecture
+
+
+//#region 🔧️PolicyRuleSubsetConformance
+/** 🪆️ Subset ownership + roundtrip readiness policies (ticket 26/08/12/SUBSET-CONFORMANCE-AND-INTEGRATED-ROUNDTRIPS). Medium until seal. */
+
+function policyListTopLevelSubsetDirs(repoRoot: string): string[] {
+  const taxonomy = loadTaxonomy();
+  const out: string[] = [];
+  const pluginsRoot = join(repoRoot, "✏️s/🔌️plugins");
+  if (!existsSync(pluginsRoot)) return out;
+  for (const plugin of readdirSync(pluginsRoot, { withFileTypes: true })) {
+    if (!plugin.isDirectory()) continue;
+    const arts = join(pluginsRoot, plugin.name, taxonomy.artifactsDirName ?? "🗿️artifacts");
+    if (!existsSync(arts)) continue;
+    for (const art of readdirSync(arts, { withFileTypes: true })) {
+      if (!art.isDirectory()) continue;
+      const standards = join(arts, art.name, taxonomy.standardsDirName ?? "🏅️standards");
+      if (!existsSync(standards)) continue;
+      for (const std of readdirSync(standards, { withFileTypes: true })) {
+        if (!std.isDirectory() || !std.name.startsWith(taxonomy.standardDirPrefix ?? "🔖️")) continue;
+        const subsets = join(standards, std.name, taxonomy.subsetsDirName ?? "🪆️subsets");
+        if (!existsSync(subsets)) continue;
+        for (const sub of readdirSync(subsets, { withFileTypes: true })) {
+          if (!sub.isDirectory() || !sub.name.startsWith(taxonomy.subsetDirPrefix ?? "✳️")) continue;
+          out.push(join("✏️s/🔌️plugins", plugin.name, taxonomy.artifactsDirName ?? "🗿️artifacts", art.name, taxonomy.standardsDirName ?? "🏅️standards", std.name, taxonomy.subsetsDirName ?? "🪆️subsets", sub.name).replaceAll("\\", "/"));
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/** 🪆️ Every subset must own schema, engine, io, and (eventually) examples. */
+export function policySubsetFacetTotalityBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const required = taxonomy.subsetChildDirs ?? ["🧬️schema", "⚙️engine", "🚪️io", "📚️examples"];
+  const breaches: BreachRecord[] = [];
+  for (const subRel of policyListTopLevelSubsetDirs(repoRoot)) {
+    for (const child of required) {
+      // examples are required structurally but many are still relocating — keep medium
+      if (!existsSync(join(repoRoot, subRel, child))) {
+        breaches.push({
+          id: `subset-facet-missing-${subRel}/${child}`,
+          summary: `"${subRel}" is missing required child ${child}/`,
+          kind: "subset-conformance/facet-totality",
+          scope: subRel,
+          priority: "medium",
+          reason: "Subsets own schema, engine, IO, and examples.",
+          solution: `Create ${subRel}/${child}/ as part of the subset ownership migration.`,
+        });
+      }
+    }
+  }
+  return breaches;
+}
+
+/** ⚙️ Engine must live at subset level, not standard level. */
+export function policySubsetEnginePresenceBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const breaches: BreachRecord[] = [];
+  for (const subRel of policyListTopLevelSubsetDirs(repoRoot)) {
+    const eng = join(subRel, "⚙️engine");
+    if (!existsSync(join(repoRoot, eng))) {
+      breaches.push({
+        id: `subset-engine-missing-${subRel}`,
+        summary: `"${subRel}" is missing ⚙️engine/`,
+        kind: "subset-conformance/engine-presence",
+        scope: subRel,
+        priority: "medium",
+        reason: "Engines moved from standards to subsets.",
+        solution: `Relocate the standard engine into ${eng}/.`,
+      });
+    }
+  }
+  // flag remaining standard-level engines
+  const pluginsRoot = join(repoRoot, "✏️s/🔌️plugins");
+  if (existsSync(pluginsRoot)) {
+    for (const plugin of readdirSync(pluginsRoot, { withFileTypes: true })) {
+      if (!plugin.isDirectory()) continue;
+      const arts = join(pluginsRoot, plugin.name, "🗿️artifacts");
+      if (!existsSync(arts)) continue;
+      for (const art of readdirSync(arts, { withFileTypes: true })) {
+        if (!art.isDirectory()) continue;
+        const standards = join(arts, art.name, "🏅️standards");
+        if (!existsSync(standards)) continue;
+        for (const std of readdirSync(standards, { withFileTypes: true })) {
+          if (!std.isDirectory()) continue;
+          const eng = join(standards, std.name, "⚙️engine");
+          if (existsSync(eng)) {
+            const rel = eng.replace(repoRoot + "/", "").replaceAll("\\", "/");
+            if (rel.startsWith("/")) {
+              // noop
+            }
+            const relPath = join("✏️s/🔌️plugins", plugin.name, "🗿️artifacts", art.name, "🏅️standards", std.name, "⚙️engine").replaceAll("\\", "/");
+            breaches.push({
+              id: `standard-engine-remaining-${relPath}`,
+              summary: `standard-level engine still present at "${relPath}"`,
+              kind: "subset-conformance/engine-presence",
+              scope: relPath,
+              priority: "medium",
+              reason: "After migration, engines must not remain at standard level.",
+              solution: "Move into each subset's ⚙️engine/ then delete the standard engine.",
+            });
+          }
+        }
+      }
+    }
+  }
+  return breaches;
+}
+
+/** 📚️ Examples must not remain at artifact/standard level. */
+export function policyExampleNotAtArtifactLevelBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const pluginsRoot = join(repoRoot, "✏️s/🔌️plugins");
+  if (!existsSync(pluginsRoot)) return breaches;
+  for (const plugin of readdirSync(pluginsRoot, { withFileTypes: true })) {
+    if (!plugin.isDirectory()) continue;
+    const arts = join(pluginsRoot, plugin.name, "🗿️artifacts");
+    if (!existsSync(arts)) continue;
+    for (const art of readdirSync(arts, { withFileTypes: true })) {
+      if (!art.isDirectory()) continue;
+      const artEx = join(arts, art.name, "📚️examples");
+      if (existsSync(artEx)) {
+        const rel = join("✏️s/🔌️plugins", plugin.name, "🗿️artifacts", art.name, "📚️examples").replaceAll("\\", "/");
+        breaches.push({
+          id: `artifact-examples-remaining-${rel}`,
+          summary: `artifact-level examples still present at "${rel}"`,
+          kind: "subset-conformance/example-placement",
+          scope: rel,
+          priority: "medium",
+          reason: "Examples belong under 🪆️subsets/<id>/📚️examples/.",
+          solution: "Move example units into the owning subset then delete the artifact examples dir.",
+        });
+      }
+      const standards = join(arts, art.name, "🏅️standards");
+      if (!existsSync(standards)) continue;
+      for (const std of readdirSync(standards, { withFileTypes: true })) {
+        if (!std.isDirectory()) continue;
+        const stdEx = join(standards, std.name, "📚️examples");
+        if (existsSync(stdEx)) {
+          const rel = join("✏️s/🔌️plugins", plugin.name, "🗿️artifacts", art.name, "🏅️standards", std.name, "📚️examples").replaceAll("\\", "/");
+          breaches.push({
+            id: `standard-examples-remaining-${rel}`,
+            summary: `standard-level examples still present at "${rel}"`,
+            kind: "subset-conformance/example-placement",
+            scope: rel,
+            priority: "medium",
+            reason: "Examples belong under 🪆️subsets/<id>/📚️examples/.",
+            solution: "Move into the owning subset then delete the standard examples dir.",
+          });
+        }
+      }
+    }
+  }
+  return breaches;
+}
+
+/** 🧹 Phantom Chinese 🏅️标准 trees must be deleted. */
+export function policyPhantomStandardsBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const pluginsRoot = join(repoRoot, "✏️s/🔌️plugins");
+  if (!existsSync(pluginsRoot)) return breaches;
+  const walk = (dir: string, rel: string) => {
+    if (!existsSync(dir)) return;
+    for (const ent of readdirSync(dir, { withFileTypes: true })) {
+      if (!ent.isDirectory()) continue;
+      const childRel = `${rel}/${ent.name}`.replaceAll("\\", "/");
+      if (ent.name.includes("标准")) {
+        breaches.push({
+          id: `phantom-standards-${childRel}`,
+          summary: `corrupt standards tree "${childRel}"`,
+          kind: "subset-conformance/phantom-standards",
+          scope: childRel,
+          priority: "medium",
+          reason: "Chinese-named 🏅️标准 directories are corrupt phantoms.",
+          solution: "Delete the entire phantom tree.",
+        });
+      }
+      walk(join(dir, ent.name), childRel);
+    }
+  };
+  walk(pluginsRoot, "✏️s/🔌️plugins");
+  return breaches;
+}
+
+/** 🪞 Meta-only TypeScript subset schema leaves (≤7 lines) must become real mirrors. */
+export function policySubsetTsParityBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const subRel of policyListTopLevelSubsetDirs(repoRoot)) {
+    const ts = join(repoRoot, subRel, "🧬️schema", "🟦️component.ts");
+    if (!existsSync(ts)) continue;
+    const lines = readFileSync(ts, "utf8").split(/\r?\n/).length;
+    if (lines > 0 && lines <= 7) {
+      breaches.push({
+        id: `subset-ts-meta-stub-${subRel}`,
+        summary: `"${subRel}/🧬️schema/🟦️component.ts" is a ${lines}-line meta stub`,
+        kind: "subset-conformance/ts-parity",
+        scope: `${subRel}/🧬️schema/🟦️component.ts`,
+        priority: "medium",
+        reason: "Derived/owning subsets require a real TypeScript implementation mirroring Rust.",
+        solution: "Replace the meta stub with a full TypeScript mirror of the Rust conformance/schema surface.",
+      });
+    }
+  }
+  return breaches;
+}
+
+/** 🚫 Glue compatibility shims keeping pre-migration module paths must be deleted. */
+export function policyNoGlueShimBlocksBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const pluginsRoot = join(repoRoot, "✏️s/🔌️plugins");
+  if (!existsSync(pluginsRoot)) return breaches;
+  for (const plugin of readdirSync(pluginsRoot, { withFileTypes: true })) {
+    if (!plugin.isDirectory()) continue;
+    const glue = join(pluginsRoot, plugin.name, "📦️packages/🦀️rust/📦️glue.rs");
+    if (!existsSync(glue)) continue;
+    const content = readFileSync(glue, "utf8");
+    if (/Shims:\s*keep pre-migration|pre-migration module paths/i.test(content)) {
+      const rel = join("✏️s/🔌️plugins", plugin.name, "📦️packages/🦀️rust/📦️glue.rs").replaceAll("\\", "/");
+      breaches.push({
+        id: `glue-shim-${rel}`,
+        summary: `"${rel}" still contains pre-migration shim blocks`,
+        kind: "subset-conformance/no-glue-shim-blocks",
+        scope: rel,
+        priority: "medium",
+        reason: "Greenfield forbids compatibility shims.",
+        solution: "Delete shim blocks after generated subset registration lands.",
+      });
+    }
+  }
+  return breaches;
+}
+
+/** 📦 Aggregate subset-conformance scanners. */
+export function policySubsetConformanceBreaches(repoRoot: string): BreachRecord[] {
+  return [
+    ...policySubsetFacetTotalityBreaches(repoRoot),
+    ...policySubsetEnginePresenceBreaches(repoRoot),
+    ...policyExampleNotAtArtifactLevelBreaches(repoRoot),
+    ...policyPhantomStandardsBreaches(repoRoot),
+    ...policySubsetTsParityBreaches(repoRoot),
+    ...policyNoGlueShimBlocksBreaches(repoRoot),
+  ];
+}
+//#endregion 🔧️PolicyRuleSubsetConformance
+
 
 //#region 🔧️PolicyRuleHandcraftedSpecP3
 /** ⚖️P3/M4 handcrafted-grammar policy scanners (distinctness / generic / declared-use / wiring / empty examples). Exemptions shrink to empty by P6 — see ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT. */
@@ -11358,6 +11643,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyBudgetNullBreaches(repoRoot));
   breaches.push(...policyMcpConfigBreaches(repoRoot));
   breaches.push(...policySniffRealityBreaches(repoRoot));
+  breaches.push(...policySubsetConformanceBreaches(repoRoot));
   return breaches;
 });
 //#endregion 🔖️PolicyExport

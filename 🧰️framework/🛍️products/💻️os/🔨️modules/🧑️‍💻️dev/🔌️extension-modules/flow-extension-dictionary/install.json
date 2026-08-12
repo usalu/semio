@@ -4,6 +4,6 @@
   "label": "flow-extension-dictionary",
   "extends": "flow",
   "moduleUrl": "/extensions/flow-extension-dictionary/semio_s_plugin_flow_extension_dictionary.js",
-  "packageHash": "dev:1786381108277",
-  "installedAt": 1786381108277
+  "packageHash": "dev:1786546640491",
+  "installedAt": 1786546640491
 }

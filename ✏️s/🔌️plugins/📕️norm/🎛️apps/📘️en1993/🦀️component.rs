@@ -175,7 +175,7 @@ mod tests {
     /// that is not listed here fails `command_ids_cover_every_row`.
     fn every_command() -> Vec<En1993Command> {
         vec![
-            En1993Command::SetSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1993Snapshot::default() }),
+            En1993Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1993Snapshot::default() }),
             En1993Command::Evaluate(evaluate::Evaluate {}),
             En1993Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
         ]
@@ -260,7 +260,7 @@ mod tests {
     #[test]
     fn set_snapshot_commits_a_host_backed_report() {
         let mut app = testkit::new_app();
-        testkit::dispatch(&mut app, En1993Command::SetSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1993Snapshot::default() }));
+        testkit::dispatch(&mut app, En1993Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1993Snapshot::default() }));
         let host = NormHost::<En1993Family>::from_document(app.snapshot().expect("projection"));
         assert!(!host.report().checks.is_empty());
     }
@@ -295,7 +295,7 @@ mod tests {
     #[test]
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = testkit::new_app();
-        testkit::dispatch(&mut app, En1993Command::SetSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1993Snapshot::default() }));
+        testkit::dispatch(&mut app, En1993Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1993Snapshot::default() }));
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
         assert_eq!(app.snapshot().expect("projection"), En1993Snapshot::default());

@@ -36,28 +36,28 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "."]
                 pub mod engine {
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/⚙️engine/↔️adjacency/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/↔️adjacency/🦀️component.rs"]
                     pub mod adjacency;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/⚙️engine/✅️validate/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/✅️validate/🦀️component.rs"]
                     pub mod validate;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/⚙️engine/🎁️outputs/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎁️outputs/🦀️component.rs"]
                     pub mod outputs;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/⚙️engine/📄️report/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📄️report/🦀️component.rs"]
                     pub mod report;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/⚙️engine/📊️status-summary/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📊️status-summary/🦀️component.rs"]
                     pub mod status_summary;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/⚙️engine/📐️template/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📐️template/🦀️component.rs"]
                     pub mod template;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/⚙️engine/📤️exchange/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📤️exchange/🦀️component.rs"]
                     pub mod exchange;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/⚙️engine/🔍️search/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔍️search/🦀️component.rs"]
                     pub mod search;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/⚙️engine/🔬️analyze/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔬️analyze/🦀️component.rs"]
                     pub mod analyze;
-                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/⚙️engine/🧭️trace/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🧭️trace/🦀️component.rs"]
                     pub mod trace;
                 }
                 #[path = "."]
@@ -2688,7 +2688,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🏛️program/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -2804,10 +2804,10 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/🏛️program/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_program_demo;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/🏛️program/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_program_demo_tests;
     #[path = "../../🎛️apps/🏛️architect/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_architect_demo_session;

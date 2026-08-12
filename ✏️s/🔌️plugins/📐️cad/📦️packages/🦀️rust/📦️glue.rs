@@ -49,23 +49,32 @@ pub mod artifacts {
             #[path = "."]
             pub mod v1 {
                 #[path = "."]
-                pub mod engine {
-                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/⚙️engine/📥️geometry-import/🦀️component.rs"]
-                    pub mod geometry_import;
-                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/⚙️engine/🔄️transformation/🦀️component.rs"]
-                    pub mod transformation;
-                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/⚙️engine/🔍️construct/🦀️component.rs"]
-                    pub mod construct;
-                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/⚙️engine/🕹️interaction/🦀️component.rs"]
-                    pub mod interaction;
-                }
-                #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
+                        #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
+                        mod engine_component;
+                        #[path = "."]
+                        pub mod engine {
+                            pub use super::engine_component::*;
+                            #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📥️geometry-import/🦀️component.rs"]
+                            pub mod geometry_import;
+                            #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔄️transformation/🦀️component.rs"]
+                            pub mod transformation;
+                            #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔍️construct/🦀️component.rs"]
+                            pub mod construct;
+                            #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🕹️interaction/🦀️component.rs"]
+                            pub mod interaction;
+                        }
+                        #[path = "."]
+                        pub mod examples {
+                            #[path = "."]
+                            pub mod demo {
+                                #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                            }
+                        }
                         #[path = "."]
                         pub mod schema {
                             #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
@@ -553,6 +562,9 @@ pub mod artifacts {
                         }
                     }
                 }
+                pub mod engine {
+                    pub use super::subsets::any::engine::*;
+                }
             }
         }
 
@@ -561,7 +573,7 @@ pub mod artifacts {
             pub use super::standards::v1::subsets::any::schema::*;
         }
         pub mod engine {
-            pub use super::standards::v1::engine::*;
+            pub use super::standards::v1::subsets::any::engine::*;
         }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
@@ -575,7 +587,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📐️cad/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -702,10 +714,10 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/📐️cad/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_cad_demo;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/📐️cad/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_cad_demo_tests;
     #[path = "../../🎛️apps/📐️cad/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_cad_demo_session;

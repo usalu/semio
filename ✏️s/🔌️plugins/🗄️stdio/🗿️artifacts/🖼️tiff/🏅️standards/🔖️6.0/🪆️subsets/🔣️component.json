@@ -3,10 +3,17 @@
   "standard": "6.0",
   "subsets": {
     "*": {
-      "name": "Unconstrained tiff 6.0"
+      "name": "Unconstrained tiff 6.0",
+      "archetype": "owning",
+      "examples": ["demo"],
+      "ioFidelity": { "class": "exact", "drops": [] },
+      "import": ["binary/raw/*"],
+      "export": ["binary/raw/*"]
     },
     "baseline": {
-      "name": "Baseline TIFF -- Adobe TIFF 6.0 Part 1 \"Baseline TIFF\", based on TIFF 6.0; real IFD-backed conformance checks -- see stdio.tiff.baseline.no-ifd for the one remaining honest gap (a document with no IFD at all)"
+      "name": "Baseline TIFF -- Adobe TIFF 6.0 Part 1 \"Baseline TIFF\", based on TIFF 6.0; real IFD-backed conformance checks -- see stdio.tiff.baseline.no-ifd for the one remaining honest gap (a document with no IFD at all)",
+      "archetype": "derived",
+      "derivesFrom": "*"
     }
   }
 }

@@ -117,6 +117,10 @@ export interface Taxonomy {
   /** 🪆️ Required and allowed children of a subset. */
   readonly subsetComponentDirs: readonly string[];
   readonly subsetChildDirs: readonly string[];
+  /** 🪆️ Allowed subset archetypes: owning owns types; derived reuses types + conformance gate. */
+  readonly subsetArchetypes?: readonly string[];
+  /** ⚖️ Allowed IO fidelity class names a subset may declare. */
+  readonly ioFidelityClasses?: readonly string[];
   /** 🧬️ Required children of each `🧬️mutations/<mutation>/` dir: mutation struct, per-mutation diff, inverse. */
   readonly mutationChildDirs: readonly string[];
   /** 🧬️ Required children of each `🧬️schema/` facet: snapshot, diff, mutations. */

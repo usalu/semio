@@ -484,6 +484,12 @@ pub fn register_subset_validator(entry: &'static SubsetValidatorEntry) {
     }
 }
 
+/// 📚️ Every dialect key currently registered in `SUBSET_VALIDATOR_REGISTRY`.
+pub fn list_registered_subset_validator_dialects() -> Vec<Dialect> {
+    let Ok(reg) = subset_validator_registry().read() else { return Vec::new() };
+    reg.keys().copied().collect()
+}
+
 /// 🛡️ The generic validate-on-build hook (D5): if `dialect.subset` is anything other than
 /// `SubsetId::ANY` and a validator is registered for that EXACT dialect, run it and fold its
 /// `Diagnostic`s onto `diagnostics`. Advisory only -- a validator that itself returns diagnostics
@@ -521,6 +527,94 @@ fn run_subset_validation(dialect: Dialect, payload: &IoPayload, diagnostics: &mu
     }
 }
 //#endregion 🔖️SubsetValidator
+
+//#region 🔖️IoFidelity
+/// ⚖️ Declared strongest IO fidelity a subset codec achieves.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum IoFidelityClass {
+    Exact,
+    Canonical,
+    Semantic,
+    Lossy,
+}
+
+impl IoFidelityClass {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Exact => "exact",
+            Self::Canonical => "canonical",
+            Self::Semantic => "semantic",
+            Self::Lossy => "lossy",
+        }
+    }
+
+    pub fn parse(s: &str) -> Result<Self, String> {
+        match s {
+            "exact" => Ok(Self::Exact),
+            "canonical" => Ok(Self::Canonical),
+            "semantic" => Ok(Self::Semantic),
+            "lossy" => Ok(Self::Lossy),
+            other => Err(format!("unknown io fidelity class {other:?}")),
+        }
+    }
+
+    /// Ordered strength: Exact > Canonical > Semantic > Lossy
+    pub fn rank(self) -> u8 {
+        match self {
+            Self::Exact => 3,
+            Self::Canonical => 2,
+            Self::Semantic => 1,
+            Self::Lossy => 0,
+        }
+    }
+}
+
+/// 📜 Manifest-facing IO fidelity declaration for a subset dialect.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IoFidelityDeclaration {
+    pub class: IoFidelityClass,
+    /// Field paths dropped under Lossy codecs; must be empty for stronger classes.
+    pub drops: Vec<String>,
+}
+
+impl IoFidelityDeclaration {
+    pub fn validate(&self) -> Result<(), String> {
+        if self.class != IoFidelityClass::Lossy && !self.drops.is_empty() {
+            return Err("drops must be empty unless fidelity is lossy".into());
+        }
+        if self.class == IoFidelityClass::Lossy && self.drops.is_empty() {
+            return Err("lossy fidelity requires a non-empty minimal drops set".into());
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod io_fidelity_tests {
+    use super::*;
+
+    #[test]
+    fn io_fidelity_class_parse_and_rank() {
+        assert_eq!(IoFidelityClass::parse("exact").unwrap(), IoFidelityClass::Exact);
+        assert_eq!(IoFidelityClass::parse("lossy").unwrap(), IoFidelityClass::Lossy);
+        assert!(IoFidelityClass::parse("bogus").is_err());
+        assert!(IoFidelityClass::Exact.rank() > IoFidelityClass::Canonical.rank());
+        assert!(IoFidelityClass::Canonical.rank() > IoFidelityClass::Semantic.rank());
+        assert!(IoFidelityClass::Semantic.rank() > IoFidelityClass::Lossy.rank());
+        assert_eq!(IoFidelityClass::Exact.as_str(), "exact");
+    }
+
+    #[test]
+    fn io_fidelity_declaration_validate() {
+        IoFidelityDeclaration { class: IoFidelityClass::Exact, drops: vec![] }.validate().unwrap();
+        assert!(IoFidelityDeclaration { class: IoFidelityClass::Exact, drops: vec!["x".into()] }.validate().is_err());
+        IoFidelityDeclaration { class: IoFidelityClass::Lossy, drops: vec!["meta.author".into()] }.validate().unwrap();
+        assert!(IoFidelityDeclaration { class: IoFidelityClass::Lossy, drops: vec![] }.validate().is_err());
+    }
+}
+//#endregion 🔖️IoFidelity
 
 //#region 🔖️Wire
 /// 🎹️ Wire twin of `ErasedComposeSource` for crossing a wasm component boundary: `Dialect` is

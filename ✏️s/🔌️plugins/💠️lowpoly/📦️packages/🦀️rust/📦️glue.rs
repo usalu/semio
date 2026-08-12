@@ -34,12 +34,12 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "."]
                 pub mod engine {
-                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/⚙️engine/🎨️paint/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎨️paint/🦀️component.rs"]
                     pub mod paint;
-                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/⚙️engine/🧵️media/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🧵️media/🦀️component.rs"]
                     pub mod media;
                 }
                 #[path = "."]
@@ -512,7 +512,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/💠️lowpoly/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -649,10 +649,6 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-#[path = "../../🔧️setup/🦀️component.rs"]
-mod setup;
-pub use setup::register_lowpoly_exports;
-
 #[path = "../../🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);
@@ -660,10 +656,10 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/💠️lowpoly/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_lowpoly_demo;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/💠️lowpoly/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_lowpoly_demo_tests;
     #[path = "../../🎛️apps/💠️lowpoly/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_lowpoly_demo_session;

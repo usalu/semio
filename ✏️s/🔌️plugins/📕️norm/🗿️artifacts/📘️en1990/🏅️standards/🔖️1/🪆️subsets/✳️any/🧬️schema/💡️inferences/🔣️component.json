@@ -11,11 +11,16 @@
     "En1990Outline": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sectionOutline", "fieldCount", "entryCount"],
+      "required": ["sectionOutline", "fieldCount", "entryCount", "checkCount", "passCount", "allPass", "governingClause", "governingUtilization"],
       "properties": {
         "sectionOutline": { "type": "array", "items": { "type": "string" } },
         "fieldCount": { "type": "integer" },
-        "entryCount": { "type": "integer" }
+        "entryCount": { "type": "integer" },
+        "checkCount": { "type": "integer" },
+        "passCount": { "type": "integer" },
+        "allPass": { "type": "boolean" },
+        "governingClause": { "type": "string" },
+        "governingUtilization": { "type": "number" }
       }
     }
   }

@@ -36,24 +36,24 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "."]
                 pub mod engine {
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/⚙️engine/⏱️rate/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/⏱️rate/🦀️component.rs"]
                     pub mod rate;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/⚙️engine/🎛️config/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎛️config/🦀️component.rs"]
                     pub mod config;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/⚙️engine/🎞️animation/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎞️animation/🦀️component.rs"]
                     pub mod animation;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/⚙️engine/🎥️camera/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎥️camera/🦀️component.rs"]
                     pub mod camera;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/⚙️engine/🎥️video/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎥️video/🦀️component.rs"]
                     pub mod video;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/⚙️engine/🎬️scene/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎬️scene/🦀️component.rs"]
                     pub mod scene;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/⚙️engine/📐️geometry/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📐️geometry/🦀️component.rs"]
                     pub mod geometry;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/⚙️engine/🔤️text/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔤️text/🦀️component.rs"]
                     pub mod text;
                     pub mod animate {
                 pub mod animation {
@@ -448,10 +448,10 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🎬️present/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
-                #[path = "../../🗿️artifacts/🎬️present/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+                #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
                 mod tests;
             }
         }
@@ -545,7 +545,7 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/🎬️present/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_present_demo;
     #[path = "../../🎛️apps/🎬️present/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_present_demo_session;

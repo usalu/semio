@@ -3,7 +3,69 @@
   "standard": "1",
   "subsets": {
     "*": {
-      "name": "Unconstrained cad 1"
+      "name": "Unconstrained cad 1",
+      "kind": "owning",
+      "ioFidelity": {
+        "dsl": "exact",
+        "pack": "exact",
+        "json": "semantic",
+        "obj": "lossy",
+        "stl": "lossy",
+        "step": "semantic",
+        "ifc": "semantic",
+        "gltf": "lossy",
+        "dwg": "lossy",
+        "png": "lossy"
+      },
+      "ioFidelityDrops": {
+        "obj": ["referencesByModelDefinitionId", "nodes"],
+        "stl": ["referencesByModelDefinitionId", "nodes", "activeModelDefinitionId"],
+        "gltf": ["referencesByModelDefinitionId", "nodes"],
+        "dwg": ["referencesByModelDefinitionId", "nodes", "shapeGeometry"],
+        "png": ["objects", "buildingObjects", "energyObjects", "structureClassicObjects", "nodes", "shapeGeometry"]
+      },
+      "inferences": ["bounds"],
+      "partialMutations": [
+        "create-object",
+        "delete-object",
+        "rename-object",
+        "move-object",
+        "rotate-object",
+        "scale-object",
+        "replace-object-geometry",
+        "drag-objects",
+        "create-node",
+        "delete-node",
+        "rename-node",
+        "move-reference",
+        "replace-references",
+        "change-active-model-definition"
+      ],
+      "importDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "exportDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "examples": ["demo"]
     }
   }
 }

@@ -256,6 +256,30 @@ the payoff for asking a peer ticket not to scaffold new subsets with `SetSnapsho
 the facet arrived needing no rework, and it is the first evidence that the taxonomy is
 transmissible to a team that didn't write it.
 
+## Coordinator error worth keeping: a wrong ownership attribution
+
+This session traced the `TutorialBase.document_dsl` / `ExampleDefinition.document_json` compile
+errors to ticket `26/08/10/RENAME-DOCUMENT-TO-ARTIFACT-THROUGHOUT-CODEBASE` (closed) and called
+them **orphaned debt with no live owner**. APA accepted that lead and broadcast it; this session
+broadcast it too, telling a peer the two-line patch was theirs to apply.
+
+**It was wrong.** DKM settled it with file mtimes:
+`🛂️manifest/🦀️component.rs` = Aug 12 03:50 (renames landed ~14h ago), but
+`🔌️plugin/🦀️component.rs` = Aug 12 **17:33** — minutes old, actively being edited. It is one
+session's rename **mid-propagation**, owned by UCAS, same owner as the `E0499` `self.children`
+borrow in that file. Correct action is retry-and-wait. Retracted to the peer before any patch was
+applied; nothing was changed.
+
+**The method failure**: ownership was inferred from a plausible narrative (a closed rename ticket
+exists, the symptom looks like a rename, therefore orphaned) instead of from the one cheap signal
+that settles it. This session had already written that `git status` is near-useless here because of
+auto-commit — and then reached for a story rather than the alternative.
+
+**Rule adopted: check mtime before declaring anything unowned.** "Nobody owns this" is a far
+stronger claim than "I can't tell who owns it", and usually only the second is true. This is the
+same class of error as reading a derived artifact for a live predicate — the exact trap this
+session spent the day warning other sessions about.
+
 ## ⚠️ Rule violation: a lane ran `git checkout` (disclosed by the lane itself)
 
 The block lane ran `git checkout -- 📦️glue.rs` once, against this repo's hard "no git-modifying

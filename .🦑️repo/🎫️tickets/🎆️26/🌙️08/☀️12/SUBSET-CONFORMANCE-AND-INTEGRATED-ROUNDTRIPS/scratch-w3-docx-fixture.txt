@@ -1,0 +1,23 @@
+    Blocking waiting for file lock on build directory
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling zmij v1.0.21
+   Compiling zerocopy v0.8.48
+   Compiling serde_core v1.0.228
+   Compiling cfg-if v1.0.4
+   Compiling memchr v2.8.0
+   Compiling stable_deref_trait v1.2.1
+   Compiling serde v1.0.228
+   Compiling ahash v0.8.12
+   Compiling autocfg v1.5.0
+   Compiling serde_json v1.0.149
+   Compiling once_cell v1.21.4
+   Compiling equivalent v1.0.2
+   Compiling itoa v1.0.18
+   Compiling hashbrown v0.17.1
+error: failed to write `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SUBSET-CONFORMANCE-AND-INTEGRATED-ROUNDTRIPS/🎯️target-w3-stdio/debug/.fingerprint/serde_json-cfd1f090b7b8570b/run-build-script-build-script-build`
+
+Caused by:
+  No such file or directory (os error 2)
+warning: build failed, waiting for other jobs to finish...

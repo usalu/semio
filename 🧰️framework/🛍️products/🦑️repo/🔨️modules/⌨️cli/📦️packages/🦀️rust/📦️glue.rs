@@ -1360,6 +1360,64 @@ pub mod tui_dashboard {
     //#endregion 🔖️Client
 
     /// 🎛️ Multiplexed dashboard client: leader `Ctrl-Space`, Alt window jump, catalog + PTY panes.
+
+
+    fn sync_window_focus(tui: &mut Tui, window_nodes: &HashMap<String, NodeId>, focused_window: &str) {
+        for (name, id) in window_nodes {
+            if let Some(chrome) = tui.scene.node_mut(*id).chrome() {
+                if let ChromeState::Window(w) = chrome {
+                    w.focused = name == focused_window;
+                }
+            }
+        }
+    }
+
+    fn activate_catalog_row(
+        tui: &mut Tui,
+        root: &Path,
+        catalog: &[PlaygroundEntry],
+        maps: &HashMap<String, Vec<Option<usize>>>,
+        term_nodes: &HashMap<String, NodeId>,
+        pipe_sessions: &mut HashMap<String, Session>,
+        local: &Option<LocalBus>,
+        kind: &str,
+        row_idx: usize,
+    ) {
+        let Some(map) = maps.get(kind) else { return };
+        let Some(Some(catalog_idx)) = map.get(row_idx).copied() else { return };
+        let row = &catalog[catalog_idx];
+        if let Some(prev) = pipe_sessions.remove(kind) {
+            prev.stop();
+        }
+        match spawn_session(root, kind, &row.variant, row) {
+            Ok(session) => {
+                if let Some(tid) = term_nodes.get(kind) {
+                    if let Some(WidgetState::Terminal(t)) = tui.scene.node_mut(*tid).widget() {
+                        t.feed(format!("[semio] launching {} ({})\r\n", row.variant, kind).as_bytes());
+                    }
+                }
+                if let Some(bus) = local {
+                    let _ = bus.send(ClientMsg::Spawn {
+                        session_id: format!("{kind}-pty"),
+                        cmd: "bash".into(),
+                        args: vec!["-lc".into(), format!("echo pty:{kind}; exec bash")],
+                        cwd: Some(root.display().to_string()),
+                        cols: 80,
+                        rows: 24,
+                    });
+                }
+                pipe_sessions.insert(kind.to_string(), session);
+            }
+            Err(e) => {
+                if let Some(tid) = term_nodes.get(kind) {
+                    if let Some(WidgetState::Terminal(t)) = tui.scene.node_mut(*tid).widget() {
+                        t.feed(format!("[semio] spawn failed: {e}\r\n").as_bytes());
+                    }
+                }
+            }
+        }
+    }
+
     pub fn run(root: &Path) -> i32 {
         let catalog = load_playground_catalog(root);
         if catalog.is_empty() {
@@ -1385,11 +1443,11 @@ pub mod tui_dashboard {
         };
         let footer = FooterState {
             hints: vec![
-                KeyHint { key: "C-Space".into(), label: "leader".into() },
-                KeyHint { key: "Alt-1..9".into(), label: "jump".into() },
+                KeyHint { key: "jk/arrows".into(), label: "move".into() },
                 KeyHint { key: "\u{21b5}".into(), label: "launch".into() },
+                KeyHint { key: "Tab".into(), label: "window".into() },
+                KeyHint { key: "C-Space t".into(), label: "term".into() },
                 KeyHint { key: "x".into(), label: "stop".into() },
-                KeyHint { key: "d".into(), label: "detach".into() },
                 KeyHint { key: "q".into(), label: "quit".into() },
             ],
             status: format!("{} playgrounds", catalog.len()),
@@ -1423,17 +1481,18 @@ pub mod tui_dashboard {
         }
 
         tui.set_focus(Some(*table_nodes.get("dev").unwrap()));
+        sync_window_focus(&mut tui, &window_nodes, "dev");
         term.present(&tui.render_full()).ok();
 
         let mut leader = LeaderMode::Idle;
         let mut focused_window = "dev".to_string();
         let window_order = ["dev", "build"];
+        let mut terminal_input = false;
 
         loop {
             if let Some(bus) = &local {
                 bus.tick();
             }
-            // legacy pipe sessions still feed into terminal as text lines
             for (kind, term_id) in &term_nodes {
                 if let Some(session) = pipe_sessions.get(kind) {
                     while let Ok(line) = session.rx.try_recv() {
@@ -1449,157 +1508,177 @@ pub mod tui_dashboard {
             let events = term.poll(Duration::from_millis(80)).unwrap_or_default();
             let mut quit = false;
             let mut detach = false;
+            let mut need_paint = !events.is_empty();
+
             for event in &events {
-                if let Event::Key(k) = event {
-                    // Leader arm: Ctrl-Space
-                    if k.key == Key::Char(' ') && k.mods & mods::CTRL != 0 {
-                        leader = LeaderMode::Armed;
-                        continue;
+                match event {
+                    Event::Resize(_) => {
+                        tui.dispatch(event);
+                        need_paint = true;
                     }
-                    match leader {
-                        LeaderMode::Armed => {
-                            match k.key {
-                                Key::Char('p') => leader = LeaderMode::Palette,
-                                Key::Char('u') => leader = LeaderMode::Utilities,
-                                Key::Char('d') => {
-                                    detach = true;
-                                    leader = LeaderMode::Idle;
-                                }
-                                Key::Char('-') => {
-                                    let _ = split_window(&mut layout, &focused_window, "column", "shell", Some("shell".into()));
-                                    leader = LeaderMode::Idle;
-                                }
-                                Key::Char('|') => {
-                                    let _ = split_window(&mut layout, &focused_window, "row", "shell", Some("shell".into()));
-                                    leader = LeaderMode::Idle;
-                                }
-                                Key::Char('z') => {
-                                    if layout.zoomed.is_some() {
-                                        zoom_window(&mut layout, None);
-                                    } else {
-                                        zoom_window(&mut layout, Some(&focused_window));
+                    Event::Mouse(m) => {
+                        if matches!(m.kind, ui_tui::tui::event::MouseKind::Down(_)) {
+                            tui.dispatch(event);
+                            if let Some(fid) = tui.focus() {
+                                for (name, id) in &table_nodes {
+                                    if *id == fid {
+                                        focused_window = name.clone();
+                                        terminal_input = false;
                                     }
-                                    leader = LeaderMode::Idle;
                                 }
-                                Key::Esc => leader = LeaderMode::Idle,
-                                _ => leader = LeaderMode::Idle,
+                                for (name, id) in &term_nodes {
+                                    if *id == fid && pipe_sessions.contains_key(name) {
+                                        focused_window = name.clone();
+                                        terminal_input = true;
+                                    }
+                                }
                             }
+                            if !terminal_input {
+                                if let Some(id) = table_nodes.get(&focused_window) {
+                                    tui.set_focus(Some(*id));
+                                }
+                            }
+                            need_paint = true;
+                        }
+                    }
+                    Event::Key(k) => {
+                        if k.key == Key::Char(' ') && k.mods & mods::CTRL != 0 {
+                            leader = LeaderMode::Armed;
+                            need_paint = true;
                             continue;
                         }
-                        LeaderMode::Palette | LeaderMode::Utilities => {
+
+                        if matches!(leader, LeaderMode::Palette | LeaderMode::Utilities) {
                             if k.key == Key::Esc {
                                 leader = LeaderMode::Idle;
                             }
+                            need_paint = true;
                             continue;
                         }
-                        LeaderMode::Idle => {}
-                    }
 
-                    // Alt-1..9 window jump
-                    if k.mods & mods::ALT != 0 {
-                        if let Key::Char(c) = k.key {
-                            if let Some(d) = c.to_digit(10) {
-                                if let Some(name) = window_order.get((d as usize).saturating_sub(1)) {
-                                    focused_window = (*name).to_string();
-                                    if let Some(id) = table_nodes.get(*name) {
+                        if matches!(leader, LeaderMode::Armed) {
+                            let consumed = match k.key {
+                                Key::Char('p') => { leader = LeaderMode::Palette; true }
+                                Key::Char('u') => { leader = LeaderMode::Utilities; true }
+                                Key::Char('d') => { detach = true; leader = LeaderMode::Idle; true }
+                                Key::Char('t') => {
+                                    terminal_input = !terminal_input && pipe_sessions.contains_key(&focused_window);
+                                    if terminal_input {
+                                        if let Some(id) = term_nodes.get(&focused_window) { tui.set_focus(Some(*id)); }
+                                    } else if let Some(id) = table_nodes.get(&focused_window) {
                                         tui.set_focus(Some(*id));
                                     }
+                                    leader = LeaderMode::Idle;
+                                    true
                                 }
-                                continue;
-                            }
-                            if matches!(c, 'h' | 'j' | 'k' | 'l') {
-                                let idx = window_order.iter().position(|w| *w == focused_window).unwrap_or(0);
-                                let next = match c {
-                                    'h' | 'k' => idx.saturating_sub(1),
-                                    _ => (idx + 1).min(window_order.len() - 1),
-                                };
-                                focused_window = window_order[next].to_string();
-                                if let Some(id) = table_nodes.get(focused_window.as_str()) {
-                                    tui.set_focus(Some(*id));
+                                Key::Char('-') => {
+                                    let _ = split_window(&mut layout, &focused_window, "column", "shell", Some("shell".into()));
+                                    leader = LeaderMode::Idle; true
                                 }
-                                continue;
+                                Key::Char('|') => {
+                                    let _ = split_window(&mut layout, &focused_window, "row", "shell", Some("shell".into()));
+                                    leader = LeaderMode::Idle; true
+                                }
+                                Key::Char('z') => {
+                                    if layout.zoomed.is_some() { zoom_window(&mut layout, None); }
+                                    else { zoom_window(&mut layout, Some(&focused_window)); }
+                                    leader = LeaderMode::Idle; true
+                                }
+                                Key::Esc => { leader = LeaderMode::Idle; true }
+                                _ => { leader = LeaderMode::Idle; false }
+                            };
+                            if consumed { need_paint = true; continue; }
+                        }
+
+                        if k.mods & mods::ALT != 0 {
+                            if let Key::Char(c) = k.key {
+                                if let Some(d) = c.to_digit(10) {
+                                    if let Some(name) = window_order.get((d as usize).saturating_sub(1)) {
+                                        focused_window = (*name).to_string();
+                                        terminal_input = false;
+                                        if let Some(id) = table_nodes.get(*name) { tui.set_focus(Some(*id)); }
+                                    }
+                                    need_paint = true; continue;
+                                }
+                                if matches!(c, 'h' | 'j' | 'k' | 'l') {
+                                    let idx = window_order.iter().position(|w| *w == focused_window).unwrap_or(0);
+                                    let next = match c {
+                                        'h' | 'k' => idx.saturating_sub(1),
+                                        _ => (idx + 1).min(window_order.len() - 1),
+                                    };
+                                    focused_window = window_order[next].to_string();
+                                    terminal_input = false;
+                                    if let Some(id) = table_nodes.get(focused_window.as_str()) { tui.set_focus(Some(*id)); }
+                                    need_paint = true; continue;
+                                }
                             }
                         }
-                    }
 
-                    if k.key == Key::Char('q') && k.mods == 0 {
-                        quit = true;
-                        break;
-                    }
-                    if k.key == Key::Char('x') && k.mods == 0 {
-                        if let Some(session) = pipe_sessions.remove(&focused_window) {
-                            session.stop();
+                        if k.key == Key::Char('q') && k.mods == 0 { quit = true; break; }
+                        if k.key == Key::Char('x') && k.mods == 0 {
+                            if let Some(session) = pipe_sessions.remove(&focused_window) { session.stop(); }
+                            if let Some(bus) = &local { let _ = bus.send(ClientMsg::Kill { session_id: focused_window.clone() }); }
+                            terminal_input = false;
+                            if let Some(id) = table_nodes.get(&focused_window) { tui.set_focus(Some(*id)); }
+                            need_paint = true; continue;
                         }
-                        if let Some(bus) = &local {
-                            let _ = bus.send(ClientMsg::Kill { session_id: focused_window.clone() });
-                        }
-                        continue;
-                    }
 
-                    // Terminal passthrough
-                    let focus = tui.focus();
-                    let term_focus = term_nodes.values().any(|id| Some(*id) == focus);
-                    if term_focus {
-                        let signals = tui.dispatch(event);
-                        for (node_id, signal) in signals {
-                            if signal == WidgetSignal::TerminalPassthrough {
-                                if let Some(bytes) = key_to_pty_bytes(k) {
-                                    if let Some(bus) = &local {
-                                        let sid = term_nodes.iter().find(|(_, id)| **id == node_id).map(|(k, _)| k.clone()).unwrap_or_else(|| focused_window.clone());
-                                        let _ = bus.send(ClientMsg::Input { session_id: sid, data: bytes });
+                        if k.key == Key::Tab || k.key == Key::BackTab {
+                            let idx = window_order.iter().position(|w| *w == focused_window).unwrap_or(0);
+                            let next = if k.key == Key::Tab { (idx + 1) % window_order.len() } else { (idx + window_order.len() - 1) % window_order.len() };
+                            focused_window = window_order[next].to_string();
+                            terminal_input = false;
+                            if let Some(id) = table_nodes.get(focused_window.as_str()) { tui.set_focus(Some(*id)); }
+                            need_paint = true; continue;
+                        }
+
+                        if terminal_input {
+                            if k.key == Key::Esc {
+                                terminal_input = false;
+                                if let Some(id) = table_nodes.get(&focused_window) { tui.set_focus(Some(*id)); }
+                                need_paint = true; continue;
+                            }
+                            if let Some(tid) = term_nodes.get(&focused_window) {
+                                tui.set_focus(Some(*tid));
+                                for (_id, signal) in tui.dispatch(event) {
+                                    if signal == WidgetSignal::TerminalPassthrough {
+                                        if let (Some(bytes), Some(bus)) = (key_to_pty_bytes(k), local.as_ref()) {
+                                            let _ = bus.send(ClientMsg::Input { session_id: format!("{focused_window}-pty"), data: bytes });
+                                        }
                                     }
                                 }
                             }
+                            need_paint = true; continue;
                         }
-                        continue;
-                    }
-                }
 
-                for (node_id, signal) in tui.dispatch(event) {
-                    let WidgetSignal::Activated(row_idx) = signal else { continue };
-                    let (verb, map) = if Some(node_id) == table_nodes.get("dev").copied() {
-                        ("dev", maps.get("dev").unwrap())
-                    } else if Some(node_id) == table_nodes.get("build").copied() {
-                        ("build", maps.get("build").unwrap())
-                    } else {
-                        continue;
-                    };
-                    let Some(Some(catalog_idx)) = map.get(row_idx).copied() else { continue };
-                    let row = &catalog[catalog_idx];
-                    let kind = verb.to_string();
-                    if let Some(prev) = pipe_sessions.remove(&kind) {
-                        prev.stop();
-                    }
-                    match spawn_session(root, verb, &row.variant, row) {
-                        Ok(session) => {
-                            if let Some(WidgetState::Terminal(t)) = tui.scene.node_mut(*term_nodes.get(&kind).unwrap()).widget() {
-                                t.feed(format!("[semio] launching {} ({})\r\n", row.variant, verb).as_bytes());
+                        if let Some(tid) = table_nodes.get(&focused_window).copied() {
+                            tui.set_focus(Some(tid));
+                            let key_ev = match (k.key, k.mods) {
+                                (Key::Char('j'), 0) => KeyEvent { key: Key::Down, mods: 0 },
+                                (Key::Char('k'), 0) => KeyEvent { key: Key::Up, mods: 0 },
+                                (Key::Char('h'), 0) => KeyEvent { key: Key::Left, mods: 0 },
+                                (Key::Char('l'), 0) => KeyEvent { key: Key::Right, mods: 0 },
+                                _ => *k,
+                            };
+                            if let Some(widget) = tui.scene.node_mut(tid).widget() {
+                                if let Some(signal) = widget.on_key(&key_ev) {
+                                    if let WidgetSignal::Activated(row_idx) = signal {
+                                        activate_catalog_row(&mut tui, root, &catalog, &maps, &term_nodes, &mut pipe_sessions, &local, &focused_window, row_idx);
+                                    }
+                                }
                             }
-                            // Also ask local PTY supervisor for an interactive shell alongside the piped nx run.
-                            if let Some(bus) = &local {
-                                let _ = bus.send(ClientMsg::Spawn {
-                                    session_id: format!("{kind}-pty"),
-                                    cmd: "bash".into(),
-                                    args: vec!["-lc".into(), format!("echo pty:{kind}; exec bash")],
-                                    cwd: Some(root.display().to_string()),
-                                    cols: 80,
-                                    rows: 24,
-                                });
-                            }
-                            pipe_sessions.insert(kind, session);
-                        }
-                        Err(e) => {
-                            if let Some(WidgetState::Terminal(t)) = tui.scene.node_mut(*term_nodes.get(&kind).unwrap()).widget() {
-                                t.feed(format!("[semio] spawn failed: {e}\r\n").as_bytes());
-                            }
+                            need_paint = true; continue;
                         }
                     }
+                    _ => { tui.dispatch(event); need_paint = true; }
                 }
             }
-            if quit || detach {
-                break;
+
+            if quit || detach { break; }
+            sync_window_focus(&mut tui, &window_nodes, &focused_window);
+            if need_paint {
+                term.present(&tui.render_full()).ok();
             }
-            term.present(&tui.render()).ok();
         }
 
         for (_, session) in pipe_sessions {
@@ -1907,6 +1986,24 @@ mod tests {
         assert_eq!(playgrounds_json_text(&root), "[{\"variant\":\"x\"}]\n");
         std::fs::remove_dir_all(&root).ok();
     }
+
+    #[test]
+    fn catalog_table_enter_on_child_activates_mapped_index() {
+        use ui_tui::tui::event::{Key, KeyEvent};
+        use ui_tui::tui::widget::{TableState, WidgetSignal, WidgetState};
+        let catalog = vec![
+            PlaygroundEntry { variant: "animate".into(), plugin_id: "animate".into(), ports: Ports { react: 1, wgpu: 2 }, examples: vec!["a".into()], ..Default::default() },
+        ];
+        let (rows, map) = group_catalog_into_table(&catalog);
+        let mut table = WidgetState::Table(TableState::new(vec![], rows));
+        // move to child row
+        let down = KeyEvent { key: Key::Down, mods: 0 };
+        assert_eq!(table.on_key(&down), Some(WidgetSignal::SelectionChanged(1)));
+        let enter = KeyEvent { key: Key::Enter, mods: 0 };
+        assert_eq!(table.on_key(&enter), Some(WidgetSignal::Activated(1)));
+        assert_eq!(map[1], Some(0));
+    }
+
     //#endregion 🔖️CatalogConsumer
 
     //#region 🔖️Workforce

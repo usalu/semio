@@ -14,7 +14,7 @@ use crate::artifacts::en1995::En1995Snapshot;
 /// an EN-annex EN 1995-2 glulam pedestrian footbridge beam under service class 2 and long-duration
 /// traffic loading, distinct from `En1995Snapshot::default()`'s DE-annex/SC1/medium-duration values so the
 /// grammar's non-default branches (annex, service class, load duration) are exercised too.
-pub const EN1995_GLULAM_FOOTBRIDGE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/📕️glulam-footbridge/🖼️assets/🗣️glulam-footbridge.dsl.semio");
+pub const EN1995_GLULAM_FOOTBRIDGE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/📕️glulam-footbridge/🖼️assets/🗣️glulam-footbridge.dsl.semio");
 
 /// 📖️ Parses `.en1995` DSL text into a `En1995Snapshot`.
 pub fn parse_dsl(text: &str) -> Result<En1995Snapshot, store::TextError> {

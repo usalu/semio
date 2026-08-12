@@ -39,16 +39,16 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "."]
                 pub mod engine {
-                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/⚙️engine/🔩️metal/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔩️metal/🦀️component.rs"]
                     pub mod metal;
-                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/⚙️engine/🤖️robotic/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🤖️robotic/🦀️component.rs"]
                     pub mod robotic;
-                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/⚙️engine/🧱️concrete/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🧱️concrete/🦀️component.rs"]
                     pub mod concrete;
-                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/⚙️engine/🪵️wood/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🪵️wood/🦀️component.rs"]
                     pub mod wood;
                 }
                 #[path = "."]
@@ -519,7 +519,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🧊️process3d/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -644,10 +644,10 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/🧊️process3d/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_process3d_demo;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/🧊️process3d/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_process3d_demo_tests;
     #[path = "../../🎛️apps/🧊️3d/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_3d_demo_session;

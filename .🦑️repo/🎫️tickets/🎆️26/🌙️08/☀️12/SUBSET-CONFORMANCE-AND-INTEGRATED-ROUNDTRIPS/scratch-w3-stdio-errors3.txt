@@ -1,0 +1,5 @@
+error: could not compile `semio-s-plugin-stdio` (lib test) due to 4 previous errors; 714 warnings emitted
+error[E0599]: no associated function or constant named `decode_diff` found for struct `semio::standards::v1::subsets::text::schema::diff::component::SemioTextDiff` in the current scope
+error[E0599]: no associated function or constant named `parse_diff` found for struct `semio::standards::v1::subsets::text::schema::diff::component::SemioTextDiff` in the current scope
+error[E0599]: no method named `encode_diff` found for struct `semio::standards::v1::subsets::text::schema::diff::component::SemioTextDiff` in the current scope
+error[E0599]: no method named `print_diff` found for struct `semio::standards::v1::subsets::text::schema::diff::component::SemioTextDiff` in the current scope

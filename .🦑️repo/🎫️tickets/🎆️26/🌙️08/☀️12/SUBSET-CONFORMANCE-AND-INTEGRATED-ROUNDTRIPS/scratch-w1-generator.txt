@@ -1,0 +1,2 @@
+[generate plugin-glue] dry 🪐️space: 1 subsets
+[generate plugin-glue] dry-run inventory for 1 subset refs

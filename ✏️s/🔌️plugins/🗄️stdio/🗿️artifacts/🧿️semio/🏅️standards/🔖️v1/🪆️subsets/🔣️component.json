@@ -4,7 +4,15 @@
   "subsets": {
     "*": { "name": "Semio envelope" },
     "brep": { "name": "Boundary-representation solid geometry", "schema": "s.stdio.semio.brep" },
-    "mesh": { "name": "Discrete mesh geometry", "schema": "s.stdio.semio.mesh" },
+    "mesh": {
+      "name": "Discrete mesh geometry",
+      "schema": "s.stdio.semio.mesh",
+      "archetype": "owning",
+      "examples": ["cube"],
+      "ioFidelity": { "class": "canonical", "drops": [] },
+      "import": ["s.stdio.semio.mesh"],
+      "export": ["s.stdio.semio.mesh"]
+    },
     "model": { "name": "Spatial/BIM element model", "schema": "s.stdio.semio.model" },
     "value": { "name": "Ordered typed value tree", "schema": "s.stdio.semio.value" },
     "document": { "name": "Rich text document", "schema": "s.stdio.semio.document" },

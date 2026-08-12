@@ -25,6 +25,7 @@ pub mod derived_composition {
     use crate::artifacts::semio::standards::v1::subsets::animation::io::SemioAnimationValidator;
     use crate::artifacts::semio::standards::v1::subsets::presentation::io::SemioPresentationValidator;
     use crate::artifacts::semio::standards::v1::subsets::flow::io::SemioFlowValidator;
+    use crate::artifacts::semio::standards::v1::subsets::text::io::SemioTextValidator;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("*") };
 
@@ -87,6 +88,7 @@ pub mod derived_composition {
             SemioSubsetSnapshot::Animation(s) => SemioAnimationValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(s))),
             SemioSubsetSnapshot::Presentation(s) => SemioPresentationValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(s))),
             SemioSubsetSnapshot::Flow(s) => SemioFlowValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot as store::ArtifactPack>::encode_pack(s))),
+            SemioSubsetSnapshot::Text(s) => SemioTextValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot as store::ArtifactPack>::encode_pack(s))),
         }
     }
 
@@ -278,8 +280,8 @@ pub mod derived_composition {
             /// pack twin — so the fixtures can never silently drift back to a fake.
             #[test]
             fn fixture_honesty_law() {
-                const FIXTURE_DSL: &str = include_str!("../../../../../📚️examples/🌐️envelope/🖼️assets/🗣️example.dsl.semio");
-                const FIXTURE_PACK: &[u8] = include_bytes!("../../../../../📚️examples/🌐️envelope/🖼️assets/🎒️example.pack.semio");
+                const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/🌐️envelope/🖼️assets/🗣️example.dsl.semio");
+                const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/🌐️envelope/🖼️assets/🎒️example.pack.semio");
 
                 let demo = snapshot::demo_semio_snapshot();
 

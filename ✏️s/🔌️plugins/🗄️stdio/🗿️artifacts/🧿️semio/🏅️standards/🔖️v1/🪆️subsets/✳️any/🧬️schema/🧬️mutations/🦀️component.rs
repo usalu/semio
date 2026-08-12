@@ -434,9 +434,12 @@ mod tests {
         assert_eq!(inv, vec![SemioMutation::NoMutation]);
     }
 
-    /// 🧪️ Dispatch-table coverage: every one of the 13 wrapped-kind arms round-trips a
+    /// 🧪️ Dispatch-table coverage: every one of the 13 legacy wrapped-kind arms round-trips a
     /// `NoMutation`-shaped payload (proves the 13-arm `diff`/`inverse` match compiles and routes
-    /// correctly for every subset).
+    /// correctly for every subset). `text` (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a) has no
+    /// `NoMutation`-equivalent variant — that vocabulary is banned for new facets — so it is
+    /// exercised separately below (`wrapped_text_kind_diff_and_inverse_route_correctly`), NOT
+    /// folded into this loop's `is_empty()` assumption.
     #[test]
     fn all_thirteen_wrapped_kinds_diff_and_inverse_route_correctly() {
         let bases: Vec<SemioSubsetSnapshot> = vec![
@@ -454,6 +457,8 @@ mod tests {
             SemioSubsetSnapshot::Presentation(Default::default()),
             SemioSubsetSnapshot::Flow(Default::default()),
         ];
+        // 🔧️ `match` stays exhaustive over all 14 `SemioSubsetSnapshot` arms (compiler-enforced);
+        // the `Text` arm is never reached since `bases` above excludes it.
         let wrap_no_mutation = |s: &SemioSubsetSnapshot| -> SemioMutation {
             match s {
                 SemioSubsetSnapshot::Brep(_) => SemioMutation::Brep(SemioBrepMutation::NoMutation),
@@ -469,6 +474,7 @@ mod tests {
                 SemioSubsetSnapshot::Animation(_) => SemioMutation::Animation(SemioAnimationMutation::NoMutation),
                 SemioSubsetSnapshot::Presentation(_) => SemioMutation::Presentation(SemioPresentationMutation::NoMutation),
                 SemioSubsetSnapshot::Flow(_) => SemioMutation::Flow(SemioFlowMutation::NoMutation),
+                SemioSubsetSnapshot::Text(_) => unreachable!("excluded from `bases` above"),
             }
         };
         for subset in bases {
@@ -479,6 +485,32 @@ mod tests {
             let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
             assert_eq!(inv.len(), 1);
         }
+    }
+
+    /// 🧪️ `text`'s own wrapped-kind coverage: a real `InsertRun` routes through the any-level
+    /// dispatch, produces a nested `SemioDiff::Text`, and its inverse restores `base` exactly.
+    #[test]
+    fn wrapped_text_kind_diff_and_inverse_route_correctly() {
+        use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::insert_run;
+        use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextRun;
+
+        let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Text(Default::default()) };
+        let m = SemioMutation::Text(SemioTextMutation::InsertRun(insert_run::mutation::InsertRun {
+            index: 0,
+            run: SemioTextRun { language: "en".into(), content: "hi".into(), marks: vec![] },
+        }));
+        let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
+        assert!(matches!(diff, SemioDiff::Text(_)));
+        assert!(!diff.is_empty());
+        let mut applied = base.clone();
+        let returned_diff = apply_semio_mutation(&mut applied, &m);
+        assert_eq!(diff.apply(&base), applied);
+        assert_eq!(returned_diff, diff);
+        let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
+        assert_eq!(inv.len(), 1);
+        let mut restored = applied;
+        let _ = apply_semio_mutation(&mut restored, &inv[0]);
+        assert_eq!(restored, base);
     }
 
     /// 🧪️ op_text_binary_roundtrip_law across `NoMutation`, `SetSnapshot`, and a wrapped variant.

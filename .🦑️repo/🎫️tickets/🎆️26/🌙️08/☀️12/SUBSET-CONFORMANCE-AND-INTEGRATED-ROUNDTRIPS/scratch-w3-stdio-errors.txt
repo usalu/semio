@@ -1,0 +1,25 @@
+   4 error[E0422]: cannot find struct, variant or union type `ExampleAsset` in module `store::test_support`
+   3 error[E0433]: cannot find module or crate `subsets` in this scope
+   3 error[E0433]: cannot find `IoFidelityClass` in `test_support`
+   3 error[E0425]: cannot find type `IoFidelityClass` in module `store::test_support`
+   3 error[E0425]: cannot find type `ExampleAsset` in module `store::test_support`
+   3 error[E0425]: cannot find function `assert_subset_roundtrip` in module `store::test_support`
+   3 error[E0405]: cannot find trait `SubsetRoundtripSpec` in module `store::test_support`
+   2 error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/../../📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio`: No such file or directory (os error 2)
+   2 error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/⚙️engine/../../../📚️examples/🎬️demo/🖼️assets/example.xml`: No such file or directory (os error 2)
+   2 error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/⚙️engine/../../../📚️examples/🎬️demo/🖼️assets/example.md`: No such file or directory (os error 2)
+   1 error[E0433]: cannot find type `TiffInference` in this scope
+   1 error[E0432]: unresolved import `crate::artifacts::xml::standards::v1_0::engine::io_registry`
+   1 error[E0432]: unresolved import `crate::artifacts::tiff::standards::v6_0::engine::io_registry`
+   1 error[E0432]: unresolved import `crate::artifacts::csv::standards::v_rfc4180::engine::io_registry`
+   1 error[E0425]: cannot find type `TiffSnapshot` in this scope
+   1 error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/../../../../../../📚️examples/🎬️demo/🖼️assets/example.html`: No such file or directory (os error 2)
+   1 error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🚪️io/../../../../../📚️examples/🕸️graph/🖼️assets/🗣️example.dsl.semio`: No such file or directory (os error 2)
+   1 error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🚪️io/../../../../../📚️examples/🕸️graph/🖼️assets/🎒️example.pack.semio`: No such file or directory (os error 2)
+   1 error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🚪️io/../../../../../📚️examples/📽️deck/🖼️assets/🗣️example.dsl.semio`: No such file or directory (os error 2)
+   1 error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🚪️io/../../../../../📚️examples/📽️deck/🖼️assets/🎒️example.pack.semio`: No such file or directory (os error 2)
+   1 error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🚪️io/../../../../../📚️examples/🏢️building/🖼️assets/🗣️example.dsl.semio`: No such file or directory (os error 2)
+   1 error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🚪️io/../../../../../📚️examples/🏢️building/🖼️assets/🎒️example.pack.semio`: No such file or directory (os error 2)
+   1 error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/../../📚️examples/🧊️cube/🖼️assets/🎒️example.pack.semio`: No such file or directory (os error 2)
+   1 error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/../../../../../📚️examples/🖼️swatch/🖼️assets/🗣️example.dsl.semio`: No such file or directory (os error 2)
+   1 error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/../../../../../📚️examples/🖼️swatch/🖼️assets/🎒️example.pack.semio`: No such file or directory (os error 2)

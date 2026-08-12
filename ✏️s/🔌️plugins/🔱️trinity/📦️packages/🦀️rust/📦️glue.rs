@@ -21,13 +21,20 @@ extern crate semio_framework_schema as schema;
 #[allow(clippy::unnecessary_wraps)]
 
 //#region 🔤️Jack kernel
-#[path = "../../🌳️ast/🦀️component.rs"]
+//! 🫀️ Cross-artifact query-language kernel, physically homed under `jack`'s own artifact engine
+//! (the DSL it implements is literally the "jack query language" per every file's own docstring)
+//! but consumed unchanged as `crate::{ast,lexer,executor,language_service}` by both the `jack` app
+//! and the `rewrite` artifact's `apply_rule` — see `🗿️artifacts/♻️rewrite/…/⚙️engine/🦀️component.rs`
+//! header comment, which names this exact sharing relationship. Moved
+//! `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`; module names kept stable at crate root so no call
+//! site elsewhere in the crate needed to change.
+#[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🌳️ast/🦀️component.rs"]
 pub mod ast;
-#[path = "../../🔤️lexer/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔤️lexer/🦀️component.rs"]
 pub mod lexer;
-#[path = "../../🧮️executor/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🧮️executor/🦀️component.rs"]
 pub mod executor;
-#[path = "../../🗣️language-service/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🗣️language-service/🦀️component.rs"]
 pub mod language_service;
 pub use language_service as core;
 //#endregion 🔤️Jack kernel
@@ -45,7 +52,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -341,7 +348,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/♻️rewrite/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -357,7 +364,7 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                 pub mod engine;
                 #[path = "."]
                 pub mod subsets {
@@ -686,7 +693,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -956,15 +963,15 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/♻️rewrite/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_rewrite_demo;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/♻️rewrite/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_rewrite_demo_tests;
-    #[path = "../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_jack_demo;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_jack_demo_tests;
     #[path = "../../🎛️apps/♻️rewrite/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_rewrite_demo_session;

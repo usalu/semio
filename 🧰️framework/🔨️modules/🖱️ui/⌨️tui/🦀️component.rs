@@ -3241,9 +3241,11 @@ pub mod engine {
                     }
                 }
                 Event::Mouse(m) => {
-                    if let Some(id) = self.scene.hit(m.pos) {
-                        self.focus = Some(id);
-                        if matches!(m.kind, crate::tui::event::MouseKind::Down(_)) {
+                    // Mouse reporting is enabled for the alt screen; only button-down changes focus.
+                    // Move/drag must not steal focus from the active table/input widget.
+                    if matches!(m.kind, crate::tui::event::MouseKind::Down(_)) {
+                        if let Some(id) = self.scene.hit(m.pos) {
+                            self.focus = Some(id);
                             let rect = self.scene.node(id).rect;
                             if let NodeContent::Chrome(chrome) = &self.scene.node(id).content {
                                 if let Some(signal) = chrome.window_control_at(rect, m.pos) {
@@ -5585,6 +5587,25 @@ mod tests {
     //#endregion 🔖️Chrome
 
     //#region 🔖️Engine
+
+    #[test]
+    fn engine_mouse_move_does_not_steal_focus() {
+        use crate::tui::engine::Tui;
+        let mut tui = Tui::new(Size { width: 20, height: 10 }, Theme::new(AppearanceName::Dark));
+        let root = tui.scene.root();
+        let a = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "a".into(), align: Align::Left, role: Role::Foreground }))));
+        let b = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "b".into(), align: Align::Left, role: Role::Foreground }))));
+        tui.scene.node_mut(root).set_constraint(Constraint { direction: Direction::Row, ..Default::default() });
+        tui.scene.node_mut(a).set_constraint(Constraint { width: Dimension::Cells(10), ..Default::default() });
+        tui.scene.node_mut(b).set_constraint(Constraint { width: Dimension::Cells(10), ..Default::default() });
+        let _ = tui.render_full();
+        tui.set_focus(Some(a));
+        tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Move, pos: Pos { x: 15, y: 0 }, mods: 0 }));
+        assert_eq!(tui.focus(), Some(a), "move must not change focus");
+        tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Down(0), pos: Pos { x: 15, y: 0 }, mods: 0 }));
+        assert_eq!(tui.focus(), Some(b), "click focuses the hit widget");
+    }
+
     #[test]
     fn tui_focus_next_and_prev_cycle_through_focusables() {
         let mut tui = crate::tui::engine::Tui::new(Size { width: 20, height: 5 }, Theme::new(AppearanceName::Dark));

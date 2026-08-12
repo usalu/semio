@@ -1,0 +1,309 @@
+//! ⚙️ Wav (riff-pcm) engine — a REAL RIFF/WAVE chunk walker: typed `fmt ` chunk decode/encode,
+//! typed `data` chunk sample interpretation (`Pcm16`/`Pcm8`/`Float32`/`Raw`), verbatim retention
+//! of any other RIFF chunk (`LIST`/`INFO`/`fact`/`cue `/…), and a magic sniff. No type sharing
+//! with `avi` — this walker is wav's own (a shared private helper across the two RIFF-based
+//! artifacts was considered per the master plan's own allowance, but wav's chunk shape (fixed
+//! `fmt `+`data` roles) is small enough that duplicating the ~15-line walk loop keeps each
+//! artifact's engine self-contained without a cross-artifact dependency).
+
+use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot, STDIO_WAV_DOCUMENT_SCHEMA};
+
+//#region 🔖️Sniff
+/// 🔍 Real magic sniff: `RIFF` fourcc at byte 0 + `WAVE` fourcc at byte 8 (RIFF's own type tag).
+pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
+    bytes.len() >= 12 && &bytes[0..4] == b"RIFF" && &bytes[8..12] == b"WAVE"
+}
+//#endregion 🔖️Sniff
+
+//#region 🔖️FmtChunk
+/// 📐️ Decodes a `fmt ` chunk body (already sliced to exactly `chunk_size` bytes). PCM's plain
+/// 16-byte form has no `cbSize`; the extensible/non-PCM form carries a `cbSize` (u16) at byte 16
+/// followed by `cbSize` bytes of extension data, retained verbatim in `WavFmt::ext`.
+fn decode_fmt_chunk(body: &[u8]) -> Result<WavFmt, String> {
+    if body.len() < 16 {
+        return Err(format!("wav: fmt chunk too short ({} bytes)", body.len()));
+    }
+    let audio_format = u16::from_le_bytes([body[0], body[1]]);
+    let channels = u16::from_le_bytes([body[2], body[3]]);
+    let sample_rate = u32::from_le_bytes([body[4], body[5], body[6], body[7]]);
+    let byte_rate = u32::from_le_bytes([body[8], body[9], body[10], body[11]]);
+    let block_align = u16::from_le_bytes([body[12], body[13]]);
+    let bits_per_sample = u16::from_le_bytes([body[14], body[15]]);
+    let ext = if body.len() > 16 {
+        if body.len() < 18 {
+            return Err("wav: fmt chunk has trailing bytes but no cbSize".into());
+        }
+        let cb_size = u16::from_le_bytes([body[16], body[17]]) as usize;
+        let end = 18 + cb_size;
+        if body.len() < end {
+            return Err(format!("wav: fmt cbSize {cb_size} overruns chunk body"));
+        }
+        Some(body[18..end].to_vec())
+    } else {
+        None
+    };
+    Ok(WavFmt { audio_format, channels, sample_rate, byte_rate, block_align, bits_per_sample, ext })
+}
+
+/// 📐️ Encodes a `fmt ` chunk body: the plain 16-byte PCM form when `ext` is `None`, else the
+/// extensible form (16 bytes + `cbSize`(u16) + `ext` bytes).
+fn encode_fmt_chunk(fmt: &WavFmt) -> Vec<u8> {
+    let mut body = Vec::with_capacity(16);
+    body.extend_from_slice(&fmt.audio_format.to_le_bytes());
+    body.extend_from_slice(&fmt.channels.to_le_bytes());
+    body.extend_from_slice(&fmt.sample_rate.to_le_bytes());
+    body.extend_from_slice(&fmt.byte_rate.to_le_bytes());
+    body.extend_from_slice(&fmt.block_align.to_le_bytes());
+    body.extend_from_slice(&fmt.bits_per_sample.to_le_bytes());
+    if let Some(ext) = &fmt.ext {
+        body.extend_from_slice(&(ext.len() as u16).to_le_bytes());
+        body.extend_from_slice(ext);
+    }
+    body
+}
+//#endregion 🔖️FmtChunk
+
+//#region 🔖️DataChunk
+/// 📐️ Interprets a `data` chunk body against the already-decoded `fmt`: PCM 16-bit → `Pcm16`,
+/// PCM 8-bit → `Pcm8` (8-bit PCM is unsigned bytes on the wire — no conversion needed), IEEE
+/// float 32-bit → `Float32`; every other `(audio_format, bits_per_sample)` combination (24-bit
+/// PCM, ADPCM, WAVE_FORMAT_EXTENSIBLE payloads, …) is retained as `Raw` — an honest boundary,
+/// not a silent misinterpretation.
+fn decode_data_chunk(fmt: &WavFmt, body: &[u8]) -> WavData {
+    match (fmt.audio_format, fmt.bits_per_sample) {
+        (1, 16) if body.len() % 2 == 0 => WavData::Pcm16(body.chunks_exact(2).map(|c| i16::from_le_bytes([c[0], c[1]])).collect()),
+        (1, 8) => WavData::Pcm8(body.to_vec()),
+        (3, 32) if body.len() % 4 == 0 => {
+            WavData::Float32(body.chunks_exact(4).map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]])).collect())
+        }
+        _ => WavData::Raw(body.to_vec()),
+    }
+}
+
+/// 📐️ Encodes a `data` chunk body from the typed sample vocabulary.
+fn encode_data_chunk(data: &WavData) -> Vec<u8> {
+    match data {
+        WavData::Pcm16(samples) => samples.iter().flat_map(|s| s.to_le_bytes()).collect(),
+        WavData::Pcm8(bytes) => bytes.clone(),
+        WavData::Float32(samples) => samples.iter().flat_map(|s| s.to_le_bytes()).collect(),
+        WavData::Raw(bytes) => bytes.clone(),
+    }
+}
+//#endregion 🔖️DataChunk
+
+//#region 🔖️RiffWalk
+/// 🚶 Walks every top-level chunk under `RIFF …/WAVE`, routing `fmt `/`data` into their typed
+/// slots and retaining everything else (`LIST`/`INFO`/`fact`/`cue `/…) verbatim in
+/// `other_chunks`, in on-disk order.
+pub fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
+    if !sniff_real_bytes(bytes) {
+        return Err("wav: missing RIFF/WAVE magic".into());
+    }
+    let mut pos = 12usize;
+    let mut fmt: Option<WavFmt> = None;
+    let mut data: Option<WavData> = None;
+    let mut other_chunks = Vec::new();
+    // 🪆️ `data` is decoded lazily against `fmt` — real RIFF/WAVE files always place `fmt ` before
+    // `data`, but a malformed/reordered file would otherwise silently mis-type; we buffer the raw
+    // `data` body until `fmt` is known instead of assuming ordering.
+    let mut pending_data_body: Option<Vec<u8>> = None;
+    while pos + 8 <= bytes.len() {
+        let fourcc = &bytes[pos..pos + 4];
+        let size = u32::from_le_bytes(bytes[pos + 4..pos + 8].try_into().map_err(|_| "wav: bad chunk size".to_string())?) as usize;
+        let body_start = pos + 8;
+        let body_end = body_start + size;
+        if body_end > bytes.len() {
+            return Err(format!("wav: chunk {:?} overruns file ({} > {})", String::from_utf8_lossy(fourcc), body_end, bytes.len()));
+        }
+        let body = &bytes[body_start..body_end];
+        match fourcc {
+            b"fmt " => fmt = Some(decode_fmt_chunk(body)?),
+            b"data" => pending_data_body = Some(body.to_vec()),
+            other => other_chunks.push(RiffChunk { fourcc: String::from_utf8_lossy(other).into_owned(), data: body.to_vec() }),
+        }
+        pos = body_end + (size % 2); // 🧮️ RIFF chunks are word-aligned: a 1-byte pad after odd-sized bodies.
+    }
+    let fmt = fmt.ok_or_else(|| "wav: no fmt chunk found".to_string())?;
+    if let Some(body) = pending_data_body {
+        data = Some(decode_data_chunk(&fmt, &body));
+    }
+    let data = data.ok_or_else(|| "wav: no data chunk found".to_string())?;
+    Ok(WavSnapshot { schema: STDIO_WAV_DOCUMENT_SCHEMA.into(), fmt, data, other_chunks })
+}
+
+/// 🚶 Re-encodes a `WavSnapshot` into real RIFF/WAVE bytes: `fmt ` then `data` then
+/// `other_chunks` in their stored order — for a snapshot decoded from a real file with no other
+/// chunks, this reproduces the original bytes exactly (see `codec_retention_law` below).
+pub fn encode_wav(snapshot: &WavSnapshot) -> Vec<u8> {
+    let mut body = Vec::new();
+    body.extend_from_slice(b"WAVE");
+    let fmt_body = encode_fmt_chunk(&snapshot.fmt);
+    body.extend_from_slice(b"fmt ");
+    body.extend_from_slice(&(fmt_body.len() as u32).to_le_bytes());
+    body.extend_from_slice(&fmt_body);
+    if fmt_body.len() % 2 == 1 {
+        body.push(0);
+    }
+    let data_body = encode_data_chunk(&snapshot.data);
+    body.extend_from_slice(b"data");
+    body.extend_from_slice(&(data_body.len() as u32).to_le_bytes());
+    body.extend_from_slice(&data_body);
+    if data_body.len() % 2 == 1 {
+        body.push(0);
+    }
+    for chunk in &snapshot.other_chunks {
+        let mut fourcc = chunk.fourcc.clone().into_bytes();
+        fourcc.resize(4, b' ');
+        body.extend_from_slice(&fourcc[0..4]);
+        body.extend_from_slice(&(chunk.data.len() as u32).to_le_bytes());
+        body.extend_from_slice(&chunk.data);
+        if chunk.data.len() % 2 == 1 {
+            body.push(0);
+        }
+    }
+    let mut out = Vec::with_capacity(8 + body.len());
+    out.extend_from_slice(b"RIFF");
+    out.extend_from_slice(&(body.len() as u32).to_le_bytes());
+    out.extend_from_slice(&body);
+    out
+}
+//#endregion 🔖️RiffWalk
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 🌱 Real ~1s 440Hz mono 8kHz 16-bit PCM fixture — byte-identical to the artifact's own
+    /// `📚️examples/🎬️demo/🖼️assets/example.wav` (per ticket `fixtures/wav/NOTES.md`), duplicated
+    /// here as a literal so the test doesn't reach across an emoji-path `include_bytes!` boundary.
+    fn real_fixture() -> Vec<u8> {
+        include_bytes!("../📚️examples/🎬️demo/🖼️assets/example.wav").to_vec()
+    }
+
+    #[test]
+    fn sniffs_and_decodes_a_synthetic_fmt_chunk() {
+        let snap = WavSnapshot {
+            fmt: WavFmt { audio_format: 1, channels: 1, sample_rate: 8000, byte_rate: 16000, block_align: 2, bits_per_sample: 16, ext: None },
+            data: WavData::Pcm16(vec![0, 100, -100]),
+            ..WavSnapshot::default()
+        };
+        let bytes = encode_wav(&snap);
+        assert!(sniff_real_bytes(&bytes));
+        let decoded = decode_wav(&bytes).expect("decode");
+        assert_eq!(decoded.fmt, snap.fmt);
+        assert_eq!(decoded.data, snap.data);
+    }
+
+    #[test]
+    fn sniff_rejects_non_wave_riff() {
+        let mut bytes = b"RIFF".to_vec();
+        bytes.extend_from_slice(&4u32.to_le_bytes());
+        bytes.extend_from_slice(b"AVI ");
+        assert!(!sniff_real_bytes(&bytes));
+    }
+
+    //#region codec_retention_law
+    /// 🧪️ `codec_retention_law`: decoding the REAL fixture, re-encoding, and decoding again must
+    /// be byte-exact at every level — the on-disk bytes, the recovered PCM samples, AND (an
+    /// independent confirmation, not reusing the decoder's own sample array) a freshly
+    /// re-synthesized 440Hz reference tone, per `fixtures/wav/NOTES.md`'s own verification
+    /// method.
+    #[test]
+    fn codec_retention_law() {
+        let fixture = real_fixture();
+        let decoded = decode_wav(&fixture).expect("decode real fixture");
+        assert_eq!(decoded.fmt.audio_format, 1, "PCM");
+        assert_eq!(decoded.fmt.channels, 1, "mono");
+        assert_eq!(decoded.fmt.sample_rate, 8000);
+        assert_eq!(decoded.fmt.byte_rate, 16000);
+        assert_eq!(decoded.fmt.block_align, 2);
+        assert_eq!(decoded.fmt.bits_per_sample, 16);
+        assert_eq!(decoded.fmt.ext, None);
+        assert!(decoded.other_chunks.is_empty(), "fixture has only fmt + data");
+
+        let samples = match &decoded.data {
+            WavData::Pcm16(s) => s.clone(),
+            other => panic!("expected Pcm16, got {other:?}"),
+        };
+        assert_eq!(samples.len(), 8000, "1.0s at 8000Hz");
+
+        // 🔬️ Independent re-synthesis (not reusing the writer's array): max abs diff must be 0.
+        // `make_wav.py`'s own `max_amp = int(AMPLITUDE * 32767)` truncates to an integer BEFORE
+        // multiplying by `sin(t)` — reproduced here bit-for-bit (not `0.5 * 32767.0` as a
+        // continuous `f64`, which rounds a peak sample to 16384 instead of the fixture's 16383).
+        let max_amp = (0.5 * 32767.0) as i32 as f64;
+        let mut max_abs_diff = 0i32;
+        for (n, &sample) in samples.iter().enumerate() {
+            let reference = ((2.0 * std::f64::consts::PI * 440.0 * n as f64 / 8000.0).sin() * max_amp).round() as i32;
+            max_abs_diff = max_abs_diff.max((sample as i32 - reference).abs());
+        }
+        assert_eq!(max_abs_diff, 0, "decoded samples must exactly match a freshly re-synthesized 440Hz sine");
+
+        // 🔁️ Re-encode must reproduce the real fixture byte-for-byte (no other_chunks, no ext).
+        let re_encoded = encode_wav(&decoded);
+        assert_eq!(re_encoded, fixture, "encode(decode(real fixture)) must be byte-identical");
+
+        // 🔁️ Second round trip (decode the re-encoded bytes) must also match exactly.
+        let re_decoded = decode_wav(&re_encoded).expect("decode re-encoded");
+        assert_eq!(re_decoded, decoded);
+    }
+    //#endregion codec_retention_law
+
+    //#region 🔖️OtherChunksRetention
+    #[test]
+    fn other_chunks_round_trip_verbatim_in_order() {
+        let snap = WavSnapshot {
+            fmt: WavFmt { audio_format: 1, channels: 1, sample_rate: 44100, byte_rate: 88200, block_align: 2, bits_per_sample: 16, ext: None },
+            data: WavData::Pcm16(vec![1, 2, 3]),
+            other_chunks: vec![
+                RiffChunk { fourcc: "fact".into(), data: vec![0x03, 0x00, 0x00, 0x00] },
+                RiffChunk { fourcc: "LIST".into(), data: b"INFOICRDodd".to_vec() }, // 🧮️ odd length exercises pad-byte handling
+            ],
+            ..WavSnapshot::default()
+        };
+        let bytes = encode_wav(&snap);
+        let decoded = decode_wav(&bytes).expect("decode");
+        assert_eq!(decoded.other_chunks, snap.other_chunks);
+        assert_eq!(decoded.other_chunks[0].fourcc, "fact");
+        assert_eq!(decoded.other_chunks[1].fourcc, "LIST");
+    }
+    //#endregion 🔖️OtherChunksRetention
+
+    //#region 🔖️ExtFmtRetention
+    #[test]
+    fn extensible_fmt_chunk_round_trips_ext_bytes() {
+        let snap = WavSnapshot {
+            fmt: WavFmt { audio_format: 0xFFFE, channels: 2, sample_rate: 48000, byte_rate: 192000, block_align: 4, bits_per_sample: 16, ext: Some(vec![0x16, 0x00, 0x03, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71]) },
+            data: WavData::Raw(vec![0xAA, 0xBB]),
+            ..WavSnapshot::default()
+        };
+        let bytes = encode_wav(&snap);
+        let decoded = decode_wav(&bytes).expect("decode");
+        assert_eq!(decoded.fmt, snap.fmt);
+        assert_eq!(decoded.data, snap.data);
+    }
+    //#endregion 🔖️ExtFmtRetention
+}
+
+//#region 🔖️Register
+/// 📌️ Registers this standard's single (✳️any) subset. Real magic-byte `sniff_real_bytes`/
+/// `decode_wav`/`encode_wav` above are used by the subset's analyzer/`ArtifactDsl`/
+/// `ArtifactPack` impls; schema descriptor + document codec registration is the subset
+/// composer's own job (see that module).
+pub fn register() {
+    crate::artifacts::wav::standards::riff_pcm::subsets::any::io::register();
+}
+//#endregion 🔖️Register
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::WavComposer as WavRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<WavRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

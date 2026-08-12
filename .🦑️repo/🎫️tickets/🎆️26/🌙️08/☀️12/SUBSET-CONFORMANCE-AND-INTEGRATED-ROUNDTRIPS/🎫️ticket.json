@@ -1,0 +1,8 @@
+{
+  "title": "Subset Conformance and Integrated Roundtrips",
+  "emoji": "🪆",
+  "status": "open",
+  "description": "Make every artifact subset own its engine, complete schema/behavior implementation, IO, real-world examples, and end-to-end conformance proof. Every subset must pass an 11-stage roundtrip through snapshot, diff, mutations, inferences, and IO. Execute via coordinated workforce: Wave 0 census, Wave 1 mechanisms, Wave 2 policies, Wave 3 seven references, Wave 4 mass migration, Wave 5 deletions, Wave 6 seal. Repo MCP unavailable at open; ticket folder created by coordinator following convention. Goal: 🎯r2602🎯runningsketchpad.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": []
+}

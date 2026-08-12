@@ -303,8 +303,8 @@ pub mod derived_composition {
             /// pack twin — so the fixtures can never silently drift back to a fake.
             #[test]
             fn fixture_honesty_law() {
-                const FIXTURE_DSL: &str = include_str!("../../../../../📚️examples/🌊️pipeline/🖼️assets/🗣️example.dsl.semio");
-                const FIXTURE_PACK: &[u8] = include_bytes!("../../../../../📚️examples/🌊️pipeline/🖼️assets/🎒️example.pack.semio");
+                const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/🌊️pipeline/🖼️assets/🗣️example.dsl.semio");
+                const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/🌊️pipeline/🖼️assets/🎒️example.pack.semio");
 
                 let demo = snapshot::demo_flow_snapshot();
 

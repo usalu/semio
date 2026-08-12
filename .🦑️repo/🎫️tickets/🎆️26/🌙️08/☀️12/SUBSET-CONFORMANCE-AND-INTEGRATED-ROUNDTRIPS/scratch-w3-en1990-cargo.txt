@@ -1,0 +1,26 @@
+# W3 EN1990 cargo attempt
+
+## Command
+```bash
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/Users/ueli/.bun/bin:/opt/homebrew/bin:$PATH
+export RUSTC_WRAPPER=
+export CARGO_TARGET_DIR=".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SUBSET-CONFORMANCE-AND-INTEGRATED-ROUNDTRIPS/🎯️target-w1-harness"
+cd "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust"
+cargo test -p semio-s-plugin-norm high_consequence_office_subset_roundtrip
+```
+
+## Result
+**BLOCKED** — pre-existing `semio-framework-plugin` compile error (not introduced by this worker):
+
+```
+error[E0499]: cannot borrow `self.children` as mutable more than once at a time
+    --> 🧰️framework/.../🔌️plugin/.../🦀️component.rs:5790:41
+```
+
+Earlier attempt with fresh `🎯️target-w3-en1990` also hit **disk full** during dependency compile; partial target removed to reclaim ~100MB.
+
+## Expected tests once plugin compiles
+- `high_consequence_office_subset_roundtrip` (🚪️io/🦀️component.rs)
+- `dsl_and_pack_wire_roundtrip_default` (🚪️io/🦀️component.rs)
+- `high_consequence_office_example_fixture_parses_and_round_trips` (📸️snapshot/📝️text/🦀️component.rs)
+- `outline_counts_checks_from_norm_computation` (💡️inferences/🧾outline/🦀️component.rs)

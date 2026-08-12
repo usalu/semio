@@ -7,11 +7,11 @@
   },
   "include": [
     "📦️index.ts",
-    "../../🔨️modules/🟦️index.ts",
-    "../../🔨️modules/📺️renderer/🟦️component.tsx",
-    "../../🔨️modules/📐️brepjs/🟦️component.ts",
-    "../../🔨️modules/🔍️query/🟦️component.ts",
-    "../../🔨️modules/🎰️stately/🟦️component.ts",
-    "../../🔨️modules/🏃️runtime/🟦️component.ts"
+    "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🟦️index.ts",
+    "../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx",
+    "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📐️brepjs/🟦️component.ts",
+    "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔍️query/🟦️component.ts",
+    "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎰️stately/🟦️component.ts",
+    "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🏃️runtime/🟦️component.ts"
   ]
 }

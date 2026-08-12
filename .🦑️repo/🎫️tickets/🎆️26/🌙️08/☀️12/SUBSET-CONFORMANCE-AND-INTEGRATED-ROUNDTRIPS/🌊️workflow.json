@@ -1,0 +1,24 @@
+{
+  "id": "subset-conformance-and-integrated-roundtrips",
+  "concurrency": 6,
+  "waves": [
+    {
+      "id": "w0",
+      "tasks": [
+        {"id": "w0-subsets-matrix", "model": "composer-2.5", "prompt": "census subsets", "path_scope": ["RO:plugins"], "verify": null, "retries": 0, "depends_on": []},
+        {"id": "w0-example-assignment", "model": "composer-2.5", "prompt": "census examples", "path_scope": ["RO:examples"], "verify": null, "retries": 0, "depends_on": []},
+        {"id": "w0-engine-shims", "model": "composer-2.5", "prompt": "census engines/shims", "path_scope": ["RO:engines"], "verify": null, "retries": 0, "depends_on": []},
+        {"id": "w0-peers", "model": "composer-2.5", "prompt": "census peers/inference/assets", "path_scope": ["RO:peers"], "verify": null, "retries": 0, "depends_on": []}
+      ]
+    },
+    {
+      "id": "w1",
+      "tasks": [
+        {"id": "w1-macro", "model": "composer-2.5", "prompt": "subset! macro", "path_scope": ["framework/plugin"], "verify": "cargo test", "retries": 0, "depends_on": ["w0-subsets-matrix", "w0-example-assignment", "w0-engine-shims", "w0-peers"]},
+        {"id": "w1-harness", "model": "composer-2.5", "prompt": "roundtrip harness", "path_scope": ["framework/store"], "verify": "cargo test", "retries": 0, "depends_on": ["w1-macro"]},
+        {"id": "w1-taxonomy", "model": "composer-2.5", "prompt": "taxonomy ownership", "path_scope": ["taxonomy"], "verify": "bun nx test", "retries": 0, "depends_on": ["w1-macro"]},
+        {"id": "w1-generator", "model": "composer-2.5", "prompt": "plugin-glue generator", "path_scope": ["root-script"], "verify": "bun generate", "retries": 0, "depends_on": ["w1-taxonomy"]}
+      ]
+    }
+  ]
+}

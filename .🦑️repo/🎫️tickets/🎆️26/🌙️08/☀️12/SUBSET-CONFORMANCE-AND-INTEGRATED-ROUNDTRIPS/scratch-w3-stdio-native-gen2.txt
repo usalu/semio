@@ -1,0 +1,40 @@
+4739 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4738:5
+     |
+4738 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4947:5
+     |
+4947 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4946:5
+     |
+4946 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5153:5
+     |
+5153 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5152:5
+     |
+5152 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+Some errors have detailed explanations: E0405, E0422, E0425, E0432, E0433.
+For more information about an error, try `rustc --explain E0405`.
+warning: `semio-s-plugin-stdio` (lib test) generated 675 warnings
+error: could not compile `semio-s-plugin-stdio` (lib test) due to 123 previous errors; 694 warnings emitted

@@ -1,0 +1,20 @@
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused variable: `mid2`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🔺️diff/🦀️component.rs:859:13
+    |
+859 |         let mid2 = d2.apply(&mid1);
+    |             ^^^^ help: if this is intentional, prefix it with an underscore: `_mid2`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `base`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs:445:13
+    |
+445 |         let base = fixture();
+    |             ^^^^ help: if this is intentional, prefix it with an underscore: `_base`
+
+Some errors have detailed explanations: E0277, E0599.
+For more information about an error, try `rustc --explain E0277`.
+warning: `semio-s-plugin-stdio` (lib test) generated 715 warnings
+error: could not compile `semio-s-plugin-stdio` (lib test) due to 104 previous errors; 715 warnings emitted

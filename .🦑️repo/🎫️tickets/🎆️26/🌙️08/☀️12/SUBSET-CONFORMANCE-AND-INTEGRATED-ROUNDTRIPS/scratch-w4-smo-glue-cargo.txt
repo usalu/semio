@@ -1,0 +1,11 @@
+W4 SMO-RELEASED glue repair — cargo check attempt 2026-08-12
+
+Target: 🎯️target-w4-smo
+
+semio-s-plugin-space: FAILED — No space left on device (dependency fingerprint writes)
+semio-s-plugin-energy: FAILED — No space left on device
+semio-s-plugin-raster: FAILED — No space left on device
+semio-s-plugin-dag: FAILED — No space left on device
+semio-s-plugin-sourcing: FAILED — No space left on device
+
+Static grep audit after glue repair: no stale 🏅️standards/🔖️1/⚙️engine or artifact-level 📚️examples/🎬️demo paths under the five plugin trees.

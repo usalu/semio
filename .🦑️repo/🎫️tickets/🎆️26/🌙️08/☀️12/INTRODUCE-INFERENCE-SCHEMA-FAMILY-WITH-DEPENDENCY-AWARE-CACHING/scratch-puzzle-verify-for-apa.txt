@@ -1,1 +1,51 @@
 ### cargo check -p semio-s-plugin-puzzle --all-targets
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+error: failed to link or copy `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING/🎯️target/debug/build/proc-macro2-06b0ba31cf55c6cc/build_script_build-06b0ba31cf55c6cc` to `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING/🎯️target/debug/build/proc-macro2-06b0ba31cf55c6cc/build-script-build`
+
+Caused by:
+  No space left on device (os error 28)
+
+### cargo test -p semio-s-plugin-puzzle --lib
+   Compiling smallvec v1.15.1
+   Compiling stable_deref_trait v1.2.1
+   Compiling arrayvec v0.7.6
+   Compiling serde_core v1.0.228
+   Compiling libm v0.2.16
+   Compiling log v0.4.29
+   Compiling bytemuck v1.25.0
+   Compiling zerofrom v0.1.8
+   Compiling simd-adler32 v0.3.9
+error: failed to link or copy `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING/🎯️target/debug/build/crc32fast-627f4d2488c321ce/build_script_build-627f4d2488c321ce` to `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING/🎯️target/debug/build/crc32fast-627f4d2488c321ce/build-script-build`
+
+Caused by:
+  No space left on device (os error 28)
+warning: build failed, waiting for other jobs to finish...
+error: error writing dependencies to `/var/folders/pm/zdg449hs6r33w_2gtsn23byc0000gn/T/sccachepqvlTj/deps.d`: No space left on device (os error 28)
+
+error: could not compile `libm` (lib) due to 1 previous error
+error: error writing dependencies to `/var/folders/pm/zdg449hs6r33w_2gtsn23byc0000gn/T/sccacheEXktoh/deps.d`: No space left on device (os error 28)
+
+error: could not compile `arrayvec` (lib) due to 1 previous error
+error: failed to write to `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING/🎯️target/debug/deps/rmetaK3DRTe/full.rmeta`: No space left on device (os error 28)
+
+error: could not compile `smallvec` (lib) due to 1 previous error
+error: failed to build archive at `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING/🎯️target/debug/deps/libstable_deref_trait-1c057e2a86c4c9d2.rlib`: failed to rename archive file: No space left on device (os error 28)
+
+error: could not compile `stable_deref_trait` (lib) due to 1 previous error
+error: failed to write to `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING/🎯️target/debug/deps/rmetaV38759/full.rmeta`: No space left on device (os error 28)
+
+error: could not compile `serde_core` (lib) due to 1 previous error
+error: failed to write to `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING/🎯️target/debug/deps/rmetaqL8ssN/full.rmeta`: No space left on device (os error 28)
+
+error: could not compile `log` (lib) due to 1 previous error
+error: failed to write to `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING/🎯️target/debug/deps/rmeta3nTSZF/full.rmeta`: No space left on device (os error 28)
+
+error: could not compile `zerofrom` (lib) due to 1 previous error
+error: failed to write to `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING/🎯️target/debug/deps/rmetaqZSFdr/full.rmeta`: No space left on device (os error 28)
+
+error: could not compile `bytemuck` (lib) due to 1 previous error
+error: failed to create file encoder: No space left on device (os error 28)
+
+error: could not compile `simd-adler32` (lib) due to 1 previous error

@@ -41,18 +41,18 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "."]
                 pub mod engine {
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/⚙️engine/🎲️board-host/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎲️board-host/🦀️component.rs"]
                     pub mod board_host;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/⚙️engine/📐️layout/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📐️layout/🦀️component.rs"]
                     pub mod layout;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/⚙️engine/🔗️linking/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔗️linking/🦀️component.rs"]
                     pub mod linking;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/⚙️engine/🔣️icons/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔣️icons/🦀️component.rs"]
                     pub mod icons;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/⚙️engine/🖌️brush/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🖌️brush/🦀️component.rs"]
                     pub mod brush;
                 }
                 #[path = "."]
@@ -561,12 +561,12 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "."]
                 pub mod engine {
-                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/⚙️engine/✂️transfer/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/✂️transfer/🦀️component.rs"]
                     pub mod transfer;
-                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/⚙️engine/📐️flatten/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📐️flatten/🦀️component.rs"]
                     pub mod flatten;
                 }
                 #[path = "."]
@@ -1085,22 +1085,22 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "."]
                 pub mod engine {
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/⏳️session/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/⏳️session/🦀️component.rs"]
                     pub mod session;
                     #[path = "."]
                     pub mod geometry {
-                        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/📐️geometry/🦀️component.rs"]
+                        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📐️geometry/🦀️component.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/📐️geometry/🎛flatten/🦀️component.rs"]
+                        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📐️geometry/🎛flatten/🦀️component.rs"]
                         pub mod flatten;
                     }
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/🖌️brush/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🖌️brush/🦀️component.rs"]
                     pub mod brush;
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/🪣️fill/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🪣️fill/🦀️component.rs"]
                     pub mod fill;
                 }
                 #[path = "."]
@@ -2157,45 +2157,45 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 pub mod examples {
     #[path = "."]
     pub mod puzzle2d {
-        #[path = "../../🗿️artifacts/◻2d/📚️examples/🏗️nakagin-capsule-tower/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🦀️component.rs"]
         pub mod nakagin_capsule_tower;
         #[cfg(test)]
-        #[path = "../../🗿️artifacts/◻2d/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🦀️test.rs"]
+        #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🦀️test.rs"]
         mod nakagin_capsule_tower_tests;
-        #[path = "../../🗿️artifacts/◻2d/📚️examples/🌲️concrete-forest/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🦀️component.rs"]
         pub mod concrete_forest;
         #[cfg(test)]
-        #[path = "../../🗿️artifacts/◻2d/📚️examples/🌲️concrete-forest/🧪️tests/🦀️test.rs"]
+        #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🧪️tests/🦀️test.rs"]
         mod concrete_forest_tests;
     }
     #[path = "."]
     pub mod puzzle3d {
-        #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🏗️nakagin-capsule-tower/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🦀️component.rs"]
         pub mod nakagin_capsule_tower;
         #[cfg(test)]
-        #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🦀️test.rs"]
+        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🦀️test.rs"]
         mod nakagin_capsule_tower_tests;
-        #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🌲️concrete-forest/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🦀️component.rs"]
         pub mod concrete_forest;
         #[cfg(test)]
-        #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🌲️concrete-forest/🧪️tests/🦀️test.rs"]
+        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🧪️tests/🦀️test.rs"]
         mod concrete_forest_tests;
     }
     #[path = "."]
     pub mod puzzle5d {
-        #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🏗️nakagin-capsule-tower/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🦀️component.rs"]
         pub mod nakagin_capsule_tower;
-        #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🌙️capsule-dream/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌙️capsule-dream/🦀️component.rs"]
         pub mod capsule_dream;
         #[cfg(test)]
-        #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🦀️test.rs"]
+        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🦀️test.rs"]
         mod nakagin_capsule_tower_tests;
-        #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🌙️capsule-dream/🧪️tests/🦀️test.rs"]
+        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌙️capsule-dream/🧪️tests/🦀️test.rs"]
         mod capsule_dream_tests;
-        #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🌲️concrete-forest/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🦀️component.rs"]
         pub mod concrete_forest;
         #[cfg(test)]
-        #[path = "../../🗿️artifacts/🖐️5d/📚️examples/🌲️concrete-forest/🧪️tests/🦀️test.rs"]
+        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🧪️tests/🦀️test.rs"]
         mod concrete_forest_tests;
     }
     #[path = "."]

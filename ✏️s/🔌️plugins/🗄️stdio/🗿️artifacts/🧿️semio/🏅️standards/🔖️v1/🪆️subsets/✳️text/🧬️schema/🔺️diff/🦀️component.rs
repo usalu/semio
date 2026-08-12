@@ -205,6 +205,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioTextDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::DiffCodec;
     use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMarkKind, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 
     #[test]

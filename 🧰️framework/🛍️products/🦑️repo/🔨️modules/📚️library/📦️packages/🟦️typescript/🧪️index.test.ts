@@ -1159,8 +1159,13 @@ describe("loadTaxonomy", () => {
     const taxonomy = loadTaxonomy();
     const lifecycleDirs = ["🏗️builder", "🧐️analyzer", "🎹️composer"];
     expect(taxonomy.newArtifactComponentDirs).toEqual(["🏅️standards"]);
-    expect(taxonomy.standardComponentDirs).toEqual(["⚙️engine", "🪆️subsets"]);
-    expect(taxonomy.subsetComponentDirs).toEqual(["🧬️schema", "🚪️io"]);
+    expect(taxonomy.newArtifactChildDirs).toEqual(["🏅️standards"]);
+    expect(taxonomy.standardComponentDirs).toEqual(["🪆️subsets"]);
+    expect(taxonomy.standardChildDirs).toEqual(["🪆️subsets"]);
+    expect(taxonomy.subsetComponentDirs).toEqual(["🧬️schema", "⚙️engine", "🚪️io"]);
+    expect(taxonomy.subsetChildDirs).toEqual(["🧬️schema", "⚙️engine", "🚪️io", "📚️examples"]);
+    expect(taxonomy.subsetArchetypes).toEqual(["owning", "derived"]);
+    expect(taxonomy.ioFidelityClasses).toEqual(["exact", "canonical", "semantic", "lossy"]);
     expect([
       ...taxonomy.newArtifactChildDirs,
       ...taxonomy.standardChildDirs,

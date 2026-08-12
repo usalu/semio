@@ -373,7 +373,19 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
-The process model
+The process models need to be 
+
+---
+
+Artifacts must not have an engine but only a schema, snapshot, diff, mutations, inferences, io system.
+Evera app has a an engine which is a state machine that is controlled by the app.
+machine is a core framework-provided stull blown state machine implementation.
+
+---
+
+Every subset has its own implementation and examples should only be on subset level.
+Every feature needs to be tested.
+At least one real-world example per subset needs to roundtrip through the snapshot, diff, mutations, inferences, io system.
 
 ---
 

@@ -708,7 +708,7 @@ impl store::ArtifactPack for HtmlSnapshot {
 mod tests {
     use super::*;
 
-    const FIXTURE: &str = include_str!("../../../../../../📚️examples/🎬️demo/🖼️assets/example.html");
+    const FIXTURE: &str = include_str!("../../📚️examples/🎬️demo/🖼️assets/example.html");
 
     fn el(name: &str, attrs: Vec<HtmlAttr>, children: Vec<HtmlNode>) -> HtmlNode {
         HtmlNode::Element { name: name.into(), attributes: attrs, children }

@@ -61,9 +61,143 @@ Audit both against the `update` test: ≥2 fields, genuinely inseparable, never 
 at a time. Three other sessions reached for `update` wrongly today; these two deserve the same
 scrutiny before they stand.
 
+## A3. Structural audit of all 54 non-stdio facets (coordinator-run, no cargo needed)
+
+Checked the dispatch-coverage invariant directly — triad-dir set vs dispatch-variant set — across
+every non-stdio facet. **Exactly 2 fail**, both leftovers from earlier waves whose agents could not
+edit `📦️glue.rs`, so the enum was modernized while directories kept old names:
+
+| facet | dirs | variants | nature |
+|---|---|---|---|
+| `🌀️procedural/🌀️procedural2d` | 8 | 14 | severe: every dir still `🎛set-*`/`➖remove-*` while variants are `CreateWidget`/`ConnectSynapse`/… ; 6 variants have no dir at all. Payloads are split between old dirs (`🎛set-widget/🦠️mutation` holds `CreateWidget`) and inline in the dispatch file (`🦀️component.rs:182` holds `CreateGeneration`) |
+| `📋️forms/📋️forms` | 9 | 10 | **corrected on closer inspection — NOT "one missing dir"**. Same full drift as procedural2d: zero overlap between dir names and variant names |
+
+**Correction to the forms entry** (first reading said "one variant missing its triad dir" — wrong,
+and worth recording because the count alone was misleading):
+
+- dirs, all OLD/playbook-shaped: `↔️move-block ↔️move-step ➕add-block ➕add-step ➖remove-block
+  ➖remove-step 📖update-playbook 🩹update-block 🩹update-step`
+- variants, all NEW/semantic: `CreateStep DeleteStep ReorderStep RenameStep ChangeStepDescription
+  CreateBlock DeleteBlock MoveBlockToStep ReplaceBlock ChangeFormTitle`
+
+Not a single name matches. The dirs are inherited from the playbook vocabulary (forms re-exports
+playbook domain types), so this facet needs a complete 10-dir restructure, not a patch. A near-9
+vs 10 count concealed a total mismatch — **when auditing this invariant, compare the name sets, not
+the cardinalities.**
+
+### A3-plan: procedural2d — complete dir↔payload mapping (analysis DONE, execution pending)
+
+Measured, so the executing lane does not have to re-derive it. Every one of the 8 existing dirs
+holds exactly one payload struct, correctly written but in a wrongly-named directory; the other 6
+payloads are inlined in the dispatch file and need extracting into new dirs.
+
+**Rename (8)** — `<current dir>` → `<target dir>` (payload struct it holds):
+
+| current | target | payload |
+|---|---|---|
+| `🎛set-widget` | `🌱create-widget` | `CreateWidget` |
+| `➖remove-widget` | `🗑️delete-widget` | `DeleteWidget` |
+| `🎛set-layout` | `📍move-widget` | `MoveWidget` |
+| `➖remove-layout` | `🧹clear-widget-layout` | `ClearWidgetLayout` |
+| `🎛set-synapse` | `🔗connect-synapse` | `ConnectSynapse` |
+| `➖remove-synapse` | `✂️disconnect-synapse` | `DisconnectSynapse` |
+| `🎛set-camera` | *(pending verb ruling — see below)* | `UpdateCamera` |
+| `🎛set-schema` | `🔤change-schema` | `ChangeSchema` |
+
+**Extract from the dispatch file into new dirs (6)**: `ReplaceWidget` → `🔁replace-widget`;
+`ReplaceSynapse` → `🔄replace-synapse`; `CreateGeneration` → `➕create-generation`;
+`DeleteGeneration` → `➖delete-generation`; `RenameGeneration` → `🏷️rename-generation`;
+`ChangeGenerationValue` → `🔢change-generation-value`.
+
+Emoji above are pre-checked pairwise-distinct within the facet. Every rename must be mirrored in
+`✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/📦️glue.rs`, and the dispatch file's
+`use super::{…}` list (currently naming the 8 old module names) updated to match.
+
+**Two verb rulings still owed before executing:**
+- `UpdateCamera` — `update` is reserved for an inseparable ≥2-field facet never set one field at a
+  time. Measure the camera type: if position/target/zoom are set independently this is
+  `move-camera` + `change-camera-<field>` (the taxonomy has exact spatial verbs), and only a
+  genuinely atomic camera facet justifies keeping `update`. Three sessions have now reached for
+  `update` wrongly today.
+- `ClearWidgetLayout` — `clear` is approved ("empty a collection/field wholesale") but its inverse
+  must restore **every** captured member from `base`. Verify the existing inverse does that rather
+  than restoring a single entry.
+
+### Combined size of A3, and why it was NOT attempted by hand
+
+procedural2d (14 variants) + forms (10 variants) = **24 triad dirs × 3 leaves ≈ 72 files**, plus
+two `📦️glue.rs` rewires, plus extracting payload structs that currently live in old dirs and
+inline in dispatch files. The assigned lane died on the session limit before starting, and the
+coordinator deliberately did **not** begin it by hand: a half-restructured facet with dangling glue
+mounts is strictly worse than a fully-documented one, and this ticket has already spent effort
+today repairing exactly that failure mode in four other plugins.
+
+Requeue as one lane, procedural2d first (it has the inline-payload complication), with the standing
+rule that both facets must end at triad-dir set ≡ variant set with unique emoji and real glue
+mounts.
+
+Requeued (the assigned lane died on the session limit before starting). Also check
+`🌀️procedural/🧊️procedural3d` — it passed the audit, but confirm rather than assume. Two
+vocabulary items to rule on while there: `UpdateCamera` (likely `move-camera`/`change-camera-*` —
+`update` needs inseparable fields) and `ClearWidgetLayout` (`clear` is approved, but verify the
+inverse restores every captured member from `base`).
+
+**Audit methodology note**: the first run reported 6 mismatches. Four were false positives — the
+variant regex counted `Some(` in match arms. Corrected by filtering `Some|None|Ok|Err|Box|Vec|String`.
+Recording because the same trap will catch anyone re-running this check.
+
+## A4. FIXED by the coordinator: sequence's dead engine + stale test
+
+`🎬️sequence/…/🧬️schema/🔺️diff/📝️text/🦀️component.rs` held the last real (non-prose)
+`CollectionMutation` code outside the flow kernel bridge:
+- `steps_delta_from_collection_mutation`, `edges_delta_from_collection_mutation` and
+  `diff_set_snapshot` — all three with **zero callers** in the plugin, the same dead-engine class
+  removed from gis/flow/animate/process during Wave R. Whole `🔖️Helpers` region deleted, import
+  narrowed to `use protocol::{MutationDiff, Patchable};`.
+- Its test constructed `SequenceMutation::StepsAdd { index, item }` — a variant that **no longer
+  exists** (sequence's dispatch is 8 semantic variants, 1:1 with its dirs). Rewritten to use the
+  `create_step(step)` builder.
+
+**This matters beyond the fix**: a stale test referencing a deleted variant means sequence's test
+build could not have compiled, yet an earlier `cargo check --workspace --all-targets` reported zero
+plugin errors. That run must have stopped at the `semio-framework-os-kernel` lib-test failure
+before building plugin test targets. **Treat that "zero plugin errors" reading as unproven** and
+re-run once the framework blockers clear.
+
 ## B. Verification gaps (block the ticket's exit criteria)
 
-### B1. Framework law tests cannot build — FOREIGN, blocks everyone
+### B0. ⛔️ ALL CARGO EVIDENCE IN THIS SESSION'S LATER WINDOW IS UNRELIABLE — DISK FULL
+
+`/System/Volumes/Data` is at **100%** (862Gi used of 926Gi, **2.8Gi free**). Root
+`/Users/ueli/Documents/semio/target` is **428G** — pure regenerable build cache, and stale under
+this repo's per-ticket `CARGO_TARGET_DIR` policy.
+
+A full disk makes `rustc` fail while writing `rmeta`/link artifacts, and those failures surface as
+*plausible but bogus* compile errors — missing crates, unresolved modules, missing manifests. So
+several "blockers" circulating between sessions are probably artifacts, including **one of this
+ticket's own findings**:
+
+- **B1's "144 errors, `tempfile` not a dev-dependency" is RETRACTED.** `tempfile = "3.20.0"` is
+  present at `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml`, under
+  `[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]`, with a comment naming
+  `🏪️store/🔄️sync`'s actor tests as the reason. DKM independently compiled and ran that crate's
+  lib-test binary at ~17:35 (11 engine tests, 0 failed) — impossible if store/sync carried 144
+  errors. The measurement was wrong, stale, or disk-induced.
+- Similarly, DKM reported `✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust/Cargo.toml` as deleted,
+  breaking workspace manifest load. **It exists on disk right now**, along with the whole
+  `🔄️fsm/` subtree.
+
+**Consequence for this ticket**: every gate, baseline and release claim resting on a build from
+this window must be **re-run before it is trusted** — including `cargo check --workspace → 0
+errors`, and the per-plugin test results (raster 66/0, gis 171/0, shooting 104/104) if they fall
+inside it. Structural evidence (directory/variant audits, banned-token greps, file reads) is
+unaffected and stands.
+
+**Not actionable by this ticket**: deleting 428G of shared build cache is destructive, affects six
+concurrent sessions mid-build, and costs everyone a cold rebuild. Escalated to the user for a
+decision; no session should do it unilaterally.
+
+### B1. Framework law tests cannot build — RETRACTED, see B0
 `cargo check --workspace --all-targets` → `semio-framework-os-kernel` **lib test** fails with 144
 errors, all in `🔨️modules/🏪️store/🔄️sync/🦀️component.rs`: `tempfile` is used but is not a
 dev-dependency of the os-kernel crate, plus `DemoSnapshot`/`DemoMutation` fixtures failing

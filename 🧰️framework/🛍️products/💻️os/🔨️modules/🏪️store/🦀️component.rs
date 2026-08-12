@@ -3891,7 +3891,15 @@ pub trait BlobStore: Send + Sync {
 /// heterogeneous registry of documents (`HashMap<String, Box<dyn SpaceMember>>`) without knowing
 /// each member's concrete `P`/`Mutation`. Blanket-implemented below by delegating to `dispatch` — never
 /// reimplement the underlying VCS mechanics here.
-pub trait SpaceMember {
+/// `: Send` (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM C1, cross-boundary fix authorized by the ticket
+/// orchestrator — see `📓️wave1-reports/c1-plugin-composition-report.md`'s `## Send bound`
+/// section): `VcsArtifactApp`'s new child-store map (`🔌️plugin/🦀️component.rs`) holds `Box<dyn
+/// SpaceMember>` as a field of a type that must stay `Send` (`PluginApp: Send`, frozen contract),
+/// matching the pattern every OTHER erased trait-object seam in this file already follows
+/// (`Backbone`/`BackbonePort`/`BackboneChannelPort` are all `Send + Sync`) — `SpaceMember` was the
+/// one outlier. Only ONE implementor exists repo-wide (the blanket impl below, confirmed via
+/// `grep -rn "impl.*SpaceMember for"`), so this is a verified, not speculative, widening.
+pub trait SpaceMember: Send {
     fn document_id(&self) -> &str;
     /// @emoji 🩸️ Whether this member has edits applied since its last checkpoint (mirrors the
     /// `CommitCheckpoint` dispatch's own "nothing to commit" check via `uncommitted_edit_ids`).
@@ -3974,8 +3982,8 @@ pub trait SpaceMember {
 
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + 'static,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + 'static,
+    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn document_id(&self) -> &str {
         self.envelope().id.as_str()
@@ -5271,6 +5279,136 @@ pub mod test_support {
         let replayed = materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).expect("replay");
         assert_eq!(live, replayed, "store's live snapshot diverged from full-replay materialization");
     }
+
+    /// 🎚️ Strongest achieved native IO fidelity for export/reimport laws (S8).
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum IoFidelityClass {
+        Exact,
+        Canonical,
+        Semantic,
+        Lossy,
+    }
+
+    /// 🗂️ Vendored real-world example input for subset integrated roundtrip harnesses.
+    pub struct ExampleAsset<'a> {
+        pub bytes: &'a [u8],
+        pub text: Option<&'a str>,
+        pub provenance: &'a str,
+    }
+
+    /// 🪆 Subset-facing surface the integrated harness needs. Implement on a thin adapter per subset.
+    pub trait SubsetRoundtripSpec {
+        type Snapshot: Clone + PartialEq + std::fmt::Debug + ArtifactDsl + ArtifactPack + Serialize + DeserializeOwned;
+        type Mutation: Clone + PartialEq + std::fmt::Debug + Mutation<Self::Snapshot> + OpText + OpBinary;
+        type Inference: Clone + PartialEq + std::fmt::Debug + Default;
+        fn dialect() -> crate::os_io::ArtifactDialect;
+        fn fidelity() -> IoFidelityClass;
+        fn drops() -> &'static [&'static str];
+        fn parse_native(asset: &ExampleAsset<'_>) -> Result<Self::Snapshot, String>;
+        fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String>;
+        fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String>;
+        fn infer(snapshot: &Self::Snapshot) -> Self::Inference;
+        fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation>;
+        fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>>;
+        fn validate_negative(bytes: &[u8]) -> Result<Vec<String>, String>;
+        fn is_derived() -> bool {
+            false
+        }
+    }
+
+    fn skip_stage(error: &str) -> bool {
+        error.starts_with("SKIP:")
+    }
+
+    fn skip_validation(codes: &[String]) -> bool {
+        codes.len() == 1 && skip_stage(&codes[0])
+    }
+
+    /// 🧪 Assert import/export byte fidelity matches the declared class at the raw-byte layer.
+    pub fn assert_import_export_fidelity_bytes(original: &[u8], exported: &[u8], class: IoFidelityClass) {
+        match class {
+            IoFidelityClass::Exact => assert_eq!(exported, original, "exact fidelity requires byte-identical export"),
+            IoFidelityClass::Canonical | IoFidelityClass::Semantic | IoFidelityClass::Lossy => {}
+        }
+    }
+
+    /// 🎯 Assert two inference runs are identical (determinism law S6).
+    pub fn assert_inference_determinism<I: PartialEq + std::fmt::Debug>(a: &I, b: &I) {
+        assert_eq!(a, b, "inference is not deterministic across two runs on the same snapshot");
+    }
+
+    /// 🔁 Drive S0–S10 subset roundtrip stages. Stages that need unavailable hooks are skipped only when
+    /// the corresponding trait method returns an explicit Err starting with "SKIP:"; otherwise failures panic with stage id.
+    pub fn assert_subset_roundtrip<S: SubsetRoundtripSpec>(example: &ExampleAsset<'_>, negative: Option<&ExampleAsset<'_>>) {
+        assert!(!example.bytes.is_empty(), "S0: example bytes must be non-empty");
+        assert!(!example.provenance.is_empty(), "S0: example provenance must be non-empty");
+
+        let dialect = S::dialect();
+        assert!(!dialect.artifact_kind.is_empty(), "S1: dialect artifact_kind must be non-empty");
+        assert!(!dialect.standard.is_empty(), "S1: dialect standard must be non-empty");
+        assert!(!dialect.subset.is_empty(), "S1: dialect subset must be non-empty");
+
+        let snapshot = match S::parse_native(example) {
+            Ok(snapshot) => snapshot,
+            Err(error) if skip_stage(&error) => return,
+            Err(error) => panic!("S2 failed: {error}"),
+        };
+
+        assert_dsl_round_trip(&snapshot);
+        assert_pack_round_trip(&snapshot);
+        assert_dsl_pack_equivalence(&snapshot);
+
+        let mutations = S::sample_mutations(&snapshot);
+        for mutation in &mutations {
+            assert_operation_round_trip(&snapshot, mutation.clone());
+            assert_op_line_round_trip(mutation);
+            assert_op_text_binary_equivalence(mutation);
+        }
+
+        assert_inference_determinism(&S::infer(&snapshot), &S::infer(&snapshot));
+
+        if let Some(first) = mutations.first() {
+            assert_store_roundtrip(snapshot.clone(), first.clone());
+        }
+
+        match S::export_native(&snapshot) {
+            Ok(exported) => {
+                assert_import_export_fidelity_bytes(example.bytes, &exported, S::fidelity());
+                match S::reimport_native(&exported) {
+                    Ok(reimported) => match S::fidelity() {
+                        IoFidelityClass::Exact => {}
+                        IoFidelityClass::Canonical | IoFidelityClass::Semantic => {
+                            assert_eq!(&reimported, &snapshot, "S8: canonical/semantic fidelity requires equal snapshot after reimport");
+                        }
+                        IoFidelityClass::Lossy if S::drops().is_empty() => {
+                            assert_eq!(&reimported, &snapshot, "S8: lossy fidelity with empty drop set requires equal snapshot after reimport");
+                        }
+                        IoFidelityClass::Lossy => {}
+                    },
+                    Err(error) if skip_stage(&error) => {}
+                    Err(error) => panic!("S8 reimport failed: {error}"),
+                }
+            }
+            Err(error) if skip_stage(&error) => {}
+            Err(error) => panic!("S8 export failed: {error}"),
+        }
+
+        match S::validate_payload(example.bytes) {
+            Ok(()) => {}
+            Err(codes) if skip_validation(&codes) => {}
+            Err(codes) => panic!("S9 validate_payload failed: {codes:?}"),
+        }
+
+        if S::is_derived() {
+            if let Some(negative) = negative {
+                match S::validate_negative(negative.bytes) {
+                    Ok(codes) => assert!(!codes.is_empty(), "S9: derived negative must yield non-empty diagnostic codes"),
+                    Err(error) if skip_stage(&error) => {}
+                    Err(error) => panic!("S9 validate_negative failed: {error}"),
+                }
+            }
+        }
+    }
 }
 //#endregion 🔖️TestSupport
 
@@ -5962,6 +6100,19 @@ impl OpBinary for DemoMutation {
         store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).expect("commit");
         store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 2 }], coalesce_key: Some("drag".into()) }).expect("amend after commit");
         assert_eq!(store.envelope().vcs.edits.len(), 2, "committed edits are never amended, even with a matching coalesce key");
+    }
+
+    #[test]
+    fn assert_subset_harness_fidelity_and_inference_helpers() {
+        test_support::assert_import_export_fidelity_bytes(b"fixture", b"fixture", test_support::IoFidelityClass::Exact);
+        test_support::assert_import_export_fidelity_bytes(b"fixture", b"other", test_support::IoFidelityClass::Canonical);
+        test_support::assert_inference_determinism(&7_i32, &7_i32);
+    }
+
+    #[test]
+    #[should_panic(expected = "exact fidelity requires byte-identical export")]
+    fn assert_import_export_fidelity_bytes_exact_rejects_divergence() {
+        test_support::assert_import_export_fidelity_bytes(b"fixture", b"other", test_support::IoFidelityClass::Exact);
     }
 
     #[test]

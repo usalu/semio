@@ -21,7 +21,7 @@ role = "plugin"
 [package.metadata.semio.storybook]
 id = "cad"
 titlePrefix = "📐️cad"
-sourceRoots = ["🔨️modules/📺️renderer", "🖼️assets", "🧫️fixtures"]
+sourceRoots = ["🎛️apps/📐️cad/⚙️engine/📺️renderer", "🗿️artifacts/📐️cad/📚️examples/🖼️assets", "🗿️artifacts/📐️cad/📚️examples/🧫️fixtures"]
 
 [[package.metadata.semio.playground]]
 variant = "cad"
@@ -37,7 +37,7 @@ ports = { react = 6020, wgpu = 6120 }
 kind = "static-dir"
 route = "/cad-fixture"
 app = "cad-play"
-root = "✏️s/🔌️plugins/📐️cad/🧫️fixtures"
+root = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🧫️fixtures"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -51,7 +51,6 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 semio-framework-3d = { path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 ui_wgpu = {path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
-semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 serde.workspace = true
 serde_json.workspace = true

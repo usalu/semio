@@ -1,0 +1,127 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling zmij v1.0.21
+   Compiling version_check v0.9.5
+   Compiling zerocopy v0.8.48
+   Compiling cfg-if v1.0.4
+   Compiling serde_core v1.0.228
+   Compiling stable_deref_trait v1.2.1
+   Compiling memchr v2.8.0
+   Compiling serde v1.0.228
+   Compiling autocfg v1.5.0
+   Compiling once_cell v1.21.4
+   Compiling serde_json v1.0.149
+   Compiling hashbrown v0.17.1
+   Compiling equivalent v1.0.2
+   Compiling itoa v1.0.18
+   Compiling shlex v1.3.0
+   Compiling bitflags v2.11.1
+   Compiling anyhow v1.0.102
+   Compiling find-msvc-tools v0.1.9
+   Compiling ahash v0.8.12
+   Compiling libc v0.2.186
+   Compiling syn v2.0.117
+   Compiling semver v1.0.28
+   Compiling num-traits v0.2.19
+   Compiling crc32fast v1.5.0
+   Compiling cc v1.2.62
+   Compiling smallvec v1.15.1
+   Compiling litemap v0.8.2
+   Compiling simd-adler32 v0.3.9
+   Compiling writeable v0.6.3
+   Compiling num-integer v0.1.46
+   Compiling pin-project-lite v0.2.17
+   Compiling adler2 v2.0.1
+   Compiling prettyplease v0.2.37
+   Compiling icu_properties_data v2.2.0
+   Compiling utf8_iter v1.0.4
+   Compiling thiserror v2.0.18
+   Compiling icu_normalizer_data v2.2.0
+   Compiling miniz_oxide v0.8.9
+   Compiling leb128 v0.2.7
+   Compiling log v0.4.29
+   Compiling futures-core v0.3.32
+   Compiling indexmap v2.14.0
+   Compiling unicode-xid v0.2.6
+   Compiling parking_lot_core v0.9.12
+   Compiling zip v2.4.2
+   Compiling arrayvec v0.7.6
+   Compiling id-arena v2.3.0
+   Compiling constant_time_eq v0.4.2
+   Compiling ref-cast v1.0.25
+   Compiling arrayref v0.3.9
+   Compiling getrandom v0.3.4
+   Compiling bumpalo v3.20.2
+   Compiling zopfli v0.8.3
+   Compiling spdx v0.10.9
+   Compiling flate2 v1.1.9
+   Compiling num-bigint v0.4.6
+   Compiling futures-task v0.3.32
+   Compiling scopeguard v1.2.0
+   Compiling fastrand v2.4.1
+   Compiling parking v2.2.1
+   Compiling futures-sink v0.3.32
+   Compiling base64 v0.22.1
+   Compiling slab v0.4.12
+   Compiling futures-io v0.3.32
+   Compiling lazy_static v1.5.0
+   Compiling futures-lite v2.6.1
+   Compiling lock_api v0.4.14
+   Compiling hashbrown v0.14.5
+   Compiling num-iter v0.1.46
+   Compiling num-complex v0.4.6
+   Compiling aho-corasick v1.1.4
+   Compiling regex-syntax v0.8.10
+   Compiling num-rational v0.4.2
+   Compiling heck v0.5.0
+   Compiling wit-bindgen-rust v0.36.0
+   Compiling synstructure v0.13.2
+   Compiling wasmparser v0.220.1
+   Compiling bit-vec v0.8.0
+   Compiling borrow-or-share v0.2.4
+   Compiling inflections v1.1.1
+   Compiling bit-set v0.8.0
+   Compiling num v0.4.3
+   Compiling serde_derive_internals v0.29.1
+   Compiling parking_lot v0.12.5
+   Compiling vsimd v0.8.0
+   Compiling schemars v0.8.22
+   Compiling regex-automata v0.4.14
+   Compiling wit-bindgen-rt v0.36.0
+   Compiling wit-bindgen-rust-macro v0.36.0
+   Compiling uuid v1.23.4
+   Compiling outref v0.5.2
+   Compiling percent-encoding v2.3.2
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling uuid-simd v0.8.0
+   Compiling fraction v0.15.4
+   Compiling byteorder v1.5.0
+   Compiling num-cmp v0.1.0
+   Compiling bytecount v0.6.9
+   Compiling dyn-clone v1.0.20
+   Compiling semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+   Compiling blake3 v1.8.5
+error: could not write output to /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SUBSET-CONFORMANCE-AND-INTEGRATED-ROUNDTRIPS/🎯️target-w3-stdio/debug/build/blake3-1984858ffe78f7c4/build_script_build-1984858ffe78f7c4.build_script_build.1c81413928a113cc-cgu.1.rcgu.o: No such file or directory
+
+error: could not compile `blake3` (build script) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: couldn't create a temp dir: No such file or directory (os error 2) at path "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}12/SUBSET-CONFORMANCE-AND-INTEGRATED-ROUNDTRIPS/🎯\u{fe0f}target-w3-stdio/debug/deps/rmetayDIP9M"
+
+error: could not compile `wasmparser` (lib) due to 1 previous error
+error: couldn't create a temp dir: No such file or directory (os error 2) at path "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}12/SUBSET-CONFORMANCE-AND-INTEGRATED-ROUNDTRIPS/🎯\u{fe0f}target-w3-stdio/debug/deps/rmetaYnKqJV"
+
+error: could not compile `regex-automata` (lib) due to 1 previous error
+error: could not write output to /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SUBSET-CONFORMANCE-AND-INTEGRATED-ROUNDTRIPS/🎯️target-w3-stdio/debug/deps/prettyplease-03f43ee244dfe20e.prettyplease.c0fc649bcab34105-cgu.3.rcgu.o: No such file or directory
+
+error: could not write output to /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SUBSET-CONFORMANCE-AND-INTEGRATED-ROUNDTRIPS/🎯️target-w3-stdio/debug/deps/synstructure-125b37dd2f1f344d.synstructure.4a2d84600d5ef546-cgu.01.rcgu.o: No such file or directory
+
+error: could not write output to /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SUBSET-CONFORMANCE-AND-INTEGRATED-ROUNDTRIPS/🎯️target-w3-stdio/debug/deps/serde_derive_internals-bccef66851e7650f.serde_derive_internals.6c77761342eb4f69-cgu.00.rcgu.o: No such file or directory
+
+error: could not compile `prettyplease` (lib) due to 1 previous error
+error: could not write output to /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SUBSET-CONFORMANCE-AND-INTEGRATED-ROUNDTRIPS/🎯️target-w3-stdio/debug/deps/syn-8a7365fef1ea67b7.syn.dd1d4550ebf14bed-cgu.09.rcgu.o: No such file or directory
+
+error: could not compile `serde_derive_internals` (lib) due to 1 previous error
+error: could not compile `synstructure` (lib) due to 1 previous error
+error: could not compile `syn` (lib) due to 1 previous error

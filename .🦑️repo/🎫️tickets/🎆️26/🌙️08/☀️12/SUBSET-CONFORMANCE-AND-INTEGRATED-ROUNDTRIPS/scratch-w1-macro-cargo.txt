@@ -1,0 +1,11 @@
+$ cargo test -p semio-framework-plugin subset_macro --no-fail-fast
+error[E0499]: cannot borrow `self.children` as mutable more than once at a time
+    --> .../🔌️plugin/🦀️component.rs:5790:41
+error: could not compile `semio-framework-plugin` (lib test) due to 6 previous errors
+
+$ cargo check --lib -p semio-framework-plugin
+error[E0499]: cannot borrow `self.children` as mutable more than once at a time
+    --> .../🔌️plugin/🦀️component.rs:5790:41
+error: could not compile `semio-framework-plugin` (lib) due to 1 previous error
+
+Note: subset! macro append compiles through macro expansion; full crate blocked by pre-existing E0499 at line 5790.

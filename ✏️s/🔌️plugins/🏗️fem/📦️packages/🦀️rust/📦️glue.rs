@@ -66,14 +66,14 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "."]
                 pub mod engine {
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/⚙️engine/🎵️modal-buckling/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎵️modal-buckling/🦀️component.rs"]
                     pub mod modal_buckling;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/⚙️engine/🕸️meshing/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🕸️meshing/🦀️component.rs"]
                     pub mod meshing;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/⚙️engine/🗺️mesh-preview/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🗺️mesh-preview/🦀️component.rs"]
                     pub mod mesh_preview;
                 }
                 #[path = "."]
@@ -532,7 +532,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/◻2d/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -550,14 +550,14 @@ pub mod artifacts {
             pub mod v1 {
                 #[path = "."]
                 pub mod engine {
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/🎵️modal-buckling/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎵️modal-buckling/🦀️component.rs"]
                     pub mod modal_buckling;
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/🕸️meshing/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🕸️meshing/🦀️component.rs"]
                     pub mod meshing;
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/⚙️engine/🗺️mesh-preview/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🗺️mesh-preview/🦀️component.rs"]
                     pub mod mesh_preview;
                 }
                 #[path = "."]
@@ -1016,7 +1016,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🎬️demo/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -1172,9 +1172,9 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/◻2d/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_2d_demo;
-    #[path = "../../🗿️artifacts/🧊️3d/📚️examples/🎬️demo/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_3d_demo;
     #[path = "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_2d_demo_session;

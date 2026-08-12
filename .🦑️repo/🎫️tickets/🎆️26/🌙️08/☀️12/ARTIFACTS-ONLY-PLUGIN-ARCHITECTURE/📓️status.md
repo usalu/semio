@@ -43,6 +43,23 @@ Two mechanism findings worth keeping:
 
 Calibration for anyone reading the gate: **22188 pre-existing high-priority breaches across 27 rules**, 19601 of them handcrafted-grammar/spec-distinctness. None new.
 
+## 💠️lowpoly — the named violation: RESOLVED
+
+The ticket was opened against `✏️s/🔌️plugins/💠️lowpoly/🔧️setup/🦀️component.rs`. Verified on disk:
+
+```
+$ ls ✏️s/🔌️plugins/💠️lowpoly/
+AGENTS.md   🎛️apps   📦️packages   🗿️artifacts   🦀️component.rs        ← the target shape, exactly
+
+$ ls ✏️s/🔌️plugins/💠️lowpoly/🔧️setup/
+ls: No such file or directory                                          ← the setup facet is gone
+
+$ grep -rn "register_mesh_\|register_solid_\|register_dwg_\|register_app_io\|register_os_media_\|semio_framework_os::" ✏️s/🔌️plugins/💠️lowpoly/
+…/⚙️engine/🦀️component.rs:82:/// `register_mesh_exporter`/… calls are not carried over   ← 1 hit, a docstring
+```
+
+All four defects are gone: no OS-host registry calls from a setup facet, no IO registered for `3d.mesh` (a kind lowpoly does not own), no duplication of the IO its own composer tree already declares, and no unguarded host-only calls in a crate that also builds to wasm. The surviving `3d.mesh` mentions are the `ArtifactKindSpec` declaration at `🗿️artifacts/💠️lowpoly/🦀️component.rs:265` — **deliberately left for UCAS**, who own duplicate-kind cleanup — and `kind_id` references inside the composer spec, which is the artifact-native form and correct.
+
 ## In flight
 
 - **W2 — policy + lint seal.** Five report-mode policy regions in repo-root `📜️script.ts` (single writer; both peers notified before the write started, per the agreed announce protocol), plus the dev-side plugin capability lint, the unwired layering lint, and `.dependency-cruiser.cjs`. All at `medium` priority / `warn` severity so **nothing gates** — two other sessions have ~14 agents running against this gate. Adversarial verifier follows.
