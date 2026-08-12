@@ -1,4 +1,5 @@
-//! 🔺️ Diff fragment for SetSnapshot on En1993.
-use crate::artifacts::en1993::En1993Snapshot;
-
-pub type Diff = crate::artifacts::en1993::diff::En1993Diff;
+//! 🪦️ Orphaned by 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL — `En1993Mutation::SetSnapshot` is banned
+//! outright (see `../🦠️mutation/🦀️component.rs`'s doc comment). This file stays present only
+//! because `📦️glue.rs` (plugin-shared, outside this facet's boundary) still `#[path]`-wires it; see
+//! this ticket's wave2 report `sharedFileRequests` for the glue.rs cleanup this orphaning needs
+//! (delete the `set_snapshot` module block entirely).

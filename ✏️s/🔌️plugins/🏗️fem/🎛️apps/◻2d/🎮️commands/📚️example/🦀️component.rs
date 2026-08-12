@@ -18,16 +18,19 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    /// 🌍️ Replaces the whole document (and resets config to its default — the pre-migration
-    /// `Fem2dPlayApp::camera`/`result_display` reset) via `SetSnapshot` — the example choice never
-    /// merges into the CURRENT document.
+    /// 📚️ `"default"` loads the bundled example fixture; any other id resets to an empty document.
+    /// Also resets the whole config back to its default (camera, result display) via a `Snapshot`.
+    ///
+    /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetSnapshot` — see
+    /// `📓️taxonomy.md`'s forbidden vocabulary), so this builds `apps::fem2d::reset_document_effect`
+    /// (a `HostEffect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
     pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let document = if payload.example_id == "default" {
             Fem2dSnapshot::parse_dsl(crate::apps::fem2d::FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| crate::artifacts::fem2d::engine::empty_fem2d_snapshot())
         } else {
             crate::artifacts::fem2d::engine::empty_fem2d_snapshot()
         };
-        Ok(Emit { artifact_mutations: vec![Fem2dMutation::SetSnapshot { snapshot: document }], config_mutations: vec![Fem2dConfigMutation::Snapshot { config: Fem2dConfig::default() }], ..Default::default() })
+        Ok(Emit { effects: vec![crate::apps::fem2d::reset_document_effect(&document)], config_mutations: vec![Fem2dConfigMutation::Snapshot { config: Fem2dConfig::default() }], ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample
@@ -36,35 +39,50 @@ pub mod set_active_example {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::fem2d::testkit::{dispatch, fem2d_app, fem2d_app_with_registry};
-    use crate::apps::fem2d::Fem2dCommand;
+    use semio_framework::kernel::HostEffect;
 
+    /// 🧬️ Driven directly through `handle` (not `dispatch`, which routes through `VcsArtifactApp` and
+    /// never applies `effects` to its own store — that's the real host's job): asserts on the `Emit`
+    /// itself, the same shape `commands::example`'s fem3d sibling tests use.
     #[test]
     fn set_active_example_loads_default_fixture_2d() {
-        let mut app = fem2d_app();
-        let result = dispatch(&mut app, Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }));
-        assert_eq!(result.mutations.len(), 1);
-        assert!(!app.snapshot().expect("snapshot").nodes.is_empty(), "expected the default fixture's nodes");
+        let snapshot = crate::artifacts::fem2d::engine::empty_fem2d_snapshot();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let cfg_snapshot = Fem2dConfig::default();
+        let cfg = ConfigView { snapshot: &cfg_snapshot };
+        let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "default".into() }, &doc, &cfg).expect("handle");
+        assert!(emit.artifact_mutations.is_empty());
+        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+            panic!("expected a LoadDocument effect");
+        };
+        let loaded = <crate::artifacts::fem2d::Fem2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        assert!(!loaded.nodes.is_empty(), "expected the default fixture's nodes");
     }
 
-    /// 📚️ Driven through the manifest-registry-wired app: `setActiveExample` is declared as an
-    /// Mutation, so the registry's View/Shell kind discipline must let a whole-document reset through.
     #[test]
-    fn set_active_example_unknown_id_yields_empty_document_2d() {
-        let mut app = fem2d_app_with_registry();
-        dispatch(&mut app, Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }));
-        dispatch(&mut app, Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "".into() }));
-        assert_eq!(app.snapshot().expect("snapshot"), crate::artifacts::fem2d::engine::empty_fem2d_snapshot());
+    fn set_active_example_unknown_id_resets_to_empty_document_2d() {
+        let snapshot = crate::artifacts::fem2d::engine::empty_fem2d_snapshot();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let cfg_snapshot = Fem2dConfig::default();
+        let cfg = ConfigView { snapshot: &cfg_snapshot };
+        let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "nonsense".into() }, &doc, &cfg).expect("handle");
+        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+            panic!("expected a LoadDocument effect");
+        };
+        let loaded = <crate::artifacts::fem2d::Fem2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        assert_eq!(loaded, crate::artifacts::fem2d::engine::empty_fem2d_snapshot());
     }
 
-    /// 🧬️ `setActiveExample` replaces document content via `SetSnapshot` operations, so it MUST be
+    /// 🧬️ `setActiveExample` replaces document content via a `HostEffect::LoadDocument`, so it MUST be
     /// declared as a Mutation, not a View/Shell action — the framework's "View/Shell actions must not
     /// emit operations" guard would otherwise reject it.
     #[test]
     fn set_active_example_is_declared_as_operation_2d() {
         let definition = crate::apps::fem2d::create_fem2d_app().definition;
         let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
-        assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "loading an example emits SetSnapshot operations, so it is a Mutation");
+        assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "loading an example emits a document-replace effect, so it is a Mutation");
         assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
     }
 }

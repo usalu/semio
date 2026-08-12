@@ -536,7 +536,7 @@ pub mod derived_analysis {
     mod tests {
         use super::*;
         use crate::artifacts::svg::schema::snapshot::{parse_view_box, CommonAttrs, ViewBox};
-        use crate::artifacts::svg::standards::v1_1::subsets::any::schema::{ElementBuilder, GradientStopSpec, PathBuilder, SvgBuilder};
+        use crate::artifacts::svg::standards::v1_1::subsets::any::schema::{ElementBuilder, GradientStopSpec, PathBuilder, SvgBuilderConstruction as SvgBuilder};
         use semio_framework_plugin::ArtifactBuilder;
 
         #[test]

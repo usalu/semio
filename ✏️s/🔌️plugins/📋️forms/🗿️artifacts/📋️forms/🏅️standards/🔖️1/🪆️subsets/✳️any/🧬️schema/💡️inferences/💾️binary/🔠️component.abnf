@@ -1,0 +1,3 @@
+; abnf forms.forms.inference
+document = payload
+payload = *OCTET

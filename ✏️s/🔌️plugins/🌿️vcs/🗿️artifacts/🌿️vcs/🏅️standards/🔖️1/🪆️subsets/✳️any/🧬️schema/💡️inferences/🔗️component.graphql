@@ -1,0 +1,11 @@
+# 💡️ VCS inference schema — a scalar summary digest of the tags/notes free-form fields.
+
+type VcsInference {
+  summary: VcsSummary! @state(class: INFERRED)
+}
+
+type VcsSummary {
+  tagCount: Int!
+  notesWordCount: Int!
+  hasNotes: Boolean!
+}

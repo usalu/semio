@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/remodel/remodel/inference/text.json",
+  "title": "RemodelInferenceText",
+  "type": "object"
+}

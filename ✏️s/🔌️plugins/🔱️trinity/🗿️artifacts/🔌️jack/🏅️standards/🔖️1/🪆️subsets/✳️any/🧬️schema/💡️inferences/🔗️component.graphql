@@ -1,0 +1,17 @@
+# 💡️ Jack inference schema — topology (topological order, depth, cycle-freedom) over nodes/edges.
+
+type JackInference {
+  topology: JackTopology! @state(class: INFERRED)
+}
+
+type JackTopology {
+  topoOrder: [String!]!
+  depth: [JackDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type JackDepthEntry {
+  nodeId: String!
+  depth: Int!
+}

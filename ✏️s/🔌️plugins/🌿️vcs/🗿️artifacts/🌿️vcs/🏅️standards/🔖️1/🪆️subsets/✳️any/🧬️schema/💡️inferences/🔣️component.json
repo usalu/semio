@@ -1,0 +1,25 @@
+{
+  "$id": "https://semio.tech/schema/s/vcs/vcs/inference.json",
+  "title": "VcsInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary"],
+  "properties": {
+    "summary": {
+      "$ref": "#/$defs/VcsSummary",
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "VcsSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tagCount", "notesWordCount", "hasNotes"],
+      "properties": {
+        "tagCount": { "type": "integer" },
+        "notesWordCount": { "type": "integer" },
+        "hasNotes": { "type": "boolean" }
+      }
+    }
+  }
+}

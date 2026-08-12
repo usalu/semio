@@ -35,6 +35,7 @@ pub fn register() {
     crate::artifacts::forms::io_registry::register();
 
     register_artifact_schema();
+    register_artifact_inference();
     register_pilot_languages();
     crate::apps::forms::config::schema::register_app_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::forms::FormsPlayApp>(FORMS_DOCUMENT_SCHEMA);
@@ -181,14 +182,14 @@ pub fn locate_question(spec: &FormsSnapshot, question_id: &str) -> Option<Questi
     None
 }
 
-/// ✏️ Locates `question_id` in `spec`, applies `mutate` to a clone, and returns the `UpdateBlock`
+/// ✏️ Locates `question_id` in `spec`, applies `mutate` to a clone, and returns the `replace-block`
 /// operation that records the edit — the single seam every inspector/command patch flows through.
 /// Returns `None` if the question no longer exists.
 pub fn update_block_operation(spec: &FormsSnapshot, question_id: &str, mutate: impl FnOnce(&mut FormQuestion)) -> Option<FormMutation> {
     let location = locate_question(spec, question_id)?;
     let mut question = location.question;
     mutate(&mut question);
-    Some(FormMutation::UpdateBlock { step_id: location.step_id, block: question })
+    Some(FormMutation::ReplaceBlock(crate::artifacts::forms::mutations::update_block::mutation::ReplaceBlock { step_id: location.step_id, block: question }))
 }
 //#endregion 🔖️QuestionLocation
 
@@ -367,6 +368,13 @@ impl FormsEngine {
 /// 📌️ Registers the twenty handcrafted schema leaves for `s.forms.forms`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::forms::schema::forms_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.forms.forms.inference`'s facet leaves — sibling registry to
+/// `register_artifact_schema()` above (ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inference() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::forms::standards::v1::subsets::any::schema::inferences::forms_artifact_inference_descriptor());
 }
 //#endregion 🔖️SchemaRegistry
 //#region 🚪️DerivedIoRegistry

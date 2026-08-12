@@ -1,0 +1,3 @@
+; abnf trinity.jack.inference
+document = payload
+payload = *OCTET

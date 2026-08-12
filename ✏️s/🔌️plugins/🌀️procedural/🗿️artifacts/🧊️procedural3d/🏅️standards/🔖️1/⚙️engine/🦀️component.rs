@@ -631,10 +631,20 @@ pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::procedural3d::schema::procedural3d_artifact_schema_descriptor());
 }
 
+/// 💡️ Registers the procedural3d artifact 💡️inference schema descriptor into the OS-wide
+/// inference catalog — sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(
+        crate::artifacts::procedural3d::standards::v1::subsets::any::schema::inferences::procedural3d_artifact_inference_descriptor(),
+    );
+}
+
 pub fn register() {
     crate::artifacts::procedural3d::io_registry::register();
 
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     semio_framework_os::register_mesh_dwg_import_handler("3d.procedural", procedural3d_document_from_mesh);
     // 📦️ Registers `Procedural3dSnapshot`'s pack<->dsl codec so `framework/sync`'s `FolderEndpoint`

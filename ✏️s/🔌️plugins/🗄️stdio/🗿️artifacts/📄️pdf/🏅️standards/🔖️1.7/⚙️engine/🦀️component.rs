@@ -1475,6 +1475,7 @@ pub fn register() {
     ::schema::register_artifact_schema_descriptor(
         crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor(),
     );
+    register_artifact_inferences();
     store::register_document_codec(store::ArtifactCodec::of::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA));
     register_pilot_languages();
     // 🛡️ D5's generic validate-on-build hook: registers each real subset's SubsetValidator so
@@ -1486,6 +1487,13 @@ pub fn register() {
     crate::artifacts::pdf::standards::v1_7::subsets::ua::io::register();
     crate::artifacts::pdf::standards::v1_7::subsets::vt::io::register();
     crate::artifacts::pdf::standards::v1_7::subsets::h::io::register();
+}
+
+/// 💡️ Registers `s.stdio.pdf.1.7.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to the artifact schema descriptor registration above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::pdf17_artifact_inference_descriptor());
 }
 
 /// 📌️ P2-FG3: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr) for `stdio.pdf.1.7`

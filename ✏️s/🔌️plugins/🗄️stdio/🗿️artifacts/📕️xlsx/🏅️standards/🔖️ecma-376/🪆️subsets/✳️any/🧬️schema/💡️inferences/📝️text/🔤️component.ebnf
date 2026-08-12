@@ -1,0 +1,3 @@
+(* ebnf stdio.xlsx.inference *)
+document = header, body ;
+header = 'schema', space, 'stdio.xlsx.inference', newline ;

@@ -219,6 +219,7 @@ fn steps_collection_delta(before: &[FormStep], after: &[FormStep]) -> FormsSteps
                     patch: FormsStepPatch {
                         title: if prev.title != step.title { Some(step.title.clone()) } else { None },
                         description: if prev.description != step.description { Some(step.description.clone()) } else { None },
+                        ..Default::default()
                     },
                 });
             }

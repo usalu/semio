@@ -1,0 +1,11 @@
+# 💡️ Pdf (1.4) inference schema — document outline (page count, word/char counts).
+
+type PdfInference {
+  outline: PdfOutline! @state(class: INFERRED)
+}
+
+type PdfOutline {
+  pageCount: Int!
+  wordCount: Int!
+  charCount: Int!
+}

@@ -1,0 +1,13 @@
+# 💡️ Procedural3d inference schema — topology (DAG shape of `fixture`'s widget/synapse graph).
+
+type Procedural3dInference {
+  topology: Procedural3dTopology! @state(class: INFERRED)
+}
+
+type Procedural3dTopology {
+  nodeCount: Int!
+  edgeCount: Int!
+  topoOrder: [String!]!
+  depth: Int!
+  cycleFree: Boolean!
+}

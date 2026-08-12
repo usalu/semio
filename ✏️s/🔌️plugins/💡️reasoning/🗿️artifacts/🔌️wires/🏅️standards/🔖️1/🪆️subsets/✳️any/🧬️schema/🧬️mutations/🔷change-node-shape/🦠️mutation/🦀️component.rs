@@ -1,0 +1,39 @@
+//! 🔷 Wires mutation — `ChangeNodeShape`: sets one board node's `shape` scalar field
+//! (`"circle"`/`"rectangle"`, per `NodeDsl`'s doc).
+use crate::artifacts::wires::diff::WiresDiff;
+use crate::artifacts::wires::mutations::WiresMutation;
+use crate::artifacts::wires::WiresSnapshot;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Mutation
+/// 🔷 `change-node-shape` payload.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "change-node-shape")]
+pub struct ChangeNodeShape {
+    pub node_id: String,
+    pub new_shape: String,
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub fn change_node_shape(node_id: String, new_shape: String) -> WiresMutation {
+    WiresMutation::ChangeNodeShape(ChangeNodeShape { node_id, new_shape })
+}
+
+impl protocol::MutationKind<WiresSnapshot, WiresMutation> for ChangeNodeShape {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node", kind: "change-node-shape", record: "ChangedNodeShape" };
+
+    fn diff(&self, base: &WiresSnapshot) -> WiresDiff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Change node \"{}\" shape to \"{}\"", self.node_id, self.new_shape)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.node_id.clone()]
+    }
+}
+//#endregion 🔖️Mutation

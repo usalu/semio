@@ -1,0 +1,20 @@
+syntax = "proto3";
+package semio.s.stdio.md.inference;
+
+// 💡️ Md inference schema — document outline (heading outline, block/word counts).
+
+message MdInference {
+  // @state inferred
+  MdOutline outline = 1;
+}
+
+message MdOutline {
+  repeated MdHeadingEntry section_outline = 1;
+  uint32 block_count = 2;
+  uint32 word_count = 3;
+}
+
+message MdHeadingEntry {
+  uint32 level = 1;
+  string text = 2;
+}

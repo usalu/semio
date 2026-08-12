@@ -57,7 +57,7 @@ mod tests {
 
     //#region 🔖️CommandEnvelopeTests
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
-    /// `FormMutation`'s `AddStep` round-trips through `protocol::MutationEnvelope`s beside this file's
+    /// `FormMutation`'s `CreateStep` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing dsl/pack round-trip laws (same pattern as `mathematical`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
@@ -69,7 +69,12 @@ mod tests {
         let document = FormsSnapshot { schema: FORMS_DOCUMENT_SCHEMA.into(), id: "forms".into(), version: "1".into(), title: None, steps: vec![FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }] };
         let mut store: ArtifactStore<FormsSnapshot, FormMutation> = ArtifactStore::new(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms-demo", document, None));
         let step = FormStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![FormMutation::AddStep { step, index: None }], description: None }).expect("apply");
+        store
+            .dispatch(ArtifactCommand::Apply {
+                mutations: vec![FormMutation::CreateStep(crate::artifacts::forms::mutations::add_step::mutation::CreateStep { step, index: None })],
+                description: None,
+            })
+            .expect("apply");
         let edit: &Edit<FormMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<FormsSnapshot, FormMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }

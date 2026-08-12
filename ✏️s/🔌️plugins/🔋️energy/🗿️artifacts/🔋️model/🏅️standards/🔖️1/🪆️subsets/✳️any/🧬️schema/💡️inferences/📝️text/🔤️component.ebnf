@@ -1,0 +1,3 @@
+(* ebnf energy.model.inference *)
+document = header, body ;
+header = 'schema', space, 'energy.model.inference', newline ;

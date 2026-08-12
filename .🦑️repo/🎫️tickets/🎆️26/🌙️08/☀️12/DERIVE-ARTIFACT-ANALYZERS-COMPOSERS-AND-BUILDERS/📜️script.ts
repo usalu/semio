@@ -127,7 +127,9 @@ function rewriteRustPaths(source: string, maps: Map<string, string>): string {
     for (const [from, to] of maps) rewritten = rewritten.replaceAll(from, to);
     if (rewritten === previous) break;
   }
-  return rewritten.replace(/(crate::artifacts::\w+::standards::\w+::subsets::\w+)::(?:builder|analyzer|composer)/g, "$1::schema");
+  return rewritten
+    .replace(/(crate::artifacts::\w+::standards::\w+::subsets::\w+)::(?:builder|analyzer|composer)/g, "$1::schema")
+    .replace(/(::subsets::\w+)::schema::(\w+Validator|register)/g, "$1::io::$2");
 }
 
 function relocateRegistries(allFiles: string[], maps: Map<string, string>, apply: boolean): number {

@@ -229,10 +229,20 @@ pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::procedural2d::schema::procedural2d_artifact_schema_descriptor());
 }
 
+/// 💡️ Registers the procedural2d artifact 💡️inference schema descriptor into the OS-wide
+/// inference catalog — sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(
+        crate::artifacts::procedural2d::standards::v1::subsets::any::schema::inferences::procedural2d_artifact_inference_descriptor(),
+    );
+}
+
 pub fn register() {
     crate::artifacts::procedural2d::io_registry::register();
 
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     // 📦️ Registers `Procedural2dSnapshot`'s pack<->dsl codec so `framework/sync`'s `FolderEndpoint`
     // can print/parse `.procedural2d` packs without depending on this crate's concrete types.

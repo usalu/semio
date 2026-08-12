@@ -1,2 +1,2 @@
-/** @emoji 🔺️ Set-document diff leaf (stub). */
+/** 🧩 din16798 mutations 📄set-snapshot/🔺️diff facade stub. */
 export {};

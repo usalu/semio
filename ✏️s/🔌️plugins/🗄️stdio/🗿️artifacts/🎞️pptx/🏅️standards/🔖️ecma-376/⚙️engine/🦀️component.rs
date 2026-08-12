@@ -658,6 +658,7 @@ pub fn demo_pptx_snapshot() -> PptxSnapshot {
 pub fn register() {
     crate::artifacts::pptx::io_registry::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::pptx::schema::pptx_artifact_schema_descriptor());
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA));
     // 🛡️ D5's generic validate-on-build hook: registers the ✳️strict/✳️transitional subsets'
@@ -666,6 +667,13 @@ pub fn register() {
     // `composer::entries()` aggregation.
     crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::io::register();
     crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::io::register();
+}
+
+/// 💡️ Registers `s.stdio.pptx.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to the artifact schema descriptor registration above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::inferences::pptx_artifact_inference_descriptor());
 }
 
 /// 📌️ FG-wave: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per

@@ -1,0 +1,3 @@
+# trinity.rewrite.inference text grammar schema
+scalar Bytes
+type Document { schema: String! payload: String! }

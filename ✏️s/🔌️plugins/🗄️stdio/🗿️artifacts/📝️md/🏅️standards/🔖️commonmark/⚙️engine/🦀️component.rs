@@ -826,6 +826,7 @@ fn render_inline(inline: &MdInline, out: &mut String) {
 pub fn register() {
     crate::artifacts::md::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<MdSnapshot, MdMutation>(STDIO_MD_DOCUMENT_SCHEMA));
 }
@@ -901,6 +902,13 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.md`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::md::schema::md_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.stdio.md.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::md::standards::v_commonmark::subsets::any::schema::inferences::md_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 

@@ -100,7 +100,7 @@ pub mod derived_composition {
         use super::*;
         use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder as _};
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::{CODE_CONFORMANCE_ATTRIBUTE, CODE_NAMESPACE_MISMATCH};
-        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::XlsxStrictBuilder;
+        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::XlsxStrictBuilderConstruction as XlsxStrictBuilder;
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxWorkbook;
 
         /// 🩹 `encode_xlsx` (`⚙️engine/🦀️component.rs`) always calls `regenerate_workbook_parts`,

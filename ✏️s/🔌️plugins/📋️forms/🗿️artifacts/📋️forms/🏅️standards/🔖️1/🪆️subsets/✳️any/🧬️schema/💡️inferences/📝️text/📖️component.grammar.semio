@@ -1,0 +1,9 @@
+dialect grammar
+grammar forms.forms.inference
+extension forms.inference
+start document
+
+document = header body
+header = "schema" SP "forms.forms.inference" NL
+body = payload NL?
+payload = OCTET+

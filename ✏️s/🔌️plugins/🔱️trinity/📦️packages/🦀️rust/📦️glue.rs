@@ -67,6 +67,22 @@ pub mod artifacts {
                                 pub mod binary;
                             }
                             #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod bounds {
+                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                            }
+                            #[path = "."]
                             pub mod diff {
                                 #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
                                 mod component;
@@ -307,6 +323,22 @@ pub mod artifacts {
                                 pub mod text;
                                 #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod topology {
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
                             }
                             #[path = "."]
                             pub mod diff {
@@ -881,8 +913,14 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 pub mod examples {
     #[path = "../../🗿️artifacts/♻️rewrite/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_rewrite_demo;
+    #[cfg(test)]
+    #[path = "../../🗿️artifacts/♻️rewrite/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+    mod art_rewrite_demo_tests;
     #[path = "../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_jack_demo;
+    #[cfg(test)]
+    #[path = "../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+    mod art_jack_demo_tests;
     #[path = "../../🎛️apps/♻️rewrite/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_rewrite_demo_session;
     #[path = "../../🎛️apps/🔌️jack/📚️examples/🎬️demo-session/🦀️component.rs"]

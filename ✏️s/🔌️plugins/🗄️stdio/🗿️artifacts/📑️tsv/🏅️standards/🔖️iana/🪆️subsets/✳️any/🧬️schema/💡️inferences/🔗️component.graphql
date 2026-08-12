@@ -1,0 +1,10 @@
+# 💡️ Tsv inference schema — document outline (record/column counts).
+
+type TsvInference {
+  outline: TsvOutline! @state(class: INFERRED)
+}
+
+type TsvOutline {
+  recordCount: Int!
+  columnCount: Int!
+}

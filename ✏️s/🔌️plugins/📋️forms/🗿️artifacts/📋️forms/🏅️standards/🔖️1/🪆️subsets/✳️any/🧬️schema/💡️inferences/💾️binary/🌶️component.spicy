@@ -1,0 +1,4 @@
+module Forms_forms_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

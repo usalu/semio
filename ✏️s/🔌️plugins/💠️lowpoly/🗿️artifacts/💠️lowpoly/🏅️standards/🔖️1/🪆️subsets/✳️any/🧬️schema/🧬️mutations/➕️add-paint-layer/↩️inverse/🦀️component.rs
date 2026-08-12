@@ -1,11 +1,2 @@
-//! ↩️ Inverse for `AddPaintLayer`.
-use crate::artifacts::lowpoly::mutations::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolySnapshot;
-
-use crate::artifacts::lowpoly::LowpolyPaintLayer;
-
-//#region 🔖️Inverse
-pub fn inverse(_base: &LowpolySnapshot, object_id: &str, index: usize, _layer: &LowpolyPaintLayer) -> Vec<LowpolyMutation> {
-    vec![LowpolyMutation::RemovePaintLayer { object_id: object_id.to_string(), index }]
-}
-//#endregion 🔖️Inverse
+//! 🪦️ Orphaned by 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL — see the sibling `🦠️mutation` leaf's doc
+//! comment for why this file stays present but empty.

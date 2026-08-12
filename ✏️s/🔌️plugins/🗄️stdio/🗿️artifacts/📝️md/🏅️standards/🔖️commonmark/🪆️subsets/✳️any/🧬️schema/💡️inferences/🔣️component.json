@@ -1,0 +1,31 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/md/inference.json",
+  "title": "MdInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/MdOutline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "MdHeadingEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "text"],
+      "properties": {
+        "level": { "type": "integer" },
+        "text": { "type": "string" }
+      }
+    },
+    "MdOutline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sectionOutline", "blockCount", "wordCount"],
+      "properties": {
+        "sectionOutline": { "type": "array", "items": { "$ref": "#/$defs/MdHeadingEntry" } },
+        "blockCount": { "type": "integer" },
+        "wordCount": { "type": "integer" }
+      }
+    }
+  }
+}

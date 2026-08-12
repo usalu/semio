@@ -1,24 +1,5 @@
-//! 🩹 Lowpoly mutation — `ObjectsPatch` payload + builder + apply.
-use crate::artifacts::lowpoly::{LowpolyObjectPatch, LowpolySnapshot};
-use crate::artifacts::lowpoly::mutations::LowpolyMutation;
-use serde::{Deserialize, Serialize};
-use protocol::{apply_collection_mutation, CollectionMutation};
-
-//#region 🔖️Mutation
-/// @emoji 🩹 `ObjectsPatch` mutation payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct ObjectsPatch {
-    pub id: String,
-    #[dsl(block)]
-    pub patch: LowpolyObjectPatch,
-}
-
-pub fn objects_patch(id: impl Into<String>, patch: LowpolyObjectPatch) -> LowpolyMutation {
-    LowpolyMutation::ObjectsPatch { id: id.into(), patch }
-}
-
-pub fn apply(projection: &mut LowpolySnapshot, id: &str, patch: &LowpolyObjectPatch) {
-    apply_collection_mutation(&mut projection.objects, &CollectionMutation::Patch { id: id.to_string(), patch: patch.clone() });
-}
-//#endregion 🔖️Mutation
+//! 🪦️ Orphaned by 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL — `LowpolyMutation::ObjectsPatch` was replaced
+//! by `rename-object`/`change-object-smooth-shading`/`move-object`/`rotate-object`/`scale-object`/`replace-object-mesh` (see `📓️taxonomy.md`/`📓️derivation-rules.md`). This file stays present only
+//! because `📦️glue.rs` (plugin-shared, outside this facet's boundary) still `#[path]`-wires it;
+//! see this ticket's wave2 report `sharedFileRequests` for the glue.rs cleanup this orphaning
+//! needs (delete this directory's `pub mod` block entirely).

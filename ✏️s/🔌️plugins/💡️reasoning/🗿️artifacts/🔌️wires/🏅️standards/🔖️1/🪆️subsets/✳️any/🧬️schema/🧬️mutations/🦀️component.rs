@@ -33,7 +33,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// `node_id` isn't found (the diff simply carries no change for a missing target).
 pub fn set_node_field(board: &mut DslValue, node_id: &str, key: &str, value: DslValue) {
     if let Some(DslValue::Object(entries)) = array_mut(board, "nodes").iter_mut().find(|node| entity_id(node, "id") == Some(node_id)) {
-        match entries.iter_mut().find(|(entry_key, _)| entry_key == key) {
+        match entries.iter_mut().find(|(entry_key, _)| entry_key.as_str() == key) {
             Some((_, slot)) => *slot = value,
             None => entries.push((key.to_string(), value)),
         }
@@ -171,7 +171,7 @@ mod tests {
     use super::*;
     use crate::artifacts::wires::empty_wires_snapshot;
     use crate::artifacts::wires::engine::find_board_node;
-    use protocol::{Mutation, MutationDiff, SemanticMutation};
+    use protocol::{Mutation, SemanticMutation};
     use serde_json::json;
     use store::apply_mutation;
     use store::os_store::test_support::assert_op_line_round_trip;

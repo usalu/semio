@@ -1,0 +1,23 @@
+{
+  "$id": "https://semio.tech/schema/s/draw/draw/inference.json",
+  "title": "DrawInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topology"],
+  "properties": {
+    "topology": { "$ref": "#/$defs/DrawTopology", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "DrawTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topoOrder", "depth", "cycleFree", "nodeCount"],
+      "properties": {
+        "topoOrder": { "type": "array", "items": { "type": "string" } },
+        "depth": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "cycleFree": { "type": "boolean" },
+        "nodeCount": { "type": "integer" }
+      }
+    }
+  }
+}

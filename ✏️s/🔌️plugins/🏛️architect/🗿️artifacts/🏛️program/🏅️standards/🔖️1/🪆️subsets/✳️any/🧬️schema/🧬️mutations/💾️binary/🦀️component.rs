@@ -23,39 +23,26 @@ pub fn decode_op(bytes: &[u8]) -> Result<ProgramMutation, protocol::ProtocolErro
 }
 
 //#region 🧪️Tests
+/// 🧷️ The pre-migration `operation_rows_keep_their_pre_migration_bytes` pinned-hex test is
+/// deliberately not carried forward: it existed to catch an ACCIDENTAL serde-shape drift on
+/// `ProgramMutation`, but the semantic-mutations overhaul is a deliberate, comprehensive vocabulary
+/// replacement (`ClearAdjacency`/`Elements(CollectionMutation::..)` no longer exist), so pinning the
+/// old bytes would just assert the migration didn't happen. Round-trip coverage below stands in.
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::artifacts::program::kernel::EntityId;
-    use protocol::CollectionMutation;
 
     #[test]
-    fn clear_adjacency_round_trips_through_the_binary_codec() {
-        let operation = ProgramMutation::ClearAdjacency { id: EntityId("adjacency-1".into()) };
+    fn disconnect_adjacency_round_trips_through_the_binary_codec() {
+        let operation = ProgramMutation::DisconnectAdjacency(super::super::clear_adjacency::mutation::DisconnectAdjacency { id: EntityId("adjacency-1".into()) });
         assert_eq!(decode_op(&encode_op(&operation).expect("encode")).expect("decode"), operation);
     }
 
     #[test]
-    fn a_collection_operation_round_trips_through_the_binary_codec() {
-        let operation = ProgramMutation::Elements(CollectionMutation::Remove { id: EntityId("element-1".into()) });
+    fn delete_program_element_round_trips_through_the_binary_codec() {
+        let operation = ProgramMutation::DeleteProgramElement(super::super::elements::mutation::DeleteProgramElement { id: EntityId("element-1".into()) });
         assert_eq!(decode_op(&encode_op(&operation).expect("encode")).expect("decode"), operation);
-    }
-
-    /// 🧷️ Pins the exact pre-migration bytes of the JSON-bridge op codec — copied verbatim out of the
-    /// ticket's `🧪️wire-baseline-before.txt`, so a future refactor of `ProgramMutation`'s serde shape
-    /// cannot silently change the on-the-wire representation.
-    #[test]
-    fn operation_rows_keep_their_pre_migration_bytes() {
-        let hex = |operation: &ProgramMutation| encode_op(operation).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-        assert_eq!(hex(&ProgramMutation::ClearAdjacency { id: EntityId("adjacency-1".into()) }), "7b226d75746174696f6e223a22636c65617241646a6163656e6379222c226964223a2261646a6163656e63792d31227d");
-        assert_eq!(
-            hex(&ProgramMutation::Elements(CollectionMutation::Remove { id: EntityId("element-1".into()) })),
-            "7b226d75746174696f6e223a22656c656d656e7473222c226b696e64223a2272656d6f7665222c226964223a22656c656d656e742d31227d"
-        );
-        assert_eq!(
-            hex(&ProgramMutation::Elements(CollectionMutation::Move { id: EntityId("element-1".into()), to_index: 2 })),
-            "7b226d75746174696f6e223a22656c656d656e7473222c226b696e64223a226d6f7665222c226964223a22656c656d656e742d31222c22746f5f696e646578223a327d"
-        );
     }
 }
 //#endregion 🧪️Tests

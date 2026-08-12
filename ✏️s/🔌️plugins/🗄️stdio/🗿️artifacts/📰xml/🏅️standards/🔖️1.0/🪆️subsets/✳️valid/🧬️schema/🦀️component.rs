@@ -285,7 +285,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec XmlValidBuilderFacets {
         construction: derived_construction::XmlValidBuilderConstruction,
         analysis: derived_analysis::XmlValidAnalyzerAnalysis,
-        composition: super::io::derived_composition::XmlValidComposerComposition,
+        composition: crate::artifacts::xml::standards::v1_0::subsets::valid::io::derived_composition::XmlValidComposerComposition,
     }
     builder: XmlValidBuilder,
     analyzer: XmlValidAnalyzer,

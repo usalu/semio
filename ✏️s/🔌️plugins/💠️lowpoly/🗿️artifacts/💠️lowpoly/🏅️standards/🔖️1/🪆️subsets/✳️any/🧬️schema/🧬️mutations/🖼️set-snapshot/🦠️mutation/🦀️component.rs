@@ -1,23 +1,5 @@
-//! 🖼️ Lowpoly mutation — `SetSnapshot` payload + builder + apply.
-use crate::artifacts::lowpoly::LowpolySnapshot;
-use crate::artifacts::lowpoly::mutations::LowpolyMutation;
-use serde::{Deserialize, Serialize};
-
-
-//#region 🔖️Mutation
-/// @emoji 🖼️ `SetSnapshot` mutation payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct SetSnapshot {
-    #[dsl(block)]
-    pub snapshot: LowpolySnapshot,
-}
-
-pub fn set_snapshot(snapshot: LowpolySnapshot) -> LowpolyMutation {
-    LowpolyMutation::SetSnapshot { snapshot }
-}
-
-pub fn apply(projection: &mut LowpolySnapshot, replacement: &LowpolySnapshot) {
-    *projection = replacement.clone();
-}
-//#endregion 🔖️Mutation
+//! 🪦️ Orphaned by 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL — `LowpolyMutation::SetSnapshot` was replaced
+//! by nothing — whole-document replace is banned outright, see taxonomy.md; `store::ArtifactStore::reset` is the sanctioned non-history path (see `📓️taxonomy.md`/`📓️derivation-rules.md`). This file stays present only
+//! because `📦️glue.rs` (plugin-shared, outside this facet's boundary) still `#[path]`-wires it;
+//! see this ticket's wave2 report `sharedFileRequests` for the glue.rs cleanup this orphaning
+//! needs (delete this directory's `pub mod` block entirely).

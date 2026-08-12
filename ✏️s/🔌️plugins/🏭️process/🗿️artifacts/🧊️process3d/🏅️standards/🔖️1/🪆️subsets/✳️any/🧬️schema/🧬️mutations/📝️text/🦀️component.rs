@@ -193,7 +193,7 @@ impl protocol::OpBinary for Process3dMutation {
 mod tests {
     use super::*;
     use crate::artifacts::process3d::schema::mutations::*;
-    use crate::artifacts::process3d::{empty_process3d_snapshot, Pose, SolidSpec, Stock};
+    use crate::artifacts::process3d::{empty_process3d_snapshot, Pose, Process3dSnapshot, SolidSpec, Stock};
     use protocol::Mutation;
 
     fn cut_step(id: &str) -> ProcessStep {

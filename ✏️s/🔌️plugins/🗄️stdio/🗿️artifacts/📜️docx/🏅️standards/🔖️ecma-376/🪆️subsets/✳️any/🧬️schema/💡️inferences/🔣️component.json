@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/docx/inference.json",
+  "title": "DocxInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/DocxOutline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "DocxOutline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["paragraphCount", "tableCount", "wordCount"],
+      "properties": {
+        "paragraphCount": { "type": "integer" },
+        "tableCount": { "type": "integer" },
+        "wordCount": { "type": "integer" }
+      }
+    }
+  }
+}

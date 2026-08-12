@@ -1,18 +1,14 @@
 //! ⚖️ Layout artifact — state-patch-representation wire codec + laws (was: constitutional `protocol`).
 //!
-//! `protocol::OpText`/`protocol::OpBinary for LayoutMutation` would normally come for free from
-//! `#[derive(dsl::DslEnum)]`, but its `Pages`/`Stories`/`Links` variants wrap a foreign generic type
-//! (`protocol::CollectionMutation<K,V,P>`, orphan rule: can't gain a `dsl::DslField`/`dsl::DslVariants`
-//! binding here) and `FramePatch.fill`/`.stroke` (`Option<Option<[f32;4]>>`) has the same "no direct
-//! binding" issue one level down. `LayoutMutationDsl` is a local, DSL-only mirror that flattens each
-//! collection wrapper into its own keyworded variants and `FramePatchDsl`/`ColorPatch` fix the doubly-
-//! optional color fields, mirroring `process_3d::Process3dMutationDsl`'s identical fix for the same
-//! foreign-type problem. Both hand-written impls below convert at the `OpText`/`OpBinary` boundary only;
-//! `LayoutMutation` itself (and every consumer matching on it) is untouched.
+//! `protocol::OpText`/`protocol::OpBinary for LayoutMutation` are implemented directly in
+//! `../📝️text/🦀️component.rs` (`serde_json`-based, no DSL mirror needed now that every variant wraps
+//! a plain local payload struct — see that file's doc comment for why the pre-migration
+//! `LayoutMutationDsl`/`FramePatchDsl`/`ColorPatch` mirrors were retired). This component only adds
+//! the thin artifact-facing `encode_op`/`decode_op` wrappers plus the op text↔binary equivalence law.
 //!
-//! The app's typed `LayoutCommand` enum — which used to share the old `📡️protocol` crate with this codec
-//! — is an APP concern, not an artifact one: it now lives in `🎛️apps/📏️layout/🦀️component.rs`, assembled
-//! from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
+//! The app's typed `LayoutCommand` enum — which used to share the old `📡️protocol` crate with this
+//! codec — is an APP concern, not an artifact one: it lives in `🎛️apps/📏️layout/🦀️component.rs`,
+//! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
 
 //#region 📡️SemioProtocol
@@ -22,10 +18,8 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::{Frame, FramePatch, ImageLink, ImageLinkPatch, Page, PagePatch, TextStory, TextStoryPatch};
-use protocol::{CollectionMutation, OpBinary, OpText};
-use store::TextError;
+use crate::artifacts::layout::schema::mutations::text::LayoutMutation;
+use protocol::OpBinary;
 
 /// 📦️ Encodes a `LayoutMutation` to its binary state-patch form.
 pub fn encode_op(operation: &LayoutMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -37,439 +31,37 @@ pub fn decode_op(bytes: &[u8]) -> Result<LayoutMutation, protocol::ProtocolError
     LayoutMutation::decode_op(bytes)
 }
 
-//#region 🔖️DslMirror
-/// 🎨️ 3-state tag standing in for `FramePatch.fill`/`.stroke`'s `Option<Option<[f32;4]>>` — the DSL
-/// engine's plain `Option<T>` can only express "untouched vs present"; `Clear` carries the doubly-
-/// optional field's "explicitly cleared to none" state that a single `Option` can't.
-#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
-enum ColorPatch {
-    Clear,
-    Set { color: [f32; 4] },
-}
-
-//#region 🔖️OpCodec
-/// 🎞️ Handcrafted OpText (P6).
-impl protocol::OpText for ColorPatch {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for ColorPatch {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
-        })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 1,
-            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
-        })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed {
-            what: "op record",
-            offset: reader.position() as u64,
-            detail: error.to_string(),
-        })
-    }
-}
-//#endregion 🔖️OpCodec
-
-
-/// 🩹️ DSL-only mirror of `FramePatch` — only `fill`/`stroke` differ from the real type (see
-/// `ColorPatch`); every other field passes through unchanged. Never fixture-visible (only ever
-/// appears inside a `patchFrame` op line), so its own shape has no compatibility obligation beyond
-/// its own round trip.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
-struct FramePatchDsl {
-    x: Option<f64>,
-    y: Option<f64>,
-    width: Option<f64>,
-    height: Option<f64>,
-    #[dsl(statements, block)]
-    fill: Option<ColorPatch>,
-    #[dsl(statements, block)]
-    stroke: Option<ColorPatch>,
-    wrap_mode: Option<String>,
-    columns: Option<u32>,
-}
-
-fn frame_patch_to_dsl(patch: &FramePatch) -> FramePatchDsl {
-    FramePatchDsl {
-        x: patch.x,
-        y: patch.y,
-        width: patch.width,
-        height: patch.height,
-        fill: match patch.fill {
-            None => None,
-            Some(None) => Some(ColorPatch::Clear),
-            Some(Some(color)) => Some(ColorPatch::Set { color }),
-        },
-        stroke: match patch.stroke {
-            None => None,
-            Some(None) => Some(ColorPatch::Clear),
-            Some(Some(color)) => Some(ColorPatch::Set { color }),
-        },
-        wrap_mode: patch.wrap_mode.clone(),
-        columns: patch.columns,
-    }
-}
-
-fn frame_patch_from_dsl(patch: FramePatchDsl) -> FramePatch {
-    FramePatch {
-        x: patch.x,
-        y: patch.y,
-        width: patch.width,
-        height: patch.height,
-        fill: match patch.fill {
-            None => None,
-            Some(ColorPatch::Clear) => Some(None),
-            Some(ColorPatch::Set { color }) => Some(Some(color)),
-        },
-        stroke: match patch.stroke {
-            None => None,
-            Some(ColorPatch::Clear) => Some(None),
-            Some(ColorPatch::Set { color }) => Some(Some(color)),
-        },
-        wrap_mode: patch.wrap_mode,
-        columns: patch.columns,
-    }
-}
-
-/// ⚡️ DSL-only mirror of `LayoutMutation` — see this module's opening doc comment.
-#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
-enum LayoutMutationDsl {
-    PagesAdd {
-        index: usize,
-        #[dsl(block)]
-        item: Page,
-    },
-    PagesRemove {
-        id: String,
-    },
-    PagesMove {
-        id: String,
-        to_index: usize,
-    },
-    PagesPatch {
-        id: String,
-        #[dsl(block)]
-        patch: PagePatch,
-    },
-    StoriesAdd {
-        index: usize,
-        #[dsl(block)]
-        item: TextStory,
-    },
-    StoriesRemove {
-        id: String,
-    },
-    StoriesMove {
-        id: String,
-        to_index: usize,
-    },
-    StoriesPatch {
-        id: String,
-        #[dsl(block)]
-        patch: TextStoryPatch,
-    },
-    LinksAdd {
-        index: usize,
-        #[dsl(block)]
-        item: ImageLink,
-    },
-    LinksRemove {
-        id: String,
-    },
-    LinksMove {
-        id: String,
-        to_index: usize,
-    },
-    LinksPatch {
-        id: String,
-        #[dsl(block)]
-        patch: ImageLinkPatch,
-    },
-    AddFrame {
-        page_id: String,
-        index: usize,
-        #[dsl(statements)]
-        frame: Box<Frame>,
-        layer_id: Option<String>,
-    },
-    RemoveFrame {
-        page_id: String,
-        frame_id: String,
-    },
-    PatchFrame {
-        page_id: String,
-        frame_id: String,
-        #[dsl(block)]
-        patch: FramePatchDsl,
-    },
-    #[dsl(key = "data-fields")]
-    SetDataFields {
-        json: Option<String>,
-    },
-}
-//#region 🔖️HandcraftedOpCodecs
-/// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
-impl protocol::OpText for LayoutMutationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-impl protocol::OpBinary for LayoutMutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
-//#endregion 🔖️HandcraftedOpCodecs
-
-
-
-
-fn layout_operation_to_dsl(operation: &LayoutMutation) -> LayoutMutationDsl {
-    match operation {
-        LayoutMutation::Pages(CollectionMutation::Add { index: at, item }) => LayoutMutationDsl::PagesAdd { index: *at, item: item.clone() },
-        LayoutMutation::Pages(CollectionMutation::Remove { id }) => LayoutMutationDsl::PagesRemove { id: id.clone() },
-        LayoutMutation::Pages(CollectionMutation::Move { id, to_index: to }) => LayoutMutationDsl::PagesMove { id: id.clone(), to_index: *to },
-        LayoutMutation::Pages(CollectionMutation::Patch { id, patch }) => LayoutMutationDsl::PagesPatch { id: id.clone(), patch: patch.clone() },
-        LayoutMutation::Stories(CollectionMutation::Add { index: at, item }) => LayoutMutationDsl::StoriesAdd { index: *at, item: item.clone() },
-        LayoutMutation::Stories(CollectionMutation::Remove { id }) => LayoutMutationDsl::StoriesRemove { id: id.clone() },
-        LayoutMutation::Stories(CollectionMutation::Move { id, to_index: to }) => LayoutMutationDsl::StoriesMove { id: id.clone(), to_index: *to },
-        LayoutMutation::Stories(CollectionMutation::Patch { id, patch }) => LayoutMutationDsl::StoriesPatch { id: id.clone(), patch: patch.clone() },
-        LayoutMutation::Links(CollectionMutation::Add { index: at, item }) => LayoutMutationDsl::LinksAdd { index: *at, item: item.clone() },
-        LayoutMutation::Links(CollectionMutation::Remove { id }) => LayoutMutationDsl::LinksRemove { id: id.clone() },
-        LayoutMutation::Links(CollectionMutation::Move { id, to_index: to }) => LayoutMutationDsl::LinksMove { id: id.clone(), to_index: *to },
-        LayoutMutation::Links(CollectionMutation::Patch { id, patch }) => LayoutMutationDsl::LinksPatch { id: id.clone(), patch: patch.clone() },
-        LayoutMutation::AddFrame { page_id, index, frame, layer_id } => LayoutMutationDsl::AddFrame { page_id: page_id.clone(), index: *index, frame: Box::new(frame.clone()), layer_id: layer_id.clone() },
-        LayoutMutation::RemoveFrame { page_id, frame_id } => LayoutMutationDsl::RemoveFrame { page_id: page_id.clone(), frame_id: frame_id.clone() },
-        LayoutMutation::PatchFrame { page_id, frame_id, patch } => LayoutMutationDsl::PatchFrame { page_id: page_id.clone(), frame_id: frame_id.clone(), patch: frame_patch_to_dsl(patch) },
-        LayoutMutation::SetDataFields { json } => LayoutMutationDsl::SetDataFields { json: json.clone() },
-    }
-}
-
-fn layout_operation_from_dsl(operation: LayoutMutationDsl) -> LayoutMutation {
-    match operation {
-        LayoutMutationDsl::PagesAdd { index, item } => LayoutMutation::Pages(CollectionMutation::Add { index: index, item }),
-        LayoutMutationDsl::PagesRemove { id } => LayoutMutation::Pages(CollectionMutation::Remove { id }),
-        LayoutMutationDsl::PagesMove { id, to_index } => LayoutMutation::Pages(CollectionMutation::Move { id, to_index: to_index }),
-        LayoutMutationDsl::PagesPatch { id, patch } => LayoutMutation::Pages(CollectionMutation::Patch { id, patch }),
-        LayoutMutationDsl::StoriesAdd { index, item } => LayoutMutation::Stories(CollectionMutation::Add { index: index, item }),
-        LayoutMutationDsl::StoriesRemove { id } => LayoutMutation::Stories(CollectionMutation::Remove { id }),
-        LayoutMutationDsl::StoriesMove { id, to_index } => LayoutMutation::Stories(CollectionMutation::Move { id, to_index: to_index }),
-        LayoutMutationDsl::StoriesPatch { id, patch } => LayoutMutation::Stories(CollectionMutation::Patch { id, patch }),
-        LayoutMutationDsl::LinksAdd { index, item } => LayoutMutation::Links(CollectionMutation::Add { index: index, item }),
-        LayoutMutationDsl::LinksRemove { id } => LayoutMutation::Links(CollectionMutation::Remove { id }),
-        LayoutMutationDsl::LinksMove { id, to_index } => LayoutMutation::Links(CollectionMutation::Move { id, to_index: to_index }),
-        LayoutMutationDsl::LinksPatch { id, patch } => LayoutMutation::Links(CollectionMutation::Patch { id, patch }),
-        LayoutMutationDsl::AddFrame { page_id, index, frame, layer_id } => LayoutMutation::AddFrame { page_id, index, frame: *frame, layer_id },
-        LayoutMutationDsl::RemoveFrame { page_id, frame_id } => LayoutMutation::RemoveFrame { page_id, frame_id },
-        LayoutMutationDsl::PatchFrame { page_id, frame_id, patch } => LayoutMutation::PatchFrame { page_id, frame_id, patch: frame_patch_from_dsl(patch) },
-        LayoutMutationDsl::SetDataFields { json } => LayoutMutation::SetDataFields { json },
-    }
-}
-
-impl OpText for LayoutMutation {
-    fn parse_op(line: &str) -> Result<Self, TextError> {
-        Ok(layout_operation_from_dsl(<LayoutMutationDsl as OpText>::parse_op(line)?))
-    }
-
-    fn print_op(&self) -> String {
-        <LayoutMutationDsl as OpText>::print_op(&layout_operation_to_dsl(self))
-    }
-}
-
-/// ⚡️ Binary mirror of the `OpText` impl above — `LayoutMutationDsl` already derives
-/// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
-impl OpBinary for LayoutMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        layout_operation_to_dsl(self).encode_op()
-    }
-
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(layout_operation_from_dsl(LayoutMutationDsl::decode_op(bytes)?))
-    }
-}
-//#endregion 🔖️DslMirror
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::artifacts::layout::LayoutSnapshot;
+    use crate::artifacts::layout::mutations::rename_layout;
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let document = crate::artifacts::layout::engine::default_document();
-        let page_id = document.pages[0].id.clone();
-        let operation = LayoutMutation::Pages(CollectionMutation::Patch { id: page_id, patch: PagePatch { name: Some("Renamed".into()), ..Default::default() } });
+        let operation = LayoutMutation::RenameLayout(rename_layout::mutation::RenameLayout { new_name: "Renamed".into() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
     #[test]
-    fn document_text_round_trips_a_store_with_applied_operations() {
+    fn document_binary_round_trips_a_store_with_applied_operations() {
         use crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
 
         let initial = crate::artifacts::layout::engine::default_document();
-        let envelope = store::create_document_envelope(LAYOUT_DOCUMENT_SCHEMA, "layout-doc-text-test", initial, None);
+        let envelope = store::create_document_envelope(LAYOUT_DOCUMENT_SCHEMA, "layout-doc-binary-test", initial, None);
         let mut doc_store: store::ArtifactStore<LayoutSnapshot, LayoutMutation> = store::ArtifactStore::new(envelope);
         doc_store
             .dispatch(store::ArtifactCommand::Apply {
-                mutations: vec![LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch { width: Some(640.0), ..Default::default() } })],
-                description: Some("resize page".into()),
+                mutations: vec![LayoutMutation::RenameLayout(rename_layout::mutation::RenameLayout { new_name: "Renamed".into() })],
+                description: Some("rename document".into()),
             })
-            .expect("apply patch page width");
-        doc_store
-            .dispatch(store::ArtifactCommand::Apply {
-                mutations: vec![LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), ..Default::default() } })],
-                description: Some("rename page".into()),
-            })
-            .expect("apply patch page");
+            .expect("apply rename");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store);
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
         store::os_store::test_support::assert_live_equals_replay(&doc_store);
-    }
-
-    #[test]
-    fn op_text_round_trips_every_layout_operation_variant() {
-        let doc = crate::artifacts::layout::engine::default_document();
-
-        let mut page_2 = doc.pages[0].clone();
-        page_2.id = "page-3".into();
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Add { index: 1, item: page_2 }));
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Remove { id: "page-1".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Move { id: "page-1".into(), to_index: 1 }));
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), width: Some(300.0), columns_count: Some(3), ..Default::default() } }));
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: PagePatch::default() }));
-
-        let mut story_2 = doc.stories[0].clone();
-        story_2.id = "story-2".into();
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Add { index: 1, item: story_2 }));
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Remove { id: "story-1".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Move { id: "story-1".into(), to_index: 0 }));
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: Some("Edited".into()) } }));
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Stories(CollectionMutation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: None } }));
-
-        let mut link_2 = doc.links[0].clone();
-        link_2.id = "link-2".into();
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Add { index: 1, item: link_2 }));
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Remove { id: "link-missing".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Move { id: "link-missing".into(), to_index: 0 }));
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: Some("b.png".into()) } }));
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Links(CollectionMutation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: None } }));
-
-        let rect_frame = Frame::Rect {
-            id: "frame-new".into(),
-            layer_id: "layer-1".into(),
-            bounds: crate::artifacts::layout::LayoutBounds { x: 0.0, y: 0.0, width: 20.0, height: 20.0, rotation: 0.0 },
-            locked: None,
-            visible: Some(true),
-            fill: Some([0.1, 0.2, 0.3, 1.0]),
-            stroke: None,
-        };
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::AddFrame { page_id: "page-1".into(), index: 1, frame: rect_frame, layer_id: Some("layer-1".into()) });
-        let image_frame =
-            Frame::Image { id: "frame-img".into(), layer_id: "layer-1".into(), bounds: crate::artifacts::layout::LayoutBounds { x: 1.0, y: 2.0, width: 3.0, height: 4.0, rotation: 5.0 }, locked: Some(false), visible: None, link_id: "link-missing".into() };
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::AddFrame { page_id: "page-1".into(), index: 1, frame: image_frame, layer_id: None });
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::RemoveFrame { page_id: "page-1".into(), frame_id: "frame-text-1".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame {
-            page_id: "page-1".into(),
-            frame_id: "frame-text-1".into(),
-            patch: FramePatch { x: Some(10.0), fill: Some(Some([0.5, 0.5, 0.5, 1.0])), stroke: Some(None), ..Default::default() },
-        });
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-text-1".into(), patch: FramePatch::default() });
-    }
-
-    #[test]
-    fn op_text_round_trips_full_page_and_frame_patch_fields() {
-        let full_page_patch =
-            PagePatch { name: Some("Renamed".into()), width: Some(300.0), height: Some(400.0), margin_top: Some(1.0), margin_right: Some(2.0), margin_bottom: Some(3.0), margin_left: Some(4.0), columns_count: Some(5), columns_gutter: Some(6.0) };
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::Pages(CollectionMutation::Patch { id: "page-1".into(), patch: full_page_patch }));
-
-        let full_frame_patch = FramePatch { x: Some(1.0), y: Some(2.0), width: Some(3.0), height: Some(4.0), fill: Some(Some([0.1, 0.2, 0.3, 0.4])), stroke: Some(None), wrap_mode: Some("column".into()), columns: Some(3) };
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), patch: full_frame_patch });
-
-        let clearing_frame_patch = FramePatch { fill: Some(None), stroke: Some(Some([0.5, 0.5, 0.5, 1.0])), ..Default::default() };
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutMutation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), patch: clearing_frame_patch });
-    }
-
-    #[test]
-    fn parse_op_reports_engine_parser_errors() {
-        assert!(LayoutMutation::parse_op("patch-frame page-id=page-1 frame-id=frame-1 patch=1,2,3").is_err(), "patch must be a block, not a bare tuple attribute");
-    }
-
-    #[test]
-    fn op_text_rejects_unknown_operation_name() {
-        assert!(LayoutMutation::parse_op("bogusOp id=x").is_err(), "unknown op keyword must fail");
     }
 }
 //#endregion 🧪️Tests

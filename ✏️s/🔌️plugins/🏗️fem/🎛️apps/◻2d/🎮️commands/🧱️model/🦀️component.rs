@@ -23,8 +23,7 @@ pub mod add_node {
     pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.nodes.iter().map(|n| n.id.clone()), "n");
-        let index = snapshot.nodes.len();
-        Ok(Emit::mutations(vec![Fem2dMutation::SetNode { index, node: FemNode { id, x: payload.x, y: payload.y } }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::CreateNode(crate::artifacts::fem2d::mutations::create_node::mutation::CreateNode { node: FemNode { id, x: payload.x, y: payload.y } })]))
     }
 }
 //#endregion 🔖️AddNode
@@ -45,9 +44,8 @@ pub mod add_bar {
     pub fn handle(payload: &AddBar, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| element_id(e).to_string()), "e");
-        let index = snapshot.elements.len();
         let element = FemElement::Bar { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
-        Ok(Emit::mutations(vec![Fem2dMutation::SetElement { index, element: Box::new(element) }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::CreateElement(crate::artifacts::fem2d::mutations::create_element::mutation::CreateElement { element: Box::new(element) })]))
     }
 }
 //#endregion 🔖️AddBar
@@ -68,9 +66,8 @@ pub mod add_beam {
     pub fn handle(payload: &AddBeam, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| element_id(e).to_string()), "e");
-        let index = snapshot.elements.len();
         let element = FemElement::Beam { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
-        Ok(Emit::mutations(vec![Fem2dMutation::SetElement { index, element: Box::new(element) }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::CreateElement(crate::artifacts::fem2d::mutations::create_element::mutation::CreateElement { element: Box::new(element) })]))
     }
 }
 //#endregion 🔖️AddBeam
@@ -89,8 +86,7 @@ pub mod add_material {
     pub fn handle(payload: &AddMaterial, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.materials.iter().map(|m| m.id.clone()), "m");
-        let index = snapshot.materials.len();
-        Ok(Emit::mutations(vec![Fem2dMutation::SetMaterial { index, material: FemMaterial { id, name: payload.name.clone(), e: payload.e, nu: 0.3, rho: 7850.0 } }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::CreateMaterial(crate::artifacts::fem2d::mutations::create_material::mutation::CreateMaterial { material: FemMaterial { id, name: payload.name.clone(), e: payload.e, nu: 0.3, rho: 7850.0 } })]))
     }
 }
 //#endregion 🔖️AddMaterial
@@ -110,8 +106,7 @@ pub mod add_section {
     pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.sections.iter().map(|s| s.id.clone()), "s");
-        let index = snapshot.sections.len();
-        Ok(Emit::mutations(vec![Fem2dMutation::SetSection { index, section: FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy } }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::CreateSection(crate::artifacts::fem2d::mutations::create_section::mutation::CreateSection { section: FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy } })]))
     }
 }
 //#endregion 🔖️AddSection
@@ -130,8 +125,7 @@ pub mod add_support {
     pub fn handle(payload: &AddSupport, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.supports.iter().map(|s| s.id.clone()), "sup");
-        let index = snapshot.supports.len();
-        Ok(Emit::mutations(vec![Fem2dMutation::SetSupport { index, support: FemSupport { id, node_id: payload.node_id.clone(), fixed: payload.fixed.clone() } }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::CreateSupport(crate::artifacts::fem2d::mutations::create_support::mutation::CreateSupport { support: FemSupport { id, node_id: payload.node_id.clone(), fixed: payload.fixed.clone() } })]))
     }
 }
 //#endregion 🔖️AddSupport
@@ -155,10 +149,9 @@ pub mod add_region {
     pub fn handle(payload: &AddRegion, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.regions.iter().map(|r| r.id.clone()), "r");
-        let index = snapshot.regions.len();
         let outline = vec![[payload.x, payload.y], [payload.x + payload.width, payload.y], [payload.x + payload.width, payload.y + payload.height], [payload.x, payload.y + payload.height]];
         let region = FemRegion { id, name: "Region".into(), outline, holes: Vec::new(), thickness: payload.thickness.unwrap_or(0.02), material_id: payload.material_id.clone(), mesh_size: payload.mesh_size.unwrap_or(0.25) };
-        Ok(Emit::mutations(vec![Fem2dMutation::SetRegion { index, region }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(crate::artifacts::fem2d::mutations::create_region::mutation::CreateRegion { region })]))
     }
 }
 //#endregion 🔖️AddRegion

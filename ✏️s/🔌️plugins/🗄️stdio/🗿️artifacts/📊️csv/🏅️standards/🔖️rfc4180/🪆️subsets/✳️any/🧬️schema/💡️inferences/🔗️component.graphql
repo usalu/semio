@@ -1,0 +1,11 @@
+# 💡️ Csv inference schema — document outline (record/column counts + hasHeader).
+
+type CsvInference {
+  outline: CsvOutline! @state(class: INFERRED)
+}
+
+type CsvOutline {
+  recordCount: Int!
+  columnCount: Int!
+  hasHeader: Boolean!
+}

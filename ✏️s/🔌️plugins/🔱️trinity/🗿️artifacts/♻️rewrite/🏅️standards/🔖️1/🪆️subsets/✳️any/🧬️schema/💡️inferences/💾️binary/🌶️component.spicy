@@ -1,0 +1,4 @@
+module Trinity_rewrite_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

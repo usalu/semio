@@ -1,7 +1,5 @@
-//! ↩️ Inverse for SetSnapshot on En1993.
-use crate::artifacts::en1993::En1993Snapshot;
-use crate::artifacts::en1993::mutations::En1993Mutation;
-
-pub fn inverse(base: &En1993Snapshot, _replacement: &En1993Snapshot) -> Vec<En1993Mutation> {
-    vec![En1993Mutation::SetSnapshot { snapshot: base.clone() }]
-}
+//! 🪦️ Orphaned by 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL — `En1993Mutation::SetSnapshot` is banned
+//! outright (see `../🦠️mutation/🦀️component.rs`'s doc comment). This file stays present only
+//! because `📦️glue.rs` (plugin-shared, outside this facet's boundary) still `#[path]`-wires it; see
+//! this ticket's wave2 report `sharedFileRequests` for the glue.rs cleanup this orphaning needs
+//! (delete the `set_snapshot` module block entirely).

@@ -12,6 +12,10 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
 - You MUST setup everything zero-touch and cross-platform compatible for devcontainer, native windows, native macos and native linux environments.
 - You SHOULD NOT use external libraries for runtime purposes.
   - You SHOULD use as many existing libraries as possible to test our implementation.
+- You MUST develop everything multi-language.
+  - You MUST use schema-first over code-first.
+  - You MUST use a domain-driven taxonomy tree of files and folders that allows for implementing multiple lanuguages.
+  - If code is repeated, it MUST be close to each other.
 - All devs are using `launch.json` and never use the cli.
   - You MUST register all executable commands there by following the existing order, grouping and naming.
 - You MUST work simultaneously with others on the same files.

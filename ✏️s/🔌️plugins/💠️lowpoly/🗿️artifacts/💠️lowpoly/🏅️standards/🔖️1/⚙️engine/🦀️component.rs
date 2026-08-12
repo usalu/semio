@@ -170,14 +170,14 @@ pub fn default_snapshot() -> LowpolySnapshot {
 //#endregion 🔖️DefaultProjection
 
 //#region 🔖️ProjectionHelpers
-/// 🔧️ Shared by the compute session and `op`'s `apply_lowpoly_mutation`/`inverse_lowpoly_mutation` — a
-/// mutable lookup of an object by id within a projection.
+/// 🔧️ Shared by the compute session and the `edit-paint-layer`/`insert-paint-layer` mutation leaves —
+/// a mutable lookup of an object by id within a projection.
 pub fn object_mut<'a>(projection: &'a mut LowpolySnapshot, object_id: &str) -> Option<&'a mut LowpolyObject> {
     projection.objects.iter_mut().find(|object| object.id == object_id)
 }
 
-/// 🔧️ Shared by the compute session and `op`'s `inverse_lowpoly_mutation` (`PaintStroke` inverse reads
-/// the currently-stored bytes at each run's offset).
+/// 🔧️ Shared by the compute session and `edit-paint-layer`'s `↩️inverse` leaf (which reads the
+/// currently-stored bytes at each run's offset to compute the undo runs).
 pub fn layer_pixels_at<'a>(projection: &'a LowpolySnapshot, object_id: &str, layer_index: usize) -> Option<&'a [u8]> {
     projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)).map(|layer| layer.pixels.as_slice())
 }
@@ -774,19 +774,25 @@ mod tests {
     
     #[test]
     fn artifact_engine_apply_and_inverse_round_trip() {
-        use crate::artifacts::lowpoly::mutations::LowpolyMutation;
-        use crate::artifacts::lowpoly::LowpolyObjectPatch;
-        use protocol::ArtifactEngine;
-        let mut engine = LowpolyEngine::new(default_snapshot());
-        let object_id = engine.snapshot().objects[0].id.clone();
-        let mutation = LowpolyMutation::ObjectsPatch { id: object_id, patch: LowpolyObjectPatch { name: Some("Renamed".into()), ..Default::default() } };
-        let inverse = ArtifactEngine::inverse(&engine, &mutation);
-        ArtifactEngine::apply(&mut engine, &mutation).expect("apply");
-        assert_eq!(engine.snapshot().objects[0].name, "Renamed");
+        // 🩹 Was `protocol::ArtifactEngine`-based (that trait doesn't exist anywhere in the
+        // codebase — a stale reference predating 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL — and
+        // `LowpolyEngine` never exposed a `snapshot()`/apply-mutation API either) and constructed
+        // the since-removed `LowpolyMutation::ObjectsPatch` bag variant. Rewritten against the real
+        // `protocol::Mutation` diff/apply/inverse contract and the new `rename-object` mutation.
+        use crate::artifacts::lowpoly::mutations::rename_object;
+        use crate::artifacts::lowpoly::LowpolyMutation;
+        use protocol::{Mutation, MutationDiff};
+        let base = default_snapshot();
+        let object_id = base.objects[0].id.clone();
+        let mutation = LowpolyMutation::RenameObject(rename_object::mutation::RenameObject { id: object_id, new_name: "Renamed".into() });
+        let after = mutation.diff(&base).apply(&base);
+        assert_eq!(after.objects[0].name, "Renamed");
+        let inverse = mutation.inverse(&base);
+        let mut state = after;
         for step in &inverse {
-            ArtifactEngine::apply(&mut engine, step).expect("inverse apply");
+            state = step.diff(&base).apply(&state);
         }
-        assert_eq!(engine.snapshot().objects[0].name, "Unit Box");
+        assert_eq!(state.objects[0].name, "Unit Box");
     }
 
     //#endregion 🔖️ComputeSessionCoverage

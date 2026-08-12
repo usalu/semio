@@ -1,0 +1,30 @@
+//! 🔧 `change-w-mm3` payload — changes the En1995 document's `w_mm3` (EN 1995 input).
+
+use crate::artifacts::en1995::diff::En1995Diff;
+use crate::artifacts::en1995::mutations::En1995Mutation;
+use crate::artifacts::en1995::En1995Snapshot;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️ChangeWMm3
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChangeWMm3 {
+    pub new_w_mm3: f64,
+}
+
+impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeWMm3 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "w-mm3", kind: "change-w-mm3", record: "ChangedWMm3" };
+
+    fn diff(&self, base: &En1995Snapshot) -> En1995Diff {
+        crate::artifacts::en1995::mutations::change_w_mm3::diff::diff(self, base)
+    }
+
+    fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> {
+        crate::artifacts::en1995::mutations::change_w_mm3::inverse::inverse(self, base)
+    }
+
+    fn label(&self) -> String {
+        format!("Change w mm3 to {:?}", self.new_w_mm3)
+    }
+}
+//#endregion 🔖️ChangeWMm3

@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.tsv.inference
+extension tsv.inference
+start document
+
+document = header body
+header = "schema" SP "stdio.tsv.inference" NL
+body = payload NL?
+payload = OCTET+

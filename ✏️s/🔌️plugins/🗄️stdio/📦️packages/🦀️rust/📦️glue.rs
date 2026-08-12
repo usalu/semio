@@ -207,6 +207,22 @@ pub mod artifacts {
                                 pub mod binary;
                             }
                             #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod outline {
+                                    #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                            }
+                            #[path = "."]
                             pub mod diff {
                                 #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
                                 mod component;
@@ -342,6 +358,22 @@ pub mod artifacts {
                                 pub mod text;
                                 #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod outline {
+                                    #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
                             }
                             #[path = "."]
                             pub mod diff {
@@ -496,6 +528,22 @@ pub mod artifacts {
                                 pub mod binary;
                             }
                             #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod outline {
+                                    #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                            }
+                            #[path = "."]
                             pub mod diff {
                                 #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
                                 mod component;
@@ -648,6 +696,22 @@ pub mod artifacts {
                                 pub mod binary;
                             }
                             #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod outline {
+                                    #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                            }
+                            #[path = "."]
                             pub mod diff {
                                 #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
                                 mod component;
@@ -783,6 +847,22 @@ pub mod artifacts {
                                 pub mod text;
                                 #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod outline {
+                                    #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
                             }
                             #[path = "."]
                             pub mod diff {
@@ -3381,6 +3461,22 @@ pub mod artifacts {
                                 pub mod binary;
                             }
                             #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod outline {
+                                    #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                            }
+                            #[path = "."]
                             pub mod diff {
                                 #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
                                 mod component;
@@ -3528,6 +3624,22 @@ pub mod artifacts {
                                 pub mod text;
                                 #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod outline {
+                                    #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
                             }
                             #[path = "."]
                             pub mod diff {
@@ -4413,6 +4525,22 @@ pub mod artifacts {
                                 pub mod binary;
                             }
                             #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod outline {
+                                    #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                            }
+                            #[path = "."]
                             pub mod diff {
                                 #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
                                 mod component;
@@ -4593,6 +4721,22 @@ pub mod artifacts {
                                 pub mod text;
                                 #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod outline {
+                                    #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
                             }
                             #[path = "."]
                             pub mod diff {
@@ -4785,6 +4929,22 @@ pub mod artifacts {
                                 pub mod text;
                                 #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod outline {
+                                    #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
                             }
                             #[path = "."]
                             pub mod diff {
@@ -7128,6 +7288,22 @@ pub mod artifacts {
                                 pub mod text;
                             }
                             #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod outline {
+                                    #[path = "../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                            }
+                            #[path = "."]
                             pub mod diff {
                                 #[path = "../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
                                 mod component;
@@ -7199,6 +7375,22 @@ pub mod artifacts {
                                 pub mod binary;
                                 #[path = "../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
                                 pub mod text;
+                            }
+                            #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod outline {
+                                    #[path = "../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
                             }
                             #[path = "."]
                             pub mod diff {

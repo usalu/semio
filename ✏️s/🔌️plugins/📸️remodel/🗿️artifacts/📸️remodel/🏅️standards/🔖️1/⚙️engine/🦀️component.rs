@@ -35,6 +35,7 @@ pub fn register() {
     crate::artifacts::remodel::io_registry::register();
 
     register_artifact_schema();
+    register_artifact_inference();
     register_pilot_languages();
     crate::apps::remodel::config::schema::register_app_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::remodel::RemodelPlayApp>(REMODEL_DOCUMENT_SCHEMA);
@@ -561,6 +562,13 @@ impl RemodelEngine {
 /// 🧬️ Registers the remodel artifact schema descriptor once.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::remodel::schema::remodel_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.remodel.remodel.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inference() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::remodel::standards::v1::subsets::any::schema::inferences::remodel_artifact_inference_descriptor());
 }
 
 //#endregion 🔖️ArtifactEngine

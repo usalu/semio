@@ -1,0 +1,3 @@
+; abnf vcs.vcs.inference
+document = payload
+payload = *OCTET

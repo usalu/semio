@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/txt/inference.json",
+  "title": "TxtInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/TxtOutline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "TxtOutline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lineCount", "wordCount", "charCount"],
+      "properties": {
+        "lineCount": { "type": "integer" },
+        "wordCount": { "type": "integer" },
+        "charCount": { "type": "integer" }
+      }
+    }
+  }
+}

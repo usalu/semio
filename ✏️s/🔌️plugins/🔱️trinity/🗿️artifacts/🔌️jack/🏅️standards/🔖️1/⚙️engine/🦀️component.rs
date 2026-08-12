@@ -89,12 +89,22 @@ pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::jack::schema::jack_artifact_schema_descriptor());
 }
 
+/// 💡️ Registers `s.trinity.jack.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inference() {
+    ::schema::register_artifact_inference_descriptor(
+        crate::artifacts::jack::standards::v1::subsets::any::schema::inferences::jack_artifact_inference_descriptor(),
+    );
+}
+
 /// 🗂️ Registers codecs and schema descriptor.
 pub fn register() {
     crate::artifacts::jack::io_registry::register();
 
     register_pilot_languages();
     register_artifact_schema();
+    register_artifact_inference();
     crate::apps::jack::config::schema::register_app_schema();
 }
 //#endregion 🔖️Register

@@ -1,0 +1,9 @@
+dialect grammar
+grammar energy.model.inference
+extension energy.inference
+start document
+
+document = header body
+header = "schema" SP "energy.model.inference" NL
+body = payload NL?
+payload = OCTET+

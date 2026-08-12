@@ -1,0 +1,4 @@
+module Stdio_json_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

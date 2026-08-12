@@ -610,6 +610,7 @@ pub fn demo_xlsx_snapshot() -> XlsxSnapshot {
 pub fn register() {
     crate::artifacts::xlsx::io_registry::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::xlsx::schema::xlsx_artifact_schema_descriptor());
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA));
     // 🛡️ D5's generic validate-on-build hook: registers the ✳️strict/✳️transitional subsets'
@@ -618,6 +619,13 @@ pub fn register() {
     // aggregation (see `crate::artifacts::xlsx::io_registry::register()` above).
     crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::io::register();
     crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::io::register();
+}
+
+/// 💡️ Registers `s.stdio.xlsx.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to the artifact schema descriptor registration above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::inferences::xlsx_artifact_inference_descriptor());
 }
 
 /// 📌️ FG-wave: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per docx's own

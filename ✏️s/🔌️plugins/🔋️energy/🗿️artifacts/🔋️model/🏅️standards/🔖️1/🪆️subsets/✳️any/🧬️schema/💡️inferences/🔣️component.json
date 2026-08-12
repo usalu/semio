@@ -1,0 +1,25 @@
+{
+  "$id": "https://semio.tech/schema/s/energy/model/inference.json",
+  "title": "EnergyModelInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["entries"],
+  "properties": {
+    "entries": {
+      "$ref": "#/$defs/EnergyModelEntries",
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "EnergyModelEntries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entryCount", "byteSize", "contentDigest"],
+      "properties": {
+        "entryCount": { "type": "integer" },
+        "byteSize": { "type": "integer" },
+        "contentDigest": { "type": "string" }
+      }
+    }
+  }
+}

@@ -79,6 +79,7 @@ pub fn empty_pdf_snapshot() -> PdfSnapshot { PdfSnapshot::default() }
 pub fn register() {
     crate::artifacts::pdf::io_registry::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor());
+    register_artifact_inferences();
     store::register_document_codec(store::ArtifactCodec::of::<PdfSnapshot, PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA));
     register_pilot_languages();
     register_schema_specs();
@@ -87,6 +88,13 @@ pub fn register() {
     // registered separately via this standard's own `composer::entries()` aggregation.
     crate::artifacts::pdf::standards::v1_4::subsets::a::io::register();
     crate::artifacts::pdf::standards::v1_4::subsets::x::io::register();
+}
+
+/// 💡️ Registers `s.stdio.pdf.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to the artifact schema descriptor registration above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::inferences::pdf_artifact_inference_descriptor());
 }
 
 /// 📌️ P2-FG3: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr) for `stdio.pdf`

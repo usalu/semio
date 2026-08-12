@@ -374,7 +374,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec JsonIJsonBuilderFacets {
         construction: derived_construction::JsonIJsonBuilderConstruction,
         analysis: derived_analysis::JsonIJsonAnalyzerAnalysis,
-        composition: super::io::derived_composition::JsonIJsonComposerComposition,
+        composition: crate::artifacts::json::standards::v_rfc8259::subsets::i_json::io::derived_composition::JsonIJsonComposerComposition,
     }
     builder: JsonIJsonBuilder,
     analyzer: JsonIJsonAnalyzer,

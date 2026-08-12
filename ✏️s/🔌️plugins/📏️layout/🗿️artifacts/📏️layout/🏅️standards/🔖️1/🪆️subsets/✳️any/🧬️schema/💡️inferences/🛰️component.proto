@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.layout.layout.inference;
+
+// 💡️ Layout inference schema — topology (parent-page/spread/page composition order).
+
+message LayoutInference {
+  // @state inferred
+  LayoutTopology topology = 1;
+}
+
+message LayoutTopology {
+  repeated string topo_order = 1;
+  map<string, uint32> depth = 2;
+  bool cycle_free = 3;
+  uint32 node_count = 4;
+}

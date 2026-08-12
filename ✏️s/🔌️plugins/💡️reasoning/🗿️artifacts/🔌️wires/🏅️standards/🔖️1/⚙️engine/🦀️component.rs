@@ -222,7 +222,7 @@ fn handcrafted_metabolism_snapshot() -> WiresSnapshot {
             "handles": []
         }))
         .expect("node serializes");
-        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::WiresMutation::AddNode { node });
+        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::create_node(node));
         array_mut(&mut snapshot.wires_fixture, "identities").push(
             dsl::to_dsl_value(&json!({
                 "identityId": i,
@@ -247,10 +247,7 @@ fn handcrafted_metabolism_snapshot() -> WiresSnapshot {
             "edgeId": edge_id,
         }))
         .expect("relationship serializes");
-        snapshot = store::apply_mutation(
-            &snapshot,
-            &crate::artifacts::wires::mutations::WiresMutation::AddRelationship { edge, relationship },
-        );
+        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::connect_nodes(edge, relationship));
     }
     if let DslValue::Object(entries) = &mut snapshot.wires_fixture {
         if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == "board") {

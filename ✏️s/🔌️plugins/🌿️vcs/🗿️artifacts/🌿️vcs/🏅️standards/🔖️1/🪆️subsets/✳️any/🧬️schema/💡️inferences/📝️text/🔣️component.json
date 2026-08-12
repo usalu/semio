@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/vcs/vcs/inference/text.json",
+  "title": "VcsInferenceText",
+  "type": "object"
+}

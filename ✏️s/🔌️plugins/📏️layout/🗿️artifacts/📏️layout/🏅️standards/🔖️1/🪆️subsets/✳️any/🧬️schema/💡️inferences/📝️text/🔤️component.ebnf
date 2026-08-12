@@ -1,0 +1,3 @@
+(* ebnf layout.layout.inference *)
+document = header, body ;
+header = 'schema', space, 'layout.layout.inference', newline ;

@@ -1,0 +1,9 @@
+dialect grammar
+grammar playbook.playbook.inference
+extension playbook.inference
+start document
+
+document = header body
+header = "schema" SP "playbook.playbook.inference" NL
+body = payload NL?
+payload = OCTET+

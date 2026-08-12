@@ -1,0 +1,30 @@
+//! ↕️ `change-page-height` — sets a page's `height` scalar.
+
+use crate::artifacts::layout::mutations::LayoutMutation;
+use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
+use protocol::{MutationKind, SemanticDescriptor};
+use serde::{Deserialize, Serialize};
+
+//#region ↕️ChangePageHeight
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ChangePageHeight {
+    pub id: String,
+    pub new_height: f64,
+}
+
+impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePageHeight {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "page-height", kind: "change-page-height", record: "ChangedPageHeight" };
+    fn diff(&self, base: &LayoutSnapshot) -> LayoutDiff {
+        super::diff::diff_change_page_height(self, base)
+    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+        super::inverse::inverse_change_page_height(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Change page \"{}\" height", self.id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+//#endregion ↕️ChangePageHeight

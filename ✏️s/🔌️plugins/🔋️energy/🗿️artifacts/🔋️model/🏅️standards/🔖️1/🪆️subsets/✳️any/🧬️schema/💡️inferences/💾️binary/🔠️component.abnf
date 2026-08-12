@@ -1,0 +1,3 @@
+; abnf energy.model.inference
+document = payload
+payload = *OCTET

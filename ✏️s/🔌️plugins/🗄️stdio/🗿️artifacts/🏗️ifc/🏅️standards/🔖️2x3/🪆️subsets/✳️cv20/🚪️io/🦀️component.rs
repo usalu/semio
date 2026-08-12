@@ -92,7 +92,7 @@ pub mod derived_composition {
         use super::*;
         use semio_framework_plugin::AnalyzeSource;
         use crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::CODE_VIEW_DEFINITION;
-        use crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::Ifc2x3Cv20Builder;
+        use crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::Ifc2x3Cv20BuilderConstruction as Ifc2x3Cv20Builder;
         use semio_framework_plugin::ArtifactBuilder as _;
 
         #[test]

@@ -1,0 +1,17 @@
+# 💡️ Layout inference schema — topology (parent-page/spread/page composition order).
+
+type LayoutInference {
+  topology: LayoutTopology! @state(class: INFERRED)
+}
+
+type LayoutTopology {
+  topoOrder: [String!]!
+  depth: [LayoutTopologyDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type LayoutTopologyDepthEntry {
+  nodeId: String!
+  depth: Int!
+}

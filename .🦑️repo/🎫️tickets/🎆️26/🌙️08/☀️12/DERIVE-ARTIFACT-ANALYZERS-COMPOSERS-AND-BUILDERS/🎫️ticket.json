@@ -1,8 +1,9 @@
 {
   "title": "Derive Artifact Analyzers Composers and Builders",
   "emoji": "🧬",
-  "status": "open",
+  "status": "closed",
   "description": "Remove all explicit analyzer, composer and builder folders and files from artifacts. Derive them instead.",
+  "summary": "Derived artifact builders, analyzers, and composers for 137 subsets; removed all explicit lifecycle paths; policies are clean; 1,972 artifact tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2547"
   },

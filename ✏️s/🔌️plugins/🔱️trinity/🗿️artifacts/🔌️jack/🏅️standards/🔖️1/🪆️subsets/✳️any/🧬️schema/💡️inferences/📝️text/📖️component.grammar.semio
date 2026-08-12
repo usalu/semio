@@ -1,0 +1,9 @@
+dialect grammar
+grammar trinity.jack.inference
+extension jack.inference
+start document
+
+document = header body
+header = "schema" SP "trinity.jack.inference" NL
+body = payload NL?
+payload = OCTET+

@@ -12,7 +12,7 @@ pub struct ReplaceObjectMesh {
 }
 
 impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ReplaceObjectMesh {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "object-mesh", kind: "replace-object-mesh", record: "ReplacedObjectMesh" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "object", kind: "replace-object-mesh", record: "ReplacedObjectMesh" };
 
     fn diff(&self, base: &LowpolySnapshot) -> <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff {
         super::diff::diff(self, base)

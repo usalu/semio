@@ -1,0 +1,3 @@
+; abnf playbook.playbook.inference
+document = payload
+payload = *OCTET

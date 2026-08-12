@@ -1,7 +1,12 @@
-//! ↩️ Inverse for SetSnapshot on En1992.
-use crate::artifacts::en1992::En1992Snapshot;
-use crate::artifacts::en1992::mutations::En1992Mutation;
+//! ↩️ `change-annex` inverse — restores the pre-change `annex` from BASE state; `change` is its
+//! own inverse partner (per `📓️taxonomy.md`).
 
-pub fn inverse(base: &En1992Snapshot, _replacement: &En1992Snapshot) -> Vec<En1992Mutation> {
-    vec![En1992Mutation::SetSnapshot { snapshot: base.clone() }]
+use crate::artifacts::en1992::mutations::set_snapshot::mutation::ChangeAnnex;
+use crate::artifacts::en1992::mutations::En1992Mutation;
+use crate::artifacts::en1992::En1992Snapshot;
+
+//#region 🔖️Inverse
+pub fn inverse(_payload: &ChangeAnnex, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+    vec![En1992Mutation::ChangeAnnex(ChangeAnnex { new_annex: base.annex.clone() })]
 }
+//#endregion 🔖️Inverse

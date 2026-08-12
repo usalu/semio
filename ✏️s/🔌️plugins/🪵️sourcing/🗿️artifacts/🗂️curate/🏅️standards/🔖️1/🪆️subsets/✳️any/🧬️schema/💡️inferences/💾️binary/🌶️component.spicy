@@ -1,0 +1,4 @@
+module Sourcing_curate_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

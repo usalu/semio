@@ -238,11 +238,3 @@ impl MutationDiff<Din16798Snapshot> for Din16798Diff {
 }
 //#endregion 🔖️Apply
 
-//#region 🔖️Helpers
-pub fn diff_set_snapshot(snapshot: &Din16798Snapshot) -> Din16798Diff {
-    Din16798Diff {
-        artifact: Some(Box::new(Din16798Artifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
-}
-//#endregion 🔖️Helpers

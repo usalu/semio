@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.pptx.inference
+extension pptx.inference
+start document
+
+document = header body
+header = "schema" SP "stdio.pptx.inference" NL
+body = payload NL?
+payload = OCTET+

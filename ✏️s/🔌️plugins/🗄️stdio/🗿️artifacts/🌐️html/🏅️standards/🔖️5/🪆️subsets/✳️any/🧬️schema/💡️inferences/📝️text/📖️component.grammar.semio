@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.html.inference
+extension html.inference
+start document
+
+document = header body
+header = "schema" SP "stdio.html.inference" NL
+body = payload NL?
+payload = OCTET+

@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.vcs.vcs.inference;
+
+// 💡️ VCS inference schema — a scalar summary digest of the tags/notes free-form fields.
+
+message VcsInference {
+  // @state inferred
+  VcsSummary summary = 1;
+}
+
+message VcsSummary {
+  uint32 tag_count = 1;
+  uint32 notes_word_count = 2;
+  bool has_notes = 3;
+}

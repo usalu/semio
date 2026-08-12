@@ -21,6 +21,7 @@ pub fn register() {
 
     register_pilot_languages();
     register_artifact_schema();
+    register_artifact_inference();
     crate::apps::mathematical::config::schema::register_app_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::mathematical::MathematicalPlayApp>(crate::artifacts::mathematical::MATH_DOCUMENT_SCHEMA);
 }
@@ -28,6 +29,13 @@ pub fn register() {
 /// 📎 Registers the mathematical artifact schema descriptor into the process-local registry.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::mathematical::schema::mathematical_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.mathematical.mathematical.inference`'s facet leaves — sibling registry to
+/// `register_artifact_schema()` above (ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inference() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::mathematical::standards::v1::subsets::any::schema::inferences::mathematical_artifact_inference_descriptor());
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.

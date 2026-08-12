@@ -22,6 +22,7 @@ pub fn demo_txt_snapshot() -> TxtSnapshot {
 pub fn register() {
     crate::artifacts::txt::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA));
@@ -104,6 +105,13 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.txt`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::txt::schema::txt_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.stdio.txt.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::txt::standards::v_utf_8::subsets::any::schema::inferences::txt_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 

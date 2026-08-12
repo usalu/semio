@@ -104,7 +104,7 @@ mod tests {
         GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationSampler, GltfDocument, GltfInterpolation, GltfNode, GltfSourceForm,
     };
     use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
-    use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::{GltfAccessorSpec, GltfBuilder as GltfDocBuilder};
+    use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::{GltfAccessorSpec, GltfBuilderConstruction as GltfDocBuilder};
     use semio_framework_plugin::ArtifactBuilder;
 
     /// 🏗️ Builds a real, decodable glTF document: two nodes, one animation with a Linear

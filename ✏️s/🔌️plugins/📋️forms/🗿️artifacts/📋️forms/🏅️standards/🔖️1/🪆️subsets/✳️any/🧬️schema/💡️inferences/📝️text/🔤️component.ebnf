@@ -1,0 +1,3 @@
+(* ebnf forms.forms.inference *)
+document = header, body ;
+header = 'schema', space, 'forms.forms.inference', newline ;

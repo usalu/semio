@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/json/inference.json",
+  "title": "JsonInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/JsonOutline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "JsonOutline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeCount", "maxDepth", "rootKind"],
+      "properties": {
+        "nodeCount": { "type": "integer" },
+        "maxDepth": { "type": "integer" },
+        "rootKind": { "type": "string" }
+      }
+    }
+  }
+}

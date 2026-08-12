@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.forms.forms.inference;
+
+// 💡️ Forms inference schema — topology (step/block dependency order).
+
+message FormsInference {
+  // @state inferred
+  FormsTopology topology = 1;
+}
+
+message FormsTopology {
+  repeated string topo_order = 1;
+  map<string, uint32> depth = 2;
+  bool cycle_free = 3;
+  uint32 node_count = 4;
+}

@@ -1,0 +1,3 @@
+(* ebnf procedural.procedural2d.inference *)
+document = header, body ;
+header = 'schema', space, 'procedural.procedural2d.inference', newline ;

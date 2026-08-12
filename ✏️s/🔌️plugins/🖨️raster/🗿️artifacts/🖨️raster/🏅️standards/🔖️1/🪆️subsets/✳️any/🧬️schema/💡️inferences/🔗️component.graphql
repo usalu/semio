@@ -1,0 +1,17 @@
+# 💡️ Raster inference schema — layer-tree topology (structural pre-order + nesting depth).
+
+type RasterInference {
+  topology: RasterTopology! @state(class: INFERRED)
+}
+
+type RasterTopology {
+  topoOrder: [String!]!
+  depth: [RasterTopologyDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type RasterTopologyDepthEntry {
+  id: String!
+  depth: Int!
+}

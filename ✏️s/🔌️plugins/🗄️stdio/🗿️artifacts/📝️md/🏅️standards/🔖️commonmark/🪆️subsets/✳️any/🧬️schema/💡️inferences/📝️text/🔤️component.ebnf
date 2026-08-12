@@ -1,0 +1,3 @@
+(* ebnf stdio.md.inference *)
+document = header, body ;
+header = 'schema', space, 'stdio.md.inference', newline ;

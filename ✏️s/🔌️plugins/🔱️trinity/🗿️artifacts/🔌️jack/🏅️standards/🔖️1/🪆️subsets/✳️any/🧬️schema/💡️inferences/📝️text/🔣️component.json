@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/trinity/jack/inference/text.json",
+  "title": "JackInferenceText",
+  "type": "object"
+}

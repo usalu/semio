@@ -25,7 +25,10 @@
 
 use crate::artifacts::pdf::examples::bachelor_thesis::{source, FIXTURE_BYTES};
 use crate::artifacts::pdf::standards::v1_7::engine::{decode_pdf, encode_pdf};
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfBuilder;
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfBuilderConstruction as PdfBuilder;
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::Pdf17Inference;
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
+use protocol::Inference;
 use semio_framework_plugin::ArtifactBuilder;
 
 #[test]
@@ -131,3 +134,31 @@ fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
     }
 }
 //#endregion (c) AnalyzerBuilderRoundTrip
+
+//#region (d)(e) InferenceLaws
+/// 🧪️ (d) `infer` on the real 65-page fixture is deterministic — two calls over the same decoded
+/// snapshot produce byte-equal results. Ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING.
+#[test]
+fn inference_determinism_law() {
+    let snapshot = decode_pdf(FIXTURE_BYTES).expect("decode real fixture");
+    assert_eq!(Pdf17Inference::infer(&snapshot), Pdf17Inference::infer(&snapshot));
+}
+
+/// 🧪️ (e) `infer(&PdfSnapshot::default())` matches `Pdf17Inference::default()` — the hand-written
+/// `Default` impl (`💡️inferences/🦀️component.rs`) must stay in lockstep with `infer` itself.
+#[test]
+fn inference_default_law() {
+    assert_eq!(Pdf17Inference::infer(&PdfSnapshot::default()), Pdf17Inference::default());
+}
+
+/// 🧪️ `outline` on the real fixture matches the independently-verified page count/text volume
+/// `real_decode_has_many_pages_and_real_extracted_text` above already asserts.
+#[test]
+fn outline_matches_real_fixture_page_count() {
+    let snapshot = decode_pdf(FIXTURE_BYTES).expect("decode real fixture");
+    let inferred = Pdf17Inference::infer(&snapshot);
+    assert_eq!(inferred.outline.page_count, 65);
+    assert_eq!(inferred.outline.title, snapshot.info.title);
+}
+//#endregion (d)(e) InferenceLaws

@@ -1,0 +1,3 @@
+(* ebnf stdio.tsv.inference *)
+document = header, body ;
+header = 'schema', space, 'stdio.tsv.inference', newline ;

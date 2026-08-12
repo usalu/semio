@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/pptx/inference.json",
+  "title": "PptxInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/PptxOutline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "PptxOutline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slideCount", "shapeCount", "wordCount"],
+      "properties": {
+        "slideCount": { "type": "integer" },
+        "shapeCount": { "type": "integer" },
+        "wordCount": { "type": "integer" }
+      }
+    }
+  }
+}

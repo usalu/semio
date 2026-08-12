@@ -33,6 +33,7 @@ pub fn register() {
     crate::artifacts::model::io_registry::register();
 
     register_artifact_schema();
+    register_artifact_inference();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<
         EnergyModelSnapshot,
@@ -99,6 +100,13 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers the twenty handcrafted schema leaves for `s.energy.model`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::model::schema::energy_model_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.energy.model.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inference() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::model::standards::v1::subsets::any::schema::inferences::energy_model_artifact_inference_descriptor());
 }
 //#endregion 🔖️SchemaRegistry
 

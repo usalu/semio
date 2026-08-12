@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.sourcing.curate.inference;
+
+// 💡️ Curate inference schema — a real census over the stock catalog and curated bill of quantities.
+
+message CurateInference {
+  // @state inferred
+  CurateEntries entries = 1;
+}
+
+message CurateEntries {
+  uint32 stock_count = 1;
+  uint32 entry_count = 2;
+  uint32 total_count = 3;
+}

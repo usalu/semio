@@ -1,0 +1,33 @@
+//! 🌱️ Fem2d mutation — `CreateLoadCase` payload + `MutationKind` impl.
+use crate::artifacts::fem2d::mutations::Fem2dMutation;
+use crate::artifacts::fem2d::{Fem2dSnapshot, FemLoadCase};
+use protocol::{MutationKind, SemanticDescriptor};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Mutation
+/// 🌱️ Brings a new [`FemLoadCase`] into existence (empty or pre-seeded with one load — the
+/// resolve-or-create gesture in `🎮️commands/🏋️loads` builds this when no matching case exists yet).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "create-load-case")]
+pub struct CreateLoadCase {
+    pub load_case: FemLoadCase,
+}
+
+impl MutationKind<Fem2dSnapshot, Fem2dMutation> for CreateLoadCase {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "load-case", kind: "create-load-case", record: "CreatedLoadCase" };
+
+    fn diff(&self, base: &Fem2dSnapshot) -> crate::artifacts::fem2d::diff::Fem2dDiff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Create load case \"{}\"", self.load_case.id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.load_case.id.clone()]
+    }
+}
+//#endregion 🔖️Mutation

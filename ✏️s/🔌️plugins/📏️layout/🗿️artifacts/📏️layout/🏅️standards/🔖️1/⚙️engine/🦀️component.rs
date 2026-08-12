@@ -49,6 +49,7 @@ pub fn register() {
     crate::artifacts::layout::io_registry::register();
 
     register_artifact_schema();
+    register_artifact_inference();
     register_pilot_languages();
     crate::apps::layout::config::schema::register_app_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::layout::LayoutPlayApp>(LAYOUT_DOCUMENT_SCHEMA);
@@ -764,6 +765,13 @@ impl LayoutArtifactEngine {
 /// 📌️ Registers the twenty handcrafted schema leaves for `s.layout.layout`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::layout::schema::layout_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.layout.layout.inference`'s facet leaves — sibling registry to
+/// `register_artifact_schema()` above (ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inference() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::layout::standards::v1::subsets::any::schema::inferences::layout_artifact_inference_descriptor());
 }
 //#endregion 🔖️SchemaRegistry
 //#region 🚪️DerivedIoRegistry

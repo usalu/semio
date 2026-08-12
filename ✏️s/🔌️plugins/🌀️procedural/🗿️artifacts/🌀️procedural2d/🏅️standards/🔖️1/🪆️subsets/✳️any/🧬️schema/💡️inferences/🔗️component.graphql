@@ -1,0 +1,13 @@
+# 💡️ Procedural2d inference schema — topology (DAG shape of `fixture`'s widget/synapse graph).
+
+type Procedural2dInference {
+  topology: Procedural2dTopology! @state(class: INFERRED)
+}
+
+type Procedural2dTopology {
+  nodeCount: Int!
+  edgeCount: Int!
+  topoOrder: [String!]!
+  depth: Int!
+  cycleFree: Boolean!
+}

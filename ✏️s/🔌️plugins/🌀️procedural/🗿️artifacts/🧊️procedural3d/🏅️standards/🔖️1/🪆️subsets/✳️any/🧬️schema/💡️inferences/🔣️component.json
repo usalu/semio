@@ -1,0 +1,27 @@
+{
+  "$id": "https://semio.tech/schema/s/procedural/procedural3d/inference.json",
+  "title": "Procedural3dInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topology"],
+  "properties": {
+    "topology": {
+      "$ref": "#/$defs/Procedural3dTopology",
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "Procedural3dTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeCount", "edgeCount", "topoOrder", "depth", "cycleFree"],
+      "properties": {
+        "nodeCount": { "type": "integer", "minimum": 0 },
+        "edgeCount": { "type": "integer", "minimum": 0 },
+        "topoOrder": { "type": "array", "items": { "type": "string" } },
+        "depth": { "type": "integer", "minimum": 0 },
+        "cycleFree": { "type": "boolean" }
+      }
+    }
+  }
+}

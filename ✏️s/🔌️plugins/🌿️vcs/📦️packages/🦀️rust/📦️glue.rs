@@ -56,6 +56,22 @@ pub mod artifacts {
                                 pub mod binary;
                             }
                             #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod summary {
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📊summary/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                            }
+                            #[path = "."]
                             pub mod diff {
                                 #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
                                 mod component;

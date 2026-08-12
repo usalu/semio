@@ -1,0 +1,3 @@
+; abnf stdio.txt.inference
+document = payload
+payload = *OCTET

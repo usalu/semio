@@ -1,0 +1,3 @@
+; abnf remodel.remodel.inference
+document = payload
+payload = *OCTET

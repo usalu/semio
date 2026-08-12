@@ -28,6 +28,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<WiresMutation, protocol::ProtocolError>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::wires::mutations::create_node;
     use crate::artifacts::wires::WiresSnapshot;
     use serde_json::json;
 
@@ -39,7 +40,7 @@ mod tests {
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
-        let operation = WiresMutation::AddNode { node };
+        let operation = create_node(node);
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -49,7 +50,7 @@ mod tests {
     fn store_applies_node_add() {
         let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None));
         let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WiresMutation::AddNode { node }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![create_node(node)], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
     }
 
@@ -57,7 +58,7 @@ mod tests {
     fn document_text_round_trip_with_operation_applied() {
         let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None));
         let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WiresMutation::AddNode { node }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![create_node(node)], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
@@ -66,16 +67,16 @@ mod tests {
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
     /// `WiresMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this
     /// file's existing pack round-trip law (same pattern as `dag`'s own
-    /// `command_envelope_round_trip_holds_for_an_applied_operation`). Uses `AddNode` (not
-    /// `SetSnapshot`) deliberately — see `op`'s own tests for the known, still-open
-    /// `SetSnapshot` op-text ordering divergence on its raw `DslValue` fields.
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`). Uses `create-node`
+    /// deliberately, not a whole-document replace — `SetSnapshot` is banned vocabulary and no
+    /// longer exists on `WiresMutation` (see `📓️taxonomy.md`).
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 
         let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None));
         let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WiresMutation::AddNode { node }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![create_node(node)], description: None }).expect("apply");
         let edit: &Edit<WiresMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<WiresSnapshot, WiresMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }

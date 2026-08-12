@@ -1,0 +1,17 @@
+# 💡️ Mathematical inference schema — topology (graph topological order).
+
+type MathematicalInference {
+  topology: MathematicalTopology! @state(class: INFERRED)
+}
+
+type MathematicalTopology {
+  topoOrder: [String!]!
+  depth: [MathematicalTopologyDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type MathematicalTopologyDepthEntry {
+  nodeId: String!
+  depth: Int!
+}

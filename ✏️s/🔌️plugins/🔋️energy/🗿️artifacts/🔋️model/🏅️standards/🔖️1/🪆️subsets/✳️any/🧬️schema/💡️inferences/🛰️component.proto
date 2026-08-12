@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.energy.model.inference;
+
+// 💡️ EnergyModel inference schema — opaque-container census of the persisted `modelJson` body.
+
+message EnergyModelInference {
+  // @state inferred
+  EnergyModelEntries entries = 1;
+}
+
+message EnergyModelEntries {
+  uint32 entry_count = 1;
+  uint32 byte_size = 2;
+  string content_digest = 3;
+}

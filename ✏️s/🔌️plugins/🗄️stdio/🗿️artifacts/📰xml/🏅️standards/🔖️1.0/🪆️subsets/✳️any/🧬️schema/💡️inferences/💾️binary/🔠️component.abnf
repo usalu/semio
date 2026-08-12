@@ -1,0 +1,3 @@
+; abnf stdio.xml.inference
+document = payload
+payload = *OCTET

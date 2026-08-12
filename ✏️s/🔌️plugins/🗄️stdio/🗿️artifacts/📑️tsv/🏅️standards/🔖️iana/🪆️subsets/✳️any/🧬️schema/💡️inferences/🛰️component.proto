@@ -1,0 +1,14 @@
+syntax = "proto3";
+package semio.s.stdio.tsv.inference;
+
+// 💡️ Tsv inference schema — document outline (record/column counts).
+
+message TsvInference {
+  // @state inferred
+  TsvOutline outline = 1;
+}
+
+message TsvOutline {
+  uint32 record_count = 1;
+  uint32 column_count = 2;
+}

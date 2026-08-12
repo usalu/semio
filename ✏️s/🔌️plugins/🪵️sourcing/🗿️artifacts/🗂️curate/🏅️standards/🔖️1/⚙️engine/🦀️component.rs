@@ -21,6 +21,7 @@ pub fn register() {
     crate::artifacts::curate::io_registry::register();
 
     register_artifact_schema();
+    register_artifact_inference();
     crate::apps::curate::config::schema::register_app_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::curate::SourcingCurateApp>(SOURCING_CURATE_SCHEMA);
@@ -29,6 +30,13 @@ pub fn register() {
 /// 📎 Registers the curate artifact schema descriptor into the process-local registry.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::curate::schema::curate_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.sourcing.curate.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inference() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::curate::standards::v1::subsets::any::schema::inferences::curate_artifact_inference_descriptor());
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.

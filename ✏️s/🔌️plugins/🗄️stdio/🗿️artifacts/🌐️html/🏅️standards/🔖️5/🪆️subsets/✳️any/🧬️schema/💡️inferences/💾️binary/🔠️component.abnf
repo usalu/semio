@@ -1,0 +1,3 @@
+; abnf stdio.html.inference
+document = payload
+payload = *OCTET

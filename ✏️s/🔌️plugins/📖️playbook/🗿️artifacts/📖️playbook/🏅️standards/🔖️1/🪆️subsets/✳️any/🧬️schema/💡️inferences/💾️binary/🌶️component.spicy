@@ -1,0 +1,4 @@
+module Playbook_playbook_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

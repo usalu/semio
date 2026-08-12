@@ -2,7 +2,7 @@
 
 use crate::artifacts::layout::schema::diff::{
     LayoutDiff, LayoutLinkPatchEntry, LayoutLinksDelta, LayoutPagePatchEntry, LayoutPagesDelta, LayoutStoriesDelta,
-    LayoutStoryPatchEntry, LayoutStringList,
+    LayoutStoryPatchEntry,
 };
 use crate::artifacts::layout::schema::LayoutArtifact;
 use crate::artifacts::layout::{ImageLink, Page, TextStory, LayoutSnapshot};

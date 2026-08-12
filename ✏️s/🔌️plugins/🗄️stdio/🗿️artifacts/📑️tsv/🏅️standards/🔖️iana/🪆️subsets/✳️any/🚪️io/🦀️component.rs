@@ -48,7 +48,15 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::tsv::standards::iana::subsets::any::schema::tsv_artifact_schema_descriptor());
+        register_artifact_inferences();
         store::register_document_codec(store::ArtifactCodec::of::<TsvSnapshot, crate::artifacts::tsv::standards::iana::subsets::any::schema::mutations::TsvMutation>(crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::STDIO_TSV_DOCUMENT_SCHEMA));
+    }
+
+    /// 💡️ Registers `s.stdio.tsv.inference`'s facet leaves into the OS-wide inference catalog —
+    /// sibling to the artifact schema descriptor above (separate registry, ticket
+    /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::tsv::standards::iana::subsets::any::schema::inferences::tsv_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }

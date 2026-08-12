@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.json.inference
+extension json.inference
+start document
+
+document = header body
+header = "schema" SP "stdio.json.inference" NL
+body = payload NL?
+payload = OCTET+

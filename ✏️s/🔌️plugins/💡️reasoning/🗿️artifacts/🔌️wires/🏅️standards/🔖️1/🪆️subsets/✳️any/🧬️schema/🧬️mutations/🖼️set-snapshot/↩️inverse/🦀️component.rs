@@ -1,6 +1,2 @@
-use crate::artifacts::wires::WiresSnapshot;
-use crate::artifacts::wires::mutations::WiresMutation;
-
-pub fn inverse(base: &WiresSnapshot, mutation: &WiresMutation) -> Vec<WiresMutation> {
-    <WiresMutation as protocol::Mutation<WiresSnapshot>>::inverse(mutation, base)
-}
+//! 🪦️ Orphaned by ticket `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL` — see the sibling `🦠️mutation` leaf's
+//! doc comment for why this file stays physically present (empty) pending a `📦️glue.rs` cleanup pass.

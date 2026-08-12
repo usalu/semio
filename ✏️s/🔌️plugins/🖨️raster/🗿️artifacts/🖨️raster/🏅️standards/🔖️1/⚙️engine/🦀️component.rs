@@ -26,12 +26,20 @@ pub fn register() {
 
     register_pilot_languages();
     register_artifact_schema();
+    register_artifact_inferences();
     crate::apps::raster::config::schema::register_app_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::raster::RasterPlayApp>(RASTER_DOCUMENT_SCHEMA);
 }
 
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::raster::schema::raster_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.raster.raster.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::raster::schema::inferences::raster_artifact_inference_descriptor());
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.

@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/energy/model/inference/text.json",
+  "title": "EnergyModelInferenceText",
+  "type": "object"
+}

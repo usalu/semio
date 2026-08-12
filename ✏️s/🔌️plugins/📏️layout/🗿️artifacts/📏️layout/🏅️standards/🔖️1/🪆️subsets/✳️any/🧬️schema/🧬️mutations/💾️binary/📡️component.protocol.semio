@@ -1,19 +1,16 @@
 dialect protocol
-protocol layout.spr
+protocol layout.mutations
 version 1
-schema layout.fixture.mutation
+schema stdio.json
 start record
-framing record
-record layout.layout-add-layer tag 1
-field format u8
-field ordinal varint
-field body bytes
-record layout.layout-set-stroke tag 2
-field format u8
-field ordinal varint
-field body bytes
-record layout.layout-move-layer tag 3
-field format u8
-field ordinal varint
-field body bytes
-chain hash u64
+framing magic 0x1a707f7d340d0a
+header fixed 32
+field format_major u16
+field format_minor u16
+field flags u32
+field domain_tag u32
+field header_crc32 u32
+segment payload varint bytes
+footer fixed 64
+field artifact_mark utf8
+field body_crc32 u32

@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.note.note.inference;
+
+// 💡️ Note inference schema — block outline (flattened block names + word/block counts).
+
+message NoteInference {
+  // @state inferred
+  NoteOutline outline = 1;
+}
+
+message NoteOutline {
+  repeated string section_outline = 1;
+  uint32 block_count = 2;
+  uint32 word_count = 3;
+}

@@ -1,0 +1,3 @@
+(* ebnf stdio.html.inference *)
+document = header, body ;
+header = 'schema', space, 'stdio.html.inference', newline ;

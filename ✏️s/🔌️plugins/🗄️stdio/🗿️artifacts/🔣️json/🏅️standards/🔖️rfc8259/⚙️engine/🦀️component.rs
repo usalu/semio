@@ -49,6 +49,7 @@ pub fn demo_json_snapshot() -> JsonSnapshot {
 pub fn register() {
     crate::artifacts::json::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<JsonSnapshot, JsonMutation>(STDIO_JSON_DOCUMENT_SCHEMA));
     // 🛡️ D5's generic validate-on-build hook: registers the ✳️i-json subset's SubsetValidator so
@@ -127,6 +128,13 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.json`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::json::schema::json_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.stdio.json.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::inferences::json_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 

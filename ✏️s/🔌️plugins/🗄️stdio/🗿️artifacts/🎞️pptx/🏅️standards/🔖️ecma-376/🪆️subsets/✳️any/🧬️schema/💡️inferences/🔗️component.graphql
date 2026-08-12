@@ -1,0 +1,11 @@
+# 💡️ Pptx inference schema — document outline (slide/shape/word counts).
+
+type PptxInference {
+  outline: PptxOutline! @state(class: INFERRED)
+}
+
+type PptxOutline {
+  slideCount: Int!
+  shapeCount: Int!
+  wordCount: Int!
+}

@@ -360,7 +360,7 @@ mod tests {
         register_fem3d_mutation_descriptors();
         let kinds = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::kinds();
         assert_eq!(kinds.len(), 25, "every semantic mutation kind must be registered exactly once");
-        for descriptor in &kinds {
+        for descriptor in kinds {
             assert!(protocol::is_approved_verb(descriptor.verb), "verb '{}' must be in APPROVED_VERBS", descriptor.verb);
         }
     }

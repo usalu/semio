@@ -1,0 +1,17 @@
+# 💡️ Forms inference schema — topology (step/block dependency order).
+
+type FormsInference {
+  topology: FormsTopology! @state(class: INFERRED)
+}
+
+type FormsTopology {
+  topoOrder: [String!]!
+  depth: [FormsTopologyDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type FormsTopologyDepthEntry {
+  nodeId: String!
+  depth: Int!
+}

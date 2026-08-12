@@ -48,7 +48,15 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::html::standards::v5::subsets::any::schema::html_artifact_schema_descriptor());
+        register_artifact_inferences();
         store::register_document_codec(store::ArtifactCodec::of::<HtmlSnapshot, crate::artifacts::html::standards::v5::subsets::any::schema::mutations::HtmlMutation>(crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA));
+    }
+
+    /// 💡️ Registers `s.stdio.html.inference`'s facet leaves into the OS-wide inference catalog —
+    /// sibling to the artifact schema descriptor above (separate registry, ticket
+    /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::html::standards::v5::subsets::any::schema::inferences::html_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }

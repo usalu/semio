@@ -1,0 +1,9 @@
+dialect grammar
+grammar vcs.vcs.inference
+extension vcs.inference
+start document
+
+document = header body
+header = "schema" SP "vcs.vcs.inference" NL
+body = payload NL?
+payload = OCTET+

@@ -10,8 +10,12 @@ use crate::artifacts::program::registers::{
     Activity, Adjacency, AdjacencyKind, ConnectionKind, Equipment, Function, FunctionKind, Process, ProgramElement, ProgramElementKind, Requirement, RequirementKind, Risk, RiskLevel, Stakeholder, TemplateRecord, UserCategory, UserProfile,
     ValidationStatus,
 };
-use protocol::CollectionMutation;
 use serde::{Deserialize, Serialize};
+
+/// 🔀 Absolute path to the `🧬️mutations` facet's per-register leaves, kept as one alias so the
+/// semantic-mutations-overhaul rename (`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL`)
+/// only needs updating here if `📦️glue.rs`'s directory wiring ever changes.
+use crate::artifacts::program::schema::mutations as leaves;
 
 // #region 🔖️TemplateApply
 /// @emoji 📋️ Result of applying a template to a program.
@@ -58,7 +62,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     communication_channels: Vec::new(),
                     success_metrics: Vec::new(),
                 };
-                operations.push(ProgramMutation::Stakeholders(CollectionMutation::Add { index: program.stakeholders.len(), item: item.clone() }));
+                operations.push(ProgramMutation::CreateStakeholder(leaves::stakeholders::mutation::CreateStakeholder { stakeholder: item.clone() }));
                 program.stakeholders.push(item);
             }
             "user" => {
@@ -89,7 +93,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     validated: false,
                     stakeholder_ids: Vec::new(),
                 };
-                operations.push(ProgramMutation::Users(CollectionMutation::Add { index: program.users.len(), item: item.clone() }));
+                operations.push(ProgramMutation::CreateUserProfile(leaves::users::mutation::CreateUserProfile { user_profile: item.clone() }));
                 program.users.push(item);
             }
             "activity" => {
@@ -120,7 +124,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     temporal_pattern: None,
                     supervision_level: None,
                 };
-                operations.push(ProgramMutation::Activities(CollectionMutation::Add { index: program.activities.len(), item: item.clone() }));
+                operations.push(ProgramMutation::CreateActivity(leaves::activities::mutation::CreateActivity { activity: item.clone() }));
                 program.activities.push(item);
             }
             "function" => {
@@ -149,7 +153,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     hierarchy_parent_id: None,
                     conflict_ids: Vec::new(),
                 };
-                operations.push(ProgramMutation::Functions(CollectionMutation::Add { index: program.functions.len(), item: item.clone() }));
+                operations.push(ProgramMutation::CreateFunction(leaves::functions::mutation::CreateFunction { function: item.clone() }));
                 program.functions.push(item);
             }
             "element" | "room" => {
@@ -181,7 +185,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     adjacency_preferences: Vec::new(),
                     environmental_zone: None,
                 };
-                operations.push(ProgramMutation::Elements(CollectionMutation::Add { index: program.elements.len(), item: item.clone() }));
+                operations.push(ProgramMutation::CreateProgramElement(leaves::elements::mutation::CreateProgramElement { program_element: item.clone() }));
                 program.elements.push(item);
                 element_ids.push(id.clone());
             }
@@ -209,7 +213,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     trace_links: Vec::new(),
                     superseded_by: None,
                 };
-                operations.push(ProgramMutation::Requirements(CollectionMutation::Add { index: program.requirements.len(), item: item.clone() }));
+                operations.push(ProgramMutation::CreateRequirement(leaves::requirements::mutation::CreateRequirement { requirement: item.clone() }));
                 program.requirements.push(item);
             }
             "risk" => {
@@ -235,7 +239,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     escalation_path: Vec::new(),
                     monitoring_plan: None,
                 };
-                operations.push(ProgramMutation::Risks(CollectionMutation::Add { index: program.risks.len(), item: item.clone() }));
+                operations.push(ProgramMutation::CreateRisk(leaves::risks::mutation::CreateRisk { risk: item.clone() }));
                 program.risks.push(item);
             }
             "process" => {
@@ -265,7 +269,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     handoff_points: Vec::new(),
                     quality_gates: Vec::new(),
                 };
-                operations.push(ProgramMutation::Processes(CollectionMutation::Add { index: program.processes.len(), item: item.clone() }));
+                operations.push(ProgramMutation::CreateProcess(leaves::processes::mutation::CreateProcess { process: item.clone() }));
                 program.processes.push(item);
             }
             "equipment" => {
@@ -296,7 +300,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     commissioning_notes: Vec::new(),
                     spare_parts: Vec::new(),
                 };
-                operations.push(ProgramMutation::Equipment(CollectionMutation::Add { index: program.equipment.len(), item: item.clone() }));
+                operations.push(ProgramMutation::CreateEquipment(leaves::equipment::mutation::CreateEquipment { equipment: item.clone() }));
                 program.equipment.push(item);
             }
             "adjacency" | "adjacency_bundle" if element_ids.len() >= 2 => {
@@ -324,7 +328,7 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
                     source_relationship_id: None,
                     internal_external_access: None,
                 };
-                operations.push(ProgramMutation::SetAdjacency { adjacency: adjacency.clone() });
+                operations.push(ProgramMutation::ConnectAdjacency(leaves::set_adjacency::mutation::ConnectAdjacency { adjacency: adjacency.clone() }));
                 set_adjacency(program, adjacency);
             }
             _ => {}
@@ -341,9 +345,9 @@ pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::op::apply_program_mutation;
     use crate::artifacts::program::empty_plugin;
     use crate::artifacts::program::registers::TemplateRecord;
+    use protocol::{Mutation, MutationDiff};
 
     #[test]
     fn apply_template_returns_plugin_operations() {
@@ -405,7 +409,7 @@ mod tests {
         let operations = apply_template(&mut source, &template);
         let mut target = empty_plugin();
         for operation in &operations {
-            apply_program_mutation(&mut target, operation);
+            target = operation.diff(&target).apply(&target);
         }
         assert_eq!(target.functions.len(), 1);
     }

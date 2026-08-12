@@ -17,6 +17,7 @@ pub fn register() {
     crate::artifacts::vcs::io_registry::register();
 
     register_artifact_schema();
+    register_artifact_inference();
     register_pilot_languages();
     crate::apps::vcs::config::schema::register_app_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::vcs::VcsPlayApp>(VCS_DOCUMENT_SCHEMA);
@@ -82,6 +83,13 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers the twenty handcrafted schema leaves for `s.vcs.vcs`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::vcs::schema::vcs_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.vcs.vcs.inference`'s facet leaves into the OS-wide inference catalog — sibling
+/// to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inference() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::vcs::standards::v1::subsets::any::schema::inferences::vcs_artifact_inference_descriptor());
 }
 //#endregion 🔖️SchemaRegistry
 

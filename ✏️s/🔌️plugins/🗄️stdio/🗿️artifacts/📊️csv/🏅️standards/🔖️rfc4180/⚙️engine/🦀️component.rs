@@ -135,6 +135,7 @@ pub fn encode_csv_with(snap: &CsvSnapshot, line_ending: &str) -> String {
 pub fn register() {
     crate::artifacts::csv::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<CsvSnapshot, CsvMutation>(STDIO_CSV_DOCUMENT_SCHEMA));
 }
@@ -198,6 +199,13 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.csv`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::csv::schema::csv_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.stdio.csv.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::csv::standards::v_rfc4180::subsets::any::schema::inferences::csv_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 

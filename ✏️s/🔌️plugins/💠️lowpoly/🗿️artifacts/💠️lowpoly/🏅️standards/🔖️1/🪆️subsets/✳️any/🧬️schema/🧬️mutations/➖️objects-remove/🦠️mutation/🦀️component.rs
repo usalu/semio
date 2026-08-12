@@ -1,22 +1,5 @@
-//! ➖️ Lowpoly mutation — `ObjectsRemove` payload + builder + apply.
-use crate::artifacts::lowpoly::LowpolySnapshot;
-use crate::artifacts::lowpoly::mutations::LowpolyMutation;
-use serde::{Deserialize, Serialize};
-use protocol::{apply_collection_mutation, CollectionMutation};
-
-//#region 🔖️Mutation
-/// @emoji ➖️ `ObjectsRemove` mutation payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct ObjectsRemove {
-    pub id: String,
-}
-
-pub fn objects_remove(id: impl Into<String>) -> LowpolyMutation {
-    LowpolyMutation::ObjectsRemove { id: id.into() }
-}
-
-pub fn apply(projection: &mut LowpolySnapshot, id: &str) {
-    apply_collection_mutation(&mut projection.objects, &CollectionMutation::Remove { id: id.to_string() });
-}
-//#endregion 🔖️Mutation
+//! 🪦️ Orphaned by 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL — `LowpolyMutation::ObjectsRemove` was replaced
+//! by `delete-object` (see `📓️taxonomy.md`/`📓️derivation-rules.md`). This file stays present only
+//! because `📦️glue.rs` (plugin-shared, outside this facet's boundary) still `#[path]`-wires it;
+//! see this ticket's wave2 report `sharedFileRequests` for the glue.rs cleanup this orphaning
+//! needs (delete this directory's `pub mod` block entirely).

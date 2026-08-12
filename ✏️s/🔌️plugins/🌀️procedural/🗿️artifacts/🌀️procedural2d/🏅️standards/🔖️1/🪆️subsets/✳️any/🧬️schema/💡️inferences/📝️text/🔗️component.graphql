@@ -1,0 +1,3 @@
+# procedural.procedural2d.inference text grammar schema
+scalar Bytes
+type Document { schema: String! payload: String! }

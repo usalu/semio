@@ -1,0 +1,3 @@
+(* ebnf stdio.csv.inference *)
+document = header, body ;
+header = 'schema', space, 'stdio.csv.inference', newline ;

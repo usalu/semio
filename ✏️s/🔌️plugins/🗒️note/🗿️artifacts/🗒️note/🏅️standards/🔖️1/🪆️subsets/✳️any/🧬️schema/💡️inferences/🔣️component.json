@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/note/note/inference.json",
+  "title": "NoteInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/NoteOutline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "NoteOutline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sectionOutline", "blockCount", "wordCount"],
+      "properties": {
+        "sectionOutline": { "type": "array", "items": { "type": "string" } },
+        "blockCount": { "type": "integer" },
+        "wordCount": { "type": "integer" }
+      }
+    }
+  }
+}

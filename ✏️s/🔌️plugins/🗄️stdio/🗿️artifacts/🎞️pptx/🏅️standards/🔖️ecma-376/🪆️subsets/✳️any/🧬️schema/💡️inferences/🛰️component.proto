@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.stdio.pptx.inference;
+
+// 💡️ Pptx inference schema — document outline (slide/shape/word counts).
+
+message PptxInference {
+  // @state inferred
+  PptxOutline outline = 1;
+}
+
+message PptxOutline {
+  uint32 slide_count = 1;
+  uint32 shape_count = 2;
+  uint32 word_count = 3;
+}

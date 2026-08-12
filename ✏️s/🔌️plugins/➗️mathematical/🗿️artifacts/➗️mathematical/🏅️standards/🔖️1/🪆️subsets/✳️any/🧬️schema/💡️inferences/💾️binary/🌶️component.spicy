@@ -1,0 +1,4 @@
+module Mathematical_mathematical_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

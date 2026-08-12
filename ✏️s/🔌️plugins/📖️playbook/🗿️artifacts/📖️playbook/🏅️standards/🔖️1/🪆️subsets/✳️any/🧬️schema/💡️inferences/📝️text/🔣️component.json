@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/playbook/playbook/inference/text.json",
+  "title": "PlaybookInferenceText",
+  "type": "object"
+}

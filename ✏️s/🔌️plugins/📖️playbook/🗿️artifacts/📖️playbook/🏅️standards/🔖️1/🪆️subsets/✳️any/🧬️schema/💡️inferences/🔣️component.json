@@ -1,0 +1,26 @@
+{
+  "$id": "https://semio.tech/schema/s/playbook/playbook/inference.json",
+  "title": "PlaybookInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topology"],
+  "properties": {
+    "topology": {
+      "$ref": "#/$defs/PlaybookTopology",
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "PlaybookTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topoOrder", "depth", "cycleFree", "nodeCount"],
+      "properties": {
+        "topoOrder": { "type": "array", "items": { "type": "string" } },
+        "depth": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "cycleFree": { "type": "boolean" },
+        "nodeCount": { "type": "integer" }
+      }
+    }
+  }
+}

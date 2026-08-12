@@ -1,14 +1,9 @@
 dialect grammar
-grammar layout.op
+grammar layout.mutations
 extension layout
-use family-scene
-start mutation
+start document
 
-artifact-mark = "layout.layout-op"
-mutation = artifact-mark canvas-op+
-canvas-op = "add-layer" layer-field+ | "set-stroke" stroke-field+ | "move-layer" move-field+ | "set-fill" fill-field+
-layer-field = "id" "=" IDENT | "kind" "=" IDENT
-stroke-field = "color" "=" TEXT | "width" "=" FLOAT
-move-field = "id" "=" IDENT | "x" "=" FLOAT | "y" "=" FLOAT
-fill-field = "id" "=" IDENT | "fill" "=" TEXT
-paint-field = "opacity" "=" FLOAT | "blend" "=" IDENT
+document = header body
+header = "schema" SP "stdio.json" NL
+body = payload NL?
+payload = OCTET+

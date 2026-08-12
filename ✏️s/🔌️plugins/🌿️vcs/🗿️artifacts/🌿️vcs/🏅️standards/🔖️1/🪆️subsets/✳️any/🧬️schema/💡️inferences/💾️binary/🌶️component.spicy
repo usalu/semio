@@ -1,0 +1,4 @@
+module Vcs_vcs_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

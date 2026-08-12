@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/xlsx/inference.json",
+  "title": "XlsxInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/XlsxOutline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "XlsxOutline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sheetNames", "sheetCount", "cellCount"],
+      "properties": {
+        "sheetNames": { "type": "array", "items": { "type": "string" } },
+        "sheetCount": { "type": "integer" },
+        "cellCount": { "type": "integer" }
+      }
+    }
+  }
+}

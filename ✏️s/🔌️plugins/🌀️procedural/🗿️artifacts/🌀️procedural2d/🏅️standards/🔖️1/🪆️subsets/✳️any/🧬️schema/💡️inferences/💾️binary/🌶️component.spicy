@@ -1,0 +1,4 @@
+module Procedural_procedural2d_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

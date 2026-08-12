@@ -11,7 +11,7 @@ pub mod derived_construction {
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::docx::schema::snapshot::{DocxParagraph, DocxRun, DocxStyle, DocxTable};
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::DocxBuilder as DocxAnyBuilder;
+    use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::DocxBuilderConstruction as DocxAnyBuilder;
     use crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
     use crate::artifacts::docx::{DocxDiff, DocxMutation, DocxSnapshot};
 

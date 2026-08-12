@@ -83,7 +83,7 @@ pub mod derived_composition {
     mod tests {
         use super::*;
         use semio_framework_plugin::AnalyzeSource;
-        use crate::artifacts::pdf::standards::v1_7::subsets::h::schema::PdfHBuilder;
+        use crate::artifacts::pdf::standards::v1_7::subsets::h::schema::PdfHBuilderConstruction as PdfHBuilder;
         use semio_framework_plugin::ArtifactBuilder as _;
 
         #[test]

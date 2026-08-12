@@ -1,0 +1,4 @@
+module Layout_layout_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.stdio.xlsx.inference;
+
+// 💡️ Xlsx inference schema — document outline (sheet names/count, cell count).
+
+message XlsxInference {
+  // @state inferred
+  XlsxOutline outline = 1;
+}
+
+message XlsxOutline {
+  repeated string sheet_names = 1;
+  uint32 sheet_count = 2;
+  uint32 cell_count = 3;
+}

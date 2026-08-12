@@ -1,0 +1,26 @@
+{
+  "$id": "https://semio.tech/schema/s/layout/layout/inference.json",
+  "title": "LayoutInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topology"],
+  "properties": {
+    "topology": {
+      "$ref": "#/$defs/LayoutTopology",
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "LayoutTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topoOrder", "depth", "cycleFree", "nodeCount"],
+      "properties": {
+        "topoOrder": { "type": "array", "items": { "type": "string" } },
+        "depth": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "cycleFree": { "type": "boolean" },
+        "nodeCount": { "type": "integer" }
+      }
+    }
+  }
+}

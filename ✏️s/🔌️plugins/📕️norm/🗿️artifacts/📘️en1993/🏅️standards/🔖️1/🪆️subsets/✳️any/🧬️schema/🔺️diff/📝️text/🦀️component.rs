@@ -273,12 +273,3 @@ impl MutationDiff<En1993Snapshot> for En1993Diff {
     }
 }
 //#endregion 🔖️Apply
-
-//#region 🔖️Helpers
-pub fn diff_set_snapshot(snapshot: &En1993Snapshot) -> En1993Diff {
-    En1993Diff {
-        artifact: Some(Box::new(En1993Artifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
-}
-//#endregion 🔖️Helpers

@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/html/inference.json",
+  "title": "HtmlInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/HtmlOutline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "HtmlOutline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["elementCount", "maxDepth", "textLength"],
+      "properties": {
+        "elementCount": { "type": "integer" },
+        "maxDepth": { "type": "integer" },
+        "textLength": { "type": "integer" }
+      }
+    }
+  }
+}

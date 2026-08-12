@@ -1,0 +1,11 @@
+# 💡️ Xlsx inference schema — document outline (sheet names/count, cell count).
+
+type XlsxInference {
+  outline: XlsxOutline! @state(class: INFERRED)
+}
+
+type XlsxOutline {
+  sheetNames: [String!]!
+  sheetCount: Int!
+  cellCount: Int!
+}

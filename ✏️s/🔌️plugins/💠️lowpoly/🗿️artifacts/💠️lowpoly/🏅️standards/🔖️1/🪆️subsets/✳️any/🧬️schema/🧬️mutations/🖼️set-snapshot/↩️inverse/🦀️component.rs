@@ -1,9 +1,2 @@
-//! ↩️ Inverse for `SetSnapshot`.
-use crate::artifacts::lowpoly::mutations::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolySnapshot;
-
-//#region 🔖️Inverse
-pub fn inverse(base: &LowpolySnapshot, _replacement: &LowpolySnapshot) -> Vec<LowpolyMutation> {
-    vec![LowpolyMutation::SetSnapshot { snapshot: base.clone() }]
-}
-//#endregion 🔖️Inverse
+//! 🪦️ Orphaned by 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL — see the sibling `🦠️mutation` leaf's doc
+//! comment for why this file stays present but empty.

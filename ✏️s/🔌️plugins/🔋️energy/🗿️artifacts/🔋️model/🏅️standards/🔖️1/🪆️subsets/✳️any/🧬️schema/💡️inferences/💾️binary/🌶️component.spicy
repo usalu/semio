@@ -1,0 +1,4 @@
+module Energy_model_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

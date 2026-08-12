@@ -93,7 +93,7 @@ pub mod derived_composition {
     mod tests {
         use super::*;
         use semio_framework_plugin::AnalyzeSource;
-        use crate::artifacts::pdf::standards::v1_7::subsets::x::schema::PdfXBuilder;
+        use crate::artifacts::pdf::standards::v1_7::subsets::x::schema::PdfXBuilderConstruction as PdfXBuilder;
         use semio_framework_plugin::ArtifactBuilder as _;
 
         /// 🩹 A genuinely PDF/X-4-conforming raw fixture: the 1.7 writer (`encode_pdf`) deliberately

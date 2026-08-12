@@ -1,0 +1,9 @@
+dialect grammar
+grammar puzzle.puzzle5d.inference
+extension puzzle5d.inference
+start document
+
+document = header body
+header = "schema" SP "puzzle.puzzle5d.inference" NL
+body = payload NL?
+payload = OCTET+

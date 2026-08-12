@@ -95,7 +95,7 @@ pub mod derived_composition {
         use super::*;
         use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder as _};
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::CODE_NAMESPACE_MISMATCH;
-        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::XlsxTransitionalBuilder;
+        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::XlsxTransitionalBuilderConstruction as XlsxTransitionalBuilder;
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxWorkbook;
 
         #[test]

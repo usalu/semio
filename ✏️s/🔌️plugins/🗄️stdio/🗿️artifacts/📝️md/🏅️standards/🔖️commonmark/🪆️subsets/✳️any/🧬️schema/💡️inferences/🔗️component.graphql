@@ -1,0 +1,16 @@
+# 💡️ Md inference schema — document outline (heading outline, block/word counts).
+
+type MdInference {
+  outline: MdOutline! @state(class: INFERRED)
+}
+
+type MdOutline {
+  sectionOutline: [MdHeadingEntry!]!
+  blockCount: Int!
+  wordCount: Int!
+}
+
+type MdHeadingEntry {
+  level: Int!
+  text: String!
+}

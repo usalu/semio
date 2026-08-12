@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.stdio.html.inference;
+
+// 💡️ Html inference schema — document outline (element count, max depth, text length).
+
+message HtmlInference {
+  // @state inferred
+  HtmlOutline outline = 1;
+}
+
+message HtmlOutline {
+  uint32 element_count = 1;
+  uint32 max_depth = 2;
+  uint32 text_length = 3;
+}

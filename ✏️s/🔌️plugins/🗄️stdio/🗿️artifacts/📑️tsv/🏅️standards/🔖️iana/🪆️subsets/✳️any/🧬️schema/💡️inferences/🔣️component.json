@@ -1,0 +1,21 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/tsv/inference.json",
+  "title": "TsvInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/TsvOutline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "TsvOutline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recordCount", "columnCount"],
+      "properties": {
+        "recordCount": { "type": "integer" },
+        "columnCount": { "type": "integer" }
+      }
+    }
+  }
+}

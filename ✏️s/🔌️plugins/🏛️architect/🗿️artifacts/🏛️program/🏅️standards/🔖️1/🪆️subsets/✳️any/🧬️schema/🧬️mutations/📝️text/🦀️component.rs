@@ -1,9 +1,7 @@
 //! ⚡️ Architect program artifact — OpText/OpBinary codecs + grammar for serializing `ProgramMutation`.
 //! Mutation apply/inverse live in `🧬️mutations`.
 
-pub use crate::artifacts::program::schema::mutations::{
-    apply_program_mutation, inverse_program_mutation, ProgramMutation,
-};
+pub use crate::artifacts::program::schema::mutations::ProgramMutation;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

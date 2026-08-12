@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/pptx/inference/text.json",
+  "title": "PptxInferenceText",
+  "type": "object"
+}

@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.stdio.pdf.1_7.inference;
+
+// 💡️ Pdf (1.7) inference schema — document outline (page count, word count, title).
+
+message Pdf17Inference {
+  // @state inferred
+  Pdf17Outline outline = 1;
+}
+
+message Pdf17Outline {
+  uint32 page_count = 1;
+  uint32 word_count = 2;
+  optional string title = 3;
+}

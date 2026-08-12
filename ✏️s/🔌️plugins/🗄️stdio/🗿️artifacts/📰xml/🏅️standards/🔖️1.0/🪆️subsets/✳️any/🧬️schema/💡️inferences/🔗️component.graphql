@@ -1,0 +1,11 @@
+# 💡️ Xml inference schema — document outline (element count, max depth, hasDoctype).
+
+type XmlInference {
+  outline: XmlOutline! @state(class: INFERRED)
+}
+
+type XmlOutline {
+  elementCount: Int!
+  maxDepth: Int!
+  hasDoctype: Boolean!
+}

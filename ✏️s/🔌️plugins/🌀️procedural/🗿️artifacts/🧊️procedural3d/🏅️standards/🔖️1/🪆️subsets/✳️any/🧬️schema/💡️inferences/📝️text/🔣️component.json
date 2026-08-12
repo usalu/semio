@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/procedural/procedural3d/inference/text.json",
+  "title": "Procedural3dInferenceText",
+  "type": "object"
+}

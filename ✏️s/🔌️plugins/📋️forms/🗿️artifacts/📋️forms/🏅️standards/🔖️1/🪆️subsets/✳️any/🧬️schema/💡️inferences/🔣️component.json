@@ -1,0 +1,26 @@
+{
+  "$id": "https://semio.tech/schema/s/forms/forms/inference.json",
+  "title": "FormsInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topology"],
+  "properties": {
+    "topology": {
+      "$ref": "#/$defs/FormsTopology",
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "FormsTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topoOrder", "depth", "cycleFree", "nodeCount"],
+      "properties": {
+        "topoOrder": { "type": "array", "items": { "type": "string" } },
+        "depth": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "cycleFree": { "type": "boolean" },
+        "nodeCount": { "type": "integer" }
+      }
+    }
+  }
+}

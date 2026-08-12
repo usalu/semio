@@ -1,6 +1,7 @@
 //! 🧮️ Fem2d play app commands — analysis settings (modal/buckling mode counts, deformation scale).
 
 use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use crate::artifacts::fem2d::mutations::update_analysis_settings;
 use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::FemAnalysisSettings;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -27,7 +28,7 @@ pub mod set_analysis_settings {
             buckling_count: payload.buckling_count.map(|value| value as usize).unwrap_or(current.buckling_count),
             deformation_scale: payload.deformation_scale.unwrap_or(current.deformation_scale),
         };
-        Ok(Emit::mutations(vec![Fem2dMutation::SetAnalysisSettings { settings }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings })]))
     }
 }
 //#endregion 🔖️SetAnalysisSettings

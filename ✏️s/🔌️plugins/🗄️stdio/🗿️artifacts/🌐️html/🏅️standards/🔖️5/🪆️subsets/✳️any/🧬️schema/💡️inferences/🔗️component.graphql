@@ -1,0 +1,11 @@
+# 💡️ Html inference schema — document outline (element count, max depth, text length).
+
+type HtmlInference {
+  outline: HtmlOutline! @state(class: INFERRED)
+}
+
+type HtmlOutline {
+  elementCount: Int!
+  maxDepth: Int!
+  textLength: Int!
+}

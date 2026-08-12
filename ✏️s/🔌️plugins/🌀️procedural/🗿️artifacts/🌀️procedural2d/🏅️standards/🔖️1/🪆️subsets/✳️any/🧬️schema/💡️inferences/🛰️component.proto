@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.s.procedural.procedural2d.inference;
+
+// 💡️ Procedural2d inference schema — topology (DAG shape of `fixture`'s widget/synapse graph).
+
+message Procedural2dInference {
+  // @state inferred
+  Procedural2dTopology topology = 1;
+}
+
+message Procedural2dTopology {
+  uint32 node_count = 1;
+  uint32 edge_count = 2;
+  repeated string topo_order = 3;
+  uint32 depth = 4;
+  bool cycle_free = 5;
+}

@@ -1,0 +1,4 @@
+module Trinity_jack_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

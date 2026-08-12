@@ -87,7 +87,7 @@ pub mod derived_composition {
         use super::*;
         use semio_framework_plugin::AnalyzeSource;
         use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::CODE_VIEW_DEFINITION;
-        use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::Ifc2x3CobieBuilder;
+        use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::Ifc2x3CobieBuilderConstruction as Ifc2x3CobieBuilder;
         use semio_framework_plugin::ArtifactBuilder as _;
 
         #[test]

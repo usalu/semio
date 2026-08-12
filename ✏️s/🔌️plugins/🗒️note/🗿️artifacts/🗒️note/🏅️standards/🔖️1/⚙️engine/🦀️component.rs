@@ -16,6 +16,7 @@ pub fn register() {
 
     register_pilot_languages();
     register_artifact_schema();
+    register_artifact_inferences();
     crate::apps::note::config::schema::register_app_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::note::NotePlayApp>(NOTE_DOCUMENT_SCHEMA);
 }
@@ -79,6 +80,13 @@ pub fn register_pilot_languages() {
 /// 📎 Registers the note artifact schema descriptor into the process-local registry.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::note::schema::note_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.note.note.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::note::schema::inferences::note_artifact_inference_descriptor());
 }
 
 //#endregion 🔖️Register

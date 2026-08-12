@@ -1266,6 +1266,12 @@ describe("validateTaxonomy", () => {
     expect(validateTaxonomy(broken).some((problem) => problem.includes("📡️spr"))).toBe(true);
   });
 
+  test("rejects explicit artifact lifecycle directories", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = { ...taxonomy, subsetChildDirs: [...taxonomy.subsetChildDirs, "🧐️analyzer"] };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("derived lifecycle facet"))).toBe(true);
+  });
+
   test("reports mutationChildDirs missing from taxonomyLeafParentDirs", () => {
     const taxonomy = loadTaxonomy();
     const broken = {

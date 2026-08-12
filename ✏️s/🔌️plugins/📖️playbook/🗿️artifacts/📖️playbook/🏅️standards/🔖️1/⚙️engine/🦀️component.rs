@@ -22,6 +22,7 @@ pub fn register() {
     crate::artifacts::playbook::io_registry::register();
 
     register_artifact_schema();
+    register_artifact_inference();
     crate::apps::playbook::config::schema::register_app_schema();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::playbook::PlaybookPlayApp>(PLAYBOOK_DOCUMENT_SCHEMA);
@@ -198,6 +199,13 @@ impl PlaybookEngine {
 /// 📌️ Registers the twenty handcrafted schema leaves for `s.playbook.playbook`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::playbook::schema::playbook_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.playbook.playbook.inference`'s facet leaves — sibling registry to
+/// `register_artifact_schema()` above (ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inference() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::playbook::standards::v1::subsets::any::schema::inferences::playbook_artifact_inference_descriptor());
 }
 //#endregion 🔖️SchemaRegistry
 //#region 🚪️DerivedIoRegistry

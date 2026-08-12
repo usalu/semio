@@ -1,0 +1,22 @@
+# 💡️ Puzzle5d inference schema — flatPosition (plane + center) per part.
+
+type Puzzle5dInference {
+  flatPositions: [Puzzle5dFlatPositionEntry!]! @state(class: INFERRED)
+}
+
+type Puzzle5dFlatPositionEntry {
+  partId: String!
+  pose: FlattenPose!
+}
+
+type FlattenPose {
+  plane: FlattenPlane!
+  center: [Float!]!
+  orientation: [Float!]!
+}
+
+type FlattenPlane {
+  origin: [Float!]!
+  xAxis: [Float!]!
+  yAxis: [Float!]!
+}

@@ -1,0 +1,17 @@
+# 💡️ Playbook inference schema — topology (step/block dependency order).
+
+type PlaybookInference {
+  topology: PlaybookTopology! @state(class: INFERRED)
+}
+
+type PlaybookTopology {
+  topoOrder: [String!]!
+  depth: [PlaybookTopologyDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type PlaybookTopologyDepthEntry {
+  nodeId: String!
+  depth: Int!
+}

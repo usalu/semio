@@ -1,0 +1,3 @@
+; abnf layout.layout.inference
+document = payload
+payload = *OCTET

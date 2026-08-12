@@ -1,23 +1,37 @@
 //! 🏋️ Fem2d play app commands — load cases, nodal/member-UDL/area loads, self-weight and combinations.
 
 use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use crate::artifacts::fem2d::mutations::{add_load, change_load_case_self_weight, create_combination, create_load_case};
 use crate::artifacts::fem2d::op::Fem2dMutation;
-use crate::artifacts::fem2d::{load_id, FemCombination, FemCombinationTerm, FemDof, FemLoad, FemLoadCase};
+use crate::artifacts::fem2d::{FemCombination, FemDof, FemLoad, FemLoadCase};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
 
-/// 🔎️ Finds the load case an incoming load/self-weight edit should target: the named `case_id` if it
-/// exists, else the first case, else a freshly synthesized `"case-1"` — shared by `addNodalLoad`,
-/// `addMemberUdl`, `addAreaLoad`, and `setSelfWeight` so every load-mutating action resolves its
-/// target case the same way. Returns the case's collection index (`load_cases.len()` for a fresh one)
-/// alongside an owned clone ready to be mutated and re-emitted via `SetLoadCase`.
-fn fem2d_resolve_load_case(doc: &Fem2dSnapshot, case_id: Option<&str>) -> (usize, FemLoadCase) {
-    let named = case_id.and_then(|id| doc.load_cases.iter().find(|lc| lc.id == id).cloned());
-    let load_case = named.or_else(|| doc.load_cases.first().cloned()).unwrap_or_else(|| FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: Vec::new(), self_weight: false });
-    let index = doc.load_cases.iter().position(|lc| lc.id == load_case.id).unwrap_or(doc.load_cases.len());
-    (index, load_case)
+/// 🔎️ Resolves the target load case for a load-adding command: the named `case_id` if given and
+/// found, else the document's first load case, else `None` — a missing case is not resolved here,
+/// the caller decides between `add-load` (existing case) and `create-load-case` (pre-seeded with the
+/// new load, synthesized `"case-1"`/`"Load Case 1"`) once it knows which branch it's in.
+fn resolve_load_case(doc: &Fem2dSnapshot, case_id: Option<&str>) -> Option<FemLoadCase> {
+    case_id.and_then(|id| doc.load_cases.iter().find(|lc| lc.id == id).cloned()).or_else(|| doc.load_cases.first().cloned())
+}
+
+/// 🌉️ Shared resolve-or-create gesture behind `add-nodal-load`/`add-member-udl`/`add-area-load`:
+/// attaches `load` to the named/first load case via `add-load` if one exists, else synthesizes a
+/// fresh `"case-1"`/`"Load Case 1"` case pre-seeded with `load` via `create-load-case`.
+fn add_load_mutation(doc: &Fem2dSnapshot, case_id: Option<&str>, load: FemLoad) -> Fem2dMutation {
+    match resolve_load_case(doc, case_id) {
+        Some(existing) => Fem2dMutation::AddLoad(add_load::mutation::AddLoad { case_id: existing.id, load: Box::new(load) }),
+        None => Fem2dMutation::CreateLoadCase(create_load_case::mutation::CreateLoadCase { load_case: FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: vec![load], self_weight: false } }),
+    }
+}
+
+/// 🌉️ The load id a new load on the (possibly not-yet-existing) target case should get — reads the
+/// existing case's loads for `next_id` continuity, or starts fresh for a synthesized case.
+fn next_load_id(doc: &Fem2dSnapshot, case_id: Option<&str>) -> String {
+    let loads = resolve_load_case(doc, case_id).map(|lc| lc.loads).unwrap_or_default();
+    crate::app_surface::next_id(loads.iter().map(|l| crate::artifacts::fem2d::load_id(l).to_string()), "l")
 }
 
 //#region 🔖️AddNodalLoad
@@ -34,10 +48,9 @@ pub mod add_nodal_load {
     }
 
     pub fn handle(payload: &AddNodalLoad, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
-        let (index, mut load_case) = fem2d_resolve_load_case(doc.snapshot, payload.case_id.as_deref());
-        let new_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| load_id(l).to_string()), "l");
-        load_case.loads.push(FemLoad::Nodal { id: new_id, node_id: payload.node_id.clone(), dof: payload.dof, value: payload.value });
-        Ok(Emit::mutations(vec![Fem2dMutation::SetLoadCase { index, load_case }]))
+        let load_id = next_load_id(doc.snapshot, payload.case_id.as_deref());
+        let load = FemLoad::Nodal { id: load_id, node_id: payload.node_id.clone(), dof: payload.dof, value: payload.value };
+        Ok(Emit::mutations(vec![add_load_mutation(doc.snapshot, payload.case_id.as_deref(), load)]))
     }
 }
 //#endregion 🔖️AddNodalLoad
@@ -56,10 +69,9 @@ pub mod add_member_udl {
     }
 
     pub fn handle(payload: &AddMemberUdl, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
-        let (index, mut load_case) = fem2d_resolve_load_case(doc.snapshot, payload.case_id.as_deref());
-        let new_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| load_id(l).to_string()), "l");
-        load_case.loads.push(FemLoad::MemberUdl { id: new_id, element_id: payload.element_id.clone(), wx: payload.wx, wy: payload.wy });
-        Ok(Emit::mutations(vec![Fem2dMutation::SetLoadCase { index, load_case }]))
+        let load_id = next_load_id(doc.snapshot, payload.case_id.as_deref());
+        let load = FemLoad::MemberUdl { id: load_id, element_id: payload.element_id.clone(), wx: payload.wx, wy: payload.wy };
+        Ok(Emit::mutations(vec![add_load_mutation(doc.snapshot, payload.case_id.as_deref(), load)]))
     }
 }
 //#endregion 🔖️AddMemberUdl
@@ -77,10 +89,9 @@ pub mod add_area_load {
     }
 
     pub fn handle(payload: &AddAreaLoad, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
-        let (index, mut load_case) = fem2d_resolve_load_case(doc.snapshot, payload.case_id.as_deref());
-        let new_id = crate::app_surface::next_id(load_case.loads.iter().map(|l| load_id(l).to_string()), "l");
-        load_case.loads.push(FemLoad::Area { id: new_id, region_id: payload.region_id.clone(), pressure: payload.pressure });
-        Ok(Emit::mutations(vec![Fem2dMutation::SetLoadCase { index, load_case }]))
+        let load_id = next_load_id(doc.snapshot, payload.case_id.as_deref());
+        let load = FemLoad::Area { id: load_id, region_id: payload.region_id.clone(), pressure: payload.pressure };
+        Ok(Emit::mutations(vec![add_load_mutation(doc.snapshot, payload.case_id.as_deref(), load)]))
     }
 }
 //#endregion 🔖️AddAreaLoad
@@ -99,8 +110,7 @@ pub mod add_load_case {
     pub fn handle(payload: &AddLoadCase, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.load_cases.iter().map(|lc| lc.id.clone()), "case-");
-        let index = snapshot.load_cases.len();
-        Ok(Emit::mutations(vec![Fem2dMutation::SetLoadCase { index, load_case: FemLoadCase { id, name: payload.name.clone(), loads: Vec::new(), self_weight: payload.self_weight } }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::CreateLoadCase(create_load_case::mutation::CreateLoadCase { load_case: FemLoadCase { id, name: payload.name.clone(), loads: Vec::new(), self_weight: payload.self_weight } })]))
     }
 }
 //#endregion 🔖️AddLoadCase
@@ -113,14 +123,13 @@ pub mod add_combination {
     #[dsl(keyword = "add-combination")]
     pub struct AddCombination {
         pub name: String,
-        pub terms: Vec<FemCombinationTerm>,
+        pub terms: Vec<crate::artifacts::fem2d::FemCombinationTerm>,
     }
 
     pub fn handle(payload: &AddCombination, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = crate::app_surface::next_id(snapshot.combinations.iter().map(|c| c.id.clone()), "c");
-        let index = snapshot.combinations.len();
-        Ok(Emit::mutations(vec![Fem2dMutation::SetCombination { index, combination: FemCombination { id, name: payload.name.clone(), terms: payload.terms.clone() } }]))
+        Ok(Emit::mutations(vec![Fem2dMutation::CreateCombination(create_combination::mutation::CreateCombination { combination: FemCombination { id, name: payload.name.clone(), terms: payload.terms.clone() } })]))
     }
 }
 //#endregion 🔖️AddCombination
@@ -138,13 +147,9 @@ pub mod set_self_weight {
 
     pub fn handle(payload: &SetSelfWeight, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
-        match snapshot.load_cases.iter().position(|lc| lc.id == payload.case_id) {
-            Some(index) => {
-                let mut load_case = snapshot.load_cases[index].clone();
-                load_case.self_weight = payload.enabled;
-                Ok(Emit::mutations(vec![Fem2dMutation::SetLoadCase { index, load_case }]))
-            }
-            None => Ok(Emit::default()),
+        match snapshot.load_cases.iter().any(|lc| lc.id == payload.case_id) {
+            true => Ok(Emit::mutations(vec![Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: payload.case_id.clone(), new_self_weight: payload.enabled })])),
+            false => Ok(Emit::default()),
         }
     }
 }
@@ -168,8 +173,19 @@ mod tests {
         dispatch(&mut app, Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false }));
         assert_eq!(app.snapshot().expect("snapshot").load_cases.last().expect("case added").name, "Live");
 
-        dispatch(&mut app, Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }] }));
-        assert_eq!(app.snapshot().expect("snapshot").combinations.last().expect("combination added").terms, vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }]);
+        let dead_id = app.snapshot().expect("snapshot").load_cases[0].id.clone();
+        dispatch(&mut app, Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![crate::artifacts::fem2d::FemCombinationTerm { case_id: dead_id.clone(), factor: 1.35 }] }));
+        assert_eq!(app.snapshot().expect("snapshot").combinations.last().expect("combination added").terms, vec![crate::artifacts::fem2d::FemCombinationTerm { case_id: dead_id, factor: 1.35 }]);
+    }
+
+    #[test]
+    fn add_nodal_load_with_no_existing_case_creates_one_2d() {
+        let mut app = fem2d_app();
+        dispatch(&mut app, Fem2dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: FemDof::Ty, value: -5000.0, case_id: None }));
+        let snapshot = app.snapshot().expect("snapshot");
+        assert_eq!(snapshot.load_cases.len(), 1);
+        assert_eq!(snapshot.load_cases[0].id, "case-1");
+        assert!(matches!(snapshot.load_cases[0].loads[0], FemLoad::Nodal { .. }));
     }
 
     #[test]
@@ -191,6 +207,14 @@ mod tests {
         let case_id = app.snapshot().expect("snapshot").load_cases[0].id.clone();
         dispatch(&mut app, Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id, enabled: true }));
         assert!(app.snapshot().expect("snapshot").load_cases[0].self_weight);
+    }
+
+    #[test]
+    fn set_self_weight_unknown_case_is_a_no_op_2d() {
+        let mut app = fem2d_app();
+        with_dead_case(&mut app);
+        dispatch(&mut app, Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "missing".into(), enabled: true }));
+        assert!(!app.snapshot().expect("snapshot").load_cases[0].self_weight);
     }
 
     #[test]

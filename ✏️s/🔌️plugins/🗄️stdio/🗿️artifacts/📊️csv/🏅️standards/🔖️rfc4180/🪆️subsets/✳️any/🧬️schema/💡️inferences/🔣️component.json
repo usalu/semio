@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/csv/inference.json",
+  "title": "CsvInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/CsvOutline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "CsvOutline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recordCount", "columnCount", "hasHeader"],
+      "properties": {
+        "recordCount": { "type": "integer" },
+        "columnCount": { "type": "integer" },
+        "hasHeader": { "type": "boolean" }
+      }
+    }
+  }
+}

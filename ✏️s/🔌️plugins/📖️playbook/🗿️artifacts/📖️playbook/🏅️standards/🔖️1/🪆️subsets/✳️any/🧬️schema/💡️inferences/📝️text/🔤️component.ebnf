@@ -1,0 +1,3 @@
+(* ebnf playbook.playbook.inference *)
+document = header, body ;
+header = 'schema', space, 'playbook.playbook.inference', newline ;

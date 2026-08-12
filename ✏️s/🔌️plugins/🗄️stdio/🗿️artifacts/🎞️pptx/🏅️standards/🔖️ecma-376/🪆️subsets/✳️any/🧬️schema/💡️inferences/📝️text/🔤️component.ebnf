@@ -1,0 +1,3 @@
+(* ebnf stdio.pptx.inference *)
+document = header, body ;
+header = 'schema', space, 'stdio.pptx.inference', newline ;

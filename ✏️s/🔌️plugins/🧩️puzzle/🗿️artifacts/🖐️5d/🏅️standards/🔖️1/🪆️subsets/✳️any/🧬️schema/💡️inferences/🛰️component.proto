@@ -1,0 +1,21 @@
+syntax = "proto3";
+package semio.s.puzzle.puzzle5d.inference;
+
+// 💡️ Puzzle5d inference schema — flatPosition (plane + center) per part.
+
+message Puzzle5dInference {
+  // @state inferred
+  map<string, FlattenPose> flat_positions = 1;
+}
+
+message FlattenPlane {
+  repeated double origin = 1;
+  repeated double x_axis = 2;
+  repeated double y_axis = 3;
+}
+
+message FlattenPose {
+  FlattenPlane plane = 1;
+  repeated double center = 2;
+  repeated double orientation = 3;
+}

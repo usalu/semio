@@ -83,11 +83,14 @@ pub fn register_artifact_schemas() {
 
 /// 💡️ Registers all puzzle artifact 💡️inference schema descriptors into the OS-wide inference
 /// catalog — sibling to `register_artifact_schemas()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Puzzle2d/5d have no
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Puzzle2d has no
 /// InferredFields registered yet (fan-out follow-up).
 pub fn register_artifact_inferences() {
     artifact_schema::register_artifact_inference_descriptor(
         crate::artifacts::puzzle3d::standards::v1::subsets::any::schema::inferences::puzzle3d_artifact_inference_descriptor(),
+    );
+    artifact_schema::register_artifact_inference_descriptor(
+        crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::puzzle5d_artifact_inference_descriptor(),
     );
 }
 

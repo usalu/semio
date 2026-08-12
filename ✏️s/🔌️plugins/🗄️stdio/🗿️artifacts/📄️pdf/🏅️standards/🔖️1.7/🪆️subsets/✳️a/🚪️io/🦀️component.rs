@@ -99,7 +99,7 @@ pub mod derived_composition {
         use super::*;
         use semio_framework_plugin::AnalyzeSource;
         use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::{CODE_JAVASCRIPT, CODE_LAUNCH};
-        use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::PdfABuilder;
+        use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::PdfABuilderConstruction as PdfABuilder;
         use semio_framework_plugin::ArtifactBuilder as _;
 
         fn minimal_pdf_with_extra_object(extra_obj_body: &[u8]) -> Vec<u8> {

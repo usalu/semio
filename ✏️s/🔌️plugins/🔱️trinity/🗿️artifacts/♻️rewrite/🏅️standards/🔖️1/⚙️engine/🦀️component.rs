@@ -484,12 +484,22 @@ pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::rewrite::schema::rewrite_artifact_schema_descriptor());
 }
 
+/// 💡️ Registers `s.trinity.rewrite.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inference() {
+    ::schema::register_artifact_inference_descriptor(
+        crate::artifacts::rewrite::standards::v1::subsets::any::schema::inferences::rewrite_artifact_inference_descriptor(),
+    );
+}
+
 /// 🗂️ Registers codecs and schema descriptor.
 pub fn register() {
     crate::artifacts::rewrite::io_registry::register();
 
     register_pilot_languages();
     register_artifact_schema();
+    register_artifact_inference();
     crate::apps::rewrite::config::schema::register_app_schema();
 }
 //#endregion 🔖️Register

@@ -1,0 +1,4 @@
+module Stdio_csv_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

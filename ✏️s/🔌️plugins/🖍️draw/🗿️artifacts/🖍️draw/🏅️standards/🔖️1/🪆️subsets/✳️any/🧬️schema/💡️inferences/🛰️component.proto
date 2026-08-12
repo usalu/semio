@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.draw.draw.inference;
+
+// 💡️ Draw inference schema — layer-tree topology (structural pre-order + nesting depth).
+
+message DrawInference {
+  // @state inferred
+  DrawTopology topology = 1;
+}
+
+message DrawTopology {
+  repeated string topo_order = 1;
+  map<string, uint32> depth = 2;
+  bool cycle_free = 3;
+  uint32 node_count = 4;
+}

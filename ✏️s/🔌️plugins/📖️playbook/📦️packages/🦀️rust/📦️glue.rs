@@ -67,6 +67,22 @@ pub mod artifacts {
                                 pub mod binary;
                             }
                             #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod topology {
+                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                            }
+                            #[path = "."]
                             pub mod diff {
                                 #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
                                 mod component;
@@ -420,6 +436,9 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 pub mod examples {
     #[path = "../../🗿️artifacts/📖️playbook/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_playbook_demo;
+    #[cfg(test)]
+    #[path = "../../🗿️artifacts/📖️playbook/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+    mod art_playbook_demo_tests;
     #[path = "../../🎛️apps/📖️playbook/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_playbook_demo_session;
 }

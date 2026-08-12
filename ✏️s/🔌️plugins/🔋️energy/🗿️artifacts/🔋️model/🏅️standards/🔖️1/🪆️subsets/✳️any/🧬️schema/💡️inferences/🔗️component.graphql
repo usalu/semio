@@ -1,0 +1,11 @@
+# 💡️ EnergyModel inference schema — opaque-container census of the persisted `modelJson` body.
+
+type EnergyModelInference {
+  entries: EnergyModelEntries! @state(class: INFERRED)
+}
+
+type EnergyModelEntries {
+  entryCount: Int!
+  byteSize: Int!
+  contentDigest: String!
+}

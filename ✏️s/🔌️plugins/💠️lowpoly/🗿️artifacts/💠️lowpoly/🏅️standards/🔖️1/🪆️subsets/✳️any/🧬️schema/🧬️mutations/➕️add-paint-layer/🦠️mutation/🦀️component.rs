@@ -1,28 +1,5 @@
-//! ➕️ Lowpoly mutation — `AddPaintLayer` payload + builder + apply.
-use crate::artifacts::lowpoly::{LowpolyPaintLayer, LowpolySnapshot};
-use crate::artifacts::lowpoly::mutations::LowpolyMutation;
-use serde::{Deserialize, Serialize};
-
-
-//#region 🔖️Mutation
-/// @emoji ➕️ `AddPaintLayer` mutation payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct AddPaintLayer {
-    pub object_id: String,
-    pub index: usize,
-    #[dsl(block)]
-    pub layer: LowpolyPaintLayer,
-}
-
-pub fn add_paint_layer(object_id: impl Into<String>, index: usize, layer: LowpolyPaintLayer) -> LowpolyMutation {
-    LowpolyMutation::AddPaintLayer { object_id: object_id.into(), index, layer }
-}
-
-pub fn apply(projection: &mut LowpolySnapshot, object_id: &str, index: usize, layer: &LowpolyPaintLayer) {
-    if let Some(object) = crate::artifacts::lowpoly::engine::object_mut(projection, object_id) {
-        let at = index.min(object.paint_layers.len());
-        object.paint_layers.insert(at, layer.clone());
-    }
-}
-//#endregion 🔖️Mutation
+//! 🪦️ Orphaned by 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL — `LowpolyMutation::AddPaintLayer` was replaced
+//! by `insert-paint-layer` (see `📓️taxonomy.md`/`📓️derivation-rules.md`). This file stays present only
+//! because `📦️glue.rs` (plugin-shared, outside this facet's boundary) still `#[path]`-wires it;
+//! see this ticket's wave2 report `sharedFileRequests` for the glue.rs cleanup this orphaning
+//! needs (delete this directory's `pub mod` block entirely).

@@ -53,6 +53,7 @@ pub fn demo_xml_snapshot() -> XmlSnapshot {
 pub fn register() {
     crate::artifacts::xml::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<XmlSnapshot, XmlMutation>(STDIO_XML_DOCUMENT_SCHEMA));
     // 🛡️ D5's generic validate-on-build hook: registers the ✳️valid subset's SubsetValidator so
@@ -134,6 +135,13 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.xml`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::xml::schema::xml_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.stdio.xml.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::xml::standards::v1_0::subsets::any::schema::inferences::xml_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 

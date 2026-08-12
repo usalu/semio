@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/sourcing/curate/inference/text.json",
+  "title": "CurateInferenceText",
+  "type": "object"
+}

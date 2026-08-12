@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.xlsx.inference
+extension xlsx.inference
+start document
+
+document = header body
+header = "schema" SP "stdio.xlsx.inference" NL
+body = payload NL?
+payload = OCTET+

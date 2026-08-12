@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/csv/inference/text.json",
+  "title": "CsvInferenceText",
+  "type": "object"
+}

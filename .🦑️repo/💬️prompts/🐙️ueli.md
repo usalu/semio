@@ -369,11 +369,14 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 The current artifact system is adhoc.
 Every artifact must be composable (and appear as child) or referenceable (and appear only as link).
 Hence every artifact can depend on other artifacts.
+Make sure to generalize, abstract, disolve, unify all artifacts from the plugins into the stdio plugin.
 e.g.
 procdudure3d uses flow and brep (inferred artifact)
-cad uses brep
-fem uses meshes
-lowpoly uses meshes
+fem uses mesh
+lowpoly uses mesh
+object uses mesh, brep
+model uses objects
+cad uses models
 document uses text, image, video, audio, etc
 video uses images, audio, etc
 etc

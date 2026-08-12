@@ -1,0 +1,3 @@
+; abnf stdio.csv.inference
+document = payload
+payload = *OCTET

@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.stdio.docx.inference;
+
+// 💡️ Docx inference schema — document outline (paragraph/table/word counts).
+
+message DocxInference {
+  // @state inferred
+  DocxOutline outline = 1;
+}
+
+message DocxOutline {
+  uint32 paragraph_count = 1;
+  uint32 table_count = 2;
+  uint32 word_count = 3;
+}

@@ -409,6 +409,22 @@ pub mod artifacts {
                                 pub mod binary;
                             }
                             #[path = "."]
+                            pub mod inferences {
+                                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
+                                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
+                                pub mod binary;
+                                #[path = "."]
+                                pub mod flat_position {
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛flat-position/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                            }
+                            #[path = "."]
                             pub mod diff {
                                 #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
                                 mod component;
