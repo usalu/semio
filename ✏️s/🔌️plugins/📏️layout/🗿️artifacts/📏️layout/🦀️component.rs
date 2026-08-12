@@ -573,7 +573,7 @@ impl Patchable<ImageLinkPatch> for ImageLink {
 /// for text. The doubly-optional `fill`/`stroke` distinguishes "unchanged" (outer `None`) from
 /// "cleared" (inner `None`). Needed both by `op`'s `PatchFrame` operation and by the DSL/spr mirror in
 /// `spr` (`FramePatchDsl`), so it lives here alongside the other `*Patch` records rather than in `op`
-/// itself. Frame patching is per-page nested rather than a flat `CollectionMutation`, so unlike the
+/// itself. Frame patching is per-page nested rather than a flat collection-wide op, so unlike the
 /// patches above it has no `Patchable` impl.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct FramePatch {

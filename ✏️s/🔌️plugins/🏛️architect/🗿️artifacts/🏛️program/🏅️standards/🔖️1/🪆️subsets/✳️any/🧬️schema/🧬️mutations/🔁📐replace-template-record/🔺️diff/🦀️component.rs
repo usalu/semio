@@ -1,0 +1,18 @@
+//! 🔺️ Sparse diff construction for the `replace-template-record` mutation leaf — real handcrafted
+//! `ProgramDiff` builder, never apply-then-capture. Split from `📐templates` per Wave C.
+
+use super::mutation::ReplaceTemplateRecord;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
+use crate::artifacts::program::diff::{ProgramTemplatesDelta, ProgramTemplatesPatchEntry};
+
+/// 🔁️ `patched = [{id, full patch}]` via `Patchable::diff_patch` — every field of the payload
+/// row becomes the patch, so applying it fully overwrites the target's non-identity content.
+/// Target absent from `base` ⇒ empty diff (nothing to change).
+pub fn diff(payload: &ReplaceTemplateRecord, base: &ProgramSnapshot) -> ProgramDiff {
+    let Some(existing) = base.templates.iter().find(|row| row.header.id == payload.template_record.header.id) else {
+        return ProgramDiff::default();
+    };
+    let patch = existing.diff_patch(&payload.template_record).expect("diff_patch always produces a full patch");
+    ProgramDiff { templates: Some(ProgramTemplatesDelta { patched: vec![ProgramTemplatesPatchEntry { id: payload.template_record.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() }
+}

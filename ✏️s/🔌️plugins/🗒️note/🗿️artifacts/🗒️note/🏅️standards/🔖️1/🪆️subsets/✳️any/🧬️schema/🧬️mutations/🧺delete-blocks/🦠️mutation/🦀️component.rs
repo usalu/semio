@@ -1,0 +1,38 @@
+//! 🧺 Note mutation — `DeleteBlocks`: removes several blocks at once (multi-select delete).
+use crate::artifacts::note::NoteDiff;
+use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::artifacts::note::NoteSnapshot;
+use protocol::{MutationKind, SemanticDescriptor};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Mutation
+/// 🧺 `delete-blocks` payload — removes several blocks at once (multi-select delete).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "delete-blocks")]
+pub struct DeleteBlocks {
+    pub ids: Vec<String>,
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub fn delete_blocks(ids: Vec<String>) -> NoteMutation {
+    NoteMutation::DeleteBlocks(DeleteBlocks { ids })
+}
+
+impl MutationKind<NoteSnapshot, NoteMutation> for DeleteBlocks {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "blocks", kind: "delete-blocks", record: "DeletedBlocks" };
+
+    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Delete {} blocks", self.ids.len())
+    }
+    fn target(&self) -> Vec<String> {
+        self.ids.clone()
+    }
+}
+//#endregion 🔖️Mutation

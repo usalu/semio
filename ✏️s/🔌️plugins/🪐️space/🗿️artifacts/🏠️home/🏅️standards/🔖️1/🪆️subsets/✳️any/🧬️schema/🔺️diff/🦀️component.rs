@@ -10,8 +10,6 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.space.home")]
 pub struct SHomeDiff {
     #[state(persistent)]
-    pub artifact: Option<Box<crate::artifacts::home::schema::SHomeArtifact>>,
-    #[state(persistent)]
     pub schema: Option<String>,
     #[state(persistent)]
     pub catalog_generation: Option<u64>,

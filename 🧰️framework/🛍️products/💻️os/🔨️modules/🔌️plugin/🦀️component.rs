@@ -5412,7 +5412,7 @@ pub mod app {
         /// no-operation commands, and history notifications produce no `KernelMutation`s).
         fn empty_result(verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework::kernel::UiDirtyScope) -> InvocationResult {
             let invocation_id = InvocationId(format!("{verb}:{}", meta.instance_id));
-            InvocationResult { output: DslValue::Null, mutations: Vec::new(), inverse_group: UndoGroup { invocation_id, mutations: Vec::new(), inverse_mutations: Vec::new() }, diagnostics: Vec::new(), requested_effects: effects, events, ui_scope }
+            InvocationResult { output: DslValue::Null, mutations: Vec::new(), inverse_group: UndoGroup { invocation_id, mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() }, diagnostics: Vec::new(), requested_effects: effects, events, ui_scope }
         }
 
         /// @emoji 🧱️ Builds the `InvocationResult` for a just-dispatched edit: one `KernelMutation` per
@@ -5473,7 +5473,7 @@ pub mod app {
             }
             let mutation_ids: Vec<MutationId> = mutations.iter().map(|operation| operation.id.clone()).collect();
             let inverse_mutations: Vec<InverseMutation> = mutations.iter().map(|operation| operation.inverse.clone()).collect();
-            InvocationResult { output: DslValue::Null, mutations, inverse_group: UndoGroup { invocation_id, mutations: mutation_ids, inverse_mutations }, diagnostics: Vec::new(), requested_effects: effects, events, ui_scope }
+            InvocationResult { output: DslValue::Null, mutations, inverse_group: UndoGroup { invocation_id, mutations: mutation_ids, inverse_mutations, member_edits: Vec::new() }, diagnostics: Vec::new(), requested_effects: effects, events, ui_scope }
         }
 
         // 🧮️ B1: `materialize_args` (JSON-args default-fill + required-arg enforcement for app-declared

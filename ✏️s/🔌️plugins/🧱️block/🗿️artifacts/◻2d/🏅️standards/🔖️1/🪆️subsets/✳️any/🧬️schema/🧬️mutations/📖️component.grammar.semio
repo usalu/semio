@@ -5,12 +5,61 @@ use family-scene
 start mutation
 
 artifact-mark = "block.2d-op"
-mutation = artifact-mark mesh-op+
-mesh-op = "add-vertex" vtx-field+ | "set-face" face-field+ | "transform-mesh" xfm-field+ | "merge-solid" merge-field+ | "extrude-loop" loop-field+
-loop-field = "loop" "=" list | "height" "=" FLOAT
-vtx-field = "x" "=" FLOAT | "y" "=" FLOAT | "z" "=" FLOAT
-face-field = "index" "=" INT | "loop" "=" list
-xfm-field = "axis" "=" IDENT | "angle" "=" FLOAT
-merge-field = "target" "=" IDENT | "source" "=" IDENT
-list = "[" INT* "]"
-layer = IDENT "@" FLOAT FLOAT FLOAT?
+mutation = artifact-mark op+
+op = "rename-node-kind" new-name-field
+   | "change-node-kind-label" new-label-field
+   | "change-node-kind-variant" new-variant-field?
+   | "change-node-kind-description" new-description-field
+   | "change-node-kind-icon" new-icon-field?
+   | "change-node-kind-unit" new-unit-field?
+   | "update-presentation" presentation-field*
+   | "create-handle-kind" id-field name-field label-field color-field wire-field
+   | "delete-handle-kind" id-field
+   | "rename-handle-kind" id-field new-name-field
+   | "change-handle-kind-label" id-field new-label-field
+   | "change-handle-kind-color" id-field new-color-field
+   | "change-handle-kind-default-wire-kind" id-field new-wire-field
+   | "create-handle" id-field handle-kind-field angle-field radius-field
+   | "delete-handle" id-field
+   | "move-handle" id-field new-angle-field new-radius-field
+   | "change-handle-handle-kind" id-field new-handle-kind-field
+   | "add-compatibility-rule" id-field source-field target-field bidirectional-field?
+   | "remove-compatibility-rule" id-field
+   | "add-attribute" key-field value-field definition-field?
+   | "remove-attribute" key-field
+   | "add-author" id-field name-field email-field?
+   | "remove-author" id-field
+   | "move-camera2d" new-x-field new-y-field
+   | "scale-camera2d" new-zoom-field
+   | "change-meta-description" new-description-field
+
+id-field = "id" "=" IDENT
+key-field = "key" "=" IDENT
+name-field = "name" "=" STRING
+label-field = "label" "=" STRING
+color-field = "color" "=" STRING
+wire-field = "default-wire-kind" "=" IDENT
+handle-kind-field = "handle-kind" "=" IDENT
+angle-field = "angle" "=" FLOAT
+radius-field = "radius" "=" FLOAT
+source-field = "source" "=" IDENT
+target-field = "target" "=" IDENT
+bidirectional-field = "bidirectional" "=" BOOL
+value-field = "value" "=" STRING
+definition-field = "definition" "=" IDENT
+email-field = "email" "=" STRING
+new-name-field = "new-name" "=" STRING
+new-label-field = "new-label" "=" STRING
+new-variant-field = "new-variant" "=" STRING
+new-description-field = "new-description" "=" STRING
+new-icon-field = "new-icon" "=" STRING
+new-unit-field = "new-unit" "=" STRING
+new-color-field = "new-color" "=" STRING
+new-wire-field = "new-default-wire-kind" "=" IDENT
+new-angle-field = "new-angle" "=" FLOAT
+new-radius-field = "new-radius" "=" FLOAT
+new-handle-kind-field = "new-handle-kind" "=" IDENT
+new-x-field = "new-x" "=" FLOAT
+new-y-field = "new-y" "=" FLOAT
+new-zoom-field = "new-zoom" "=" FLOAT
+presentation-field = "new-shape" "=" STRING | "new-radius" "=" FLOAT | "new-width" "=" FLOAT | "new-height" "=" FLOAT | "new-color" "=" STRING | "new-icon-kind" "=" STRING

@@ -1,6 +1,7 @@
 //! 🧬️ DAG diff schema — sparse field delta over the artifact.
 
 use crate::artifacts::dag::{DagCamera, DagFixtureEdge, DagNodePatch, DagNodeSpec};
+use math::graph::manifest::PropertyBag;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -56,6 +57,10 @@ pub struct DagNodesDelta {
     pub added: Vec<DagNodeSpec>,
     pub removed: Vec<String>,
     pub patched: Vec<DagNodePatchEntry>,
+    /// 🩹️ Fields `infinite_board_port_directed_dag::DagNodePatch` (foreign, out of this plugin's
+    /// bounds) has no slot for — the node's own `id`, `icon`, `abbreviation`, `operatorKind` and
+    /// `properties` — applied in place so node order never shifts (unlike a removed+re-added entry).
+    pub extra_patched: Vec<DagNodeExtraPatchEntry>,
     pub reordered: Option<Vec<String>>,
 }
 
@@ -73,6 +78,26 @@ pub struct DagEdgesDelta {
 pub struct DagNodePatchEntry {
     pub id: String,
     pub patch: DagNodePatch,
+}
+
+/// 🩹️ Sparse patch for the `DagNodeSpec` fields `DagNodePatch` doesn't carry. `operator_kind` is
+/// double-`Option`ed (`Some(None)` clears it, `None` leaves it untouched) since the field itself
+/// is already `Option<String>`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct DagNodeExtraPatch {
+    pub new_id: Option<String>,
+    pub icon: Option<String>,
+    pub abbreviation: Option<String>,
+    pub operator_kind: Option<Option<String>>,
+    pub properties: Option<PropertyBag>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DagNodeExtraPatchEntry {
+    pub id: String,
+    pub patch: DagNodeExtraPatch,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

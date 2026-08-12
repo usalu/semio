@@ -3,19 +3,43 @@ You are a senior developer.
 You MUST follow the following rules unless explicitly asked to do otherwise:
 
 - You MUST use `bun` as package manager and `nx` as task runner.
-  - You MUST implement all permanent scripts in `script.ts` at the respective directory.
-    - `project.json` MUST only call `script.ts <command> <subcommand...> <args>`.
-    - `package.json` MUST call `nx` to run `scripts.ts <command> <subcommand...> <args>`.
+  - You MUST implement all permanent scripts in `📜️script.ts` at the respective directory.
+    - `project.json` MUST only call `📜️script.ts <command> <subcommand...> <args>`.
+    - `package.json` MUST call `nx` to run `📜️scripts.ts <command> <subcommand...> <args>`.
     - Extend the script functionality from `./📜️script.ts`.
-    - You MUST NOT create any other script files other than `script.ts`.
+    - You MUST NOT create any other script files other than `📜️script.ts`.
 - You MUST NOT edit `AGENTS.md` files.
 - You MUST setup everything zero-touch and cross-platform compatible for devcontainer, native windows, native macos and native linux environments.
-- You SHOULD NOT use external libraries for runtime purposes.
-  - You SHOULD use as many existing libraries as possible to test our implementation.
-- You MUST develop everything multi-language.
+- You MUST NOT depend on external implementation details.
+  - You SHOULD NOT use external libraries for runtime purposes.
+    - You SHOULD use as many existing libraries as possible to test our implementation.
+    - You MUST use all external libraries behind an interface.
+      - You MUST NOT export api that directly or indirectly requires an interface/class/type outside of this codebase.
+        - You MUST reexport explicitly if the client needs it.
+- You MUST develop multi-implementation.
   - You MUST use schema-first over code-first.
   - You MUST use a domain-driven taxonomy tree of files and folders that allows for implementing multiple lanuguages.
   - If code is repeated, it MUST be close to each other.
+- You MUST develop accessible UIs.
+  - You MUST support multiple languages with no default language.
+    - You SHOULD use English as first, then German as second language.
+- You MUST develop customizable UIs.
+- You MUST develop for multi-user.
+  - You MUST use local-first over cloud-first.
+  - You MUST use event-driven over state-driven.
+    - You MUST use CQRS with event-sourcing.
+    - You MUST NOT use CRUDs.
+    - You MUST NOT use CRDTs.
+    - You MUST support short connection-shortages and not freeze the app.
+      - You SHOULD NOT accept long offline periods.
+    - You SHOULD distinguish between persisted local-only, persisted shared, ephemeral local-only, ephemeral shared.
+- You MUST develop multi-app.
+  - You MUST use domain-neutral framework.
+  - You MUST use domain-specific extensions.
+- You MUST develop multi-device.
+  - You MUST prioritize desktop, then mobile, then tablet.
+- You MUST take decisions for maximum control.
+- You MUST take decisions for maximum performance.
 - All devs are using `launch.json` and never use the cli.
   - You MUST register all executable commands there by following the existing order, grouping and naming.
 - You MUST work simultaneously with others on the same files.
@@ -73,7 +97,3 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST NOT comment inside definitions.
   - You SHOULD add links to related resources in native docstring format.
     - You MUST start all docstrings with a unique and fitting emoji.
-- You MUST NOT depend on implementation details.
-  - You MUST use all external libraries behind an interface.
-    - You MUST NOT export api that directly or indirectly requires an interface/class/type outside of this codebase.
-      - You MUST reexport explicitly if the client needs it.

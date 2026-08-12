@@ -2,6 +2,7 @@
 
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::artifacts::present::engine::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
+use crate::artifacts::present::mutations::replace_tiles::mutation::ReplaceTiles;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::PresentSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -22,7 +23,7 @@ pub mod seed_grid {
         let deck = doc.snapshot;
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: payload.rows, columns: payload.columns, gap: 0.0, key_prefix: "tile" });
         let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
-        Ok(Emit { artifact_mutations: vec![PresentMutation::SetTiles { tiles }], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }], ..Default::default() })
     }
 }
 //#endregion 🔖️SeedGrid
@@ -43,7 +44,7 @@ pub mod reset_grid {
         let deck = doc.snapshot;
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
         let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
-        Ok(Emit { artifact_mutations: vec![PresentMutation::SetTiles { tiles }], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }], ..Default::default() })
     }
 }
 //#endregion 🔖️ResetGrid
@@ -57,7 +58,7 @@ pub mod clear_tiles {
     pub struct ClearTiles {}
 
     pub fn handle(_payload: &ClearTiles, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
-        Ok(Emit { artifact_mutations: vec![PresentMutation::SetTiles { tiles: Vec::new() }], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: Vec::new() })], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }], ..Default::default() })
     }
 }
 //#endregion 🔖️ClearTiles
@@ -77,12 +78,32 @@ mod tests {
         assert_eq!(app.snapshot().expect("projection").tiles.len(), 4);
     }
 
+    /// 🧬️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright), so
+    /// `setActiveExample` now surfaces as a `HostEffect::LoadDocument` carrying the default document's
+    /// pack bytes rather than an `artifact_mutations` entry — `dispatch`'s in-process `VcsArtifactApp`
+    /// never applies `effects` to its own store (that's the real host's job), so this asserts directly
+    /// on the emitted effect rather than through `app.snapshot()`.
     #[test]
-    fn set_active_example_demo_resets_to_default_deck_after_seed() {
+    fn set_active_example_demo_emits_a_reset_effect_after_seed() {
+        use semio_framework_plugin::HostEffect;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }));
-        app.dispatch_typed(PresentCommand::SetActiveExample(crate::apps::present::commands::source::set_active_example::SetActiveExample { example_id: "demo".into() }), &meta("local")).expect("reset demo");
-        assert!(app.snapshot().expect("projection").tiles.is_empty(), "resetting to demo clears seeded tiles");
+        let deck = app.snapshot().expect("projection");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView { snapshot: &deck, history: &history };
+        let cfg_snapshot = PresentConfig::default();
+        let cfg = ConfigView { snapshot: &cfg_snapshot };
+        let emit = crate::apps::present::commands::source::set_active_example::handle(
+            &crate::apps::present::commands::source::set_active_example::SetActiveExample { example_id: "demo".into() },
+            &doc,
+            &cfg,
+        )
+        .expect("handle");
+        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+            panic!("expected a LoadDocument effect");
+        };
+        let loaded = <PresentSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        assert!(loaded.tiles.is_empty(), "resetting to demo loads the default deck, which has no seeded tiles");
     }
 
     #[test]

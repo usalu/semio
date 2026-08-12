@@ -104,7 +104,7 @@ impl ArtifactApp for En1992PlayApp {
 
     /// 🎞️ `"model:in"`/`"document:in"` — see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, En1992Snapshot>) -> Result<Emit<En1992Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
-        crate::app_surface::import_media(port, media, |snapshot| En1992Mutation::SetSnapshot { snapshot })
+        crate::app_surface::import_media(port, media, |snapshot| vec![En1992Mutation::SetSnapshot { snapshot }])
     }
     //#endregion 🔖️MediaPorts
 }

@@ -1,0 +1,11 @@
+//! ↩️ Inverse (undo) construction for the `create-quantity-requirement` mutation leaf — computed from
+//! captured pre-state (`base`), never by structurally inverting the diff. Split from
+//! `🔢quantities` per Wave C.
+
+use crate::artifacts::program::ProgramMutation;
+use crate::artifacts::program::ProgramSnapshot;
+
+/// ↩️ Undo a create by deleting the row it added.
+pub fn inverse(payload: &super::mutation::CreateQuantityRequirement, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    vec![ProgramMutation::DeleteQuantityRequirement(super::super::delete_quantity_requirement::mutation::DeleteQuantityRequirement { id: payload.quantity_requirement.header.id.clone() })]
+}

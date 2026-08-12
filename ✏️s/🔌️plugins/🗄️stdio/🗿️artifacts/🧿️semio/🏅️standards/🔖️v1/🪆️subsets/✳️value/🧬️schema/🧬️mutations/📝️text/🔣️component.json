@@ -1,0 +1,10 @@
+{
+  "$id": "https://semio.tech/schema/stdio.semio.value.mutations/text.json",
+  "title": "Semio_semio_value_mutations",
+  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "type": "value",
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "entries": { "type": "array", "x-semio-state": "persistent", "items": { "type": "value" } }
+  }
+}

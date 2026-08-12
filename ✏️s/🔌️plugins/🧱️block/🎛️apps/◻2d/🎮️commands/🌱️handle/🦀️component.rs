@@ -17,7 +17,7 @@ pub mod add_handle {
         };
         let id = crate::artifacts::block2d::engine::next_id(doc.snapshot.handles.iter().map(|handle| handle.id.as_str()), "handle-");
         let handle = Block2dHandleTemplate { id, handle_kind: handle_kind_id, angle: 0.0, radius: 0.36 };
-        Ok(Emit::mutations(vec![Block2dMutation::SetHandle { index: doc.snapshot.handles.len(), handle }]))
+        Ok(Emit::mutations(vec![crate::artifacts::block2d::mutations::create_handle(handle)]))
     }
 }
 
@@ -35,6 +35,6 @@ pub mod remove_handle {
     }
 
     pub fn handle(payload: &RemoveHandle, _doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![Block2dMutation::RemoveHandle { id: payload.id.clone() }]))
+        Ok(Emit::mutations(vec![crate::artifacts::block2d::mutations::delete_handle(payload.id.clone())]))
     }
 }

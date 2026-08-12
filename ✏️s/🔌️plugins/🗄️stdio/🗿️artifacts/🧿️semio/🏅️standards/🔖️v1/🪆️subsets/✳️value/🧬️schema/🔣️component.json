@@ -1,0 +1,12 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.value/artifact.json",
+  "title": "SemioValueArtifact",
+  "description": "Full artifact state — mirrors SemioValueSnapshot field for field.",
+  "type": "value",
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "root": { "type": "value", "x-semio-state": "persistent" },
+    "nodes": { "type": "array", "x-semio-state": "persistent", "items": { "type": "value" } }
+  },
+  "required": ["schema", "root", "nodes"]
+}

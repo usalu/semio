@@ -82,6 +82,108 @@ impl ArtifactDialect {
 }
 //#endregion 🔖️Dialect
 
+//#region 🔖️ArtifactRef
+/// 🪪️ Canonical artifact-kind id — the ONLY spelling `Dialect.artifact_kind`, schema ids, catalog
+/// keys, and format rows are meant to derive from (ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM `📓️design-full-plan.md` section "1. Kernel
+/// primitives"). Grammar: exactly three dot-separated ASCII segments, `s.<plugin>.<artifact>` —
+/// the first segment is always the literal `s`, the remaining two are lowercase-ASCII kebab
+/// (`[a-z0-9-]`, no leading/trailing/doubled hyphen). This wave lands the type and validator
+/// only; renaming existing artifact ids to this grammar is a later wave — see
+/// `is_canonical_artifact_kind`.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct ArtifactKindId(String);
+
+impl ArtifactKindId {
+    /// 🧵️ Parses and validates the canonical grammar, failing with a message that names which
+    /// rule broke rather than a generic "invalid" — the same courtesy `ArtifactDialect::parse_coordinate`
+    /// gives its callers.
+    pub fn parse(s: &str) -> Result<Self, String> {
+        if !is_canonical_artifact_kind(s) {
+            return Err(format!("artifact kind {s:?} is not canonical grammar `s.<plugin>.<artifact>` (three dot-separated ASCII segments, first literally `s`, the rest lowercase-kebab)"));
+        }
+        Ok(ArtifactKindId(s.to_string()))
+    }
+
+    /// 🔍️ Borrowed access to the full `s.<plugin>.<artifact>` string.
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    /// 🔌️ Second segment — the owning plugin slug.
+    pub fn plugin(&self) -> &str {
+        self.0.split('.').nth(1).expect("ArtifactKindId invariant: exactly 3 dot-separated segments")
+    }
+
+    /// 🗿️ Third segment — the artifact slug within the plugin.
+    pub fn artifact(&self) -> &str {
+        self.0.split('.').nth(2).expect("ArtifactKindId invariant: exactly 3 dot-separated segments")
+    }
+}
+
+impl std::fmt::Display for ArtifactKindId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+/// ✅️ Standalone canonical-grammar predicate behind `ArtifactKindId::parse` — usable wherever a
+/// `bool` fits better than a `Result` (e.g. `script.ts`-adjacent policy breach scans).
+pub fn is_canonical_artifact_kind(kind: &str) -> bool {
+    let mut segments = kind.split('.');
+    let Some(first) = segments.next() else { return false };
+    if first != "s" {
+        return false;
+    }
+    let Some(plugin) = segments.next() else { return false };
+    let Some(artifact) = segments.next() else { return false };
+    if segments.next().is_some() {
+        return false;
+    }
+    is_kebab_segment(plugin) && is_kebab_segment(artifact)
+}
+
+/// 🔡️ One canonical-grammar segment: non-empty lowercase-ASCII `[a-z0-9-]`, no leading/trailing
+/// hyphen, no doubled hyphen.
+fn is_kebab_segment(segment: &str) -> bool {
+    if segment.is_empty() || segment.starts_with('-') || segment.ends_with('-') || segment.contains("--") {
+        return false;
+    }
+    segment.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+}
+
+/// 🔗️ A reference to one artifact: its id plus the dialect it is materialized in. Renders to/from
+/// the wire URI `"<artifact_id>!<kind>@<standard>/<subset>"` — the `!` separates identity (which
+/// artifact) from dialect (which coordinate it is read/written in). Reuses
+/// `ArtifactDialect::to_coordinate`/`parse_coordinate` for the half after `!` so there remains
+/// exactly one dialect-coordinate codec in the codebase.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ArtifactRef {
+    pub artifact_id: String,
+    pub dialect: ArtifactDialect,
+}
+
+impl ArtifactRef {
+    /// 🧵️ Canonical wire form: `"<artifact_id>!<kind>@<standard>/<subset>"`.
+    pub fn to_uri(&self) -> String {
+        format!("{}!{}", self.artifact_id, self.dialect.to_coordinate())
+    }
+
+    /// 🧵️ Inverse of `to_uri`. Splits on the FIRST `!` — the dialect coordinate after it resolves
+    /// its own `@`/`/` boundaries via `ArtifactDialect::parse_coordinate`, so an artifact id may
+    /// itself contain dots or dashes and still round-trip exactly.
+    pub fn parse_uri(s: &str) -> Result<Self, String> {
+        let (artifact_id, coordinate) = s.split_once('!').ok_or_else(|| format!("artifact ref uri {s:?} missing '!'"))?;
+        if artifact_id.is_empty() {
+            return Err(format!("artifact ref uri {s:?} has an empty artifact id"));
+        }
+        let dialect = ArtifactDialect::parse_coordinate(coordinate)?;
+        Ok(ArtifactRef { artifact_id: artifact_id.to_string(), dialect })
+    }
+}
+//#endregion 🔖️ArtifactRef
+
 //#region 🔖️ComposeTypes
 /// 📥 One typed compose source: a foreign or native dialect plus its payload.
 #[derive(Clone, Debug)]
@@ -709,6 +811,61 @@ mod tests {
             Ok(_) => panic!("unregistered hub key must fail hop 1"),
         };
         assert!(err.message.contains("no composer registered"), "{}", err.message);
+    }
+
+    /// ✅️ Accept table for `is_canonical_artifact_kind`/`ArtifactKindId::parse`: exactly three
+    /// dot-separated ASCII segments, first literally `s`, the rest lowercase-kebab.
+    #[test]
+    fn artifact_kind_id_accepts_canonical_grammar() {
+        for kind in ["s.stdio.stl", "s.stdio.semio"] {
+            assert!(is_canonical_artifact_kind(kind), "{kind:?} should be canonical");
+            ArtifactKindId::parse(kind).unwrap_or_else(|e| panic!("{kind:?} should parse: {e}"));
+        }
+    }
+
+    /// ⚠️ Reject table covering: missing `s.` prefix, non-canonical vocabulary, uppercase, emoji,
+    /// too few/too many segments, empty segment, leading hyphen.
+    #[test]
+    fn artifact_kind_id_rejects_non_canonical_grammar() {
+        for kind in ["stdio.stl", "3d.cad", "data.🏛️program", "s.Stdio.stl", "s.stdio", "s.stdio.stl.extra", "s..stl", "s.stdio.-stl"] {
+            assert!(!is_canonical_artifact_kind(kind), "{kind:?} should be rejected");
+            assert!(ArtifactKindId::parse(kind).is_err(), "{kind:?} should fail to parse");
+        }
+    }
+
+    /// 🔁️ `ArtifactRef::to_uri`/`parse_uri` round-trip, including an artifact id containing dots
+    /// and dashes (must not be mistaken for dialect-coordinate delimiters since only the FIRST
+    /// `!` is significant).
+    #[test]
+    fn artifact_ref_uri_round_trips() {
+        let cases = [
+            ArtifactRef { artifact_id: "abc123".to_string(), dialect: ArtifactDialect { artifact_kind: "s.stdio.stl".to_string(), standard: "1".to_string(), subset: "*".to_string() } },
+            ArtifactRef {
+                artifact_id: "doc.v2-final.draft".to_string(),
+                dialect: ArtifactDialect { artifact_kind: "s.norm.en-1994-1".to_string(), standard: "2024".to_string(), subset: "cc6".to_string() },
+            },
+        ];
+        for artifact_ref in cases {
+            let uri = artifact_ref.to_uri();
+            let parsed = ArtifactRef::parse_uri(&uri).unwrap_or_else(|e| panic!("{uri:?} should round-trip: {e}"));
+            assert_eq!(parsed, artifact_ref);
+        }
+    }
+
+    /// 🔁️ Exact expected shape of `to_uri`, pinned so the format doesn't silently drift.
+    #[test]
+    fn artifact_ref_to_uri_matches_expected_shape() {
+        let artifact_ref =
+            ArtifactRef { artifact_id: "abc123".to_string(), dialect: ArtifactDialect { artifact_kind: "s.stdio.gif".to_string(), standard: "87a".to_string(), subset: "*".to_string() } };
+        assert_eq!(artifact_ref.to_uri(), "abc123!s.stdio.gif@87a/*");
+    }
+
+    /// ⚠️ `parse_uri` rejects a missing `!` and an empty artifact id, mirroring
+    /// `parse_coordinate`'s own empty-component rejection.
+    #[test]
+    fn artifact_ref_parse_uri_rejects_malformed_input() {
+        assert!(ArtifactRef::parse_uri("s.stdio.gif@87a/*").is_err(), "missing '!' should fail");
+        assert!(ArtifactRef::parse_uri("!s.stdio.gif@87a/*").is_err(), "empty artifact id should fail");
     }
 }
 //#endregion 🔖️Tests

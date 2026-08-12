@@ -1,7 +1,7 @@
 //! 🔺️ Raster artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::raster::schema::diff::{
-    RasterAssetsDelta, RasterDiff, RasterLayerPatchEntry, RasterLayersDelta, RasterStringList,
+    RasterAssetsDelta, RasterDiff, RasterLayerInsertion, RasterLayerMove, RasterLayerPatchEntry, RasterLayersDelta, RasterStringList,
 };
 use crate::artifacts::raster::engine::{layer_node_id, locate_layer};
 use crate::artifacts::raster::schema::RasterArtifact;
@@ -227,22 +227,16 @@ pub fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayersDelta)
     for id in &delta.removed {
         remove_layer_from_tree(&mut next, id);
     }
-    for item in &delta.added {
-        next.push(item.clone());
-    }
     for entry in &delta.patched {
         apply_layer_patch_entry(&mut next, entry);
     }
-    if let Some(order) = &delta.reordered {
-        let mut by_id: std::collections::BTreeMap<_, _> = next.into_iter().map(|layer| (layer_node_id(&layer).to_string(), layer)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
-        for id in order {
-            if let Some(layer) = by_id.remove(id) {
-                ordered.push(layer);
-            }
+    for mv in &delta.moved {
+        if let Some(node) = remove_layer_from_tree(&mut next, &mv.id) {
+            insert_layer(&mut next, mv.parent_id.as_deref(), mv.index, node);
         }
-        ordered.extend(by_id.into_values());
-        next = ordered;
+    }
+    for insertion in &delta.added {
+        insert_layer(&mut next, insertion.parent_id.as_deref(), insertion.index, insertion.layer.clone());
     }
     next
 }
@@ -314,9 +308,7 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
                 dst.added.extend(src.added);
                 dst.removed.extend(src.removed);
                 dst.patched.extend(src.patched);
-                if src.reordered.is_some() {
-                    dst.reordered = src.reordered;
-                }
+                dst.moved.extend(src.moved);
             }
             (None, Some(src)) => self.layers = Some(src),
             _ => {}
@@ -344,10 +336,12 @@ pub fn diff_from_snapshot(snapshot: RasterSnapshot) -> RasterDiff {
     diff_set_snapshot(&snapshot)
 }
 
-pub fn diff_add_layer(layer: RasterLayerNode) -> RasterDiff {
+/// ➕ Sparse insertion diff — tree-aware (`parent_id: None` = document root), so `create-layer` never
+/// needs to fall back to whole-snapshot capture even when inserting into a nested `Group`.
+pub fn diff_add_layer(parent_id: Option<String>, index: usize, layer: RasterLayerNode) -> RasterDiff {
     RasterDiff {
         layers: Some(RasterLayersDelta {
-            added: vec![layer],
+            added: vec![RasterLayerInsertion { parent_id, index, layer }],
             ..Default::default()
         }),
         ..Default::default()
@@ -377,13 +371,29 @@ pub fn diff_patch_layer(layer_id: &str, patch: RasterLayerPatch) -> RasterDiff {
     }
 }
 
-pub fn diff_move_layer(snapshot: &RasterSnapshot, layer_id: &str, parent_id: Option<String>, index: usize) -> RasterDiff {
-    let mut probe = snapshot.clone();
-    if let Some(node) = remove_layer_from_tree(&mut probe.layers, layer_id) {
-        insert_layer(&mut probe.layers, parent_id.as_deref(), index, node);
-        diff_from_snapshot(probe)
-    } else {
-        RasterDiff::default()
+/// 🔀 Sparse reposition diff (`reorder-layers`) — remove-then-insert at a tree address, built
+/// directly from the payload; never clones/mutates/re-diffs the whole snapshot.
+pub fn diff_move_layer(layer_id: &str, parent_id: Option<String>, index: usize) -> RasterDiff {
+    RasterDiff {
+        layers: Some(RasterLayersDelta {
+            moved: vec![RasterLayerMove { id: layer_id.to_string(), parent_id, index }],
+            ..Default::default()
+        }),
+        ..Default::default()
     }
+}
+
+/// 🖇️ Sparse asset-map insertion diff (`add-layer-asset`).
+pub fn diff_add_asset(asset_id: &str, asset: crate::artifacts::raster::RasterImageAsset) -> RasterDiff {
+    let mut entries = std::collections::BTreeMap::new();
+    entries.insert(asset_id.to_string(), Some(asset));
+    RasterDiff { assets: Some(RasterAssetsDelta { entries }), ..Default::default() }
+}
+
+/// 🗂️ Sparse asset-map removal diff (`remove-layer-asset`).
+pub fn diff_remove_asset(asset_id: &str) -> RasterDiff {
+    let mut entries = std::collections::BTreeMap::new();
+    entries.insert(asset_id.to_string(), None);
+    RasterDiff { assets: Some(RasterAssetsDelta { entries }), ..Default::default() }
 }
 //#endregion 🔖️Builders

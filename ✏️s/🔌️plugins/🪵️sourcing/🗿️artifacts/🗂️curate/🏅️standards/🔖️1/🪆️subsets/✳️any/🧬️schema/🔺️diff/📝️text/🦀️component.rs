@@ -173,15 +173,16 @@ impl MutationDiff<CurateSnapshot> for CurateDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::curate::op::SourcingMutation;
-    use protocol::Mutation;
 
+    /// 🧬️ `diff_set_snapshot`/`CurateDiff.artifact` are a generic whole-artifact-replacement escape
+    /// hatch retained for `apply_to_artifact`'s own callers — no `SourcingMutation` variant reaches
+    /// it any more (the former whole-snapshot-replace variant is banned outright, see `📓️taxonomy.md`), so this exercises the
+    /// function directly rather than through a mutation's `diff()`.
     #[test]
-    fn set_snapshot_diff_carries_whole_replacement() {
+    fn diff_set_snapshot_carries_whole_replacement() {
         let base = CurateSnapshot::default();
         let next = CurateSnapshot { stock: vec![], curated: vec![] };
-        let operation = SourcingMutation::SetSnapshot { snapshot: next.clone() };
-        let diff: CurateDiff = operation.diff(&base);
+        let diff = diff_set_snapshot(&next);
         assert_eq!(diff.apply(&base), next);
     }
 

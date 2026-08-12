@@ -1,7 +1,12 @@
 syntax = "proto3";
 package semio.s.energy.model;
 
+message ReplaceModel {
+  string new_model_json = 1;
+}
+
 message EnergyModelMutation {
-  string schema = 1;
-  string model_json = 2;
+  oneof op {
+    ReplaceModel replace_model = 1;
+  }
 }

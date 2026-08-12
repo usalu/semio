@@ -1,6 +1,7 @@
 //! 🔧️ Din16798 artifact — OpText/OpBinary codecs for `Din16798Mutation`. Mutation apply/inverse
 //! live in `🧬️mutations`; this facet only handcrafts the op wire forms (the shared
-//! `impl_norm_set_snapshot_ops!` macro no longer applies now that `SetSnapshot` is gone).
+//! whole-document-replace macro, `impl_norm_set_snapshot_ops!`, no longer applies now that the
+//! whole-document-replace variant is gone).
 
 
 //#region 📖️SemioGrammar
@@ -12,7 +13,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 pub use crate::artifacts::din16798::schema::mutations::Din16798Mutation;
 use crate::artifacts::din16798::schema::mutations::{
-    change_air_speed_m_s, change_bedrooms, change_cellar_area_m2, change_cellar_ventilation_m3_h, change_chiller_type, change_co2_ppm, change_comfort_category, change_cooling_delta_t_h, change_cooling_gains_kwh, change_cooling_reference_kwh, change_cooling_utilization_factor, change_data_center_supply_c, change_df_percent, change_dhw_delivery_c, change_duct_class, change_duct_leakage_m3_s_m2, change_duct_test_pressure_pa, change_dwelling_ventilation_m3_h, change_eer_actual, change_fan_energy_reference_kwh, change_fan_q_v_m3_s, change_fan_t_run_h, change_floor_area_m2, change_generation_reference_kwh, change_h_st_w_k, change_h_tr_w_k, change_h_ve_w_k, change_heat_recovery_eta, change_heat_recovery_eta_min, change_hr_cp_j_kgk, change_hr_delta_t_c, change_hr_m_dot_kg_s, change_hr_savings_reference_kwh, change_hr_t_h, change_humidification_provided_kg_h, change_humidification_required_kg_h, change_ida_class, change_infiltration_allowance_m3_h, change_l_aeq_db, change_n50_h_inv, change_night_setback_k, change_occupancy, change_occupants, change_persons, change_q_c_kwh, change_residential_ventilation_m3_h, change_rh_percent, change_sfp_required_class, change_sfp_w_m3_s, change_storage_allowance_kwh, change_storage_t_h, change_system_type, change_t_op_c, change_theta_amb_c, change_theta_e_c, change_theta_rm_c, change_theta_set_c, change_theta_st_c, change_ventilation_m3_h, change_volume_m3, change_years_since_inspection, set_snapshot,
+    change_air_speed_m_s, change_bedrooms, change_cellar_area_m2, change_cellar_ventilation_m3_h, change_chiller_type, change_co2_ppm, change_comfort_category, change_cooling_delta_t_h, change_cooling_gains_kwh, change_cooling_reference_kwh, change_cooling_utilization_factor, change_data_center_supply_c, change_df_percent, change_dhw_delivery_c, change_duct_class, change_duct_leakage_m3_s_m2, change_duct_test_pressure_pa, change_dwelling_ventilation_m3_h, change_eer_actual, change_fan_energy_reference_kwh, change_fan_q_v_m3_s, change_fan_t_run_h, change_floor_area_m2, change_generation_reference_kwh, change_h_st_w_k, change_h_tr_w_k, change_h_ve_w_k, change_heat_recovery_eta, change_heat_recovery_eta_min, change_hr_cp_j_kgk, change_hr_delta_t_c, change_hr_m_dot_kg_s, change_hr_savings_reference_kwh, change_hr_t_h, change_humidification_provided_kg_h, change_humidification_required_kg_h, change_ida_class, change_infiltration_allowance_m3_h, change_l_aeq_db, change_n50_h_inv, change_night_setback_k, change_occupancy, change_occupants, change_persons, change_q_c_kwh, change_residential_ventilation_m3_h, change_rh_percent, change_sfp_required_class, change_sfp_w_m3_s, change_storage_allowance_kwh, change_storage_t_h, change_system_type, change_t_op_c, change_theta_amb_c, change_theta_e_c, change_theta_rm_c, change_theta_set_c, change_theta_st_c, change_ventilation_m3_h, change_volume_m3, change_years_since_inspection, change_annex,
 };
 use crate::document::AnnexChoice;
 use protocol::OpText;
@@ -316,7 +317,7 @@ fn din16798_mutation_to_dsl(mutation: &Din16798Mutation) -> Din16798MutationDsl 
 
 fn din16798_mutation_from_dsl(mutation: Din16798MutationDsl) -> Din16798Mutation {
     match mutation {
-        Din16798MutationDsl::ChangeAnnex { new_annex } => Din16798Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex }),
+        Din16798MutationDsl::ChangeAnnex { new_annex } => Din16798Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex }),
         Din16798MutationDsl::ChangeOccupancy { new_occupancy } => Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy }),
         Din16798MutationDsl::ChangeComfortCategory { new_comfort_category } => Din16798Mutation::ChangeComfortCategory(change_comfort_category::mutation::ChangeComfortCategory { new_comfort_category }),
         Din16798MutationDsl::ChangeTOpC { new_t_op_c } => Din16798Mutation::ChangeTOpC(change_t_op_c::mutation::ChangeTOpC { new_t_op_c }),
@@ -410,7 +411,7 @@ mod tests {
     use super::*;
     #[test]
     fn op_text_round_trips_change_annex() {
-        store::os_store::test_support::assert_op_line_round_trip(&Din16798Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: AnnexChoice::En }));
+        store::os_store::test_support::assert_op_line_round_trip(&Din16798Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: AnnexChoice::En }));
     }
 
     #[test]
@@ -444,7 +445,7 @@ mod tests {
 
     fn every_mutation() -> Vec<Din16798Mutation> {
         vec![
-            Din16798Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: AnnexChoice::En }),
+            Din16798Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: AnnexChoice::En }),
             Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy: "office".to_string() }),
             Din16798Mutation::ChangeComfortCategory(change_comfort_category::mutation::ChangeComfortCategory { new_comfort_category: "I".to_string() }),
             Din16798Mutation::ChangeTOpC(change_t_op_c::mutation::ChangeTOpC { new_t_op_c: 24.5 }),

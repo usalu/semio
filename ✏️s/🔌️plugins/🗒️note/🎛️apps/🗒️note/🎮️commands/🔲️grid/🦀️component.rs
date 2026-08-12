@@ -18,7 +18,7 @@ pub mod set_grid_visible {
 
     pub fn handle(payload: &SetGridVisible, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let next = payload.value.unwrap_or(!doc.snapshot.grid_visible.unwrap_or(true));
-        Ok(Emit::mutations(vec![NoteMutation::SetGridVisible { visible: Some(next) }]))
+        Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::change_grid_visible(Some(next))]))
     }
 }
 //#endregion 🔖️SetGridVisible
@@ -34,7 +34,7 @@ pub mod set_grid_spacing {
     }
 
     pub fn handle(payload: &SetGridSpacing, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![NoteMutation::SetGridSpacing { spacing: Some(payload.value.max(4.0)) }]))
+        Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::change_grid_spacing(Some(payload.value.max(4.0)))]))
     }
 }
 //#endregion 🔖️SetGridSpacing
@@ -50,7 +50,7 @@ pub mod set_grid_subdivisions {
     }
 
     pub fn handle(payload: &SetGridSubdivisions, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![NoteMutation::SetGridSubdivisions { value: Some(payload.value.round().clamp(1.0, 16.0)) }]))
+        Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::change_grid_subdivisions(Some(payload.value.round().clamp(1.0, 16.0)))]))
     }
 }
 //#endregion 🔖️SetGridSubdivisions
@@ -66,7 +66,7 @@ pub mod set_grid_opacity {
     }
 
     pub fn handle(payload: &SetGridOpacity, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![NoteMutation::SetGridOpacity { opacity: Some(payload.value.clamp(0.05, 1.0)) }]))
+        Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::change_grid_opacity(Some(payload.value.clamp(0.05, 1.0)))]))
     }
 }
 //#endregion 🔖️SetGridOpacity

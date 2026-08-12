@@ -18,7 +18,7 @@ pub mod set_snap_enabled {
 
     pub fn handle(payload: &SetSnapEnabled, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let next = payload.value.unwrap_or(!doc.snapshot.snap_enabled.unwrap_or(false));
-        Ok(Emit::mutations(vec![NoteMutation::SetSnapEnabled { enabled: Some(next) }]))
+        Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::change_snap_enabled(Some(next))]))
     }
 }
 //#endregion 🔖️SetSnapEnabled
@@ -34,7 +34,7 @@ pub mod set_snap_grid_spacing {
     }
 
     pub fn handle(payload: &SetSnapGridSpacing, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![NoteMutation::SetSnapGridSpacing { spacing: Some(payload.value.max(1.0)) }]))
+        Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::change_snap_grid_spacing(Some(payload.value.max(1.0)))]))
     }
 }
 //#endregion 🔖️SetSnapGridSpacing

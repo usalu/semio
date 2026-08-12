@@ -12,7 +12,7 @@
 type SemioSubsetSnapshotBrep { subset: String!, brep: SemioBrepSnapshot! } # defined in ✳️brep's own snapshot mirror
 type SemioSubsetSnapshotMesh { subset: String!, mesh: SemioMeshSnapshot! } # defined in ✳️mesh's own snapshot mirror
 type SemioSubsetSnapshotModel { subset: String!, model: SemioModelSnapshot! } # defined in ✳️model's own snapshot mirror
-type SemioSubsetSnapshotObject { subset: String!, object: SemioObjectSnapshot! } # defined in ✳️object's own snapshot mirror
+type SemioSubsetSnapshotValue { subset: String!, value: SemioValueSnapshot! } # defined in ✳️value's own snapshot mirror
 type SemioSubsetSnapshotDocument { subset: String!, document: SemioDocumentSnapshot! } # defined in ✳️document's own snapshot mirror
 type SemioSubsetSnapshotCad { subset: String!, cad: SemioCadSnapshot! } # defined in ✳️cad's own snapshot mirror
 type SemioSubsetSnapshotDrawing { subset: String!, drawing: SemioDrawingSnapshot! } # defined in ✳️drawing's own snapshot mirror
@@ -21,13 +21,13 @@ type SemioSubsetSnapshotVideo { subset: String!, video: SemioVideoSnapshot! } # 
 type SemioSubsetSnapshotAudio { subset: String!, audio: SemioAudioSnapshot! } # defined in ✳️audio's own snapshot mirror
 type SemioSubsetSnapshotAnimation { subset: String!, animation: SemioAnimationSnapshot! } # defined in ✳️animation's own snapshot mirror
 type SemioSubsetSnapshotPresentation { subset: String!, presentation: SemioPresentationSnapshot! } # defined in ✳️presentation's own snapshot mirror
-type SemioSubsetSnapshotWorkflow { subset: String!, workflow: SemioWorkflowSnapshot! } # defined in ✳️workflow's own snapshot mirror
+type SemioSubsetSnapshotFlow { subset: String!, flow: SemioFlowSnapshot! } # defined in ✳️flow's own snapshot mirror
 
 union SemioSubsetSnapshot =
     SemioSubsetSnapshotBrep
   | SemioSubsetSnapshotMesh
   | SemioSubsetSnapshotModel
-  | SemioSubsetSnapshotObject
+  | SemioSubsetSnapshotValue
   | SemioSubsetSnapshotDocument
   | SemioSubsetSnapshotCad
   | SemioSubsetSnapshotDrawing
@@ -36,7 +36,7 @@ union SemioSubsetSnapshot =
   | SemioSubsetSnapshotAudio
   | SemioSubsetSnapshotAnimation
   | SemioSubsetSnapshotPresentation
-  | SemioSubsetSnapshotWorkflow
+  | SemioSubsetSnapshotFlow
 
 type SemioSnapshot {
   schema: String! @state(class: PERSISTENT)

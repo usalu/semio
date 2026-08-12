@@ -136,6 +136,18 @@ pub fn layer_opacity(layer: &RasterLayerNode) -> f32 {
     }
 }
 
+pub fn layer_blend_mode(layer: &RasterLayerNode) -> &str {
+    match layer {
+        RasterLayerNode::Pixel { blend_mode, .. } | RasterLayerNode::Group { blend_mode, .. } | RasterLayerNode::Adjustment { blend_mode, .. } => blend_mode,
+    }
+}
+
+pub fn layer_transform(layer: &RasterLayerNode) -> &RasterTransform {
+    match layer {
+        RasterLayerNode::Pixel { transform, .. } | RasterLayerNode::Group { transform, .. } | RasterLayerNode::Adjustment { transform, .. } => transform,
+    }
+}
+
 pub fn find_layer<'a>(layers: &'a [RasterLayerNode], target_id: &str) -> Option<&'a RasterLayerNode> {
     for layer in layers {
         if layer_node_id(layer) == target_id {
@@ -577,7 +589,10 @@ pub fn raster_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -
 /// source. Real decode through `s.stdio.semio/v1/image` (`semio_image_from_png_bytes`) recovers the
 /// real width/height instead of leaving them unset, and re-encodes through the real serializer
 /// instead of storing the caller's bytes verbatim.
-pub fn raster_append_image_layer(document: &RasterSnapshot, png_base64: &str) -> RasterSnapshot {
+/// 🎞️ Decodes an incoming `image:in` PNG payload into an `(asset_id, asset, layer)` triple, ready to
+/// be emitted as two real semantic mutations (`add-layer-asset` then `create-layer`) instead of a
+/// whole-document replace — no `RasterMutation::SetSnapshot` involved (that variant is gone).
+pub fn raster_image_layer_and_asset(png_base64: &str) -> (String, RasterImageAsset, RasterLayerNode) {
     let asset_key = create_raster_id("image-in-asset");
     let raw_bytes = base64::engine::general_purpose::STANDARD.decode(png_base64.as_bytes()).unwrap_or_default();
     let (data, width, height) = match semio_image_from_png_bytes(&raw_bytes).and_then(|image| Ok((png_bytes_from_semio_image(&image)?, image.width, image.height))) {
@@ -590,10 +605,7 @@ pub fn raster_append_image_layer(document: &RasterSnapshot, png_base64: &str) ->
         *layer_width = width;
         *layer_height = height;
     }
-    let mut next = document.clone();
-    next.assets.insert(asset_key, RasterImageAsset { mime: "image/png".into(), data });
-    next.layers.push(layer);
-    next
+    (asset_key, RasterImageAsset { mime: "image/png".into(), data }, layer)
 }
 //#endregion 🔖️MediaImport
 
@@ -719,14 +731,11 @@ mod tests {
     }
 
     #[test]
-    fn raster_append_image_layer_inserts_layer_and_asset() {
-        let document = empty_raster_document();
-        let before_layers = document.layers.len();
-        let next = raster_append_image_layer(&document, "aGVsbG8=");
-        assert_eq!(next.layers.len(), before_layers + 1);
-        let RasterLayerNode::Pixel { image_key, .. } = next.layers.last().unwrap() else { panic!("expected pixel layer") };
-        let asset = next.assets.get(image_key.as_ref().unwrap()).expect("asset inserted");
+    fn raster_image_layer_and_asset_builds_a_pixel_layer_and_matching_asset() {
+        let (asset_id, asset, layer) = raster_image_layer_and_asset("aGVsbG8=");
         assert_eq!(asset.data, b"hello".to_vec());
+        let RasterLayerNode::Pixel { image_key, .. } = &layer else { panic!("expected pixel layer") };
+        assert_eq!(image_key.as_deref(), Some(asset_id.as_str()));
     }
 
     #[test]

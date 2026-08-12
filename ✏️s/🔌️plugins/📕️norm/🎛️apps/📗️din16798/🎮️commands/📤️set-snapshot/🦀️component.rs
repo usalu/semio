@@ -1,4 +1,12 @@
-//! 📤️ Din16798 play app command — replace the whole compliance document.
+//! 📤️ DIN EN 16798-1 play app command — replace the whole compliance document.
+//!
+//! 📌️ The payload's `#[dsl(keyword)]` MUST equal the `app_commands!` row's `as` literal: a single-field
+//! tuple variant delegates its whole `RecordSpec` to the inner type, whose keyword otherwise defaults to
+//! `None` and would print with no leading keyword at all.
+//!
+//! 🧩️ The whole-document-replace mutation is banned with no 1:1 replacement (`📓️taxonomy.md`), so the
+//! payload decomposes into one `change-<field>` mutation per persistent field via
+//! `Din16798Mutation::from_snapshot`, bundled into a single atomic edit.
 
 use crate::artifacts::din16798::op::Din16798Mutation;
 use crate::artifacts::din16798::Din16798Snapshot;
@@ -9,15 +17,15 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "set-snapshot")]
-pub struct SetSnapshot {
+pub struct ReplaceSnapshot {
     #[dsl(block)]
     pub snapshot: Din16798Snapshot,
 }
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &SetSnapshot, _doc: &ArtifactView<'_, Din16798Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din16798Mutation, NormConfigMutation>, Fault> {
-    crate::app_surface::commit_snapshot(Din16798Mutation::SetSnapshot { snapshot: payload.snapshot.clone() }, "setSnapshot")
+pub fn handle(payload: &ReplaceSnapshot, _doc: &ArtifactView<'_, Din16798Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din16798Mutation, NormConfigMutation>, Fault> {
+    crate::app_surface::commit_snapshot_fields(Din16798Mutation::from_snapshot(&payload.snapshot), "setSnapshot")
 }
 //#endregion 🔖️Handler
 
@@ -33,12 +41,12 @@ mod tests {
         let projection = Din16798Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(
-            &SetSnapshot { snapshot: Din16798Snapshot::default() },
+            &ReplaceSnapshot { snapshot: Din16798Snapshot::default() },
             &ArtifactView { snapshot: &projection, history: &HistoryView::empty() },
             &ConfigView { snapshot: &config },
         )
         .expect("handle");
-        assert_eq!(emit.artifact_mutations, vec![Din16798Mutation::SetSnapshot { snapshot: Din16798Snapshot::default() }]);
+        assert_eq!(emit.artifact_mutations, Din16798Mutation::from_snapshot(&Din16798Snapshot::default()));
         assert_eq!(emit.description.as_deref(), Some("setSnapshot"));
         assert!(emit.config_mutations.is_empty());
     }

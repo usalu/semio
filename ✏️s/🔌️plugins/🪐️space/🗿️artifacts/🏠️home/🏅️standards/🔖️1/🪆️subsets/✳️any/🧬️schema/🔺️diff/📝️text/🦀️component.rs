@@ -17,9 +17,6 @@ use crate::artifacts::home::schema::diff::*;
 impl SHomeDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &SHomeArtifact) -> SHomeArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
         let mut next = artifact.clone();
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
@@ -39,9 +36,6 @@ impl SHomeDiff {
 
 impl MutationDiff<SHomeSnapshot> for SHomeDiff {
     fn apply(&self, snapshot: &SHomeSnapshot) -> SHomeSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
         let mut next = snapshot.clone();
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
@@ -53,10 +47,6 @@ impl MutationDiff<SHomeSnapshot> for SHomeDiff {
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.artifact.is_some() {
-            *self = other;
-            return;
-        }
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -71,13 +61,3 @@ impl MutationDiff<SHomeSnapshot> for SHomeDiff {
     }
 }
 //#endregion 🔖️Apply
-
-//#region 🔖️Helpers
-/// 🖼️ Whole-snapshot replacement diff.
-pub fn diff_set_snapshot(snapshot: &SHomeSnapshot) -> SHomeDiff {
-    SHomeDiff {
-        artifact: Some(Box::new(SHomeArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
-}
-//#endregion 🔖️Helpers

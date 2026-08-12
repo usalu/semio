@@ -1,0 +1,35 @@
+//! ✏️ `rename-layer` — changes an id-addressed layer's identity field (`name`).
+
+use crate::artifacts::raster::diff::RasterDiff;
+use crate::artifacts::raster::mutations::RasterMutation;
+use crate::artifacts::raster::RasterSnapshot;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️RenameLayer
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RenameLayer {
+    pub layer_id: String,
+    pub new_name: String,
+}
+
+impl protocol::MutationKind<RasterSnapshot, RasterMutation> for RenameLayer {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "layer", kind: "rename-layer", record: "RenamedLayer" };
+
+    fn diff(&self, base: &RasterSnapshot) -> RasterDiff {
+        crate::artifacts::raster::mutations::rename_layer::diff::diff(self, base)
+    }
+
+    fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
+        crate::artifacts::raster::mutations::rename_layer::inverse::inverse(self, base)
+    }
+
+    fn label(&self) -> String {
+        format!("Rename layer {} to \"{}\"", self.layer_id, self.new_name)
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.layer_id.clone()]
+    }
+}
+//#endregion 🔖️RenameLayer

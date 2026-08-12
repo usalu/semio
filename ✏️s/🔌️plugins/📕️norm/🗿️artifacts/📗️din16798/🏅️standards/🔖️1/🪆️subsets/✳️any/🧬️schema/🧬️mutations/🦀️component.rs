@@ -7,641 +7,84 @@
 //! `rename`. Every field becomes its own `change-<field>` mutation per the rule's "change-<field>
 //! per remaining scalar" clause; none qualify for the `update-<facet>` grouping exception (each
 //! parameter is independently measured/entered, never validated as an atomic multi-field bundle).
-//! `SetSnapshot` — the pre-migration whole-document replace — is gone: banned outright per
+//! The pre-migration whole-document-replace variant is gone: banned outright per
 //! `📓️taxonomy.md`/`📓️derivation-rules.md` rule 6, with NO replacement mutation; file-open/import/
 //! load-example now goes through `store::ArtifactStore::reset`, entirely outside this enum.
 //!
-//! `📄set-snapshot` keeps its pre-migration directory name — `📦️glue.rs` path-includes that exact
-//! triad outside this facet's writable boundary, so it was repurposed in place (same path,
-//! rewritten `🦠️mutation`/`🔺️diff`/`↩️inverse` content) to hold `ChangeAnnex` instead of being
-//! renamed; see the migration report's `sharedFileRequests` for the rename once a later pass can
-//! touch `📦️glue.rs`. The other sixty-one triads have no pre-migration slot and are self-wired
-//! directly below via nested `#[path = "."] pub mod <name> { ... }` blocks (mirrors this ticket's
-//! `process`/`process3d` precedent — `#[path]` resolves per physical file, not per logical mod
-//! nesting, so this works without touching `📦️glue.rs`).
+//! All sixty-two triads (including the renamed former `set-snapshot` slot, now `change-annex`)
+//! are mounted directly as `mutations`-sibling modules in `📦️glue.rs`, each with its own unique
+//! emoji-prefixed directory (this lane's agent owns `📦️glue.rs` and the emoji-uniqueness policy
+//! rule, so the wave-2 precedent's self-wiring `#[path = "."]` blocks and reused `🔧` emoji across
+//! all 61 dirs are both retired here in favour of real glue mounts + distinct emoji).
 
 use crate::artifacts::din16798::diff::Din16798Diff;
 use crate::artifacts::din16798::Din16798Snapshot;
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️NewLeaves
-#[path = "."]
-pub mod change_occupancy {
-    #[path = "🔧change-occupancy/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-occupancy/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-occupancy/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_comfort_category {
-    #[path = "🔧change-comfort-category/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-comfort-category/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-comfort-category/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_t_op_c {
-    #[path = "🔧change-t-op-c/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-t-op-c/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-t-op-c/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_rh_percent {
-    #[path = "🔧change-rh-percent/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-rh-percent/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-rh-percent/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_air_speed_m_s {
-    #[path = "🔧change-air-speed-ms/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-air-speed-ms/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-air-speed-ms/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_theta_rm_c {
-    #[path = "🔧change-theta-rm-c/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-theta-rm-c/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-theta-rm-c/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_co2_ppm {
-    #[path = "🔧change-co2-ppm/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-co2-ppm/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-co2-ppm/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_df_percent {
-    #[path = "🔧change-df-percent/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-df-percent/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-df-percent/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_l_aeq_db {
-    #[path = "🔧change-l-aeq-db/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-l-aeq-db/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-l-aeq-db/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_persons {
-    #[path = "🔧change-persons/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-persons/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-persons/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_ida_class {
-    #[path = "🔧change-ida-class/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-ida-class/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-ida-class/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_ventilation_m3_h {
-    #[path = "🔧change-ventilation-m3-h/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-ventilation-m3-h/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-ventilation-m3-h/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_floor_area_m2 {
-    #[path = "🔧change-floor-area-m2/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-floor-area-m2/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-floor-area-m2/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_bedrooms {
-    #[path = "🔧change-bedrooms/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-bedrooms/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-bedrooms/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_dwelling_ventilation_m3_h {
-    #[path = "🔧change-dwelling-ventilation-m3-h/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-dwelling-ventilation-m3-h/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-dwelling-ventilation-m3-h/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_occupants {
-    #[path = "🔧change-occupants/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-occupants/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-occupants/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_residential_ventilation_m3_h {
-    #[path = "🔧change-residential-ventilation-m3-h/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-residential-ventilation-m3-h/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-residential-ventilation-m3-h/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_sfp_w_m3_s {
-    #[path = "🔧change-sfp-wm3-s/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-sfp-wm3-s/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-sfp-wm3-s/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_sfp_required_class {
-    #[path = "🔧change-sfp-required-class/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-sfp-required-class/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-sfp-required-class/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_heat_recovery_eta {
-    #[path = "🔧change-heat-recovery-eta/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-heat-recovery-eta/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-heat-recovery-eta/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_heat_recovery_eta_min {
-    #[path = "🔧change-heat-recovery-eta-min/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-heat-recovery-eta-min/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-heat-recovery-eta-min/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_system_type {
-    #[path = "🔧change-system-type/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-system-type/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-system-type/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_years_since_inspection {
-    #[path = "🔧change-years-since-inspection/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-years-since-inspection/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-years-since-inspection/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_humidification_required_kg_h {
-    #[path = "🔧change-humidification-required-kg-h/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-humidification-required-kg-h/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-humidification-required-kg-h/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_humidification_provided_kg_h {
-    #[path = "🔧change-humidification-provided-kg-h/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-humidification-provided-kg-h/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-humidification-provided-kg-h/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_fan_q_v_m3_s {
-    #[path = "🔧change-fan-qvm3-s/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-fan-qvm3-s/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-fan-qvm3-s/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_fan_t_run_h {
-    #[path = "🔧change-fan-t-run-h/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-fan-t-run-h/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-fan-t-run-h/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_fan_energy_reference_kwh {
-    #[path = "🔧change-fan-energy-reference-kwh/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-fan-energy-reference-kwh/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-fan-energy-reference-kwh/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_night_setback_k {
-    #[path = "🔧change-night-setback-k/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-night-setback-k/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-night-setback-k/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_hr_m_dot_kg_s {
-    #[path = "🔧change-hr-m-dot-kg-s/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-hr-m-dot-kg-s/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-hr-m-dot-kg-s/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_hr_cp_j_kgk {
-    #[path = "🔧change-hr-cp-j-kgk/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-hr-cp-j-kgk/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-hr-cp-j-kgk/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_hr_delta_t_c {
-    #[path = "🔧change-hr-delta-tc/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-hr-delta-tc/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-hr-delta-tc/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_hr_t_h {
-    #[path = "🔧change-hr-th/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-hr-th/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-hr-th/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_hr_savings_reference_kwh {
-    #[path = "🔧change-hr-savings-reference-kwh/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-hr-savings-reference-kwh/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-hr-savings-reference-kwh/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_n50_h_inv {
-    #[path = "🔧change-n50-h-inv/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-n50-h-inv/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-n50-h-inv/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_volume_m3 {
-    #[path = "🔧change-volume-m3/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-volume-m3/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-volume-m3/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_infiltration_allowance_m3_h {
-    #[path = "🔧change-infiltration-allowance-m3-h/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-infiltration-allowance-m3-h/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-infiltration-allowance-m3-h/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_cellar_area_m2 {
-    #[path = "🔧change-cellar-area-m2/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-cellar-area-m2/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-cellar-area-m2/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_cellar_ventilation_m3_h {
-    #[path = "🔧change-cellar-ventilation-m3-h/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-cellar-ventilation-m3-h/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-cellar-ventilation-m3-h/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_h_tr_w_k {
-    #[path = "🔧change-h-tr-wk/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-h-tr-wk/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-h-tr-wk/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_h_ve_w_k {
-    #[path = "🔧change-h-ve-wk/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-h-ve-wk/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-h-ve-wk/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_theta_e_c {
-    #[path = "🔧change-theta-ec/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-theta-ec/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-theta-ec/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_theta_set_c {
-    #[path = "🔧change-theta-set-c/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-theta-set-c/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-theta-set-c/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_cooling_delta_t_h {
-    #[path = "🔧change-cooling-delta-th/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-cooling-delta-th/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-cooling-delta-th/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_cooling_gains_kwh {
-    #[path = "🔧change-cooling-gains-kwh/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-cooling-gains-kwh/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-cooling-gains-kwh/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_cooling_utilization_factor {
-    #[path = "🔧change-cooling-utilization-factor/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-cooling-utilization-factor/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-cooling-utilization-factor/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_cooling_reference_kwh {
-    #[path = "🔧change-cooling-reference-kwh/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-cooling-reference-kwh/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-cooling-reference-kwh/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_chiller_type {
-    #[path = "🔧change-chiller-type/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-chiller-type/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-chiller-type/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_eer_actual {
-    #[path = "🔧change-eer-actual/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-eer-actual/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-eer-actual/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_q_c_kwh {
-    #[path = "🔧change-qc-kwh/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-qc-kwh/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-qc-kwh/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_generation_reference_kwh {
-    #[path = "🔧change-generation-reference-kwh/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-generation-reference-kwh/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-generation-reference-kwh/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_data_center_supply_c {
-    #[path = "🔧change-data-center-supply-c/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-data-center-supply-c/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-data-center-supply-c/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_h_st_w_k {
-    #[path = "🔧change-h-st-wk/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-h-st-wk/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-h-st-wk/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_theta_st_c {
-    #[path = "🔧change-theta-st-c/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-theta-st-c/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-theta-st-c/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_theta_amb_c {
-    #[path = "🔧change-theta-amb-c/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-theta-amb-c/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-theta-amb-c/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_storage_t_h {
-    #[path = "🔧change-storage-th/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-storage-th/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-storage-th/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_storage_allowance_kwh {
-    #[path = "🔧change-storage-allowance-kwh/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-storage-allowance-kwh/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-storage-allowance-kwh/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_dhw_delivery_c {
-    #[path = "🔧change-dhw-delivery-c/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-dhw-delivery-c/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-dhw-delivery-c/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_duct_class {
-    #[path = "🔧change-duct-class/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-duct-class/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-duct-class/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_duct_test_pressure_pa {
-    #[path = "🔧change-duct-test-pressure-pa/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-duct-test-pressure-pa/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-duct-test-pressure-pa/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_duct_leakage_m3_s_m2 {
-    #[path = "🔧change-duct-leakage-m3-sm2/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-duct-leakage-m3-sm2/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-duct-leakage-m3-sm2/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-//#endregion 🔖️NewLeaves
-
-//#region 🔖️RepurposedLeaves
-// 🌱️ `set_snapshot` is declared by `📦️glue.rs` as a sibling of `component` (this file) under
-// `pub mod mutations { ... }` — brought into this file's own scope the same way `process3d`'s
-// already-migrated `🧬️mutations/🦀️component.rs` reaches its own repurposed siblings.
-use super::set_snapshot;
-//#endregion 🔖️RepurposedLeaves
+//#region 🔖️Leaves
+use super::change_annex;
+use super::change_occupancy;
+use super::change_comfort_category;
+use super::change_t_op_c;
+use super::change_rh_percent;
+use super::change_air_speed_m_s;
+use super::change_theta_rm_c;
+use super::change_co2_ppm;
+use super::change_df_percent;
+use super::change_l_aeq_db;
+use super::change_persons;
+use super::change_ida_class;
+use super::change_ventilation_m3_h;
+use super::change_floor_area_m2;
+use super::change_bedrooms;
+use super::change_dwelling_ventilation_m3_h;
+use super::change_occupants;
+use super::change_residential_ventilation_m3_h;
+use super::change_sfp_w_m3_s;
+use super::change_sfp_required_class;
+use super::change_heat_recovery_eta;
+use super::change_heat_recovery_eta_min;
+use super::change_system_type;
+use super::change_years_since_inspection;
+use super::change_humidification_required_kg_h;
+use super::change_humidification_provided_kg_h;
+use super::change_fan_q_v_m3_s;
+use super::change_fan_t_run_h;
+use super::change_fan_energy_reference_kwh;
+use super::change_night_setback_k;
+use super::change_hr_m_dot_kg_s;
+use super::change_hr_cp_j_kgk;
+use super::change_hr_delta_t_c;
+use super::change_hr_t_h;
+use super::change_hr_savings_reference_kwh;
+use super::change_n50_h_inv;
+use super::change_volume_m3;
+use super::change_infiltration_allowance_m3_h;
+use super::change_cellar_area_m2;
+use super::change_cellar_ventilation_m3_h;
+use super::change_h_tr_w_k;
+use super::change_h_ve_w_k;
+use super::change_theta_e_c;
+use super::change_theta_set_c;
+use super::change_cooling_delta_t_h;
+use super::change_cooling_gains_kwh;
+use super::change_cooling_utilization_factor;
+use super::change_cooling_reference_kwh;
+use super::change_chiller_type;
+use super::change_eer_actual;
+use super::change_q_c_kwh;
+use super::change_generation_reference_kwh;
+use super::change_data_center_supply_c;
+use super::change_h_st_w_k;
+use super::change_theta_st_c;
+use super::change_theta_amb_c;
+use super::change_storage_t_h;
+use super::change_storage_allowance_kwh;
+use super::change_dhw_delivery_c;
+use super::change_duct_class;
+use super::change_duct_test_pressure_pa;
+use super::change_duct_leakage_m3_s_m2;
+//#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the din16798 document, derived per
@@ -650,7 +93,7 @@ use super::set_snapshot;
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Din16798Snapshot, diff = Din16798Diff, schema = "norm.din16798")]
 pub enum Din16798Mutation {
-    ChangeAnnex(set_snapshot::mutation::ChangeAnnex),
+    ChangeAnnex(change_annex::mutation::ChangeAnnex),
     ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy),
     ChangeComfortCategory(change_comfort_category::mutation::ChangeComfortCategory),
     ChangeTOpC(change_t_op_c::mutation::ChangeTOpC),
@@ -715,6 +158,81 @@ pub enum Din16798Mutation {
 }
 //#endregion 🔖️Mutations
 
+//#region 🔖️FromSnapshot
+impl Din16798Mutation {
+    /// 📤️ Decomposes a whole `Din16798Snapshot` into one `change-<field>` mutation per persistent
+    /// field — the closed-vocabulary replacement for the banned whole-document-replace variant, used
+    /// by `import_media`'s `"model:in"` port and the `set-snapshot` app command to bundle a bulk
+    /// document replacement into a single atomic `Emit::commit`.
+    pub fn from_snapshot(snapshot: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+        let mut mutations = Vec::with_capacity(62);
+        mutations.push(Din16798Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: snapshot.annex.clone() }));
+        mutations.push(Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy: snapshot.occupancy.clone() }));
+        mutations.push(Din16798Mutation::ChangeComfortCategory(change_comfort_category::mutation::ChangeComfortCategory { new_comfort_category: snapshot.comfort_category.clone() }));
+        mutations.push(Din16798Mutation::ChangeTOpC(change_t_op_c::mutation::ChangeTOpC { new_t_op_c: snapshot.t_op_c.clone() }));
+        mutations.push(Din16798Mutation::ChangeRhPercent(change_rh_percent::mutation::ChangeRhPercent { new_rh_percent: snapshot.rh_percent.clone() }));
+        mutations.push(Din16798Mutation::ChangeAirSpeedMS(change_air_speed_m_s::mutation::ChangeAirSpeedMS { new_air_speed_m_s: snapshot.air_speed_m_s.clone() }));
+        mutations.push(Din16798Mutation::ChangeThetaRmC(change_theta_rm_c::mutation::ChangeThetaRmC { new_theta_rm_c: snapshot.theta_rm_c.clone() }));
+        mutations.push(Din16798Mutation::ChangeCo2Ppm(change_co2_ppm::mutation::ChangeCo2Ppm { new_co2_ppm: snapshot.co2_ppm.clone() }));
+        mutations.push(Din16798Mutation::ChangeDfPercent(change_df_percent::mutation::ChangeDfPercent { new_df_percent: snapshot.df_percent.clone() }));
+        mutations.push(Din16798Mutation::ChangeLAeqDb(change_l_aeq_db::mutation::ChangeLAeqDb { new_l_aeq_db: snapshot.l_aeq_db.clone() }));
+        mutations.push(Din16798Mutation::ChangePersons(change_persons::mutation::ChangePersons { new_persons: snapshot.persons.clone() }));
+        mutations.push(Din16798Mutation::ChangeIdaClass(change_ida_class::mutation::ChangeIdaClass { new_ida_class: snapshot.ida_class.clone() }));
+        mutations.push(Din16798Mutation::ChangeVentilationM3H(change_ventilation_m3_h::mutation::ChangeVentilationM3H { new_ventilation_m3_h: snapshot.ventilation_m3_h.clone() }));
+        mutations.push(Din16798Mutation::ChangeFloorAreaM2(change_floor_area_m2::mutation::ChangeFloorAreaM2 { new_floor_area_m2: snapshot.floor_area_m2.clone() }));
+        mutations.push(Din16798Mutation::ChangeBedrooms(change_bedrooms::mutation::ChangeBedrooms { new_bedrooms: snapshot.bedrooms.clone() }));
+        mutations.push(Din16798Mutation::ChangeDwellingVentilationM3H(change_dwelling_ventilation_m3_h::mutation::ChangeDwellingVentilationM3H { new_dwelling_ventilation_m3_h: snapshot.dwelling_ventilation_m3_h.clone() }));
+        mutations.push(Din16798Mutation::ChangeOccupants(change_occupants::mutation::ChangeOccupants { new_occupants: snapshot.occupants.clone() }));
+        mutations.push(Din16798Mutation::ChangeResidentialVentilationM3H(change_residential_ventilation_m3_h::mutation::ChangeResidentialVentilationM3H { new_residential_ventilation_m3_h: snapshot.residential_ventilation_m3_h.clone() }));
+        mutations.push(Din16798Mutation::ChangeSfpWM3S(change_sfp_w_m3_s::mutation::ChangeSfpWM3S { new_sfp_w_m3_s: snapshot.sfp_w_m3_s.clone() }));
+        mutations.push(Din16798Mutation::ChangeSfpRequiredClass(change_sfp_required_class::mutation::ChangeSfpRequiredClass { new_sfp_required_class: snapshot.sfp_required_class.clone() }));
+        mutations.push(Din16798Mutation::ChangeHeatRecoveryEta(change_heat_recovery_eta::mutation::ChangeHeatRecoveryEta { new_heat_recovery_eta: snapshot.heat_recovery_eta.clone() }));
+        mutations.push(Din16798Mutation::ChangeHeatRecoveryEtaMin(change_heat_recovery_eta_min::mutation::ChangeHeatRecoveryEtaMin { new_heat_recovery_eta_min: snapshot.heat_recovery_eta_min.clone() }));
+        mutations.push(Din16798Mutation::ChangeSystemType(change_system_type::mutation::ChangeSystemType { new_system_type: snapshot.system_type.clone() }));
+        mutations.push(Din16798Mutation::ChangeYearsSinceInspection(change_years_since_inspection::mutation::ChangeYearsSinceInspection { new_years_since_inspection: snapshot.years_since_inspection.clone() }));
+        mutations.push(Din16798Mutation::ChangeHumidificationRequiredKgH(change_humidification_required_kg_h::mutation::ChangeHumidificationRequiredKgH { new_humidification_required_kg_h: snapshot.humidification_required_kg_h.clone() }));
+        mutations.push(Din16798Mutation::ChangeHumidificationProvidedKgH(change_humidification_provided_kg_h::mutation::ChangeHumidificationProvidedKgH { new_humidification_provided_kg_h: snapshot.humidification_provided_kg_h.clone() }));
+        mutations.push(Din16798Mutation::ChangeFanQVM3S(change_fan_q_v_m3_s::mutation::ChangeFanQVM3S { new_fan_q_v_m3_s: snapshot.fan_q_v_m3_s.clone() }));
+        mutations.push(Din16798Mutation::ChangeFanTRunH(change_fan_t_run_h::mutation::ChangeFanTRunH { new_fan_t_run_h: snapshot.fan_t_run_h.clone() }));
+        mutations.push(Din16798Mutation::ChangeFanEnergyReferenceKwh(change_fan_energy_reference_kwh::mutation::ChangeFanEnergyReferenceKwh { new_fan_energy_reference_kwh: snapshot.fan_energy_reference_kwh.clone() }));
+        mutations.push(Din16798Mutation::ChangeNightSetbackK(change_night_setback_k::mutation::ChangeNightSetbackK { new_night_setback_k: snapshot.night_setback_k.clone() }));
+        mutations.push(Din16798Mutation::ChangeHrMDotKgS(change_hr_m_dot_kg_s::mutation::ChangeHrMDotKgS { new_hr_m_dot_kg_s: snapshot.hr_m_dot_kg_s.clone() }));
+        mutations.push(Din16798Mutation::ChangeHrCpJKgk(change_hr_cp_j_kgk::mutation::ChangeHrCpJKgk { new_hr_cp_j_kgk: snapshot.hr_cp_j_kgk.clone() }));
+        mutations.push(Din16798Mutation::ChangeHrDeltaTC(change_hr_delta_t_c::mutation::ChangeHrDeltaTC { new_hr_delta_t_c: snapshot.hr_delta_t_c.clone() }));
+        mutations.push(Din16798Mutation::ChangeHrTH(change_hr_t_h::mutation::ChangeHrTH { new_hr_t_h: snapshot.hr_t_h.clone() }));
+        mutations.push(Din16798Mutation::ChangeHrSavingsReferenceKwh(change_hr_savings_reference_kwh::mutation::ChangeHrSavingsReferenceKwh { new_hr_savings_reference_kwh: snapshot.hr_savings_reference_kwh.clone() }));
+        mutations.push(Din16798Mutation::ChangeN50HInv(change_n50_h_inv::mutation::ChangeN50HInv { new_n50_h_inv: snapshot.n50_h_inv.clone() }));
+        mutations.push(Din16798Mutation::ChangeVolumeM3(change_volume_m3::mutation::ChangeVolumeM3 { new_volume_m3: snapshot.volume_m3.clone() }));
+        mutations.push(Din16798Mutation::ChangeInfiltrationAllowanceM3H(change_infiltration_allowance_m3_h::mutation::ChangeInfiltrationAllowanceM3H { new_infiltration_allowance_m3_h: snapshot.infiltration_allowance_m3_h.clone() }));
+        mutations.push(Din16798Mutation::ChangeCellarAreaM2(change_cellar_area_m2::mutation::ChangeCellarAreaM2 { new_cellar_area_m2: snapshot.cellar_area_m2.clone() }));
+        mutations.push(Din16798Mutation::ChangeCellarVentilationM3H(change_cellar_ventilation_m3_h::mutation::ChangeCellarVentilationM3H { new_cellar_ventilation_m3_h: snapshot.cellar_ventilation_m3_h.clone() }));
+        mutations.push(Din16798Mutation::ChangeHTrWK(change_h_tr_w_k::mutation::ChangeHTrWK { new_h_tr_w_k: snapshot.h_tr_w_k.clone() }));
+        mutations.push(Din16798Mutation::ChangeHVeWK(change_h_ve_w_k::mutation::ChangeHVeWK { new_h_ve_w_k: snapshot.h_ve_w_k.clone() }));
+        mutations.push(Din16798Mutation::ChangeThetaEC(change_theta_e_c::mutation::ChangeThetaEC { new_theta_e_c: snapshot.theta_e_c.clone() }));
+        mutations.push(Din16798Mutation::ChangeThetaSetC(change_theta_set_c::mutation::ChangeThetaSetC { new_theta_set_c: snapshot.theta_set_c.clone() }));
+        mutations.push(Din16798Mutation::ChangeCoolingDeltaTH(change_cooling_delta_t_h::mutation::ChangeCoolingDeltaTH { new_cooling_delta_t_h: snapshot.cooling_delta_t_h.clone() }));
+        mutations.push(Din16798Mutation::ChangeCoolingGainsKwh(change_cooling_gains_kwh::mutation::ChangeCoolingGainsKwh { new_cooling_gains_kwh: snapshot.cooling_gains_kwh.clone() }));
+        mutations.push(Din16798Mutation::ChangeCoolingUtilizationFactor(change_cooling_utilization_factor::mutation::ChangeCoolingUtilizationFactor { new_cooling_utilization_factor: snapshot.cooling_utilization_factor.clone() }));
+        mutations.push(Din16798Mutation::ChangeCoolingReferenceKwh(change_cooling_reference_kwh::mutation::ChangeCoolingReferenceKwh { new_cooling_reference_kwh: snapshot.cooling_reference_kwh.clone() }));
+        mutations.push(Din16798Mutation::ChangeChillerType(change_chiller_type::mutation::ChangeChillerType { new_chiller_type: snapshot.chiller_type.clone() }));
+        mutations.push(Din16798Mutation::ChangeEerActual(change_eer_actual::mutation::ChangeEerActual { new_eer_actual: snapshot.eer_actual.clone() }));
+        mutations.push(Din16798Mutation::ChangeQCKwh(change_q_c_kwh::mutation::ChangeQCKwh { new_q_c_kwh: snapshot.q_c_kwh.clone() }));
+        mutations.push(Din16798Mutation::ChangeGenerationReferenceKwh(change_generation_reference_kwh::mutation::ChangeGenerationReferenceKwh { new_generation_reference_kwh: snapshot.generation_reference_kwh.clone() }));
+        mutations.push(Din16798Mutation::ChangeDataCenterSupplyC(change_data_center_supply_c::mutation::ChangeDataCenterSupplyC { new_data_center_supply_c: snapshot.data_center_supply_c.clone() }));
+        mutations.push(Din16798Mutation::ChangeHStWK(change_h_st_w_k::mutation::ChangeHStWK { new_h_st_w_k: snapshot.h_st_w_k.clone() }));
+        mutations.push(Din16798Mutation::ChangeThetaStC(change_theta_st_c::mutation::ChangeThetaStC { new_theta_st_c: snapshot.theta_st_c.clone() }));
+        mutations.push(Din16798Mutation::ChangeThetaAmbC(change_theta_amb_c::mutation::ChangeThetaAmbC { new_theta_amb_c: snapshot.theta_amb_c.clone() }));
+        mutations.push(Din16798Mutation::ChangeStorageTH(change_storage_t_h::mutation::ChangeStorageTH { new_storage_t_h: snapshot.storage_t_h.clone() }));
+        mutations.push(Din16798Mutation::ChangeStorageAllowanceKwh(change_storage_allowance_kwh::mutation::ChangeStorageAllowanceKwh { new_storage_allowance_kwh: snapshot.storage_allowance_kwh.clone() }));
+        mutations.push(Din16798Mutation::ChangeDhwDeliveryC(change_dhw_delivery_c::mutation::ChangeDhwDeliveryC { new_dhw_delivery_c: snapshot.dhw_delivery_c.clone() }));
+        mutations.push(Din16798Mutation::ChangeDuctClass(change_duct_class::mutation::ChangeDuctClass { new_duct_class: snapshot.duct_class.clone() }));
+        mutations.push(Din16798Mutation::ChangeDuctTestPressurePa(change_duct_test_pressure_pa::mutation::ChangeDuctTestPressurePa { new_duct_test_pressure_pa: snapshot.duct_test_pressure_pa.clone() }));
+        mutations.push(Din16798Mutation::ChangeDuctLeakageM3SM2(change_duct_leakage_m3_s_m2::mutation::ChangeDuctLeakageM3SM2 { new_duct_leakage_m3_s_m2: snapshot.duct_leakage_m3_s_m2.clone() }));
+        mutations
+    }
+}
+//#endregion 🔖️FromSnapshot
+
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -726,7 +244,7 @@ mod tests {
     /// iterate, mirroring `process3d`'s own `every_mutation()` fixture.
     fn every_mutation() -> Vec<Din16798Mutation> {
         vec![
-        Din16798Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+        Din16798Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
         Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy: "office".to_string() }),
         Din16798Mutation::ChangeComfortCategory(change_comfort_category::mutation::ChangeComfortCategory { new_comfort_category: "I".to_string() }),
         Din16798Mutation::ChangeTOpC(change_t_op_c::mutation::ChangeTOpC { new_t_op_c: 24.5 }),
@@ -827,7 +345,7 @@ mod tests {
     #[test]
     fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = Din16798Snapshot::default();
-        let mutation = Din16798Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
+        let mutation = Din16798Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base);
         let d2 = Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy: "office".to_string() }).diff(&base);

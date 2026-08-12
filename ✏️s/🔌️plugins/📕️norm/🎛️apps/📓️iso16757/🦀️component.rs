@@ -104,7 +104,7 @@ impl ArtifactApp for Iso16757PlayApp {
 
     /// 🎞️ `"model:in"`/`"document:in"` — see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, Iso16757Snapshot>) -> Result<Emit<Iso16757Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
-        crate::app_surface::import_media(port, media, |snapshot| Iso16757Mutation::SetSnapshot { snapshot })
+        crate::app_surface::import_media(port, media, |snapshot| vec![Iso16757Mutation::SetSnapshot { snapshot }])
     }
     //#endregion 🔖️MediaPorts
 }

@@ -186,18 +186,23 @@ where
 }
 
 /// 🎞️ `"model:in"` is an honest generic pass-through: a payload that happens to decode as this family's
-/// own `Document` shape becomes a whole-document replace; anything else is accepted but inert (no norm
+/// own `Document` shape becomes a bundle of targeted `change-<field>` mutations (one per persistent
+/// field, via each migrated facet's `XMutation::from_snapshot`) rather than a single whole-document
+/// replace mutation — the banned `SetSnapshot` escape hatch has no 1:1 replacement, so `wrap` now
+/// decomposes the imported document into the closed semantic vocabulary instead. Bundling them into one
+/// `Emit::mutations` call keeps the import atomic (one edit, one undo entry), matching the old
+/// single-mutation commit's history shape. Anything that doesn't decode is accepted but inert (no norm
 /// family document has a generic "raw model" field to stash a foreign shape into yet). `"document:in"`
 /// replicates the SDK default (decodes the base64 pack).
 pub fn import_media<D, M, F>(port: &str, media: &Media, wrap: F) -> Result<Emit<M, crate::config::NormConfigMutation>, MediaError>
 where
     D: Clone + Default + PartialEq + Serialize + DeserializeOwned + store::ArtifactPack,
-    F: Fn(D) -> M,
+    F: Fn(D) -> Vec<M>,
 {
     if port == "model:in" {
         if let MediaPayload::Structured { json, .. } = &media.payload {
             if let Ok(document) = serde_json::from_str::<D>(json) {
-                return Ok(Emit::mutations(vec![wrap(document)]));
+                return Ok(Emit::mutations(wrap(document)));
             }
         }
         return Ok(Emit::default());
@@ -210,7 +215,7 @@ where
     };
     let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
     let document = <D as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-    Ok(Emit::mutations(vec![wrap(document)]))
+    Ok(Emit::mutations(wrap(document)))
 }
 //#endregion 🔖️MediaPorts
 
@@ -218,9 +223,19 @@ where
 /// 📤️ The whole-document replace every app's `set-document` and `evaluate` commands emit — `description`
 /// is the manifest action id the command was declared under, which the command log labels the edit with.
 
-/// 📤️ Commit a typed document mutation (typically `XMutation::SetSnapshot { snapshot }`).
+/// 📤️ Commit a typed document mutation (kept for the norm sub-lane's not-yet-migrated sibling facets;
+/// migrated facets use `commit_snapshot_fields` below instead, since the whole-document `SetSnapshot`
+/// variant this helper used to construct is banned with no 1:1 replacement).
 pub fn commit_snapshot<M>(mutation: M, description: &str) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
     Ok(Emit::commit(vec![mutation], description))
+}
+
+/// 📤️ Commit a bundle of targeted semantic mutations as one described edit — the migrated facets'
+/// replacement for `commit_snapshot`'s old single whole-document `SetSnapshot` commit: a `set-snapshot`
+/// command payload (or a re-evaluation re-commit) decomposes into one `change-<field>` mutation per
+/// persistent field via `XMutation::from_snapshot`, bundled here into a single undo entry.
+pub fn commit_snapshot_fields<M>(mutations: Vec<M>, description: &str) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
+    Ok(Emit::commit(mutations, description))
 }
 
 pub fn commit_document<D>(document: D, description: &str) -> Result<Emit<crate::document::SetArtifactMutation<D>, crate::config::NormConfigMutation>, Fault> {

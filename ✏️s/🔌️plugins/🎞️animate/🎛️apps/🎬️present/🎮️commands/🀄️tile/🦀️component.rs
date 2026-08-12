@@ -3,9 +3,13 @@
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::apps::present::{new_tile_id, valid_tile_ids};
 use crate::artifacts::present::engine::clamp_tile_crop;
+use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
+use crate::artifacts::present::mutations::delete_tile::mutation::DeleteTile;
+use crate::artifacts::present::mutations::delete_tiles::mutation::DeleteTiles;
+use crate::artifacts::present::mutations::rename_tile::mutation::RenameTile;
+use crate::artifacts::present::mutations::resize_tile_crop::mutation::ResizeTileCrop;
 use crate::artifacts::present::op::PresentMutation;
-use crate::artifacts::present::{FigureTileDraft, FigureTileDraftPatch, FigureTileFrame, PresentSnapshot};
-use protocol::CollectionMutation;
+use crate::artifacts::present::{FigureTileDraft, FigureTileFrame, PresentSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -27,7 +31,7 @@ pub mod add_tile {
         let crop = payload.crop.clone().unwrap_or(FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
         let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop };
         Ok(Emit {
-            artifact_mutations: vec![PresentMutation::Tiles(CollectionMutation::Add { index: deck.tiles.len(), item: tile })],
+            artifact_mutations: vec![PresentMutation::CreateTile(CreateTile { index: deck.tiles.len(), tile })],
             config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: vec![id] }],
             ..Default::default()
         })
@@ -54,7 +58,7 @@ pub mod delete_tile {
         }
         let remaining: Vec<String> = config.selected_ids.iter().filter(|selected| !targets.contains(selected)).cloned().collect();
         Ok(Emit {
-            artifact_mutations: targets.into_iter().map(|id| PresentMutation::Tiles(CollectionMutation::Remove { id })).collect(),
+            artifact_mutations: targets.into_iter().map(|id| PresentMutation::DeleteTile(DeleteTile { id })).collect(),
             config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: remaining }],
             ..Default::default()
         })
@@ -78,7 +82,7 @@ pub mod delete_selection {
             return Ok(Emit::default());
         }
         Ok(Emit {
-            artifact_mutations: targets.into_iter().map(|id| PresentMutation::Tiles(CollectionMutation::Remove { id })).collect(),
+            artifact_mutations: vec![PresentMutation::DeleteTiles(DeleteTiles { ids: targets })],
             config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }],
             ..Default::default()
         })
@@ -107,7 +111,7 @@ pub mod rename_tiles {
         if valid.is_empty() {
             return Ok(Emit::default());
         }
-        Ok(Emit::mutations(valid.into_iter().map(|id| PresentMutation::Tiles(CollectionMutation::Patch { id, patch: FigureTileDraftPatch { name: Some(name.into()), crop: None } })).collect()))
+        Ok(Emit::mutations(valid.into_iter().map(|id| PresentMutation::RenameTile(RenameTile { id, new_name: name.to_string() })).collect()))
     }
 }
 //#endregion 🔖️RenameTiles
@@ -140,7 +144,7 @@ pub mod patch_tile_crops {
                     "height" => crop.height = payload.value,
                     _ => {}
                 }
-                PresentMutation::Tiles(CollectionMutation::Patch { id: tile.id.clone(), patch: FigureTileDraftPatch { name: None, crop: Some(clamp_tile_crop(&crop)) } })
+                PresentMutation::ResizeTileCrop(ResizeTileCrop { id: tile.id.clone(), new_crop: clamp_tile_crop(&crop) })
             })
             .collect();
         if operations.is_empty() {

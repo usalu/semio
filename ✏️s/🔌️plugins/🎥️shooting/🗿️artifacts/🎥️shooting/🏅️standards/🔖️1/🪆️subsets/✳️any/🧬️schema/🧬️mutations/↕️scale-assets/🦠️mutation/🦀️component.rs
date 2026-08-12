@@ -1,4 +1,4 @@
-//! ↕ Shooting mutation payload — `ScaleAssets`, the bulk multiplicative-scale gesture.
+//! ↕️ Shooting mutation payload — `ScaleAssets`. The bulk multiplicative-scale gesture. Multiplies every asset in `asset_ids`' current per-axis scale by `(sx, sy, sz)`.
 
 use crate::artifacts::shooting::diff::ShootingDiff;
 use crate::artifacts::shooting::mutations::ShootingMutation;
@@ -6,8 +6,6 @@ use crate::artifacts::shooting::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 
-//#region ↕️ScaleAssets
-/// ↕️ Multiplies every asset in `asset_ids`' current per-axis scale by `(sx, sy, sz)`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ScaleAssets {
     pub asset_ids: Vec<String>,
@@ -19,10 +17,10 @@ pub struct ScaleAssets {
 impl MutationKind<ShootingSnapshot, ShootingMutation> for ScaleAssets {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "scale", entity: "assets", kind: "scale-assets", record: "ScaledAssets" };
     fn diff(&self, base: &ShootingSnapshot) -> ShootingDiff {
-        super::diff::diff_scale_assets(self, base)
+        super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
-        super::inverse::inverse_scale_assets(self, base)
+        super::inverse::inverse(self, base)
     }
     fn label(&self) -> String {
         format!("Scale {} asset(s)", self.asset_ids.len())
@@ -31,4 +29,3 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ScaleAssets {
         self.asset_ids.clone()
     }
 }
-//#endregion ↕️ScaleAssets

@@ -1,12 +1,11 @@
-//! 🔺 Diff constructor for `ScaleAssets` — multiplies each targeted asset's current per-axis scale
-//! (identity when absent) by the payload factors.
+//! 🔺 Diff constructor for `ScaleAssets`.
 
 use super::mutation::ScaleAssets;
+use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
-use crate::artifacts::shooting::{shooting_asset_scale, ShootingAssetPatch, ShootingSnapshot};
+use crate::artifacts::shooting::{shooting_asset_scale, ShootingAssetPatch};
 
-//#region ↕️ScaleAssets
-pub fn diff_scale_assets(payload: &ScaleAssets, base: &ShootingSnapshot) -> ShootingDiff {
+pub fn diff(payload: &ScaleAssets, base: &ShootingSnapshot) -> ShootingDiff {
     let patched: Vec<ShootingAssetPatchEntry> = base
         .assets
         .iter()
@@ -21,4 +20,3 @@ pub fn diff_scale_assets(payload: &ScaleAssets, base: &ShootingSnapshot) -> Shoo
     }
     ShootingDiff { assets: Some(ShootingAssetsDelta { patched, ..Default::default() }), ..Default::default() }
 }
-//#endregion ↕️ScaleAssets

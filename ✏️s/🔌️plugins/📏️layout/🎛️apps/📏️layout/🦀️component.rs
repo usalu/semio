@@ -20,6 +20,7 @@ use crate::apps::layout::modes::edit::windows::{blueprint, preview};
 use crate::apps::layout::modes::edit;
 use crate::apps::layout::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, preflight as preflight_panel};
 use crate::apps::layout::terminology::{layout_labels, LayoutLabels};
+use crate::artifacts::layout::mutations::change_data_fields::mutation::ChangeDataFields;
 use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutSnapshot;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
@@ -193,7 +194,7 @@ impl ArtifactApp for LayoutPlayApp {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "fields:in only accepts a Structured (JSON object) payload".into()));
                 };
-                Ok(Emit::mutations(vec![LayoutMutation::SetDataFields { json: Some(json.clone()) }]))
+                Ok(Emit::mutations(vec![LayoutMutation::ChangeDataFields(ChangeDataFields { new_json: Some(json.clone()) })]))
             }
             _ => Err(MediaError::NotImplemented),
         }

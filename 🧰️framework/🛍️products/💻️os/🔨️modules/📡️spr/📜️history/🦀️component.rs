@@ -88,6 +88,12 @@ pub struct HistoryOpMeta {
     pub hlt: Option<(u64, i64, u64)>,
     pub undo_policy: u8,
     pub payload_hash: Option<[u8; 32]>,
+    /// @emoji 🧑‍🤝‍🧑️ Durable twin of `crate::os_spr::command::MutationMeta.group_id` — the composite-
+    /// gesture stamp, present iff the op it describes was authored as one member of a multi-
+    /// document composite gesture. Dict-interned like `op_id`/`author_id`/`dependencies` (bullet
+    /// design point: every sibling member of one composite gesture shares the identical string,
+    /// so the dictionary compresses it near-for-free across a whole edit/checkpoint).
+    pub group_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -607,6 +613,9 @@ fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut DictBuil
     if meta.payload_hash.is_some() {
         presence |= 1 << 3;
     }
+    if meta.group_id.is_some() {
+        presence |= 1 << 4;
+    }
     out.write_u8(presence);
     if let Some(op_id) = &meta.op_id {
         write_id_field(out, op_id, dict, edit_ordinal_of)?;
@@ -627,6 +636,14 @@ fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut DictBuil
     out.write_u8(meta.undo_policy);
     if let Some(hash) = &meta.payload_hash {
         out.write_bytes(hash);
+    }
+    // 🎯️ Appended past the pre-existing tail (bit4 of the same presence byte) — a decoder reading
+    // a byte-log written before this field existed sees bit4 unset (that bit never existed in the
+    // old presence byte, so it always tests as 0) and recovers `group_id: None`, exactly the
+    // "absent for logs predating this field" contract `HistoryLog.cursor` documents for its own
+    // additive field.
+    if let Some(group_id) = &meta.group_id {
+        write_id_field(out, group_id, dict, edit_ordinal_of)?;
     }
     Ok(())
 }
@@ -651,7 +668,8 @@ fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to
     };
     let undo_policy = input.read_u8()?;
     let payload_hash = if presence & (1 << 3) != 0 { Some(input.read_array32()?) } else { None };
-    Ok(HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash })
+    let group_id = if presence & (1 << 4) != 0 { Some(read_id_field(input, dict, ordinal_to_id)?) } else { None };
+    Ok(HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id })
 }
 
 pub fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
@@ -1639,6 +1657,12 @@ mod tests {
                         hlt: Some((1, 1_700_000_000_000, 3)),
                         undo_policy: 2,
                         payload_hash: Some([9u8; 32]),
+                        // 🎯️ Non-`None` on purpose: `sample_log()` feeds every encode/decode
+                        // identity test below (`history_encode_decode_identity_standard` etc.), so
+                        // a populated `group_id` here proves the composite-gesture stamp survives
+                        // a real `.spr` byte round trip via `assert_eq!(decoded, log)`, not just a
+                        // narrowly-targeted unit test.
+                        group_id: Some("group-composite-1".to_string()),
                     }]),
                 },
             ],

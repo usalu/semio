@@ -36,6 +36,29 @@ export const GRAPHQL_STATE_PREAMBLE =
   "directive @state(class: StateClass!) on FIELD_DEFINITION";
 //#endregion 🔖️GraphQlStatePreamble
 
+//#region 🔖️ArtifactCompositionSpec
+/** 🧒 One declared CHILD slot on an artifact snapshot — TS twin of Rust `ChildSlotSpec`. `kind` is a
+ * plain canonical artifact kind id string, grammar `s.<plugin>.<artifact>` (e.g. `"s.stdio.mesh"`). */
+export type ChildSlotSpec = {
+  readonly name: string;
+  readonly kind: string;
+  readonly many: boolean;
+};
+
+/** 🔗 One declared LINK slot on an artifact snapshot — TS twin of Rust `LinkSlotSpec`. */
+export type LinkSlotSpec = {
+  readonly name: string;
+  readonly roles: readonly string[];
+  readonly many: boolean;
+};
+
+/** 🔗 Shared GraphQL SDL fragment for CHILD/LINK slots — TS twin of Rust `GRAPHQL_COMPOSITION_PREAMBLE`. */
+export const GRAPHQL_COMPOSITION_PREAMBLE =
+  "type ArtifactLink { targetId: String! kind: String! }\n" +
+  "directive @child(kind: String!) on FIELD_DEFINITION\n" +
+  "directive @link(roles: [String!]) on FIELD_DEFINITION";
+//#endregion 🔖️ArtifactCompositionSpec
+
 //#region 🔖️ArtifactSchemaRegistry
 /** 📚 Runtime registry of {@link ArtifactSchemaDescriptor} values. */
 export class ArtifactSchemaRegistry {

@@ -1,0 +1,28 @@
+//! 🗑️ Shooting mutation payload — `DeleteAsset`. Removes an asset by id; inverse recreates it (with its captured base position).
+
+use crate::artifacts::shooting::diff::ShootingDiff;
+use crate::artifacts::shooting::mutations::ShootingMutation;
+use crate::artifacts::shooting::ShootingSnapshot;
+use protocol::{MutationKind, SemanticDescriptor};
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct DeleteAsset {
+    pub id: String,
+}
+
+impl MutationKind<ShootingSnapshot, ShootingMutation> for DeleteAsset {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "asset", kind: "delete-asset", record: "DeletedAsset" };
+    fn diff(&self, base: &ShootingSnapshot) -> ShootingDiff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Delete asset \"{}\"", self.id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}

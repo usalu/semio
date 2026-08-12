@@ -1,8 +1,8 @@
 //! 🔺️ Animate present artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::present::schema::PresentArtifact;
-use crate::artifacts::present::{FigureTileDraft, FigureTileDraftPatch, PresentSnapshot};
-use protocol::{CollectionMutation, MutationDiff, Patchable};
+use crate::artifacts::present::{FigureTileDraft, PresentSnapshot};
+use protocol::{MutationDiff, Patchable};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -146,49 +146,10 @@ impl MutationDiff<PresentSnapshot> for PresentDiff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-pub fn tiles_delta_from_collection_mutation(
-    base: &[FigureTileDraft],
-    op: &CollectionMutation<String, FigureTileDraft, FigureTileDraftPatch>,
-) -> PresentTilesDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => PresentTilesDelta {
-            added: vec![item.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Remove { id } => PresentTilesDelta {
-            removed: vec![id.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Patch { id, patch } => PresentTilesDelta {
-            patched: vec![PresentTilePatchEntry { id: id.clone(), patch: patch.clone() }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|item| item.id.clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            PresentTilesDelta {
-                reordered: Some(ids),
-                ..Default::default()
-            }
-        }
-    }
-}
-
 pub fn tiles_delta_from_set_tiles(base: &[FigureTileDraft], tiles: &[FigureTileDraft]) -> PresentTilesDelta {
     PresentTilesDelta {
         removed: base.iter().map(|t| t.id.clone()).collect(),
         added: tiles.to_vec(),
-        ..Default::default()
-    }
-}
-
-pub fn diff_set_snapshot(snapshot: &PresentSnapshot) -> PresentDiff {
-    PresentDiff {
-        artifact: Some(Box::new(PresentArtifact::from_snapshot(snapshot.clone()))),
         ..Default::default()
     }
 }

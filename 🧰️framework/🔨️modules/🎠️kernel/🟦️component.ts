@@ -238,11 +238,19 @@ export type KernelMutation = {
   readonly timestamp: HybridLogicalTimestamp;
 };
 
+/** @emoji 🧩️ One member edit folded into a group undo — pairs the owning document handle with the
+ * edit id inside it (composite/child-document dispatch). Mirrors Rust `kernel::EditRef`. */
+export type EditRef = {
+  readonly document: number;
+  readonly editId: string;
+};
+
 /** @emoji 🎁️ The undo group binding an invocation (action or command) to its operations + inverses. */
 export type UndoGroup = {
   readonly invocationId: string;
   readonly mutations: readonly string[];
   readonly inverseMutations: readonly InverseMutation[];
+  readonly memberEdits?: readonly EditRef[];
 };
 
 /** @emoji 📣️ An out-of-band app event surfaced to the shell (e.g. history changed). */

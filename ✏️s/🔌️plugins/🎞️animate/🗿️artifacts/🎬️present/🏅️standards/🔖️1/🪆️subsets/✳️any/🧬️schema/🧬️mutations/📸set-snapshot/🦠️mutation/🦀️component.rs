@@ -1,5 +1,5 @@
-//! 🪦️ Superseded stub — the generic `SetSnapshot { snapshot }` variant this leaf backed was
-//! deleted outright by the SEMANTIC-MUTATIONS-OVERHAUL fan-out (ticket
+//! 🪦️ Superseded stub — the generic whole-document-replacement `{ snapshot }` variant this leaf
+//! backed was deleted outright by the SEMANTIC-MUTATIONS-OVERHAUL fan-out (ticket
 //! `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL`, `animate-present-1-any` facet
 //! report): whole-document replacement has no in-history mutation replacement per the taxonomy's
 //! locked decision — it goes through `ArtifactStore::reset`, an app-level concern outside

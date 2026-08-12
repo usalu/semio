@@ -326,27 +326,68 @@ pub fn curated_count(document: &CurateSnapshot, object_id: &str) -> u32 {
 /// ➕️➖️ Adjusts the curated count for `object_id` by `delta`, clamped to `0..=availability`; removes the
 /// entry entirely when the count reaches 0. Silently no-operations if `object_id` isn't in the stock.
 pub fn curate_delta(document: &mut CurateSnapshot, object_id: &str, delta: i64) {
-    let Some(kind) = document.stock.iter().find(|kind| kind.id == object_id) else { return };
-    let next = (curated_count(document, object_id) as i64 + delta).clamp(0, kind.availability as i64) as u32;
-    curate_set(document, object_id, next);
+    apply_curation_decision(document, curation_decision_for_delta(document, object_id, delta));
 }
 
 /// 🎯️ Sets the curated count for `object_id` directly, clamped to `0..=availability`; removes the
 /// entry when the count is 0. Silently no-operations if `object_id` isn't in the stock.
 pub fn curate_set(document: &mut CurateSnapshot, object_id: &str, count: u32) {
-    let Some(kind) = document.stock.iter().find(|kind| kind.id == object_id) else { return };
-    let clamped = count.min(kind.availability);
-    match document.curated.iter_mut().find(|item| item.object_id == object_id) {
-        Some(item) if clamped == 0 => {
-            let id = item.object_id.clone();
-            document.curated.retain(|item| item.object_id != id);
-        }
-        Some(item) => item.count = clamped,
-        None if clamped > 0 => document.curated.push(CuratedItem { object_id: object_id.to_string(), count: clamped }),
-        None => {}
-    }
+    apply_curation_decision(document, curation_decision_for_set(document, object_id, count));
 }
 //#endregion 🔖️DocumentHelpers
+
+//#region 🔖️CurationDecisions
+/// 🧭️ What a curated-count adjustment resolves to against a given base document — the single
+/// source of truth both the mutating `curate_delta`/`curate_set` helpers above (engine-level
+/// fixtures/tests) and the `crate::apps::curate::commands::curation` handlers (which must emit a
+/// REAL `SourcingMutation` rather than mutate a document clone, now that whole-document replace is
+/// banned from the mutation enum) fold through.
+#[derive(Clone, Debug, PartialEq)]
+pub enum CurationDecision {
+    NoOp,
+    Create(CuratedItem),
+    ChangeCount { object_id: String, new_count: u32 },
+    Delete { object_id: String },
+}
+
+/// 🎯️ Resolves a relative count adjustment against `document`'s CURRENT `curated`/`stock`, clamped
+/// to `0..=availability`. Unknown `object_id` (absent from stock) resolves to `NoOp`.
+pub fn curation_decision_for_delta(document: &CurateSnapshot, object_id: &str, delta: i64) -> CurationDecision {
+    let Some(kind) = document.stock.iter().find(|kind| kind.id == object_id) else { return CurationDecision::NoOp };
+    let next = (curated_count(document, object_id) as i64 + delta).clamp(0, kind.availability as i64) as u32;
+    curation_decision_for_set(document, object_id, next)
+}
+
+/// 🎯️ Resolves an absolute count set against `document`, clamped to `0..=availability`. Unknown
+/// `object_id` (absent from stock) resolves to `NoOp`.
+pub fn curation_decision_for_set(document: &CurateSnapshot, object_id: &str, count: u32) -> CurationDecision {
+    let Some(kind) = document.stock.iter().find(|kind| kind.id == object_id) else { return CurationDecision::NoOp };
+    let clamped = count.min(kind.availability);
+    match document.curated.iter().find(|item| item.object_id == object_id) {
+        Some(item) if clamped == 0 => CurationDecision::Delete { object_id: object_id.to_string() },
+        Some(item) if item.count == clamped => CurationDecision::NoOp,
+        Some(_) => CurationDecision::ChangeCount { object_id: object_id.to_string(), new_count: clamped },
+        None if clamped > 0 => CurationDecision::Create(CuratedItem { object_id: object_id.to_string(), count: clamped }),
+        None => CurationDecision::NoOp,
+    }
+}
+
+/// ▶️ Mutates `document.curated` in place to reflect `decision` — the shared apply step behind the
+/// mutating `curate_delta`/`curate_set` engine helpers only; command handlers turn a
+/// `CurationDecision` into a real `SourcingMutation` instead of calling this.
+fn apply_curation_decision(document: &mut CurateSnapshot, decision: CurationDecision) {
+    match decision {
+        CurationDecision::NoOp => {}
+        CurationDecision::Create(item) => document.curated.push(item),
+        CurationDecision::ChangeCount { object_id, new_count } => {
+            if let Some(item) = document.curated.iter_mut().find(|item| item.object_id == object_id) {
+                item.count = new_count;
+            }
+        }
+        CurationDecision::Delete { object_id } => document.curated.retain(|item| item.object_id != object_id),
+    }
+}
+//#endregion 🔖️CurationDecisions
 
 //#region 🔖️Modules
 /// 🧩️ A sourcing module composes a typology subtree, demo catalogue kinds, and preview meshing for one

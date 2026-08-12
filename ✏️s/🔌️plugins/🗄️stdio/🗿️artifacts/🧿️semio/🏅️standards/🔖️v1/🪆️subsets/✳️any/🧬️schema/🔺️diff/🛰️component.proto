@@ -14,7 +14,7 @@ message SemioDiff {
     bytes brep = 2;         // SemioBrepDiff (brep subset's own wire form)
     bytes mesh = 3;          // SemioMeshDiff (mesh subset's own wire form)
     bytes model = 4;         // SemioModelDiff (model subset's own wire form)
-    bytes object = 5;        // SemioObjectDiff (object subset's own wire form)
+    bytes value = 5;        // SemioValueTreeDiff (value subset's own wire form)
     bytes document = 6;      // SemioDocumentDiff (document subset's own wire form)
     bytes cad = 7;           // SemioCadDiff (cad subset's own wire form)
     bytes drawing = 8;       // SemioDrawingDiff (drawing subset's own wire form)
@@ -23,7 +23,7 @@ message SemioDiff {
     bytes audio = 11;        // SemioAudioDiff (audio subset's own wire form)
     bytes animation = 12;    // SemioAnimationDiff (animation subset's own wire form)
     bytes presentation = 13; // SemioPresentationDiff (presentation subset's own wire form)
-    bytes workflow = 14;     // SemioWorkflowDiff (workflow subset's own wire form)
+    bytes flow = 14;     // SemioFlowDiff (flow subset's own wire form)
     semio.s_stdio_semio.snapshot.SemioSnapshot replace = 15;
   }
 }

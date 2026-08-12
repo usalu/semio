@@ -34,7 +34,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = SourcingMutation::SetSnapshot { snapshot: crate::artifacts::curate::engine::empty_document() };
+        let operation = crate::artifacts::curate::schema::mutations::create_curated_item(crate::artifacts::curate::CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -45,9 +45,9 @@ mod tests {
         let document = CurateSnapshot { stock: crate::artifacts::curate::engine::sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect(), ..Default::default() };
         let envelope = store::create_document_envelope(crate::artifacts::curate::SOURCING_CURATE_SCHEMA, "sourcing-curate-test", document, None);
         let mut doc_store = store::ArtifactStore::new(envelope);
-        let mut next = doc_store.snapshot().expect("snapshot");
-        crate::artifacts::curate::engine::curate_delta(&mut next, "beam-glulam-gl24h", 3);
-        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SourcingMutation::SetSnapshot { snapshot: next }], description: None }).expect("apply");
+        let object_id = doc_store.snapshot().expect("snapshot").stock[0].id.clone();
+        let mutation = crate::artifacts::curate::schema::mutations::create_curated_item(crate::artifacts::curate::CuratedItem { object_id, count: 3 });
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store);
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }

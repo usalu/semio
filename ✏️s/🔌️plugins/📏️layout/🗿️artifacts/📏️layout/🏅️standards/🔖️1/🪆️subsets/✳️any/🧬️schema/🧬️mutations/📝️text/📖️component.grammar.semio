@@ -1,9 +1,62 @@
 dialect grammar
-grammar layout.mutations
+grammar layout.layout.mutations
 extension layout
-start document
+start line
 
-document = header body
-header = "schema" SP "stdio.json" NL
-body = payload NL?
-payload = OCTET+
+line = rename-layout
+     / change-print-target
+     / change-data-fields
+     / create-page
+     / delete-page
+     / rename-page
+     / change-page-width
+     / change-page-height
+     / update-page-margins
+     / update-page-columns
+     / reorder-pages
+     / create-story
+     / delete-story
+     / edit-story
+     / create-link
+     / delete-link
+     / change-link-path
+     / create-frame
+     / delete-frame
+     / move-frame
+     / resize-frame
+     / change-frame-fill
+     / change-frame-stroke
+     / change-frame-wrap-mode
+     / change-frame-columns
+
+rename-layout = "rename-layout" SP text
+change-print-target = "change-print-target" SP text?
+change-data-fields = "change-data-fields" SP text?
+create-page = "create-page" SP block SP number?
+delete-page = "delete-page" SP id
+rename-page = "rename-page" SP id SP text
+change-page-width = "change-page-width" SP id SP number
+change-page-height = "change-page-height" SP id SP number
+update-page-margins = "update-page-margins" SP id SP number SP number SP number SP number
+update-page-columns = "update-page-columns" SP id SP number SP number
+reorder-pages = "reorder-pages" SP id SP number
+create-story = "create-story" SP block SP number?
+delete-story = "delete-story" SP id
+edit-story = "edit-story" SP id SP text
+create-link = "create-link" SP block SP number?
+delete-link = "delete-link" SP id
+change-link-path = "change-link-path" SP id SP text
+create-frame = "create-frame" SP id SP block SP number? SP id?
+delete-frame = "delete-frame" SP id SP id
+move-frame = "move-frame" SP id SP id SP number SP number
+resize-frame = "resize-frame" SP id SP id SP number SP number
+change-frame-fill = "change-frame-fill" SP id SP id SP block?
+change-frame-stroke = "change-frame-stroke" SP id SP id SP block?
+change-frame-wrap-mode = "change-frame-wrap-mode" SP id SP id SP text
+change-frame-columns = "change-frame-columns" SP id SP id SP number
+
+id = OCTET+
+number = OCTET+
+text = OCTET+
+boolean = "true" / "false"
+block = "{" NL OCTET+ "}"

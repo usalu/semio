@@ -1,9 +1,9 @@
 dialect grammar
 grammar home.mutations
 extension home
-start document
+start line
 
-document = header body
-header = "schema" SP "stdio.json" NL
-body = payload NL?
-payload = OCTET+
+line = change-catalog-generation
+
+change-catalog-generation = "change-catalog-generation" SP number
+number = OCTET+

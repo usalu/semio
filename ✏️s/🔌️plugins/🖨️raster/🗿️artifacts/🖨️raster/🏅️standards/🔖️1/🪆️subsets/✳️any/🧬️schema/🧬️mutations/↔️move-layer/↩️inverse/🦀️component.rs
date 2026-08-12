@@ -1,8 +1,19 @@
-//! ↔️move-layer `RasterMutation` inverse leaf.
-use crate::artifacts::raster::RasterSnapshot;
-use crate::artifacts::raster::mutations::RasterMutation;
-use protocol::Mutation;
+//! ↩️ `move-layer` inverse — the old `transform.x`/`.y` from `base`; `move` is its own inverse
+//! partner. Missing target ⇒ `Vec::new()`.
 
-pub fn inverse(base: &RasterSnapshot, mutation: &RasterMutation) -> Vec<RasterMutation> {
-    <RasterMutation as Mutation<RasterSnapshot>>::inverse(mutation, base)
+use crate::artifacts::raster::engine::{find_layer, layer_transform};
+use crate::artifacts::raster::mutations::move_layer::mutation::MoveLayer;
+use crate::artifacts::raster::mutations::RasterMutation;
+use crate::artifacts::raster::RasterSnapshot;
+
+//#region 🔖️Inverse
+pub fn inverse(payload: &MoveLayer, base: &RasterSnapshot) -> Vec<RasterMutation> {
+    match find_layer(&base.layers, &payload.layer_id) {
+        Some(layer) => {
+            let transform = layer_transform(layer);
+            vec![RasterMutation::MoveLayer(MoveLayer { layer_id: payload.layer_id.clone(), new_x: transform.x, new_y: transform.y })]
+        }
+        None => Vec::new(),
+    }
 }
+//#endregion 🔖️Inverse

@@ -1,0 +1,24 @@
+//! 🔺️ Sparse diff builder for `ReplaceNodeHandle` — patches one handle inside the owner node.
+use crate::artifacts::puzzle2d::diff::{Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodePatchEntry, Puzzle2dNodesDelta};
+use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+
+//#region 🔖️Diff
+pub fn diff(payload: &super::mutation::ReplaceNodeHandle, base: &Puzzle2dSnapshot) -> Puzzle2dDiff {
+    let Some(node) = base.nodes.iter().find(|entry| entry.id == payload.node_id) else {
+        return Puzzle2dDiff::default();
+    };
+    if !node.handles.iter().any(|handle| handle.id == payload.handle_id) {
+        return Puzzle2dDiff::default();
+    }
+    let mut next = node.clone();
+    for handle in next.handles.iter_mut() {
+        if handle.id == payload.handle_id {
+            *handle = payload.new_handle.clone();
+        }
+    }
+    Puzzle2dDiff {
+        nodes: Some(Puzzle2dNodesDelta { patched: vec![Puzzle2dNodePatchEntry { id: payload.node_id.clone(), patch: Puzzle2dNodePatch { replacement: Some(next) } }], ..Default::default() }),
+        ..Default::default()
+    }
+}
+//#endregion 🔖️Diff

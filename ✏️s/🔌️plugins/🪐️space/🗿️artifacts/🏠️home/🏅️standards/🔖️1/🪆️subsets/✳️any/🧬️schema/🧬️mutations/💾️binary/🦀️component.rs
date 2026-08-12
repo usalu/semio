@@ -9,6 +9,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 
 use crate::artifacts::home::schema::mutations::text::SHomeMutation;
+use crate::artifacts::home::schema::mutations::change_catalog_generation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes an `SHomeMutation` to its binary command form.
@@ -28,7 +29,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = SHomeMutation::SetCatalogGeneration { value: 7 };
+        let operation = change_catalog_generation(7);
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -40,7 +41,7 @@ mod tests {
         let projection = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
         let envelope = store::create_document_envelope::<SHomeSnapshot, SHomeMutation>("s.home", "home", projection, None);
         let mut store: store::ArtifactStore<SHomeSnapshot, SHomeMutation> = store::ArtifactStore::new(envelope);
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SHomeMutation::SetCatalogGeneration { value: 3 }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![change_catalog_generation(3)], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }

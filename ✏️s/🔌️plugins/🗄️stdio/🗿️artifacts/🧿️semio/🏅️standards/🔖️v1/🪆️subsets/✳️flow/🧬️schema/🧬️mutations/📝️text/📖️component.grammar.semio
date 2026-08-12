@@ -1,0 +1,50 @@
+dialect grammar
+grammar semio.flow.mutations
+extension semio
+start op
+
+# P2 pilot (flow): real one-line `OpText::print_op`/`parse_op` shape ALREADY emitted by
+# `🧬️mutations/🦀️component.rs` (`print_flow_mutation`/`parse_flow_mutation`) —
+# "keyword arg=value ..." (space-separated; space is lexer trivia at this dialect level). Every
+# keyword/field-name token below is copied verbatim from the real `format!(...)` call sites in that
+# file's `print_flow_mutation`, not invented.
+op = no-mutation | set-snapshot | insert-node | remove-node | set-node-kind | set-node-label | set-node-position | set-node-param | remove-node-param | insert-edge | remove-edge | set-edge-endpoints | set-edge-kind
+
+no-mutation = "no-mutation"
+set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
+insert-node = "insert-node" "node" "=" node
+remove-node = "remove-node" "id" "=" hex
+set-node-kind = "set-node-kind" "id" "=" hex "kind" "=" hex
+set-node-label = "set-node-label" "id" "=" hex "label" "=" hex
+set-node-position = "set-node-position" "id" "=" hex "position" "=" point2
+set-node-param = "set-node-param" "id" "=" hex "key" "=" hex "value" "=" hex
+remove-node-param = "remove-node-param" "id" "=" hex "key" "=" hex
+insert-edge = "insert-edge" "edge" "=" edge
+remove-edge = "remove-edge" "id" "=" hex
+set-edge-endpoints = "set-edge-endpoints" "id" "=" hex "from" "=" port "to" "=" port
+set-edge-kind = "set-edge-kind" "id" "=" hex "kind" "=" hex
+
+# `enc_semio_flow_snapshot`/`dec_semio_flow_snapshot` — `[hex(schema),[node,...],[edge,...]]`.
+snapshot-lit = "[" hex "," "[" node-list? "]" "," "[" edge-list? "]" "]"
+node-list = node {"," node}*
+edge-list = edge {"," edge}*
+
+# `enc_node`/`enc_edge`/`enc_param`/`enc_point2`/`enc_port_ref` — the same full-VALUE codecs
+# `📸️snapshot/🦀️component.rs`'s own text DSL grammar declares (restated here so this leaf grammar
+# is self-contained, matching the repo's existing per-facet convention).
+node = "[" hex "," hex "," hex "," "[" param-list? "]" "," point2 "]"
+param-list = param {"," param}*
+param = "[" hex "," hex "]"
+point2 = "[" number "," number "]"
+edge = "[" hex "," port "," port "," hex "]"
+port = "[" hex "," hex "]"
+
+number = INT | FLOAT
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — a run of lowercase hex digits (`enc_str`/`hex_encode`'s own alphabet), incl. the
+# empty string. `Symbol::Ref` already falls back from "no production of this name" to "macro of
+# this name", so referencing `hex` with no matching production routes here automatically. Using a
+# hand-rolled `{INT|IDENT}*` production instead would be wrong: it never backtracks and would
+# silently swallow the next literal keyword token (e.g. `id=<hex> kind=<hex>` — the literal `kind`
+# tokenizes as a plain `IDENT`, exactly like a stray hex letter run would).

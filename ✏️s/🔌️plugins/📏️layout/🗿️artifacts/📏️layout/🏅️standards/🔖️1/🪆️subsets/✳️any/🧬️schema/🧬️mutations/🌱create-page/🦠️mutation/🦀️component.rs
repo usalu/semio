@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🌱️CreatePage
 /// 🌱️ `index` is descriptive of authoring intent (the append-only `LayoutPagesDelta` apply always
-/// pushes at the end, matching the pre-migration `CollectionMutation::Add` behavior).
+/// pushes at the end, matching the pre-migration generic append behavior).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CreatePage {
     pub page: Page,

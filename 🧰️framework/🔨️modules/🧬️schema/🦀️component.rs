@@ -90,6 +90,54 @@ pub trait ArtifactSchemaFields {
 }
 //#endregion 🔖️ArtifactSchemaFields
 
+//#region 🔖️ArtifactCompositionSpec
+/// 🧒️ One declared CHILD slot on an artifact snapshot — an owned sub-artifact with its own document
+/// and lifecycle (`ArtifactChild<T>` / `Vec<ArtifactChild<T>>` at the field level).
+///
+/// `kind` is a plain `&'static str` holding a canonical artifact kind id, grammar `s.<plugin>.<artifact>`
+/// (e.g. `"s.stdio.mesh"`) — deliberately NOT the `ArtifactKindId` newtype from `🚪️io`'s `semio-framework`
+/// crate: this crate (`semio-framework-schema`) must not gain a dependency on `semio-framework` merely to
+/// name a kind inside a slot table.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ChildSlotSpec {
+    pub name: &'static str,
+    pub kind: &'static str,
+    pub many: bool,
+}
+
+/// 🔗 One declared LINK slot on an artifact snapshot — a reference to an independent artifact, never
+/// owned (`ArtifactLink` / `Vec<ArtifactLink>` at the field level).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct LinkSlotSpec {
+    pub name: &'static str,
+    pub roles: &'static [&'static str],
+    pub many: bool,
+}
+
+/// ✨️ Per-artifact CHILD/LINK slot tables, sibling of [`ArtifactSchemaFields`] and emitted alongside
+/// it by [`ArtifactSchema`] — lets consumers (UI, manifest, io) read a snapshot type's declared
+/// composition slots from the schema registry instead of hardcoding "renders as a link" / "derived
+/// composition" behaviour. Leaf artifacts (no children, no links) get both methods for free via the
+/// default `&[]` — no boilerplate impl required.
+pub trait ArtifactCompositionFields {
+    fn child_slots() -> &'static [ChildSlotSpec] {
+        &[]
+    }
+    fn link_slots() -> &'static [LinkSlotSpec] {
+        &[]
+    }
+}
+
+/// 🔗 Shared GraphQL SDL fragment for CHILD/LINK slots — declares the `ArtifactLink` type and the
+/// `@child`/`@link` directives once, so per-artifact GraphQL facets reference it instead of
+/// redeclaring it (mirrors [`GRAPHQL_STATE_PREAMBLE`]'s composition role for `@state`).
+pub const GRAPHQL_COMPOSITION_PREAMBLE: &str = "\
+type ArtifactLink { targetId: String! kind: String! }\n\
+directive @child(kind: String!) on FIELD_DEFINITION\n\
+directive @link(roles: [String!]) on FIELD_DEFINITION\
+";
+//#endregion 🔖️ArtifactCompositionSpec
+
 //#region 🔖️ArtifactSchemaDescriptor
 /// 🍃 Five handcrafted leaf bodies for one facet (`include_str!` at each artifact's registration site).
 #[derive(Clone, Debug)]
@@ -638,6 +686,51 @@ mod tests {
         format!("{titled}Snapshot")
     }
     //#endregion 🔖️SyntheticArtifact
+
+    //#region 🔖️ArtifactCompositionFixture
+    /// 🧪️ Local stand-ins for `semio-framework-os-kernel`'s store `ArtifactChild<T>` / `ArtifactLink`
+    /// — legitimate here since `#[derive(ArtifactSchema)]`'s composition support matches field types
+    /// SYNTACTICALLY (last path segment), never resolving the real types.
+    struct ArtifactChild<T> {
+        _marker: std::marker::PhantomData<T>,
+    }
+    struct ArtifactLink;
+
+    #[derive(ArtifactSchema)]
+    #[artifact_schema(id = "s.wave3.composite")]
+    struct CompositeArtifact {
+        #[state(persistent)]
+        #[child(kind = "s.stdio.mesh")]
+        primary_mesh: ArtifactChild<()>,
+        #[state(persistent)]
+        #[child(kind = "s.stdio.image")]
+        textures: Vec<ArtifactChild<()>>,
+        #[state(persistent)]
+        #[link_slot(roles("base", "material"))]
+        base_material: ArtifactLink,
+        #[state(persistent)]
+        label: String,
+    }
+    //#endregion 🔖️ArtifactCompositionFixture
+
+    #[test]
+    fn artifact_composition_fields_derive_emits_expected_slot_tables() {
+        let children = CompositeArtifact::child_slots();
+        assert_eq!(children.len(), 2, "single child + Vec child must both be captured, plain field must not");
+        assert_eq!(children[0], ChildSlotSpec { name: "primaryMesh", kind: "s.stdio.mesh", many: false });
+        assert_eq!(children[1], ChildSlotSpec { name: "textures", kind: "s.stdio.image", many: true });
+
+        let links = CompositeArtifact::link_slots();
+        assert_eq!(links.len(), 1, "only the ArtifactLink field must be captured");
+        assert_eq!(links[0], LinkSlotSpec { name: "baseMaterial", roles: &["base", "material"], many: false });
+    }
+
+    #[test]
+    fn artifact_composition_fields_default_to_empty_for_leaf_artifacts() {
+        assert!(SyntheticSnapshot::child_slots().is_empty());
+        assert!(SyntheticSnapshot::link_slots().is_empty());
+        assert_eq!(SyntheticSnapshot::artifact_schema_id(), "s.wave3.synthetic");
+    }
 
     #[test]
     fn registry_descriptors_carry_valid_snapshot_state_and_match_field_states() {

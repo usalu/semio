@@ -1,187 +1,181 @@
-//! 🧬️ Raster artifact — document mutation dispatch enum + apply helpers.
+//! 🧬️ Raster artifact — closed semantic mutation dispatch enum (constitutional: op). Derived from
+//! `RasterSnapshot`'s recursive layer-tree shape per `📓️derivation-rules.md`: the five old
+//! option-bag/whole-tree variants (`AddLayer`, `RemoveLayer`, `PatchLayer`, `MoveLayer`,
+//! `SetSnapshot`) are gone, replaced by ten real verbs (`create-layer`, `delete-layer`,
+//! `reorder-layers`, `rename-layer`, `change-layer-visible`, `change-layer-opacity`,
+//! `change-layer-blend-mode`, `move-layer`, `resize-layer`, `change-layer-adjustment-kind`) plus two
+//! justified additions for the `assets` id-keyed root collection (`add-layer-asset`,
+//! `remove-layer-asset` — see that leaf's docstring). `SetSnapshot` dies with NO replacement:
+//! whole-document replace goes through `store::ArtifactStore::reset`, entirely outside this enum.
+//!
+//! All twelve triads are mounted directly as `mutations`-sibling modules in `📦️glue.rs`, each with
+//! its own unique emoji-prefixed directory — no inline `#[path = "."]` self-wiring.
 
-use crate::artifacts::raster::diff::{
-    diff_add_layer, diff_from_snapshot, diff_move_layer, diff_patch_layer, diff_remove_layer, diff_set_snapshot, RasterDiff,
-};
-use crate::artifacts::raster::engine::{find_layer, layer_node_id, locate_layer};
-use crate::artifacts::raster::diff::{insert_layer, patch_layer_in_tree, remove_layer_from_tree};
-use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
-use protocol::Mutation;
+use crate::artifacts::raster::diff::RasterDiff;
+use crate::artifacts::raster::RasterSnapshot;
 use serde::{Deserialize, Serialize};
 
+//#region 🔖️Leaves
+use super::add_layer_asset;
+use super::change_layer_adjustment_kind;
+use super::change_layer_blend_mode;
+use super::change_layer_opacity;
+use super::change_layer_visible;
+use super::create_layer;
+use super::delete_layer;
+use super::move_layer;
+use super::remove_layer_asset;
+use super::rename_layer;
+use super::reorder_layers;
+use super::resize_layer;
+//#endregion 🔖️Leaves
+
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+/// 🧬️ Closed semantic mutation vocabulary for the raster document, derived per
+/// `📓️derivation-rules.md` from `RasterLayerNode`'s recursive tree shape and the `assets` root
+/// collection.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
+#[mutations(snapshot = RasterSnapshot, diff = RasterDiff, schema = "raster.raster")]
 pub enum RasterMutation {
-    AddLayer {
-        parent_id: Option<String>,
-        index: usize,
-        #[dsl(statements)]
-        layer: Box<RasterLayerNode>,
-    },
-    RemoveLayer {
-        #[dsl(key = "id")]
-        layer_id: String,
-    },
-    PatchLayer {
-        #[dsl(key = "id")]
-        layer_id: String,
-        #[dsl(block)]
-        patch: crate::artifacts::raster::RasterLayerPatch,
-    },
-    MoveLayer {
-        #[dsl(key = "id")]
-        layer_id: String,
-        #[dsl(key = "parent")]
-        parent_id: Option<String>,
-        index: usize,
-    },
-    SetSnapshot {
-        #[dsl(block)]
-        snapshot: RasterSnapshot,
-    },
+    CreateLayer(create_layer::mutation::CreateLayer),
+    DeleteLayer(delete_layer::mutation::DeleteLayer),
+    ReorderLayers(reorder_layers::mutation::ReorderLayers),
+    RenameLayer(rename_layer::mutation::RenameLayer),
+    ChangeLayerVisible(change_layer_visible::mutation::ChangeLayerVisible),
+    ChangeLayerOpacity(change_layer_opacity::mutation::ChangeLayerOpacity),
+    ChangeLayerBlendMode(change_layer_blend_mode::mutation::ChangeLayerBlendMode),
+    MoveLayer(move_layer::mutation::MoveLayer),
+    ResizeLayer(resize_layer::mutation::ResizeLayer),
+    ChangeLayerAdjustmentKind(change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind),
+    AddLayerAsset(add_layer_asset::mutation::AddLayerAsset),
+    RemoveLayerAsset(remove_layer_asset::mutation::RemoveLayerAsset),
 }
 
-impl Mutation<RasterSnapshot> for RasterMutation {
-    type Diff = RasterDiff;
-
-    fn diff(&self, snapshot: &RasterSnapshot) -> RasterDiff {
-        match self {
-            RasterMutation::AddLayer { parent_id, index, layer } => {
-                if parent_id.is_none() {
-                    diff_add_layer((**layer).clone())
-                } else {
-                    diff_from_snapshot(apply_raster_mutation(snapshot, self))
-                }
-            }
-            RasterMutation::RemoveLayer { layer_id } => diff_remove_layer(layer_id),
-            RasterMutation::PatchLayer { layer_id, patch } => diff_patch_layer(layer_id, patch.clone()),
-            RasterMutation::MoveLayer { layer_id, parent_id, index } => diff_move_layer(snapshot, layer_id, parent_id.clone(), *index),
-            RasterMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
-        }
-    }
-
-    fn inverse(&self, snapshot: &RasterSnapshot) -> Vec<Self> {
-        match self {
-            RasterMutation::AddLayer { layer, .. } => vec![RasterMutation::RemoveLayer { layer_id: layer_node_id(layer).to_string() }],
-            RasterMutation::RemoveLayer { layer_id } => match (locate_layer(&snapshot.layers, layer_id), find_layer(&snapshot.layers, layer_id)) {
-                (Some((parent_id, index)), Some(layer)) => vec![RasterMutation::AddLayer { parent_id, index, layer: Box::new(layer.clone()) }],
-                _ => Vec::new(),
-            },
-            RasterMutation::PatchLayer { layer_id, patch } => {
-                let mut probe = snapshot.layers.clone();
-                match patch_layer_in_tree(&mut probe, layer_id, patch) {
-                    Some(inverse) => vec![RasterMutation::PatchLayer { layer_id: layer_id.clone(), patch: inverse }],
-                    None => Vec::new(),
-                }
-            }
-            RasterMutation::MoveLayer { layer_id, .. } => match locate_layer(&snapshot.layers, layer_id) {
-                Some((parent_id, index)) => vec![RasterMutation::MoveLayer { layer_id: layer_id.clone(), parent_id, index }],
-                None => Vec::new(),
-            },
-            RasterMutation::SetSnapshot { .. } => vec![RasterMutation::SetSnapshot { snapshot: snapshot.clone() }],
-        }
-    }
-}
-
+/// ⚡️ Convenience wrapper kept for existing in-plugin callers (`RasterBuilderConstruction::mutate`,
+/// the WASM bridge) — `diff().apply()` in one call, now delegating to the derive's real
+/// `Mutation`/`MutationDiff` impls instead of a hand-written match.
 pub fn apply_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSnapshot {
-    match mutation {
-        RasterMutation::SetSnapshot { snapshot } => snapshot.clone(),
-        RasterMutation::AddLayer { parent_id, index, layer } => {
-            let mut next = snapshot.clone();
-            insert_layer(&mut next.layers, parent_id.as_deref(), *index, layer.as_ref().clone());
-            next
-        }
-        RasterMutation::RemoveLayer { layer_id } => {
-            let mut next = snapshot.clone();
-            remove_layer_from_tree(&mut next.layers, layer_id);
-            next
-        }
-        RasterMutation::PatchLayer { layer_id, patch } => {
-            let mut next = snapshot.clone();
-            patch_layer_in_tree(&mut next.layers, layer_id, patch);
-            next
-        }
-        RasterMutation::MoveLayer { layer_id, parent_id, index } => {
-            let mut next = snapshot.clone();
-            if let Some(node) = remove_layer_from_tree(&mut next.layers, layer_id) {
-                insert_layer(&mut next.layers, parent_id.as_deref(), *index, node);
-            }
-            next
-        }
-    }
+    protocol::MutationDiff::apply(&protocol::Mutation::diff(mutation, snapshot), snapshot)
 }
 
+/// ⚡️ Convenience wrapper mirroring `apply_raster_mutation` — forwards to the derive's real
+/// `Mutation::inverse`.
 pub fn inverse_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Vec<RasterMutation> {
-    mutation.inverse(snapshot)
+    protocol::Mutation::inverse(mutation, snapshot)
 }
 
 pub type RasterEnvelope = store::ArtifactEnvelope<RasterSnapshot, RasterMutation>;
 pub type RasterStore = store::ArtifactStore<RasterSnapshot, RasterMutation>;
-
-pub use super::set_snapshot::mutation::{set_snapshot, SetSnapshot};
 //#endregion 🔖️Mutations
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerPatch, RasterTransform, RASTER_DOCUMENT_SCHEMA};
     use crate::artifacts::raster::engine::{empty_raster_snapshot, layer_name, layer_visible};
+    use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+    use protocol::Mutation;
     use std::collections::BTreeMap;
     use store::{create_document_envelope, ArtifactCommand};
-    use vcs::apply_mutation;
 
     fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
         RasterLayerNode::Pixel { id: id.into(), name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(512), height: Some(512), image_key: None }
     }
 
-    fn round_trip(snapshot: &RasterSnapshot, operation: &RasterMutation) -> RasterSnapshot {
-        let forward = vcs::apply_mutation(snapshot, operation);
+    fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSnapshot {
+        let forward = vcs::apply_mutation(snapshot, mutation);
         let mut restored = forward.clone();
-        for back in operation.inverse(snapshot) {
+        for back in mutation.inverse(snapshot) {
             restored = vcs::apply_mutation(&restored, &back);
         }
-        assert_eq!(&restored, snapshot, "backwards() must restore the pre-operation snapshot");
+        assert_eq!(&restored, snapshot, "inverse(base) must restore the pre-mutation snapshot");
         forward
     }
 
+    /// ⚖️ One value per `RasterMutation` variant — the closed set the semantics/round-trip tests
+    /// iterate, mirroring `din16798`'s own `every_mutation()` fixture.
+    fn every_mutation() -> Vec<RasterMutation> {
+        vec![
+            RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }),
+            RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id: "l1".into() }),
+            RasterMutation::ReorderLayers(reorder_layers::mutation::ReorderLayers { layer_id: "l1".into(), parent_id: None, index: 0 }),
+            RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id: "l1".into(), new_name: "Renamed".into() }),
+            RasterMutation::ChangeLayerVisible(change_layer_visible::mutation::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }),
+            RasterMutation::ChangeLayerOpacity(change_layer_opacity::mutation::ChangeLayerOpacity { layer_id: "l1".into(), new_opacity: 0.4 }),
+            RasterMutation::ChangeLayerBlendMode(change_layer_blend_mode::mutation::ChangeLayerBlendMode { layer_id: "l1".into(), new_blend_mode: "multiply".into() }),
+            RasterMutation::MoveLayer(move_layer::mutation::MoveLayer { layer_id: "l1".into(), new_x: 10.0, new_y: 20.0 }),
+            RasterMutation::ResizeLayer(resize_layer::mutation::ResizeLayer { layer_id: "l1".into(), new_width: 256, new_height: 256 }),
+            RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind { layer_id: "adjust-1".into(), new_adjustment_kind: "curves".into() }),
+            RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "asset-1".into(), asset: RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() } }),
+            RasterMutation::RemoveLayerAsset(remove_layer_asset::mutation::RemoveLayerAsset { asset_id: "asset-1".into() }),
+        ]
+    }
+
     #[test]
-    fn add_remove_patch_layer_round_trip() {
+    fn every_variant_registers_an_approved_semantic_descriptor() {
+        for mutation in every_mutation() {
+            let descriptor = protocol::SemanticMutation::semantics(&mutation);
+            assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
+        }
+        assert_eq!(<RasterMutation as protocol::SemanticMutation<RasterSnapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
+    }
+
+    #[test]
+    fn every_variant_round_trips_via_inverse() {
+        let mut base = empty_raster_snapshot();
+        base.layers.push(pixel_layer("l1", "Base"));
+        base.layers.push(RasterLayerNode::Adjustment { id: "adjust-1".into(), name: "Curves".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "brightnessContrast".into(), params: BTreeMap::new() });
+        base.assets.insert("asset-1".into(), RasterImageAsset { mime: "image/png".into(), data: b"seed".to_vec() });
+        for mutation in every_mutation() {
+            round_trip(&base, &mutation);
+        }
+    }
+
+    #[test]
+    fn add_remove_layer_round_trip() {
         let snapshot = empty_raster_snapshot();
-        let added = round_trip(&snapshot, &RasterMutation::AddLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
+        let added = round_trip(&snapshot, &RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }));
         assert_eq!(added.layers.len(), 1);
-        let patched = round_trip(&added, &RasterMutation::PatchLayer { layer_id: "l1".into(), patch: RasterLayerPatch { name: Some("Renamed".into()), visible: Some(false), ..Default::default() } });
-        assert_eq!(layer_name(&patched.layers[0]), "Renamed");
-        assert!(!layer_visible(&patched.layers[0]));
-        let removed = round_trip(&patched, &RasterMutation::RemoveLayer { layer_id: "l1".into() });
+        let removed = round_trip(&added, &RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id: "l1".into() }));
         assert!(removed.layers.is_empty());
     }
 
     #[test]
-    fn move_layer_into_group_round_trip() {
+    fn rename_and_change_layer_visible_round_trip() {
+        let snapshot = empty_raster_snapshot();
+        let added = round_trip(&snapshot, &RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }));
+        let renamed = round_trip(&added, &RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id: "l1".into(), new_name: "Renamed".into() }));
+        assert_eq!(layer_name(&renamed.layers[0]), "Renamed");
+        let hidden = round_trip(&renamed, &RasterMutation::ChangeLayerVisible(change_layer_visible::mutation::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }));
+        assert!(!layer_visible(&hidden.layers[0]));
+    }
+
+    #[test]
+    fn reorder_layer_into_group_round_trip() {
         let mut snapshot = empty_raster_snapshot();
         snapshot.layers.push(RasterLayerNode::Group { id: "g1".into(), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() });
         snapshot.layers.push(pixel_layer("l1", "Base"));
-        let moved = round_trip(&snapshot, &RasterMutation::MoveLayer { layer_id: "l1".into(), parent_id: Some("g1".into()), index: 0 });
+        let moved = round_trip(&snapshot, &RasterMutation::ReorderLayers(reorder_layers::mutation::ReorderLayers { layer_id: "l1".into(), parent_id: Some("g1".into()), index: 0 }));
         let RasterLayerNode::Group { children, .. } = &moved.layers[0] else { panic!("expected group") };
         assert_eq!(children.len(), 1);
-        assert_eq!(layer_node_id(&children[0]), "l1");
+        assert_eq!(crate::artifacts::raster::engine::layer_node_id(&children[0]), "l1");
     }
 
     #[test]
-    fn set_snapshot_round_trip() {
-        let snapshot = empty_raster_snapshot();
-        let mut replacement = empty_raster_snapshot();
-        replacement.layers.push(pixel_layer("l9", "Replaced"));
-        let replaced = round_trip(&snapshot, &RasterMutation::SetSnapshot { snapshot: replacement.clone() });
-        assert_eq!(replaced, replacement);
+    fn resize_layer_is_a_graceful_no_op_on_a_group() {
+        let mut snapshot = empty_raster_snapshot();
+        snapshot.layers.push(RasterLayerNode::Group { id: "g1".into(), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() });
+        let mutation = RasterMutation::ResizeLayer(resize_layer::mutation::ResizeLayer { layer_id: "g1".into(), new_width: 10, new_height: 10 });
+        let diff = mutation.diff(&snapshot);
+        assert_eq!(diff, RasterDiff::default());
+        assert!(mutation.inverse(&snapshot).is_empty());
     }
 
     #[test]
-    fn store_applies_layer_add() {
+    fn store_applies_layer_create() {
         let mut store = RasterStore::new(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::AddLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").layers.len(), 1);
     }
 
@@ -245,24 +239,50 @@ mod tests {
 
     #[test]
     fn raster_op_text_round_trips_every_variant() {
-        store::os_store::test_support::assert_op_line_round_trip(&RasterMutation::AddLayer {
-            parent_id: None,
-            index: 0,
-            layer: Box::new(RasterLayerNode::Pixel {
-                id: "l1".into(),
-                name: "Base".into(),
-                visible: true,
-                opacity: 1.0,
-                blend_mode: "normal".into(),
-                transform: RasterTransform::default(),
-                mask: None,
-                width: Some(512),
-                height: Some(512),
-                image_key: None,
-            }),
-        });
-        store::os_store::test_support::assert_op_line_round_trip(&RasterMutation::SetSnapshot { snapshot: representative_raster_document() });
+        for mutation in every_mutation() {
+            store::os_store::test_support::assert_op_line_round_trip(&mutation);
+        }
+        let _ = representative_raster_document();
     }
     //#endregion 🔖️OpText
+
+    //#region 🧪️MutationLaws
+    /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`,
+    /// exercised against three structurally distinct kinds: `create-layer` (id-keyed collection
+    /// insert), `change-layer-opacity` (typical `f32` scalar), and `reorder-layers` (tree
+    /// reposition).
+    #[test]
+    fn create_layer_satisfies_the_inverse_and_absorb_laws() {
+        let base = empty_raster_snapshot();
+        let mutation = RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
+        let d1 = mutation.diff(&base);
+        let d2 = RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 1, layer: Box::new(pixel_layer("l2", "Second")) }).diff(&base);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+
+    #[test]
+    fn change_layer_opacity_satisfies_the_inverse_and_absorb_laws() {
+        let mut base = empty_raster_snapshot();
+        base.layers.push(pixel_layer("l1", "Base"));
+        let mutation = RasterMutation::ChangeLayerOpacity(change_layer_opacity::mutation::ChangeLayerOpacity { layer_id: "l1".into(), new_opacity: 0.4 });
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
+        let d1 = mutation.diff(&base);
+        let d2 = RasterMutation::ChangeLayerVisible(change_layer_visible::mutation::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }).diff(&base);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+
+    #[test]
+    fn reorder_layers_satisfies_the_inverse_and_absorb_laws() {
+        let mut base = empty_raster_snapshot();
+        base.layers.push(pixel_layer("l1", "Base"));
+        base.layers.push(pixel_layer("l2", "Second"));
+        let mutation = RasterMutation::ReorderLayers(reorder_layers::mutation::ReorderLayers { layer_id: "l1".into(), parent_id: None, index: 1 });
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
+        let d1 = mutation.diff(&base);
+        let d2 = RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id: "l2".into() }).diff(&base);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+    //#endregion 🧪️MutationLaws
 }
 //#endregion 🧪️Tests

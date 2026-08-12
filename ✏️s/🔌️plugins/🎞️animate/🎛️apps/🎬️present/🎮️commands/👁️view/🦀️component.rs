@@ -44,7 +44,7 @@ pub mod canvas_pointer_down {
 }
 //#endregion 🔖️CanvasPointerDown
 
-//#region 🔖️NoMutation
+//#region 🔖️NoOperation
 pub mod no_operation {
     use super::*;
 
@@ -52,13 +52,13 @@ pub mod no_operation {
     /// mutates anything (mirrors the pre-B1 `"noMutation"` view action verbatim).
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "no-op")]
-    pub struct NoMutation {}
+    pub struct NoOperation {}
 
-    pub fn handle(_payload: &NoMutation, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+    pub fn handle(_payload: &NoOperation, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
-//#endregion 🔖️NoMutation
+//#endregion 🔖️NoOperation
 
 //#region 🔖️SetLocale
 pub mod set_locale {

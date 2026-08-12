@@ -38,6 +38,19 @@ pub fn architect_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 }
 //#endregion 🔖️Constants
 
+//#region 🔖️ResetDocument
+/// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetSnapshot` — see
+/// `📓️taxonomy.md`'s forbidden vocabulary), so import/exchange flows build a
+/// `HostEffect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry —
+/// same mechanism `✏️s/🔌️plugins/🗒️note`'s `reset_document_effect` already established.
+pub fn reset_document_effect(document: &ProgramSnapshot) -> semio_framework_plugin::HostEffect {
+    let pack = <ProgramSnapshot as store::ArtifactPack>::encode_pack(document);
+    let envelope = store::create_document_envelope::<ProgramSnapshot, ProgramMutation>(ARCHITECT_PROGRAM_SCHEMA, ARCHITECT_APP_ID, document.clone(), None);
+    let spr = store::print_document_spr(&envelope).expect("architect program document spr encode is infallible for a fresh, edit-free envelope");
+    semio_framework_plugin::HostEffect::LoadDocument { pack, spr }
+}
+//#endregion 🔖️ResetDocument
+
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
     /// 🎯️ B1: `ArchitectPlayApp::Command` — the sole typed dispatch surface, one row per action declared
@@ -363,7 +376,6 @@ mod tests {
     use crate::apps::architect::testkit;
     use crate::artifacts::program::engine::exchange::export_registers_csv;
     use crate::artifacts::program::registers::{AdjacencyKind, AnalysisKind};
-    use protocol::CollectionMutation;
     use semio_framework_plugin::PluginApp;
     use serde_json::json;
 
@@ -524,7 +536,7 @@ mod tests {
         );
         assert!(matches!(
             emit.artifact_mutations.first(),
-            Some(ProgramMutation::SetAdjacency { adjacency: updated }) if updated.kind == AdjacencyKind::Preferred
+            Some(ProgramMutation::ConnectAdjacency(payload)) if payload.adjacency.kind == AdjacencyKind::Preferred
         ));
     }
 
@@ -565,7 +577,7 @@ mod tests {
         );
         assert!(matches!(
             emit.artifact_mutations.first(),
-            Some(ProgramMutation::Elements(CollectionMutation::Patch { patch, .. })) if patch.name.as_deref() == Some("Updated Reception")
+            Some(ProgramMutation::ReplaceProgramElement(payload)) if payload.program_element.header.name == "Updated Reception"
         ));
     }
 
@@ -596,7 +608,8 @@ mod tests {
         let program = sample_plugin();
         let csv = export_registers_csv(&program).expect("export csv");
         let emit = testkit::drive(&ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { csv, strategy: "upsert".into() }), &program);
-        assert!(matches!(emit.artifact_mutations.first(), Some(ProgramMutation::SetSnapshot { .. })));
+        assert!(emit.artifact_mutations.is_empty(), "whole-document load must not go through the Mutation enum");
+        assert!(matches!(emit.effects.first(), Some(semio_framework_plugin::HostEffect::LoadDocument { .. })), "importRegistersCsv must emit a LoadDocument effect");
     }
 
     #[test]

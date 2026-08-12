@@ -2,7 +2,7 @@
 //! position + full payload); a step already absent from `base` has nothing to undo.
 
 use crate::artifacts::process3d::mutations::delete_step::mutation::DeleteStep;
-use crate::artifacts::process3d::mutations::steps::mutation::CreateStep;
+use crate::artifacts::process3d::mutations::create_step::mutation::CreateStep;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 

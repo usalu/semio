@@ -1,16 +1,113 @@
 dialect protocol
-protocol layout.mutations
+protocol layout.layout.mutations
 version 1
-schema stdio.json
+schema layout.layout
 start record
-framing magic 0x1a707f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+
+record RenameLayout tag 1
+  field new_name utf8
+
+record ChangePrintTarget tag 2
+  field new_print_target utf8
+
+record ChangeDataFields tag 3
+  field new_json utf8
+
+record CreatePage tag 4
+  field page bytes
+  field index varint
+
+record DeletePage tag 5
+  field id utf8
+
+record RenamePage tag 6
+  field id utf8
+  field new_name utf8
+
+record ChangePageWidth tag 7
+  field id utf8
+  field new_width f64
+
+record ChangePageHeight tag 8
+  field id utf8
+  field new_height f64
+
+record UpdatePageMargins tag 9
+  field id utf8
+  field top f64
+  field right f64
+  field bottom f64
+  field left f64
+
+record UpdatePageColumns tag 10
+  field id utf8
+  field count varint
+  field gutter f64
+
+record ReorderPages tag 11
+  field id utf8
+  field to_index varint
+
+record CreateStory tag 12
+  field story bytes
+  field index varint
+
+record DeleteStory tag 13
+  field id utf8
+
+record EditStory tag 14
+  field id utf8
+  field new_content utf8
+
+record CreateLink tag 15
+  field link bytes
+  field index varint
+
+record DeleteLink tag 16
+  field id utf8
+
+record ChangeLinkPath tag 17
+  field id utf8
+  field new_path utf8
+
+record CreateFrame tag 18
+  field page_id utf8
+  field frame bytes
+  field index varint
+  field layer_id utf8
+
+record DeleteFrame tag 19
+  field page_id utf8
+  field frame_id utf8
+
+record MoveFrame tag 20
+  field page_id utf8
+  field frame_id utf8
+  field new_x f64
+  field new_y f64
+
+record ResizeFrame tag 21
+  field page_id utf8
+  field frame_id utf8
+  field new_width f64
+  field new_height f64
+
+record ChangeFrameFill tag 22
+  field page_id utf8
+  field frame_id utf8
+  field new_fill bytes
+
+record ChangeFrameStroke tag 23
+  field page_id utf8
+  field frame_id utf8
+  field new_stroke bytes
+
+record ChangeFrameWrapMode tag 24
+  field page_id utf8
+  field frame_id utf8
+  field new_wrap_mode utf8
+
+record ChangeFrameColumns tag 25
+  field page_id utf8
+  field frame_id utf8
+  field new_columns varint

@@ -39,16 +39,14 @@ mod tests {
     #[test]
     fn puzzle2d_document_vcs_replays_granular_operations() {
         use crate::artifacts::puzzle2d::engine::empty_puzzle2d_snapshot;
+        use crate::artifacts::puzzle2d::mutations::create_node;
         use crate::artifacts::puzzle2d::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
         use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_snapshot(), None));
         store
             .dispatch(ArtifactCommand::Apply {
-                mutations: vec![Puzzle2dMutation::SetNode {
-                    index: 0,
-                    node: Puzzle2dNode { id: "n1".into(), ..Default::default() },
-                }],
+                mutations: vec![create_node(Puzzle2dNode { id: "n1".into(), ..Default::default() }, None)],
                 description: None,
             })
             .expect("apply");
@@ -62,65 +60,40 @@ mod tests {
 //#region 🔒️WireFormatGuard
 #[cfg(test)]
 mod wire_format_guard {
-    //! 🔒️ The permanent byte-level regression guard for this artifact's spr codec, frozen from the
-    //! pre-consolidation `📡️protocol` crate (master ticket
-    //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, TEMPLATE.md §0.4/§7).
+    //! 🔒️ Byte-level `OpBinary` round-trip guard for the semantic-mutations-overhaul vocabulary
+    //! (ticket `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`). The pre-overhaul whole-record-upsert / whole-document-replace wire
+    //! bytes this guard used to freeze no longer exist — that vocabulary is banned outright, not
+    //! preserved — so this now asserts the NEW operations' `OpText`/`OpBinary` round-trip
+    //! (`print_op`/`parse_op`, `encode_op`/`decode_op`) instead of pinning byte literals for a wire
+    //! shape this ticket deliberately changed.
     use super::*;
-    use crate::artifacts::puzzle2d as puzzle_2d;
+    use crate::artifacts::puzzle2d::mutations::{change_manifest_id, connect_handles, create_node, delete_node, disconnect_handles, move_node};
+    use crate::artifacts::puzzle2d::Puzzle2dNode;
     use protocol::OpText;
-    use serde_json::json;
 
     fn ops() -> Vec<Puzzle2dMutation> {
-        let node: puzzle_2d::Puzzle2dNode = serde_json::from_value(json!({"id":"n1","nodeKind":"Base","shape":"circle","x":1.5,"y":-2.25,"radius":3.0,"text":"hi","iconKind":"base","root":true,"scale":2.0,"visible":true,"locked":false,"handles":[]})).unwrap();
-        let edge: puzzle_2d::Puzzle2dEdge = serde_json::from_value(json!({"id":"e1","source":"n1:h0","target":"n2:h0","edgeKind":"wire.link","sourceTip":"none","targetTip":"arrow","visible":true,"locked":false})).unwrap();
-        let meta: puzzle_2d::Puzzle2dMeta = serde_json::from_value(json!({"manifestId":"nakagin","kindCompatibility":[{"source":"a","target":"b","bidirectional":true,"specificity":"handle"}]})).unwrap();
-        let document = Puzzle2dSnapshot::default();
+        let node = Puzzle2dNode { id: "n1".into(), node_kind: Some("Base".into()), shape: Some("circle".into()), x: 1.5, y: -2.25, radius: Some(3.0), text: Some("hi".into()), icon_kind: Some("base".into()), root: Some(true), scale: Some(2.0), visible: Some(true), locked: Some(false), ..Default::default() };
         vec![
-            Puzzle2dMutation::SetNode { index: 0, node },
-            Puzzle2dMutation::RemoveNode { id: "n1".into() },
-            Puzzle2dMutation::SetEdge { index: 1, edge },
-            Puzzle2dMutation::RemoveEdge { id: "e1".into() },
-            Puzzle2dMutation::SetMeta { meta },
-            Puzzle2dMutation::SetSnapshot { snapshot: document },
+            create_node(node, Some(0)),
+            move_node("n1".into(), 4.0, 5.0),
+            delete_node("n1".into()),
+            connect_handles("e1".into(), "n1:h0".into(), "n2:h0".into(), Some("wire.link".into()), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Some("none".into()), Some("arrow".into())),
+            disconnect_handles("e1".into()),
+            change_manifest_id(Some("nakagin".into())),
         ]
     }
 
-    /// 🔒️ The exact `print_op | byte-length | hex` of every operation row, captured from the
-    /// pre-consolidation `📡️protocol` crate BEFORE this plugin was merged into one crate. A
-    /// round-trip law is self-consistent and would happily pass on a silently changed format;
-    /// only these frozen bytes prove the wire did not move.
-    const PRE_MIGRATION_OPERATION_WIRE: &[&str] = &[
-"setNode index=0 node { id=n1 node-kind=Base shape=circle x=1.5 y=-2.25 radius=3 text=hi icon-kind=base root=true scale=2 visible=true locked=false anchor=fixed handles=[ ] } | 101 | 0100050442617365046261736506636972636c65026869026e3102000400010e0d0e0006040106000206020305000000000000f83f040500000000000002c0050500000000000008400806030906010a020b0500000000000000400c020d010e0a000f0c00",
-        "removeNode id=n1 | 10 | 010101026e3101000600",
-        "setEdge index=1 edge { id=e1 source=\"n1:h0\" target=\"n2:h0\" edge-kind=wire.link gap=0 shift=0 rise=0 rotation=0 turn=0 tilt=0 x=0 y=0 source-tip=none target-tip=arrow visible=true locked=false } | 149 | 010206056172726f77026531056e313a6830056e323a6830046e6f6e6509776972652e6c696e6b02000401010e0d100006010106020206030306050405000000000000000005050000000000000000060500000000000000000705000000000000000008050000000000000000090500000000000000000a0500000000000000000b0500000000000000000c06040d06000e020f01",
-        "removeEdge id=e1 | 10 | 01030102653101000600",
-        "setMeta meta { manifest-id=nakagin kind-compatibility [source:TEXT target:TEXT bidirectional:BOOL important:BOOL specificity:ENUM] { a b true false handle } } | 47 | 01040301610162076e616b6167696e01000e0d02000602011401050000050001000501020001010300010004000603",
-        "setSnapshot snapshot { schema=puzzle.2d.fixture camera { x=0 y=0 zoom=1 } meta { kind-compatibility [source:TEXT target:TEXT bidirectional:BOOL important:BOOL specificity:ENUM] { } } nodes [id:TEXT node-kind:TEXT shape:TEXT x:NUM y:NUM radius:NUM width:NUM height:NUM text:TEXT icon-kind:TEXT root:BOOL scale:NUM visible:BOOL locked:BOOL anchor:ENUM handles:LIST] { } edges [id:TEXT source:REF target:REF edge-kind:TEXT gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM x:NUM y:NUM source-tip:TEXT target-tip:TEXT visible:BOOL locked:BOOL] { } } | 190 | 0105011170757a7a6c652e32642e6669787475726501000e0d05000600010e0d0300050000000000000000010500000000000000000205000000000000f03f021400100000050100050200050300040400040500040600040700040800050900050a00010b00040c00010d00010e00060f0000031400100000050100050200050300050400040500040600040700040800040900040a00040b00040c00050d00050e00010f0001040e0d0101140005000005010005020001030001040006",
-    ];
-
-    /// ⚖️ Every operation row still prints and encodes to its pre-migration bytes, and still
-    /// decodes back to the same value.
+    /// ⚖️ Every operation still prints, parses, encodes, and decodes back to an equal value.
     #[test]
-    fn operation_rows_keep_their_pre_migration_wire_bytes() {
+    fn operations_round_trip_text_and_binary() {
         let operations = ops();
         assert!(!operations.is_empty());
-        let mut rows = Vec::new();
         for operation in &operations {
+            let line = operation.print_op();
+            assert_eq!(&Puzzle2dMutation::parse_op(&line).expect("parse_op"), operation);
             let bytes = encode_op(operation).expect("encode");
-            let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
-            rows.push(format!("{} | {} | {hex}", operation.print_op(), bytes.len()));
             assert_eq!(&decode_op(&bytes).expect("decode"), operation);
         }
-        if let Ok(ticket) = std::env::var("SEMIO_TICKET") {
-            let body = rows.iter().map(|row| format!("        {:?},", row)).collect::<Vec<_>>().join("
-");
-            let _ = std::fs::write(format!("{ticket}/🧪spr-wire-refreshed.txt"), body);
-        }
-        assert_eq!(rows.len(), PRE_MIGRATION_OPERATION_WIRE.len());
-        for (row, expected) in rows.iter().zip(PRE_MIGRATION_OPERATION_WIRE) {
-            assert_eq!(row, expected);
-        }
     }
-
 }
 //#endregion 🔒️WireFormatGuard

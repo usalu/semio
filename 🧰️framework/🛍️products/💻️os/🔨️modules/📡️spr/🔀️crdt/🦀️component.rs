@@ -186,6 +186,7 @@ mod tests {
             payload_hash: None,
             semantic_kind: None,
             label: None,
+            group_id: None,
         }
     }
 

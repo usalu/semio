@@ -1,0 +1,7 @@
+module Semio_value_snapshot;
+
+# `pack` payload: UTF-8 tag-prefixed SemioValueSnapshot text (`[hex(schema),value,[node,...]]`),
+# same grammar as the sibling text facet -- text-native, NOT hex-of-JSON, NOT serde_json.
+type Document = unit {
+    payload: bytes &eod &convert=$$.decode("utf-8");
+};

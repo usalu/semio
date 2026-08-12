@@ -7,7 +7,14 @@
 Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for a workforce of parallel agents /workflows.
 Everything end to end.
-Use only Cursor Grok 4.5 and Composer 2.5 as subagent models. Use the regular speed models and not the fast ones.
+
+---
+
+Use a single Fable agent for creating the plan, a single Opus 5 agent for main plan coordination, multiple Sonnet 5 agents for task execution.
+
+---
+
+Use a single Opus 5 agent for creating the plan, a single Cursor Grok 4.5 High agent for main plan coordination, multiple Composer 2.5 agents for task execution.
 
 ---
 
@@ -363,6 +370,17 @@ TODO: Add roomie to discord for verification
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)t
 
 ##
+
+---
+
+Dissolve all kernels, modules, etc into artifacts with schema, snapshot, diff, mutations, inferences, etc.
+
+
+---
+
+The current dev setup is focused on vscode. We are moving away to a self-contained dashboard tui.
+dashboard is becoming the new way for devs to start dev, build, test, etc
+The windows are different processes, navigation between should be possible, every is multiplexed, etc. Every window has utilities such as copy output to clipboard etc.
 
 ---
 

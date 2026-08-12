@@ -14,149 +14,44 @@
 //! each payload's own `diff`/`inverse` — see `🧪️MutationsDeriveLaws` in
 //! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs` for the reference shape.
 //!
-//! `Steps { collection: CollectionMutation<..> }` / `Machines { collection: CollectionMutation<..> }`
-//! / `SetStock` / `SetCursor` / `SetSnapshot` — the pre-migration generic vocabulary — are gone.
-//! `SetSnapshot` has NO replacement mutation (whole-document replace is banned; file-open/import/
+//! The whole-collection `Steps { collection: ... }` / `Machines { collection: ... }` / `SetStock` /
+//! `SetCursor` / whole-document-replacement variants — the pre-migration generic vocabulary — are
+//! gone. Whole-document replacement has NO replacement mutation (it is banned; file-open/import/
 //! load-example goes through `store::ArtifactStore::reset`, outside this enum).
 //!
-//! Five triad-leaf directories keep their pre-migration names — glue.rs path-includes those exact
-//! files and this facet's writable boundary excludes glue.rs, so the directories couldn't be
-//! renamed alongside their content: `⏱️set-cursor` now holds `ChangeCursor`, `📄set-snapshot` now
-//! holds `ReplaceStepMeasure`, `📋steps` now holds `CreateStep`, `🛠️machines` now holds
-//! `CreateMachine`, `🧱set-stock` now holds `MoveStock` — see the migration report's
-//! `sharedFileRequests` for the rename once a later pass can touch `📦️glue.rs`.
+//! Every triad-leaf directory now carries its target slug (`kind` name, emoji stripped) exactly —
+//! the five directories that used to repurpose pre-migration names (`⏱️set-cursor` → `⏱️change-cursor`,
+//! `📄set-snapshot` → `📐replace-step-measure`, `📋steps` → `🌱create-step`, `🛠️machines` →
+//! `🏭create-machine`, `🧱set-stock` → `📍move-stock`) were renamed, and every duplicate emoji among
+//! the fresh leaves was reassigned a unique one within this facet, as part of this ticket's
+//! directory + glue trueing pass. See this facet's migration report for the emoji table.
 
 use crate::artifacts::process3d::diff::Process3dDiff;
 use crate::artifacts::process3d::Process3dSnapshot;
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️NewLeaves
-// 🌱️ Triad leaves that needed a fresh directory (no pre-migration slot to repurpose) — self-wired
-// here since glue.rs is outside this facet's writable boundary; the five repurposed leaves
-// (`set_cursor`/`set_snapshot`/`steps`/`machines`/`set_stock`) stay wired by glue.rs's existing
-// sibling `pub mod` blocks, unchanged.
-#[path = "."]
-pub mod delete_step {
-    #[path = "🗑️delete-step/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗑️delete-step/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗑️delete-step/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod rename_step {
-    #[path = "🏷️rename-step/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🏷️rename-step/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🏷️rename-step/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_step_enabled {
-    #[path = "🔧change-step-enabled/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-step-enabled/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-step-enabled/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_step_origin {
-    #[path = "🔧change-step-origin/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-step-origin/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-step-origin/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod reorder_steps {
-    #[path = "🔀reorder-steps/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔀reorder-steps/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔀reorder-steps/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod delete_machine {
-    #[path = "🗑️delete-machine/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗑️delete-machine/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗑️delete-machine/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod rename_machine {
-    #[path = "🏷️rename-machine/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🏷️rename-machine/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🏷️rename-machine/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_machine_icon {
-    #[path = "🔧change-machine-icon/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-machine-icon/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-machine-icon/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod replace_machine_capabilities {
-    #[path = "🔁replace-machine-capabilities/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔁replace-machine-capabilities/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔁replace-machine-capabilities/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_stock_label {
-    #[path = "🔧change-stock-label/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔧change-stock-label/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔧change-stock-label/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod replace_stock_solid {
-    #[path = "🔁replace-stock-solid/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔁replace-stock-solid/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔁replace-stock-solid/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-//#endregion 🔖️NewLeaves
-
-//#region 🔖️RepurposedLeaves
-// 🌱️ Triad leaves that repurpose a pre-migration `⏱️set-cursor`/`📄set-snapshot`/`📋steps`/
-// `🛠️machines`/`🧱set-stock` directory glue.rs already path-includes as a sibling of `component`
-// (this file) under `pub mod mutations { ... }` — brought into this file's own scope the same way
-// `procedural3d`'s own already-migrated `🧬️mutations/🦀️component.rs` reaches its own siblings.
-use super::machines;
-use super::set_cursor;
-use super::set_snapshot;
-use super::set_stock;
-use super::steps;
-//#endregion 🔖️RepurposedLeaves
+//#region 🔖️MutationLeaves
+// 🌱️ Every `🧬️mutations/<kind>/` triad leaf is `#[path]`-mounted as a sibling of this dispatch file
+// directly in the plugin's `📦️glue.rs` (this facet's fan-out ticket, SEMANTIC-MUTATIONS-OVERHAUL
+// wave-C, owns `📦️glue.rs` for this plugin); `use super::<kind>;` below brings each sibling into
+// this file's scope so the enum body can reference `<kind>::mutation::<Type>`.
+use super::create_step;
+use super::delete_step;
+use super::rename_step;
+use super::change_step_enabled;
+use super::change_step_origin;
+use super::replace_step_measure;
+use super::reorder_steps;
+use super::create_machine;
+use super::delete_machine;
+use super::rename_machine;
+use super::change_machine_icon;
+use super::replace_machine_capabilities;
+use super::move_stock;
+use super::change_stock_label;
+use super::replace_stock_solid;
+use super::change_cursor;
+//#endregion 🔖️MutationLeaves
 
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the process3d document, derived per
@@ -165,22 +60,22 @@ use super::steps;
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Process3dSnapshot, diff = Process3dDiff, schema = "process.process3d")]
 pub enum Process3dMutation {
-    CreateStep(steps::mutation::CreateStep),
+    CreateStep(create_step::mutation::CreateStep),
     DeleteStep(delete_step::mutation::DeleteStep),
     RenameStep(rename_step::mutation::RenameStep),
     ChangeStepEnabled(change_step_enabled::mutation::ChangeStepEnabled),
     ChangeStepOrigin(change_step_origin::mutation::ChangeStepOrigin),
-    ReplaceStepMeasure(set_snapshot::mutation::ReplaceStepMeasure),
+    ReplaceStepMeasure(replace_step_measure::mutation::ReplaceStepMeasure),
     ReorderSteps(reorder_steps::mutation::ReorderSteps),
-    CreateMachine(machines::mutation::CreateMachine),
+    CreateMachine(create_machine::mutation::CreateMachine),
     DeleteMachine(delete_machine::mutation::DeleteMachine),
     RenameMachine(rename_machine::mutation::RenameMachine),
     ChangeMachineIcon(change_machine_icon::mutation::ChangeMachineIcon),
     ReplaceMachineCapabilities(replace_machine_capabilities::mutation::ReplaceMachineCapabilities),
-    MoveStock(set_stock::mutation::MoveStock),
+    MoveStock(move_stock::mutation::MoveStock),
     ChangeStockLabel(change_stock_label::mutation::ChangeStockLabel),
     ReplaceStockSolid(replace_stock_solid::mutation::ReplaceStockSolid),
-    ChangeCursor(set_cursor::mutation::ChangeCursor),
+    ChangeCursor(change_cursor::mutation::ChangeCursor),
 }
 //#endregion 🔖️Mutations
 
@@ -195,17 +90,17 @@ mod tests {
     use change_stock_label::mutation::ChangeStockLabel;
     use delete_machine::mutation::DeleteMachine;
     use delete_step::mutation::DeleteStep;
-    use machines::mutation::CreateMachine;
+    use create_machine::mutation::CreateMachine;
     use protocol::Mutation;
     use rename_machine::mutation::RenameMachine;
     use rename_step::mutation::RenameStep;
     use replace_machine_capabilities::mutation::ReplaceMachineCapabilities;
     use replace_stock_solid::mutation::ReplaceStockSolid;
     use reorder_steps::mutation::ReorderSteps;
-    use set_cursor::mutation::ChangeCursor;
-    use set_snapshot::mutation::ReplaceStepMeasure;
-    use set_stock::mutation::MoveStock;
-    use steps::mutation::CreateStep;
+    use change_cursor::mutation::ChangeCursor;
+    use replace_step_measure::mutation::ReplaceStepMeasure;
+    use move_stock::mutation::MoveStock;
+    use create_step::mutation::CreateStep;
 
     fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }

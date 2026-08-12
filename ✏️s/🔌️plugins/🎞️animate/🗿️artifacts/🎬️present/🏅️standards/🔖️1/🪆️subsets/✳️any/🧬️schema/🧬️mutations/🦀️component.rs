@@ -6,96 +6,20 @@ use protocol::{Mutation, SemanticMutation};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️MutationLeaves
-// 🧵️ Each block below is exactly one `🧬️mutations/<kind>/` triad leaf (🦠️mutation/🔺️diff/
-// ↩️inverse), wired here (relative to THIS file's own directory) instead of in the plugin's
-// `📦️glue.rs` — this facet's fan-out ticket (SEMANTIC-MUTATIONS-OVERHAUL) explicitly scopes
-// `📦️glue.rs` out (shared across every facet of this plugin, edited by other concurrent sessions);
-// `#[path = "."]` on the group module keeps the base directory unchanged for its children exactly
-// like `📦️glue.rs`'s own wiring blocks do, so every leaf's `pub use component::*;` still surfaces
-// at `crate::artifacts::present::mutations::<kind>::{mutation,diff,inverse}`, matching the shape
-// sibling plugins (`gis`, `cad`, `fem`) wire directly in their `📦️glue.rs`. See this facet's report
-// (`sharedFileRequests`) for the follow-up `📦️glue.rs` reconciliation.
-#[path = "."]
-pub mod resize_source_frame {
-    #[path = "🔲resize-source-frame/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔲resize-source-frame/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔲resize-source-frame/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod replace_source {
-    #[path = "🖼replace-source/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🖼replace-source/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🖼replace-source/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod create_tile {
-    #[path = "🆕create-tile/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🆕create-tile/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🆕create-tile/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod delete_tile {
-    #[path = "🗑delete-tile/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗑delete-tile/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗑delete-tile/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod delete_tiles {
-    #[path = "🗑delete-tiles/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🗑delete-tiles/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🗑delete-tiles/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod rename_tile {
-    #[path = "✏rename-tile/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "✏rename-tile/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "✏rename-tile/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod resize_tile_crop {
-    #[path = "✂resize-tile-crop/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "✂resize-tile-crop/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "✂resize-tile-crop/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod reorder_tiles {
-    #[path = "🔀reorder-tiles/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔀reorder-tiles/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔀reorder-tiles/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
-#[path = "."]
-pub mod replace_tiles {
-    #[path = "🔁replace-tiles/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
-    #[path = "🔁replace-tiles/🔺️diff/🦀️component.rs"]
-    pub mod diff;
-    #[path = "🔁replace-tiles/↩️inverse/🦀️component.rs"]
-    pub mod inverse;
-}
+// 🧵️ Each `🧬️mutations/<kind>/` triad leaf (🦠️mutation/🔺️diff/↩️inverse) is `#[path]`-mounted as a
+// sibling module of this dispatch file directly in the plugin's `📦️glue.rs` (this facet's fan-out
+// ticket, SEMANTIC-MUTATIONS-OVERHAUL wave-C, owns `📦️glue.rs` for this plugin), matching the shape
+// sibling plugins (`gis`, `cad`, `fem`) use. `use super::<kind>;` below just brings each sibling
+// into this file's scope so the enum body can reference `<kind>::mutation::<Type>`.
+use super::resize_source_frame;
+use super::replace_source;
+use super::create_tile;
+use super::delete_tile;
+use super::delete_tiles;
+use super::rename_tile;
+use super::resize_tile_crop;
+use super::reorder_tiles;
+use super::replace_tiles;
 //#endregion 🔖️MutationLeaves
 
 //#region 🔖️Mutations
@@ -105,9 +29,9 @@ pub mod replace_tiles {
 /// `source` (a singleton facet) gets `replace-source`/`resize-source-frame`; `tiles` (an id-keyed
 /// ordered collection) gets `create`/`delete`/`delete-tiles`/`rename`/`resize-tile-crop`/`reorder`/
 /// `replace-tiles` per `derivation-rules.md`'s per-id-keyed-collection recipe. Replaces the former
-/// generic `Tiles(CollectionMutation<..>)`/`SetSource`/`SetTiles`/`SetSnapshot` vocabulary —
-/// whole-document replacement is not expressible as an in-history mutation at all (goes through
-/// `ArtifactStore::reset`, an app-level concern outside this enum).
+/// generic whole-collection `Tiles(...)`/`SetSource`/`SetTiles`/whole-document-replacement
+/// vocabulary — whole-document replacement is not expressible as an in-history mutation at all
+/// (goes through `ArtifactStore::reset`, an app-level concern outside this enum).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[mutations(snapshot = PresentSnapshot, diff = PresentDiff, schema = "animate.present")]
 pub enum PresentMutation {

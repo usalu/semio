@@ -1,4 +1,4 @@
-//! 🔄 Shooting mutation payload — `RotateAssets`, the bulk axis-angle rotation gesture.
+//! 🔄 Shooting mutation payload — `RotateAssets`. The bulk axis-angle rotation gesture. Composes an `(ax, ay, az, angle)` axis-angle quaternion onto every asset in `asset_ids`.
 
 use crate::artifacts::shooting::diff::ShootingDiff;
 use crate::artifacts::shooting::mutations::ShootingMutation;
@@ -6,8 +6,6 @@ use crate::artifacts::shooting::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 
-//#region 🔄️RotateAssets
-/// 🔄️ Composes an `(ax, ay, az, angle)` axis-angle quaternion onto every asset in `asset_ids`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct RotateAssets {
     pub asset_ids: Vec<String>,
@@ -20,10 +18,10 @@ pub struct RotateAssets {
 impl MutationKind<ShootingSnapshot, ShootingMutation> for RotateAssets {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rotate", entity: "assets", kind: "rotate-assets", record: "RotatedAssets" };
     fn diff(&self, base: &ShootingSnapshot) -> ShootingDiff {
-        super::diff::diff_rotate_assets(self, base)
+        super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
-        super::inverse::inverse_rotate_assets(self, base)
+        super::inverse::inverse(self, base)
     }
     fn label(&self) -> String {
         format!("Rotate {} asset(s)", self.asset_ids.len())
@@ -32,4 +30,3 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for RotateAssets {
         self.asset_ids.clone()
     }
 }
-//#endregion 🔄️RotateAssets

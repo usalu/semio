@@ -1,7 +1,6 @@
 # 🧬️ S Home diff schema — sparse field delta over the artifact.
 
 type SHomeDiff {
-  artifact: SHomeArtifact @state(class: PERSISTENT)
   schema: String @state(class: PERSISTENT)
   catalogGeneration: Long @state(class: PERSISTENT)
   activePanelTab: String @state(class: LOCAL_UI)

@@ -2,7 +2,7 @@
   "$id": "https://semio.tech/schema/s.stdio.semio/artifact.json",
   "title": "SemioArtifact",
   "description": "Full artifact state, mirrors SemioSnapshot field for field — see the sibling snapshot.json for the real SemioSubsetSnapshot union shape.",
-  "type": "object",
+  "type": "value",
   "properties": {
     "schema": { "type": "string", "x-semio-state": "persistent" },
     "subset": { "$ref": "https://semio.tech/schema/s.stdio.semio/snapshot.json#/definitions/SemioSubsetSnapshot", "x-semio-state": "persistent" }

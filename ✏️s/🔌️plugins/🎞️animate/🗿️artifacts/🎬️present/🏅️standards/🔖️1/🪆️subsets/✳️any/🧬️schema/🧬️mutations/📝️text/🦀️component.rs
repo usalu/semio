@@ -1,7 +1,7 @@
 //! ⚡️ present artifact — OpText/OpBinary codecs + grammar for `PresentMutation`. `PresentMutation`
 //! derives `dsl::DslEnum` directly on its dispatch enum (every variant wraps a payload struct that
 //! itself derives `dsl::DslRecord` with its own `#[dsl(keyword = "...")]`), so no separate mirror
-//! enum is needed — unlike the retired generic `Tiles(CollectionMutation<..>)` variant, every
+//! enum is needed — unlike the retired generic whole-collection `Tiles(...)` variant, every
 //! payload here is a plain struct declared in this crate, so `dsl::DslRecord` applies directly.
 
 pub use crate::artifacts::present::schema::mutations::{apply_present_mutation, inverse_present_mutation, PresentMutation};

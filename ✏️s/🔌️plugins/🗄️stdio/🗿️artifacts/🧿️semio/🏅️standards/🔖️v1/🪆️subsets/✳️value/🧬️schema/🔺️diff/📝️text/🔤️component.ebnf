@@ -1,0 +1,44 @@
+(* EBNF for `stdio.semio.value`'s hand-rolled `DiffCodec` wire text form -- space-separated
+   key=value tokens (either/both absent = unchanged), tag-prefixed hex encoding, NOT JSON. Same
+   shape as the sibling 📖️component.grammar.semio, restated here for a self-contained reading. *)
+document = [ root token, [ space, nodes token ] | nodes token ] ;
+root token = 'root', '=', value diff ;
+nodes token = 'nodes', '=', named triple ;
+
+value diff = 'P', '[', value, ']'
+           | 'B', '[', bit, ']'
+           | 'I', '[', hex, ']'
+           | 'F', '[', hex, ']'
+           | 'S', '[', hex, ']'
+           | 'Y', '[', hex, ']'
+           | 'L', '[', indexed triple, ']'
+           | 'M', '[', named triple, ']'
+           | 'R', '[', hex, ']' ;
+bit = '0' | '1' ;
+
+indexed triple = '[', [ digit, { ',', digit } ], ']', ';',
+                  '[', [ index modified, { ',', index modified } ], ']', ';',
+                  '[', [ index added, { ',', index added } ], ']' ;
+index modified = digit, ':', value diff ;
+index added = digit, ':', value ;
+
+named triple = '[', [ hex, { ',', hex } ], ']', ';',
+                '[', [ named modified, { ',', named modified } ], ']', ';',
+                '[', [ named item, { ',', named item } ], ']' ;
+named modified = hex, ':', value diff ;
+named item = digit, ':', hex, ':', value ;
+
+value = 'Z'
+      | 'B', '[', bit, ']'
+      | 'I', '[', hex, ']'
+      | 'F', '[', hex, ']'
+      | 'S', '[', hex, ']'
+      | 'Y', '[', hex, ']'
+      | 'L', '[', [ value, { ',', value } ], ']'
+      | 'M', '[', [ entry, { ',', entry } ], ']'
+      | 'R', '[', hex, ']' ;
+entry = hex, ':', value ;
+
+hex = { hex digit, hex digit } ;
+hex digit = digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;

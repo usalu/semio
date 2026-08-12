@@ -1,4 +1,4 @@
-//! ⚖️ EN 1998 app — binary command protocol surface + laws (constitutional: protocol).
+//! ⚖️ En1998 app — binary command protocol surface + laws (constitutional: protocol).
 
 
 //#region 📡️SemioProtocol
@@ -25,12 +25,17 @@ pub fn decode_op(bytes: &[u8]) -> Result<En1998Mutation, protocol::ProtocolError
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::en1998::mutations::change_seismic_zone;
     use crate::artifacts::en1998::En1998Snapshot;
+
+    fn sample_mutation() -> En1998Mutation {
+        En1998Mutation::ChangeSeismicZone(change_seismic_zone::mutation::ChangeSeismicZone { new_seismic_zone: 3 })
+    }
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let mutation = En1998Mutation::SetSnapshot { snapshot: En1998Snapshot::default() };
-        store::os_store::test_support::assert_op_line_round_trip(&mutation);
+        let mutation = sample_mutation();
+        store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
         let bytes = encode_op(&mutation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), mutation);
     }
@@ -39,7 +44,7 @@ mod tests {
     fn document_text_round_trips_through_store() {
         let envelope = store::create_document_envelope("norm.en1998/v1", "en1998", En1998Snapshot::default(), None);
         let mut store = store::ArtifactStore::new(envelope);
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![En1998Mutation::SetSnapshot { snapshot: En1998Snapshot::default() }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![sample_mutation()], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }

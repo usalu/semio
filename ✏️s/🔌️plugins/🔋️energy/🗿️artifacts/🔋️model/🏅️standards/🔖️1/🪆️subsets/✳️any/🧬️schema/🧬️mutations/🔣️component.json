@@ -1,20 +1,19 @@
 {
   "$id": "https://semio.tech/schema/s/energy/model/mutation.json",
   "title": "EnergyModelMutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema",
-    "modelJson"
+  "oneOf": [
+    { "$ref": "#/$defs/ReplaceModel" }
   ],
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
-    },
-    "modelJson": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "$defs": {
+    "ReplaceModel": {
+      "title": "ReplaceModel",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation", "newModelJson"],
+      "properties": {
+        "mutation": { "const": "replace-model" },
+        "newModelJson": { "type": "string" }
+      }
     }
   }
 }

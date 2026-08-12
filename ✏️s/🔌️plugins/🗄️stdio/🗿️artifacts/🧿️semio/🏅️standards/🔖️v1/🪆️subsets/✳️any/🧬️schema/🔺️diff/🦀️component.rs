@@ -11,7 +11,7 @@ use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::{Sem
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::{diff::SemioBrepDiff, snapshot::SemioBrepSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::{diff::SemioMeshDiff, snapshot::SemioMeshSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::model::schema::{diff::SemioModelDiff, snapshot::SemioModelSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::object::schema::{diff::SemioObjectDiff, snapshot::SemioObjectSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::{diff::SemioValueTreeDiff, snapshot::SemioValueSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::document::schema::{diff::SemioDocumentDiff, snapshot::SemioDocumentSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::{diff::SemioCadDiff, snapshot::SemioCadSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::{diff::SemioDrawingDiff, snapshot::SemioDrawingSnapshot};
@@ -20,7 +20,7 @@ use crate::artifacts::semio::standards::v1::subsets::video::schema::{diff::Semio
 use crate::artifacts::semio::standards::v1::subsets::audio::schema::{diff::SemioAudioDiff, snapshot::SemioAudioSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::{diff::SemioAnimationDiff, snapshot::SemioAnimationSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::{diff::SemioPresentationDiff, snapshot::SemioPresentationSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::workflow::schema::{diff::SemioWorkflowDiff, snapshot::SemioWorkflowSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::flow::schema::{diff::SemioFlowDiff, snapshot::SemioFlowSnapshot};
 use protocol::DiffCodec;
 use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
@@ -41,7 +41,7 @@ pub enum SemioDiff {
     Brep(SemioBrepDiff),
     Mesh(SemioMeshDiff),
     Model(SemioModelDiff),
-    Object(SemioObjectDiff),
+    Value(SemioValueTreeDiff),
     Document(SemioDocumentDiff),
     Cad(SemioCadDiff),
     Drawing(SemioDrawingDiff),
@@ -50,7 +50,7 @@ pub enum SemioDiff {
     Audio(SemioAudioDiff),
     Animation(SemioAnimationDiff),
     Presentation(SemioPresentationDiff),
-    Workflow(SemioWorkflowDiff),
+    Flow(SemioFlowDiff),
     Replace(Box<SemioSnapshot>),
 }
 
@@ -63,7 +63,7 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
             (SemioDiff::Brep(d), S::Brep(b)) => S::Brep(<SemioBrepDiff as MutationDiff<SemioBrepSnapshot>>::apply(d, b)),
             (SemioDiff::Mesh(d), S::Mesh(b)) => S::Mesh(<SemioMeshDiff as MutationDiff<SemioMeshSnapshot>>::apply(d, b)),
             (SemioDiff::Model(d), S::Model(b)) => S::Model(<SemioModelDiff as MutationDiff<SemioModelSnapshot>>::apply(d, b)),
-            (SemioDiff::Object(d), S::Object(b)) => S::Object(<SemioObjectDiff as MutationDiff<SemioObjectSnapshot>>::apply(d, b)),
+            (SemioDiff::Value(d), S::Value(b)) => S::Value(<SemioValueTreeDiff as MutationDiff<SemioValueSnapshot>>::apply(d, b)),
             (SemioDiff::Document(d), S::Document(b)) => S::Document(<SemioDocumentDiff as MutationDiff<SemioDocumentSnapshot>>::apply(d, b)),
             (SemioDiff::Cad(d), S::Cad(b)) => S::Cad(<SemioCadDiff as MutationDiff<SemioCadSnapshot>>::apply(d, b)),
             (SemioDiff::Drawing(d), S::Drawing(b)) => S::Drawing(<SemioDrawingDiff as MutationDiff<SemioDrawingSnapshot>>::apply(d, b)),
@@ -72,7 +72,7 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
             (SemioDiff::Audio(d), S::Audio(b)) => S::Audio(<SemioAudioDiff as MutationDiff<SemioAudioSnapshot>>::apply(d, b)),
             (SemioDiff::Animation(d), S::Animation(b)) => S::Animation(<SemioAnimationDiff as MutationDiff<SemioAnimationSnapshot>>::apply(d, b)),
             (SemioDiff::Presentation(d), S::Presentation(b)) => S::Presentation(<SemioPresentationDiff as MutationDiff<SemioPresentationSnapshot>>::apply(d, b)),
-            (SemioDiff::Workflow(d), S::Workflow(b)) => S::Workflow(<SemioWorkflowDiff as MutationDiff<SemioWorkflowSnapshot>>::apply(d, b)),
+            (SemioDiff::Flow(d), S::Flow(b)) => S::Flow(<SemioFlowDiff as MutationDiff<SemioFlowSnapshot>>::apply(d, b)),
             // 🛡️ Kind mismatch (a nested-kind diff paired with a base of a DIFFERENT kind): can
             // only arise from a malformed/foreign diff, never from this module's own `between`/
             // `diff` — `apply` stays TOTAL (never panics) per `MutationDiff`'s contract by
@@ -98,7 +98,7 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
             (Brep(mut d1), Brep(d2)) => { d1.absorb(d2); Brep(d1) }
             (Mesh(mut d1), Mesh(d2)) => { d1.absorb(d2); Mesh(d1) }
             (Model(mut d1), Model(d2)) => { d1.absorb(d2); Model(d1) }
-            (Object(mut d1), Object(d2)) => { d1.absorb(d2); Object(d1) }
+            (Value(mut d1), Value(d2)) => { d1.absorb(d2); Value(d1) }
             (Document(mut d1), Document(d2)) => { d1.absorb(d2); Document(d1) }
             (Cad(mut d1), Cad(d2)) => { d1.absorb(d2); Cad(d1) }
             (Drawing(mut d1), Drawing(d2)) => { d1.absorb(d2); Drawing(d1) }
@@ -107,7 +107,7 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
             (Audio(mut d1), Audio(d2)) => { d1.absorb(d2); Audio(d1) }
             (Animation(mut d1), Animation(d2)) => { d1.absorb(d2); Animation(d1) }
             (Presentation(mut d1), Presentation(d2)) => { d1.absorb(d2); Presentation(d1) }
-            (Workflow(mut d1), Workflow(d2)) => { d1.absorb(d2); Workflow(d1) }
+            (Flow(mut d1), Flow(d2)) => { d1.absorb(d2); Flow(d1) }
             // 🛡️ Mismatched, non-`Replace` kind pair — structurally impossible from this module's
             // OWN sequential diffs (a kind change always goes through `Replace`), but `absorb`
             // must stay TOTAL over every pair per its trait contract; last-diff-wins is the
@@ -125,7 +125,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
             (S::Brep(b), S::Brep(o)) => SemioDiff::Brep(<SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::between(b, o)),
             (S::Mesh(b), S::Mesh(o)) => SemioDiff::Mesh(<SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(b, o)),
             (S::Model(b), S::Model(o)) => SemioDiff::Model(<SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::between(b, o)),
-            (S::Object(b), S::Object(o)) => SemioDiff::Object(<SemioObjectDiff as DiffAlgebra<SemioObjectSnapshot>>::between(b, o)),
+            (S::Value(b), S::Value(o)) => SemioDiff::Value(<SemioValueTreeDiff as DiffAlgebra<SemioValueSnapshot>>::between(b, o)),
             (S::Document(b), S::Document(o)) => SemioDiff::Document(<SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(b, o)),
             (S::Cad(b), S::Cad(o)) => SemioDiff::Cad(<SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::between(b, o)),
             (S::Drawing(b), S::Drawing(o)) => SemioDiff::Drawing(<SemioDrawingDiff as DiffAlgebra<SemioDrawingSnapshot>>::between(b, o)),
@@ -134,7 +134,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
             (S::Audio(b), S::Audio(o)) => SemioDiff::Audio(<SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(b, o)),
             (S::Animation(b), S::Animation(o)) => SemioDiff::Animation(<SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(b, o)),
             (S::Presentation(b), S::Presentation(o)) => SemioDiff::Presentation(<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(b, o)),
-            (S::Workflow(b), S::Workflow(o)) => SemioDiff::Workflow(<SemioWorkflowDiff as DiffAlgebra<SemioWorkflowSnapshot>>::between(b, o)),
+            (S::Flow(b), S::Flow(o)) => SemioDiff::Flow(<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(b, o)),
             // 🧭 Different kinds (or, degenerately, the exact same value): a cross-kind change has
             // no sparse representation, so it's `Replace`; an identical pair collapses to `NoChange`
             // so `between(a, a).is_empty()` holds even when `a`/`b` happen to share a reference.
@@ -150,7 +150,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
             (SemioDiff::Brep(d), S::Brep(b)) => SemioDiff::Brep(<SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::inverse(d, b)),
             (SemioDiff::Mesh(d), S::Mesh(b)) => SemioDiff::Mesh(<SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::inverse(d, b)),
             (SemioDiff::Model(d), S::Model(b)) => SemioDiff::Model(<SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::inverse(d, b)),
-            (SemioDiff::Object(d), S::Object(b)) => SemioDiff::Object(<SemioObjectDiff as DiffAlgebra<SemioObjectSnapshot>>::inverse(d, b)),
+            (SemioDiff::Value(d), S::Value(b)) => SemioDiff::Value(<SemioValueTreeDiff as DiffAlgebra<SemioValueSnapshot>>::inverse(d, b)),
             (SemioDiff::Document(d), S::Document(b)) => SemioDiff::Document(<SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::inverse(d, b)),
             (SemioDiff::Cad(d), S::Cad(b)) => SemioDiff::Cad(<SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::inverse(d, b)),
             (SemioDiff::Drawing(d), S::Drawing(b)) => SemioDiff::Drawing(<SemioDrawingDiff as DiffAlgebra<SemioDrawingSnapshot>>::inverse(d, b)),
@@ -159,7 +159,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
             (SemioDiff::Audio(d), S::Audio(b)) => SemioDiff::Audio(<SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::inverse(d, b)),
             (SemioDiff::Animation(d), S::Animation(b)) => SemioDiff::Animation(<SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::inverse(d, b)),
             (SemioDiff::Presentation(d), S::Presentation(b)) => SemioDiff::Presentation(<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::inverse(d, b)),
-            (SemioDiff::Workflow(d), S::Workflow(b)) => SemioDiff::Workflow(<SemioWorkflowDiff as DiffAlgebra<SemioWorkflowSnapshot>>::inverse(d, b)),
+            (SemioDiff::Flow(d), S::Flow(b)) => SemioDiff::Flow(<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::inverse(d, b)),
             // 🛡️ Kind mismatch: same total-fallback stance as `apply`/`absorb` above — the safe
             // inverse of "unknown, ill-typed change" is "restore base wholesale".
             (_, b) => SemioDiff::Replace(Box::new(SemioSnapshot { schema: base.schema.clone(), subset: b.clone() })),
@@ -173,7 +173,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
             SemioDiff::Brep(d) => d.is_empty(),
             SemioDiff::Mesh(d) => d.is_empty(),
             SemioDiff::Model(d) => d.is_empty(),
-            SemioDiff::Object(d) => d.is_empty(),
+            SemioDiff::Value(d) => d.is_empty(),
             SemioDiff::Document(d) => d.is_empty(),
             SemioDiff::Cad(d) => d.is_empty(),
             SemioDiff::Drawing(d) => d.is_empty(),
@@ -182,7 +182,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
             SemioDiff::Audio(d) => d.is_empty(),
             SemioDiff::Animation(d) => d.is_empty(),
             SemioDiff::Presentation(d) => d.is_empty(),
-            SemioDiff::Workflow(d) => d.is_empty(),
+            SemioDiff::Flow(d) => d.is_empty(),
         }
     }
 }
@@ -230,7 +230,7 @@ fn diff_tag(d: &SemioDiff) -> u8 {
         SemioDiff::Brep(_) => 1,
         SemioDiff::Mesh(_) => 2,
         SemioDiff::Model(_) => 3,
-        SemioDiff::Object(_) => 4,
+        SemioDiff::Value(_) => 4,
         SemioDiff::Document(_) => 5,
         SemioDiff::Cad(_) => 6,
         SemioDiff::Drawing(_) => 7,
@@ -239,7 +239,7 @@ fn diff_tag(d: &SemioDiff) -> u8 {
         SemioDiff::Audio(_) => 10,
         SemioDiff::Animation(_) => 11,
         SemioDiff::Presentation(_) => 12,
-        SemioDiff::Workflow(_) => 13,
+        SemioDiff::Flow(_) => 13,
         SemioDiff::Replace(_) => 14,
     }
 }
@@ -251,7 +251,7 @@ fn print_semio_diff(d: &SemioDiff) -> String {
         SemioDiff::Brep(d) => format!("brep:{}", d.print_diff()),
         SemioDiff::Mesh(d) => format!("mesh:{}", d.print_diff()),
         SemioDiff::Model(d) => format!("model:{}", d.print_diff()),
-        SemioDiff::Object(d) => format!("object:{}", d.print_diff()),
+        SemioDiff::Value(d) => format!("value:{}", d.print_diff()),
         SemioDiff::Document(d) => format!("document:{}", d.print_diff()),
         SemioDiff::Cad(d) => format!("cad:{}", d.print_diff()),
         SemioDiff::Drawing(d) => format!("drawing:{}", d.print_diff()),
@@ -260,7 +260,7 @@ fn print_semio_diff(d: &SemioDiff) -> String {
         SemioDiff::Audio(d) => format!("audio:{}", d.print_diff()),
         SemioDiff::Animation(d) => format!("animation:{}", d.print_diff()),
         SemioDiff::Presentation(d) => format!("presentation:{}", d.print_diff()),
-        SemioDiff::Workflow(d) => format!("workflow:{}", d.print_diff()),
+        SemioDiff::Flow(d) => format!("flow:{}", d.print_diff()),
     }
 }
 
@@ -274,7 +274,7 @@ fn parse_semio_diff(line: &str) -> Result<SemioDiff, String> {
         "brep" => Ok(SemioDiff::Brep(SemioBrepDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         "mesh" => Ok(SemioDiff::Mesh(SemioMeshDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         "model" => Ok(SemioDiff::Model(SemioModelDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
-        "object" => Ok(SemioDiff::Object(SemioObjectDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "value" => Ok(SemioDiff::Value(SemioValueTreeDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         "document" => Ok(SemioDiff::Document(SemioDocumentDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         "cad" => Ok(SemioDiff::Cad(SemioCadDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         "drawing" => Ok(SemioDiff::Drawing(SemioDrawingDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
@@ -283,7 +283,7 @@ fn parse_semio_diff(line: &str) -> Result<SemioDiff, String> {
         "audio" => Ok(SemioDiff::Audio(SemioAudioDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         "animation" => Ok(SemioDiff::Animation(SemioAnimationDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         "presentation" => Ok(SemioDiff::Presentation(SemioPresentationDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
-        "workflow" => Ok(SemioDiff::Workflow(SemioWorkflowDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "flow" => Ok(SemioDiff::Flow(SemioFlowDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         other => Err(format!("semio diff: unknown tag {other:?}")),
     }
 }
@@ -309,7 +309,7 @@ impl protocol::DiffCodec for SemioDiff {
             SemioDiff::Brep(d) => d.encode_diff()?,
             SemioDiff::Mesh(d) => d.encode_diff()?,
             SemioDiff::Model(d) => d.encode_diff()?,
-            SemioDiff::Object(d) => d.encode_diff()?,
+            SemioDiff::Value(d) => d.encode_diff()?,
             SemioDiff::Document(d) => d.encode_diff()?,
             SemioDiff::Cad(d) => d.encode_diff()?,
             SemioDiff::Drawing(d) => d.encode_diff()?,
@@ -318,7 +318,7 @@ impl protocol::DiffCodec for SemioDiff {
             SemioDiff::Audio(d) => d.encode_diff()?,
             SemioDiff::Animation(d) => d.encode_diff()?,
             SemioDiff::Presentation(d) => d.encode_diff()?,
-            SemioDiff::Workflow(d) => d.encode_diff()?,
+            SemioDiff::Flow(d) => d.encode_diff()?,
         };
         out.extend_from_slice(&payload);
         Ok(out)
@@ -340,7 +340,7 @@ impl protocol::DiffCodec for SemioDiff {
             1 => SemioDiff::Brep(SemioBrepDiff::decode_diff(payload)?),
             2 => SemioDiff::Mesh(SemioMeshDiff::decode_diff(payload)?),
             3 => SemioDiff::Model(SemioModelDiff::decode_diff(payload)?),
-            4 => SemioDiff::Object(SemioObjectDiff::decode_diff(payload)?),
+            4 => SemioDiff::Value(SemioValueTreeDiff::decode_diff(payload)?),
             5 => SemioDiff::Document(SemioDocumentDiff::decode_diff(payload)?),
             6 => SemioDiff::Cad(SemioCadDiff::decode_diff(payload)?),
             7 => SemioDiff::Drawing(SemioDrawingDiff::decode_diff(payload)?),
@@ -349,7 +349,7 @@ impl protocol::DiffCodec for SemioDiff {
             10 => SemioDiff::Audio(SemioAudioDiff::decode_diff(payload)?),
             11 => SemioDiff::Animation(SemioAnimationDiff::decode_diff(payload)?),
             12 => SemioDiff::Presentation(SemioPresentationDiff::decode_diff(payload)?),
-            13 => SemioDiff::Workflow(SemioWorkflowDiff::decode_diff(payload)?),
+            13 => SemioDiff::Flow(SemioFlowDiff::decode_diff(payload)?),
             14 => SemioDiff::Replace(Box::new(<SemioSnapshot as store::ArtifactPack>::decode_pack(payload)?)),
             other => return Err(protocol::ProtocolError::Malformed { what: "diff tag", offset: 1, detail: format!("unknown tag {other}") }),
         })
@@ -368,7 +368,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioDiff> {
         SemioSubsetSnapshot::Brep(Default::default()),
         SemioSubsetSnapshot::Mesh(Default::default()),
         SemioSubsetSnapshot::Model(Default::default()),
-        SemioSubsetSnapshot::Object(Default::default()),
+        SemioSubsetSnapshot::Value(Default::default()),
         SemioSubsetSnapshot::Document(Default::default()),
         SemioSubsetSnapshot::Cad(Default::default()),
         SemioSubsetSnapshot::Drawing(Default::default()),
@@ -377,14 +377,14 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioDiff> {
         SemioSubsetSnapshot::Audio(Default::default()),
         SemioSubsetSnapshot::Animation(Default::default()),
         SemioSubsetSnapshot::Presentation(Default::default()),
-        SemioSubsetSnapshot::Workflow(Default::default()),
+        SemioSubsetSnapshot::Flow(Default::default()),
     ];
     let mut cases = vec![SemioDiff::NoChange];
     for subset in subsets {
         let snap = SemioSnapshot { schema: "stdio.semio".into(), subset };
         cases.push(<SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&snap, &snap));
     }
-    cases.push(SemioDiff::Replace(Box::new(SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Workflow(Default::default()) })));
+    cases.push(SemioDiff::Replace(Box::new(SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Flow(Default::default()) })));
     cases
 }
 //#endregion 🔖️Demo
@@ -394,7 +394,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioDiff> {
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
-    use crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::{SemioWorkflowSnapshot, WorkflowNode};
+    use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{SemioFlowSnapshot, FlowNode};
     use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
 
     fn audio_snapshot(sample_rate: u32) -> SemioSnapshot {
@@ -404,10 +404,10 @@ mod tests {
         }
     }
 
-    fn workflow_snapshot(node_ids: &[&str]) -> SemioSnapshot {
+    fn flow_snapshot(node_ids: &[&str]) -> SemioSnapshot {
         SemioSnapshot {
-            subset: SemioSubsetSnapshot::Workflow(SemioWorkflowSnapshot {
-                nodes: node_ids.iter().map(|id| WorkflowNode {
+            subset: SemioSubsetSnapshot::Flow(SemioFlowSnapshot {
+                nodes: node_ids.iter().map(|id| FlowNode {
                     id: (*id).into(), kind: "task".into(), label: (*id).into(), params: vec![],
                     position: SemioPoint2 { x: 0.0, y: 0.0 },
                 }).collect(),
@@ -431,15 +431,15 @@ mod tests {
         assert!(<SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &a).is_empty());
     }
 
-    /// 🧪️ field_sweep, second real same-kind field change (workflow's id-keyed `nodes`
+    /// 🧪️ field_sweep, second real same-kind field change (flow's id-keyed `nodes`
     /// collection) — sweeps a DIFFERENT subset and a DIFFERENT field shape (collection insert,
     /// not a scalar) than the audio case above.
     #[test]
-    fn between_roundtrip_law_workflow_node_insert() {
-        let a = workflow_snapshot(&["n1"]);
-        let b = workflow_snapshot(&["n1", "n2"]);
+    fn between_roundtrip_law_flow_node_insert() {
+        let a = flow_snapshot(&["n1"]);
+        let b = flow_snapshot(&["n1", "n2"]);
         let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
-        assert!(matches!(d, SemioDiff::Workflow(_)));
+        assert!(matches!(d, SemioDiff::Flow(_)));
         assert_eq!(d.apply(&a), b);
         let inv = d.inverse(&a);
         assert_eq!(inv.apply(&d.apply(&a)), a);
@@ -450,7 +450,7 @@ mod tests {
     #[test]
     fn between_roundtrip_law_cross_kind_replaces() {
         let a = audio_snapshot(44_100);
-        let b = workflow_snapshot(&["n1"]);
+        let b = flow_snapshot(&["n1"]);
         let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
         assert!(matches!(d, SemioDiff::Replace(_)), "cross-kind change must Replace: {d:?}");
         assert_eq!(d.apply(&a), b);
@@ -461,7 +461,7 @@ mod tests {
     fn inverse_law_covers_nested_replace_and_no_change() {
         for (a, b) in [
             (audio_snapshot(44_100), audio_snapshot(96_000)),
-            (audio_snapshot(44_100), workflow_snapshot(&["n1", "n2"])),
+            (audio_snapshot(44_100), flow_snapshot(&["n1", "n2"])),
             (audio_snapshot(44_100), audio_snapshot(44_100)),
         ] {
             let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
@@ -491,7 +491,7 @@ mod tests {
     fn absorb_law_later_replace_wins() {
         let a = audio_snapshot(44_100);
         let mid = audio_snapshot(48_000);
-        let after = workflow_snapshot(&["n1"]);
+        let after = flow_snapshot(&["n1"]);
         let mut d1 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &mid);
         let d2 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&mid, &after);
         d1.absorb(d2);
@@ -503,7 +503,7 @@ mod tests {
     /// replacement snapshot rather than dropping it.
     #[test]
     fn absorb_law_replace_then_nested_folds_in() {
-        let a = workflow_snapshot(&["n1"]);
+        let a = flow_snapshot(&["n1"]);
         let replaced = audio_snapshot(44_100);
         let after = audio_snapshot(48_000);
         let mut d1 = SemioDiff::Replace(Box::new(replaced.clone()));
@@ -519,7 +519,7 @@ mod tests {
         let a = audio_snapshot(44_100);
         let b = audio_snapshot(48_000);
         let nested = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
-        let replace = SemioDiff::Replace(Box::new(workflow_snapshot(&["n1"])));
+        let replace = SemioDiff::Replace(Box::new(flow_snapshot(&["n1"])));
         for d in [SemioDiff::NoChange, nested, replace] {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
@@ -542,7 +542,7 @@ mod tests {
             SemioSubsetSnapshot::Brep(Default::default()),
             SemioSubsetSnapshot::Mesh(Default::default()),
             SemioSubsetSnapshot::Model(Default::default()),
-            SemioSubsetSnapshot::Object(Default::default()),
+            SemioSubsetSnapshot::Value(Default::default()),
             SemioSubsetSnapshot::Document(Default::default()),
             SemioSubsetSnapshot::Cad(Default::default()),
             SemioSubsetSnapshot::Drawing(Default::default()),
@@ -551,7 +551,7 @@ mod tests {
             SemioSubsetSnapshot::Audio(Default::default()),
             SemioSubsetSnapshot::Animation(Default::default()),
             SemioSubsetSnapshot::Presentation(Default::default()),
-            SemioSubsetSnapshot::Workflow(Default::default()),
+            SemioSubsetSnapshot::Flow(Default::default()),
         ];
         for subset in subsets {
             let snap = SemioSnapshot { schema: "stdio.semio".into(), subset };

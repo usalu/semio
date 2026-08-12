@@ -1,87 +1,486 @@
 {
   "$id": "https://semio.tech/schema/s/block/block2d/mutation.json",
   "title": "Block2dMutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema",
-    "nodeKind",
-    "presentation",
-    "handleKinds",
-    "handles",
-    "compatibility",
-    "attributes",
-    "authors",
-    "camera2d",
-    "meta"
-  ],
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "persistent"
+  "description": "One of 26 semantic mutation kinds — see x-mutation-kind on each $def.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/RenameNodeKind"
     },
-    "nodeKind": {
-      "$ref": "#/$defs/BlockKindIdentity",
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/ChangeNodeKindLabel"
     },
-    "presentation": {
-      "$ref": "#/$defs/Block2dPresentation",
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/ChangeNodeKindVariant"
     },
-    "handleKinds": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/Block2dHandleKind"
-      },
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/ChangeNodeKindDescription"
     },
-    "handles": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/Block2dHandleTemplate"
-      },
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/ChangeNodeKindIcon"
     },
-    "compatibility": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/BlockCompatibilityRule"
-      },
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/ChangeNodeKindUnit"
     },
-    "attributes": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/BlockAttribute"
-      },
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/UpdatePresentation"
     },
-    "authors": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/BlockAuthor"
-      },
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/CreateHandleKind"
     },
-    "camera2d": {
-      "$ref": "#/$defs/BlockCamera2d",
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/DeleteHandleKind"
     },
-    "meta": {
-      "$ref": "#/$defs/BlockMeta",
-      "x-semio-state": "persistent"
+    {
+      "$ref": "#/$defs/RenameHandleKind"
+    },
+    {
+      "$ref": "#/$defs/ChangeHandleKindLabel"
+    },
+    {
+      "$ref": "#/$defs/ChangeHandleKindColor"
+    },
+    {
+      "$ref": "#/$defs/ChangeHandleKindDefaultWireKind"
+    },
+    {
+      "$ref": "#/$defs/CreateHandle"
+    },
+    {
+      "$ref": "#/$defs/DeleteHandle"
+    },
+    {
+      "$ref": "#/$defs/MoveHandle"
+    },
+    {
+      "$ref": "#/$defs/ChangeHandleHandleKind"
+    },
+    {
+      "$ref": "#/$defs/AddCompatibilityRule"
+    },
+    {
+      "$ref": "#/$defs/RemoveCompatibilityRule"
+    },
+    {
+      "$ref": "#/$defs/AddAttribute"
+    },
+    {
+      "$ref": "#/$defs/RemoveAttribute"
+    },
+    {
+      "$ref": "#/$defs/AddAuthor"
+    },
+    {
+      "$ref": "#/$defs/RemoveAuthor"
+    },
+    {
+      "$ref": "#/$defs/MoveCamera2d"
+    },
+    {
+      "$ref": "#/$defs/ScaleCamera2d"
+    },
+    {
+      "$ref": "#/$defs/ChangeMetaDescription"
     }
-  },
+  ],
   "$defs": {
-    "BlockKindIdentity": {
-      "title": "BlockKindIdentity",
+    "RenameNodeKind": {
+      "title": "RenameNodeKind",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "x-mutation-kind": "rename-node-kind",
+      "properties": {
+        "newName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "newName"
+      ]
     },
-    "Block2dPresentation": {
-      "title": "Block2dPresentation",
+    "ChangeNodeKindLabel": {
+      "title": "ChangeNodeKindLabel",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "x-mutation-kind": "change-node-kind-label",
+      "properties": {
+        "newLabel": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "newLabel"
+      ]
+    },
+    "ChangeNodeKindVariant": {
+      "title": "ChangeNodeKindVariant",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "change-node-kind-variant",
+      "properties": {
+        "newVariant": {
+          "type": "string"
+        }
+      }
+    },
+    "ChangeNodeKindDescription": {
+      "title": "ChangeNodeKindDescription",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "change-node-kind-description",
+      "properties": {
+        "newDescription": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "newDescription"
+      ]
+    },
+    "ChangeNodeKindIcon": {
+      "title": "ChangeNodeKindIcon",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "change-node-kind-icon",
+      "properties": {
+        "newIcon": {
+          "type": "string"
+        }
+      }
+    },
+    "ChangeNodeKindUnit": {
+      "title": "ChangeNodeKindUnit",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "change-node-kind-unit",
+      "properties": {
+        "newUnit": {
+          "type": "string"
+        }
+      }
+    },
+    "UpdatePresentation": {
+      "title": "UpdatePresentation",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "update-presentation",
+      "properties": {
+        "newShape": {
+          "type": "string"
+        },
+        "newRadius": {
+          "type": "number"
+        },
+        "newWidth": {
+          "type": "number"
+        },
+        "newHeight": {
+          "type": "number"
+        },
+        "newColor": {
+          "type": "string"
+        },
+        "newIconKind": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateHandleKind": {
+      "title": "CreateHandleKind",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "create-handle-kind",
+      "properties": {
+        "handleKind": {
+          "$ref": "#/$defs/Block2dHandleKind"
+        }
+      },
+      "required": [
+        "handleKind"
+      ]
+    },
+    "DeleteHandleKind": {
+      "title": "DeleteHandleKind",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "delete-handle-kind",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "RenameHandleKind": {
+      "title": "RenameHandleKind",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "rename-handle-kind",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "newName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "newName"
+      ]
+    },
+    "ChangeHandleKindLabel": {
+      "title": "ChangeHandleKindLabel",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "change-handle-kind-label",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "newLabel": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "newLabel"
+      ]
+    },
+    "ChangeHandleKindColor": {
+      "title": "ChangeHandleKindColor",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "change-handle-kind-color",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "newColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "newColor"
+      ]
+    },
+    "ChangeHandleKindDefaultWireKind": {
+      "title": "ChangeHandleKindDefaultWireKind",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "change-handle-kind-default-wire-kind",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "newDefaultWireKind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "newDefaultWireKind"
+      ]
+    },
+    "CreateHandle": {
+      "title": "CreateHandle",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "create-handle",
+      "properties": {
+        "handle": {
+          "$ref": "#/$defs/Block2dHandleTemplate"
+        }
+      },
+      "required": [
+        "handle"
+      ]
+    },
+    "DeleteHandle": {
+      "title": "DeleteHandle",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "delete-handle",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "MoveHandle": {
+      "title": "MoveHandle",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "move-handle",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "newAngle": {
+          "type": "number"
+        },
+        "newRadius": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "newAngle",
+        "newRadius"
+      ]
+    },
+    "ChangeHandleHandleKind": {
+      "title": "ChangeHandleHandleKind",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "change-handle-handle-kind",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "newHandleKind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "newHandleKind"
+      ]
+    },
+    "AddCompatibilityRule": {
+      "title": "AddCompatibilityRule",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "add-compatibility-rule",
+      "properties": {
+        "rule": {
+          "$ref": "#/$defs/BlockCompatibilityRule"
+        }
+      },
+      "required": [
+        "rule"
+      ]
+    },
+    "RemoveCompatibilityRule": {
+      "title": "RemoveCompatibilityRule",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "remove-compatibility-rule",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "AddAttribute": {
+      "title": "AddAttribute",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "add-attribute",
+      "properties": {
+        "attribute": {
+          "$ref": "#/$defs/BlockAttribute"
+        }
+      },
+      "required": [
+        "attribute"
+      ]
+    },
+    "RemoveAttribute": {
+      "title": "RemoveAttribute",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "remove-attribute",
+      "properties": {
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key"
+      ]
+    },
+    "AddAuthor": {
+      "title": "AddAuthor",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "add-author",
+      "properties": {
+        "author": {
+          "$ref": "#/$defs/BlockAuthor"
+        }
+      },
+      "required": [
+        "author"
+      ]
+    },
+    "RemoveAuthor": {
+      "title": "RemoveAuthor",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "remove-author",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "MoveCamera2d": {
+      "title": "MoveCamera2d",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "move-camera2d",
+      "properties": {
+        "newX": {
+          "type": "number"
+        },
+        "newY": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "newX",
+        "newY"
+      ]
+    },
+    "ScaleCamera2d": {
+      "title": "ScaleCamera2d",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "scale-camera2d",
+      "properties": {
+        "newZoom": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "newZoom"
+      ]
+    },
+    "ChangeMetaDescription": {
+      "title": "ChangeMetaDescription",
+      "type": "object",
+      "additionalProperties": false,
+      "x-mutation-kind": "change-meta-description",
+      "properties": {
+        "newDescription": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "newDescription"
+      ]
     },
     "Block2dHandleKind": {
       "title": "Block2dHandleKind",
@@ -105,16 +504,6 @@
     },
     "BlockAuthor": {
       "title": "BlockAuthor",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockCamera2d": {
-      "title": "BlockCamera2d",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockMeta": {
-      "title": "BlockMeta",
       "type": "object",
       "additionalProperties": true
     }

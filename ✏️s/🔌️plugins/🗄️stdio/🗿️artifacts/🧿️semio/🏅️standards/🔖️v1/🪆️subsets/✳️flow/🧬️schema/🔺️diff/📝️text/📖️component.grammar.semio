@@ -1,0 +1,58 @@
+dialect grammar
+grammar semio.flow.diff
+extension semio
+start document
+
+# P2 pilot (flow): real one-line `DiffCodec::print_diff`/`parse_diff` shape ALREADY emitted by
+# `🔺️diff/🦀️component.rs` (`print_flow_diff`/`parse_flow_diff`) — token-per-nonempty-field,
+# space-separated (space is lexer trivia, irrelevant at this dialect level); each collection field
+# encodes as the shared `engine::triples::enc_named_triple`/`dec_named_triple`
+# `[removed];[modified];[added]` bracket-depth-aware triple (recipe's own collection-triple shape,
+# §1.4). Both top-level fields are optional (an unchanged diff prints as the empty string).
+document = nodes-line? edges-line?
+
+nodes-line = "nodes" "=" nodes-triple
+nodes-triple = "[" removed-list? "]" ";" "[" node-modified-list? "]" ";" "[" node-added-list? "]"
+node-modified-list = node-modified {"," node-modified}*
+node-modified = hex ":" node-diff
+node-added-list = node {"," node}*
+
+edges-line = "edges" "=" edges-triple
+edges-triple = "[" removed-list? "]" ";" "[" edge-modified-list? "]" ";" "[" edge-added-list? "]"
+edge-modified-list = edge-modified {"," edge-modified}*
+edge-modified = hex ":" edge-diff
+edge-added-list = edge {"," edge}*
+
+removed-list = hex {"," hex}*
+
+# `enc_node`/`enc_edge`/`enc_param` — the same full-VALUE codecs `📸️snapshot/🦀️component.rs`'s own
+# text DSL grammar declares (restated here so this leaf grammar is self-contained, matching the
+# repo's existing per-facet convention).
+node = "[" hex "," hex "," hex "," "[" param-list? "]" "," "[" number "," number "]" "]"
+param-list = param {"," param}*
+param = "[" hex "," hex "]"
+edge = "[" hex "," port "," port "," hex "]"
+port = "[" hex "," hex "]"
+
+# `enc_node_diff`/`dec_node_diff` — `FlowNodeDiff`'s 4 fields (`kind`/`label`/`params`/
+# `position`), each an `Option<T>` printed via the shared `[0]` (None) / `[1,<value>]` (Some)
+# tri-state tag (recipe §1.4's "tri-state" pattern, verbatim shape).
+node-diff = "[" option-hex "," option-hex "," option-params-diff "," option-point2 "]"
+option-hex = "[" "0" "]" | "[" "1" "," hex "]"
+option-params-diff = "[" "0" "]" | "[" "1" "," params-triple "]"
+option-point2 = "[" "0" "]" | "[" "1" "," "[" number "," number "]" "]"
+params-triple = "[" removed-list? "]" ";" "[" param-modified-list? "]" ";" "[" param-added-list? "]"
+param-modified-list = param-modified {"," param-modified}*
+param-modified = hex ":" param-diff
+param-added-list = param {"," param}*
+param-diff = "[" option-hex "]"
+
+# `enc_edge_diff`/`dec_edge_diff` — `FlowEdgeDiff`'s 3 fields (`from`/`to`/`kind`).
+edge-diff = "[" option-port "," option-port "," option-hex "]"
+option-port = "[" "0" "]" | "[" "1" "," port "]"
+
+number = INT | FLOAT
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — see the sibling `📸️snapshot/📝️text/📖️component.grammar.semio`'s own `hex` doc
+# comment for why a hand-rolled `{INT|IDENT}*` production would be wrong here.

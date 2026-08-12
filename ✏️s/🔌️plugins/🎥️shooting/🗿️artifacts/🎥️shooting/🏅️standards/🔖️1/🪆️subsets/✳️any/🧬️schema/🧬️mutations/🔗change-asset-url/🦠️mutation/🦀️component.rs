@@ -1,0 +1,29 @@
+//! 🔗 Shooting mutation payload — `ChangeAssetUrl`. Sets an asset's mesh `url`.
+
+use crate::artifacts::shooting::diff::ShootingDiff;
+use crate::artifacts::shooting::mutations::ShootingMutation;
+use crate::artifacts::shooting::ShootingSnapshot;
+use protocol::{MutationKind, SemanticDescriptor};
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ChangeAssetUrl {
+    pub id: String,
+    pub new_url: String,
+}
+
+impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeAssetUrl {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "asset-url", kind: "change-asset-url", record: "ChangedAssetUrl" };
+    fn diff(&self, base: &ShootingSnapshot) -> ShootingDiff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Change asset \"{}\" url", self.id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}

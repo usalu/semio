@@ -1,0 +1,10 @@
+//! ↩ Inverse constructor for `ChangeSceneSunAzimuth` — reconstructed from BASE state.
+
+use super::mutation::ChangeSceneSunAzimuth;
+use crate::artifacts::shooting::mutations::ShootingMutation;
+use crate::artifacts::shooting::ShootingSnapshot;
+
+
+pub fn inverse(payload: &ChangeSceneSunAzimuth, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+    vec![ShootingMutation::ChangeSceneSunAzimuth(ChangeSceneSunAzimuth { new_azimuth: base.scene.sun.azimuth })]
+}

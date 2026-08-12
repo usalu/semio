@@ -1,7 +1,7 @@
 //! 🧬️ SemioSnapshot — the envelope union over all 13 domain subsets — every semio artifact round-trips through this shape.
 //! W2b closer: the 13 imports below now resolve to each subset's REAL, W2a/W2b-completed
-//! snapshot type (brep/mesh/model/object/cad/drawing landed in W2a; document/image/video/audio/
-//! animation/presentation/workflow landed in W2b) — this file's own shape (an untagged-by-us
+//! snapshot type (brep/mesh/model/value/cad/drawing landed in W2a; document/image/video/audio/
+//! animation/presentation/flow landed in W2b) — this file's own shape (an untagged-by-us
 //! `SemioSubsetSnapshot` enum + the thin `SemioSnapshot{schema, subset}` wrapper) needed no
 //! structural change from the W1b scaffold to pick that up, since only the referenced types'
 //! internals grew, not their names/paths.
@@ -9,7 +9,7 @@
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
@@ -18,7 +18,7 @@ use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::Se
 use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::SemioWorkflowSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 
 /// 🌐️ The envelope union of all 13 semio subset snapshot types (master plan: "SemioSnapshot =
 /// tagged union of the 13"). Wrapped by `SemioSnapshot` below (a struct, not the enum directly —
@@ -29,7 +29,7 @@ pub enum SemioSubsetSnapshot {
     Brep(SemioBrepSnapshot),
     Mesh(SemioMeshSnapshot),
     Model(SemioModelSnapshot),
-    Object(SemioObjectSnapshot),
+    Value(SemioValueSnapshot),
     Document(SemioDocumentSnapshot),
     Cad(SemioCadSnapshot),
     Drawing(SemioDrawingSnapshot),
@@ -38,7 +38,7 @@ pub enum SemioSubsetSnapshot {
     Audio(SemioAudioSnapshot),
     Animation(SemioAnimationSnapshot),
     Presentation(SemioPresentationSnapshot),
-    Workflow(SemioWorkflowSnapshot),
+    Flow(SemioFlowSnapshot),
 }
 
 impl Default for SemioSubsetSnapshot {
@@ -81,7 +81,7 @@ fn subset_tag(s: &SemioSubsetSnapshot) -> &'static str {
         SemioSubsetSnapshot::Brep(_) => "brep",
         SemioSubsetSnapshot::Mesh(_) => "mesh",
         SemioSubsetSnapshot::Model(_) => "model",
-        SemioSubsetSnapshot::Object(_) => "object",
+        SemioSubsetSnapshot::Value(_) => "value",
         SemioSubsetSnapshot::Document(_) => "document",
         SemioSubsetSnapshot::Cad(_) => "cad",
         SemioSubsetSnapshot::Drawing(_) => "drawing",
@@ -90,7 +90,7 @@ fn subset_tag(s: &SemioSubsetSnapshot) -> &'static str {
         SemioSubsetSnapshot::Audio(_) => "audio",
         SemioSubsetSnapshot::Animation(_) => "animation",
         SemioSubsetSnapshot::Presentation(_) => "presentation",
-        SemioSubsetSnapshot::Workflow(_) => "workflow",
+        SemioSubsetSnapshot::Flow(_) => "flow",
     }
 }
 
@@ -101,7 +101,7 @@ pub(crate) fn subset_ordinal(s: &SemioSubsetSnapshot) -> u8 {
         SemioSubsetSnapshot::Brep(_) => 0,
         SemioSubsetSnapshot::Mesh(_) => 1,
         SemioSubsetSnapshot::Model(_) => 2,
-        SemioSubsetSnapshot::Object(_) => 3,
+        SemioSubsetSnapshot::Value(_) => 3,
         SemioSubsetSnapshot::Document(_) => 4,
         SemioSubsetSnapshot::Cad(_) => 5,
         SemioSubsetSnapshot::Drawing(_) => 6,
@@ -110,7 +110,7 @@ pub(crate) fn subset_ordinal(s: &SemioSubsetSnapshot) -> u8 {
         SemioSubsetSnapshot::Audio(_) => 9,
         SemioSubsetSnapshot::Animation(_) => 10,
         SemioSubsetSnapshot::Presentation(_) => 11,
-        SemioSubsetSnapshot::Workflow(_) => 12,
+        SemioSubsetSnapshot::Flow(_) => 12,
     }
 }
 //#endregion 🔖️SubsetDispatch
@@ -148,7 +148,7 @@ fn enc_semio_snapshot_body(snap: &SemioSnapshot) -> String {
         SemioSubsetSnapshot::Brep(s) => <SemioBrepSnapshot as store::ArtifactDsl>::print_dsl(s),
         SemioSubsetSnapshot::Mesh(s) => <SemioMeshSnapshot as store::ArtifactDsl>::print_dsl(s),
         SemioSubsetSnapshot::Model(s) => <SemioModelSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Object(s) => <SemioObjectSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Value(s) => <SemioValueSnapshot as store::ArtifactDsl>::print_dsl(s),
         SemioSubsetSnapshot::Document(s) => <SemioDocumentSnapshot as store::ArtifactDsl>::print_dsl(s),
         SemioSubsetSnapshot::Cad(s) => <SemioCadSnapshot as store::ArtifactDsl>::print_dsl(s),
         SemioSubsetSnapshot::Drawing(s) => <SemioDrawingSnapshot as store::ArtifactDsl>::print_dsl(s),
@@ -157,7 +157,7 @@ fn enc_semio_snapshot_body(snap: &SemioSnapshot) -> String {
         SemioSubsetSnapshot::Audio(s) => <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(s),
         SemioSubsetSnapshot::Animation(s) => <SemioAnimationSnapshot as store::ArtifactDsl>::print_dsl(s),
         SemioSubsetSnapshot::Presentation(s) => <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Workflow(s) => <SemioWorkflowSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Flow(s) => <SemioFlowSnapshot as store::ArtifactDsl>::print_dsl(s),
     };
     let inner_body = strip_inner_preamble(&inner_printed);
     format!("subset={tag}\nschema={}\n{inner_body}", hex_encode(snap.schema.as_bytes()))
@@ -175,7 +175,7 @@ fn dec_semio_snapshot_body(body: &str) -> Result<SemioSnapshot, String> {
         "brep" => SemioSubsetSnapshot::Brep(<SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         "mesh" => SemioSubsetSnapshot::Mesh(<SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         "model" => SemioSubsetSnapshot::Model(<SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "object" => SemioSubsetSnapshot::Object(<SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "value" => SemioSubsetSnapshot::Value(<SemioValueSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         "document" => SemioSubsetSnapshot::Document(<SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         "cad" => SemioSubsetSnapshot::Cad(<SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         "drawing" => SemioSubsetSnapshot::Drawing(<SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
@@ -184,7 +184,7 @@ fn dec_semio_snapshot_body(body: &str) -> Result<SemioSnapshot, String> {
         "audio" => SemioSubsetSnapshot::Audio(<SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         "animation" => SemioSubsetSnapshot::Animation(<SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         "presentation" => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "workflow" => SemioSubsetSnapshot::Workflow(<SemioWorkflowSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "flow" => SemioSubsetSnapshot::Flow(<SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         other => return Err(format!("semio snapshot: unknown subset tag {other:?}")),
     };
     Ok(SemioSnapshot { schema, subset })
@@ -217,7 +217,7 @@ fn encode_semio_snapshot_binary(snap: &SemioSnapshot) -> Vec<u8> {
         SemioSubsetSnapshot::Brep(s) => <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(s),
         SemioSubsetSnapshot::Mesh(s) => <SemioMeshSnapshot as store::ArtifactPack>::encode_pack(s),
         SemioSubsetSnapshot::Model(s) => <SemioModelSnapshot as store::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Object(s) => <SemioObjectSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Value(s) => <SemioValueSnapshot as store::ArtifactPack>::encode_pack(s),
         SemioSubsetSnapshot::Document(s) => <SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(s),
         SemioSubsetSnapshot::Cad(s) => <SemioCadSnapshot as store::ArtifactPack>::encode_pack(s),
         SemioSubsetSnapshot::Drawing(s) => <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(s),
@@ -226,7 +226,7 @@ fn encode_semio_snapshot_binary(snap: &SemioSnapshot) -> Vec<u8> {
         SemioSubsetSnapshot::Audio(s) => <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(s),
         SemioSubsetSnapshot::Animation(s) => <SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(s),
         SemioSubsetSnapshot::Presentation(s) => <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Workflow(s) => <SemioWorkflowSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Flow(s) => <SemioFlowSnapshot as store::ArtifactPack>::encode_pack(s),
     };
     out.extend_from_slice(&payload);
     out
@@ -245,7 +245,7 @@ fn decode_semio_snapshot_binary(bytes: &[u8]) -> Result<SemioSnapshot, String> {
         0 => SemioSubsetSnapshot::Brep(<SemioBrepSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         1 => SemioSubsetSnapshot::Mesh(<SemioMeshSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         2 => SemioSubsetSnapshot::Model(<SemioModelSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        3 => SemioSubsetSnapshot::Object(<SemioObjectSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        3 => SemioSubsetSnapshot::Value(<SemioValueSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         4 => SemioSubsetSnapshot::Document(<SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         5 => SemioSubsetSnapshot::Cad(<SemioCadSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         6 => SemioSubsetSnapshot::Drawing(<SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
@@ -254,7 +254,7 @@ fn decode_semio_snapshot_binary(bytes: &[u8]) -> Result<SemioSnapshot, String> {
         9 => SemioSubsetSnapshot::Audio(<SemioAudioSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         10 => SemioSubsetSnapshot::Animation(<SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         11 => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        12 => SemioSubsetSnapshot::Workflow(<SemioWorkflowSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        12 => SemioSubsetSnapshot::Flow(<SemioFlowSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         other => return Err(format!("semio snapshot: unknown subset tag {other}")),
     };
     Ok(SemioSnapshot { schema, subset })
@@ -317,17 +317,17 @@ impl store::ArtifactPack for SemioSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🔖️Demo
-/// 🌱 The demo `s.stdio.semio` document — wraps `workflow`'s own real demo snapshot (2 nodes, 1
+/// 🌱 The demo `s.stdio.semio` document — wraps `flow`'s own real demo snapshot (2 nodes, 1
 /// edge, incl. a negative coordinate) so this facet's fixtures/conformance tests exercise a real,
 /// already-nontrivial nested payload rather than an all-default stub. Single source of truth for
 /// `📚️examples/🌐️envelope/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` and this facet's
 /// own conformance-law tests.
 #[cfg(test)]
 pub(crate) fn demo_semio_snapshot() -> SemioSnapshot {
-    use crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::demo_workflow_snapshot;
+    use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::demo_flow_snapshot;
     SemioSnapshot {
         schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(),
-        subset: SemioSubsetSnapshot::Workflow(demo_workflow_snapshot()),
+        subset: SemioSubsetSnapshot::Flow(demo_flow_snapshot()),
     }
 }
 //#endregion 🔖️Demo
@@ -353,7 +353,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    /// 🧪️ Real delegation, non-default nested payload: the demo (workflow-wrapped) snapshot's
+    /// 🧪️ Real delegation, non-default nested payload: the demo (flow-wrapped) snapshot's
     /// text/binary round trips must both hold, proving this isn't merely round-tripping an
     /// all-zero stub.
     #[test]
@@ -374,7 +374,7 @@ mod tests {
             SemioSubsetSnapshot::Brep(Default::default()),
             SemioSubsetSnapshot::Mesh(Default::default()),
             SemioSubsetSnapshot::Model(Default::default()),
-            SemioSubsetSnapshot::Object(Default::default()),
+            SemioSubsetSnapshot::Value(Default::default()),
             SemioSubsetSnapshot::Document(Default::default()),
             SemioSubsetSnapshot::Cad(Default::default()),
             SemioSubsetSnapshot::Drawing(Default::default()),
@@ -383,7 +383,7 @@ mod tests {
             SemioSubsetSnapshot::Audio(Default::default()),
             SemioSubsetSnapshot::Animation(Default::default()),
             SemioSubsetSnapshot::Presentation(Default::default()),
-            SemioSubsetSnapshot::Workflow(Default::default()),
+            SemioSubsetSnapshot::Flow(Default::default()),
         ];
         for subset in subsets {
             let snap = SemioSnapshot { schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset };

@@ -21,7 +21,7 @@ pub mod set_active_example {
 
     pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
         let next_document = if payload.example_id == "semio" { semio_example_snapshot() } else { empty_note_snapshot() };
-        Ok(Emit { artifact_mutations: vec![NoteMutation::SetSnapshot { snapshot: next_document }], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: Vec::new() }], ..Default::default() })
+        Ok(Emit { effects: vec![crate::apps::note::reset_document_effect(&next_document)], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: Vec::new() }], ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample
@@ -51,7 +51,7 @@ pub mod set_fixture_json {
             };
             document
         };
-        Ok(Emit { artifact_mutations: vec![NoteMutation::SetSnapshot { snapshot: next_document }], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: Vec::new() }], ..Default::default() })
+        Ok(Emit { effects: vec![crate::apps::note::reset_document_effect(&next_document)], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: Vec::new() }], ..Default::default() })
     }
 }
 //#endregion 🔖️SetFixtureJson
@@ -60,25 +60,51 @@ pub mod set_fixture_json {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::note::testkit::{dispatch, note_app};
-    use crate::apps::note::NoteCommand;
+    use semio_framework::kernel::HostEffect;
+
+    /// 🧬️ Driven directly through `handle` (not `dispatch`, which routes through `VcsArtifactApp` and
+    /// never applies `effects` to its own store — that's the real host's job): asserts on the `Emit`
+    /// itself, mirroring `fem2d`'s `set_active_example` test of the same `HostEffect::LoadDocument`
+    /// reroute (whole-document replace is banned from the `Mutation` enum outright).
+    fn empty_view() -> (NoteSnapshot, semio_framework_plugin::HistoryView<'static>) {
+        (empty_note_snapshot(), semio_framework_plugin::HistoryView::empty())
+    }
 
     #[test]
     fn set_fixture_json_replaces_document() {
-        let mut app = note_app();
-        let result = dispatch(&mut app, NoteCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: crate::artifacts::note::engine::semio_example_json() }));
-        assert_eq!(result.mutations.len(), 1);
-        assert_eq!(app.snapshot().expect("snapshot").blocks.len(), 1);
+        let (snapshot, history) = empty_view();
+        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let cfg_snapshot = NoteConfig::default();
+        let cfg = ConfigView { snapshot: &cfg_snapshot };
+        let emit = set_fixture_json::handle(&set_fixture_json::SetFixtureJson { json: crate::artifacts::note::engine::semio_example_json() }, &doc, &cfg).expect("handle");
+        assert!(emit.artifact_mutations.is_empty(), "whole-document load must not go through the Mutation enum");
+        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setFixtureJson must emit a LoadDocument effect") else {
+            panic!("expected a LoadDocument effect");
+        };
+        let loaded = <NoteSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        assert_eq!(loaded.blocks.len(), 1);
     }
 
     #[test]
     fn set_active_example_loads_semio_blocks() {
-        let mut app = note_app();
-        dispatch(&mut app, NoteCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "semio".into() }));
-        assert_eq!(app.snapshot().expect("snapshot").blocks.len(), 1);
+        let (snapshot, history) = empty_view();
+        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let cfg_snapshot = NoteConfig::default();
+        let cfg = ConfigView { snapshot: &cfg_snapshot };
 
-        dispatch(&mut app, NoteCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }));
-        assert!(app.snapshot().expect("snapshot").blocks.is_empty());
+        let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "semio".into() }, &doc, &cfg).expect("handle");
+        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+            panic!("expected a LoadDocument effect");
+        };
+        let loaded = <NoteSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        assert_eq!(loaded.blocks.len(), 1);
+
+        let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: String::new() }, &doc, &cfg).expect("handle");
+        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+            panic!("expected a LoadDocument effect");
+        };
+        let loaded = <NoteSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        assert!(loaded.blocks.is_empty());
     }
 }
 //#endregion 🧪️Tests

@@ -12,7 +12,6 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.trinity.jack")]
 pub struct JackDiff {
-    #[state(persistent)] pub artifact: Option<Box<crate::artifacts::jack::schema::JackArtifact>>,
     #[state(persistent)] pub schema: Option<String>,
     #[state(persistent)] pub name: Option<String>,
     #[state(persistent)] pub manifest_id: Option<Option<String>>,
@@ -72,6 +71,8 @@ pub struct JackNodePatch {
     pub y: Option<f64>,
     pub width: Option<f64>,
     pub height: Option<f64>,
+    pub key: Option<String>,
+    pub value_json: Option<Option<String>>,
 }
 
 /// 🧩 Identified-collection delta for `edges`.

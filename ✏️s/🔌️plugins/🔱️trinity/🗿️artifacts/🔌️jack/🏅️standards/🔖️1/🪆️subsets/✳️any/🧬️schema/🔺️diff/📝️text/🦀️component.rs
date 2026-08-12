@@ -22,9 +22,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 impl JackDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &JackArtifact) -> JackArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
         let mut next = artifact.clone();
         if let Some(value) = &self.schema {
             next.schema = value.clone();
@@ -128,6 +125,9 @@ pub fn apply_nodes_delta(nodes: &[Node], delta: &JackNodesDelta) -> Vec<Node> {
             if let Some(height) = entry.patch.height {
                 node.height = height;
             }
+            if let Some(key) = &entry.patch.key {
+                apply_property_patch(&mut node.properties, key, &entry.patch.value_json);
+            }
         }
     }
     if let Some(order) = &delta.reordered {
@@ -144,6 +144,21 @@ pub fn apply_nodes_delta(nodes: &[Node], delta: &JackNodesDelta) -> Vec<Node> {
     next
 }
 
+/// 🩹 Applies a `key`/`value_json` property patch onto a property bag — `Some(json)` upserts the
+/// decoded value, `None` (with `key` present) clears the key.
+fn apply_property_patch(properties: &mut crate::artifacts::jack::PropertyBag, key: &str, value_json: &Option<Option<String>>) {
+    match value_json {
+        Some(Some(json)) => {
+            if let Ok(value) = serde_json::from_str::<crate::artifacts::jack::PropertyValue>(json) {
+                properties.insert(key.to_string(), value);
+            }
+        }
+        Some(None) | None => {
+            properties.remove(key);
+        }
+    }
+}
+
 /// 🧩 Applies an identified-collection delta to edges.
 pub fn apply_edges_delta(
     edges: &[crate::artifacts::jack::Edge],
@@ -155,6 +170,13 @@ pub fn apply_edges_delta(
     }
     for edge in &delta.added {
         next.push(edge.clone());
+    }
+    for entry in &delta.patched {
+        if let Some(edge) = next.iter_mut().find(|edge| edge.id == entry.id) {
+            if let Some(key) = &entry.patch.key {
+                apply_property_patch(&mut edge.properties, key, &entry.patch.value_json);
+            }
+        }
     }
     if let Some(order) = &delta.reordered {
         let mut by_id: BTreeMap<_, _> = next.into_iter().map(|edge| (edge.id.clone(), edge)).collect();
@@ -172,18 +194,6 @@ pub fn apply_edges_delta(
 
 impl MutationDiff<JackSnapshot> for JackDiff {
     fn apply(&self, snapshot: &JackSnapshot) -> JackSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return JackSnapshot {
-                schema: replacement.schema.clone(),
-                name: replacement.name.clone(),
-                manifest_id: replacement.manifest_id.clone(),
-                manifest: replacement.manifest.clone(),
-                camera: replacement.camera.clone(),
-                nodes: replacement.nodes.clone(),
-                edges: replacement.edges.clone(),
-                root_node_id: replacement.root_node_id.clone(),
-            };
-        }
         let mut next = snapshot.clone();
         if let Some(value) = &self.schema {
             next.schema = value.clone();
@@ -213,10 +223,6 @@ impl MutationDiff<JackSnapshot> for JackDiff {
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.artifact.is_some() {
-            *self = other;
-            return;
-        }
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -270,14 +276,6 @@ impl MutationDiff<JackSnapshot> for JackDiff {
     }
 }
 
-/// 🏗️ Whole-snapshot replacement diff.
-pub fn diff_set_snapshot(snapshot: &JackSnapshot) -> JackDiff {
-    JackDiff {
-        artifact: Some(Box::new(JackArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
-}
-
 /// 🏗️ Nodes-added delta.
 pub fn diff_nodes_added(nodes: Vec<Node>) -> JackDiff {
     JackDiff {
@@ -314,6 +312,23 @@ pub fn diff_edges_added(edges: Vec<crate::artifacts::jack::Edge>) -> JackDiff {
 pub fn diff_edges_removed(ids: Vec<String>) -> JackDiff {
     JackDiff {
         edges: Some(JackEdgesDelta { removed: ids, ..Default::default() }),
+        ..Default::default()
+    }
+}
+
+/// 🏗️ Edges-patched delta.
+pub fn diff_edges_patched(patched: Vec<JackEdgePatchEntry>) -> JackDiff {
+    JackDiff {
+        edges: Some(JackEdgesDelta { patched, ..Default::default() }),
+        ..Default::default()
+    }
+}
+
+/// 🏗️ Node-removed + cascade-severed-edges-removed delta (`delete-node`'s real cascade capture).
+pub fn diff_delete_node(id: String, severed_edge_ids: Vec<String>) -> JackDiff {
+    JackDiff {
+        nodes: Some(JackNodesDelta { removed: vec![id], ..Default::default() }),
+        edges: if severed_edge_ids.is_empty() { None } else { Some(JackEdgesDelta { removed: severed_edge_ids, ..Default::default() }) },
         ..Default::default()
     }
 }

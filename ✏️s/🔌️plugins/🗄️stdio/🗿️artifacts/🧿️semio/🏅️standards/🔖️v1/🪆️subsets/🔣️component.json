@@ -6,7 +6,7 @@
     "brep": { "name": "Boundary-representation solid geometry", "schema": "s.stdio.semio.brep" },
     "mesh": { "name": "Discrete mesh geometry", "schema": "s.stdio.semio.mesh" },
     "model": { "name": "Spatial/BIM element model", "schema": "s.stdio.semio.model" },
-    "object": { "name": "Ordered typed object graph", "schema": "s.stdio.semio.object" },
+    "value": { "name": "Ordered typed value tree", "schema": "s.stdio.semio.value" },
     "document": { "name": "Rich text document", "schema": "s.stdio.semio.document" },
     "cad": { "name": "2D/3D CAD drawing entities", "schema": "s.stdio.semio.cad" },
     "drawing": { "name": "Vector drawing scene graph", "schema": "s.stdio.semio.drawing" },
@@ -15,6 +15,6 @@
     "audio": { "name": "Audio container", "schema": "s.stdio.semio.audio" },
     "animation": { "name": "Keyframe animation", "schema": "s.stdio.semio.animation" },
     "presentation": { "name": "Slide presentation", "schema": "s.stdio.semio.presentation" },
-    "workflow": { "name": "Node/edge workflow graph", "schema": "s.stdio.semio.workflow" }
+    "flow": { "name": "Node/edge flow graph", "schema": "s.stdio.semio.flow" }
   }
 }

@@ -1,76 +1,32 @@
 syntax = "proto3";
 package semio.s.sourcing.curate.mutation;
 
-// 🧬️ Curate mutation schema — persistent fields only.
-
-message TableSort {
-  string column_id = 1;
-  string direction = 2;
-}
-
-message Filters {
-  string query = 1;
-  repeated string module_ids = 2;
-  repeated string typology_path = 3;
-  uint32 min_availability = 4;
-  optional TableSort sort = 5;
-}
-
-message GeometryRecipeBox {
-  string kind = 1;
-  double width = 2;
-  double height = 3;
-  double depth = 4;
-}
-
-message GeometryRecipeFrame {
-  string kind = 1;
-  double width = 2;
-  double height = 3;
-  double depth = 4;
-  double profile = 5;
-}
-
-message GeometryRecipeSlab {
-  string kind = 1;
-  double width = 2;
-  double depth = 3;
-  double thickness = 4;
-}
-
-message GeometryRecipeMesh {
-  string kind = 1;
-  repeated float positions = 2;
-  repeated float normals = 3;
-  repeated uint32 indices = 4;
-}
-
-message GeometryRecipe {
-  oneof recipe {
-    GeometryRecipeBox box = 1;
-    GeometryRecipeFrame frame = 2;
-    GeometryRecipeSlab slab = 3;
-    GeometryRecipeMesh mesh = 4;
-  }
-}
-
-message ObjectKind {
-  string id = 1;
-  string name = 2;
-  string module_id = 3;
-  repeated string typology_path = 4;
-  uint32 availability = 5;
-  GeometryRecipe geometry = 6;
-}
+// 🧬️ Curate mutation schema — the closed semantic vocabulary derived from `CurateSnapshot.curated`
+// (the id-keyed curation selection). `stock` is not represented: it is a bulk-populated reference
+// catalogue, never hand-authored item-by-item.
 
 message CuratedItem {
   string object_id = 1;
   uint32 count = 2;
 }
 
-message CurateMutation {
-  // @state persistent
-  repeated ObjectKind stock = 1;
-  // @state persistent
-  repeated CuratedItem curated = 2;
+message CreateCuratedItem {
+  CuratedItem item = 1;
+}
+
+message DeleteCuratedItem {
+  string object_id = 1;
+}
+
+message ChangeCuratedItemCount {
+  string object_id = 1;
+  uint32 new_count = 2;
+}
+
+message SourcingMutation {
+  oneof mutation {
+    CreateCuratedItem create_curated_item = 1;
+    DeleteCuratedItem delete_curated_item = 2;
+    ChangeCuratedItemCount change_curated_item_count = 3;
+  }
 }

@@ -13,7 +13,7 @@ use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::{Sem
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::{mutations::SemioBrepMutation, snapshot::SemioBrepSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::{mutations::SemioMeshMutation, snapshot::SemioMeshSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::model::schema::{mutations::SemioModelMutation, snapshot::SemioModelSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::object::schema::{mutations::SemioObjectMutation, snapshot::SemioObjectSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::{mutations::SemioValueMutation, snapshot::SemioValueSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::document::schema::{mutations::SemioDocumentMutation, snapshot::SemioDocumentSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::{mutations::SemioCadMutation, snapshot::SemioCadSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::{mutations::SemioDrawingMutation, snapshot::SemioDrawingSnapshot};
@@ -22,7 +22,7 @@ use crate::artifacts::semio::standards::v1::subsets::video::schema::{mutations::
 use crate::artifacts::semio::standards::v1::subsets::audio::schema::{mutations::SemioAudioMutation, snapshot::SemioAudioSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::{mutations::SemioAnimationMutation, snapshot::SemioAnimationSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::{mutations::SemioPresentationMutation, snapshot::SemioPresentationSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::workflow::schema::{mutations::SemioWorkflowMutation, snapshot::SemioWorkflowSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::flow::schema::{mutations::SemioFlowMutation, snapshot::SemioFlowSnapshot};
 use protocol::Mutation;
 use protocol::MutationDiff;
 use protocol::OpText;
@@ -34,7 +34,7 @@ use serde::{Deserialize, Serialize};
 /// every one of the 13 wrapped subset enums' own `#[serde(tag = "mutation", ...)]` — an
 /// internally-tagged wrapper here would collide key-for-key with a wrapped variant's OWN
 /// `"mutation"` discriminator field when serde flattens a newtype variant's fields into the
-/// outer object (real bug caught by this file's own `op_text_binary_roundtrip_law` test: printed
+/// outer value (real bug caught by this file's own `op_text_binary_roundtrip_law` test: printed
 /// JSON came out `{"mutation":"audio","mutation":"setSampleRate",...}`, two keys with the same
 /// name, which `serde_json` then refuses to parse back). `content = "payload"` nests the wrapped
 /// value under its own key instead of flattening it, sidestepping the collision entirely.
@@ -44,12 +44,12 @@ pub enum SemioMutation {
     #[default]
     NoMutation,
     /// 🧨 Full-snapshot replace — the only way to change SUBSET KIND (there is no sparse
-    /// representation for "this artifact used to be a video, now it's a workflow").
+    /// representation for "this artifact used to be a video, now it's a flow").
     SetSnapshot { snapshot: SemioSnapshot },
     Brep(SemioBrepMutation),
     Mesh(SemioMeshMutation),
     Model(SemioModelMutation),
-    Object(SemioObjectMutation),
+    Value(SemioValueMutation),
     Document(SemioDocumentMutation),
     Cad(SemioCadMutation),
     Drawing(SemioDrawingMutation),
@@ -58,7 +58,7 @@ pub enum SemioMutation {
     Audio(SemioAudioMutation),
     Animation(SemioAnimationMutation),
     Presentation(SemioPresentationMutation),
-    Workflow(SemioWorkflowMutation),
+    Flow(SemioFlowMutation),
 }
 
 impl Mutation<SemioSnapshot> for SemioMutation {
@@ -72,7 +72,7 @@ impl Mutation<SemioSnapshot> for SemioMutation {
             (SemioMutation::Brep(m), S::Brep(b)) => SemioDiff::Brep(<SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(m, b)),
             (SemioMutation::Mesh(m), S::Mesh(b)) => SemioDiff::Mesh(<SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(m, b)),
             (SemioMutation::Model(m), S::Model(b)) => SemioDiff::Model(<SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(m, b)),
-            (SemioMutation::Object(m), S::Object(b)) => SemioDiff::Object(<SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(m, b)),
+            (SemioMutation::Value(m), S::Value(b)) => SemioDiff::Value(<SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(m, b)),
             (SemioMutation::Document(m), S::Document(b)) => SemioDiff::Document(<SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::diff(m, b)),
             (SemioMutation::Cad(m), S::Cad(b)) => SemioDiff::Cad(<SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(m, b)),
             (SemioMutation::Drawing(m), S::Drawing(b)) => SemioDiff::Drawing(<SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(m, b)),
@@ -81,9 +81,9 @@ impl Mutation<SemioSnapshot> for SemioMutation {
             (SemioMutation::Audio(m), S::Audio(b)) => SemioDiff::Audio(<SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(m, b)),
             (SemioMutation::Animation(m), S::Animation(b)) => SemioDiff::Animation(<SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(m, b)),
             (SemioMutation::Presentation(m), S::Presentation(b)) => SemioDiff::Presentation(<SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::diff(m, b)),
-            (SemioMutation::Workflow(m), S::Workflow(b)) => SemioDiff::Workflow(<SemioWorkflowMutation as Mutation<SemioWorkflowSnapshot>>::diff(m, b)),
+            (SemioMutation::Flow(m), S::Flow(b)) => SemioDiff::Flow(<SemioFlowMutation as Mutation<SemioFlowSnapshot>>::diff(m, b)),
             // 🛡️ A wrapped mutation whose kind doesn't match the base snapshot's current kind
-            // (e.g. `SemioMutation::Audio(..)` applied to a workflow base): can only arise from
+            // (e.g. `SemioMutation::Audio(..)` applied to a flow base): can only arise from
             // caller error, not from any path this module itself constructs. `diff()` has no
             // `Result` in its signature (per `protocol::Mutation`), so it degrades to a safe
             // no-op (`NoChange`) rather than panicking — same total-fallback stance as `SemioDiff`'s
@@ -100,7 +100,7 @@ impl Mutation<SemioSnapshot> for SemioMutation {
             (SemioMutation::Brep(m), S::Brep(b)) => <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Brep).collect(),
             (SemioMutation::Mesh(m), S::Mesh(b)) => <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Mesh).collect(),
             (SemioMutation::Model(m), S::Model(b)) => <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Model).collect(),
-            (SemioMutation::Object(m), S::Object(b)) => <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Object).collect(),
+            (SemioMutation::Value(m), S::Value(b)) => <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Value).collect(),
             (SemioMutation::Document(m), S::Document(b)) => <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Document).collect(),
             (SemioMutation::Cad(m), S::Cad(b)) => <SemioCadMutation as Mutation<SemioCadSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Cad).collect(),
             (SemioMutation::Drawing(m), S::Drawing(b)) => <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Drawing).collect(),
@@ -109,7 +109,7 @@ impl Mutation<SemioSnapshot> for SemioMutation {
             (SemioMutation::Audio(m), S::Audio(b)) => <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Audio).collect(),
             (SemioMutation::Animation(m), S::Animation(b)) => <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Animation).collect(),
             (SemioMutation::Presentation(m), S::Presentation(b)) => <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Presentation).collect(),
-            (SemioMutation::Workflow(m), S::Workflow(b)) => <SemioWorkflowMutation as Mutation<SemioWorkflowSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Workflow).collect(),
+            (SemioMutation::Flow(m), S::Flow(b)) => <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Flow).collect(),
             // 🛡️ Same kind-mismatch fallback as `diff()` above.
             _ => vec![SemioMutation::NoMutation],
         }
@@ -139,7 +139,7 @@ fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
         SemioMutation::Brep(_) => "brep",
         SemioMutation::Mesh(_) => "mesh",
         SemioMutation::Model(_) => "model",
-        SemioMutation::Object(_) => "object",
+        SemioMutation::Value(_) => "value",
         SemioMutation::Document(_) => "document",
         SemioMutation::Cad(_) => "cad",
         SemioMutation::Drawing(_) => "drawing",
@@ -148,7 +148,7 @@ fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
         SemioMutation::Audio(_) => "audio",
         SemioMutation::Animation(_) => "animation",
         SemioMutation::Presentation(_) => "presentation",
-        SemioMutation::Workflow(_) => "workflow",
+        SemioMutation::Flow(_) => "flow",
     }
 }
 
@@ -161,7 +161,7 @@ fn mutation_tag(m: &SemioMutation) -> u8 {
         SemioMutation::Brep(_) => 2,
         SemioMutation::Mesh(_) => 3,
         SemioMutation::Model(_) => 4,
-        SemioMutation::Object(_) => 5,
+        SemioMutation::Value(_) => 5,
         SemioMutation::Document(_) => 6,
         SemioMutation::Cad(_) => 7,
         SemioMutation::Drawing(_) => 8,
@@ -170,7 +170,7 @@ fn mutation_tag(m: &SemioMutation) -> u8 {
         SemioMutation::Audio(_) => 11,
         SemioMutation::Animation(_) => 12,
         SemioMutation::Presentation(_) => 13,
-        SemioMutation::Workflow(_) => 14,
+        SemioMutation::Flow(_) => 14,
     }
 }
 
@@ -201,7 +201,7 @@ fn print_semio_mutation(m: &SemioMutation) -> String {
         SemioMutation::Brep(m) => format!("{tag}:{}", m.print_op()),
         SemioMutation::Mesh(m) => format!("{tag}:{}", m.print_op()),
         SemioMutation::Model(m) => format!("{tag}:{}", m.print_op()),
-        SemioMutation::Object(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Value(m) => format!("{tag}:{}", m.print_op()),
         SemioMutation::Document(m) => format!("{tag}:{}", m.print_op()),
         SemioMutation::Cad(m) => format!("{tag}:{}", m.print_op()),
         SemioMutation::Drawing(m) => format!("{tag}:{}", m.print_op()),
@@ -210,7 +210,7 @@ fn print_semio_mutation(m: &SemioMutation) -> String {
         SemioMutation::Audio(m) => format!("{tag}:{}", m.print_op()),
         SemioMutation::Animation(m) => format!("{tag}:{}", m.print_op()),
         SemioMutation::Presentation(m) => format!("{tag}:{}", m.print_op()),
-        SemioMutation::Workflow(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Flow(m) => format!("{tag}:{}", m.print_op()),
     }
 }
 
@@ -224,7 +224,7 @@ fn parse_semio_mutation(line: &str) -> Result<SemioMutation, String> {
         "brep" => Ok(SemioMutation::Brep(SemioBrepMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         "mesh" => Ok(SemioMutation::Mesh(SemioMeshMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         "model" => Ok(SemioMutation::Model(SemioModelMutation::parse_op(rest).map_err(|e| e.to_string())?)),
-        "object" => Ok(SemioMutation::Object(SemioObjectMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "value" => Ok(SemioMutation::Value(SemioValueMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         "document" => Ok(SemioMutation::Document(SemioDocumentMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         "cad" => Ok(SemioMutation::Cad(SemioCadMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         "drawing" => Ok(SemioMutation::Drawing(SemioDrawingMutation::parse_op(rest).map_err(|e| e.to_string())?)),
@@ -233,7 +233,7 @@ fn parse_semio_mutation(line: &str) -> Result<SemioMutation, String> {
         "audio" => Ok(SemioMutation::Audio(SemioAudioMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         "animation" => Ok(SemioMutation::Animation(SemioAnimationMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         "presentation" => Ok(SemioMutation::Presentation(SemioPresentationMutation::parse_op(rest).map_err(|e| e.to_string())?)),
-        "workflow" => Ok(SemioMutation::Workflow(SemioWorkflowMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "flow" => Ok(SemioMutation::Flow(SemioFlowMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         other => Err(format!("semio mutation: unknown tag {other:?}")),
     }
 }
@@ -262,7 +262,7 @@ impl protocol::OpBinary for SemioMutation {
             SemioMutation::Brep(m) => m.encode_op()?,
             SemioMutation::Mesh(m) => m.encode_op()?,
             SemioMutation::Model(m) => m.encode_op()?,
-            SemioMutation::Object(m) => m.encode_op()?,
+            SemioMutation::Value(m) => m.encode_op()?,
             SemioMutation::Document(m) => m.encode_op()?,
             SemioMutation::Cad(m) => m.encode_op()?,
             SemioMutation::Drawing(m) => m.encode_op()?,
@@ -271,7 +271,7 @@ impl protocol::OpBinary for SemioMutation {
             SemioMutation::Audio(m) => m.encode_op()?,
             SemioMutation::Animation(m) => m.encode_op()?,
             SemioMutation::Presentation(m) => m.encode_op()?,
-            SemioMutation::Workflow(m) => m.encode_op()?,
+            SemioMutation::Flow(m) => m.encode_op()?,
         };
         out.extend_from_slice(&payload);
         Ok(out)
@@ -294,7 +294,7 @@ impl protocol::OpBinary for SemioMutation {
             2 => SemioMutation::Brep(SemioBrepMutation::decode_op(payload)?),
             3 => SemioMutation::Mesh(SemioMeshMutation::decode_op(payload)?),
             4 => SemioMutation::Model(SemioModelMutation::decode_op(payload)?),
-            5 => SemioMutation::Object(SemioObjectMutation::decode_op(payload)?),
+            5 => SemioMutation::Value(SemioValueMutation::decode_op(payload)?),
             6 => SemioMutation::Document(SemioDocumentMutation::decode_op(payload)?),
             7 => SemioMutation::Cad(SemioCadMutation::decode_op(payload)?),
             8 => SemioMutation::Drawing(SemioDrawingMutation::decode_op(payload)?),
@@ -303,7 +303,7 @@ impl protocol::OpBinary for SemioMutation {
             11 => SemioMutation::Audio(SemioAudioMutation::decode_op(payload)?),
             12 => SemioMutation::Animation(SemioAnimationMutation::decode_op(payload)?),
             13 => SemioMutation::Presentation(SemioPresentationMutation::decode_op(payload)?),
-            14 => SemioMutation::Workflow(SemioWorkflowMutation::decode_op(payload)?),
+            14 => SemioMutation::Flow(SemioFlowMutation::decode_op(payload)?),
             other => return Err(protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("unknown tag {other}") }),
         })
     }
@@ -323,7 +323,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
         SemioMutation::Brep(SemioBrepMutation::NoMutation),
         SemioMutation::Mesh(SemioMeshMutation::NoMutation),
         SemioMutation::Model(SemioModelMutation::NoMutation),
-        SemioMutation::Object(SemioObjectMutation::NoMutation),
+        SemioMutation::Value(SemioValueMutation::NoMutation),
         SemioMutation::Document(SemioDocumentMutation::NoMutation),
         SemioMutation::Cad(SemioCadMutation::NoMutation),
         SemioMutation::Drawing(SemioDrawingMutation::NoMutation),
@@ -332,7 +332,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
         SemioMutation::Audio(SemioAudioMutation::NoMutation),
         SemioMutation::Animation(SemioAnimationMutation::NoMutation),
         SemioMutation::Presentation(SemioPresentationMutation::NoMutation),
-        SemioMutation::Workflow(SemioWorkflowMutation::NoMutation),
+        SemioMutation::Flow(SemioFlowMutation::NoMutation),
     ]
 }
 //#endregion 🔖️Demo
@@ -342,7 +342,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
-    use crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::{SemioWorkflowSnapshot, WorkflowNode};
+    use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{SemioFlowSnapshot, FlowNode};
     use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
     use protocol::command::DiffAlgebra;
 
@@ -350,8 +350,8 @@ mod tests {
         SemioSnapshot { subset: SemioSubsetSnapshot::Audio(SemioAudioSnapshot { sample_rate: 44_100, format: SemioAudioFormat::Pcm16, ..Default::default() }), ..Default::default() }
     }
 
-    fn workflow_base() -> SemioSnapshot {
-        SemioSnapshot { subset: SemioSubsetSnapshot::Workflow(SemioWorkflowSnapshot::default()), ..Default::default() }
+    fn flow_base() -> SemioSnapshot {
+        SemioSnapshot { subset: SemioSubsetSnapshot::Flow(SemioFlowSnapshot::default()), ..Default::default() }
     }
 
     /// 🧪️ mutation_diff_law + inverse_law: `NoMutation`, `SetSnapshot` (cross-kind), and a real
@@ -364,7 +364,7 @@ mod tests {
         let d0 = <SemioMutation as Mutation<SemioSnapshot>>::diff(&no_mut, &base);
         assert_eq!(d0.apply(&base), base);
 
-        let target = workflow_base();
+        let target = flow_base();
         let set_snap = SemioMutation::SetSnapshot { snapshot: target.clone() };
         let d1 = <SemioMutation as Mutation<SemioSnapshot>>::diff(&set_snap, &base);
         assert_eq!(d1.apply(&base), target);
@@ -387,19 +387,19 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    /// 🧪️ mutation_diff_law, second wrapped subset (workflow's id-keyed `InsertNode`) — proves
+    /// 🧪️ mutation_diff_law, second wrapped subset (flow's id-keyed `InsertNode`) — proves
     /// the dispatch works for a collection-shaped mutation, not just a scalar one.
     #[test]
-    fn mutation_diff_law_workflow_insert_node() {
-        let base = workflow_base();
-        let node = WorkflowNode { id: "n1".into(), kind: "task".into(), label: "N1".into(), params: vec![], position: SemioPoint2 { x: 1.0, y: 2.0 } };
-        let wrapped = SemioMutation::Workflow(SemioWorkflowMutation::InsertNode { node: node.clone() });
+    fn mutation_diff_law_flow_insert_node() {
+        let base = flow_base();
+        let node = FlowNode { id: "n1".into(), kind: "task".into(), label: "N1".into(), params: vec![], position: SemioPoint2 { x: 1.0, y: 2.0 } };
+        let wrapped = SemioMutation::Flow(SemioFlowMutation::InsertNode { node: node.clone() });
         let mut applied = base.clone();
         let diff = apply_semio_mutation(&mut applied, &wrapped);
-        assert!(matches!(diff, SemioDiff::Workflow(_)));
+        assert!(matches!(diff, SemioDiff::Flow(_)));
         match &applied.subset {
-            SemioSubsetSnapshot::Workflow(s) => assert_eq!(s.nodes, vec![node]),
-            other => panic!("expected Workflow, got {other:?}"),
+            SemioSubsetSnapshot::Flow(s) => assert_eq!(s.nodes, vec![node]),
+            other => panic!("expected Flow, got {other:?}"),
         }
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base);
         let mut restored = applied;
@@ -411,7 +411,7 @@ mod tests {
     /// degrades to a documented no-op.
     #[test]
     fn kind_mismatch_wrapped_mutation_is_a_safe_no_op() {
-        let base = workflow_base();
+        let base = flow_base();
         let wrapped = SemioMutation::Audio(SemioAudioMutation::SetSampleRate { sample_rate: 1 });
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&wrapped, &base);
         assert_eq!(diff, SemioDiff::NoChange);
@@ -429,7 +429,7 @@ mod tests {
             SemioSubsetSnapshot::Brep(Default::default()),
             SemioSubsetSnapshot::Mesh(Default::default()),
             SemioSubsetSnapshot::Model(Default::default()),
-            SemioSubsetSnapshot::Object(Default::default()),
+            SemioSubsetSnapshot::Value(Default::default()),
             SemioSubsetSnapshot::Document(Default::default()),
             SemioSubsetSnapshot::Cad(Default::default()),
             SemioSubsetSnapshot::Drawing(Default::default()),
@@ -438,14 +438,14 @@ mod tests {
             SemioSubsetSnapshot::Audio(Default::default()),
             SemioSubsetSnapshot::Animation(Default::default()),
             SemioSubsetSnapshot::Presentation(Default::default()),
-            SemioSubsetSnapshot::Workflow(Default::default()),
+            SemioSubsetSnapshot::Flow(Default::default()),
         ];
         let wrap_no_mutation = |s: &SemioSubsetSnapshot| -> SemioMutation {
             match s {
                 SemioSubsetSnapshot::Brep(_) => SemioMutation::Brep(SemioBrepMutation::NoMutation),
                 SemioSubsetSnapshot::Mesh(_) => SemioMutation::Mesh(SemioMeshMutation::NoMutation),
                 SemioSubsetSnapshot::Model(_) => SemioMutation::Model(SemioModelMutation::NoMutation),
-                SemioSubsetSnapshot::Object(_) => SemioMutation::Object(SemioObjectMutation::NoMutation),
+                SemioSubsetSnapshot::Value(_) => SemioMutation::Value(SemioValueMutation::NoMutation),
                 SemioSubsetSnapshot::Document(_) => SemioMutation::Document(SemioDocumentMutation::NoMutation),
                 SemioSubsetSnapshot::Cad(_) => SemioMutation::Cad(SemioCadMutation::NoMutation),
                 SemioSubsetSnapshot::Drawing(_) => SemioMutation::Drawing(SemioDrawingMutation::NoMutation),
@@ -454,7 +454,7 @@ mod tests {
                 SemioSubsetSnapshot::Audio(_) => SemioMutation::Audio(SemioAudioMutation::NoMutation),
                 SemioSubsetSnapshot::Animation(_) => SemioMutation::Animation(SemioAnimationMutation::NoMutation),
                 SemioSubsetSnapshot::Presentation(_) => SemioMutation::Presentation(SemioPresentationMutation::NoMutation),
-                SemioSubsetSnapshot::Workflow(_) => SemioMutation::Workflow(SemioWorkflowMutation::NoMutation),
+                SemioSubsetSnapshot::Flow(_) => SemioMutation::Flow(SemioFlowMutation::NoMutation),
             }
         };
         for subset in bases {
@@ -475,7 +475,7 @@ mod tests {
             SemioMutation::NoMutation,
             SemioMutation::SetSnapshot { snapshot: base.clone() },
             SemioMutation::Audio(SemioAudioMutation::SetSampleRate { sample_rate: 22_050 }),
-            SemioMutation::Workflow(SemioWorkflowMutation::NoMutation),
+            SemioMutation::Flow(SemioFlowMutation::NoMutation),
         ];
         for m in cases {
             let printed = m.print_op();

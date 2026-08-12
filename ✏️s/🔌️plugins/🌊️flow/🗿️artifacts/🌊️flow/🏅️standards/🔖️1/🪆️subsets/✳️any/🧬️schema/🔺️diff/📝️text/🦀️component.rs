@@ -11,7 +11,7 @@ pub use crate::artifacts::flow::schema::diff::*;
 use crate::artifacts::flow::schema::FlowArtifact;
 use crate::artifacts::flow::FlowSnapshot;
 use flow::{SynapseSpec, Widget};
-use protocol::{CollectionMutation, Identified, MutationDiff, Patchable};
+use protocol::{Identified, MutationDiff, Patchable};
 
 //#region 🔹Apply
 /// Applies an identified-collection delta to a widget list.
@@ -254,78 +254,6 @@ impl MutationDiff<FlowSnapshot> for FlowDiff {
 //#endregion 🔹Apply
 
 //#region 🔹Helpers
-/// Builds a widgets delta from a collection mutation against the pre-state list.
-pub fn widgets_delta_from_collection_mutation(
-    base: &[Widget],
-    op: &CollectionMutation<String, Widget, Widget>,
-) -> FlowWidgetsDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => FlowWidgetsDelta {
-            added: vec![item.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Remove { id } => FlowWidgetsDelta {
-            removed: vec![id.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Patch { id, patch } => FlowWidgetsDelta {
-            patched: vec![FlowWidgetPatchEntry {
-                id: id.clone(),
-                patch: patch.clone(),
-            }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|w| w.id().clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            FlowWidgetsDelta {
-                reordered: Some(ids),
-                ..Default::default()
-            }
-        }
-    }
-}
-
-/// Builds a synapses delta from a collection mutation against the pre-state list.
-pub fn synapses_delta_from_collection_mutation(
-    base: &[SynapseSpec],
-    op: &CollectionMutation<String, SynapseSpec, SynapseSpec>,
-) -> FlowSynapsesDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => FlowSynapsesDelta {
-            added: vec![item.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Remove { id } => FlowSynapsesDelta {
-            removed: vec![id.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Patch { id, patch } => FlowSynapsesDelta {
-            patched: vec![FlowSynapsePatchEntry {
-                id: id.clone(),
-                patch: patch.clone(),
-            }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|s| s.id.clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            FlowSynapsesDelta {
-                reordered: Some(ids),
-                ..Default::default()
-            }
-        }
-    }
-}
-
 /// 📄 Whole-snapshot replacement diff.
 pub fn diff_set_snapshot(snapshot: &FlowSnapshot) -> FlowDiff {
     FlowDiff {

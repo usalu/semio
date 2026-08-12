@@ -1,13 +1,13 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio/snapshot.json",
   "title": "SemioSnapshot",
-  "description": "The envelope union over all 13 domain subsets — real mirror of the Rust snapshot. `subset` is a serde-internally-tagged union (tag key `subset`, camelCase tag values) that on the wire flattens the referenced subset's own snapshot fields alongside the tag. JSON Schema's `oneOf` cannot flatten a $ref'd external schema into a sibling-keyed object, so each variant below is a wrapper object carrying the `subset` tag plus a single named field whose value is a cross-file $ref to that subset's own, independently-published snapshot schema (never redeclared here).",
-  "type": "object",
+  "description": "The envelope union over all 13 domain subsets — real mirror of the Rust snapshot. `subset` is a serde-internally-tagged union (tag key `subset`, camelCase tag values) that on the wire flattens the referenced subset's own snapshot fields alongside the tag. JSON Schema's `oneOf` cannot flatten a $ref'd external schema into a sibling-keyed value, so each variant below is a wrapper value carrying the `subset` tag plus a single named field whose value is a cross-file $ref to that subset's own, independently-published snapshot schema (never redeclared here).",
+  "type": "value",
   "definitions": {
     "SemioSubsetSnapshot": {
       "oneOf": [
         {
-          "type": "object",
+          "type": "value",
           "required": ["subset", "brep"],
           "properties": {
             "subset": { "const": "brep" },
@@ -15,7 +15,7 @@
           }
         },
         {
-          "type": "object",
+          "type": "value",
           "required": ["subset", "mesh"],
           "properties": {
             "subset": { "const": "mesh" },
@@ -23,7 +23,7 @@
           }
         },
         {
-          "type": "object",
+          "type": "value",
           "required": ["subset", "model"],
           "properties": {
             "subset": { "const": "model" },
@@ -31,15 +31,15 @@
           }
         },
         {
-          "type": "object",
-          "required": ["subset", "object"],
+          "type": "value",
+          "required": ["subset", "value"],
           "properties": {
-            "subset": { "const": "object" },
-            "object": { "$ref": "https://semio.tech/schema/s.stdio.semio.object/snapshot.json", "description": "SemioObjectSnapshot (object subset's own snapshot schema)" }
+            "subset": { "const": "value" },
+            "value": { "$ref": "https://semio.tech/schema/s.stdio.semio.value/snapshot.json", "description": "SemioValueSnapshot (value subset's own snapshot schema)" }
           }
         },
         {
-          "type": "object",
+          "type": "value",
           "required": ["subset", "document"],
           "properties": {
             "subset": { "const": "document" },
@@ -47,7 +47,7 @@
           }
         },
         {
-          "type": "object",
+          "type": "value",
           "required": ["subset", "cad"],
           "properties": {
             "subset": { "const": "cad" },
@@ -55,7 +55,7 @@
           }
         },
         {
-          "type": "object",
+          "type": "value",
           "required": ["subset", "drawing"],
           "properties": {
             "subset": { "const": "drawing" },
@@ -63,7 +63,7 @@
           }
         },
         {
-          "type": "object",
+          "type": "value",
           "required": ["subset", "image"],
           "properties": {
             "subset": { "const": "image" },
@@ -71,7 +71,7 @@
           }
         },
         {
-          "type": "object",
+          "type": "value",
           "required": ["subset", "video"],
           "properties": {
             "subset": { "const": "video" },
@@ -79,7 +79,7 @@
           }
         },
         {
-          "type": "object",
+          "type": "value",
           "required": ["subset", "audio"],
           "properties": {
             "subset": { "const": "audio" },
@@ -87,7 +87,7 @@
           }
         },
         {
-          "type": "object",
+          "type": "value",
           "required": ["subset", "animation"],
           "properties": {
             "subset": { "const": "animation" },
@@ -95,7 +95,7 @@
           }
         },
         {
-          "type": "object",
+          "type": "value",
           "required": ["subset", "presentation"],
           "properties": {
             "subset": { "const": "presentation" },
@@ -103,11 +103,11 @@
           }
         },
         {
-          "type": "object",
-          "required": ["subset", "workflow"],
+          "type": "value",
+          "required": ["subset", "flow"],
           "properties": {
-            "subset": { "const": "workflow" },
-            "workflow": { "$ref": "https://semio.tech/schema/s.stdio.semio.workflow/snapshot.json", "description": "SemioWorkflowSnapshot (workflow subset's own snapshot schema)" }
+            "subset": { "const": "flow" },
+            "flow": { "$ref": "https://semio.tech/schema/s.stdio.semio.flow/snapshot.json", "description": "SemioFlowSnapshot (flow subset's own snapshot schema)" }
           }
         }
       ]

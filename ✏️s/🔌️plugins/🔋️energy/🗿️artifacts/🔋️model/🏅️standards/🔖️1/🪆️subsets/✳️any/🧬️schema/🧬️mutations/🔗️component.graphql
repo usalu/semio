@@ -1,6 +1,7 @@
-# 🧬️ EnergyModel mutation schema.
+# 🧬️ EnergyModel mutation schema — closed vocabulary, one variant.
 
-type EnergyModelMutation {
-  schema: String!
-  modelJson: String!
+type ReplaceModel {
+  newModelJson: String!
 }
+
+union EnergyModelMutation = ReplaceModel

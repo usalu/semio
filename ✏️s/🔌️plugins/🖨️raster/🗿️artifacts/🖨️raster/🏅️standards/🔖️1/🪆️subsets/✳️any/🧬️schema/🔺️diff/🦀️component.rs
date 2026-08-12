@@ -45,14 +45,36 @@ pub struct RasterStringList {
     pub values: Vec<String>,
 }
 
-/// 🧩 Identified-collection delta for `layers`.
+/// 🧩 Identified-collection delta for `layers` — every entry is tree-aware (`parent_id: None` means
+/// the document root) so `create-layer`/`reorder-layers` never fall back to whole-snapshot capture,
+/// even when the target lives inside a nested `Group`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RasterLayersDelta {
-    pub added: Vec<RasterLayerNode>,
+    pub added: Vec<RasterLayerInsertion>,
     pub removed: Vec<String>,
     pub patched: Vec<RasterLayerPatchEntry>,
-    pub reordered: Option<Vec<String>>,
+    pub moved: Vec<RasterLayerMove>,
+}
+
+/// ➕ One inserted layer (`create-layer`) — carries its own tree address so insertion into a nested
+/// `Group` is expressible sparsely.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RasterLayerInsertion {
+    pub parent_id: Option<String>,
+    pub index: usize,
+    pub layer: RasterLayerNode,
+}
+
+/// 🔀 One repositioned layer (`reorder-layers`) — remove-then-insert at a tree address, never a
+/// flat top-level-only reorder.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RasterLayerMove {
+    pub id: String,
+    pub parent_id: Option<String>,
+    pub index: usize,
 }
 
 /// 🩹 One patched layer entry.

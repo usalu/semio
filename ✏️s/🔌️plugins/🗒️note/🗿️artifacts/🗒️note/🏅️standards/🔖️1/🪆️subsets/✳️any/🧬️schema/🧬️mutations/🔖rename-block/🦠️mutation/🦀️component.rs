@@ -1,0 +1,39 @@
+//! 🔖 Note mutation — `RenameBlock`: sets a block's display name.
+use crate::artifacts::note::NoteDiff;
+use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::artifacts::note::NoteSnapshot;
+use protocol::{MutationKind, SemanticDescriptor};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Mutation
+/// 🔖 `rename-block` payload — sets a block's display name.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "rename-block")]
+pub struct RenameBlock {
+    pub id: String,
+    pub new_name: String,
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub fn rename_block(id: String, new_name: String) -> NoteMutation {
+    NoteMutation::RenameBlock(RenameBlock { id, new_name })
+}
+
+impl MutationKind<NoteSnapshot, NoteMutation> for RenameBlock {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "block", kind: "rename-block", record: "RenamedBlock" };
+
+    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Rename block to \"{}\"", self.new_name)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+//#endregion 🔖️Mutation

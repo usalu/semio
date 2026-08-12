@@ -1,0 +1,38 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.flow/snapshot.json",
+  "title": "SemioFlowSnapshot",
+  "description": "🧬️ Real facet mirror of 🦀️component.rs — id-keyed nodes{kind,label,params,position} + PortRef-addressed edges{from,to,kind}.",
+  "type": "object",
+  "definitions": {
+    "SemioPoint2": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" } }, "required": ["x", "y"] },
+    "PortRef": { "type": "object", "properties": { "node": { "type": "string" }, "port": { "type": "string" } }, "required": ["node", "port"] },
+    "FlowParam": { "type": "object", "properties": { "key": { "type": "string" }, "value": { "type": "string" } }, "required": ["key", "value"] },
+    "FlowNode": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "type": "string" },
+        "label": { "type": "string" },
+        "params": { "type": "array", "items": { "$ref": "#/definitions/FlowParam" } },
+        "position": { "$ref": "#/definitions/SemioPoint2" }
+      },
+      "required": ["id", "kind", "label", "params", "position"]
+    },
+    "FlowEdge": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "from": { "$ref": "#/definitions/PortRef" },
+        "to": { "$ref": "#/definitions/PortRef" },
+        "kind": { "type": "string" }
+      },
+      "required": ["id", "from", "to", "kind"]
+    }
+  },
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "nodes": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/FlowNode" } },
+    "edges": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/FlowEdge" } }
+  },
+  "required": ["schema", "nodes", "edges"]
+}

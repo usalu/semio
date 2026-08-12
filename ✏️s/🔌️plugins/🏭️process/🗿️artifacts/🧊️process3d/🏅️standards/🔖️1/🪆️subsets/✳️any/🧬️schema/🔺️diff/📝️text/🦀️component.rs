@@ -10,7 +10,7 @@ use crate::artifacts::process3d::schema::diff::*;
 
 
 use crate::artifacts::process3d::schema::Process3dArtifact;
-use crate::artifacts::process3d::{ProcessStep, ProcessStepPatch, Process3dSnapshot, Workshop};
+use crate::artifacts::process3d::{ProcessStep, Process3dSnapshot, Workshop};
 use protocol::{CollectionMutation, MutationDiff, Patchable};
 
 //#region 🔖️Apply
@@ -180,30 +180,6 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-/// 🧩 Builds a steps delta from a collection mutation against the pre-state list.
-pub fn steps_delta_from_collection_mutation(
-    base: &[ProcessStep],
-    op: &CollectionMutation<String, ProcessStep, ProcessStepPatch>,
-) -> Process3dStepsDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => Process3dStepsDelta { added: vec![item.clone()], ..Default::default() },
-        CollectionMutation::Remove { id } => Process3dStepsDelta { removed: vec![id.clone()], ..Default::default() },
-        CollectionMutation::Patch { id, patch } => Process3dStepsDelta {
-            patched: vec![Process3dStepPatchEntry { id: id.clone(), patch: patch.clone() }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|s| s.id.clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            Process3dStepsDelta { reordered: Some(ids), ..Default::default() }
-        }
-    }
-}
-
 /// 🏭️ Applies a machines collection mutation onto a workshop clone.
 pub fn workshop_after_machines_mutation(
     workshop: &Workshop,

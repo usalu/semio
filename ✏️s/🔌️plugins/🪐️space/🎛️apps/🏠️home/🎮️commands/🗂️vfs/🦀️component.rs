@@ -4,7 +4,7 @@
 //! `🔖️HomeCommand` region, which `use`s each of these modules flat).
 
 use crate::apps::home::config::{HomeConfig, HomeConfigMutation};
-use crate::artifacts::home::op::SHomeMutation;
+use crate::artifacts::home::op::{change_catalog_generation, SHomeMutation};
 use crate::artifacts::home::SHomeSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
 
@@ -46,7 +46,7 @@ pub mod delete_virtual_file_system_node {
                 let draft_port = crate::apps::home::draft_backbone_port();
                 crate::apps::home::ephemeral_draft_catalog().discard_draft(&draft_port, space_id);
                 let _ = delete_os_space(space_id, crate::apps::home::catalog_port());
-                Ok(Emit::mutations(vec![SHomeMutation::SetCatalogGeneration { value: generation + 1 }]))
+                Ok(Emit::mutations(vec![change_catalog_generation(generation + 1)]))
             }
             None => Ok(Emit::default()),
         }

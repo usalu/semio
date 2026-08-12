@@ -1,0 +1,2 @@
+/** ↩️ `change-h-ef-mm` inverse — its restored mutation has the same payload shape as the forward one. */
+export type ChangeHEfMmInverse = ChangeHEfMm;

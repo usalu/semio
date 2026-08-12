@@ -71,7 +71,7 @@
       "name": "🛠️dev🎛️dashboard",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/⚡️implementations/🦀️rust/📜️script.ts run",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📜️script.ts run",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1923,7 +1923,7 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/⚡️implementations/🐹️go&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📦️packages/🐹️go&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
     },
     {
@@ -1941,7 +1941,7 @@
       "name": "🛠️dev🧰️repo⌨️client",
       "type": "node-terminal",
       "request": "launch",
-      "command": "go build -o 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client ./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/⚡️implementations/🐹️go && ./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client --help",
+      "command": "go build -o 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client ./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📦️packages/🐹️go && ./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client --help",
       "env": {
         "GOWORK": "${workspaceFolder}/go.work"
       },
@@ -3553,7 +3553,7 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "bun ./📜️script.ts build",
-      "cwd": "${workspaceFolder}/🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript",
+      "cwd": "${workspaceFolder}/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
       "presentation": {
         "group": "4_build",
         "order": 210

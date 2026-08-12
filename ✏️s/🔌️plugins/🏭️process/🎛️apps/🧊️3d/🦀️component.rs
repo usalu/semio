@@ -77,7 +77,7 @@ semio_framework_plugin::app_commands! {
     /// verbatim from the pre-migration `Process3dCommand`/`command_id()` match. **Row order is the binary
     /// variant ordinal: appending is safe, reordering is a wire-format break.**
     pub enum Process3dCommand for Process3dSnapshot, Process3dMutation, Process3dConfig, Process3dConfigMutation {
-        "setSnapshot" as "document" => set_snapshot::SetSnapshot,
+        "setSnapshot" as "document" => set_snapshot::SetDocument,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "addStep" as "add-step" => add_step::AddStep,
         "addWorkshopMachine" as "add-workshop-machine" => add_workshop_machine::AddWorkshopMachine,
@@ -190,13 +190,16 @@ impl ArtifactApp for Process3dPlayApp {
         }
     }
 
-    fn whole_document_operation(snapshot: Process3dSnapshot) -> Option<Process3dMutation> {
-        Some(Process3dMutation::SetSnapshot { snapshot })
-    }
+    /// 🌱️ `whole_document_operation` stays the trait default (`None`): per `📓️taxonomy.md`, whole-
+    /// document replace has no in-history mutation at all (there is no import mutation by locked
+    /// decision — every whole-document gesture below routes through `reset_process3d_document_effect`
+    /// instead, a `HostEffect::LoadDocument`).
 
-    /// 📥️ `geometry:in` (best-effort STEP-text import) plus the inherited `document:in` default (base64
-    /// pack via `whole_document_operation`, replicated inline — overriding `import_media` shadows the
-    /// trait's provided body for every port).
+    /// 📥️ `geometry:in` (best-effort STEP-text import) replaces the whole document via a
+    /// `HostEffect::LoadDocument` (whole-document replace has no in-history mutation); the inherited
+    /// `document:in` default (which would decode a base64 pack via `whole_document_operation`) is
+    /// unreachable now that `whole_document_operation` is `None`, so `document:in` is simply
+    /// unimplemented here — overriding `import_media` shadows the trait's provided body for every port.
     fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "geometry:in" => {
@@ -212,19 +215,8 @@ impl ArtifactApp for Process3dPlayApp {
                 use base64::Engine;
                 let data_url = format!("data:application/octet-stream;base64,{}", base64::engine::general_purpose::STANDARD.encode(json.as_bytes()));
                 match crate::artifacts::process3d::engine::import_process3d_model("geometry-in.step", &data_url) {
-                    Some(snapshot) => Ok(Emit::mutations(vec![Process3dMutation::SetSnapshot { snapshot }])),
+                    Some(snapshot) => Ok(Emit { effects: vec![reset_process3d_document_effect(&snapshot)], ..Default::default() }),
                     None => Err(MediaError::Payload("geometry:in".into(), "STEP import failed".into())),
-                }
-            }
-            "document:in" => {
-                let MediaPayload::Structured { json, .. } = &media.payload else {
-                    return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
-                };
-                let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let snapshot = <Process3dSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                match Self::whole_document_operation(snapshot) {
-                    Some(operation) => Ok(Emit::mutations(vec![operation])),
-                    None => Err(MediaError::NotImplemented),
                 }
             }
             _ => Err(MediaError::NotImplemented),

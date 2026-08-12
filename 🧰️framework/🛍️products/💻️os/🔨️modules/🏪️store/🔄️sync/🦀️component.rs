@@ -380,6 +380,12 @@ fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_spr::His
             hlt: Some((envelope.timestamp.actor, envelope.timestamp.physical_ms as i64, envelope.timestamp.logical)),
             undo_policy: 0,
             payload_hash: None,
+            // 🎞️ `crate::os_spr::causal::MutationEnvelope` (this fn's input) carries no group_id —
+            // same precedent as its already-absent `semantic_kind`/`label`/`undo_policy`, see
+            // `command::MutationMeta.group_id`'s doc comment. A remote-ingested edit is therefore
+            // never a recognized composite-gesture member; group undo degrades it to a foreign/
+            // solitary edit, matching how this whole envelope is already `undo_policy: 0`-flattened.
+            group_id: None,
         }]),
     }
 }

@@ -10,6 +10,6 @@ start diff
 # a real tag alternation, then the opaque remainder as REST — re-describing all 13 nested diff
 # grammars (plus the recursive snapshot grammar for `replace`) inline here would duplicate
 # already-real, already-tested files.
-tag = "replace" | "brep" | "mesh" | "model" | "object" | "document" | "cad" | "drawing" | "image" | "video" | "audio" | "animation" | "presentation" | "workflow"
+tag = "replace" | "brep" | "mesh" | "model" | "value" | "document" | "cad" | "drawing" | "image" | "video" | "audio" | "animation" | "presentation" | "flow"
 tagged-diff = tag ":" REST
 diff = "noChange" | tagged-diff

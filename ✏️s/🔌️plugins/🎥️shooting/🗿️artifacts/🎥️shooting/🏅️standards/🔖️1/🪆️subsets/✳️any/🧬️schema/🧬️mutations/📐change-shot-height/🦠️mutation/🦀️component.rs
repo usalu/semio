@@ -1,0 +1,29 @@
+//! 📐 Shooting mutation payload — `ChangeShotHeight`. Sets a shot's render `height`.
+
+use crate::artifacts::shooting::diff::ShootingDiff;
+use crate::artifacts::shooting::mutations::ShootingMutation;
+use crate::artifacts::shooting::ShootingSnapshot;
+use protocol::{MutationKind, SemanticDescriptor};
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ChangeShotHeight {
+    pub id: String,
+    pub new_height: u32,
+}
+
+impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeShotHeight {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "shot-height", kind: "change-shot-height", record: "ChangedShotHeight" };
+    fn diff(&self, base: &ShootingSnapshot) -> ShootingDiff {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Change shot \"{}\" height", self.id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}

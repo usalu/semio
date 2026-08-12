@@ -1,8 +1,8 @@
 //! 🔺️ DAG artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::dag::schema::DagArtifact;
-use crate::artifacts::dag::{DagFixtureEdge, DagNodePatch, DagNodeSpec, DagSnapshot};
-use protocol::{CollectionMutation, MutationDiff, Patchable};
+use crate::artifacts::dag::{DagFixtureEdge, DagNodeSpec, DagSnapshot};
+use protocol::{MutationDiff, Patchable};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -14,9 +14,29 @@ pub use crate::artifacts::dag::schema::diff::*;
 
 //#region 🔖️Apply
 pub fn apply_nodes_delta(items: &[DagNodeSpec], delta: &DagNodesDelta) -> Vec<DagNodeSpec> {
-    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &DagNodePatchEntry| {
+    let mut next = apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &DagNodePatchEntry| {
         (&entry.id, &entry.patch)
-    })
+    });
+    for entry in &delta.extra_patched {
+        if let Some(item) = next.iter_mut().find(|item| item.id == entry.id) {
+            if let Some(new_id) = &entry.patch.new_id {
+                item.id = new_id.clone();
+            }
+            if let Some(icon) = &entry.patch.icon {
+                item.icon = icon.clone();
+            }
+            if let Some(abbreviation) = &entry.patch.abbreviation {
+                item.abbreviation = abbreviation.clone();
+            }
+            if let Some(operator_kind) = &entry.patch.operator_kind {
+                item.operator_kind = operator_kind.clone();
+            }
+            if let Some(properties) = &entry.patch.properties {
+                item.properties = properties.clone();
+            }
+        }
+    }
+    next
 }
 
 pub fn apply_edges_delta(items: &[DagFixtureEdge], delta: &DagEdgesDelta) -> Vec<DagFixtureEdge> {
@@ -72,6 +92,7 @@ fn absorb_nodes_delta(target: &mut Option<DagNodesDelta>, incoming: Option<DagNo
                 dst.added.extend(src.added);
                 dst.removed.extend(src.removed);
                 dst.patched.extend(src.patched);
+                dst.extra_patched.extend(src.extra_patched);
                 if src.reordered.is_some() {
                     dst.reordered = src.reordered;
                 }
@@ -180,78 +201,12 @@ impl MutationDiff<DagSnapshot> for DagDiff {
 }
 //#endregion 🔖️Apply
 
-//#region 🔖️Helpers
-pub fn dag_nodes_delta_from_collection_mutation(
-    base: &[DagNodeSpec],
-    op: &CollectionMutation<String, DagNodeSpec, DagNodePatch>,
-) -> DagNodesDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => DagNodesDelta {
-            added: vec![item.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Remove { id } => DagNodesDelta {
-            removed: vec![id.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Patch { id, patch } => DagNodesDelta {
-            patched: vec![DagNodePatchEntry { id: id.clone(), patch: patch.clone() }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|item| item.id.clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            DagNodesDelta {
-                reordered: Some(ids),
-                ..Default::default()
-            }
-        }
-    }
-}
-
-pub fn dag_edges_delta_from_collection_mutation(
-    base: &[DagFixtureEdge],
-    op: &CollectionMutation<String, DagFixtureEdge, infinite_board_port_directed_dag::DagEdgePatch>,
-) -> DagEdgesDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => DagEdgesDelta {
-            added: vec![item.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Remove { id } => DagEdgesDelta {
-            removed: vec![id.clone()],
-            ..Default::default()
-        },
-        CollectionMutation::Patch { id, patch } => DagEdgesDelta {
-            patched: vec![DagEdgePatchEntry { id: id.clone(), patch: patch.clone() }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|item| item.id.clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            DagEdgesDelta {
-                reordered: Some(ids),
-                ..Default::default()
-            }
-        }
-    }
-}
-//#endregion 🔖️Helpers
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::artifacts::dag::default_snapshot;
-    use crate::artifacts::dag::schema::mutations::DagMutation;
+    use crate::artifacts::dag::schema::mutations::delete_node;
     use protocol::Mutation;
 
     #[test]
@@ -262,11 +217,12 @@ mod tests {
     }
 
     #[test]
-    fn set_nodes_diff_replaces_nodes() {
+    fn delete_node_diff_removes_the_node() {
         let base = default_snapshot();
-        let mutation = DagMutation::SetNodes { nodes: Vec::new() };
+        let id = base.nodes.first().expect("fixture has a node").id.clone();
+        let mutation = delete_node(id.clone());
         let diff = mutation.diff(&base);
-        assert_eq!(diff.apply(&base).nodes.len(), 0);
+        assert!(diff.apply(&base).nodes.iter().all(|node| node.id != id));
     }
 }
 //#endregion 🧪️Tests

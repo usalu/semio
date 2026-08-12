@@ -6,8 +6,8 @@ use crate::artifacts::present::PresentSnapshot;
 
 //#region 🔹Inverse
 /// ↩️ Undo re-creates the tile at its pre-deletion index, captured from `base` — missing target
-/// (already absent) returns `Vec::new()`, the taxonomy's replacement for the banned `NoMutation`
-/// sentinel.
+/// (already absent) returns `Vec::new()` — the taxonomy's rule for a mutation with nothing to
+/// undo, replacing any sentinel no-op variant.
 pub fn inverse(payload: &DeleteTile, base: &PresentSnapshot) -> Vec<PresentMutation> {
     let Some(index) = base.tiles.iter().position(|tile| tile.id == payload.id) else {
         return Vec::new();

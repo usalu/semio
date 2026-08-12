@@ -45,7 +45,7 @@ pub mod import_registers_csv {
         if import_registers_csv(&mut next_program, &payload.csv, strategy).is_err() {
             return Ok(Emit::default());
         }
-        Ok(Emit::mutations(vec![ProgramMutation::SetSnapshot { snapshot: Box::new(next_program) }]))
+        Ok(Emit { effects: vec![crate::apps::architect::reset_document_effect(&next_program)], ..Default::default() })
     }
 }
 
@@ -102,6 +102,6 @@ pub mod import_program {
         };
         let mut next = cfg.snapshot.clone();
         next.selected_ids.clear();
-        Ok(Emit { artifact_mutations: vec![ProgramMutation::SetSnapshot { snapshot: Box::new(next_program) }], config_mutations: snapshot(next), ..Default::default() })
+        Ok(Emit { effects: vec![crate::apps::architect::reset_document_effect(&next_program)], config_mutations: snapshot(next), ..Default::default() })
     }
 }

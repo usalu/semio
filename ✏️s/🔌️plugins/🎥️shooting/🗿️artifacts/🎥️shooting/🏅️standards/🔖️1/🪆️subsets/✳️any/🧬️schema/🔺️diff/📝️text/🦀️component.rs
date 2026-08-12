@@ -274,7 +274,7 @@ impl MutationDiff<ShootingSnapshot> for ShootingDiff {
 
 //#region 🔖️Helpers
 // 🗑️ The pre-migration `*_delta_from_collection_mutation` helpers and `diff_set_snapshot` lived
-// here to serve the generic `CollectionMutation`/`SetSnapshot` dispatch that `../../🧬️mutations`
+// here to serve the generic option-bag-collection/whole-document-replace dispatch that `../../🧬️mutations`
 // deleted outright (banned per `📓️taxonomy.md`'s "Forbidden vocabulary" — whole-document replace
 // has no in-history mutation, see `ArtifactStore::reset`). Every triad leaf under `🧬️mutations/`
 // now builds its `ShootingAssetsDelta`/`ShootingShotsDelta`/`ShootingSavedCamerasDelta` sparsely

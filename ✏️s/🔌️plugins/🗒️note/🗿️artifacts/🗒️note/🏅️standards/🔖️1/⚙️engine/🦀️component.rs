@@ -167,6 +167,12 @@ pub fn block_visible(block: &NoteBlockNode) -> bool {
     }
 }
 
+pub fn block_locked(block: &NoteBlockNode) -> bool {
+    match block {
+        NoteBlockNode::Text { locked, .. } | NoteBlockNode::Image { locked, .. } | NoteBlockNode::Table { locked, .. } | NoteBlockNode::Math { locked, .. } | NoteBlockNode::Ink { locked, .. } | NoteBlockNode::Group { locked, .. } => *locked,
+    }
+}
+
 pub fn block_icon(kind: &str) -> &str {
     match kind {
         "text" => "type",
@@ -193,6 +199,26 @@ pub fn find_block<'a>(blocks: &'a [NoteBlockNode], target_id: &str) -> Option<&'
         }
         if let NoteBlockNode::Group { children, .. } = block {
             if let Some(found) = find_block(children, target_id) {
+                return Some(found);
+            }
+        }
+    }
+    None
+}
+
+/// 🧭️ Locates `target_id`'s parent (`None` = document root) and sibling index — the position a
+/// `delete-block`/`move-block-to-container` mutation's diff/inverse needs to reconstruct or
+/// reparent a node exactly, since `find_block` alone only returns the node's content.
+pub fn find_block_location(blocks: &[NoteBlockNode], target_id: &str) -> Option<(Option<String>, usize)> {
+    if let Some(index) = blocks.iter().position(|block| block_id(block) == target_id) {
+        return Some((None, index));
+    }
+    for block in blocks {
+        if let NoteBlockNode::Group { id, children, .. } = block {
+            if let Some(index) = children.iter().position(|child| block_id(child) == target_id) {
+                return Some((Some(id.clone()), index));
+            }
+            if let Some(found) = find_block_location(children, target_id) {
                 return Some(found);
             }
         }

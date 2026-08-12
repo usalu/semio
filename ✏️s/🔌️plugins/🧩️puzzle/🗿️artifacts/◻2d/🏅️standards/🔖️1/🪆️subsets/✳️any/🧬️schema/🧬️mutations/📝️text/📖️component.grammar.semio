@@ -1,9 +1,54 @@
 dialect grammar
-grammar 2d.mutations
-extension 2d
-start document
+grammar puzzle.puzzle2d.mutations
+extension puzzle2d
+start line
 
-document = header body
-header = "schema" SP "stdio.json" NL
-body = payload NL?
-payload = OCTET+
+line = create-node / delete-node / move-node / replace-node-geometry / change-node-kind
+     / edit-node-text / change-node-icon / scale-node / change-node-visible
+     / change-node-locked / change-node-root / change-node-anchor / add-node-handle
+     / remove-node-handle / replace-node-handle / connect-handles / disconnect-handles
+     / replace-edge-geometry / change-edge-kind / change-edge-tips / change-edge-visible
+     / change-edge-locked / change-manifest-id / connect-kind-compatibility
+     / disconnect-kind-compatibility / replace-kind-catalogs
+
+create-node = "create-node" SP node-block SP index-opt
+delete-node = "delete-node" SP id
+move-node = "move-node" SP id SP number SP number
+replace-node-geometry = "replace-node-geometry" SP id SP text-opt SP number-opt SP number-opt SP number-opt
+change-node-kind = "change-node-kind" SP id SP text-opt
+edit-node-text = "edit-node-text" SP id SP text-opt
+change-node-icon = "change-node-icon" SP id SP text-opt
+scale-node = "scale-node" SP id SP number-opt
+change-node-visible = "change-node-visible" SP id SP boolean-opt
+change-node-locked = "change-node-locked" SP id SP boolean-opt
+change-node-root = "change-node-root" SP id SP boolean-opt
+change-node-anchor = "change-node-anchor" SP id SP anchor
+add-node-handle = "add-node-handle" SP id SP handle-block SP index-opt
+remove-node-handle = "remove-node-handle" SP id SP id
+replace-node-handle = "replace-node-handle" SP id SP id SP handle-block
+connect-handles = "connect-handles" SP id SP id SP id SP edge-fields
+disconnect-handles = "disconnect-handles" SP id
+replace-edge-geometry = "replace-edge-geometry" SP id SP number SP number SP number SP number SP number SP number SP number SP number
+change-edge-kind = "change-edge-kind" SP id SP text-opt
+change-edge-tips = "change-edge-tips" SP id SP text-opt SP text-opt
+change-edge-visible = "change-edge-visible" SP id SP boolean-opt
+change-edge-locked = "change-edge-locked" SP id SP boolean-opt
+change-manifest-id = "change-manifest-id" SP text-opt
+connect-kind-compatibility = "connect-kind-compatibility" SP id SP id SP boolean SP boolean SP specificity
+disconnect-kind-compatibility = "disconnect-kind-compatibility" SP id SP id
+replace-kind-catalogs = "replace-kind-catalogs" SP catalogs-block-opt
+
+node-block = "{" NL OCTET+ "}"
+handle-block = "{" NL OCTET+ "}"
+catalogs-block-opt = ( "{" NL OCTET+ "}" ) / "none"
+edge-fields = text-opt SP number SP number SP number SP number SP number SP number SP number SP number SP text-opt SP text-opt
+anchor = "fixed" / "derived"
+specificity = "general" / "node" / "edge" / "handle" / "wire" / "vortex"
+index-opt = number / "none"
+text-opt = text / "none"
+number-opt = number / "none"
+boolean-opt = boolean / "none"
+id = OCTET+
+number = OCTET+
+text = OCTET+
+boolean = "true" / "false"

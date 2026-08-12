@@ -1,0 +1,92 @@
+# Unified Composable Artifact System over CQRS Event-Sourcing
+
+## Context
+
+The artifact system is ad-hoc: 33 plugins under `✏️s/🔌️plugins/` each define their own content types with massive duplication (9+ mesh types, 4 brep topologies, 3 path-segment vocabularies, 2 LocalizedText, duplicate kind ids `3d.mesh`/`kit.catalog`, emoji ids `data.🏛️program`), identity is spelled 5–6 ways per artifact, registration takes 6 manual channels across 5 hot files, and there is **no first-class composition or reference primitive** — only advisory catalog edges nothing reads, conversion topology (`ComposerEntry::reads`), hand-written embedding (`ZipSnapshot.entries: Vec<u8>`, lowpoly `mesh_json: String`), and 2-hop `io_compose_via`.
+
+Target: every artifact is **composable** (appears as an owned child) or **referenceable** (appears only as a link); shared content kinds are dissolved into the stdio plugin's `🧿️semio` neutral subsets; everything rides the existing CQRS mutation-based event-sourcing stack (envelope → store → vcs → spr → backbone/hub) with version control, history, and collaboration. Greenfield: no compatibility layers, no legacy, regenerate fixtures, handcraft everything.
+
+## User decisions (2026-08-12)
+
+1. **Child = own envelope**: every composed child is its own `ArtifactEnvelope` with its own `ArtifactVcs` history; the parent owns lifecycle and aggregates via typed handles. (Precedent: `VcsArtifactApp::dispatch_emit` already coordinates document/config/draft stores under one `InvocationResult{inverse_group: UndoGroup}`.)
+2. **18-subset roster** approved (renames + new subsets, below).
+3. **Interleave with SEMANTIC-MUTATIONS-OVERHAUL (SMO)**: kernel waves start immediately; stdio/plugin fan-out gated on per-plugin SMO wave-2-report clearance.
+
+## Design
+
+### 1. Kernel primitives (framework, single-writer)
+
+All additions live in existing files/regions:
+
+- `ArtifactRef { artifact_id, dialect }` + URI `"<id>!<kind>@<std>/<subset>"` — new `🔖️ArtifactRef` region after `🔖️Dialect` in [🧰️framework/🔨️modules/🚪️io/🦀️component.rs](🧰️framework/🔨️modules/🚪️io/🦀️component.rs). Kind becomes newtype `ArtifactKindId`, grammar `s.<plugin>.<artifact>` (3 ASCII-kebab segments), the ONLY spelling; `Dialect.artifact_kind`, schema ids, catalog keys, format rows all derive from it.
+- `ArtifactChild<S> { child_id, target: ArtifactRef, PhantomData<S> }` — ownership handle (no pin, no independent lifecycle) vs `ArtifactLink { target, pin: LinkPin{Head|Checkpoint|Snapshot(BlobRef)}, role }` — reference (independent, chip-rendered). `OwnerRef` stamp on the child envelope (`ArtifactEnvelope.owner: Option<OwnerRef>`; `envelope.dialect` becomes required). New `🔖️Composition` region in [🏪️store/🦀️component.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs) plus `ArtifactRefs` (derived child/link extraction), `LinkResolver`/`LinkState`, `ChildStoreFactory`.
+- **`CompositionCoordinator`** — new `🔖️CompositionCoordinator` region after `🔖️Space` in store: atomic composite dispatch across parent + N child stores. Two-phase: validate-all (any failure → nothing dispatched; ownership/cycle checks included), then apply in fixed order (child geneses → child edits → parent ops), compensation via reverse-order `Undo` on late failure (tail edits guaranteed under held `&mut`). `SpaceMember` gains object-safe `validate_wire`/`dispatch_wire`/`tail_group_id` (blanket over `ArtifactStore::dispatch_binary`).
+- **Grouping**: `MutationMeta.group_id: Option<InvocationId>` (additive, `📡️spr/🎮️command/🦀️component.rs` `🔖️Meta` — survives `.spr` + sync); `UndoGroup.member_edits: Vec<EditRef{document, edit_id}>` (additive, [🎠️kernel/🦀️component.rs:446](🧰️framework/🔨️modules/🎠️kernel/🦀️component.rs) + TS mirror). Group undo: parent first then children, per-member `UndoWithPolicy`, **best-effort + `GroupUndoReport`** (skipped members surfaced as diagnostics, never abort-all — generalizes the existing benign `NothingToUndo`/`ForeignEdit` collapse). Per-envelope cursors/`tail_undo_cache`/redo untouched. Diffs NEVER cross envelopes — no `ChildDiff`, no `#[derive(Mutations)]` child arm; parent artifacts only need small handle-management triads (`create-*`/`delete-*`/`extract-*`/`adopt-*`/`bind-link`/`unbind-link`/`update-link-pin`, all approved verbs). Child edits enter via `Emit.child_emits: Vec<ChildEmit>` (typed ops captured with the child's own `SemanticMutation` labels/semantics before OpBinary encoding); `VcsArtifactApp` gains a `children` member map + factory wiring; command-log rows gain `child_edit_ids`.
+- **Checkpoints**: `Checkpoint.composition_pins: Vec<CompositionPin{child_ref, checkpoint_id}>` in `🌿️vcs` `🔖️Schemas`; commit cascades leaves-first over dirty children; pin list enters `content_addressed_checkpoint_id` (peers converge); checkout cascades with a pending-pin queue for not-yet-synced children (never blocks). Alternatives cascade purely via checkpoints. New `VcsError::{CompositionCycle, OwnershipViolation}`.
+- **Sync**: children are ordinary docs — `SpaceHost` auto-registers owned children (derived backbone URI, recursive) when the parent attaches; no hub protocol change. Ordering by graceful degradation: parent handle before child doc → "pending child" (dangling-link-family diagnostic + chip) until the child syncs; locally the coordinator's apply order guarantees consistency; `MutationMeta.dependencies` records cross-doc causality for audit only (no cross-doc MutationDag).
+- **Lifecycle**: create = composite gesture with `ChildGenesis{slot, dialect, initial_pack}`, child envelope id content-addressed from `parent_id ++ slot ++ parent_edit_fingerprint ++ ordinal` (replicas converge); delete = cascade with pack escrowed as `Snapshot(BlobRef)` in the inverse payload (undo revives even after GC), recursive leaves-first; extract (child→standalone: handle→link + clear owner) and adopt (inverse; validate rejects double-owner/forest violation). `CompositionGraph{Owns: forest, Links: acyclic}` replaces `LinkGraph`, rebuilt diff-driven by SpaceHost; deletes `catalog.json` advisory `stdio_dag_edges`.
+- **Codecs/facets**: `Shape::Child` (one-line handle literal) + `Shape::LinkRef` in `🗣️dsl/🧬️schema` `🔖️Shape`; `DslRecord`/`DslArtifact` derive recognizes `ArtifactChild<T>`/`Vec<ArtifactChild<T>>`/`ArtifactLink`/`Vec<ArtifactLink>` (the `Mutations` derive is untouched). `ChildSlotSpec`/`LinkSlotSpec`/`ArtifactCompositionFields` + `#[child(kind = "s.stdio.mesh")]` in `🧬️schema` (+derive); one shared JSON-Schema/proto/TS link leaf referenced by all facets (never re-declared).
+- **io derivation**: `ArtifactChildren { slots, compose_from_children, decompose_to_children }` + `DerivedArtifactSpec::Children` in `🔌️plugin` `🧬️DerivedArtifactFacets`; derived composer includes slot dialects in `reads()`, operating on resolver-supplied child packs; registers into the same `IO_REGISTRY`. Cross-plugin children MUST be stdio snapshot types (all plugins already link stdio); anything else is a link. One new WIT host import `resolve-artifact-link`; `io_compose_via` 2-hop cap unchanged.
+
+### 2. stdio target vocabulary (18 subsets + any)
+
+`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/`:
+
+| Subset | Change | Composes (child slots) |
+|---|---|---|
+| value | rename of `object` (value tree, json/xml) | — |
+| table | NEW (csv/tsv/xlsx) | — |
+| text | NEW (lang-tagged runs; absorbs LocalizedText; txt/md) | — |
+| image, audio, brep, graph(NEW: wires/dag/trinity neutral) | leaves | — |
+| mesh | textures → image children; Points topology = pointclouds | image |
+| video | mp4/avi | image, audio |
+| animation | keep | (refs only) |
+| drawing | keep (surviving PathSegment vocabulary) | text, image |
+| document | blocks only | text, image, table, drawing, video, audio |
+| presentation | keep | text, image, table, drawing, video, audio, document |
+| object | NEW spatial thing: transform + geometry + psets | brep, mesh, value |
+| model | spatial tree + relations | object, value |
+| cad | engineering assembly | model, drawing |
+| flow | rename of `workflow` | graph, value |
+| kit | NEW types/designs (absorbs kit.catalog, MediaForm Type/Design/Kit) | object, model, value |
+| any | 18-arm tagged union | — |
+
+DAG declared once in Rust (semio `⚙️engine`), enforced by `SubsetValidator` for Composes edges (References unrestricted); acyclic by layering. NOT added: sequence/imperative/pointcloud/geo. Per-subset `ChildStoreFactory` registrations.
+
+### 3. Media & registration consolidation
+
+- `MediaType(SubsetKind)` replaces `MediaClass×MediaForm`; `MediaClass` becomes a derived UI-grouping fn; `MEDIA_FORM_CONVERSIONS` → `SUBSET_CONVERSIONS` derived from composer topology. DELETE `OsMediaCapability` and `ArtifactKindSpec` entirely — `AppIo`/`ArtifactPresentation` wins, reduced to `{id: ArtifactKindId, name}` + slots read from the schema registry. ([🛂️manifest/🦀️component.rs](🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs))
+- `declare_artifact!` macro (extends the just-landed `derive_artifact_facets!` at `🔌️plugin/🦀️component.rs:9665`): one `ArtifactDescriptor` const (id/standard/subsets/spec/schema/media/format-row) expands to facets + `DIALECT` + a single `register()` covering all 6 channels (engine, io_registry, schema descriptor, 5 dsl languages, store codec, format row). Plugin root becomes `plugin! { id, artifacts: [DESCRIPTORS] }`. `📇️catalog.json` becomes generated + CI-diffed (counts computed, never typed). Only `📦️glue.rs` and TS `📦️index.ts` remain hand-touched per artifact.
+
+### 4. Per-plugin migration map (33 plugins)
+
+Full table in the design input (agent B). Summary — C=composes, R=references, kills:
+
+cad→C:cad chain (kills Cad* topology) | process→C:flow,brep (kills SolidSpec) | procedural→C:flow+drawing/mesh+brep | flow→C:flow (canonical editor) | lowpoly→C:object w/ mesh+image children (kills mesh_json) | remodel→C:mesh R:image | gis→terrain C:mesh, map C:drawing+image+value (kills `3d.mesh` dup) | fem→ONE fem-core parameterized by dimension, C:mesh,table R:brep,drawing (kills 11-type dup + 4 mesh types) | norm 15 artifacts→C:document,table,value R:fem (kills LocalizedText×2) | reasoning/dag→C:graph | trinity→C:graph (jack; rewrite = 2 graph children) | puzzle/block/sourcing→C:kit (kills kit.catalog dup, fixes app-owned ids) | layout→C:drawing R:model | draw→C:drawing R:image | raster→C:image layers R:drawing | shooting→C:video,image,audio,table | note→C:text R:any | animate→C:presentation,animation | writer→C:document | playbook→C:document,flow | forms→C:value,table | architect→C:table,graph R:model (id `s.architect.program`) | energy→C:value,table R:model | sequence→C:flow | imperative→C:text,flow | mathematical→C:text,table,value (id `a` dies) | vcs→R:any | space→C:model | demonstrator→R only (6 plugins).
+
+Type survivors: persisted = SemioMesh/SemioBrep/stdio-drawing paths/text runs; engine (behind traits, never serialized) = framework MeshData+HalfedgeMesh, brep topology kernel, DrawingScene; docx/xlsx/pptx compose the zip artifact (`ZipSnapshot.entries` → typed children); GltfMesh/BrepMesh demoted codec-internal.
+
+## Execution — waves for a parallel agent workforce
+
+Master ticket via `mcp__repo__ticket_open` (goal: Running Sketchpad / r26-02): `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`. Ticket layout: `📌️important.md` (hot-file ownership table, binding for every agent), `📓️status.md` (orchestrator single-writer), `📓️design-composition.md` + `📓️design-stdio-subsets.md` + `📓️orchestration.md` (the three design inputs, written into the ticket at W0), `📓️migration-recipe.md` (distilled after exemplars), `📓️waveN-reports/<plugin>-report.md`, `🔧️patches/<P>-glue-patch.txt`, `scratch-*.txt` (never .log — repo-gitignored), `🎯️target/` shared CARGO_TARGET_DIR (cargo flock serializes; "Blocking waiting for file lock" is normal).
+
+**Hot-file ownership**: framework kernel files (`🔌️plugin`, `🚪️io`, `🧬️schema`, `🛂️manifest`, `📡️spr`, `🏪️store`, `🌿️vcs`, `🎠️kernel`) → W1/W2.5 mechanism agent only; stdio subtree + its glue + catalog → W2 stdio agent then W5 serializer; repo-root `📜️script.ts` + taxonomy + repo-lib TS → W6 ratchet agent only; each plugin subtree (minus its glue.rs) → exactly one fan-out agent; all other hot-file needs → patch file + `## sharedFileRequests` report section, applied only by W5 serializer.
+
+- **W0 recon** (1 agent): open ticket, write important/status/design docs, compute SMO clearance map from `SEMANTIC-MUTATIONS-OVERHAUL/📓️wave2-reports/` (a plugin is clear only when ALL its artifacts are reported), record baselines (`cargo check -p semio-framework-os-kernel`, `bun ./📜️script.ts policy` breach counts).
+- **W1 kernel primitives + W2.5 coordinator** (1 writer + 1 adversarial reviewer, serial): §1 above — ArtifactRef/ArtifactKindId, Composition + CompositionCoordinator regions, group_id/UndoGroup.member_edits, checkpoint pins, Shape arms, schema composition spec, ArtifactChildren, declare_artifact!/plugin! macros, WIT import, testkit laws (below). Must NOT overlap SMO wave-4 ratchet (same 9.7k-line `🔌️plugin/🦀️component.rs` — claim via status.md). Exit: kernel + `semio-framework-plugin` green, stdio/draw sanity no worse than baseline.
+- **W2 stdio** (1 writer + 1 reviewer, serial): 18-subset roster (renames workflow→flow, object→value; new text/table/object/graph/kit; rework mesh/video/document/model/cad/any), SemioRef retrofit of GeometryRef/SemioValue::Ref, DAG table in engine, migrate stdio's 37 artifacts to `declare_artifact!`, canonical ids, regenerate catalog + fixtures, ChildStoreFactories. Gate: stdio SMO-clear. Exit: `bun nx run @semio-tech/stdio-plugin:test-quick` then `SEMIO_TEST_LEVEL=long …:test-long` green (~1,972 tests).
+- **W3 exemplars** (3 parallel migrate+review pairs): lowpoly (opaque-mesh worst case), cad (consumer chain), writer or draw (text/2d family). Exemplars may edit their own glue.rs (validates whether W4 agents can). Exit: per-plugin `cargo check -p semio-s-plugin-<P> --tests` + plugin test target green; orchestrator distills `📓️migration-recipe.md`.
+- **W4 mass fan-out** (~29 plugins, width 7, one agent per plugin): batches A (remodel, process, fem, gis) → B (flow, sequence, imperative, mathematical, dag, reasoning, trinity, norm) → C (raster, shooting, note, animate, playbook, forms, layout) → D (puzzle, block, sourcing, architect, energy, vcs, space, demonstrator LAST — aggregates 6). Dispatch only SMO-clear plugins; swap in clear ones otherwise. Launched as background Workflow runs with the prompt template from the orchestration design (boundary = own plugin minus glue/index; patches to `🔧️patches/`; transient-failure protocol: git status/stat out-of-boundary failing file, retry 3×60s, report `blocked-mechanism` with proof of zero in-boundary errors; never bare `cargo check`; never close the shared ticket).
+- **W5 serializer** (1 agent): apply all patches + sharedFileRequests (glue.rs trees, generated catalog, manifest rows, TS index), sweep all 33 plugin crates green.
+- **W6 ratchet** (1 agent): `📜️script.ts` policies — `policyChildSlotKindDagBreaches`, `policyCanonicalArtifactKindBreaches` (bans emoji/legacy id grammars), dissolved-kind redefinition ban (seeded allowlist, burn down), semio-hub io-leaf routing policy; taxonomy.json shapes; delete dead legacy (OsMediaCapability, ArtifactKindSpec, MeshExporter/Importer, advisory catalog edges); repo-lib TS tests. Exit: 0 new high-priority breaches; `verify gate` no worse than W0 baseline.
+- **W7 verify + close** (integration runner + report auditor): stdio test-long, repo-lib test-quick (diff vs ~19 pre-existing failures), space-plugin canary, composition law tests workspace-wide, final policy/gate; auditor cross-reads all reports for unresolved requests; `ticket_close` with explicit ticket path + all files (trackable paths only).
+
+~50 agent dispatches; W1–W3 sequential critical path, W4 is the parallel payoff.
+
+**SMO coordination (binding rules)**: plugin-level mutual exclusion via wave2-report oracle; never touch an uncleared plugin's `🧬️mutations/**`; stdio claim line in both tickets' status docs; the one forbidden overlap is two writers in `🔌️plugin/🦀️component.rs` (our W1 vs SMO wave-4) — whoever starts first wins, the other waits; semantic triads only (SetSnapshot/NoMutation/CollectionMutation banned); a red workspace is not a red plugin — always scope `-p`.
+
+## Verification
+
+- Kernel laws (new, `📡️spr/🧪️testkit` `🔖️Laws`): `assert_group_apply_atomicity`, `assert_group_rollback_on_late_failure`, `assert_group_undo_round_trip`, `assert_group_undo_degrades_on_foreign_child`, `assert_checkpoint_pins_deterministic`, `assert_child_genesis_id_deterministic`, `assert_checkout_cascade` (+pending-pin), link-pin round-trip, CompositionGraph forest/acyclicity property tests, `assert_op_dag_convergence` with group_id-stamped envelopes.
+- Existing suites: ArtifactDsl fixpoint + ArtifactPack round-trip auto-cover new Shape arms once fixtures regenerate; stdio semio conformance extended to 18 arms + child-bearing demos; derived child-slot composer round-trip in `🚪️io` tests.
+- Commands: per-plugin `CARGO_TARGET_DIR=<ticket>/🎯️target cargo check -p semio-s-plugin-<P> --tests` + `bun nx run @semio-tech/<P>-plugin:test-quick`; kernel `cargo check/test -p semio-framework-os-kernel --lib`; stdio quick (15s budget) / long gates; `bun ./📜️script.ts policy` + `verify gate` diffed against W0 baseline.

@@ -2,6 +2,6 @@
    descriptive mirror of the authoritative `📖️component.grammar.semio` (same production names). *)
 op = 'noMutation' | tagged op ;
 tagged op = tag, ':', rest of line ;
-tag = 'setSnapshot' | 'brep' | 'mesh' | 'model' | 'object' | 'document' | 'cad' | 'drawing' | 'image' | 'video' | 'audio' | 'animation' | 'presentation' | 'workflow' ;
+tag = 'setSnapshot' | 'brep' | 'mesh' | 'model' | 'value' | 'document' | 'cad' | 'drawing' | 'image' | 'video' | 'audio' | 'animation' | 'presentation' | 'flow' ;
 
 rest of line = { ? any character up to end of document ? } ;

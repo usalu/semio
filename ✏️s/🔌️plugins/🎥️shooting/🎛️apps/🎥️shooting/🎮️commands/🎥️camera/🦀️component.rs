@@ -7,7 +7,8 @@
 use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::{ShootingCamera, ShootingSnapshot, ShootingSavedCamera};
-use protocol::CollectionMutation;
+use crate::artifacts::shooting::mutations::replace_shot_camera::mutation::ReplaceShotCamera;
+use crate::artifacts::shooting::mutations::create_saved_camera::mutation::CreateSavedCamera;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -27,7 +28,7 @@ pub mod set_shot_camera {
     }
 
     pub fn handle(payload: &SetShotCamera, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![ShootingMutation::SetShotCamera { shot_id: payload.shot_id.clone(), camera: payload.camera.clone() }]))
+        Ok(Emit::mutations(vec![ShootingMutation::ReplaceShotCamera(ReplaceShotCamera { shot_id: payload.shot_id.clone(), new_camera: payload.camera.clone() })]))
     }
 }
 //#endregion 🔖️SetShotCamera
@@ -48,7 +49,7 @@ pub mod save_camera {
         let label = if draft.is_empty() { format!("Camera {}", snapshot.saved_cameras.len() + 1) } else { draft };
         let saved_camera = ShootingSavedCamera { id: next_shooting_id("camera"), label, camera: config.camera.clone() };
         Ok(Emit {
-            artifact_mutations: vec![ShootingMutation::SavedCameras(CollectionMutation::Add { index: snapshot.saved_cameras.len(), item: saved_camera })],
+            artifact_mutations: vec![ShootingMutation::CreateSavedCamera(CreateSavedCamera { saved_camera, index: Some(snapshot.saved_cameras.len()) })],
             config_mutations: vec![ShootingConfigMutation::SetCameraDraftLabel { value: String::new() }],
             ..Default::default()
         })

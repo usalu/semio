@@ -4,7 +4,7 @@
 //! `🔖️HomeCommand` region, which `use`s each of these modules flat).
 
 use crate::apps::home::config::{HomeConfig, HomeConfigMutation};
-use crate::artifacts::home::op::SHomeMutation;
+use crate::artifacts::home::op::{change_catalog_generation, SHomeMutation};
 use crate::artifacts::home::SHomeSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
 
@@ -36,7 +36,7 @@ pub mod create_studio {
     /// @emoji 🧭️ Builds the typed emit for a freshly-created studio: bump the catalog counter (operation)
     /// and navigate the shell to the new studio route (host effect).
     fn created_studio_emit(catalog_generation: u64, space_id: &str) -> Emit<SHomeMutation, HomeConfigMutation> {
-        Emit { artifact_mutations: vec![SHomeMutation::SetCatalogGeneration { value: catalog_generation + 1 }], effects: vec![HostEffect::Navigate { uri: format!("/spaces/{space_id}") }], ..Default::default() }
+        Emit { artifact_mutations: vec![change_catalog_generation(catalog_generation + 1)], effects: vec![HostEffect::Navigate { uri: format!("/spaces/{space_id}") }], ..Default::default() }
     }
 
     pub fn handle(payload: &CreateStudio, doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
@@ -131,7 +131,7 @@ pub mod import_space {
         match &payload.dsl {
             Some(dsl) => {
                 if import_os_space_from_dsl(dsl, crate::apps::home::catalog_port()).is_ok() {
-                    Ok(Emit::mutations(vec![SHomeMutation::SetCatalogGeneration { value: generation + 1 }]))
+                    Ok(Emit::mutations(vec![change_catalog_generation(generation + 1)]))
                 } else {
                     Ok(Emit::default())
                 }

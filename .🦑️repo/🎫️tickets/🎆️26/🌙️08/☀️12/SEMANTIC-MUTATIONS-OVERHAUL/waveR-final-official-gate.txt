@@ -1,0 +1,96 @@
+=== semio-s-plugin-writer ===
+error: functions tagged with `#[proc_macro_derive]` must currently reside in the root of the crate
+   --> 🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/📦️glue.rs:309:1
+    |
+309 | pub fn derive_artifact_schema(input: TokenStream) -> TokenStream {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: there exists a built-in attribute with the same name
+--
+error: could not compile `semio-framework-schema-derive` (lib) due to 1 previous error; 1 warning emitted
+warning: build failed, waiting for other jobs to finish...
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate semio_framework_os_kernel as pack;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+--
+error[E0063]: missing field `member_edits` in initializer of `UndoGroup`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5415:94
+     |
+5415 | ...   InvocationResult { output: DslValue::Null, mutations: Vec::new(), inverse_group: UndoGroup { invocation_id, mutations: Vec::...
+     |                                                                                        ^^^^^^^^^ missing `member_edits`
+
+error[E0063]: missing field `member_edits` in initializer of `UndoGroup`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5476:82
+     |
+5476 | ...   InvocationResult { output: DslValue::Null, mutations, inverse_group: UndoGroup { invocation_id, mutations: mutation_ids, inv...
+     |                                                                            ^^^^^^^^^ missing `member_edits`
+
+warning: unnecessary `unsafe` block
+--
+error: could not compile `semio-framework-plugin` (lib) due to 2 previous errors; 36 warnings emitted
+
+=== semio-s-plugin-vcs ===
+error: functions tagged with `#[proc_macro_derive]` must currently reside in the root of the crate
+   --> 🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/📦️glue.rs:309:1
+    |
+309 | pub fn derive_artifact_schema(input: TokenStream) -> TokenStream {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: there exists a built-in attribute with the same name
+--
+error: could not compile `semio-framework-schema-derive` (lib) due to 1 previous error; 1 warning emitted
+warning: build failed, waiting for other jobs to finish...
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate semio_framework_os_kernel as pack;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+--
+error[E0063]: missing field `member_edits` in initializer of `UndoGroup`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5415:94
+     |
+5415 | ...   InvocationResult { output: DslValue::Null, mutations: Vec::new(), inverse_group: UndoGroup { invocation_id, mutations: Vec::...
+     |                                                                                        ^^^^^^^^^ missing `member_edits`
+
+error[E0063]: missing field `member_edits` in initializer of `UndoGroup`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5476:82
+     |
+5476 | ...   InvocationResult { output: DslValue::Null, mutations, inverse_group: UndoGroup { invocation_id, mutations: mutation_ids, inv...
+     |                                                                            ^^^^^^^^^ missing `member_edits`
+
+warning: unnecessary `unsafe` block
+--
+error: could not compile `semio-framework-plugin` (lib) due to 2 previous errors; 36 warnings emitted
+
+=== semio-s-plugin-flow ===
+error: functions tagged with `#[proc_macro_derive]` must currently reside in the root of the crate
+   --> 🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/📦️glue.rs:309:1
+    |
+309 | pub fn derive_artifact_schema(input: TokenStream) -> TokenStream {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: there exists a built-in attribute with the same name
+--
+error: could not compile `semio-framework-schema-derive` (lib) due to 1 previous error; 1 warning emitted
+warning: build failed, waiting for other jobs to finish...
+warning: `semio-framework-compiler` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-compiler` to apply 1 suggestion)
+
+=== semio-s-plugin-sequence ===
+error: functions tagged with `#[proc_macro_derive]` must currently reside in the root of the crate
+   --> 🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/📦️glue.rs:309:1
+    |
+309 | pub fn derive_artifact_schema(input: TokenStream) -> TokenStream {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: there exists a built-in attribute with the same name
+--
+error: could not compile `semio-framework-schema-derive` (lib) due to 1 previous error; 1 warning emitted
+warning: build failed, waiting for other jobs to finish...
+warning: unused import: `Level`
+ --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:5:38
+  |
+5 | use crate::wgpu::theme::{GlassStyle, Level, Rgba, Theme};
+  |                                      ^^^^^
+

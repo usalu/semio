@@ -1,3 +1,141 @@
 syntax = "proto3";
-package semio.stdio_json.mutations_text;
-message Artifact { string schema = 1; bytes payload = 2; }
+package semio.layout_layout.mutations;
+
+message RenameLayout {
+  string new_name = 1;
+}
+message ChangePrintTarget {
+  string new_print_target = 1;
+}
+message ChangeDataFields {
+  string new_json = 1;
+}
+message CreatePage {
+  bytes page = 1;
+  uint32 index = 2;
+}
+message DeletePage {
+  string id = 1;
+}
+message RenamePage {
+  string id = 1;
+  string new_name = 2;
+}
+message ChangePageWidth {
+  string id = 1;
+  double new_width = 2;
+}
+message ChangePageHeight {
+  string id = 1;
+  double new_height = 2;
+}
+message UpdatePageMargins {
+  string id = 1;
+  double top = 2;
+  double right = 3;
+  double bottom = 4;
+  double left = 5;
+}
+message UpdatePageColumns {
+  string id = 1;
+  uint32 count = 2;
+  double gutter = 3;
+}
+message ReorderPages {
+  string id = 1;
+  uint32 to_index = 2;
+}
+message CreateStory {
+  bytes story = 1;
+  uint32 index = 2;
+}
+message DeleteStory {
+  string id = 1;
+}
+message EditStory {
+  string id = 1;
+  string new_content = 2;
+}
+message CreateLink {
+  bytes link = 1;
+  uint32 index = 2;
+}
+message DeleteLink {
+  string id = 1;
+}
+message ChangeLinkPath {
+  string id = 1;
+  string new_path = 2;
+}
+message CreateFrame {
+  string page_id = 1;
+  bytes frame = 2;
+  uint32 index = 3;
+  string layer_id = 4;
+}
+message DeleteFrame {
+  string page_id = 1;
+  string frame_id = 2;
+}
+message MoveFrame {
+  string page_id = 1;
+  string frame_id = 2;
+  double new_x = 3;
+  double new_y = 4;
+}
+message ResizeFrame {
+  string page_id = 1;
+  string frame_id = 2;
+  double new_width = 3;
+  double new_height = 4;
+}
+message ChangeFrameFill {
+  string page_id = 1;
+  string frame_id = 2;
+  bytes new_fill = 3;
+}
+message ChangeFrameStroke {
+  string page_id = 1;
+  string frame_id = 2;
+  bytes new_stroke = 3;
+}
+message ChangeFrameWrapMode {
+  string page_id = 1;
+  string frame_id = 2;
+  string new_wrap_mode = 3;
+}
+message ChangeFrameColumns {
+  string page_id = 1;
+  string frame_id = 2;
+  uint32 new_columns = 3;
+}
+
+message LayoutMutation {
+  oneof kind {
+    RenameLayout rename_layout = 1;
+    ChangePrintTarget change_print_target = 2;
+    ChangeDataFields change_data_fields = 3;
+    CreatePage create_page = 4;
+    DeletePage delete_page = 5;
+    RenamePage rename_page = 6;
+    ChangePageWidth change_page_width = 7;
+    ChangePageHeight change_page_height = 8;
+    UpdatePageMargins update_page_margins = 9;
+    UpdatePageColumns update_page_columns = 10;
+    ReorderPages reorder_pages = 11;
+    CreateStory create_story = 12;
+    DeleteStory delete_story = 13;
+    EditStory edit_story = 14;
+    CreateLink create_link = 15;
+    DeleteLink delete_link = 16;
+    ChangeLinkPath change_link_path = 17;
+    CreateFrame create_frame = 18;
+    DeleteFrame delete_frame = 19;
+    MoveFrame move_frame = 20;
+    ResizeFrame resize_frame = 21;
+    ChangeFrameFill change_frame_fill = 22;
+    ChangeFrameStroke change_frame_stroke = 23;
+    ChangeFrameWrapMode change_frame_wrap_mode = 24;
+    ChangeFrameColumns change_frame_columns = 25;
+  }
+}

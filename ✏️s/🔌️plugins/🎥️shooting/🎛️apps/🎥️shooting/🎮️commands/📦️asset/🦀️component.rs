@@ -3,17 +3,21 @@
 use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::artifacts::shooting::engine::next_shooting_id;
 use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::{ShootingAsset, ShootingAssetPatch, ShootingSnapshot};
-use protocol::CollectionMutation;
+use crate::artifacts::shooting::{ShootingAsset, ShootingSnapshot};
+use crate::artifacts::shooting::mutations::change_asset_url::mutation::ChangeAssetUrl;
+use crate::artifacts::shooting::mutations::create_asset::mutation::CreateAsset;
+use crate::artifacts::shooting::mutations::rename_asset::mutation::RenameAsset;
+use crate::artifacts::shooting::mutations::set_active_asset::mutation::SetActiveAsset as SetActiveAssetMutation;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-/// 🩹️ Builds the `ShootingAssetPatch` for a `patchAsset`/`patchAssets` field write.
-fn asset_patch_for_field(field: &str, value: &Value) -> Option<ShootingAssetPatch> {
+/// 🩹️ Builds the single-field `ShootingMutation` for a `patchAsset`/`patchAssets` field write,
+/// addressed at `id`.
+fn asset_mutation_for_field(id: String, field: &str, value: &Value) -> Option<ShootingMutation> {
     match field {
-        "name" => value.as_str().map(|v| ShootingAssetPatch { name: Some(v.into()), ..Default::default() }),
-        "url" => value.as_str().map(|v| ShootingAssetPatch { url: Some(v.into()), ..Default::default() }),
+        "name" => value.as_str().map(|v| ShootingMutation::RenameAsset(RenameAsset { id, new_name: v.into() })),
+        "url" => value.as_str().map(|v| ShootingMutation::ChangeAssetUrl(ChangeAssetUrl { id, new_url: v.into() })),
         _ => None,
     }
 }
@@ -30,7 +34,7 @@ pub mod set_active_asset {
 
     pub fn handle(payload: &SetActiveAsset, _doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match payload.asset_id.as_deref().filter(|id| !id.is_empty()) {
-            Some(id) => Ok(Emit { artifact_mutations: vec![ShootingMutation::SetActiveAsset { asset_id: Some(id.into()) }], config_mutations: vec![ShootingConfigMutation::SetFitRevision { value: cfg.snapshot.fit_revision + 1 }], ..Default::default() }),
+            Some(id) => Ok(Emit { artifact_mutations: vec![ShootingMutation::SetActiveAsset(SetActiveAssetMutation { asset_id: Some(id.into()) })], config_mutations: vec![ShootingConfigMutation::SetFitRevision { value: cfg.snapshot.fit_revision + 1 }], ..Default::default() }),
             None => Ok(Emit::default()),
         }
     }
@@ -50,10 +54,12 @@ pub mod patch_assets {
     }
 
     pub fn handle(payload: &PatchAssets, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        match asset_patch_for_field(&payload.field, &json!(payload.value)) {
-            Some(patch) if !payload.asset_ids.is_empty() => Ok(Emit::mutations(payload.asset_ids.iter().cloned().map(|id| ShootingMutation::Assets(CollectionMutation::Patch { id, patch: patch.clone() })).collect())),
-            _ => Ok(Emit::default()),
+        if payload.asset_ids.is_empty() {
+            return Ok(Emit::default());
         }
+        let value = json!(payload.value);
+        let mutations: Vec<ShootingMutation> = payload.asset_ids.iter().cloned().filter_map(|id| asset_mutation_for_field(id, &payload.field, &value)).collect();
+        if mutations.is_empty() { Ok(Emit::default()) } else { Ok(Emit::mutations(mutations)) }
     }
 }
 //#endregion 🔖️PatchAssets
@@ -74,7 +80,7 @@ pub mod add_asset {
         let format = &payload.format;
         let asset = ShootingAsset { id: id.clone(), name: format!("Asset {}", snapshot.assets.len() + 1), url: format!("/mesh/placeholder.{format}"), format: format.clone(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
         Ok(Emit {
-            artifact_mutations: vec![ShootingMutation::Assets(CollectionMutation::Add { index: snapshot.assets.len(), item: asset }), ShootingMutation::SetActiveAsset { asset_id: Some(id.clone()) }],
+            artifact_mutations: vec![ShootingMutation::CreateAsset(CreateAsset { asset, index: Some(snapshot.assets.len()) }), ShootingMutation::SetActiveAsset(SetActiveAssetMutation { asset_id: Some(id.clone()) })],
             config_mutations: vec![ShootingConfigMutation::SetSelection { shot_ids: Vec::new(), asset_ids: vec![id] }],
             ..Default::default()
         })
@@ -99,7 +105,7 @@ pub mod import_asset {
         let resolved_name = payload.name.as_deref().map(|name| name.trim_end_matches(".glb").to_string()).filter(|name| !name.is_empty()).unwrap_or_else(|| format!("Asset {}", snapshot.assets.len() + 1));
         let asset = ShootingAsset { id: id.clone(), name: resolved_name, url: payload.payload.clone(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
         Ok(Emit {
-            artifact_mutations: vec![ShootingMutation::Assets(CollectionMutation::Add { index: snapshot.assets.len(), item: asset }), ShootingMutation::SetActiveAsset { asset_id: Some(id.clone()) }],
+            artifact_mutations: vec![ShootingMutation::CreateAsset(CreateAsset { asset, index: Some(snapshot.assets.len()) }), ShootingMutation::SetActiveAsset(SetActiveAssetMutation { asset_id: Some(id.clone()) })],
             config_mutations: vec![ShootingConfigMutation::SetSelection { shot_ids: Vec::new(), asset_ids: vec![id] }, ShootingConfigMutation::SetFitRevision { value: cfg.snapshot.fit_revision + 1 }],
             ..Default::default()
         })

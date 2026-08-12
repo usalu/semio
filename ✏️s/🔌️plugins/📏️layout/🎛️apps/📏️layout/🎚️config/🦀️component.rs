@@ -126,18 +126,14 @@ store::impl_whole_record_config!(LayoutConfig);
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutations
-/// 🧮️ [`LayoutConfig`]'s operation enum — one variant per settled interaction, plus a generic
-/// `Snapshot` every variant's `backwards()` returns. `Mutation::Diff` is the WHOLE `LayoutConfig` (not a
-/// granular patch type): `diff()` returns "the full config after this op", and
+/// 🧮️ [`LayoutConfig`]'s operation enum — one variant per settled interaction; each variant's
+/// `backwards()` re-emits the SAME variant with the old field value read from `base` (no
+/// whole-config snapshot sentinel). `Mutation::Diff` is the WHOLE `LayoutConfig` (not a granular
+/// patch type): `diff()` returns "the full config after this op", and
 /// `store::impl_whole_record_config!` supplies the `MutationDiff<LayoutConfig>` that returns that
 /// snapshot verbatim, ignoring `base`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum LayoutConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: LayoutConfig,
-    },
     #[dsl(key = "selection")]
     SetSelection { ids: Vec<String> },
     #[dsl(key = "active-page")]
@@ -243,7 +239,6 @@ impl Mutation<LayoutConfig> for LayoutConfigMutation {
     fn diff(&self, base: &LayoutConfig) -> LayoutConfig {
         let mut next = base.clone();
         match self {
-            LayoutConfigMutation::Snapshot { config } => return config.clone(),
             LayoutConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
             LayoutConfigMutation::SetActivePage { page_id } => next.active_page_id = page_id.clone(),
             LayoutConfigMutation::SetHover { id } => next.hovered_id = id.clone(),
@@ -257,7 +252,16 @@ impl Mutation<LayoutConfig> for LayoutConfigMutation {
     }
 
     fn inverse(&self, base: &LayoutConfig) -> Vec<Self> {
-        vec![LayoutConfigMutation::Snapshot { config: base.clone() }]
+        match self {
+            LayoutConfigMutation::SetSelection { .. } => vec![LayoutConfigMutation::SetSelection { ids: base.selected_ids.clone() }],
+            LayoutConfigMutation::SetActivePage { .. } => vec![LayoutConfigMutation::SetActivePage { page_id: base.active_page_id.clone() }],
+            LayoutConfigMutation::SetHover { .. } => vec![LayoutConfigMutation::SetHover { id: base.hovered_id.clone() }],
+            LayoutConfigMutation::SetDropPreview { .. } => vec![LayoutConfigMutation::SetDropPreview { preview: base.drop_preview.clone() }],
+            LayoutConfigMutation::SetEngagementInput { .. } => vec![LayoutConfigMutation::SetEngagementInput { value: base.engagement_input.clone() }],
+            LayoutConfigMutation::SetCamera { .. } => vec![LayoutConfigMutation::SetCamera { camera: base.camera.clone() }],
+            LayoutConfigMutation::SetPreviewCamera { .. } => vec![LayoutConfigMutation::SetPreviewCamera { camera: base.preview_camera.clone() }],
+            LayoutConfigMutation::SetLocale { .. } => vec![LayoutConfigMutation::SetLocale { value: base.locale.clone() }],
+        }
     }
 }
 //#endregion 🔖️ConfigMutations
@@ -337,11 +341,17 @@ mod tests {
 
     #[test]
     fn config_snapshot_op_text_round_trips() {
-        let config = sample_config();
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::Snapshot { config });
         store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
         store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetHover { id: None });
         store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetLocale { value: "en-US".into() });
+    }
+
+    #[test]
+    fn config_mutation_inverses_restore_each_field_without_a_snapshot_sentinel() {
+        let base = sample_config();
+        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetSelection { ids: vec!["z".into()] }).selected_ids, vec!["z".to_string()]);
+        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetActivePage { page_id: "page-9".into() }).active_page_id, "page-9");
+        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetLocale { value: "fr-FR".into() }).locale, "fr-FR");
     }
 }
 //#endregion 🧪️Tests

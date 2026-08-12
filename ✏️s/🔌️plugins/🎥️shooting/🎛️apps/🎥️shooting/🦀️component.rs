@@ -61,7 +61,7 @@ semio_framework_plugin::app_commands! {
     /// `setLocale`/`locale` is the row that proves it. **Row order is the binary variant ordinal:
     /// appending is safe, reordering is a wire-format break.**
     pub enum ShootingCommand for ShootingSnapshot, ShootingMutation, ShootingConfig, ShootingConfigMutation {
-        "setSnapshotJson" as "snapshot-json" => set_snapshot_json::SetSnapshotJson,
+        "importSnapshotJson" as "import-snapshot-json" => import_snapshot_json::ImportSnapshotJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "setActiveShot" as "active-shot" => set_active_shot::SetActiveShot,
         "setActiveAsset" as "active-asset" => set_active_asset::SetActiveAsset,
@@ -113,7 +113,7 @@ semio_framework_plugin::app_commands! {
 use asset::{add_asset, import_asset, import_asset_request, patch_assets, set_active_asset};
 use camera::{load_saved_camera, save_camera, set_camera, set_camera_draft_label, set_shot_camera};
 use export::export_shots;
-use fixture::{load_request, reset_snapshot, save_download, set_active_example, set_snapshot_json};
+use fixture::{load_request, reset_snapshot, save_download, set_active_example, import_snapshot_json};
 use gumball::{rotate_selection, scale_selection, translate_selection};
 use locale::set_locale;
 use scene::{set_ambient_intensity, set_material_roughness, set_shadow_enabled, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
@@ -166,8 +166,20 @@ impl ArtifactApp for ShootingPlayApp {
         }
     }
 
-    fn whole_document_operation(snapshot: ShootingSnapshot) -> Option<ShootingMutation> {
-        Some(ShootingMutation::SetSnapshot { snapshot })
+    /// 🧬️ No `whole_document_operation` override — per `📓️taxonomy.md`, whole-document replace
+    /// (the retired whole-document-replace variant) is banned outright with NO replacement mutation, so this falls back to the
+    /// trait's own default (`None`); `import_media`'s `"document:in"` override below handles the
+    /// real gesture via `reset_document_effect` instead.
+    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, ShootingSnapshot>) -> Result<Emit<ShootingMutation, ShootingConfigMutation, NoDraftMutation>, MediaError> {
+        if port != "document:in" {
+            return Err(MediaError::NotImplemented);
+        }
+        let MediaPayload::Structured { json, .. } = &media.payload else {
+            return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
+        };
+        let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let snapshot = <ShootingSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
     }
 
     /// 🏷️ Maps each `ShootingCommand` variant back to the action id it was declared under in
@@ -246,6 +258,23 @@ impl ArtifactApp for ShootingPlayApp {
 }
 //#endregion 🔖️ShootingPlayApp
 
+//#region 🔖️ResetDocument
+/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
+/// history — the sanctioned non-mutation path for a whole-document replace (file import,
+/// load-example, dev fixture load). Per `📓️taxonomy.md`, whole-document replace is banned outright with NO
+/// replacement mutation: whole-document replace is not expressible as an in-history `Mutation` at
+/// all. Every former "replace the whole document" gesture in this package (`import_media`'s
+/// `"document:in"` above, `commands::fixture::{import_snapshot_json,set_active_example,reset_snapshot}`)
+/// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
+/// for `scene` — a genesis envelope with no history to encode.
+pub fn reset_document_effect(scene: &ShootingSnapshot) -> semio_framework_plugin::HostEffect {
+    let pack = <ShootingSnapshot as store::ArtifactPack>::encode_pack(scene);
+    let envelope = store::create_document_envelope::<ShootingSnapshot, ShootingMutation>(SHOOTING_DOCUMENT_SCHEMA, "shooting", scene.clone(), None);
+    let spr = store::print_document_spr(&envelope).expect("shooting document spr encode is infallible for a fresh, edit-free envelope");
+    semio_framework_plugin::HostEffect::LoadDocument { pack, spr }
+}
+//#endregion 🔖️ResetDocument
+
 //#region 🔖️Manifest
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
@@ -284,7 +313,7 @@ pub fn create_shooting_app() -> App {
             .panel_tab_def(inspection_panel::definition())
             // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
             // 🛠️ Dev-only whole-fixture import — kept out of the command palette.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setSnapshotJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importSnapshotJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("setActiveShot", LocalizedLabel::native("Set Active Shot", "Aktive Aufnahme festlegen"))
             .mutation("setActiveAsset", LocalizedLabel::native("Set Active Asset", "Aktives Objekt festlegen"))
@@ -436,7 +465,7 @@ mod tests {
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
     pub(super) fn every_command() -> Vec<ShootingCommand> {
         vec![
-            ShootingCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "{\"schema\":\"shooting.shooting\"}".into() }),
+            ShootingCommand::ImportSnapshotJson(import_snapshot_json::ImportSnapshotJson { json: "{\"schema\":\"shooting.shooting\"}".into() }),
             ShootingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "base-icon".into() }),
             ShootingCommand::SetActiveShot(set_active_shot::SetActiveShot { shot_id: Some("s1".into()) }),
             ShootingCommand::SetActiveAsset(set_active_asset::SetActiveAsset { asset_id: Some("a1".into()) }),
@@ -616,7 +645,7 @@ mod tests {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::LoadRequest(load_request::LoadRequest {}));
         match &result.requested_effects[0] {
-            HostEffect::RequestFileOpen { import_action, .. } => assert_eq!(import_action, "setSnapshotJson"),
+            HostEffect::RequestFileOpen { import_action, .. } => assert_eq!(import_action, "importSnapshotJson"),
             other => panic!("expected RequestFileOpen, got {other:?}"),
         }
         let result = dispatch(&mut app, ShootingCommand::SaveDownload(save_download::SaveDownload {}));

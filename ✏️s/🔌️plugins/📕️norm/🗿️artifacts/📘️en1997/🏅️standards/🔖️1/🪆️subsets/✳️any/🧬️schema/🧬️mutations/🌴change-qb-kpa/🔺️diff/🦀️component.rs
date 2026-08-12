@@ -1,0 +1,11 @@
+//! 🔺️ `change-qb-kpa` sparse diff construction — writes only `En1997Diff.q_b_kpa` from the payload.
+
+use crate::artifacts::en1997::diff::En1997Diff;
+use crate::artifacts::en1997::mutations::change_q_b_kpa::mutation::ChangeQBKpa;
+use crate::artifacts::en1997::En1997Snapshot;
+
+//#region 🔖️Diff
+pub fn diff(payload: &ChangeQBKpa, _base: &En1997Snapshot) -> En1997Diff {
+    En1997Diff { q_b_kpa: Some(payload.new_q_b_kpa.clone()), ..Default::default() }
+}
+//#endregion 🔖️Diff

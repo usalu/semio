@@ -2,14 +2,30 @@
 //! from `crate::apps::curate::modes::curate::windows::curated` (the "Curated" window this pushes into).
 
 use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
-use crate::artifacts::curate::engine::{curate_delta, curate_set};
+use crate::artifacts::curate::engine::{curation_decision_for_delta, curation_decision_for_set, CurationDecision};
 use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-fn set_snapshot(snapshot: CurateSnapshot) -> Emit<SourcingMutation, SourcingCurateConfigMutation> {
-    Emit::mutations(vec![SourcingMutation::SetSnapshot { snapshot }])
+/// 🔀️ Turns a resolved curation decision into the real `SourcingMutation` it corresponds to — `None`
+/// for a no-op adjustment (e.g. dropping an already-zero item), which must NOT be recorded in
+/// history at all (mirrors `apply_sourcing_mutation`'s former no-op-if-unknown-id silence, now
+/// expressed as "emit nothing" instead of "emit a snapshot no-op").
+fn mutation_for(decision: CurationDecision) -> Option<SourcingMutation> {
+    match decision {
+        CurationDecision::NoOp => None,
+        CurationDecision::Create(item) => Some(crate::artifacts::curate::mutations::create_curated_item(item)),
+        CurationDecision::ChangeCount { object_id, new_count } => Some(crate::artifacts::curate::mutations::change_curated_item_count(object_id, new_count)),
+        CurationDecision::Delete { object_id } => Some(crate::artifacts::curate::mutations::delete_curated_item(object_id)),
+    }
+}
+
+fn emit_decision(decision: CurationDecision) -> Emit<SourcingMutation, SourcingCurateConfigMutation> {
+    match mutation_for(decision) {
+        Some(mutation) => Emit::mutations(vec![mutation]),
+        None => Emit::default(),
+    }
 }
 
 //#region 🔖️CurateAdd
@@ -23,9 +39,7 @@ pub mod curate_add {
     }
 
     pub fn handle(payload: &CurateAdd, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
-        let mut document = doc.snapshot.clone();
-        curate_delta(&mut document, &payload.object_id, 1);
-        Ok(set_snapshot(document))
+        Ok(emit_decision(curation_decision_for_delta(doc.snapshot, &payload.object_id, 1)))
     }
 }
 //#endregion 🔖️CurateAdd
@@ -45,13 +59,14 @@ pub mod curate_set_count {
     /// 🎚️ The pool/curated tables' count stepper cell dispatches this SAME action for both a relative
     /// drag tick (`delta`) and an absolute typed value (`value`) — `delta` is checked first.
     pub fn handle(payload: &CurateSetCount, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
-        let mut document = doc.snapshot.clone();
-        if let Some(delta) = payload.delta {
-            curate_delta(&mut document, &payload.object_id, delta as i64);
+        let decision = if let Some(delta) = payload.delta {
+            curation_decision_for_delta(doc.snapshot, &payload.object_id, delta as i64)
         } else if let Some(value) = payload.value {
-            curate_set(&mut document, &payload.object_id, value.max(0.0) as u32);
-        }
-        Ok(set_snapshot(document))
+            curation_decision_for_set(doc.snapshot, &payload.object_id, value.max(0.0) as u32)
+        } else {
+            CurationDecision::NoOp
+        };
+        Ok(emit_decision(decision))
     }
 }
 //#endregion 🔖️CurateSetCount
@@ -67,9 +82,7 @@ pub mod curate_remove {
     }
 
     pub fn handle(payload: &CurateRemove, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
-        let mut document = doc.snapshot.clone();
-        curate_set(&mut document, &payload.object_id, 0);
-        Ok(set_snapshot(document))
+        Ok(emit_decision(curation_decision_for_set(doc.snapshot, &payload.object_id, 0)))
     }
 }
 //#endregion 🔖️CurateRemove
@@ -86,9 +99,7 @@ pub mod drop_on_pool {
 
     /// 🪂️ Dropping a curated row back onto the pool mirrors `curate_remove`: zero its curated count.
     pub fn handle(payload: &DropOnPool, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
-        let mut document = doc.snapshot.clone();
-        curate_set(&mut document, &payload.object_id, 0);
-        Ok(set_snapshot(document))
+        Ok(emit_decision(curation_decision_for_set(doc.snapshot, &payload.object_id, 0)))
     }
 }
 //#endregion 🔖️DropOnPool
@@ -104,9 +115,7 @@ pub mod drop_on_curated {
     }
 
     pub fn handle(payload: &DropOnCurated, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
-        let mut document = doc.snapshot.clone();
-        curate_delta(&mut document, &payload.object_id, 1);
-        Ok(set_snapshot(document))
+        Ok(emit_decision(curation_decision_for_delta(doc.snapshot, &payload.object_id, 1)))
     }
 }
 //#endregion 🔖️DropOnCurated
@@ -153,6 +162,17 @@ mod tests {
 
         dispatch(&mut app, SourcingCurateCommand::DropOnPool(drop_on_pool::DropOnPool { object_id: object_id.clone() }));
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 0);
+    }
+
+    /// 🧬️ A no-op adjustment (removing an object that was never curated) must emit NOTHING —
+    /// `SourcingMutation` has no whole-snapshot no-op sentinel to fall back on any more.
+    #[test]
+    fn curate_remove_on_an_uncurated_object_emits_no_mutation() {
+        let mut app = new_app();
+        let object_id = app.snapshot().expect("snapshot").stock[2].id.clone();
+        assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 0);
+        let result = crate::apps::curate::testkit::dispatch(&mut app, SourcingCurateCommand::CurateRemove(curate_remove::CurateRemove { object_id }));
+        assert!(result.mutations.is_empty(), "removing an already-uncurated object is a no-op");
     }
 }
 //#endregion 🧪️Tests

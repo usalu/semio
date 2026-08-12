@@ -1,1 +1,0 @@
-//! stub diff leaf

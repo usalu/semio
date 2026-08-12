@@ -17,7 +17,7 @@ pub mod set_pencil_width {
     }
 
     pub fn handle(payload: &SetPencilWidth, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![NoteMutation::SetPencilWidth { width: Some(payload.value.clamp(1.0, 24.0)) }]))
+        Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::change_pencil_width(Some(payload.value.clamp(1.0, 24.0)))]))
     }
 }
 //#endregion 🔖️SetPencilWidth
@@ -33,7 +33,7 @@ pub mod set_eraser_radius {
     }
 
     pub fn handle(payload: &SetEraserRadius, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![NoteMutation::SetEraserRadius { radius: Some(payload.value.clamp(4.0, 48.0)) }]))
+        Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::change_eraser_radius(Some(payload.value.clamp(4.0, 48.0)))]))
     }
 }
 //#endregion 🔖️SetEraserRadius

@@ -8,7 +8,6 @@
 //! `📓️derivation-rules.md` recipe §1. `schema` is the fixed artifact-schema-id constant
 //! (`WRITER_DOCUMENT_SCHEMA`), never user-authored, so it gets no mutation.
 
-use crate::artifacts::writer::schema::mutations::{change_language, change_uri, edit_text, rename_writer};
 use crate::artifacts::writer::WriterDiff;
 use crate::artifacts::writer::WriterSnapshot;
 use protocol::{Mutation, MutationDiff};
@@ -20,10 +19,10 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = WriterSnapshot, diff = WriterDiff, schema = "writer.writer")]
 pub enum WriterMutation {
-    RenameWriter(rename_writer::mutation::RenameWriter),
-    ChangeUri(change_uri::mutation::ChangeUri),
-    ChangeLanguage(change_language::mutation::ChangeLanguage),
-    EditText(edit_text::mutation::EditText),
+    RenameWriter(RenameWriter),
+    ChangeUri(ChangeUri),
+    ChangeLanguage(ChangeLanguage),
+    EditText(EditText),
 }
 
 /// 🧮️ Diff-first apply — matches every other migrated facet (`operation.diff(base).apply(base)`,
@@ -36,10 +35,10 @@ pub fn inverse_writer_mutation(snapshot: &WriterSnapshot, mutation: &WriterMutat
     mutation.inverse(snapshot)
 }
 
-pub use rename_writer::mutation::{rename_writer, RenameWriter};
-pub use change_uri::mutation::{change_uri, ChangeUri};
-pub use change_language::mutation::{change_language, ChangeLanguage};
-pub use edit_text::mutation::{edit_text, EditText};
+pub use super::rename_writer::mutation::{rename_writer, RenameWriter};
+pub use super::change_uri::mutation::{change_uri, ChangeUri};
+pub use super::change_language::mutation::{change_language, ChangeLanguage};
+pub use super::edit_text::mutation::{edit_text, EditText};
 //#endregion 🔖️Mutations
 
 //#region 🧪️Tests

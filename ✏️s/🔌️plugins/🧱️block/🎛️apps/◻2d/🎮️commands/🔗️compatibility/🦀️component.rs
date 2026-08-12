@@ -21,7 +21,7 @@ pub mod add_compatibility_rule {
         }
         let id = crate::artifacts::block2d::engine::next_id(doc.snapshot.compatibility.iter().map(|rule| rule.id.as_str()), "compat-");
         let rule = BlockCompatibilityRule { id, source: payload.source.clone(), target: payload.target.clone(), bidirectional: true };
-        Ok(Emit::mutations(vec![Block2dMutation::SetCompatibilityRule { index: doc.snapshot.compatibility.len(), rule }]))
+        Ok(Emit::mutations(vec![crate::artifacts::block2d::mutations::add_compatibility_rule(rule)]))
     }
 }
 
@@ -39,6 +39,6 @@ pub mod remove_compatibility_rule {
     }
 
     pub fn handle(payload: &RemoveCompatibilityRule, _doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![Block2dMutation::RemoveCompatibilityRule { id: payload.id.clone() }]))
+        Ok(Emit::mutations(vec![crate::artifacts::block2d::mutations::remove_compatibility_rule(payload.id.clone())]))
     }
 }

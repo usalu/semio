@@ -1,11 +1,14 @@
-//! 🔺️ Sparse `FlowDiff` construction for `replace-widget`.
-use crate::artifacts::flow::schema::diff::text::{widgets_delta_from_collection_mutation, FlowDiff};
+//! 🔺️ Sparse `FlowDiff` construction for `replace-widget` — a real whole-value patch entry
+//! construction (never a whole-snapshot capture).
+use crate::artifacts::flow::schema::diff::text::{FlowDiff, FlowWidgetPatchEntry, FlowWidgetsDelta};
 use crate::artifacts::flow::FlowSnapshot;
-use protocol::CollectionMutation;
 
 use super::mutation::ReplaceWidget;
 
-pub fn diff(payload: &ReplaceWidget, base: &FlowSnapshot) -> FlowDiff {
-    let delta = widgets_delta_from_collection_mutation(&base.widgets, &CollectionMutation::Patch { id: payload.id.clone(), patch: payload.widget.clone() });
+pub fn diff(payload: &ReplaceWidget, _base: &FlowSnapshot) -> FlowDiff {
+    let delta = FlowWidgetsDelta {
+        patched: vec![FlowWidgetPatchEntry { id: payload.id.clone(), patch: payload.widget.clone() }],
+        ..Default::default()
+    };
     FlowDiff { widgets: Some(delta), ..Default::default() }
 }

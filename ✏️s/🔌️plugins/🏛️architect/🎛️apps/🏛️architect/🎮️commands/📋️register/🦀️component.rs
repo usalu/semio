@@ -62,6 +62,7 @@ pub mod remove_register_item {
     use crate::apps::architect::catalog::remove_register_item_operation;
     use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
+    use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
     use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
@@ -84,7 +85,7 @@ pub mod remove_register_item {
         }
         if payload.register_id == "elements" {
             for adjacency in program.adjacencies.iter().filter(|row| row.element_a_id == entity_id || row.element_b_id == entity_id) {
-                operations.push(ProgramMutation::ClearAdjacency { id: adjacency.header.id.clone() });
+                operations.push(ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::mutation::DisconnectAdjacency { id: adjacency.header.id.clone() }));
             }
         }
         Ok(Emit { artifact_mutations: operations, config_mutations: snapshot(next), ..Default::default() })
@@ -108,11 +109,11 @@ pub mod patch_register_item {
         pub patch_json: String,
     }
 
-    pub fn handle(payload: &PatchRegisterItem, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchRegisterItem, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let Ok(patch) = serde_json::from_str::<Value>(&payload.patch_json) else {
             return Ok(Emit::default());
         };
-        match patch_register_item_operation(&payload.register_id, EntityId(payload.entity_id.clone()), patch) {
+        match patch_register_item_operation(doc.snapshot, &payload.register_id, EntityId(payload.entity_id.clone()), patch) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
         }

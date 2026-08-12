@@ -9,7 +9,7 @@ document: artifactMark subsetLine REST EOF;
 artifactMark: 'stdio.semio';
 
 subsetLine: 'subset' '=' subsetTag;
-subsetTag: 'brep' | 'mesh' | 'model' | 'object' | 'document' | 'cad' | 'drawing' | 'image' | 'video' | 'audio' | 'animation' | 'presentation' | 'workflow';
+subsetTag: 'brep' | 'mesh' | 'model' | 'value' | 'document' | 'cad' | 'drawing' | 'image' | 'video' | 'audio' | 'animation' | 'presentation' | 'flow';
 
 REST: .*? ;
 WS: [ \t\r\n]+ -> skip;

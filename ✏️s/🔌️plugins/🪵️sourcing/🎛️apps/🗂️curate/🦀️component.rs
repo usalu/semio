@@ -119,8 +119,21 @@ impl ArtifactApp for SourcingCurateApp {
         }
     }
 
-    fn whole_document_operation(snapshot: CurateSnapshot) -> Option<SourcingMutation> {
-        Some(SourcingMutation::SetSnapshot { snapshot })
+    /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (the former whole-
+    /// snapshot-replace variant — see `📓️taxonomy.md`'s forbidden vocabulary), so this app does NOT
+    /// override `whole_document_operation`
+    /// (stays at the trait's own `None` default) and instead overrides `import_media` below to build a
+    /// `HostEffect::LoadDocument` via `reset_document_effect`, outside undo history.
+    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, CurateSnapshot>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, MediaError> {
+        if port != "document:in" {
+            return Err(MediaError::NotImplemented);
+        }
+        let MediaPayload::Structured { json, .. } = &media.payload else {
+            return Err(MediaError::Payload(port.to_string(), "document:in importer only accepts a Structured (base64 pack) payload".into()));
+        };
+        let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let snapshot = <CurateSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -149,6 +162,23 @@ impl ArtifactApp for SourcingCurateApp {
     }
 }
 //#endregion 🔖️SourcingCurateApp
+
+//#region 🔖️ResetDocument
+/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `document` OUTSIDE undo
+/// history — the sanctioned non-mutation path for a whole-document replace (JSON import, load-
+/// example, bulk catalogue restock). Per `📓️taxonomy.md`, the former whole-snapshot-replace variant
+/// is banned outright with NO replacement mutation: whole-document replace is not expressible as an in-history `Mutation` at
+/// all. Every former "replace the whole document" gesture in this app (`import_media`'s
+/// `"document:in"` above, `commands::document::{set_active_example, set_artifact_json,
+/// stock_from_catalogue}`) builds this effect instead of an `Emit::mutations([...])`. The spr is a
+/// fresh, edit-free op-log for `document` — a genesis envelope with no history to encode.
+pub fn reset_document_effect(document: &CurateSnapshot) -> semio_framework::kernel::HostEffect {
+    let pack = <CurateSnapshot as store::ArtifactPack>::encode_pack(document);
+    let envelope = store::create_document_envelope::<CurateSnapshot, SourcingMutation>(SOURCING_CURATE_SCHEMA, "curate", document.clone(), None);
+    let spr = store::print_document_spr(&envelope).expect("curate document spr encode is infallible for a fresh, edit-free envelope");
+    semio_framework::kernel::HostEffect::LoadDocument { pack, spr }
+}
+//#endregion 🔖️ResetDocument
 
 //#region 🔖️Manifest
 /// 🙈️ An internal document operation kept out of the command palette — the curate/DnD arms that mutate

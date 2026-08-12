@@ -1,6 +1,6 @@
 //! ⚡️ SHome artifact — OpText/OpBinary codecs + grammar for `SHomeMutation`.
 
-pub use crate::artifacts::home::schema::mutations::{apply_shome_mutation, inverse_shome_mutation, SHomeMutation};
+pub use crate::artifacts::home::schema::mutations::SHomeMutation;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

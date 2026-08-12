@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️ReorderSteps
 /// 🔀 `to_index` is FINAL-state, clamped to the list length — mirrors the pre-migration
-/// `CollectionMutation::Move` semantics `steps_delta_from_collection_mutation` implemented.
+/// generic-move semantics the old collection-op engine implemented.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReorderSteps {

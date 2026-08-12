@@ -4,7 +4,7 @@
 //! file's concern; this file only wires the operation-log line/binary encodings.
 //!
 //! Every `ShootingMutation` variant wraps a plain local payload struct now (no foreign generic —
-//! the pre-migration `CollectionMutation<..>`-flattening `ShootingMutationDsl` mirror this file used
+//! the pre-migration generic-option-bag-flattening `ShootingMutationDsl` mirror this file used
 //! to carry, needed only to route around the orphan rule, is gone with it). `serde_json`'s compact
 //! (single-line, declaration-order) encoding satisfies `OpText`/`OpBinary`'s laws directly:
 //! `print_op` never contains `\n`, `parse_op(op.print_op()) == op`, and encoding is deterministic.

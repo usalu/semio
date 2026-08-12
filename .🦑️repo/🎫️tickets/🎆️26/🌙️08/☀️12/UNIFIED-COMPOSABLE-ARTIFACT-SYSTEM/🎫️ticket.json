@@ -1,0 +1,13 @@
+{
+  "title": "Unified Composable Artifact System",
+  "emoji": "🗿️",
+  "status": "open",
+  "description": "Introduce a first-class composition/reference primitive so every artifact is either composable (owned child, own ArtifactEnvelope/ArtifactVcs history, aggregated by the parent via a CompositionCoordinator) or referenceable (independent ArtifactLink with pin semantics), fully integrated with the existing CQRS mutation-based event-sourcing stack (envelope/store/vcs/spr/backbone/hub) — atomic cross-envelope gestures via one InvocationResult/UndoGroup, cascading checkpoints, graceful degradation for sync. Dissolve all duplicated plugin content types (9+ mesh types, 4 brep topologies, 3 path-segment vocabularies, 2 LocalizedText, duplicate kind ids, emoji ids) into the stdio plugin's neutral 🧿️semio artifact, expanding its subset roster from 13 to 18 (rename workflow→flow, object→value; add text/table/object/graph/kit) with an enforced composition DAG. Unify artifact identity onto one grammar (s.\u003cplugin\u003e.\u003cartifact\u003e) and collapse the current 6 manual registration channels into a single declare_artifact! macro. Migrate all 33 plugins to compose/reference stdio artifacts instead of redefining content types. Full plan at /Users/ueli/.claude/plans/the-current-artifact-system-eager-scone.md. Execution: 7 waves (W0 recon, W1 kernel primitives + coordinator, W2 stdio roster, W3 three exemplar plugins, W4 mass fan-out across ~29 remaining plugins at parallel width 7, W5 hot-file serializer, W6 policy/taxonomy ratchet, W7 verify+close) run via parallel Claude Code agents and background Workflows, interleaved with the concurrently-running SEMANTIC-MUTATIONS-OVERHAUL ticket via a per-plugin wave2-report clearance oracle. Greenfield: no compatibility layers, no legacy support, fixtures regenerated not upcast.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2548"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪0aa41e2a844d4583a2c3936da90b84ea"
+  ]
+}

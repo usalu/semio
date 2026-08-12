@@ -5,11 +5,6 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": {
-      "title": "SHomeArtifact",
-      "type": "object",
-      "x-semio-state": "persistent"
-    },
     "schema": {
       "type": "string",
       "x-semio-state": "persistent"

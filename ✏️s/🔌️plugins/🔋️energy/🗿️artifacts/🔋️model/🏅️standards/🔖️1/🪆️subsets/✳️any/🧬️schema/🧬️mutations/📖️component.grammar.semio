@@ -5,5 +5,5 @@ start mutation
 
 artifact-mark = "energy.model-mutations"
 mutation = artifact-mark op+
-op = "no-mutation" | "set-snapshot" snapshot-field+
-snapshot-field = "schema" "=" TEXT | "modelJson" "=" TEXT
+op = replace-model
+replace-model = "replace-model" "new-model-json" "=" TEXT

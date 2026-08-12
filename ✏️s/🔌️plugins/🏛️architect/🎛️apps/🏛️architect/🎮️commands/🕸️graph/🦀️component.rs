@@ -5,8 +5,8 @@ pub mod node_graph_edit {
     use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::registers::AdjacencyKind;
+    use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
-    use protocol::CollectionMutation;
     use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
@@ -30,15 +30,15 @@ pub mod node_graph_edit {
                         let a = EntityId(source.into());
                         let b = EntityId(target.into());
                         let kind = find_adjacency(program, &a, &b).map_or(AdjacencyKind::Preferred, |row| row.kind.clone());
-                        emitted.push(ProgramMutation::SetAdjacency { adjacency: new_adjacency(program, &a, &b, kind) });
+                        emitted.push(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::mutation::ConnectAdjacency { adjacency: new_adjacency(program, &a, &b, kind) }));
                     }
                 }
                 "deleteSelection" => {
                     if let Some(ids) = operation.get("nodeIds").and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok()) {
                         for id in ids {
-                            emitted.push(ProgramMutation::Elements(CollectionMutation::Remove { id: EntityId(id.clone()) }));
+                            emitted.push(ProgramMutation::DeleteProgramElement(leaves::delete_program_element::mutation::DeleteProgramElement { id: EntityId(id.clone()) }));
                             for adjacency in program.adjacencies.iter().filter(|row| row.element_a_id.0 == id || row.element_b_id.0 == id) {
-                                emitted.push(ProgramMutation::ClearAdjacency { id: adjacency.header.id.clone() });
+                                emitted.push(ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::mutation::DisconnectAdjacency { id: adjacency.header.id.clone() }));
                             }
                         }
                     }

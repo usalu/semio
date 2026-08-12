@@ -12,11 +12,11 @@ use crate::artifacts::program::engine::analyze::AnalysisResult;
 use crate::artifacts::program::engine::report::ProgramReport;
 use crate::artifacts::program::op::ProgramMutation;
 use crate::artifacts::program::registers::{
-    Adjacency, AdjacencyKind, AdjacencyPatch, AnalysisKind, AnalysisRecord, ConnectionKind, EngagementLevel, Function, FunctionKind, InfluenceLevel, Issue, IssueSeverity, ProgramElement, ProgramElementKind, ProgramElementPatch, ReportKind,
-    ReportRecord, Requirement, RequirementKind, Risk, RiskLevel, Stakeholder, StakeholderPatch, UserCategory, UserProfile, ValidationStatus,
+    Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, EngagementLevel, Function, FunctionKind, InfluenceLevel, Issue, IssueSeverity, ProgramElement, ProgramElementKind, ReportKind,
+    ReportRecord, Requirement, RequirementKind, Risk, RiskLevel, Stakeholder, UserCategory, UserProfile, ValidationStatus,
 };
+use crate::artifacts::program::schema::mutations as leaves;
 use crate::artifacts::program::{EntityHeader, EntityId, ProgramSnapshot, TextField, TraceKind, TraceLink};
-use protocol::CollectionMutation;
 use semio_framework_plugin::{ActionArgOption, LocalizedLabel};
 use serde::de::DeserializeOwned;
 use serde_json::{json, Value};
@@ -516,47 +516,45 @@ pub fn default_from_json<T: DeserializeOwned>(register: &str, label: &str, extra
 }
 
 pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, label: &str) -> Option<(ProgramMutation, EntityId)> {
-    macro_rules! add {
-        ($field:ident, $operation:ident, $item:expr) => {{
+    macro_rules! create {
+        ($variant:ident, $module:ident, $field:ident, $item:expr) => {{
             let item = $item;
             let id = item.header.id.clone();
-            (ProgramMutation::$operation(CollectionMutation::Add { index: program.$field.len(), item: item }), id)
+            (ProgramMutation::$variant(leaves::$module::mutation::$variant { $field: item }), id)
         }};
     }
     Some(match register {
-        "elements" => {
-            let item = default_element(label);
-            let id = item.header.id.clone();
-            (ProgramMutation::Elements(CollectionMutation::Add { index: program.elements.len(), item: item }), id)
-        }
-        "stakeholders" => add!(stakeholders, Stakeholders, default_stakeholder(label)),
-        "requirements" => add!(requirements, Requirements, default_requirement(label)),
-        "risks" => add!(risks, Risks, default_risk(label)),
-        "issues" => add!(issues, Issues, default_issue(label)),
-        "functions" => add!(functions, Functions, default_function(label)),
-        "users" => add!(users, Users, default_user(label)),
+        "stakeholders" => create!(CreateStakeholder, create_stakeholder, stakeholder, default_stakeholder(label)),
+        "users" => create!(CreateUserProfile, create_user_profile, user_profile, default_user(label)),
         "activities" => {
             let item: crate::artifacts::program::Activity = default_from_json("activities", label, json!({ "code": "ACT", "category": "general", "activityType": "general" }))?;
-            add!(activities, Activities, item)
+            create!(CreateActivity, create_activity, activity, item)
         }
-        "assumptions" => add!(assumptions, Assumptions, default_from_json::<crate::artifacts::program::Assumption>("assumptions", label, json!({ "statement": { "text": "" }, "validationStatus": "pending" }),)?),
+        "functions" => create!(CreateFunction, create_function, function, default_function(label)),
+        "elements" => create!(CreateProgramElement, create_program_element, program_element, default_element(label)),
+        "risks" => create!(CreateRisk, create_risk, risk, default_risk(label)),
+        "requirements" => create!(CreateRequirement, create_requirement, requirement, default_requirement(label)),
+        "assumptions" => create!(CreateAssumption, create_assumption, assumption, default_from_json::<crate::artifacts::program::Assumption>("assumptions", label, json!({ "statement": { "text": "" }, "validationStatus": "pending" }),)?),
         "constraints" => {
-            add!(
-                constraints,
-                Constraints,
+            create!(
+                CreateConstraintRecord,
+                create_constraint_record,
+                constraint_record,
                 default_from_json::<crate::artifacts::program::ConstraintRecord>("constraints", label, json!({ "constraintType": "general", "summary": { "text": "" }, "severity": "medium", "complianceStatus": "pending" }),)?
             )
         }
         "compliance_records" => {
-            add!(
-                compliance_records,
-                ComplianceRecords,
+            create!(
+                CreateComplianceRecord,
+                create_compliance_record,
+                compliance_record,
                 default_from_json::<crate::artifacts::program::ComplianceRecord>("compliance", label, json!({ "standardRef": "", "obligation": { "text": "" }, "complianceStatus": "pending", "severity": "medium" }),)?
             )
         }
-        "approvals" => add!(
-            approvals,
-            Approvals,
+        "approvals" => create!(
+            CreateApprovalRecord,
+            create_approval_record,
+            approval_record,
             default_from_json::<crate::artifacts::program::ApprovalRecord>(
                 "approvals",
                 label,
@@ -566,117 +564,153 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
                 }),
             )?
         ),
-        "meetings" => add!(meetings, Meetings, default_from_json::<crate::artifacts::program::MeetingRecord>("meetings", label, json!({ "meetingType": "workshop", "quorumMet": false, "meetingStatus": "draft" }),)?),
-        "analyses" => add!(analyses, Analyses, default_from_json::<AnalysisRecord>("analysis", label, json!({ "kind": "gap", "title": label, "outputSummary": { "text": "" } }),)?),
-        "reports" => add!(reports, Reports, default_from_json::<ReportRecord>("report", label, json!({ "kind": "executiveSummary", "title": label, "approvalStatus": "pending", "version": "0" }),)?),
-        "templates" => add!(templates, Templates, default_from_json::<crate::artifacts::program::TemplateRecord>("template", label, json!({ "templateType": "sector", "version": "1", "approvalStatus": "pending", "usageCount": 0 }),)?),
+        "meetings" => create!(CreateMeetingRecord, create_meeting_record, meeting_record, default_from_json::<crate::artifacts::program::MeetingRecord>("meetings", label, json!({ "meetingType": "workshop", "quorumMet": false, "meetingStatus": "draft" }),)?),
+        "analyses" => create!(CreateAnalysisRecord, create_analysis_record, analysis_record, default_from_json::<AnalysisRecord>("analysis", label, json!({ "kind": "gap", "title": label, "outputSummary": { "text": "" } }),)?),
+        "reports" => create!(CreateReportRecord, create_report_record, report_record, default_from_json::<ReportRecord>("report", label, json!({ "kind": "executiveSummary", "title": label, "approvalStatus": "pending", "version": "0" }),)?),
+        "issues" => create!(CreateIssue, create_issue, issue, default_issue(label)),
+        "templates" => create!(CreateTemplateRecord, create_template_record, template_record, default_from_json::<crate::artifacts::program::TemplateRecord>("template", label, json!({ "templateType": "sector", "version": "1", "approvalStatus": "pending", "usageCount": 0 }),)?),
         "traces" => {
             let from = program.elements.first().map_or_else(|| EntityId::new_serial("from", "from"), |element| element.header.id.clone());
             let to = program.elements.get(1).map_or_else(|| EntityId::new_serial("to", "to"), |element| element.header.id.clone());
             let item = TraceLink::new(from, to, TraceKind::FunctionToProgramElement);
             let id = item.id.clone();
-            (ProgramMutation::Traces(CollectionMutation::Add { index: program.traces.len(), item: item }), id)
+            (ProgramMutation::ConnectTrace(leaves::connect_trace::mutation::ConnectTrace { trace: item }), id)
         }
         _ => return None,
     })
 }
 
 pub fn remove_register_item_operation(register: &str, entity_id: EntityId) -> Option<ProgramMutation> {
-    macro_rules! remove {
-        ($operation:ident) => {
-            ProgramMutation::$operation(CollectionMutation::Remove { id: entity_id })
+    macro_rules! delete {
+        ($variant:ident, $module:ident) => {
+            ProgramMutation::$variant(leaves::$module::mutation::$variant { id: entity_id })
         };
     }
     Some(match register {
-        "stakeholders" => remove!(Stakeholders),
-        "users" => remove!(Users),
-        "activities" => remove!(Activities),
-        "functions" => remove!(Functions),
-        "elements" => remove!(Elements),
-        "quantities" => remove!(Quantities),
-        "relationships" => remove!(Relationships),
-        "adjacencies" => remove!(Adjacencies),
-        "processes" => remove!(Processes),
-        "flows" => remove!(Flows),
-        "access_rules" => remove!(AccessRules),
-        "operations" => remove!(Operations),
-        "equipment" => remove!(Equipment),
-        "resources" => remove!(Resources),
-        "storage" => remove!(Storage),
-        "environmental" => remove!(Environmental),
-        "human_factors" => remove!(HumanFactors),
-        "accessibility" => remove!(Accessibility),
-        "privacy" => remove!(Privacy),
-        "safety" => remove!(Safety),
-        "security" => remove!(Security),
-        "regulatory" => remove!(Regulatory),
-        "site_context" => remove!(SiteContext),
-        "organizational" => remove!(Organizational),
-        "services" => remove!(Services),
-        "infrastructure" => remove!(Infrastructure),
-        "information" => remove!(Information),
-        "communication" => remove!(Communication),
-        "wayfinding" => remove!(Wayfinding),
-        "schedules" => remove!(Schedules),
-        "flexibility" => remove!(Flexibility),
-        "growth" => remove!(Growth),
-        "sustainability" => remove!(Sustainability),
-        "resilience" => remove!(Resilience),
-        "costs" => remove!(Costs),
-        "delivery" => remove!(Delivery),
-        "risks" => remove!(Risks),
-        "conflicts" => remove!(Conflicts),
-        "requirements" => remove!(Requirements),
-        "priorities" => remove!(Priorities),
-        "scenarios" => remove!(Scenarios),
-        "options" => remove!(Options),
-        "decisions" => remove!(Decisions),
-        "validations" => remove!(Validations),
-        "performance" => remove!(Performance),
-        "quality" => remove!(Quality),
-        "documents" => remove!(Documents),
-        "assumptions" => remove!(Assumptions),
-        "constraints" => remove!(Constraints),
-        "compliance_records" => remove!(ComplianceRecords),
-        "approvals" => remove!(Approvals),
-        "meetings" => remove!(Meetings),
-        "changes" => remove!(Changes),
-        "collaboration" => remove!(Collaboration),
-        "analyses" => remove!(Analyses),
-        "reports" => remove!(Reports),
-        "search_filters" => remove!(SearchFilters),
-        "status_records" => remove!(StatusRecords),
-        "workshops" => remove!(Workshops),
-        "surveys" => remove!(Surveys),
-        "issues" => remove!(Issues),
-        "audit_events" => remove!(AuditEvents),
-        "templates" => remove!(Templates),
-        "knowledge" => remove!(Knowledge),
-        "benchmarks" => remove!(Benchmarks),
-        "traces" => remove!(Traces),
+        "stakeholders" => delete!(DeleteStakeholder, delete_stakeholder),
+        "users" => delete!(DeleteUserProfile, delete_user_profile),
+        "activities" => delete!(DeleteActivity, delete_activity),
+        "functions" => delete!(DeleteFunction, delete_function),
+        "elements" => delete!(DeleteProgramElement, delete_program_element),
+        "quantities" => delete!(DeleteQuantityRequirement, delete_quantity_requirement),
+        "relationships" => delete!(DeleteRelationship, delete_relationship),
+        "adjacencies" => ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::mutation::DisconnectAdjacency { id: entity_id }),
+        "processes" => delete!(DeleteProcess, delete_process),
+        "flows" => delete!(DeleteFlowRequirement, delete_flow_requirement),
+        "access_rules" => delete!(DeleteAccessRule, delete_access_rule),
+        "operations" => delete!(DeleteOperationalRequirement, delete_operational_requirement),
+        "equipment" => delete!(DeleteEquipment, delete_equipment),
+        "resources" => delete!(DeleteResource, delete_resource),
+        "storage" => delete!(DeleteStorageRequirement, delete_storage_requirement),
+        "environmental" => delete!(DeleteEnvironmentalRequirement, delete_environmental_requirement),
+        "human_factors" => delete!(DeleteHumanFactorRequirement, delete_human_factor_requirement),
+        "accessibility" => delete!(DeleteAccessibilityRequirement, delete_accessibility_requirement),
+        "privacy" => delete!(DeletePrivacyRequirement, delete_privacy_requirement),
+        "safety" => delete!(DeleteSafetyRequirement, delete_safety_requirement),
+        "security" => delete!(DeleteSecurityRequirement, delete_security_requirement),
+        "regulatory" => delete!(DeleteRegulatoryRequirement, delete_regulatory_requirement),
+        "site_context" => delete!(DeleteSiteContext, delete_site_context),
+        "organizational" => delete!(DeleteOrganizationalRequirement, delete_organizational_requirement),
+        "services" => delete!(DeleteServiceRequirement, delete_service_requirement),
+        "infrastructure" => delete!(DeleteInfrastructureRequirement, delete_infrastructure_requirement),
+        "information" => delete!(DeleteInformationRequirement, delete_information_requirement),
+        "communication" => delete!(DeleteCommunicationRequirement, delete_communication_requirement),
+        "wayfinding" => delete!(DeleteWayfindingRequirement, delete_wayfinding_requirement),
+        "schedules" => delete!(DeleteScheduleRequirement, delete_schedule_requirement),
+        "flexibility" => delete!(DeleteFlexibilityRequirement, delete_flexibility_requirement),
+        "growth" => delete!(DeleteGrowthPlan, delete_growth_plan),
+        "sustainability" => delete!(DeleteSustainabilityRequirement, delete_sustainability_requirement),
+        "resilience" => delete!(DeleteResilienceRequirement, delete_resilience_requirement),
+        "costs" => delete!(DeleteCostRequirement, delete_cost_requirement),
+        "delivery" => delete!(DeleteDeliveryConstraint, delete_delivery_constraint),
+        "risks" => delete!(DeleteRisk, delete_risk),
+        "conflicts" => delete!(DeleteConflict, delete_conflict),
+        "requirements" => delete!(DeleteRequirement, delete_requirement),
+        "priorities" => delete!(DeletePriorityRecord, delete_priority_record),
+        "scenarios" => delete!(DeleteScenario, delete_scenario),
+        "options" => delete!(DeleteOptionEvaluation, delete_option_evaluation),
+        "decisions" => delete!(DeleteDecision, delete_decision),
+        "validations" => delete!(DeleteValidationRecord, delete_validation_record),
+        "performance" => delete!(DeletePerformanceCriterion, delete_performance_criterion),
+        "quality" => delete!(DeleteQualityRecord, delete_quality_record),
+        "documents" => delete!(DeleteDocument, delete_document),
+        "assumptions" => delete!(DeleteAssumption, delete_assumption),
+        "constraints" => delete!(DeleteConstraintRecord, delete_constraint_record),
+        "compliance_records" => delete!(DeleteComplianceRecord, delete_compliance_record),
+        "approvals" => delete!(DeleteApprovalRecord, delete_approval_record),
+        "meetings" => delete!(DeleteMeetingRecord, delete_meeting_record),
+        "changes" => delete!(DeleteChangeRecord, delete_change_record),
+        "collaboration" => delete!(DeleteCollaborationRecord, delete_collaboration_record),
+        "analyses" => delete!(DeleteAnalysisRecord, delete_analysis_record),
+        "reports" => delete!(DeleteReportRecord, delete_report_record),
+        "search_filters" => delete!(DeleteSearchFilter, delete_search_filter),
+        "status_records" => delete!(DeleteStatusRecord, delete_status_record),
+        "workshops" => delete!(DeleteWorkshop, delete_workshop),
+        "surveys" => delete!(DeleteSurvey, delete_survey),
+        "issues" => delete!(DeleteIssue, delete_issue),
+        "audit_events" => delete!(DeleteAuditEvent, delete_audit_event),
+        "templates" => delete!(DeleteTemplateRecord, delete_template_record),
+        "knowledge" => delete!(DeleteKnowledgeRecord, delete_knowledge_record),
+        "benchmarks" => delete!(DeleteBenchmarkRecord, delete_benchmark_record),
+        "traces" => ProgramMutation::DisconnectTrace(leaves::disconnect_trace::mutation::DisconnectTrace { id: entity_id }),
         _ => return None,
     })
 }
 
-pub fn patch_register_item_operation(register: &str, entity_id: EntityId, patch: Value) -> Option<ProgramMutation> {
-    macro_rules! patch {
-        ($operation:ident, $ty:ty) => {
-            ProgramMutation::$operation(CollectionMutation::Patch { id: entity_id, patch: serde_json::from_value::<$ty>(patch).ok()? })
-        };
+fn merge_json_patch<T: Clone + Serialize + DeserializeOwned>(existing: &T, patch: &Value) -> Option<T> {
+    let mut value = serde_json::to_value(existing).ok()?;
+    let (Value::Object(base), Value::Object(patch_map)) = (&mut value, patch) else { return None };
+    for (key, entry) in patch_map {
+        base.insert(key.clone(), entry.clone());
     }
+    serde_json::from_value(value).ok()
+}
+
+pub fn patch_register_item_operation(program: &ProgramSnapshot, register: &str, entity_id: EntityId, patch: Value) -> Option<ProgramMutation> {
     Some(match register {
-        "stakeholders" => patch!(Stakeholders, StakeholderPatch),
-        "elements" => patch!(Elements, ProgramElementPatch),
-        "adjacencies" => patch!(Adjacencies, AdjacencyPatch),
-        "requirements" => patch!(Requirements, crate::artifacts::program::RequirementPatch),
-        "risks" => patch!(Risks, crate::artifacts::program::RiskPatch),
-        "issues" => patch!(Issues, crate::artifacts::program::IssuePatch),
-        "functions" => patch!(Functions, crate::artifacts::program::FunctionPatch),
-        "users" => patch!(Users, crate::artifacts::program::UserProfilePatch),
+        "stakeholders" => {
+            let existing = program.stakeholders.iter().find(|row| row.header.id == entity_id)?;
+            let merged = merge_json_patch(existing, &patch)?;
+            ProgramMutation::ReplaceStakeholder(leaves::replace_stakeholder::mutation::ReplaceStakeholder { stakeholder: merged })
+        }
+        "elements" => {
+            let existing = program.elements.iter().find(|row| row.header.id == entity_id)?;
+            let merged = merge_json_patch(existing, &patch)?;
+            ProgramMutation::ReplaceProgramElement(leaves::replace_program_element::mutation::ReplaceProgramElement { program_element: merged })
+        }
+        "adjacencies" => {
+            let existing = program.adjacencies.iter().find(|row| row.header.id == entity_id)?;
+            let merged = merge_json_patch(existing, &patch)?;
+            ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::mutation::ConnectAdjacency { adjacency: merged })
+        }
+        "requirements" => {
+            let existing = program.requirements.iter().find(|row| row.header.id == entity_id)?;
+            let merged = merge_json_patch(existing, &patch)?;
+            ProgramMutation::ReplaceRequirement(leaves::replace_requirement::mutation::ReplaceRequirement { requirement: merged })
+        }
+        "risks" => {
+            let existing = program.risks.iter().find(|row| row.header.id == entity_id)?;
+            let merged = merge_json_patch(existing, &patch)?;
+            ProgramMutation::ReplaceRisk(leaves::replace_risk::mutation::ReplaceRisk { risk: merged })
+        }
+        "issues" => {
+            let existing = program.issues.iter().find(|row| row.header.id == entity_id)?;
+            let merged = merge_json_patch(existing, &patch)?;
+            ProgramMutation::ReplaceIssue(leaves::replace_issue::mutation::ReplaceIssue { issue: merged })
+        }
+        "functions" => {
+            let existing = program.functions.iter().find(|row| row.header.id == entity_id)?;
+            let merged = merge_json_patch(existing, &patch)?;
+            ProgramMutation::ReplaceFunction(leaves::replace_function::mutation::ReplaceFunction { function: merged })
+        }
+        "users" => {
+            let existing = program.users.iter().find(|row| row.header.id == entity_id)?;
+            let merged = merge_json_patch(existing, &patch)?;
+            ProgramMutation::ReplaceUserProfile(leaves::replace_user_profile::mutation::ReplaceUserProfile { user_profile: merged })
+        }
         _ => return None,
     })
 }
-
 pub fn analysis_record_from(program: &ProgramSnapshot, kind: AnalysisKind, result: &AnalysisResult) -> AnalysisRecord {
     AnalysisRecord {
         header: EntityHeader::new(EntityId::new_serial("analysis", "analysis"), result.title.clone()),

@@ -4,9 +4,9 @@
 //! operation-log line/binary encodings.
 //!
 //! Every `LayoutMutation` variant wraps a plain local payload struct now (no foreign generic — the
-//! pre-migration `CollectionMutation<..>`-flattening `LayoutMutationDsl`/`FramePatchDsl`/`ColorPatch`
+//! pre-migration collection-op-flattening `LayoutMutationDsl`/`FramePatchDsl`/`ColorPatch`
 //! mirrors this file (and `../💾️binary/🦀️component.rs`) used to carry, needed only to route around
-//! the orphan rule for `CollectionMutation`'s foreign generic and `FramePatch.fill`/`.stroke`'s
+//! the orphan rule for that op type's foreign generic and `FramePatch.fill`/`.stroke`'s
 //! doubly-optional `Option<Option<[f32;4]>>` fields, are gone with it). `serde_json`'s compact
 //! (single-line, declaration-order) encoding satisfies `OpText`/`OpBinary`'s laws directly:
 //! `print_op` never contains `\n`, `parse_op(op.print_op()) == op`, and encoding is deterministic.

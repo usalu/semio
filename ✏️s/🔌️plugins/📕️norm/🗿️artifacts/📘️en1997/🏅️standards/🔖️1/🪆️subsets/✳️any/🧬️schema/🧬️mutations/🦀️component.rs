@@ -1,33 +1,220 @@
-//! 🧬️ En1997 artifact — document mutation dispatch.
+//! 🧬️ En1997 artifact — closed semantic mutation dispatch enum (constitutional: op).
+//!
+//! Derived from `En1997Snapshot`'s shape per `📓️derivation-rules.md` rule 1: a flat, id-less,
+//! document-root parameter form (twenty-two persistent scalar/enum fields describing the EN 1997 geotechnical (shallow-footing, pile) design check's actions, resistances and ground parameters) — no id-keyed
+//! collections, no name/identity field to `rename`. Every field becomes its own `change-<field>`
+//! mutation per the rule's "change-<field> per remaining scalar" clause; none qualify for the
+//! `update-<facet>` grouping exception (each parameter is independently entered on its own input row,
+//! never validated as an atomic multi-field bundle). The pre-migration whole-document-replace variant
+//! is gone: banned outright per `📓️taxonomy.md`/`📓️derivation-rules.md` rule 6, with NO replacement
+//! mutation; file-open/import/load-example now goes through `store::ArtifactStore::reset`, entirely
+//! outside this enum. The old whole-document-replace macro call is removed with it.
+//!
+//! All triads are mounted directly as `mutations`-sibling modules in `📦️glue.rs` (this lane's agent
+//! owns `📦️glue.rs`, so no self-wiring `#[path = "."]` blocks are needed here).
 
-use crate::artifacts::en1997::diff::{diff_set_snapshot, En1997Diff};
+use crate::artifacts::en1997::diff::En1997Diff;
 use crate::artifacts::en1997::En1997Snapshot;
-use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+//#region 🔖️Leaves
+use super::change_v_ed_kn;
+use super::change_h_ed_kn;
+use super::change_footing_area_m2;
+use super::change_phi_deg;
+use super::change_c_kpa;
+use super::change_gamma_kn_m3;
+use super::change_b_m;
+use super::change_d_f_m;
+use super::change_e_s_mpa;
+use super::change_nu;
+use super::change_design_approach;
+use super::change_annex;
+use super::change_settlement_limit_mm;
+use super::change_n_pile_ed_kn;
+use super::change_alpha_s;
+use super::change_pile_d_m;
+use super::change_q_s_kpa;
+use super::change_pile_l_m;
+use super::change_q_b_kpa;
+use super::change_pile_base_area_m2;
+use super::change_pile_n_profiles;
+use super::change_z_investigated_m;
+//#endregion 🔖️Leaves
+
+//#region 🔖️Mutations
+/// 🧬️ Closed semantic mutation vocabulary for the en1997 document, derived per
+/// `📓️derivation-rules.md` from `En1997Snapshot`'s flat scalar/enum shape.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
+#[mutations(snapshot = En1997Snapshot, diff = En1997Diff, schema = "norm.en1997")]
 pub enum En1997Mutation {
-    SetSnapshot {
-        #[dsl(block)]
-        snapshot: En1997Snapshot,
-    },
+    ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn),
+    ChangeHEdKn(change_h_ed_kn::mutation::ChangeHEdKn),
+    ChangeFootingAreaM2(change_footing_area_m2::mutation::ChangeFootingAreaM2),
+    ChangePhiDeg(change_phi_deg::mutation::ChangePhiDeg),
+    ChangeCKpa(change_c_kpa::mutation::ChangeCKpa),
+    ChangeGammaKnM3(change_gamma_kn_m3::mutation::ChangeGammaKnM3),
+    ChangeBM(change_b_m::mutation::ChangeBM),
+    ChangeDFM(change_d_f_m::mutation::ChangeDFM),
+    ChangeESMpa(change_e_s_mpa::mutation::ChangeESMpa),
+    ChangeNu(change_nu::mutation::ChangeNu),
+    ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach),
+    ChangeAnnex(change_annex::mutation::ChangeAnnex),
+    ChangeSettlementLimitMm(change_settlement_limit_mm::mutation::ChangeSettlementLimitMm),
+    ChangeNPileEdKn(change_n_pile_ed_kn::mutation::ChangeNPileEdKn),
+    ChangeAlphaS(change_alpha_s::mutation::ChangeAlphaS),
+    ChangePileDM(change_pile_d_m::mutation::ChangePileDM),
+    ChangeQSKpa(change_q_s_kpa::mutation::ChangeQSKpa),
+    ChangePileLM(change_pile_l_m::mutation::ChangePileLM),
+    ChangeQBKpa(change_q_b_kpa::mutation::ChangeQBKpa),
+    ChangePileBaseAreaM2(change_pile_base_area_m2::mutation::ChangePileBaseAreaM2),
+    ChangePileNProfiles(change_pile_n_profiles::mutation::ChangePileNProfiles),
+    ChangeZInvestigatedM(change_z_investigated_m::mutation::ChangeZInvestigatedM),
 }
+//#endregion 🔖️Mutations
 
-impl Mutation<En1997Snapshot> for En1997Mutation {
-    type Diff = En1997Diff;
+//#region 🔖️FromSnapshot
+impl En1997Mutation {
+    /// 📤️ Decomposes a whole `En1997Snapshot` into one `change-<field>` mutation per
+    /// persistent field — the closed-vocabulary replacement for the banned whole-document-replace
+    /// variant, used by `import_media`'s `"model:in"` port and the `set-snapshot` app command to
+    /// bundle a bulk document replacement into a single atomic `Emit::commit`.
+    pub fn from_snapshot(snapshot: &En1997Snapshot) -> Vec<En1997Mutation> {
+        let mut mutations = Vec::with_capacity(22);
+        mutations.push(En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn.clone() }));
+        mutations.push(En1997Mutation::ChangeHEdKn(change_h_ed_kn::mutation::ChangeHEdKn { new_h_ed_kn: snapshot.h_ed_kn.clone() }));
+        mutations.push(En1997Mutation::ChangeFootingAreaM2(change_footing_area_m2::mutation::ChangeFootingAreaM2 { new_footing_area_m2: snapshot.footing_area_m2.clone() }));
+        mutations.push(En1997Mutation::ChangePhiDeg(change_phi_deg::mutation::ChangePhiDeg { new_phi_deg: snapshot.phi_deg.clone() }));
+        mutations.push(En1997Mutation::ChangeCKpa(change_c_kpa::mutation::ChangeCKpa { new_c_kpa: snapshot.c_kpa.clone() }));
+        mutations.push(En1997Mutation::ChangeGammaKnM3(change_gamma_kn_m3::mutation::ChangeGammaKnM3 { new_gamma_kn_m3: snapshot.gamma_kn_m3.clone() }));
+        mutations.push(En1997Mutation::ChangeBM(change_b_m::mutation::ChangeBM { new_b_m: snapshot.b_m.clone() }));
+        mutations.push(En1997Mutation::ChangeDFM(change_d_f_m::mutation::ChangeDFM { new_d_f_m: snapshot.d_f_m.clone() }));
+        mutations.push(En1997Mutation::ChangeESMpa(change_e_s_mpa::mutation::ChangeESMpa { new_e_s_mpa: snapshot.e_s_mpa.clone() }));
+        mutations.push(En1997Mutation::ChangeNu(change_nu::mutation::ChangeNu { new_nu: snapshot.nu.clone() }));
+        mutations.push(En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: snapshot.design_approach.clone() }));
+        mutations.push(En1997Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: snapshot.annex.clone() }));
+        mutations.push(En1997Mutation::ChangeSettlementLimitMm(change_settlement_limit_mm::mutation::ChangeSettlementLimitMm { new_settlement_limit_mm: snapshot.settlement_limit_mm.clone() }));
+        mutations.push(En1997Mutation::ChangeNPileEdKn(change_n_pile_ed_kn::mutation::ChangeNPileEdKn { new_n_pile_ed_kn: snapshot.n_pile_ed_kn.clone() }));
+        mutations.push(En1997Mutation::ChangeAlphaS(change_alpha_s::mutation::ChangeAlphaS { new_alpha_s: snapshot.alpha_s.clone() }));
+        mutations.push(En1997Mutation::ChangePileDM(change_pile_d_m::mutation::ChangePileDM { new_pile_d_m: snapshot.pile_d_m.clone() }));
+        mutations.push(En1997Mutation::ChangeQSKpa(change_q_s_kpa::mutation::ChangeQSKpa { new_q_s_kpa: snapshot.q_s_kpa.clone() }));
+        mutations.push(En1997Mutation::ChangePileLM(change_pile_l_m::mutation::ChangePileLM { new_pile_l_m: snapshot.pile_l_m.clone() }));
+        mutations.push(En1997Mutation::ChangeQBKpa(change_q_b_kpa::mutation::ChangeQBKpa { new_q_b_kpa: snapshot.q_b_kpa.clone() }));
+        mutations.push(En1997Mutation::ChangePileBaseAreaM2(change_pile_base_area_m2::mutation::ChangePileBaseAreaM2 { new_pile_base_area_m2: snapshot.pile_base_area_m2.clone() }));
+        mutations.push(En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::mutation::ChangePileNProfiles { new_pile_n_profiles: snapshot.pile_n_profiles.clone() }));
+        mutations.push(En1997Mutation::ChangeZInvestigatedM(change_z_investigated_m::mutation::ChangeZInvestigatedM { new_z_investigated_m: snapshot.z_investigated_m.clone() }));
+        mutations
+    }
+}
+//#endregion 🔖️FromSnapshot
 
-    fn diff(&self, _snapshot: &En1997Snapshot) -> En1997Diff {
-        match self {
-            En1997Mutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use protocol::Mutation;
+
+    /// ⚖️ One value per `En1997Mutation` variant — the closed set the semantics/round-trip
+    /// tests iterate.
+    fn every_mutation() -> Vec<En1997Mutation> {
+        vec![
+        En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 }),
+        En1997Mutation::ChangeHEdKn(change_h_ed_kn::mutation::ChangeHEdKn { new_h_ed_kn: 95.0 }),
+        En1997Mutation::ChangeFootingAreaM2(change_footing_area_m2::mutation::ChangeFootingAreaM2 { new_footing_area_m2: 2.4 }),
+        En1997Mutation::ChangePhiDeg(change_phi_deg::mutation::ChangePhiDeg { new_phi_deg: 32.0 }),
+        En1997Mutation::ChangeCKpa(change_c_kpa::mutation::ChangeCKpa { new_c_kpa: 5.0 }),
+        En1997Mutation::ChangeGammaKnM3(change_gamma_kn_m3::mutation::ChangeGammaKnM3 { new_gamma_kn_m3: 19.0 }),
+        En1997Mutation::ChangeBM(change_b_m::mutation::ChangeBM { new_b_m: 2.2 }),
+        En1997Mutation::ChangeDFM(change_d_f_m::mutation::ChangeDFM { new_d_f_m: 1.8 }),
+        En1997Mutation::ChangeESMpa(change_e_s_mpa::mutation::ChangeESMpa { new_e_s_mpa: 32_000.0 }),
+        En1997Mutation::ChangeNu(change_nu::mutation::ChangeNu { new_nu: 0.32 }),
+        En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: "da2".to_string() }),
+        En1997Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+        En1997Mutation::ChangeSettlementLimitMm(change_settlement_limit_mm::mutation::ChangeSettlementLimitMm { new_settlement_limit_mm: 20.0 }),
+        En1997Mutation::ChangeNPileEdKn(change_n_pile_ed_kn::mutation::ChangeNPileEdKn { new_n_pile_ed_kn: 900.0 }),
+        En1997Mutation::ChangeAlphaS(change_alpha_s::mutation::ChangeAlphaS { new_alpha_s: 0.75 }),
+        En1997Mutation::ChangePileDM(change_pile_d_m::mutation::ChangePileDM { new_pile_d_m: 0.65 }),
+        En1997Mutation::ChangeQSKpa(change_q_s_kpa::mutation::ChangeQSKpa { new_q_s_kpa: 90.0 }),
+        En1997Mutation::ChangePileLM(change_pile_l_m::mutation::ChangePileLM { new_pile_l_m: 14.0 }),
+        En1997Mutation::ChangeQBKpa(change_q_b_kpa::mutation::ChangeQBKpa { new_q_b_kpa: 2700.0 }),
+        En1997Mutation::ChangePileBaseAreaM2(change_pile_base_area_m2::mutation::ChangePileBaseAreaM2 { new_pile_base_area_m2: 0.33 }),
+        En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::mutation::ChangePileNProfiles { new_pile_n_profiles: 3 }),
+        En1997Mutation::ChangeZInvestigatedM(change_z_investigated_m::mutation::ChangeZInvestigatedM { new_z_investigated_m: 10.0 }),
+        ]
+    }
+
+    fn round_trip(base: &En1997Snapshot, mutation: &En1997Mutation) -> En1997Snapshot {
+        let forward = vcs::apply_mutation(base, mutation);
+        let mut restored = forward.clone();
+        for back in mutation.inverse(base) {
+            restored = vcs::apply_mutation(&restored, &back);
+        }
+        assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
+        forward
+    }
+
+    #[test]
+    fn every_variant_registers_an_approved_semantic_descriptor() {
+        for mutation in every_mutation() {
+            let descriptor = protocol::SemanticMutation::semantics(&mutation);
+            assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
+        }
+        assert_eq!(<En1997Mutation as protocol::SemanticMutation<En1997Snapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
+    }
+
+    #[test]
+    fn every_variant_round_trips_via_inverse() {
+        let base = En1997Snapshot::default();
+        for mutation in every_mutation() {
+            round_trip(&base, &mutation);
         }
     }
 
-    fn inverse(&self, snapshot: &En1997Snapshot) -> Vec<Self> {
-        match self {
-            En1997Mutation::SetSnapshot { .. } => vec![En1997Mutation::SetSnapshot { snapshot: snapshot.clone() }],
+    #[test]
+    fn from_snapshot_round_trips_via_full_document_replacement() {
+        let base = En1997Snapshot::default();
+        let mut target = En1997Snapshot::default();
+        let _ = &mut target;
+        let mut projected = base.clone();
+        for mutation in En1997Mutation::from_snapshot(&target) {
+            projected = vcs::apply_mutation(&projected, &mutation);
         }
+        assert_eq!(projected, target, "from_snapshot must reconstruct every persistent field");
     }
-}
 
-crate::impl_norm_set_snapshot_ops!(En1997Mutation, En1997Snapshot);
+    //#region 🧪️MutationLaws
+    /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`
+    /// (reachable here as `protocol::os_spr::testkit`), exercised against three structurally distinct
+    /// variants.
+    #[test]
+    fn change_annex_satisfies_the_inverse_and_absorb_laws() {
+        let base = En1997Snapshot::default();
+        let mutation = En1997Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
+        let d1 = mutation.diff(&base);
+        let d2 = En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: "da2".to_string() }).diff(&base);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+    #[test]
+    fn change_v_ed_kn_satisfies_the_inverse_and_absorb_laws() {
+        let base = En1997Snapshot::default();
+        let mutation = En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 });
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
+        let d1 = mutation.diff(&base);
+        let d2 = En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::mutation::ChangePileNProfiles { new_pile_n_profiles: 3 }).diff(&base);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+    #[test]
+    fn change_design_approach_satisfies_the_inverse_and_absorb_laws() {
+        let base = En1997Snapshot::default();
+        let mutation = En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: "da2".to_string() });
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
+        let d1 = mutation.diff(&base);
+        let d2 = En1997Mutation::ChangePhiDeg(change_phi_deg::mutation::ChangePhiDeg { new_phi_deg: 32.0 }).diff(&base);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    }
+    //#endregion 🧪️MutationLaws
+}
+//#endregion 🧪️Tests

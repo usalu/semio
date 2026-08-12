@@ -1,0 +1,12 @@
+//! 🔺️ Sparse diff construction for the `delete-wayfinding-requirement` mutation leaf — real handcrafted
+//! `ProgramDiff` builder, never apply-then-capture. Split from `🧭wayfinding` per Wave C.
+
+use super::mutation::DeleteWayfindingRequirement;
+use crate::artifacts::program::ProgramDiff;
+use crate::artifacts::program::ProgramSnapshot;
+use crate::artifacts::program::diff::{ProgramWayfindingDelta};
+
+/// 🗑️ `removed = [id]`.
+pub fn diff(payload: &DeleteWayfindingRequirement, _base: &ProgramSnapshot) -> ProgramDiff {
+    ProgramDiff { wayfinding: Some(ProgramWayfindingDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() }
+}

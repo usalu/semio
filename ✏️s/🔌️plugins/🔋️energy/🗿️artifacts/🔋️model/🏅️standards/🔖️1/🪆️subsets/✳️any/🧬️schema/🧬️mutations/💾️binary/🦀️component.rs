@@ -23,21 +23,19 @@ pub fn decode_op(bytes: &[u8]) -> Result<EnergyModelMutation, protocol::Protocol
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::model::EnergyModelSnapshot;
+    use crate::artifacts::model::mutations::replace_model;
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = EnergyModelMutation::NoMutation;
+        let operation = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: "{}".to_string() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
     #[test]
-    fn set_snapshot_round_trips() {
-        let operation = EnergyModelMutation::SetSnapshot {
-            snapshot: EnergyModelSnapshot::default(),
-        };
+    fn replace_model_round_trips() {
+        let operation = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: r#"{"name":"demo"}"#.to_string() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
     }
 }

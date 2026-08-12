@@ -6,25 +6,25 @@ use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️SetSnapshotJson
-pub mod set_snapshot_json {
+//#region 🔖️ImportSnapshotJson
+pub mod import_snapshot_json {
     use super::*;
 
     /// 🛠️ Dev-only whole-fixture import — kept out of the command palette.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "snapshot-json")]
-    pub struct SetSnapshotJson {
+    #[dsl(keyword = "import-snapshot-json")]
+    pub struct ImportSnapshotJson {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetSnapshotJson, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &ImportSnapshotJson, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match serde_json::from_str::<ShootingSnapshot>(&payload.json) {
-            Ok(snapshot) => Ok(Emit::mutations(vec![ShootingMutation::SetSnapshot { snapshot }])),
+            Ok(snapshot) => Ok(Emit { effects: vec![crate::apps::shooting::reset_document_effect(&snapshot)], ..Default::default() }),
             Err(_) => Ok(Emit::default()),
         }
     }
 }
-//#endregion 🔖️SetSnapshotJson
+//#endregion 🔖️ImportSnapshotJson
 
 //#region 🔖️SetActiveExample
 pub mod set_active_example {
@@ -47,7 +47,7 @@ pub mod set_active_example {
             None
         };
         match next {
-            Some(snapshot) => Ok(Emit::mutations(vec![ShootingMutation::SetSnapshot { snapshot }])),
+            Some(snapshot) => Ok(Emit { effects: vec![crate::apps::shooting::reset_document_effect(&snapshot)], ..Default::default() }),
             None => Ok(Emit::default()),
         }
     }
@@ -63,7 +63,7 @@ pub mod reset_snapshot {
     pub struct ResetSnapshot {}
 
     pub fn handle(_payload: &ResetSnapshot, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![ShootingMutation::SetSnapshot { snapshot: crate::artifacts::shooting::engine::default_snapshot() }]))
+        Ok(Emit { effects: vec![crate::apps::shooting::reset_document_effect(&crate::artifacts::shooting::engine::default_snapshot())], ..Default::default() })
     }
 }
 //#endregion 🔖️ResetSnapshot
@@ -94,7 +94,7 @@ pub mod load_request {
     pub struct LoadRequest {}
 
     pub fn handle(_payload: &LoadRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".ops,.dsl,.spk,application/octet-stream,text/plain".into(), read_as: None, import_action: "setSnapshotJson".into(), multiple: false }))
+        Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".ops,.dsl,.spk,application/octet-stream,text/plain".into(), read_as: None, import_action: "importSnapshotJson".into(), multiple: false }))
     }
 }
 //#endregion 🔖️LoadRequest
@@ -106,22 +106,36 @@ mod tests {
     use crate::apps::shooting::testkit::{dispatch, shooting_app};
     use crate::apps::shooting::ShootingCommand;
 
+    /// 🧬️ `reset_snapshot::handle` emits a `HostEffect::LoadDocument` (outside undo history), not an
+    /// `artifact_mutations` entry — driven directly through `handle` (not `dispatch`, which routes
+    /// through `VcsArtifactApp` and never applies `effects` to its own store, that's the real host's
+    /// job), same as the already-migrated `fem2d` sibling's `commands::example` tests.
     #[test]
     fn reset_snapshot_restores_default_snapshot() {
+        use semio_framework_plugin::HostEffect;
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::AddShot(crate::apps::shooting::commands::shot::add_shot::AddShot { format: "svg".into(), shape: "ellipse".into() }));
         assert_eq!(app.snapshot().expect("snapshot").shots.len(), 3);
-        dispatch(&mut app, ShootingCommand::ResetSnapshot(reset_snapshot::ResetSnapshot {}));
-        assert_eq!(app.snapshot().expect("snapshot").shots.len(), 2);
+        let snapshot = app.snapshot().expect("snapshot");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let cfg_snapshot = ShootingConfig::default();
+        let cfg = ConfigView { snapshot: &cfg_snapshot };
+        let emit = reset_snapshot::handle(&reset_snapshot::ResetSnapshot {}, &doc, &cfg).expect("handle");
+        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("resetSnapshot must emit a LoadDocument effect") else {
+            panic!("expected a LoadDocument effect");
+        };
+        let restored = <ShootingSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        assert_eq!(restored.shots.len(), 2);
     }
 
     #[test]
-    fn load_request_declares_the_set_snapshot_json_import_action() {
+    fn load_request_declares_the_import_snapshot_json_import_action() {
         use semio_framework_plugin::HostEffect;
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::LoadRequest(load_request::LoadRequest {}));
         match &result.requested_effects[0] {
-            HostEffect::RequestFileOpen { import_action, .. } => assert_eq!(import_action, "setSnapshotJson"),
+            HostEffect::RequestFileOpen { import_action, .. } => assert_eq!(import_action, "importSnapshotJson"),
             other => panic!("expected RequestFileOpen, got {other:?}"),
         }
     }

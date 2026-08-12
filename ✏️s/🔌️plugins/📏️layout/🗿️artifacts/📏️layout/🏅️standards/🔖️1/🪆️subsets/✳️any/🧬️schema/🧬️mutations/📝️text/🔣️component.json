@@ -1,5 +1,529 @@
 {
-  "$id": "https://semio.tech/schema/stdio.json/mutations/text.json",
-  "title": "JsonMutationsText",
-  "type": "object"
+  "$id": "https://semio.tech/schema/layout.layout/mutations/text.json",
+  "title": "LayoutMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "title": "RenameLayout",
+      "properties": {
+        "kind": {
+          "const": "rename-layout"
+        },
+        "newName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "newName"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ChangePrintTarget",
+      "properties": {
+        "kind": {
+          "const": "change-print-target"
+        },
+        "newPrintTarget": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ChangeDataFields",
+      "properties": {
+        "kind": {
+          "const": "change-data-fields"
+        },
+        "newJson": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "CreatePage",
+      "properties": {
+        "kind": {
+          "const": "create-page"
+        },
+        "page": {
+          "type": "object"
+        },
+        "index": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "page"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "DeletePage",
+      "properties": {
+        "kind": {
+          "const": "delete-page"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "RenamePage",
+      "properties": {
+        "kind": {
+          "const": "rename-page"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "newName"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ChangePageWidth",
+      "properties": {
+        "kind": {
+          "const": "change-page-width"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newWidth": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "newWidth"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ChangePageHeight",
+      "properties": {
+        "kind": {
+          "const": "change-page-height"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newHeight": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "newHeight"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "UpdatePageMargins",
+      "properties": {
+        "kind": {
+          "const": "update-page-margins"
+        },
+        "id": {
+          "type": "string"
+        },
+        "top": {
+          "type": "number"
+        },
+        "right": {
+          "type": "number"
+        },
+        "bottom": {
+          "type": "number"
+        },
+        "left": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "top",
+        "right",
+        "bottom",
+        "left"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "UpdatePageColumns",
+      "properties": {
+        "kind": {
+          "const": "update-page-columns"
+        },
+        "id": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer"
+        },
+        "gutter": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "count",
+        "gutter"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ReorderPages",
+      "properties": {
+        "kind": {
+          "const": "reorder-pages"
+        },
+        "id": {
+          "type": "string"
+        },
+        "toIndex": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "toIndex"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "CreateStory",
+      "properties": {
+        "kind": {
+          "const": "create-story"
+        },
+        "story": {
+          "type": "object"
+        },
+        "index": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "story"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "DeleteStory",
+      "properties": {
+        "kind": {
+          "const": "delete-story"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "EditStory",
+      "properties": {
+        "kind": {
+          "const": "edit-story"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newContent": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "newContent"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "CreateLink",
+      "properties": {
+        "kind": {
+          "const": "create-link"
+        },
+        "link": {
+          "type": "object"
+        },
+        "index": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "link"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "DeleteLink",
+      "properties": {
+        "kind": {
+          "const": "delete-link"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ChangeLinkPath",
+      "properties": {
+        "kind": {
+          "const": "change-link-path"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newPath": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "newPath"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "CreateFrame",
+      "properties": {
+        "kind": {
+          "const": "create-frame"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "frame": {
+          "type": "object"
+        },
+        "index": {
+          "type": "integer"
+        },
+        "layerId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "frame"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "DeleteFrame",
+      "properties": {
+        "kind": {
+          "const": "delete-frame"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "frameId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "frameId"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "MoveFrame",
+      "properties": {
+        "kind": {
+          "const": "move-frame"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "frameId": {
+          "type": "string"
+        },
+        "newX": {
+          "type": "number"
+        },
+        "newY": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "frameId",
+        "newX",
+        "newY"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ResizeFrame",
+      "properties": {
+        "kind": {
+          "const": "resize-frame"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "frameId": {
+          "type": "string"
+        },
+        "newWidth": {
+          "type": "number"
+        },
+        "newHeight": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "frameId",
+        "newWidth",
+        "newHeight"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ChangeFrameFill",
+      "properties": {
+        "kind": {
+          "const": "change-frame-fill"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "frameId": {
+          "type": "string"
+        },
+        "newFill": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "frameId"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ChangeFrameStroke",
+      "properties": {
+        "kind": {
+          "const": "change-frame-stroke"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "frameId": {
+          "type": "string"
+        },
+        "newStroke": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "frameId"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ChangeFrameWrapMode",
+      "properties": {
+        "kind": {
+          "const": "change-frame-wrap-mode"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "frameId": {
+          "type": "string"
+        },
+        "newWrapMode": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "frameId",
+        "newWrapMode"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ChangeFrameColumns",
+      "properties": {
+        "kind": {
+          "const": "change-frame-columns"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "frameId": {
+          "type": "string"
+        },
+        "newColumns": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "frameId",
+        "newColumns"
+      ]
+    }
+  ]
 }

@@ -43,6 +43,18 @@ pub use document_panel::NOTE_PLAY_BODY_DOCUMENT;
 pub use inspection_panel::NOTE_PLAY_BODY_PROPERTIES;
 //#endregion 🔖️Constants
 
+//#region 🔖️ResetDocument
+/// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (see
+/// `📓️taxonomy.md`'s forbidden vocabulary), so `setActiveExample`/`setFixtureJson` build a
+/// `HostEffect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry.
+pub fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::kernel::HostEffect {
+    let pack = <NoteSnapshot as store::ArtifactPack>::encode_pack(document);
+    let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note", document.clone(), None);
+    let spr = store::print_document_spr(&envelope).expect("note document spr encode is infallible for a fresh, edit-free envelope");
+    semio_framework::kernel::HostEffect::LoadDocument { pack, spr }
+}
+//#endregion 🔖️ResetDocument
+
 //#region 🔖️Utilities
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🎚️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.

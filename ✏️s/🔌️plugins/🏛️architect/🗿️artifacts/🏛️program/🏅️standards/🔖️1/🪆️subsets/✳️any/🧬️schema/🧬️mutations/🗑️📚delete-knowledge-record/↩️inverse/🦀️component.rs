@@ -1,0 +1,14 @@
+//! ↩️ Inverse (undo) construction for the `delete-knowledge-record` mutation leaf — computed from
+//! captured pre-state (`base`), never by structurally inverting the diff. Split from
+//! `📚knowledge` per Wave C.
+
+use crate::artifacts::program::ProgramMutation;
+use crate::artifacts::program::ProgramSnapshot;
+
+/// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
+pub fn inverse(payload: &super::mutation::DeleteKnowledgeRecord, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    match base.knowledge.iter().find(|row| row.header.id == payload.id) {
+        Some(existing) => vec![ProgramMutation::CreateKnowledgeRecord(super::super::create_knowledge_record::mutation::CreateKnowledgeRecord { knowledge_record: existing.clone() })],
+        None => Vec::new(),
+    }
+}

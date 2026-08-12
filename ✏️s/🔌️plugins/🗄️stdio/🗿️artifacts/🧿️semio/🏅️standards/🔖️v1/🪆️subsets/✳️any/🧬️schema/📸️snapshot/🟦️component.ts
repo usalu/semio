@@ -10,7 +10,7 @@
 import type { SemioBrepSnapshot } from "../../../brep/schema/snapshot/component";
 import type { SemioMeshSnapshot } from "../../../mesh/schema/snapshot/component";
 import type { SemioModelSnapshot } from "../../../model/schema/snapshot/component";
-import type { SemioObjectSnapshot } from "../../../object/schema/snapshot/component";
+import type { SemioValueSnapshot } from "../../../value/schema/snapshot/component";
 import type { SemioDocumentSnapshot } from "../../../document/schema/snapshot/component";
 import type { SemioCadSnapshot } from "../../../cad/schema/snapshot/component";
 import type { SemioDrawingSnapshot } from "../../../drawing/schema/snapshot/component";
@@ -19,13 +19,13 @@ import type { SemioVideoSnapshot } from "../../../video/schema/snapshot/componen
 import type { SemioAudioSnapshot } from "../../../audio/schema/snapshot/component";
 import type { SemioAnimationSnapshot } from "../../../animation/schema/snapshot/component";
 import type { SemioPresentationSnapshot } from "../../../presentation/schema/snapshot/component";
-import type { SemioWorkflowSnapshot } from "../../../workflow/schema/snapshot/component";
+import type { SemioFlowSnapshot } from "../../../flow/schema/snapshot/component";
 
 export type SemioSubsetSnapshot =
   | { subset: "brep"; brep: SemioBrepSnapshot }
   | { subset: "mesh"; mesh: SemioMeshSnapshot }
   | { subset: "model"; model: SemioModelSnapshot }
-  | { subset: "object"; object: SemioObjectSnapshot }
+  | { subset: "value"; value: SemioValueSnapshot }
   | { subset: "document"; document: SemioDocumentSnapshot }
   | { subset: "cad"; cad: SemioCadSnapshot }
   | { subset: "drawing"; drawing: SemioDrawingSnapshot }
@@ -34,7 +34,7 @@ export type SemioSubsetSnapshot =
   | { subset: "audio"; audio: SemioAudioSnapshot }
   | { subset: "animation"; animation: SemioAnimationSnapshot }
   | { subset: "presentation"; presentation: SemioPresentationSnapshot }
-  | { subset: "workflow"; workflow: SemioWorkflowSnapshot };
+  | { subset: "flow"; flow: SemioFlowSnapshot };
 
 export interface SemioSnapshot {
   /** @state persistent */ schema: string;

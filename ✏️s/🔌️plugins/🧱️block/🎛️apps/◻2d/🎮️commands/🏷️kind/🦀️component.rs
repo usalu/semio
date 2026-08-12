@@ -14,15 +14,18 @@ pub mod patch_node_kind {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchNodeKind, doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
-        let mut node_kind = doc.snapshot.node_kind.clone();
-        match payload.field.as_str() {
-            "name" => node_kind.name = payload.value.clone(),
-            "label" => node_kind.label = payload.value.clone(),
-            "variant" => node_kind.variant = if payload.value.is_empty() { None } else { Some(payload.value.clone()) },
-            "description" => node_kind.description = payload.value.clone(),
+    pub fn handle(payload: &PatchNodeKind, _doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
+        use crate::artifacts::block2d::mutations as m;
+        let optional = |value: &str| if value.is_empty() { None } else { Some(value.to_string()) };
+        let mutation = match payload.field.as_str() {
+            "name" => m::rename_node_kind(payload.value.clone()),
+            "label" => m::change_node_kind_label(payload.value.clone()),
+            "variant" => m::change_node_kind_variant(optional(&payload.value)),
+            "description" => m::change_node_kind_description(payload.value.clone()),
+            "icon" => m::change_node_kind_icon(optional(&payload.value)),
+            "unit" => m::change_node_kind_unit(optional(&payload.value)),
             _ => return Ok(Emit::default()),
-        }
-        Ok(Emit::mutations(vec![Block2dMutation::SetNodeKind { node_kind }]))
+        };
+        Ok(Emit::mutations(vec![mutation]))
     }
 }

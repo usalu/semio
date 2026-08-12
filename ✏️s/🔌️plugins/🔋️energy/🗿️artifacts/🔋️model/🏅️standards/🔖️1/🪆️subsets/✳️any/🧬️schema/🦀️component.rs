@@ -115,7 +115,7 @@ pub mod derived_construction {
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
             let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            crate::artifacts::model::schema::mutations::apply_energy_model_mutation(&mut self.snapshot, &mutation);
+            self.snapshot = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(&diff, &self.snapshot);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> Self {

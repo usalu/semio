@@ -1,63 +1,158 @@
 syntax = "proto3";
 package semio.s.block.block2d.mutation;
 
-// 🧬️ Block2d mutation schema — persistent fields only.
+// 🧬️ Block2d mutation schema — one message per mutation kind (26 kinds).
 
 message Block2dMutation {
-  // @state persistent
-  string schema = 1;
-  // @state persistent
-  BlockKindIdentity node_kind = 2;
-  // @state persistent
-  Block2dPresentation presentation = 3;
-  // @state persistent
-  repeated Block2dHandleKind handle_kinds = 4;
-  // @state persistent
-  repeated Block2dHandleTemplate handles = 5;
-  // @state persistent
-  repeated BlockCompatibilityRule compatibility = 6;
-  // @state persistent
-  repeated BlockAttribute attributes = 7;
-  // @state persistent
-  repeated BlockAuthor authors = 8;
-  // @state persistent
-  BlockCamera2d camera2d = 9;
-  // @state persistent
-  BlockMeta meta = 10;
+  oneof kind {
+    RenameNodeKind rename_node_kind = 1;
+    ChangeNodeKindLabel change_node_kind_label = 2;
+    ChangeNodeKindVariant change_node_kind_variant = 3;
+    ChangeNodeKindDescription change_node_kind_description = 4;
+    ChangeNodeKindIcon change_node_kind_icon = 5;
+    ChangeNodeKindUnit change_node_kind_unit = 6;
+    UpdatePresentation update_presentation = 7;
+    CreateHandleKind create_handle_kind = 8;
+    DeleteHandleKind delete_handle_kind = 9;
+    RenameHandleKind rename_handle_kind = 10;
+    ChangeHandleKindLabel change_handle_kind_label = 11;
+    ChangeHandleKindColor change_handle_kind_color = 12;
+    ChangeHandleKindDefaultWireKind change_handle_kind_default_wire_kind = 13;
+    CreateHandle create_handle = 14;
+    DeleteHandle delete_handle = 15;
+    MoveHandle move_handle = 16;
+    ChangeHandleHandleKind change_handle_handle_kind = 17;
+    AddCompatibilityRule add_compatibility_rule = 18;
+    RemoveCompatibilityRule remove_compatibility_rule = 19;
+    AddAttribute add_attribute = 20;
+    RemoveAttribute remove_attribute = 21;
+    AddAuthor add_author = 22;
+    RemoveAuthor remove_author = 23;
+    MoveCamera2d move_camera2d = 24;
+    ScaleCamera2d scale_camera2d = 25;
+    ChangeMetaDescription change_meta_description = 26;
+  }
 }
 
-message BlockKindIdentity {
-  bool _placeholder = 1;
+message RenameNodeKind { // kind "rename-node-kind"
+  string new_name = 1;
 }
 
-message Block2dPresentation {
-  bool _placeholder = 1;
+message ChangeNodeKindLabel { // kind "change-node-kind-label"
+  string new_label = 1;
 }
 
-message Block2dHandleKind {
-  bool _placeholder = 1;
+message ChangeNodeKindVariant { // kind "change-node-kind-variant"
+  string new_variant = 1;
 }
 
-message Block2dHandleTemplate {
-  bool _placeholder = 1;
+message ChangeNodeKindDescription { // kind "change-node-kind-description"
+  string new_description = 1;
 }
 
-message BlockCompatibilityRule {
-  bool _placeholder = 1;
+message ChangeNodeKindIcon { // kind "change-node-kind-icon"
+  string new_icon = 1;
 }
 
-message BlockAttribute {
-  bool _placeholder = 1;
+message ChangeNodeKindUnit { // kind "change-node-kind-unit"
+  string new_unit = 1;
 }
 
-message BlockAuthor {
-  bool _placeholder = 1;
+message UpdatePresentation { // kind "update-presentation"
+  string new_shape = 1;
+  double new_radius = 2;
+  double new_width = 3;
+  double new_height = 4;
+  string new_color = 5;
+  string new_icon_kind = 6;
 }
 
-message BlockCamera2d {
-  bool _placeholder = 1;
+message CreateHandleKind { // kind "create-handle-kind"
+  Block2dHandleKind handle_kind = 1;
 }
 
-message BlockMeta {
-  bool _placeholder = 1;
+message DeleteHandleKind { // kind "delete-handle-kind"
+  string id = 1;
 }
+
+message RenameHandleKind { // kind "rename-handle-kind"
+  string id = 1;
+  string new_name = 2;
+}
+
+message ChangeHandleKindLabel { // kind "change-handle-kind-label"
+  string id = 1;
+  string new_label = 2;
+}
+
+message ChangeHandleKindColor { // kind "change-handle-kind-color"
+  string id = 1;
+  string new_color = 2;
+}
+
+message ChangeHandleKindDefaultWireKind { // kind "change-handle-kind-default-wire-kind"
+  string id = 1;
+  string new_default_wire_kind = 2;
+}
+
+message CreateHandle { // kind "create-handle"
+  Block2dHandleTemplate handle = 1;
+}
+
+message DeleteHandle { // kind "delete-handle"
+  string id = 1;
+}
+
+message MoveHandle { // kind "move-handle"
+  string id = 1;
+  double new_angle = 2;
+  double new_radius = 3;
+}
+
+message ChangeHandleHandleKind { // kind "change-handle-handle-kind"
+  string id = 1;
+  string new_handle_kind = 2;
+}
+
+message AddCompatibilityRule { // kind "add-compatibility-rule"
+  BlockCompatibilityRule rule = 1;
+}
+
+message RemoveCompatibilityRule { // kind "remove-compatibility-rule"
+  string id = 1;
+}
+
+message AddAttribute { // kind "add-attribute"
+  BlockAttribute attribute = 1;
+}
+
+message RemoveAttribute { // kind "remove-attribute"
+  string key = 1;
+}
+
+message AddAuthor { // kind "add-author"
+  BlockAuthor author = 1;
+}
+
+message RemoveAuthor { // kind "remove-author"
+  string id = 1;
+}
+
+message MoveCamera2d { // kind "move-camera2d"
+  double new_x = 1;
+  double new_y = 2;
+}
+
+message ScaleCamera2d { // kind "scale-camera2d"
+  double new_zoom = 1;
+}
+
+message ChangeMetaDescription { // kind "change-meta-description"
+  string new_description = 1;
+}
+
+message Block2dHandleKind { string id = 1; }
+message Block2dHandleTemplate { string id = 1; }
+message BlockCompatibilityRule { string id = 1; }
+message BlockAttribute { string id = 1; }
+message BlockAuthor { string id = 1; }

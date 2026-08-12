@@ -408,6 +408,20 @@ pub struct MutationMeta {
     /// `SemanticMutation::label`), so history UI stops reverse-engineering one from `print_op`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
+    /// @emoji 🧑‍🤝‍🧑️ Composite-gesture stamp: `Some(id)` when this edit was authored as one member
+    /// of a multi-document composite gesture (the future `CompositionCoordinator`'s atomic
+    /// parent+child dispatch across several `ArtifactEnvelope`s), so group undo can find and
+    /// reverse every sibling member together; `None` for a solitary, single-document edit.
+    /// Additive, mirrors `semantic_kind`/`label` above. 🎞️ Wire representation is the bare id
+    /// string `semio_framework::kernel::InvocationId` wraps, not that newtype itself: this crate
+    /// (`semio-framework-os-kernel`) is a dependency `semio-framework` builds on (see
+    /// `📦️packages/🦀️rust/Cargo.toml`), so importing `InvocationId` here would invert that edge —
+    /// see `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b1-spr-vcs-report.md` for the
+    /// decision record. Callers holding a real `InvocationId` pass `.0`; this field round-trips
+    /// through `Edit.mutation_meta` into the `.spr` history log (`HistoryOpMeta.group_id`,
+    /// `📡️spr/📜️history/🦀️component.rs`) so it survives persistence and sync.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub group_id: Option<String>,
 }
 
 /// @emoji 📝️ One coalesced batch of operations, forward and backward, plus their causal metadata.
@@ -780,10 +794,18 @@ mod tests {
             payload_hash: Some(crate::os_spr::ids::PayloadHash([7u8; 32])),
             semantic_kind: None,
             label: None,
+            group_id: Some("invocation-1".to_string()),
         };
         let json = serde_json::to_string(&meta).expect("serialize");
+        assert!(json.contains("\"group_id\":\"invocation-1\""), "group_id must serialize under its own field name (MutationMeta has no rename_all), got {json}");
         let round_tripped: MutationMeta = serde_json::from_str(&json).expect("deserialize");
-        assert_eq!(round_tripped, meta);
+        assert_eq!(round_tripped, meta, "group_id must round-trip through serde exactly like semantic_kind/label");
+
+        let solitary = MutationMeta { group_id: None, ..meta };
+        let solitary_json = serde_json::to_string(&solitary).expect("serialize");
+        assert!(!solitary_json.contains("group_id"), "a solitary edit's None group_id must be omitted, matching skip_serializing_if on the sibling optional fields");
+        let solitary_round_tripped: MutationMeta = serde_json::from_str(&solitary_json).expect("deserialize");
+        assert_eq!(solitary_round_tripped, solitary);
     }
 
     #[test]
@@ -803,6 +825,7 @@ mod tests {
                 payload_hash: None,
                 semantic_kind: None,
                 label: None,
+                group_id: None,
             }],
             description: Some("two adds".into()),
             coalesce_key: None,

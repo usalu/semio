@@ -2204,7 +2204,7 @@ mod tests {
 
         let mut store = Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None));
         let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![Puzzle5dMutation::SetPart { index: 0, part }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle5d::mutations::create_part(part, None)], description: None }).expect("apply");
         let edit: &Edit<Puzzle5dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }

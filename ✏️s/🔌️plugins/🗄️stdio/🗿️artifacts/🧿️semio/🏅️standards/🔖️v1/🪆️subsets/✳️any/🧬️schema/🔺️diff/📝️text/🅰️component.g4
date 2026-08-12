@@ -4,6 +4,6 @@ grammar Semio_any_diff;
 
 diff: 'noChange' | taggedDiff;
 taggedDiff: tag ':' REST;
-tag: 'replace' | 'brep' | 'mesh' | 'model' | 'object' | 'document' | 'cad' | 'drawing' | 'image' | 'video' | 'audio' | 'animation' | 'presentation' | 'workflow';
+tag: 'replace' | 'brep' | 'mesh' | 'model' | 'value' | 'document' | 'cad' | 'drawing' | 'image' | 'video' | 'audio' | 'animation' | 'presentation' | 'flow';
 
 REST: .*? ;

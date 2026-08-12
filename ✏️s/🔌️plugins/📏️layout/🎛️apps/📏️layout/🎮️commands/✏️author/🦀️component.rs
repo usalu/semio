@@ -3,38 +3,44 @@
 
 use crate::apps::layout::config::{LayoutConfig, LayoutConfigMutation};
 use crate::artifacts::layout::engine::text_to_rgba;
+use crate::artifacts::layout::mutations::change_frame_columns::mutation::ChangeFrameColumns;
+use crate::artifacts::layout::mutations::change_frame_fill::mutation::ChangeFrameFill;
+use crate::artifacts::layout::mutations::change_frame_stroke::mutation::ChangeFrameStroke;
+use crate::artifacts::layout::mutations::change_frame_wrap_mode::mutation::ChangeFrameWrapMode;
+use crate::artifacts::layout::mutations::change_link_path::mutation::ChangeLinkPath;
+use crate::artifacts::layout::mutations::change_page_height::mutation::ChangePageHeight;
+use crate::artifacts::layout::mutations::change_page_width::mutation::ChangePageWidth;
+use crate::artifacts::layout::mutations::create_frame::mutation::CreateFrame;
+use crate::artifacts::layout::mutations::create_page::mutation::CreatePage;
+use crate::artifacts::layout::mutations::edit_story::mutation::EditStory;
+use crate::artifacts::layout::mutations::move_frame::mutation::MoveFrame;
+use crate::artifacts::layout::mutations::rename_page::mutation::RenamePage;
+use crate::artifacts::layout::mutations::resize_frame::mutation::ResizeFrame;
+use crate::artifacts::layout::mutations::update_page_columns::mutation::UpdatePageColumns;
+use crate::artifacts::layout::mutations::update_page_margins::mutation::UpdatePageMargins;
 use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::{Frame, FramePatch, ImageLinkPatch, LayoutSnapshot, PageColumns, PageMargins, PagePatch, TextStoryPatch};
-use protocol::CollectionMutation;
+use crate::artifacts::layout::{Frame, LayoutSnapshot, Page, PageColumns, PageMargins};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shared
-/// 🩹️ Builds the `PagePatch` for a `patchPage` field write from the command's text `value`; unknown
-/// fields/mistyped (non-numeric where a number is expected) values yield `None`.
-fn page_patch_for_field(field: &str, value: &str) -> Option<PagePatch> {
+/// 🎯️ Builds the exact semantic mutation for a `patchPage` field write from the command's text
+/// `value`; unknown fields/mistyped (non-numeric where a number is expected) values yield `None`.
+/// `marginTop`/`marginRight`/`marginBottom`/`marginLeft`/`columnsCount`/`columnsGutter` read the
+/// page's OTHER current value(s) so `update-page-margins`/`update-page-columns` stay atomic.
+fn page_field_mutation(page: &Page, field: &str, value: &str) -> Option<LayoutMutation> {
+    let id = page.id.clone();
     match field {
-        "name" => Some(PagePatch { name: Some(value.into()), ..Default::default() }),
-        "width" => value.parse::<f64>().ok().map(|v| PagePatch { width: Some(v), ..Default::default() }),
-        "height" => value.parse::<f64>().ok().map(|v| PagePatch { height: Some(v), ..Default::default() }),
-        "marginTop" => value.parse::<f64>().ok().map(|v| PagePatch { margin_top: Some(v), ..Default::default() }),
-        "marginRight" => value.parse::<f64>().ok().map(|v| PagePatch { margin_right: Some(v), ..Default::default() }),
-        "marginBottom" => value.parse::<f64>().ok().map(|v| PagePatch { margin_bottom: Some(v), ..Default::default() }),
-        "marginLeft" => value.parse::<f64>().ok().map(|v| PagePatch { margin_left: Some(v), ..Default::default() }),
-        "columnsCount" => value.parse::<f64>().ok().map(|v| PagePatch { columns_count: Some(v.max(0.0) as u32), ..Default::default() }),
-        "columnsGutter" => value.parse::<f64>().ok().map(|v| PagePatch { columns_gutter: Some(v), ..Default::default() }),
+        "name" => Some(LayoutMutation::RenamePage(RenamePage { id, new_name: value.into() })),
+        "width" => value.parse::<f64>().ok().map(|new_width| LayoutMutation::ChangePageWidth(ChangePageWidth { id, new_width })),
+        "height" => value.parse::<f64>().ok().map(|new_height| LayoutMutation::ChangePageHeight(ChangePageHeight { id, new_height })),
+        "marginTop" => value.parse::<f64>().ok().map(|top| LayoutMutation::UpdatePageMargins(UpdatePageMargins { id, top, right: page.margins.right, bottom: page.margins.bottom, left: page.margins.left })),
+        "marginRight" => value.parse::<f64>().ok().map(|right| LayoutMutation::UpdatePageMargins(UpdatePageMargins { id, top: page.margins.top, right, bottom: page.margins.bottom, left: page.margins.left })),
+        "marginBottom" => value.parse::<f64>().ok().map(|bottom| LayoutMutation::UpdatePageMargins(UpdatePageMargins { id, top: page.margins.top, right: page.margins.right, bottom, left: page.margins.left })),
+        "marginLeft" => value.parse::<f64>().ok().map(|left| LayoutMutation::UpdatePageMargins(UpdatePageMargins { id, top: page.margins.top, right: page.margins.right, bottom: page.margins.bottom, left })),
+        "columnsCount" => value.parse::<f64>().ok().map(|v| LayoutMutation::UpdatePageColumns(UpdatePageColumns { id, count: v.max(0.0) as u32, gutter: page.columns.gutter })),
+        "columnsGutter" => value.parse::<f64>().ok().map(|gutter| LayoutMutation::UpdatePageColumns(UpdatePageColumns { id, count: page.columns.count, gutter })),
         _ => None,
-    }
-}
-
-/// 🩹️ Builds the bounds `FramePatch` for an `x`/`y`/`width`/`height` frame field write.
-fn frame_bounds_patch(field: &str, value: f64) -> FramePatch {
-    match field {
-        "x" => FramePatch { x: Some(value), ..Default::default() },
-        "y" => FramePatch { y: Some(value), ..Default::default() },
-        "width" | "w" => FramePatch { width: Some(value), ..Default::default() },
-        "height" | "h" => FramePatch { height: Some(value), ..Default::default() },
-        _ => FramePatch::default(),
     }
 }
 //#endregion 🔖️Shared
@@ -91,7 +97,7 @@ pub mod add_frame {
                 stroke: None,
             },
         };
-        Ok(Emit { artifact_mutations: vec![LayoutMutation::AddFrame { page_id, index, frame, layer_id: Some(layer_id) }], config_mutations: vec![LayoutConfigMutation::SetSelection { ids: vec![frame_id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![LayoutMutation::CreateFrame(CreateFrame { page_id, frame, index: Some(index), layer_id: Some(layer_id) })], config_mutations: vec![LayoutConfigMutation::SetSelection { ids: vec![frame_id] }], ..Default::default() })
     }
 }
 //#endregion 🔖️AddFrame
@@ -114,6 +120,7 @@ pub mod add_page {
         );
         let page_id = format!("page-{}", document.pages.len() + 1);
         let layer_id = format!("layer-{page_id}");
+        let index = document.pages.len();
         let page = crate::artifacts::layout::Page {
             id: page_id.clone(),
             name: format!("Page {}", document.pages.len() + 1),
@@ -130,7 +137,7 @@ pub mod add_page {
             overrides: Vec::new(),
         };
         Ok(Emit {
-            artifact_mutations: vec![LayoutMutation::Pages(CollectionMutation::Add { index: document.pages.len(), item: page })],
+            artifact_mutations: vec![LayoutMutation::CreatePage(CreatePage { page, index: Some(index) })],
             config_mutations: vec![LayoutConfigMutation::SetActivePage { page_id: page_id.clone() }, LayoutConfigMutation::SetSelection { ids: vec![page_id] }],
             ..Default::default()
         })
@@ -152,9 +159,9 @@ pub mod patch_page {
 
     pub fn handle(payload: &PatchPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
         let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
-        match page_patch_for_field(&payload.field, &payload.value) {
-            Some(patch) if doc.snapshot.pages.iter().any(|page| page.id == page_id) => Ok(Emit::mutations(vec![LayoutMutation::Pages(CollectionMutation::Patch { id: page_id, patch })])),
-            _ => Ok(Emit::default()),
+        match doc.snapshot.pages.iter().find(|page| page.id == page_id).and_then(|page| page_field_mutation(page, &payload.field, &payload.value)) {
+            Some(mutation) => Ok(Emit::mutations(vec![mutation])),
+            None => Ok(Emit::default()),
         }
     }
 }
@@ -185,19 +192,29 @@ pub mod patch_frame {
         let Some(frame) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else {
             return Ok(Emit::default());
         };
+        let frame_id = payload.frame_id.clone();
         match payload.field.as_str() {
-            "x" | "y" | "width" | "w" | "height" | "h" => match payload.value.parse::<f64>() {
-                Ok(number) => Ok(Emit::mutations(vec![LayoutMutation::PatchFrame { page_id, frame_id: payload.frame_id.clone(), patch: frame_bounds_patch(&payload.field, number) }])),
+            "x" | "y" => match payload.value.parse::<f64>() {
+                Ok(number) => {
+                    let bounds = frame.bounds();
+                    let (new_x, new_y) = if payload.field == "x" { (number, bounds.y) } else { (bounds.x, number) };
+                    Ok(Emit::mutations(vec![LayoutMutation::MoveFrame(MoveFrame { page_id, frame_id, new_x, new_y })]))
+                }
                 Err(_) => Ok(Emit::default()),
             },
-            "fill" | "stroke" => {
-                let rgba = text_to_rgba(&payload.value);
-                let patch = if payload.field == "fill" { FramePatch { fill: Some(rgba), ..Default::default() } } else { FramePatch { stroke: Some(rgba), ..Default::default() } };
-                Ok(Emit::mutations(vec![LayoutMutation::PatchFrame { page_id, frame_id: payload.frame_id.clone(), patch }]))
-            }
-            "wrapMode" => Ok(Emit::mutations(vec![LayoutMutation::PatchFrame { page_id, frame_id: payload.frame_id.clone(), patch: FramePatch { wrap_mode: Some(payload.value.clone()), ..Default::default() } }])),
+            "width" | "w" | "height" | "h" => match payload.value.parse::<f64>() {
+                Ok(number) => {
+                    let bounds = frame.bounds();
+                    let (new_width, new_height) = if payload.field == "width" || payload.field == "w" { (number, bounds.height) } else { (bounds.width, number) };
+                    Ok(Emit::mutations(vec![LayoutMutation::ResizeFrame(ResizeFrame { page_id, frame_id, new_width, new_height })]))
+                }
+                Err(_) => Ok(Emit::default()),
+            },
+            "fill" => Ok(Emit::mutations(vec![LayoutMutation::ChangeFrameFill(ChangeFrameFill { page_id, frame_id, new_fill: Some(text_to_rgba(&payload.value)) })])),
+            "stroke" => Ok(Emit::mutations(vec![LayoutMutation::ChangeFrameStroke(ChangeFrameStroke { page_id, frame_id, new_stroke: Some(text_to_rgba(&payload.value)) })])),
+            "wrapMode" => Ok(Emit::mutations(vec![LayoutMutation::ChangeFrameWrapMode(ChangeFrameWrapMode { page_id, frame_id, new_wrap_mode: payload.value.clone() })])),
             "columns" => match payload.value.parse::<f64>() {
-                Ok(count) => Ok(Emit::mutations(vec![LayoutMutation::PatchFrame { page_id, frame_id: payload.frame_id.clone(), patch: FramePatch { columns: Some(count.max(0.0) as u32), ..Default::default() } }])),
+                Ok(count) => Ok(Emit::mutations(vec![LayoutMutation::ChangeFrameColumns(ChangeFrameColumns { page_id, frame_id, new_columns: count.max(0.0) as u32 })])),
                 Err(_) => Ok(Emit::default()),
             },
             "storyContent" => {
@@ -206,7 +223,7 @@ pub mod patch_frame {
                     _ => None,
                 };
                 match story_id {
-                    Some(story_id) if document.stories.iter().any(|story| story.id == story_id) => Ok(Emit::mutations(vec![LayoutMutation::Stories(CollectionMutation::Patch { id: story_id, patch: TextStoryPatch { content: Some(payload.value.clone()) } })])),
+                    Some(id) if document.stories.iter().any(|story| story.id == id) => Ok(Emit::mutations(vec![LayoutMutation::EditStory(EditStory { id, new_content: payload.value.clone() })])),
                     _ => Ok(Emit::default()),
                 }
             }
@@ -216,7 +233,7 @@ pub mod patch_frame {
                     _ => None,
                 };
                 match link_id {
-                    Some(link_id) if document.links.iter().any(|link| link.id == link_id) => Ok(Emit::mutations(vec![LayoutMutation::Links(CollectionMutation::Patch { id: link_id, patch: ImageLinkPatch { path: Some(payload.value.clone()) } })])),
+                    Some(id) if document.links.iter().any(|link| link.id == id) => Ok(Emit::mutations(vec![LayoutMutation::ChangeLinkPath(ChangeLinkPath { id, new_path: payload.value.clone() })])),
                     _ => Ok(Emit::default()),
                 }
             }

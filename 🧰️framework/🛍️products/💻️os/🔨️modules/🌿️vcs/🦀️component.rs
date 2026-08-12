@@ -94,6 +94,23 @@ pub struct Change {
     pub saved_at: String,
 }
 
+/// @emoji 🧩️ One owned child's checkpoint pin, captured on the parent's checkpoint so checking out
+/// the parent can restore the whole composition. `child_ref` is the pinned child artifact's
+/// `ArtifactRef` wire URI (`"<artifact_id>!<kind>@<standard>/<subset>"`, see `to_uri`/`parse_uri`
+/// on `ArtifactRef` in `🧰️framework/🔨️modules/🚪️io/🦀️component.rs`), not that type itself: this
+/// crate (`semio-framework-os-kernel`) is the dependency `semio-framework` (where `ArtifactRef`
+/// lives) builds on, so importing it here would invert that edge — same cross-crate consideration,
+/// and the same String-primitive resolution, as `command::MutationMeta.group_id`; see
+/// `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b1-spr-vcs-report.md` for the decision
+/// record. The URI form doubles as a natural deterministic sort key for
+/// [`content_addressed_checkpoint_id`] below.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CompositionPin {
+    pub child_ref: String,
+    pub checkpoint_id: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Checkpoint {
@@ -105,6 +122,11 @@ pub struct Checkpoint {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
     pub timestamp: String,
+    /// @emoji 🧩️ Which checkpoint each owned child was at when this checkpoint was committed —
+    /// empty for a non-composite artifact (every checkpoint before this ticket, and every leaf
+    /// artifact after it). Additive; see [`CompositionPin`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub composition_pins: Vec<CompositionPin>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -163,6 +185,16 @@ pub enum VcsError {
     /// this pass — additive only.
     #[error("migration failed: {0}")]
     MigrationFailed(String),
+    /// @emoji 🔁️ A composition-pin graph traversal (parent → child → …) found a cycle back to an
+    /// ancestor — an owned-child forest must stay acyclic. Not yet raised by any call site in this
+    /// pass (the `CompositionCoordinator` that walks this graph is a later wave) — additive only.
+    #[error("composition cycle: {0}")]
+    CompositionCycle(String),
+    /// @emoji 🚫️ An operation would violate composition's single-ownership invariant (e.g.
+    /// adopting a child that already has a different owner). Not yet raised by any call site in
+    /// this pass — additive only.
+    #[error("ownership violation: {0}")]
+    OwnershipViolation(String),
 }
 
 crate::fault_from_thiserror!(VcsError, crate::os_dsl::FaultOrigin::Module, "module.vcs");
@@ -331,13 +363,24 @@ where
 // envelope) — only the envelope-free id-minting primitive stays here.
 
 /// @emoji 🔒️ Content-addressed checkpoint id: `ck-<hex16(blake3(parent_id || ordered_change_content_
-/// hashes || message || authors || timestamp))>`, replacing the old fully-random counter-string
-/// scheme (`create_document_vcs_id("checkpoint")`) — two peers that independently commit the
-/// identical checkpoint content (same parent, same changes in the same order, same message/authors/
-/// timestamp) now converge on the identical id instead of minting two different ones. `changes` must
-/// already contain every entry `change_ids` references (including one freshly created by this same
-/// commit, if any) — callers push a new `Change` before calling this.
-pub fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids: &[String], changes: &[Change], message: Option<&str>, authors: &[Author], timestamp: &str) -> String {
+/// hashes || message || authors || timestamp [|| ordered_pin_content]))>`, replacing the old fully-
+/// random counter-string scheme (`create_document_vcs_id("checkpoint")`) — two peers that
+/// independently commit the identical checkpoint content (same parent, same changes in the same
+/// order, same message/authors/timestamp, same composition pins) now converge on the identical id
+/// instead of minting two different ones. `changes` must already contain every entry `change_ids`
+/// references (including one freshly created by this same commit, if any) — callers push a new
+/// `Change` before calling this.
+///
+/// 🎯️ `pins` extension (composition-aware checkpoints): appended to the hash input ONLY when
+/// non-empty, so a non-composite checkpoint (the overwhelming majority, and every checkpoint ever
+/// minted before this ticket) hashes to EXACTLY the pre-existing bytes — this is what keeps old ids
+/// stable, not a version bump. `pins` is re-sorted by `child_ref` (the `ArtifactRef` wire URI, see
+/// [`CompositionPin`]) inside this function rather than trusted in caller-supplied order: a caller
+/// building the pin list from a `HashMap`/parallel-dispatch fan-out over owned children has no
+/// natural deterministic order of its own, and two peers committing the identical pin SET must
+/// still converge on the identical id regardless of which order their local dispatch happened to
+/// discover the children in.
+pub fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids: &[String], changes: &[Change], message: Option<&str>, authors: &[Author], timestamp: &str, pins: &[CompositionPin]) -> String {
     let mut input = Vec::new();
     input.extend_from_slice(parent_id.unwrap_or("").as_bytes());
     input.push(0);
@@ -354,6 +397,17 @@ pub fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids: &[St
     }
     input.push(0);
     input.extend_from_slice(timestamp.as_bytes());
+    if !pins.is_empty() {
+        let mut ordered: Vec<&CompositionPin> = pins.iter().collect();
+        ordered.sort_by(|a, b| a.child_ref.cmp(&b.child_ref));
+        input.push(0);
+        for pin in ordered {
+            input.extend_from_slice(pin.child_ref.as_bytes());
+            input.push(0);
+            input.extend_from_slice(pin.checkpoint_id.as_bytes());
+            input.push(0);
+        }
+    }
     let digest = *blake3::hash(&input).as_bytes();
     let hex16: String = digest[..8].iter().map(|byte| format!("{byte:02x}")).collect();
     format!("ck-{hex16}")
@@ -473,19 +527,87 @@ mod tests {
         let change_ids = vec!["change-root".to_string()];
         let authors = vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }];
 
-        let id_a = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z");
-        let id_b = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z");
+        let id_a = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z", &[]);
+        let id_b = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z", &[]);
         assert_eq!(id_a, id_b, "identical inputs converge on the identical id");
         assert!(id_a.starts_with("ck-"), "got {id_a}");
 
-        let id_different_message = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("other message"), &authors, "2026-07-27T00:00:01Z");
+        let id_different_message = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("other message"), &authors, "2026-07-27T00:00:01Z", &[]);
         assert_ne!(id_a, id_different_message, "a different message must change the id");
 
-        let id_different_parent = content_addressed_checkpoint_id(Some("ck-parent"), &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z");
+        let id_different_parent = content_addressed_checkpoint_id(Some("ck-parent"), &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z", &[]);
         assert_ne!(id_a, id_different_parent, "a different parent must change the id");
 
-        let id_different_timestamp = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:02Z");
+        let id_different_timestamp = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:02Z", &[]);
         assert_ne!(id_a, id_different_timestamp, "a different timestamp must change the id");
+    }
+
+    /// @emoji 🧩️ `composition_pins`/`CompositionPin` extension to `content_addressed_checkpoint_id`:
+    /// the three properties the ticket calls for — pin-set changes flip the id, identical
+    /// pins-in-identical-order converge, and (critically) an EMPTY pin list must hash to the exact
+    /// same bytes `content_addressed_checkpoint_id` produced before this field existed, so every
+    /// checkpoint id ever minted for a non-composite artifact stays valid.
+    #[test]
+    fn content_addressed_checkpoint_id_composition_pins_are_deterministic_and_backward_compatible() {
+        let root_change = Change { id: "change-root".into(), edit_ids: vec!["edit-1".into()], description: Some("root".into()), saved_at: "2026-07-27T00:00:00Z".into() };
+        let changes = vec![root_change];
+        let change_ids = vec!["change-root".to_string()];
+        let authors = vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }];
+        let args = (None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z");
+
+        // (1) Empty pins must reproduce the pre-pins hash bytes EXACTLY — recomputed here via the
+        // same blake3(parent||changes||message||authors||timestamp) formula
+        // `content_addressed_checkpoint_id` used before the `pins` parameter was added, so this is
+        // a byte-level backward-compatibility proof, not just "doesn't panic".
+        let mut legacy_input = Vec::new();
+        legacy_input.extend_from_slice(args.0.unwrap_or("").as_bytes());
+        legacy_input.push(0);
+        for change_id in args.1 {
+            let change_hash = args.2.iter().find(|change| change.id == *change_id).map(|change| *blake3::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes()).unwrap_or([0u8; 32]);
+            legacy_input.extend_from_slice(&change_hash);
+        }
+        legacy_input.push(0);
+        legacy_input.extend_from_slice(args.3.unwrap_or("").as_bytes());
+        legacy_input.push(0);
+        for author in args.4 {
+            legacy_input.extend_from_slice(author.id.as_bytes());
+            legacy_input.push(0);
+        }
+        legacy_input.push(0);
+        legacy_input.extend_from_slice(args.5.as_bytes());
+        let legacy_digest = *blake3::hash(&legacy_input).as_bytes();
+        let legacy_hex16: String = legacy_digest[..8].iter().map(|byte| format!("{byte:02x}")).collect();
+        let legacy_id = format!("ck-{legacy_hex16}");
+        let id_no_pins = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &[]);
+        assert_eq!(id_no_pins, legacy_id, "an empty pin list must not change a single byte of the pre-existing hash input");
+
+        // (2) A non-empty pin set changes the id relative to no pins at all.
+        let pins_one = vec![CompositionPin { child_ref: "child-a!s.stdio.mesh@87a/mesh".into(), checkpoint_id: "ck-child-a-1".into() }];
+        let id_with_pins = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one);
+        assert_ne!(id_no_pins, id_with_pins, "a non-empty pin list must change the id relative to no composition");
+
+        // (3) Identical pins in identical order converge on the identical id.
+        let id_with_pins_again = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one);
+        assert_eq!(id_with_pins, id_with_pins_again, "identical pins in identical order converge on the identical id");
+
+        // (4) A different pin CONTENT (same child, different pinned checkpoint) changes the id.
+        let pins_one_moved = vec![CompositionPin { child_ref: "child-a!s.stdio.mesh@87a/mesh".into(), checkpoint_id: "ck-child-a-2".into() }];
+        let id_pin_moved = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one_moved);
+        assert_ne!(id_with_pins, id_pin_moved, "a different pinned checkpoint_id for the same child must change the id");
+
+        // (5) Two peers that discover the same pin SET in different order (e.g. concurrent
+        // parallel-child dispatch) still converge — the function sorts by `child_ref` internally.
+        let pins_two_ordered = vec![
+            CompositionPin { child_ref: "child-a!s.stdio.mesh@87a/mesh".into(), checkpoint_id: "ck-child-a-1".into() },
+            CompositionPin { child_ref: "child-b!s.stdio.image@87a/image".into(), checkpoint_id: "ck-child-b-1".into() },
+        ];
+        let pins_two_reordered = vec![
+            CompositionPin { child_ref: "child-b!s.stdio.image@87a/image".into(), checkpoint_id: "ck-child-b-1".into() },
+            CompositionPin { child_ref: "child-a!s.stdio.mesh@87a/mesh".into(), checkpoint_id: "ck-child-a-1".into() },
+        ];
+        let id_ordered = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_two_ordered);
+        let id_reordered = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_two_reordered);
+        assert_eq!(id_ordered, id_reordered, "two peers discovering the same pin set in different incidental order must converge on the identical id");
     }
 
     //#region 🆔️Ids

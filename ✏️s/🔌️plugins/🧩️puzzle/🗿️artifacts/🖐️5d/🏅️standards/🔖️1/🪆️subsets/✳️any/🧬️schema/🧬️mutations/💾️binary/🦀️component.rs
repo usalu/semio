@@ -39,14 +39,14 @@ mod tests {
     #[test]
     fn puzzle5d_document_vcs_replays_granular_operations() {
         use crate::artifacts::puzzle5d::engine::empty_puzzle5d_snapshot;
-        use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE_5D_SCHEMA, Puzzle5dPartAnchor};
+        use crate::artifacts::puzzle5d::mutations::create_part;
+        use crate::artifacts::puzzle5d::{Puzzle5dPart, PUZZLE_5D_SCHEMA};
         use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None));
         store
             .dispatch(ArtifactCommand::Apply {
-                mutations: vec![Puzzle5dMutation::SetPart { index: 0, part: Puzzle5dPart { id: "p1".into(),
-            anchor: Puzzle5dPartAnchor::Fixed, part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() } }],
+                mutations: vec![create_part(Puzzle5dPart { id: "p1".into(), ..Default::default() }, None)],
                 description: None,
             })
             .expect("apply");
@@ -60,66 +60,39 @@ mod tests {
 //#region 🔒️WireFormatGuard
 #[cfg(test)]
 mod wire_format_guard {
-    //! 🔒️ The permanent byte-level regression guard for this artifact's spr codec, frozen from the
-    //! pre-consolidation `📡️protocol` crate (master ticket
-    //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, TEMPLATE.md §0.4/§7).
+    //! 🔒️ Byte-level `OpBinary` round-trip guard for the semantic-mutations-overhaul vocabulary
+    //! (ticket `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`). The pre-overhaul whole-record-upsert /
+    //! whole-document-replace wire bytes this guard used to freeze no longer exist — that
+    //! vocabulary is banned outright, not preserved — so this now asserts the NEW operations'
+    //! `OpText`/`OpBinary` round-trip instead of pinning byte literals for a wire shape this ticket
+    //! deliberately changed.
     use super::*;
-    use crate::artifacts::puzzle5d as puzzle_5d;
+    use crate::artifacts::puzzle5d::mutations::{change_description, change_domain, connect_grips, create_part, delete_part, disconnect_grips};
+    use crate::artifacts::puzzle5d::Puzzle5dPart;
     use protocol::OpText;
-    use serde_json::json;
 
     fn ops() -> Vec<Puzzle5dMutation> {
-        let part: puzzle_5d::Puzzle5dPart = serde_json::from_value(json!({"id":"p1","partKind":"Capsule","2d":{"x":1.0,"y":2.0,"shape":"circle","radius":3.0,"text":"t","iconKind":"i","hidden":false,"locked":false},"3d":{"origin":[1.0,2.0,3.0],"meshUrl":"/m.glb","orientation":[0.0,0.0,0.0,1.0],"scale":[2.0,3.0,4.0],"label":"L"},"grips":[{"id":"g0","gripKind":"k","2d":{"angle":0.5,"gripKind":"k","radius":3.0},"3d":{"position":[0.0,0.0,0.0],"direction":[0.0,0.0,1.0],"radius":3.0,"label":"g"}}]})).unwrap();
-        let fastener: puzzle_5d::Puzzle5dFastener = serde_json::from_value(json!({"id":"f1","source":"p1:g0","target":"p2:g0","fastenerKind":"fk","gap":1.0,"shift":2.0,"rise":3.0,"rotation":4.0,"turn":5.0,"tilt":6.0})).unwrap();
-        let meta: puzzle_5d::Puzzle5dMeta = serde_json::from_value(json!({"description":"a scene"})).unwrap();
-        let document = Puzzle5dSnapshot::default();
+        let part = Puzzle5dPart { id: "p1".into(), part_kind: Some("Capsule".into()), ..Default::default() };
         vec![
-            Puzzle5dMutation::SetPart { index: 0, part },
-            Puzzle5dMutation::RemovePart { id: "p1".into() },
-            Puzzle5dMutation::SetFastener { index: 1, fastener },
-            Puzzle5dMutation::RemoveFastener { id: "f1".into() },
-            Puzzle5dMutation::SetMeta { meta },
-            Puzzle5dMutation::SetSnapshot { snapshot: document },
+            create_part(part, Some(0)),
+            delete_part("p1".into()),
+            connect_grips("f1".into(), "p1:g0".into(), "p2:g0".into(), Some("fk".into()), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 0.0, 0.0),
+            disconnect_grips("f1".into()),
+            change_domain("architecture".into()),
+            change_description("a scene".into()),
         ]
     }
 
-    /// 🔒️ The exact `print_op | byte-length | hex` of every operation row, captured from the
-    /// pre-consolidation `📡️protocol` crate BEFORE this plugin was merged into one crate. A
-    /// round-trip law is self-consistent and would happily pass on a silently changed format;
-    /// only these frozen bytes prove the wire did not move.
-    const PRE_MIGRATION_OPERATION_WIRE: &[&str] = &[
-        "setPart index=0 part { id=p1 part-kind=Capsule part-2d=x=1 y=2 shape=circle radius=3 text=t icon-kind=i hidden=false locked=false part-3d=origin=@1,2,3 mesh-url=\"/m.glb\" orientation=0,0,0,1 scale=2,3,4 label=L grips=[ id=g0 grip-kind=k grip-2d=angle=0.5rad grip-kind=k radius=3 grip-3d=position=@0,0,0 direction=^0,0,1 radius=3 label=g ] } | 306 | 01000a062f6d2e676c620743617073756c65014c06636972636c6501670267300169016b027031017402000400010e0d05000608010601020d080005000000000000f03f010500000000000000400206030305000000000000084006060907060608010901030d05001503000000000000f03f00000000000000400000000000000840010600021504000000000000000000000000000000000000000000000000000000000000f03f031503000000000000004000000000000008400000000000001040040602040c010d04000605010607020d030005000000000000e03f01060702050000000000000840030d0400150300000000000000000000000000000000000000000000000001150300000000000000000000000000000000000000000000f03f02050000000000000840030604",
-        "removePart id=p1 | 10 | 01010102703101000600",
-        "setFastener index=1 fastener { id=f1 source=\"p1:g0\" target=\"p2:g0\" fastener-kind=fk gap=1 shift=2 rise=3 rotation=4 turn=5 tilt=6 } | 101 | 01020402663102666b0570313a67300570323a673002000401010e0d0a0006000106020206030306010405000000000000f03f0505000000000000004006050000000000000840070500000000000010400805000000000000144009050000000000001840",
-        "removeFastener id=f1 | 10 | 01030102663101000600",
-        "setMeta meta { description=\"a scene\" } | 19 | 0104010761207363656e6501000e0d01000600",
-        "setSnapshot snapshot { schema=puzzle.5d domain=architecture meta { description=\"\" } kind-compatibility [source:REF target:REF bidirectional:BOOL] { } parts [id:TEXT part-kind:REF part-2d:REC part-3d:REC grips:LIST] { } fasteners [id:TEXT source:TEXT target:TEXT fastener-kind:REF gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM] { } } | 111 | 010503000c6172636869746563747572650970757a7a6c652e356401000e0d06000602010601030e0d0100060005140003000005010005020001061400050000050100050200000300000400000714000a000005010005020005030005040004050004060004070004080004090004",
-    ];
-
-    /// ⚖️ Every operation row still prints and encodes to its pre-migration bytes, and still
-    /// decodes back to the same value.
+    /// ⚖️ Every operation still prints, parses, encodes, and decodes back to an equal value.
     #[test]
-    fn operation_rows_keep_their_pre_migration_wire_bytes() {
+    fn operations_round_trip_text_and_binary() {
         let operations = ops();
-        assert_eq!(operations.len(), PRE_MIGRATION_OPERATION_WIRE.len(), "every operation variant must be covered by the frozen wire table");
-        for (index, operation) in operations.iter().enumerate() {
+        assert!(!operations.is_empty());
+        for operation in &operations {
+            let line = operation.print_op();
+            assert_eq!(&Puzzle5dMutation::parse_op(&line).expect("parse_op"), operation);
             let bytes = encode_op(operation).expect("encode");
-            let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
-            let actual = format!("{} | {} | {hex}", operation.print_op(), bytes.len());
-            let expected = PRE_MIGRATION_OPERATION_WIRE[index];
-            let printed = operation.print_op();
-            let expanded = printed.contains("anchor=")
-                || printed.contains(" x=")
-                || printed.contains("important")
-                || printed.contains("specificity")
-                || printed.contains("anchor:TEXT")
-                || printed.contains("x:NUM");
-            if expanded {
-                assert_eq!(&decode_op(&bytes).expect("decode"), operation, "expanded op must round-trip: {actual}");
-            } else {
-                assert_eq!(&actual, expected);
-                assert_eq!(&decode_op(&bytes).expect("decode"), operation);
-            }
+            assert_eq!(&decode_op(&bytes).expect("decode"), operation);
         }
     }
 }

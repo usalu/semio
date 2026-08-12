@@ -1,4 +1,4 @@
-//! 🪦️ Superseded stub — the generic `Tiles(CollectionMutation<..>)` variant this leaf backed was
+//! 🪦️ Superseded stub — the generic whole-collection `Tiles(...)` variant this leaf backed was
 //! deleted by the SEMANTIC-MUTATIONS-OVERHAUL fan-out (ticket
 //! `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL`, `animate-present-1-any` facet
 //! report) in favor of `create-tile`/`delete-tile`/`delete-tiles`/`rename-tile`/

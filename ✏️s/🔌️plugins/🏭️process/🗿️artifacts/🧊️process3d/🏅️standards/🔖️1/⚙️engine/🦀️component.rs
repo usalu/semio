@@ -644,22 +644,22 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSna
 /// `&Process3dSnapshot` keeps every handler free of manual mutation, since the VCS store applies them.
 pub fn insert_step_mutations(fixture: &Process3dSnapshot, step: ProcessStep) -> Vec<crate::artifacts::process3d::op::Process3dMutation> {
     use crate::artifacts::process3d::op::Process3dMutation;
-    use crate::artifacts::process3d::schema::mutations::{set_cursor, steps};
+    use crate::artifacts::process3d::schema::mutations::{change_cursor, create_step};
     let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len()).min(fixture.steps.len());
     vec![
-        Process3dMutation::CreateStep(steps::mutation::CreateStep { index: cursor, step }),
-        Process3dMutation::ChangeCursor(set_cursor::mutation::ChangeCursor { new_resolved_up_to: Some(cursor + 1) }),
+        Process3dMutation::CreateStep(create_step::mutation::CreateStep { index: cursor, step }),
+        Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to: Some(cursor + 1) }),
     ]
 }
 
 pub fn remove_step_mutations(fixture: &Process3dSnapshot, id: &str) -> Option<Vec<crate::artifacts::process3d::op::Process3dMutation>> {
     use crate::artifacts::process3d::op::Process3dMutation;
-    use crate::artifacts::process3d::schema::mutations::{delete_step, set_cursor};
+    use crate::artifacts::process3d::schema::mutations::{change_cursor, delete_step};
     let index = fixture.steps.iter().position(|step| step.id == id)?;
     let mut operations = vec![Process3dMutation::DeleteStep(delete_step::mutation::DeleteStep { id: id.to_string() })];
     if let Some(cursor) = fixture.resolved_up_to {
         if cursor > index {
-            operations.push(Process3dMutation::ChangeCursor(set_cursor::mutation::ChangeCursor { new_resolved_up_to: Some(cursor - 1) }));
+            operations.push(Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to: Some(cursor - 1) }));
         }
     }
     Some(operations)

@@ -1,3 +1,30 @@
-# stdio.json mutations text grammar schema
+# layout.layout mutations — one input type per semantic mutation slug (tags 1..25 match protocol.semio order).
 scalar Bytes
-type Document { schema: String! payload: String! }
+
+input RenameLayout { newName: String! }
+input ChangePrintTarget { newPrintTarget: String }
+input ChangeDataFields { newJson: String }
+input CreatePage { page: Bytes! index: Float }
+input DeletePage { id: String! }
+input RenamePage { id: String! newName: String! }
+input ChangePageWidth { id: String! newWidth: Float! }
+input ChangePageHeight { id: String! newHeight: Float! }
+input UpdatePageMargins { id: String! top: Float! right: Float! bottom: Float! left: Float! }
+input UpdatePageColumns { id: String! count: Float! gutter: Float! }
+input ReorderPages { id: String! toIndex: Float! }
+input CreateStory { story: Bytes! index: Float }
+input DeleteStory { id: String! }
+input EditStory { id: String! newContent: String! }
+input CreateLink { link: Bytes! index: Float }
+input DeleteLink { id: String! }
+input ChangeLinkPath { id: String! newPath: String! }
+input CreateFrame { pageId: String! frame: Bytes! index: Float layerId: String }
+input DeleteFrame { pageId: String! frameId: String! }
+input MoveFrame { pageId: String! frameId: String! newX: Float! newY: Float! }
+input ResizeFrame { pageId: String! frameId: String! newWidth: Float! newHeight: Float! }
+input ChangeFrameFill { pageId: String! frameId: String! newFill: Bytes }
+input ChangeFrameStroke { pageId: String! frameId: String! newStroke: Bytes }
+input ChangeFrameWrapMode { pageId: String! frameId: String! newWrapMode: String! }
+input ChangeFrameColumns { pageId: String! frameId: String! newColumns: Float! }
+
+union LayoutMutation = RenameLayout | ChangePrintTarget | ChangeDataFields | CreatePage | DeletePage | RenamePage | ChangePageWidth | ChangePageHeight | UpdatePageMargins | UpdatePageColumns | ReorderPages | CreateStory | DeleteStory | EditStory | CreateLink | DeleteLink | ChangeLinkPath | CreateFrame | DeleteFrame | MoveFrame | ResizeFrame | ChangeFrameFill | ChangeFrameStroke | ChangeFrameWrapMode | ChangeFrameColumns

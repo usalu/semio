@@ -15,7 +15,7 @@ pub mod derived_composition {
     use crate::artifacts::semio::standards::v1::subsets::brep::io::SemioBrepValidator;
     use crate::artifacts::semio::standards::v1::subsets::mesh::io::SemioMeshValidator;
     use crate::artifacts::semio::standards::v1::subsets::model::io::SemioModelValidator;
-    use crate::artifacts::semio::standards::v1::subsets::object::io::SemioObjectValidator;
+    use crate::artifacts::semio::standards::v1::subsets::value::io::SemioValueValidator;
     use crate::artifacts::semio::standards::v1::subsets::document::io::SemioDocumentValidator;
     use crate::artifacts::semio::standards::v1::subsets::cad::io::SemioCadValidator;
     use crate::artifacts::semio::standards::v1::subsets::drawing::io::SemioDrawingValidator;
@@ -24,7 +24,7 @@ pub mod derived_composition {
     use crate::artifacts::semio::standards::v1::subsets::audio::io::SemioAudioValidator;
     use crate::artifacts::semio::standards::v1::subsets::animation::io::SemioAnimationValidator;
     use crate::artifacts::semio::standards::v1::subsets::presentation::io::SemioPresentationValidator;
-    use crate::artifacts::semio::standards::v1::subsets::workflow::io::SemioWorkflowValidator;
+    use crate::artifacts::semio::standards::v1::subsets::flow::io::SemioFlowValidator;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("*") };
 
@@ -77,7 +77,7 @@ pub mod derived_composition {
             SemioSubsetSnapshot::Brep(s) => SemioBrepValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot as store::ArtifactPack>::encode_pack(s))),
             SemioSubsetSnapshot::Mesh(s) => SemioMeshValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot as store::ArtifactPack>::encode_pack(s))),
             SemioSubsetSnapshot::Model(s) => SemioModelValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Object(s) => SemioObjectValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot as store::ArtifactPack>::encode_pack(s))),
+            SemioSubsetSnapshot::Value(s) => SemioValueValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot as store::ArtifactPack>::encode_pack(s))),
             SemioSubsetSnapshot::Document(s) => SemioDocumentValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(s))),
             SemioSubsetSnapshot::Cad(s) => SemioCadValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot as store::ArtifactPack>::encode_pack(s))),
             SemioSubsetSnapshot::Drawing(s) => SemioDrawingValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(s))),
@@ -86,7 +86,7 @@ pub mod derived_composition {
             SemioSubsetSnapshot::Audio(s) => SemioAudioValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot as store::ArtifactPack>::encode_pack(s))),
             SemioSubsetSnapshot::Animation(s) => SemioAnimationValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(s))),
             SemioSubsetSnapshot::Presentation(s) => SemioPresentationValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Workflow(s) => SemioWorkflowValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::workflow::schema::snapshot::SemioWorkflowSnapshot as store::ArtifactPack>::encode_pack(s))),
+            SemioSubsetSnapshot::Flow(s) => SemioFlowValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot as store::ArtifactPack>::encode_pack(s))),
         }
     }
 
@@ -173,7 +173,7 @@ pub mod derived_composition {
 
         //#region 🔖️ConformanceLaws
         /// 🧪️ Per-artifact conformance laws (grammar recipe §4 item 8) for `s.stdio.semio`'s (the
-        /// `✳️any` envelope union) three facets — following `workflow`'s/`object`'s own established
+        /// `✳️any` envelope union) three facets — following `flow`'s/`value`'s own established
         /// pilot pattern. Lives in this composer's own test region: `any` has no per-standard
         /// `⚙️engine` dir the way json/csv/zip/png do, and v1's SHARED
         /// `🏅️standards/🔖️v1/⚙️engine/🦀️component.rs` only aggregates all 14 subsets' `register()`

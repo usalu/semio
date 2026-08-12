@@ -737,8 +737,10 @@ where
         envelope.vcs.changes.push(change);
         let timestamp = now_iso();
         let checkpoint_message = Some("reconciled".to_string());
-        let id = content_addressed_checkpoint_id(parent_id.as_deref(), &change_ids, &envelope.vcs.changes, checkpoint_message.as_deref(), &authors, &timestamp);
-        envelope.vcs.checkpoints.push(Checkpoint { id, change_ids, parent_id, authors, message: checkpoint_message, timestamp });
+        // 🎯️ `&[]`: reconcile-alternative checkpoints carry no composition pins yet — the
+        // `CompositionCoordinator` that populates real `CompositionPin`s on commit is a later wave.
+        let id = content_addressed_checkpoint_id(parent_id.as_deref(), &change_ids, &envelope.vcs.changes, checkpoint_message.as_deref(), &authors, &timestamp, &[]);
+        envelope.vcs.checkpoints.push(Checkpoint { id, change_ids, parent_id, authors, message: checkpoint_message, timestamp, composition_pins: Vec::new() });
     }
     Ok(alternative_id)
 }
@@ -1173,6 +1175,7 @@ fn history_op_meta_from_operation_meta(meta: &MutationMeta) -> crate::os_spr::Hi
         hlt: Some((meta.timestamp.actor, meta.timestamp.physical_ms as i64, meta.timestamp.logical)),
         undo_policy: protocol_undo_policy_ordinal(meta.undo_policy),
         payload_hash: meta.payload_hash.as_ref().map(|hash| hash.0),
+        group_id: meta.group_id.clone(),
     }
 }
 
@@ -1188,6 +1191,7 @@ fn mutation_meta_from_history_op_meta(meta: crate::os_spr::HistoryOpMeta) -> Mut
         payload_hash: meta.payload_hash.map(crate::os_spr::PayloadHash),
         semantic_kind: None,
         label: None,
+        group_id: meta.group_id,
     }
 }
 
@@ -1330,6 +1334,7 @@ where
                     payload_hash: None,
                     semantic_kind: None,
                     label: None,
+                    group_id: None,
                 });
             }
             (inverse, mutation_meta)
@@ -1369,6 +1374,12 @@ where
                     authors: checkpoint.authors.into_iter().map(|author| Author { id: author.id, name: author.name, avatar: None }).collect(),
                     message: checkpoint.message,
                     timestamp: checkpoint.timestamp,
+                    // 🎯️ `crate::os_spr::HistoryCheckpoint` (the `.spr` durable form) does not carry
+                    // composition pins yet — extending that codec is out of this wave's scope (see
+                    // `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b1-spr-vcs-report.md`
+                    // sharedFileRequests). `composition_pins` is therefore in-memory-only until a
+                    // later wave threads it through `history_op_meta`-style encode/decode.
+                    composition_pins: Vec::new(),
                 })
                 .collect(),
             alternatives: log.alternatives.into_iter().map(|alternative| Alternative { id: alternative.id, name: alternative.name, checkpoint_ids: alternative.checkpoint_ids }).collect(),
@@ -1475,6 +1486,7 @@ where
                 payload_hash: None,
                 semantic_kind: None,
                 label: None,
+                group_id: None,
             });
             *snapshot = apply_mutation(snapshot, operation);
         }
@@ -1519,7 +1531,7 @@ where
                 changes.push(Change { id: change_id, edit_ids, description, saved_at: saved });
             }
             OpsHeaderLine::Checkpoint { id: checkpoint_id, at, changes: change_ids, parent, by, message } => {
-                checkpoints.push(Checkpoint { id: checkpoint_id, change_ids, parent_id: parent, authors: by.into_iter().map(Author::from).collect(), message, timestamp: at });
+                checkpoints.push(Checkpoint { id: checkpoint_id, change_ids, parent_id: parent, authors: by.into_iter().map(Author::from).collect(), message, timestamp: at, composition_pins: Vec::new() });
             }
             OpsHeaderLine::Alternative { id: alternative_id, name, checkpoints: checkpoint_ids } => {
                 alternatives.push(Alternative { id: alternative_id, name, checkpoint_ids });
@@ -2525,8 +2537,11 @@ where
                 // so `content_addressed_checkpoint_id` can hash its actual content, not a placeholder.
                 self.envelope.vcs.changes.push(change);
                 let timestamp = now_iso();
-                let id = content_addressed_checkpoint_id(parent_id.as_deref(), &change_ids, &self.envelope.vcs.changes, message.as_deref(), &authors, &timestamp);
-                let checkpoint = Checkpoint { id, change_ids, parent_id, authors, message, timestamp };
+                // 🎯️ `&[]`: `ArtifactStore<P, Mutation>` has no notion of owned children yet — the
+                // `CompositionCoordinator` that dispatches across parent + child stores and
+                // populates real `CompositionPin`s here is a later wave (see design doc §1).
+                let id = content_addressed_checkpoint_id(parent_id.as_deref(), &change_ids, &self.envelope.vcs.changes, message.as_deref(), &authors, &timestamp, &[]);
+                let checkpoint = Checkpoint { id, change_ids, parent_id, authors, message, timestamp, composition_pins: Vec::new() };
                 let checkpoint_id = checkpoint.id.clone();
                 self.envelope.vcs.checkpoints.push(checkpoint);
                 if let Some(alternative_id) = self.envelope.active_alternative_id.clone() {
@@ -2677,6 +2692,7 @@ where
                 payload_hash: Some(crate::os_spr::PayloadHash(*blake3::hash(&mutation.encode_op().unwrap_or_default()).as_bytes())),
                 semantic_kind: None,
                 label: None,
+                group_id: None,
             });
             snapshot = apply_mutation(&snapshot, &mutation);
             forwards.push(mutation);
@@ -3010,6 +3026,7 @@ pub fn edit_from_operation_envelope<Mutation: OpBinary>(envelope: &crate::os_spr
             payload_hash: None,
             semantic_kind: None,
             label: None,
+            group_id: None,
         }],
         description: None,
         coalesce_key: None,
@@ -4931,6 +4948,7 @@ impl OpBinary for DemoMutation {
                 payload_hash: None,
                 semantic_kind: None,
                 label: None,
+                group_id: None,
             }],
             description: None,
             coalesce_key: None,

@@ -11,7 +11,7 @@ message SemioSubsetSnapshot {
     bytes brep = 1;         // SemioBrepSnapshot (brep subset's own wire form)
     bytes mesh = 2;          // SemioMeshSnapshot (mesh subset's own wire form)
     bytes model = 3;         // SemioModelSnapshot (model subset's own wire form)
-    bytes object = 4;        // SemioObjectSnapshot (object subset's own wire form)
+    bytes value = 4;        // SemioValueSnapshot (value subset's own wire form)
     bytes document = 5;      // SemioDocumentSnapshot (document subset's own wire form)
     bytes cad = 6;           // SemioCadSnapshot (cad subset's own wire form)
     bytes drawing = 7;       // SemioDrawingSnapshot (drawing subset's own wire form)
@@ -20,7 +20,7 @@ message SemioSubsetSnapshot {
     bytes audio = 10;        // SemioAudioSnapshot (audio subset's own wire form)
     bytes animation = 11;    // SemioAnimationSnapshot (animation subset's own wire form)
     bytes presentation = 12; // SemioPresentationSnapshot (presentation subset's own wire form)
-    bytes workflow = 13;     // SemioWorkflowSnapshot (workflow subset's own wire form)
+    bytes flow = 13;     // SemioFlowSnapshot (flow subset's own wire form)
   }
 }
 

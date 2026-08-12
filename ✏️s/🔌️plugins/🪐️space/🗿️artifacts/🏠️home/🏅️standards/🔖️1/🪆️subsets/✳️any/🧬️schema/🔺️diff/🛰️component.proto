@@ -5,20 +5,11 @@ package semio.s.space.home.diff;
 
 message SHomeDiff {
   // @state persistent
-  optional SHomeArtifact artifact = 1;
+  optional string schema = 1;
   // @state persistent
-  optional string schema = 2;
-  // @state persistent
-  optional uint64 catalog_generation = 3;
+  optional uint64 catalog_generation = 2;
   // @state local-ui
-  optional string active_panel_tab = 4;
+  optional string active_panel_tab = 3;
   // @state local-ui
-  optional string locale = 5;
-}
-
-message SHomeArtifact {
-  string schema = 1;
-  uint64 catalog_generation = 2;
-  string active_panel_tab = 3;
-  string locale = 4;
+  optional string locale = 4;
 }

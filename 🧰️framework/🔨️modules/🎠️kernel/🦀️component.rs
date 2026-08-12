@@ -441,12 +441,28 @@ pub struct KernelMutation {
     pub timestamp: HybridLogicalTimestamp,
 }
 
+/// 🧩️ One member edit folded into a group undo — pairs the owning document handle with the edit
+/// id inside it, so `UndoGroup.member_edits` can name edits that live on documents other than the
+/// group's own `invocation_id` target (composite/child-document dispatch, ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM `📓️design-full-plan.md` section "1. Kernel
+/// primitives" — grouping). Additive only: nothing in this wave constructs one yet.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EditRef {
+    pub document: ArtifactHandle,
+    pub edit_id: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UndoGroup {
     pub invocation_id: InvocationId,
     pub mutations: Vec<MutationId>,
     pub inverse_mutations: Vec<InverseMutation>,
+    /// 🧩️ Cross-document member edits folded into this group's undo (composite dispatch across
+    /// parent + child documents) — additive, empty for every group that isn't composite.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub member_edits: Vec<EditRef>,
 }
 
 /// @emoji 🐢️ What part of the shell's rendered UI an action actually invalidates — lets `refresh-ui`

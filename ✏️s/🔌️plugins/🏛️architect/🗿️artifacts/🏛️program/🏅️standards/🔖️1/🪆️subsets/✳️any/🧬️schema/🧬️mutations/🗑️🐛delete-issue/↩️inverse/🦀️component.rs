@@ -1,0 +1,14 @@
+//! ↩️ Inverse (undo) construction for the `delete-issue` mutation leaf — computed from
+//! captured pre-state (`base`), never by structurally inverting the diff. Split from
+//! `🐛issues` per Wave C.
+
+use crate::artifacts::program::ProgramMutation;
+use crate::artifacts::program::ProgramSnapshot;
+
+/// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
+pub fn inverse(payload: &super::mutation::DeleteIssue, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    match base.issues.iter().find(|row| row.header.id == payload.id) {
+        Some(existing) => vec![ProgramMutation::CreateIssue(super::super::create_issue::mutation::CreateIssue { issue: existing.clone() })],
+        None => Vec::new(),
+    }
+}

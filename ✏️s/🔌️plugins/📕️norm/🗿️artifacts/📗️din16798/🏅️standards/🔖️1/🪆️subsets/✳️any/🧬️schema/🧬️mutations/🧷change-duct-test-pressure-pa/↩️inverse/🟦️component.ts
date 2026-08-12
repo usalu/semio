@@ -1,0 +1,2 @@
+/** ↩️ `change-duct-test-pressure-pa` inverse — its restored mutation has the same payload shape as the forward one. */
+export type ChangeDuctTestPressurePaInverse = ChangeDuctTestPressurePa;

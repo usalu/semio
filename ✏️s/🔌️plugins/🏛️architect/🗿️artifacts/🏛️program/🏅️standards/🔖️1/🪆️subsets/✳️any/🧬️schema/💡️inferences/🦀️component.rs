@@ -12,6 +12,7 @@
 //! machinery — see `🧭topology/🦀️component.rs` for the derivation).
 
 use crate::artifacts::program::ProgramSnapshot;
+use protocol::Inference;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};

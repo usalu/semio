@@ -32,7 +32,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = NoteMutation::SetGridSpacing { spacing: Some(24.0) };
+        let operation = crate::artifacts::note::schema::mutations::change_grid_spacing(Some(24.0));
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -42,7 +42,7 @@ mod tests {
     fn note_document_text_round_trips_store_with_applied_operation() {
         let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>("note.document", "doc-text-test", crate::artifacts::note::engine::empty_note_snapshot(), None);
         let mut doc_store = store::ArtifactStore::new(envelope);
-        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![NoteMutation::SetGridSpacing { spacing: Some(48.0) }], description: None }).expect("apply");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::artifacts::note::schema::mutations::change_grid_spacing(Some(48.0))], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store);
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }
@@ -58,7 +58,7 @@ mod tests {
 
         let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>("note.document", "command-envelope-demo", crate::artifacts::note::engine::empty_note_snapshot(), None);
         let mut doc_store = store::ArtifactStore::new(envelope);
-        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![NoteMutation::SetGridSpacing { spacing: Some(48.0) }], description: None }).expect("apply");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::artifacts::note::schema::mutations::change_grid_spacing(Some(48.0))], description: None }).expect("apply");
         let edit: &Edit<NoteMutation> = doc_store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &ArtifactId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone()));
     }
@@ -80,7 +80,7 @@ mod semio_protocol_conformance {
     #[test]
     fn verify_protocol_bytes_against_encoded_spr() {
         use crate::artifacts::note::schema::mutations::text::NoteMutation;
-        let operation = NoteMutation::SetGridVisible { visible: Some(false) };
+        let operation = crate::artifacts::note::schema::mutations::change_grid_visible(Some(false));
         let bytes = encode_op(&operation).expect("encode op");
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");

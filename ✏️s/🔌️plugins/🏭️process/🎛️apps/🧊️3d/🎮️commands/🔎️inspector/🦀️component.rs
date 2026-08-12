@@ -2,8 +2,14 @@
 //! `target`/`field` pair against the stock, a selected step, or a workshop machine.
 
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::artifacts::process3d::{op::Process3dMutation, Pose, Process3dSnapshot, ProcessMeasure, ProcessStepPatch, SolidSpec, WorkshopMachine, WorkshopMachinePatch};
-use protocol::CollectionMutation;
+use crate::artifacts::process3d::mutations::change_stock_label::mutation::ChangeStockLabel;
+use crate::artifacts::process3d::mutations::move_stock::mutation::MoveStock;
+use crate::artifacts::process3d::mutations::rename_machine::mutation::RenameMachine;
+use crate::artifacts::process3d::mutations::rename_step::mutation::RenameStep;
+use crate::artifacts::process3d::mutations::replace_machine_capabilities::mutation::ReplaceMachineCapabilities;
+use crate::artifacts::process3d::mutations::replace_step_measure::mutation::ReplaceStepMeasure;
+use crate::artifacts::process3d::mutations::replace_stock_solid::mutation::ReplaceStockSolid;
+use crate::artifacts::process3d::{op::Process3dMutation, Pose, Process3dSnapshot, ProcessMeasure, SolidSpec, WorkshopMachine};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -135,22 +141,33 @@ fn apply_workshop_machine_patch(machine: &mut WorkshopMachine, field: &str, valu
 
 /// 🩹️ Builds the `Process3dMutation` for one inspector field edit — clones the target (stock, step, or
 /// workshop machine), mutates the clone via `apply_stock_patch`/`apply_step_patch`/
-/// `apply_workshop_machine_patch`, then wraps it back into a `SetStock`/`Steps::Patch`/`Machines::Patch`
-/// operation so the store computes the true pre-state inverse.
+/// `apply_workshop_machine_patch`, then routes the touched field into its own semantic mutation:
+/// `label` → `RenameMachine`/`RenameStep`/`ChangeStockLabel`, a spatial stock field →
+/// `MoveStock`, a capability parameter → `ReplaceMachineCapabilities`, everything else (the step's
+/// measure geometry, the stock's solid dims) → `ReplaceStepMeasure`/`ReplaceStockSolid`.
 fn process3d_inspector_patch_operation(fixture: &Process3dSnapshot, target: &str, field: &str, value: Option<&Value>) -> Option<Process3dMutation> {
     if let Some(machine_id) = target.strip_prefix("machine:") {
         let machine = fixture.workshop.machines.iter().find(|machine| machine.id == machine_id)?;
         let mut updated = machine.clone();
-        return if apply_workshop_machine_patch(&mut updated, field, value) {
-            let patch = WorkshopMachinePatch { label: Some(updated.label), icon_id: None, capabilities: Some(updated.capabilities) };
-            Some(Process3dMutation::Machines { collection: CollectionMutation::Patch { id: machine_id.to_string(), patch } })
+        if !apply_workshop_machine_patch(&mut updated, field, value) {
+            return None;
+        }
+        return Some(if field == "label" {
+            Process3dMutation::RenameMachine(RenameMachine { id: machine_id.to_string(), new_label: updated.label })
         } else {
-            None
-        };
+            Process3dMutation::ReplaceMachineCapabilities(ReplaceMachineCapabilities { id: machine_id.to_string(), new_capabilities: updated.capabilities })
+        });
     }
     if target == fixture.stock.id {
         let mut stock = fixture.stock.clone();
-        return if apply_stock_patch(&mut stock, field, value) { Some(Process3dMutation::SetStock { stock }) } else { None };
+        if !apply_stock_patch(&mut stock, field, value) {
+            return None;
+        }
+        return Some(match field {
+            "label" => Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: stock.label }),
+            "posX" | "posY" | "posZ" | "angle" => Process3dMutation::MoveStock(MoveStock { new_pose: stock.pose }),
+            _ => Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: stock.solid }),
+        });
     }
     let step_id = target.strip_prefix("step:")?;
     let step = fixture.steps.iter().find(|step| step.id == step_id)?;
@@ -158,8 +175,11 @@ fn process3d_inspector_patch_operation(fixture: &Process3dSnapshot, target: &str
     if !apply_step_patch(&mut updated, field, value) {
         return None;
     }
-    let patch = ProcessStepPatch { label: Some(updated.label), enabled: None, measure: Some(updated.measure), origin: None };
-    Some(Process3dMutation::Steps { collection: CollectionMutation::Patch { id: step_id.to_string(), patch } })
+    Some(if field == "label" {
+        Process3dMutation::RenameStep(RenameStep { id: step_id.to_string(), new_label: updated.label })
+    } else {
+        Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: step_id.to_string(), new_measure: updated.measure })
+    })
 }
 //#endregion 🔖️InspectorPatch
 

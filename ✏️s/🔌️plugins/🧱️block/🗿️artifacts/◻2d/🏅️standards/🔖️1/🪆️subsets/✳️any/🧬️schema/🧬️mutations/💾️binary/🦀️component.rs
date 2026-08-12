@@ -27,22 +27,21 @@ pub fn decode_op(bytes: &[u8]) -> Result<Block2dMutation, protocol::ProtocolErro
 mod tests {
     use super::*;
     use crate::artifacts::block2d::{Block2dSnapshot, BLOCK_2D_SCHEMA};
-    use crate::BlockKindIdentity;
     use store::{create_document_envelope, ArtifactCommand};
 
     #[test]
     fn block2d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::block2d::schema::mutations::Block2dStore;
+        use crate::artifacts::block2d::schema::mutations::{self as m, Block2dStore};
 
         let mut store = Block2dStore::new(create_document_envelope(BLOCK_2D_SCHEMA, "block2d", Block2dSnapshot::default(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Block2dMutation::SetNodeKind { node_kind: BlockKindIdentity { id: "n1".into(), name: "n1".into(), label: "N1".into(), ..Default::default() } }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![m::rename_node_kind("n1".into())], description: None }).expect("apply");
         let projection = store.snapshot().expect("snapshot");
-        assert_eq!(projection.node_kind.id, "n1");
+        assert_eq!(projection.node_kind.name, "n1");
     }
 
     #[test]
     fn block2d_operation_binary_round_trips() {
-        let operation = Block2dMutation::RemoveHandle { id: "h0".into() };
+        let operation = crate::artifacts::block2d::schema::mutations::delete_handle("h0".into());
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }

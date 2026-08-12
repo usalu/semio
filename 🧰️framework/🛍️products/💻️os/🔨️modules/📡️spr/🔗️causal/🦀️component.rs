@@ -720,6 +720,7 @@ mod tests {
                     payload_hash: None,
                     semantic_kind: None,
                     label: None,
+                    group_id: None,
                 },
                 crate::os_spr::command::MutationMeta {
                     mutation_id: Some(crate::os_spr::ids::MutationId("op-b".into())),
@@ -731,6 +732,7 @@ mod tests {
                     payload_hash: None,
                     semantic_kind: None,
                     label: None,
+                    group_id: None,
                 },
             ],
             description: None,

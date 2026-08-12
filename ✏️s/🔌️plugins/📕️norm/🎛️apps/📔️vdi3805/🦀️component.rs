@@ -104,7 +104,7 @@ impl ArtifactApp for Vdi3805PlayApp {
 
     /// 🎞️ `"model:in"`/`"document:in"` — see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, Vdi3805Snapshot>) -> Result<Emit<Vdi3805Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
-        crate::app_surface::import_media(port, media, |snapshot| Vdi3805Mutation::SetSnapshot { snapshot })
+        crate::app_surface::import_media(port, media, |snapshot| vec![Vdi3805Mutation::SetSnapshot { snapshot }])
     }
     //#endregion 🔖️MediaPorts
 }

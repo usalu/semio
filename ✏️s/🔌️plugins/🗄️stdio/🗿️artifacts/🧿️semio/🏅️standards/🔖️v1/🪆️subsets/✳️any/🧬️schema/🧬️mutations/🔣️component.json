@@ -3,31 +3,31 @@
   "title": "SemioMutation",
   "description": "The envelope union's own mutation vocabulary — real mirror of the Rust `SemioMutation`. `NoMutation`, `SetSnapshot` (the only way to change SUBSET KIND), and 13 wrapper variants each carrying that subset's OWN mutation schema (cross-file $ref, never redeclared). Adjacently tagged: tag key `mutation`, non-unit variants carry their data under a `payload` key (never internally-tagged/flattened — would collide with a wrapped variant's own `mutation` discriminator).",
   "oneOf": [
-    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
+    { "type": "value", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
     {
-      "type": "object",
+      "type": "value",
       "required": ["mutation", "payload"],
       "properties": {
         "mutation": { "const": "setSnapshot" },
         "payload": {
-          "type": "object",
+          "type": "value",
           "required": ["snapshot"],
           "properties": { "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.semio/snapshot.json", "description": "SemioSnapshot (this subset's own snapshot schema)" } }
         }
       }
     },
-    { "type": "object", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "brep" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.brep/mutations.json", "description": "SemioBrepMutation (brep subset's own mutations schema)" } } },
-    { "type": "object", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "mesh" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.mesh/mutations.json", "description": "SemioMeshMutation (mesh subset's own mutations schema)" } } },
-    { "type": "object", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "model" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.model/mutation.json", "description": "SemioModelMutation (model subset's own mutations schema)" } } },
-    { "type": "object", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "object" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.object/mutations.json", "description": "SemioObjectMutation (object subset's own mutations schema)" } } },
-    { "type": "object", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "document" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.document/mutations.json", "description": "SemioDocumentMutation (document subset's own mutations schema)" } } },
-    { "type": "object", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "cad" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.cad/mutations.json", "description": "SemioCadMutation (cad subset's own mutations schema)" } } },
-    { "type": "object", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "drawing" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.drawing/mutation.json", "description": "SemioDrawingMutation (drawing subset's own mutations schema)" } } },
-    { "type": "object", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "image" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.image/mutations.json", "description": "SemioImageMutation (image subset's own mutations schema)" } } },
-    { "type": "object", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "video" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.video/mutations.json", "description": "SemioVideoMutation (video subset's own mutations schema)" } } },
-    { "type": "object", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "audio" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.audio/mutation.json", "description": "SemioAudioMutation (audio subset's own mutations schema)" } } },
-    { "type": "object", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "animation" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.animation/mutations.json", "description": "SemioAnimationMutation (animation subset's own mutations schema)" } } },
-    { "type": "object", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "presentation" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.presentation/mutations.json", "description": "SemioPresentationMutation (presentation subset's own mutations schema)" } } },
-    { "type": "object", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "workflow" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.workflow/mutations.json", "description": "SemioWorkflowMutation (workflow subset's own mutations schema)" } } }
+    { "type": "value", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "brep" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.brep/mutations.json", "description": "SemioBrepMutation (brep subset's own mutations schema)" } } },
+    { "type": "value", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "mesh" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.mesh/mutations.json", "description": "SemioMeshMutation (mesh subset's own mutations schema)" } } },
+    { "type": "value", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "model" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.model/mutation.json", "description": "SemioModelMutation (model subset's own mutations schema)" } } },
+    { "type": "value", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "value" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.value/mutations.json", "description": "SemioValueMutation (value subset's own mutations schema)" } } },
+    { "type": "value", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "document" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.document/mutations.json", "description": "SemioDocumentMutation (document subset's own mutations schema)" } } },
+    { "type": "value", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "cad" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.cad/mutations.json", "description": "SemioCadMutation (cad subset's own mutations schema)" } } },
+    { "type": "value", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "drawing" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.drawing/mutation.json", "description": "SemioDrawingMutation (drawing subset's own mutations schema)" } } },
+    { "type": "value", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "image" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.image/mutations.json", "description": "SemioImageMutation (image subset's own mutations schema)" } } },
+    { "type": "value", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "video" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.video/mutations.json", "description": "SemioVideoMutation (video subset's own mutations schema)" } } },
+    { "type": "value", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "audio" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.audio/mutation.json", "description": "SemioAudioMutation (audio subset's own mutations schema)" } } },
+    { "type": "value", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "animation" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.animation/mutations.json", "description": "SemioAnimationMutation (animation subset's own mutations schema)" } } },
+    { "type": "value", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "presentation" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.presentation/mutations.json", "description": "SemioPresentationMutation (presentation subset's own mutations schema)" } } },
+    { "type": "value", "required": ["mutation", "payload"], "properties": { "mutation": { "const": "flow" }, "payload": { "$ref": "https://semio.tech/schema/s.stdio.semio.flow/mutations.json", "description": "SemioFlowMutation (flow subset's own mutations schema)" } } }
   ]
 }

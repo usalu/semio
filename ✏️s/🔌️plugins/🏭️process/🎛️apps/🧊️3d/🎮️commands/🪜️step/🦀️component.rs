@@ -2,8 +2,12 @@
 
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::artifacts::process3d::engine::{capability_for_measure_kind, find_capability, insert_step_mutations, measure_for_capability, next_step_id, remove_step_mutations, validate_capability, validation_context_for_stock};
-use crate::artifacts::process3d::{op::Process3dMutation, MeasureKind, Process3dSnapshot, ProcessStep, ProcessStepPatch, StepOrigin};
-use protocol::CollectionMutation;
+use crate::artifacts::process3d::mutations::change_step_enabled::mutation::ChangeStepEnabled;
+use crate::artifacts::process3d::mutations::change_step_origin::mutation::ChangeStepOrigin;
+use crate::artifacts::process3d::mutations::rename_step::mutation::RenameStep;
+use crate::artifacts::process3d::mutations::reorder_steps::mutation::ReorderSteps;
+use crate::artifacts::process3d::mutations::replace_step_measure::mutation::ReplaceStepMeasure;
+use crate::artifacts::process3d::{op::Process3dMutation, MeasureKind, Process3dSnapshot, ProcessStep, StepOrigin};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -109,7 +113,7 @@ pub mod move_step {
 
     pub fn handle(payload: &MoveStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         if doc.snapshot.steps.iter().any(|step| step.id == payload.id) {
-            Ok(Emit::mutations(vec![Process3dMutation::Steps { collection: CollectionMutation::Move { id: payload.id.clone(), to_index: payload.index } }]))
+            Ok(Emit::mutations(vec![Process3dMutation::ReorderSteps(ReorderSteps { id: payload.id.clone(), to_index: payload.index })]))
         } else {
             Ok(Emit::default())
         }
@@ -128,13 +132,27 @@ pub mod update_step {
         pub step: ProcessStep,
     }
 
+    /// 🔧️ Programmatic full-step edit — each field carries its own semantic mutation now
+    /// (`RenameStep`/`ChangeStepEnabled`/`ChangeStepOrigin`/`ReplaceStepMeasure`), so this diffs
+    /// `payload.step` against the current entity and emits one targeted mutation per changed field.
     pub fn handle(payload: &UpdateStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        if doc.snapshot.steps.iter().any(|existing| existing.id == payload.step.id) {
-            let patch = ProcessStepPatch { label: Some(payload.step.label.clone()), enabled: Some(payload.step.enabled), measure: Some(payload.step.measure.clone()), origin: Some(payload.step.origin.clone()) };
-            Ok(Emit::mutations(vec![Process3dMutation::Steps { collection: CollectionMutation::Patch { id: payload.step.id.clone(), patch } }]))
-        } else {
-            Ok(Emit::default())
+        let Some(existing) = doc.snapshot.steps.iter().find(|existing| existing.id == payload.step.id) else {
+            return Ok(Emit::default());
+        };
+        let mut operations = Vec::new();
+        if existing.label != payload.step.label {
+            operations.push(Process3dMutation::RenameStep(RenameStep { id: payload.step.id.clone(), new_label: payload.step.label.clone() }));
         }
+        if existing.enabled != payload.step.enabled {
+            operations.push(Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: payload.step.id.clone(), new_enabled: payload.step.enabled }));
+        }
+        if existing.origin != payload.step.origin {
+            operations.push(Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: payload.step.id.clone(), new_origin: payload.step.origin.clone() }));
+        }
+        if existing.measure != payload.step.measure {
+            operations.push(Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: payload.step.id.clone(), new_measure: payload.step.measure.clone() }));
+        }
+        Ok(Emit::mutations(operations))
     }
 }
 //#endregion 🔖️UpdateStep
@@ -152,8 +170,7 @@ pub mod set_step_enabled {
 
     pub fn handle(payload: &SetStepEnabled, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         if doc.snapshot.steps.iter().any(|step| step.id == payload.id) {
-            let patch = ProcessStepPatch { enabled: Some(payload.enabled), ..Default::default() };
-            Ok(Emit::mutations(vec![Process3dMutation::Steps { collection: CollectionMutation::Patch { id: payload.id.clone(), patch } }]))
+            Ok(Emit::mutations(vec![Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: payload.id.clone(), new_enabled: payload.enabled })]))
         } else {
             Ok(Emit::default())
         }

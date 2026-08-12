@@ -8,8 +8,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 use crate::artifacts::gismap::schema::GisMapArtifact;
-use crate::artifacts::gismap::{GisMapSnapshot, MapFeature, MapFeaturePatch};
-use protocol::{CollectionMutation, MutationDiff, Patchable};
+use crate::artifacts::gismap::{GisMapSnapshot, MapFeature};
+use protocol::{MutationDiff, Patchable};
 
 //#region 🔹Apply
 /// Applies an identified-collection delta to a feature list.
@@ -165,30 +165,6 @@ impl MutationDiff<GisMapSnapshot> for GisMapDiff {
 //#endregion 🔹Apply
 
 //#region 🔹Helpers
-/// Builds a features delta from a collection mutation against the pre-state list.
-pub fn features_delta_from_collection_mutation(
-    base: &[MapFeature],
-    op: &CollectionMutation<String, MapFeature, MapFeaturePatch>,
-) -> GisMapFeaturesDelta {
-    match op {
-        CollectionMutation::Add { item, .. } => GisMapFeaturesDelta { added: vec![item.clone()], ..Default::default() },
-        CollectionMutation::Remove { id } => GisMapFeaturesDelta { removed: vec![id.clone()], ..Default::default() },
-        CollectionMutation::Patch { id, patch } => GisMapFeaturesDelta {
-            patched: vec![GisMapFeaturePatchEntry { id: id.clone(), patch: patch.clone() }],
-            ..Default::default()
-        },
-        CollectionMutation::Move { id, to_index } => {
-            let mut ids: Vec<String> = base.iter().map(|f| f.id.clone()).collect();
-            if let Some(from) = ids.iter().position(|x| x == id) {
-                let item = ids.remove(from);
-                let to = (*to_index).min(ids.len());
-                ids.insert(to, item);
-            }
-            GisMapFeaturesDelta { reordered: Some(ids), ..Default::default() }
-        }
-    }
-}
-
 pub fn diff_set_snapshot(snapshot: &GisMapSnapshot) -> GisMapDiff {
     GisMapDiff {
         artifact: Some(Box::new(GisMapArtifact::from_snapshot(snapshot.clone()))),

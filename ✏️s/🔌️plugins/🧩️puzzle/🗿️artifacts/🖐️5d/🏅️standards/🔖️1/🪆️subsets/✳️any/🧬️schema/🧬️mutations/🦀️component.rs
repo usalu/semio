@@ -1,223 +1,239 @@
-//! 🧬️ Puzzle 5d artifact — the granular operation enum and its laws: id-keyed part/fastener edits
-//! plus the scalar meta, each with a true inverse computed from the pre-operation projection, plus
-//! the whole-document replace for example loads. Also carries the `serde_json::Value` bridge (and the
-//! `Puzzle5dPlaySnapshot` newtype over it) the play app's untyped document still rides on, and the
-//! `puzzle5d_document_delta_operations` before/after differ every document-mutating action goes through.
+//! 🧬️ Puzzle 5d artifact — semantic document mutation dispatch enum. Every variant is a
+//! single-field tuple wrapping a handcrafted `protocol::MutationKind` payload (see the
+//! `🧬️mutations/<slug>/` triad leaves); `#[derive(dsl::Mutations)]` generates
+//! `impl protocol::Mutation<Puzzle5dSnapshot>` and `impl protocol::SemanticMutation<Puzzle5dSnapshot>`
+//! from those payloads — no hand-written apply/diff/inverse dispatch here. `dsl::DslEnum` supplies
+//! `DslVariants`, consumed by `OpText`/`OpBinary` in the sibling `📝️text`/`💾️binary` modules.
+//!
+//! The `serde_json::Value` bridge (`🔖️ValueBridge`) and the play app's `Puzzle5dPlaySnapshot`
+//! newtype (`🔖️PlaySnapshot`) live here too, same shape as `puzzle2d`'s: the bridge round-trips
+//! through the typed `Puzzle5dSnapshot` instead of hand-splicing JSON per mutation kind.
 
 
-//#region 📖️SemioGrammar
-/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
-pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
-pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
-//#endregion 📖️SemioGrammar
-
-
-use crate::artifacts::puzzle5d::diff::{puzzle5d_index_of, Puzzle5dDiff};
-use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dMeta, Puzzle5dPart, Puzzle5dSnapshot};
+use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
+use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 use protocol::{Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-//#region 🔖️Operations
-/// 🧮️ Puzzle-5d operation: id-keyed part/fastener edits plus scalar meta, each with a true inverse
-/// computed from the pre-operation projection, and a whole-document replace for example loads (also
-/// the only path that changes `schema`/`domain`/`label`/`kindCatalogs`/`kindCompatibility` —
-/// static/rare fields with no granular editor today). Camera pose is session-only app runtime state
-/// (`ActionKind::View`), never a document operation — see the app's `Puzzle5dConfig`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+//#region 🔖️Mutations
+/// 🧮️ Semantic puzzle-5d document mutation vocabulary: id-keyed part create-delete plus per-2d/
+/// per-3d-projection field edits, grip membership, a grip-to-grip fastener connect/disconnect
+/// relationship, and document-level edits (label rename, domain/description change,
+/// kind-compatibility connect/disconnect, kind-catalog replace). There is deliberately no camera
+/// mutation: camera pose is session-only app runtime state (`ActionKind::View`), never a document
+/// operation. There is deliberately no whole-document mutation: import/reset/example-load goes
+/// through `store::ArtifactStore::reset` (non-history), never through this enum.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
+#[mutations(snapshot = Puzzle5dSnapshot, diff = Puzzle5dDiff, schema = "puzzle.puzzle5d")]
 pub enum Puzzle5dMutation {
-    #[dsl(key = "setPart")]
-    SetPart {
-        index: usize,
-        #[dsl(block)]
-        part: Puzzle5dPart,
-    },
-    #[dsl(key = "removePart")]
-    RemovePart { id: String },
-    #[dsl(key = "setFastener")]
-    SetFastener {
-        index: usize,
-        #[dsl(block)]
-        fastener: Puzzle5dFastener,
-    },
-    #[dsl(key = "removeFastener")]
-    RemoveFastener { id: String },
-    #[dsl(key = "setMeta")]
-    SetMeta {
-        #[dsl(block)]
-        meta: Puzzle5dMeta,
-    },
-    /// 🌍️ Replaces the whole document (example import / reset / engine fill).
-    #[dsl(key = "setSnapshot")]
-    SetSnapshot {
-        #[dsl(block)]
-        snapshot: Puzzle5dSnapshot,
-    },
+    CreatePart(CreatePart),
+    DeletePart(DeletePart),
+    MovePart2d(MovePart2d),
+    ReplacePart2dGeometry(ReplacePart2dGeometry),
+    EditPart2dText(EditPart2dText),
+    ChangePart2dIcon(ChangePart2dIcon),
+    ChangePart2dHidden(ChangePart2dHidden),
+    ChangePart2dLocked(ChangePart2dLocked),
+    MovePart3d(MovePart3d),
+    RotatePart3d(RotatePart3d),
+    ScalePart3d(ScalePart3d),
+    ChangePart3dMesh(ChangePart3dMesh),
+    EditPart3dLabel(EditPart3dLabel),
+    ChangePartKind(ChangePartKind),
+    ChangePartAnchor(ChangePartAnchor),
+    AddPartGrip(AddPartGrip),
+    RemovePartGrip(RemovePartGrip),
+    ReplacePartGrip(ReplacePartGrip),
+    ConnectGrips(ConnectGrips),
+    DisconnectGrips(DisconnectGrips),
+    ReplaceFastenerGeometry(ReplaceFastenerGeometry),
+    ChangeFastenerKind(ChangeFastenerKind),
+    RenamePuzzle5d(RenamePuzzle5d),
+    ChangeDomain(ChangeDomain),
+    ChangeDescription(ChangeDescription),
+    ConnectKindCompatibility(ConnectKindCompatibility),
+    DisconnectKindCompatibility(DisconnectKindCompatibility),
+    ReplaceKindCatalogs(ReplaceKindCatalogs),
 }
+//#endregion 🔖️Mutations
 
+pub use super::add_part_grip::mutation::{add_part_grip, AddPartGrip};
+pub use super::change_description::mutation::{change_description, ChangeDescription};
+pub use super::change_domain::mutation::{change_domain, ChangeDomain};
+pub use super::change_fastener_kind::mutation::{change_fastener_kind, ChangeFastenerKind};
+pub use super::change_part_2d_hidden::mutation::{change_part_2d_hidden, ChangePart2dHidden};
+pub use super::change_part_2d_icon::mutation::{change_part_2d_icon, ChangePart2dIcon};
+pub use super::change_part_2d_locked::mutation::{change_part_2d_locked, ChangePart2dLocked};
+pub use super::change_part_3d_mesh::mutation::{change_part_3d_mesh, ChangePart3dMesh};
+pub use super::change_part_anchor::mutation::{change_part_anchor, ChangePartAnchor};
+pub use super::change_part_kind::mutation::{change_part_kind, ChangePartKind};
+pub use super::connect_grips::mutation::{connect_grips, ConnectGrips};
+pub use super::connect_kind_compatibility::mutation::{connect_kind_compatibility, ConnectKindCompatibility};
+pub use super::create_part::mutation::{create_part, CreatePart};
+pub use super::delete_part::mutation::{delete_part, DeletePart};
+pub use super::disconnect_grips::mutation::{disconnect_grips, DisconnectGrips};
+pub use super::disconnect_kind_compatibility::mutation::{disconnect_kind_compatibility, DisconnectKindCompatibility};
+pub use super::edit_part_2d_text::mutation::{edit_part_2d_text, EditPart2dText};
+pub use super::edit_part_3d_label::mutation::{edit_part_3d_label, EditPart3dLabel};
+pub use super::move_part_2d::mutation::{move_part_2d, MovePart2d};
+pub use super::move_part_3d::mutation::{move_part_3d, MovePart3d};
+pub use super::remove_part_grip::mutation::{remove_part_grip, RemovePartGrip};
+pub use super::rename_puzzle5d::mutation::{rename_puzzle5d, RenamePuzzle5d};
+pub use super::replace_fastener_geometry::mutation::{replace_fastener_geometry, ReplaceFastenerGeometry};
+pub use super::replace_kind_catalogs::mutation::{replace_kind_catalogs, ReplaceKindCatalogs};
+pub use super::replace_part_2d_geometry::mutation::{replace_part_2d_geometry, ReplacePart2dGeometry};
+pub use super::replace_part_grip::mutation::{replace_part_grip, ReplacePartGrip};
+pub use super::rotate_part_3d::mutation::{rotate_part_3d, RotatePart3d};
+pub use super::scale_part_3d::mutation::{scale_part_3d, ScalePart3d};
 
-
-
-
-fn puzzle5d_mutation_diff(operation: &Puzzle5dMutation, base: &Puzzle5dSnapshot) -> Puzzle5dDiff {
-    match operation {
-        Puzzle5dMutation::SetPart { index, part } => crate::artifacts::puzzle5d::diff::diff_set_part(*index, part.clone(), base),
-        Puzzle5dMutation::RemovePart { id } => crate::artifacts::puzzle5d::diff::diff_remove_part(id.clone()),
-        Puzzle5dMutation::SetFastener { index, fastener } => crate::artifacts::puzzle5d::diff::diff_set_fastener(*index, fastener.clone(), base),
-        Puzzle5dMutation::RemoveFastener { id } => crate::artifacts::puzzle5d::diff::diff_remove_fastener(id.clone()),
-        Puzzle5dMutation::SetMeta { meta } => crate::artifacts::puzzle5d::diff::diff_set_meta(meta.clone()),
-        Puzzle5dMutation::SetSnapshot { snapshot } => crate::artifacts::puzzle5d::diff::diff_set_snapshot(snapshot.clone()),
-    }
-}
-
-impl Mutation<Puzzle5dSnapshot> for Puzzle5dMutation {
-    type Diff = Puzzle5dDiff;
-
-    fn diff(&self, projection: &Puzzle5dSnapshot) -> Puzzle5dDiff {
-        puzzle5d_mutation_diff(self, projection)
-    }
-
-    fn inverse(&self, projection: &Puzzle5dSnapshot) -> Vec<Self> {
-        match self {
-            Puzzle5dMutation::SetPart { part, .. } => match puzzle5d_index_of(&projection.parts, &part.id) {
-                Some(index) => vec![Puzzle5dMutation::SetPart { index, part: projection.parts[index].clone() }],
-                None => vec![Puzzle5dMutation::RemovePart { id: part.id.clone() }],
-            },
-            Puzzle5dMutation::RemovePart { id } => puzzle5d_index_of(&projection.parts, id).map_or_else(Vec::new, |index| vec![Puzzle5dMutation::SetPart { index, part: projection.parts[index].clone() }]),
-            Puzzle5dMutation::SetFastener { fastener, .. } => match puzzle5d_index_of(&projection.fasteners, &fastener.id) {
-                Some(index) => vec![Puzzle5dMutation::SetFastener { index, fastener: projection.fasteners[index].clone() }],
-                None => vec![Puzzle5dMutation::RemoveFastener { id: fastener.id.clone() }],
-            },
-            Puzzle5dMutation::RemoveFastener { id } => puzzle5d_index_of(&projection.fasteners, id).map_or_else(Vec::new, |index| vec![Puzzle5dMutation::SetFastener { index, fastener: projection.fasteners[index].clone() }]),
-            Puzzle5dMutation::SetMeta { .. } => vec![Puzzle5dMutation::SetMeta { meta: projection.meta.clone() }],
-            Puzzle5dMutation::SetSnapshot { .. } => vec![Puzzle5dMutation::SetSnapshot { snapshot: projection.clone() }],
+//#region 🔖️SnapshotDelta
+/// 🔀️ Diffs two typed snapshots into a minimal semantic mutation set — the single source of truth
+/// both the VCS layer and the `serde_json::Value` scene bridge below replay through.
+pub fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
+    let mut mutations = Vec::new();
+    for part in &before.parts {
+        if !after.parts.iter().any(|entry| entry.id == part.id) {
+            mutations.push(delete_part(part.id.clone()));
         }
     }
+    for part in &after.parts {
+        match before.parts.iter().find(|entry| entry.id == part.id) {
+            None => mutations.push(create_part(part.clone(), None)),
+            Some(prior) => {
+                if prior.part_2d.x != part.part_2d.x || prior.part_2d.y != part.part_2d.y {
+                    mutations.push(move_part_2d(part.id.clone(), part.part_2d.x, part.part_2d.y));
+                }
+                if prior.part_2d.shape != part.part_2d.shape || prior.part_2d.radius != part.part_2d.radius || prior.part_2d.width != part.part_2d.width || prior.part_2d.height != part.part_2d.height {
+                    mutations.push(replace_part_2d_geometry(part.id.clone(), part.part_2d.shape.clone(), part.part_2d.radius, part.part_2d.width, part.part_2d.height));
+                }
+                if prior.part_2d.text != part.part_2d.text {
+                    mutations.push(edit_part_2d_text(part.id.clone(), part.part_2d.text.clone()));
+                }
+                if prior.part_2d.icon_kind != part.part_2d.icon_kind {
+                    mutations.push(change_part_2d_icon(part.id.clone(), part.part_2d.icon_kind.clone()));
+                }
+                if prior.part_2d.hidden != part.part_2d.hidden {
+                    mutations.push(change_part_2d_hidden(part.id.clone(), part.part_2d.hidden));
+                }
+                if prior.part_2d.locked != part.part_2d.locked {
+                    mutations.push(change_part_2d_locked(part.id.clone(), part.part_2d.locked));
+                }
+                if prior.part_3d.origin != part.part_3d.origin {
+                    mutations.push(move_part_3d(part.id.clone(), part.part_3d.origin));
+                }
+                if prior.part_3d.orientation != part.part_3d.orientation {
+                    mutations.push(rotate_part_3d(part.id.clone(), part.part_3d.orientation));
+                }
+                if prior.part_3d.scale != part.part_3d.scale {
+                    mutations.push(scale_part_3d(part.id.clone(), part.part_3d.scale));
+                }
+                if prior.part_3d.mesh_url != part.part_3d.mesh_url {
+                    mutations.push(change_part_3d_mesh(part.id.clone(), part.part_3d.mesh_url.clone()));
+                }
+                if prior.part_3d.label != part.part_3d.label {
+                    mutations.push(edit_part_3d_label(part.id.clone(), part.part_3d.label.clone()));
+                }
+                if prior.part_kind != part.part_kind {
+                    mutations.push(change_part_kind(part.id.clone(), part.part_kind.clone()));
+                }
+                if prior.anchor != part.anchor {
+                    mutations.push(change_part_anchor(part.id.clone(), part.anchor));
+                }
+                for grip in &prior.grips {
+                    if !part.grips.iter().any(|entry| entry.id == grip.id) {
+                        mutations.push(remove_part_grip(part.id.clone(), grip.id.clone()));
+                    }
+                }
+                for grip in &part.grips {
+                    match prior.grips.iter().find(|entry| entry.id == grip.id) {
+                        None => mutations.push(add_part_grip(part.id.clone(), grip.clone(), None)),
+                        Some(prior_grip) if prior_grip != grip => mutations.push(replace_part_grip(part.id.clone(), grip.id.clone(), grip.clone())),
+                        Some(_) => {}
+                    }
+                }
+            }
+        }
+    }
+    for fastener in &before.fasteners {
+        if !after.fasteners.iter().any(|entry| entry.id == fastener.id) {
+            mutations.push(disconnect_grips(fastener.id.clone()));
+        }
+    }
+    for fastener in &after.fasteners {
+        match before.fasteners.iter().find(|entry| entry.id == fastener.id) {
+            None => mutations.push(connect_grips(
+                fastener.id.clone(), fastener.source.clone(), fastener.target.clone(), fastener.fastener_kind.clone(),
+                fastener.gap, fastener.shift, fastener.rise, fastener.rotation, fastener.turn, fastener.tilt, fastener.x, fastener.y,
+            )),
+            Some(prior) if prior.source != fastener.source || prior.target != fastener.target => {
+                mutations.push(disconnect_grips(fastener.id.clone()));
+                mutations.push(connect_grips(
+                    fastener.id.clone(), fastener.source.clone(), fastener.target.clone(), fastener.fastener_kind.clone(),
+                    fastener.gap, fastener.shift, fastener.rise, fastener.rotation, fastener.turn, fastener.tilt, fastener.x, fastener.y,
+                ));
+            }
+            Some(prior) => {
+                if prior.gap != fastener.gap || prior.shift != fastener.shift || prior.rise != fastener.rise || prior.rotation != fastener.rotation || prior.turn != fastener.turn || prior.tilt != fastener.tilt || prior.x != fastener.x || prior.y != fastener.y {
+                    mutations.push(replace_fastener_geometry(fastener.id.clone(), fastener.gap, fastener.shift, fastener.rise, fastener.rotation, fastener.turn, fastener.tilt, fastener.x, fastener.y));
+                }
+                if prior.fastener_kind != fastener.fastener_kind {
+                    mutations.push(change_fastener_kind(fastener.id.clone(), fastener.fastener_kind.clone()));
+                }
+            }
+        }
+    }
+    if before.label != after.label {
+        mutations.push(rename_puzzle5d(after.label.clone()));
+    }
+    if before.domain != after.domain {
+        mutations.push(change_domain(after.domain.clone()));
+    }
+    if before.meta.description != after.meta.description {
+        mutations.push(change_description(after.meta.description.clone()));
+    }
+    for row in &before.kind_compatibility {
+        if !after.kind_compatibility.iter().any(|entry| entry.source == row.source && entry.target == row.target) {
+            mutations.push(disconnect_kind_compatibility(row.source.clone(), row.target.clone()));
+        }
+    }
+    for row in &after.kind_compatibility {
+        match before.kind_compatibility.iter().find(|entry| entry.source == row.source && entry.target == row.target) {
+            None => mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity)),
+            Some(prior) if prior != row => {
+                mutations.push(disconnect_kind_compatibility(row.source.clone(), row.target.clone()));
+                mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity));
+            }
+            Some(_) => {}
+        }
+    }
+    if before.kind_catalogs != after.kind_catalogs {
+        mutations.push(replace_kind_catalogs(after.kind_catalogs.clone()));
+    }
+    mutations
 }
-//#endregion 🔖️Operations
+//#endregion 🔖️SnapshotDelta
+
+/// ▶️ Applies `mutation` via its diff.
+pub fn apply_puzzle5d_mutation(projection: &mut Puzzle5dSnapshot, mutation: &Puzzle5dMutation) {
+    *projection = vcs::apply_mutation(projection, mutation);
+}
+
+pub fn inverse_puzzle5d_mutation(projection: &Puzzle5dSnapshot, mutation: &Puzzle5dMutation) -> Vec<Puzzle5dMutation> {
+    mutation.inverse(projection)
+}
 
 //#region 🔖️ValueBridge
 // 🌉️ The play app's scene-mutation helpers predate this typed projection and stay on a bare
 // `serde_json::Value` scratch fixture. Bridging `Puzzle5dMutation`/`Puzzle5dDiff` onto that `Value`
-// boundary too keeps `puzzle5d_document_delta_operations` and the app's `ArtifactApp::Snapshot`
-// compiling unchanged — mirrors `puzzle2d`/`puzzle3d`'s bridge.
-fn puzzle5d_value_item_id(item: &Value) -> Option<&str> {
-    item.get("id").and_then(|value| value.as_str())
-}
-
-fn puzzle5d_upsert_value_item(document: &mut Value, collection: &str, index: usize, item: Value) {
-    let Some(object) = document.as_object_mut() else {
-        return;
-    };
-    let array = object.entry(collection.to_string()).or_insert_with(|| Value::Array(Vec::new()));
-    let Some(array) = array.as_array_mut() else {
-        return;
-    };
-    if let Some(id) = puzzle5d_value_item_id(&item).map(str::to_string) {
-        if let Some(slot) = array.iter_mut().find(|entry| puzzle5d_value_item_id(entry) == Some(id.as_str())) {
-            *slot = item;
-            return;
-        }
-    }
-    array.insert(index.min(array.len()), item);
-}
-
-fn puzzle5d_remove_value_item(document: &mut Value, collection: &str, id: &str) {
-    if let Some(array) = document.get_mut(collection).and_then(|value| value.as_array_mut()) {
-        array.retain(|entry| puzzle5d_value_item_id(entry) != Some(id));
-    }
-}
-
-fn apply_puzzle5d_operation_to_value(document: &mut Value, operation: &Puzzle5dMutation) {
-    match operation {
-        Puzzle5dMutation::SetPart { index, part } => puzzle5d_upsert_value_item(document, "parts", *index, serde_json::to_value(part).unwrap_or(Value::Null)),
-        Puzzle5dMutation::RemovePart { id } => puzzle5d_remove_value_item(document, "parts", id),
-        Puzzle5dMutation::SetFastener { index, fastener } => puzzle5d_upsert_value_item(document, "fasteners", *index, serde_json::to_value(fastener).unwrap_or(Value::Null)),
-        Puzzle5dMutation::RemoveFastener { id } => puzzle5d_remove_value_item(document, "fasteners", id),
-        Puzzle5dMutation::SetMeta { meta } => {
-            if let Some(object) = document.as_object_mut() {
-                object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(Value::Null));
-            }
-        }
-        Puzzle5dMutation::SetSnapshot { snapshot: next } => *document = serde_json::to_value(next).unwrap_or_else(|_| document.clone()),
-    }
-}
-
-fn puzzle5d_value_collection<'a>(document: &'a Value, collection: &str) -> &'a [Value] {
-    document.get(collection).and_then(|value| value.as_array()).map_or(&[], Vec::as_slice)
-}
-
-fn puzzle5d_value_item_index<T: serde::de::DeserializeOwned>(document: &Value, collection: &str, id: &str) -> Option<(usize, T)> {
-    let items = puzzle5d_value_collection(document, collection);
-    let index = items.iter().position(|entry| puzzle5d_value_item_id(entry) == Some(id))?;
-    serde_json::from_value(items[index].clone()).ok().map(|item| (index, item))
-}
-
-fn puzzle5d_reorder_value_collection(document: &mut Value, collection: &str, order: &[String]) {
-    let Some(array) = document.get_mut(collection).and_then(|value| value.as_array_mut()) else {
-        return;
-    };
-    let mut by_id: std::collections::BTreeMap<String, Value> = std::collections::BTreeMap::new();
-    for item in array.drain(..) {
-        if let Some(id) = puzzle5d_value_item_id(&item).map(str::to_string) {
-            by_id.insert(id, item);
-        }
-    }
-    let mut ordered = Vec::with_capacity(order.len());
-    for id in order {
-        if let Some(item) = by_id.remove(id) {
-            ordered.push(item);
-        }
-    }
-    ordered.extend(by_id.into_values());
-    *array = ordered;
-}
-
+// boundary round-trips through the typed `Puzzle5dSnapshot` (`serde_json::from_value`/`to_value`)
+// rather than hand-splicing JSON per mutation kind — mirrors `puzzle2d`'s bridge exactly.
 impl MutationDiff<Value> for Puzzle5dDiff {
     fn apply(&self, projection: &Value) -> Value {
-        if let Some(artifact) = &self.artifact {
-            return serde_json::to_value(artifact.to_snapshot()).unwrap_or_else(|_| projection.clone());
-        }
-        let mut next = projection.clone();
-        if let Some(delta) = &self.parts {
-            for id in &delta.removed {
-                puzzle5d_remove_value_item(&mut next, "parts", id);
-            }
-            for part in &delta.added {
-                puzzle5d_upsert_value_item(&mut next, "parts", usize::MAX, serde_json::to_value(part).unwrap_or(Value::Null));
-            }
-            for entry in &delta.patched {
-                if let Some(part) = &entry.patch.replacement {
-                    puzzle5d_upsert_value_item(&mut next, "parts", usize::MAX, serde_json::to_value(part).unwrap_or(Value::Null));
-                }
-            }
-            if let Some(order) = &delta.reordered {
-                puzzle5d_reorder_value_collection(&mut next, "parts", order);
-            }
-        }
-        if let Some(delta) = &self.fasteners {
-            for id in &delta.removed {
-                puzzle5d_remove_value_item(&mut next, "fasteners", id);
-            }
-            for fastener in &delta.added {
-                puzzle5d_upsert_value_item(&mut next, "fasteners", usize::MAX, serde_json::to_value(fastener).unwrap_or(Value::Null));
-            }
-            for entry in &delta.patched {
-                if let Some(fastener) = &entry.patch.replacement {
-                    puzzle5d_upsert_value_item(&mut next, "fasteners", usize::MAX, serde_json::to_value(fastener).unwrap_or(Value::Null));
-                }
-            }
-            if let Some(order) = &delta.reordered {
-                puzzle5d_reorder_value_collection(&mut next, "fasteners", order);
-            }
-        }
-        if let Some(meta) = &self.meta {
-            if let Some(object) = next.as_object_mut() {
-                object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(Value::Null));
-            }
-        }
-        next
+        let base: Puzzle5dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
+        let next = MutationDiff::<Puzzle5dSnapshot>::apply(self, &base);
+        serde_json::to_value(next).unwrap_or_else(|_| projection.clone())
     }
 
     fn absorb(&mut self, other: Self) {
@@ -230,128 +246,27 @@ impl Mutation<Value> for Puzzle5dMutation {
 
     fn diff(&self, projection: &Value) -> Puzzle5dDiff {
         let base: Puzzle5dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
-        puzzle5d_mutation_diff(self, &base)
+        Mutation::<Puzzle5dSnapshot>::diff(self, &base)
     }
 
     fn inverse(&self, projection: &Value) -> Vec<Self> {
-        match self {
-            Puzzle5dMutation::SetPart { part, .. } => match puzzle5d_value_item_index::<Puzzle5dPart>(projection, "parts", &part.id) {
-                Some((index, previous)) => vec![Puzzle5dMutation::SetPart { index, part: previous }],
-                None => vec![Puzzle5dMutation::RemovePart { id: part.id.clone() }],
-            },
-            Puzzle5dMutation::RemovePart { id } => puzzle5d_value_item_index::<Puzzle5dPart>(projection, "parts", id).map_or_else(Vec::new, |(index, previous)| vec![Puzzle5dMutation::SetPart { index, part: previous }]),
-            Puzzle5dMutation::SetFastener { fastener, .. } => match puzzle5d_value_item_index::<Puzzle5dFastener>(projection, "fasteners", &fastener.id) {
-                Some((index, previous)) => vec![Puzzle5dMutation::SetFastener { index, fastener: previous }],
-                None => vec![Puzzle5dMutation::RemoveFastener { id: fastener.id.clone() }],
-            },
-            Puzzle5dMutation::RemoveFastener { id } => {
-                puzzle5d_value_item_index::<Puzzle5dFastener>(projection, "fasteners", id).map_or_else(Vec::new, |(index, previous)| vec![Puzzle5dMutation::SetFastener { index, fastener: previous }])
-            }
-            Puzzle5dMutation::SetMeta { .. } => {
-                let meta: Puzzle5dMeta = projection.get("meta").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
-                vec![Puzzle5dMutation::SetMeta { meta }]
-            }
-            Puzzle5dMutation::SetSnapshot { .. } => vec![Puzzle5dMutation::SetSnapshot { snapshot: serde_json::from_value(projection.clone()).unwrap_or_default() }],
-        }
+        let base: Puzzle5dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
+        Mutation::<Puzzle5dSnapshot>::inverse(self, &base)
     }
 }
 
-/// 🧮️ Collects the sparse `set`/`removed` delta for one id-keyed `Value` array collection into typed
-/// entries. Returns `false` (caller falls back to `SetSnapshot`) whenever an entry is missing an
-/// `id` or fails to deserialize into `T`.
-fn puzzle5d_collect_value_collection_delta<T>(before: &[Value], after: &[Value], set: &mut Vec<(usize, T)>, removed: &mut Vec<String>) -> bool
-where
-    T: serde::de::DeserializeOwned,
-{
-    let before_by_id: std::collections::HashMap<&str, &Value> = before.iter().filter_map(|entry| puzzle5d_value_item_id(entry).map(|id| (id, entry))).collect();
-    let mut after_ids: std::collections::HashSet<&str> = std::collections::HashSet::with_capacity(after.len());
-    for (index, entry) in after.iter().enumerate() {
-        let Some(id) = puzzle5d_value_item_id(entry) else {
-            return false;
-        };
-        after_ids.insert(id);
-        if before_by_id.get(id).copied() != Some(entry) {
-            let Ok(item) = serde_json::from_value::<T>(entry.clone()) else {
-                return false;
-            };
-            set.push((index, item));
-        }
-    }
-    for entry in before {
-        let Some(id) = puzzle5d_value_item_id(entry) else {
-            return false;
-        };
-        if !after_ids.contains(id) {
-            removed.push(id.to_string());
-        }
-    }
-    true
-}
-
-/// 🧮️ Computes the granular typed operation sequence turning `before` into `after` (both the bare
-/// document JSON the play app mutates). Falls back to a single `SetSnapshot` whenever the granular
-/// replay would not reproduce `after` exactly, or whenever `schema`/`domain`/`label`/`kindCatalogs`/
-/// `kindCompatibility` changed (no granular editor for those today — see `Puzzle5dMutation`'s doc).
+/// 🧮️ Computes the exact typed semantic mutation sequence turning `before` into `after` (both the
+/// bare document JSON the play app mutates), by round-tripping through the typed
+/// `Puzzle5dSnapshot` and delegating to [`puzzle5d_snapshot_mutations`].
 pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle5dMutation> {
-    if before == after {
+    let before_snapshot: Puzzle5dSnapshot = serde_json::from_value(before.clone()).unwrap_or_default();
+    let after_snapshot: Puzzle5dSnapshot = serde_json::from_value(after.clone()).unwrap_or_default();
+    if before_snapshot == after_snapshot {
         return Vec::new();
     }
-    let fallback = |after: &Value| vec![Puzzle5dMutation::SetSnapshot { snapshot: serde_json::from_value(after.clone()).unwrap_or_default() }];
-    let (Some(before_object), Some(after_object)) = (before.as_object(), after.as_object()) else {
-        return fallback(after);
-    };
-    const KNOWN_KEYS: [&str; 8] = ["schema", "domain", "label", "meta", "kindCatalogs", "kindCompatibility", "parts", "fasteners"];
-    if before_object.keys().chain(after_object.keys()).any(|key| !KNOWN_KEYS.contains(&key.as_str())) {
-        return fallback(after);
-    }
-    for exact_key in ["schema", "domain", "label", "kindCatalogs", "kindCompatibility"] {
-        if before_object.get(exact_key) != after_object.get(exact_key) {
-            return fallback(after);
-        }
-    }
-    let mut operations = Vec::new();
-    macro_rules! collect_collection {
-        ($key:literal, $set_op:expr, $remove_op:expr, $ty:ty) => {{
-            let before_items = before_object.get($key).and_then(|value| value.as_array()).map_or(&[][..], Vec::as_slice);
-            let after_items = after_object.get($key).and_then(|value| value.as_array()).map_or(&[][..], Vec::as_slice);
-            if before_items != after_items {
-                let mut set = Vec::new();
-                let mut removed = Vec::new();
-                if !puzzle5d_collect_value_collection_delta::<$ty>(before_items, after_items, &mut set, &mut removed) {
-                    return fallback(after);
-                }
-                operations.extend(removed.into_iter().map($remove_op));
-                operations.extend(set.into_iter().map($set_op));
-            }
-        }};
-    }
-    collect_collection!("parts", |(index, part)| Puzzle5dMutation::SetPart { index, part }, |id| Puzzle5dMutation::RemovePart { id }, Puzzle5dPart);
-    collect_collection!("fasteners", |(index, fastener)| Puzzle5dMutation::SetFastener { index, fastener }, |id| Puzzle5dMutation::RemoveFastener { id }, Puzzle5dFastener);
-    let before_meta = before_object.get("meta");
-    let after_meta = after_object.get("meta");
-    if before_meta != after_meta {
-        let meta = match after_meta {
-            Some(value) => match serde_json::from_value::<Puzzle5dMeta>(value.clone()) {
-                Ok(meta) => meta,
-                Err(_) => return fallback(after),
-            },
-            None => Puzzle5dMeta::default(),
-        };
-        operations.push(Puzzle5dMutation::SetMeta { meta });
-    }
-    let mut replay = before.clone();
-    for operation in &operations {
-        apply_puzzle5d_operation_to_value(&mut replay, operation);
-    }
-    let normalize = |value: &Value| {
-        serde_json::to_value(serde_json::from_value::<Puzzle5dSnapshot>(value.clone()).unwrap_or_default()).unwrap_or_else(|_| value.clone())
-    };
-    if normalize(&replay) == normalize(after) {
-        operations
-    } else {
-        fallback(after)
-    }
+    puzzle5d_snapshot_mutations(&before_snapshot, &after_snapshot)
 }
+//#endregion 🔖️ValueBridge
 
 //#region 🔖️PlaySnapshot
 /// 🌱️ The play app's `Puzzle5dPlayApp` predates the typed `Puzzle5dSnapshot` above and stays on
@@ -359,9 +274,8 @@ pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 /// only to satisfy `ArtifactApp::Snapshot: store::ArtifactDsl + store::ArtifactPack`;
 /// `parse_dsl`/`print_dsl`/`encode_pack_with`/`decode_pack_with` all round-trip straight through the
 /// still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack encoding respectively),
-/// same local-bridge shape as `puzzle2d`'s `Puzzle2dPlaySnapshot` and `puzzle3d`'s
-/// `Puzzle3dPlaySnapshot`. `Mutation`/`MutationDiff` delegate straight through to the `Value`
-/// impls above too.
+/// same local-bridge shape as `puzzle2d`'s `Puzzle2dPlaySnapshot`. `Mutation`/`MutationDiff`
+/// delegate straight through to the `Value` impls above too.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Puzzle5dPlaySnapshot(pub Value);
 
@@ -411,12 +325,11 @@ impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
         Mutation::<Value>::diff(self, &projection.0)
     }
 
-    fn inverse(&self, projection: &Puzzle5dPlaySnapshot) -> Vec<Self> {
+    fn inverse(&self, projection: &Puzzle5dPlaySnapshot) -> Vec<Puzzle5dMutation> {
         Mutation::<Value>::inverse(self, &projection.0)
     }
 }
 //#endregion 🔖️PlaySnapshot
-//#endregion 🔖️ValueBridge
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -444,8 +357,9 @@ mod tests {
             "fasteners": [],
         });
         let operations = puzzle5d_document_delta_operations(&before, &after);
-        assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::SetPart { .. })));
-        assert!(!operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::SetSnapshot { .. })), "granular delta must not fall back to whole-document replace here");
+        assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::MovePart2d(_))));
+        assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::CreatePart(_))));
+        assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::DeletePart(_))));
         let mut forward = before.clone();
         let mut inverses = Vec::new();
         for operation in &operations {
@@ -458,14 +372,89 @@ mod tests {
         }
         assert_eq!(forward, before, "backwards operations must restore the pre-edit document");
     }
+
+    //#region 🔖️MutationLaws
+    use protocol::testkit::assert_mutation_inverse_law;
+
+    fn empty() -> Puzzle5dSnapshot {
+        Puzzle5dSnapshot::default()
+    }
+
+    #[test]
+    fn create_delete_part_inverse_law() {
+        use crate::artifacts::puzzle5d::Puzzle5dPart;
+        let base = empty();
+        let part = Puzzle5dPart { id: "p1".into(), ..Default::default() };
+        assert_mutation_inverse_law(&base, &create_part(part.clone(), None));
+        let with_part = MutationDiff::<Puzzle5dSnapshot>::apply(&create_part(part, None).diff(&base), &base);
+        assert_mutation_inverse_law(&with_part, &delete_part("p1".into()));
+    }
+
+    #[test]
+    fn part_field_mutations_inverse_law() {
+        use crate::artifacts::puzzle5d::{Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale};
+        let base = empty();
+        let part = Puzzle5dPart { id: "p1".into(), grips: vec![Puzzle5dGrip { id: "g1".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
+        let with_part = MutationDiff::<Puzzle5dSnapshot>::apply(&create_part(part, None).diff(&base), &base);
+        assert_mutation_inverse_law(&with_part, &move_part_2d("p1".into(), 5.0, 6.0));
+        assert_mutation_inverse_law(&with_part, &replace_part_2d_geometry("p1".into(), Some("rectangle".into()), None, Some(4.0), Some(2.0)));
+        assert_mutation_inverse_law(&with_part, &edit_part_2d_text("p1".into(), Some("hi".into())));
+        assert_mutation_inverse_law(&with_part, &change_part_2d_icon("p1".into(), Some("star".into())));
+        assert_mutation_inverse_law(&with_part, &change_part_2d_hidden("p1".into(), Some(true)));
+        assert_mutation_inverse_law(&with_part, &change_part_2d_locked("p1".into(), Some(true)));
+        assert_mutation_inverse_law(&with_part, &move_part_3d("p1".into(), [1.0, 2.0, 3.0]));
+        assert_mutation_inverse_law(&with_part, &rotate_part_3d("p1".into(), Some([0.0, 0.0, 0.0, 1.0])));
+        assert_mutation_inverse_law(&with_part, &scale_part_3d("p1".into(), Some(Puzzle5dScale::Uniform(2.0))));
+        assert_mutation_inverse_law(&with_part, &change_part_3d_mesh("p1".into(), Some("mesh://a".into())));
+        assert_mutation_inverse_law(&with_part, &edit_part_3d_label("p1".into(), Some("Label".into())));
+        assert_mutation_inverse_law(&with_part, &change_part_kind("p1".into(), Some("core.capsule".into())));
+        assert_mutation_inverse_law(&with_part, &change_part_anchor("p1".into(), Puzzle5dPartAnchor::Derived));
+        assert_mutation_inverse_law(&with_part, &add_part_grip("p1".into(), Puzzle5dGrip { id: "g2".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }, None));
+        assert_mutation_inverse_law(&with_part, &remove_part_grip("p1".into(), "g1".into()));
+        assert_mutation_inverse_law(&with_part, &replace_part_grip("p1".into(), "g1".into(), Puzzle5dGrip { id: "g1".into(), grip_kind: Some("k".into()), grip_2d: Default::default(), grip_3d: Default::default() }));
+    }
+
+    #[test]
+    fn connect_disconnect_grips_inverse_law_and_cascade() {
+        use crate::artifacts::puzzle5d::{Puzzle5dGrip, Puzzle5dPart};
+        let base = empty();
+        let part_a = Puzzle5dPart { id: "a".into(), grips: vec![Puzzle5dGrip { id: "ga".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
+        let part_b = Puzzle5dPart { id: "b".into(), grips: vec![Puzzle5dGrip { id: "gb".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
+        let mut projection = base;
+        projection = MutationDiff::<Puzzle5dSnapshot>::apply(&create_part(part_a, None).diff(&projection), &projection);
+        projection = MutationDiff::<Puzzle5dSnapshot>::apply(&create_part(part_b, None).diff(&projection), &projection);
+        assert_mutation_inverse_law(&projection, &connect_grips("f1".into(), "a:ga".into(), "b:gb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+        let connected = MutationDiff::<Puzzle5dSnapshot>::apply(&connect_grips("f1".into(), "a:ga".into(), "b:gb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0).diff(&projection), &projection);
+        assert_mutation_inverse_law(&connected, &disconnect_grips("f1".into()));
+        assert_mutation_inverse_law(&connected, &replace_fastener_geometry("f1".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0));
+        assert_mutation_inverse_law(&connected, &change_fastener_kind("f1".into(), Some("core.link".into())));
+        let deleted = delete_part("a".into());
+        let after_delete = MutationDiff::<Puzzle5dSnapshot>::apply(&deleted.diff(&connected), &connected);
+        assert!(!after_delete.fasteners.iter().any(|fastener| fastener.id == "f1"), "delete-part must sever fasteners touching its grips");
+        assert_mutation_inverse_law(&connected, &deleted);
+    }
+
+    #[test]
+    fn document_scalar_mutations_inverse_law() {
+        use crate::artifacts::puzzle5d::{Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs};
+        let base = empty();
+        assert_mutation_inverse_law(&base, &rename_puzzle5d(Some("Nakagin".into())));
+        assert_mutation_inverse_law(&base, &change_domain("mechanical".into()));
+        assert_mutation_inverse_law(&base, &change_description("a scene".into()));
+        assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle5dCompatSpecificity::Grip));
+        let connected = MutationDiff::<Puzzle5dSnapshot>::apply(&connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle5dCompatSpecificity::Grip).diff(&base), &base);
+        assert_mutation_inverse_law(&connected, &disconnect_kind_compatibility("a".into(), "b".into()));
+        assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle5dKindCatalogs::default())));
+    }
+
+    #[test]
+    fn dispatch_registers_semantic_descriptors() {
+        register_puzzle5d_mutation_descriptors();
+        for kind in Puzzle5dMutation::kinds() {
+            assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
+        }
+        assert_eq!(Puzzle5dMutation::kinds().len(), 28);
+    }
+    //#endregion 🔖️MutationLaws
 }
 //#endregion 🧪️Tests
-
-
-pub fn apply_puzzle5d_mutation(projection: &mut Puzzle5dSnapshot, mutation: &Puzzle5dMutation) {
-    *projection = vcs::apply_mutation(projection, mutation);
-}
-
-pub fn inverse_puzzle5d_mutation(projection: &Puzzle5dPlaySnapshot, mutation: &Puzzle5dMutation) -> Vec<Puzzle5dMutation> {
-    mutation.inverse(projection)
-}

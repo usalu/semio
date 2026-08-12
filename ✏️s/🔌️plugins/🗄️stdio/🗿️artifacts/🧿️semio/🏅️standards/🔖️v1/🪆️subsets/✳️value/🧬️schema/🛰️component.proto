@@ -1,0 +1,11 @@
+syntax = "proto3";
+// 🧬️ SemioValueArtifact schema — mirrors SemioValueSnapshot field for field.
+package semio.s_stdio_semio_value.artifact;
+
+import "📸️snapshot/🛰️component.proto";
+
+message SemioValueArtifact {
+  string schema = 1;
+  semio.s_stdio_semio_value.snapshot.SemioValue root = 2;
+  repeated semio.s_stdio_semio_value.snapshot.SemioValueNode nodes = 3;
+}

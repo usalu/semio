@@ -25,13 +25,14 @@ pub fn decode_op(bytes: &[u8]) -> Result<RasterMutation, protocol::ProtocolError
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::raster::{RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
     use crate::artifacts::raster::engine::empty_raster_document;
+    use crate::artifacts::raster::mutations::create_layer;
+    use crate::artifacts::raster::{RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let document = empty_raster_document();
-        let operation = RasterMutation::AddLayer {
+        let operation = RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
             parent_id: None,
             index: document.layers.len(),
             layer: Box::new(RasterLayerNode::Pixel {
@@ -46,7 +47,7 @@ mod tests {
                 height: Some(64),
                 image_key: None,
             }),
-        };
+        });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -60,7 +61,7 @@ mod tests {
         let mut store = store::ArtifactStore::new(envelope);
         store
             .dispatch(store::ArtifactCommand::Apply {
-                mutations: vec![RasterMutation::AddLayer {
+                mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
                     parent_id: None,
                     index: 1,
                     layer: Box::new(RasterLayerNode::Adjustment {
@@ -73,7 +74,7 @@ mod tests {
                         adjustment_kind: "levels".into(),
                         params: std::collections::BTreeMap::new(),
                     }),
-                }],
+                })],
                 description: None,
             })
             .expect("apply");
@@ -95,7 +96,7 @@ mod tests {
         let mut store = store::ArtifactStore::new(envelope);
         store
             .dispatch(store::ArtifactCommand::Apply {
-                mutations: vec![RasterMutation::AddLayer {
+                mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
                     parent_id: None,
                     index: 0,
                     layer: Box::new(RasterLayerNode::Pixel {
@@ -110,7 +111,7 @@ mod tests {
                         height: Some(32),
                         image_key: None,
                     }),
-                }],
+                })],
                 description: None,
             })
             .expect("apply");

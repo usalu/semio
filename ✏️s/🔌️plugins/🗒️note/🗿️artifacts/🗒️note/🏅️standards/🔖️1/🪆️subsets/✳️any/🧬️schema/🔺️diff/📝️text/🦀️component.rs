@@ -1,9 +1,9 @@
 //! 🔺️ Note artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::note::schema::diff::{
-    NoteAssetsDelta, NoteBlockPatchEntry, NoteBlocksDelta, NoteDiff, NoteStringList,
+    NoteAddedBlockEntry, NoteAssetsDelta, NoteBlockPatchEntry, NoteBlocksDelta, NoteDiff, NoteStringList,
 };
-use crate::artifacts::note::engine::{block_id, flatten_blocks, remove_block_from_tree, update_block_in_tree};
+use crate::artifacts::note::engine::{block_id, insert_block, remove_block_from_tree, update_block_in_tree};
 use crate::artifacts::note::schema::NoteArtifact;
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use protocol::MutationDiff;
@@ -98,14 +98,16 @@ impl NoteDiff {
     }
 }
 
-/// 🧩 Applies an identified-collection delta to a block tree (root-level adds/removes/patches/reorder).
+/// 🧩 Applies an identified-collection delta to a block tree (adds/removes/patches/reorder) — `added`
+/// entries carry their own `parent_id`/`index` so a nested `create-block`/`move-block-to-container`
+/// places the node exactly, never a root-only push.
 pub fn apply_blocks_delta(blocks: &[NoteBlockNode], delta: &NoteBlocksDelta) -> Vec<NoteBlockNode> {
     let mut next = blocks.to_vec();
     for id in &delta.removed {
         remove_block_from_tree(&mut next, id);
     }
-    for item in &delta.added {
-        next.push(item.clone());
+    for entry in &delta.added {
+        insert_block(&mut next, entry.parent_id.as_deref(), entry.index.unwrap_or(usize::MAX), entry.block.clone());
     }
     for entry in &delta.patched {
         apply_block_patch_entry(&mut next, entry);
@@ -247,105 +249,46 @@ impl MutationDiff<NoteSnapshot> for NoteDiff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Builders
-/// 🖼️ Whole-artifact replacement from a snapshot (UI fields defaulted).
-pub fn diff_set_snapshot(snapshot: &NoteSnapshot) -> NoteDiff {
+/// 🩹 Sparse single-block whole-value patch — shared by every `change-block-*`/`rename-block`/
+/// `move-block`/`resize-block`/`edit-block-*`/table-row-column mutation leaf: each computes the
+/// updated `NoteBlockNode` value from `(payload, base)` and hands it here.
+pub fn note_block_patch_diff(id: &str, block: NoteBlockNode) -> NoteDiff {
     NoteDiff {
-        artifact: Some(Box::new(NoteArtifact::from_snapshot(snapshot.clone()))),
+        blocks: Some(NoteBlocksDelta { patched: vec![NoteBlockPatchEntry { id: id.to_string(), patch: NoteBlockPatch { block_json: Some(serde_json::to_string(&block).expect("NoteBlockNode is always json-serializable")) } }], ..Default::default() }),
         ..Default::default()
     }
 }
 
-pub fn diff_set_grid_visible(visible: Option<bool>) -> NoteDiff {
+/// ➕ Sparse single-block insertion at `(parent_id, index)` — shared by `create-block`,
+/// `duplicate-block(s)`, and the added-half of `move-block-to-container`.
+pub fn note_block_added_diff(parent_id: Option<String>, index: Option<usize>, block: NoteBlockNode) -> NoteDiff {
     NoteDiff {
-        grid_visible: Some(visible),
+        blocks: Some(NoteBlocksDelta { added: vec![NoteAddedBlockEntry { parent_id, index, block }], ..Default::default() }),
         ..Default::default()
     }
 }
 
-pub fn diff_set_grid_spacing(spacing: Option<f64>) -> NoteDiff {
+/// 🗑️ Sparse single/multi-id removal — shared by `delete-block(s)` and the removed-half of
+/// `move-block-to-container`.
+pub fn note_block_removed_diff(ids: Vec<String>) -> NoteDiff {
     NoteDiff {
-        grid_spacing: Some(spacing),
+        blocks: Some(NoteBlocksDelta { removed: ids, ..Default::default() }),
         ..Default::default()
     }
 }
 
-pub fn diff_set_grid_subdivisions(value: Option<f64>) -> NoteDiff {
-    NoteDiff {
-        grid_subdivisions: Some(value),
-        ..Default::default()
-    }
-}
-
-pub fn diff_set_grid_opacity(opacity: Option<f64>) -> NoteDiff {
-    NoteDiff {
-        grid_opacity: Some(opacity),
-        ..Default::default()
-    }
-}
-
-pub fn diff_set_snap_enabled(enabled: Option<bool>) -> NoteDiff {
-    NoteDiff {
-        snap_enabled: Some(enabled),
-        ..Default::default()
-    }
-}
-
-pub fn diff_set_snap_grid_spacing(spacing: Option<f64>) -> NoteDiff {
-    NoteDiff {
-        snap_grid_spacing: Some(spacing),
-        ..Default::default()
-    }
-}
-
-pub fn diff_set_pencil_width(width: Option<f64>) -> NoteDiff {
-    NoteDiff {
-        pencil_width: Some(width),
-        ..Default::default()
-    }
-}
-
-pub fn diff_set_eraser_radius(radius: Option<f64>) -> NoteDiff {
-    NoteDiff {
-        eraser_radius: Some(radius),
-        ..Default::default()
-    }
-}
-
-pub fn diff_set_blocks(snapshot: &NoteSnapshot, blocks: Vec<NoteBlockNode>) -> NoteDiff {
-    let removed: Vec<String> = flatten_blocks(&snapshot.blocks)
-        .into_iter()
-        .map(|block| block_id(block).to_string())
-        .collect();
-    NoteDiff {
-        blocks: Some(NoteBlocksDelta {
-            removed,
-            added: blocks,
-            ..Default::default()
-        }),
-        ..Default::default()
-    }
-}
-
-pub fn diff_put_asset(key: &str, asset: &crate::artifacts::note::NoteImageAsset) -> NoteDiff {
+/// 🖼️ Sparse single-key asset upsert — shared by `create-asset`/`replace-asset-payload`.
+pub fn note_asset_upsert_diff(key: &str, asset: &crate::artifacts::note::NoteImageAsset) -> NoteDiff {
     let mut entries = std::collections::BTreeMap::new();
     entries.insert(key.to_string(), Some(asset.clone()));
-    NoteDiff {
-        assets: Some(NoteAssetsDelta { entries }),
-        ..Default::default()
-    }
+    NoteDiff { assets: Some(NoteAssetsDelta { entries }), ..Default::default() }
 }
 
-pub fn diff_remove_asset(key: &str) -> NoteDiff {
+/// 🗑️ Sparse single-key asset removal — shared by `delete-asset`.
+pub fn note_asset_removed_diff(key: &str) -> NoteDiff {
     let mut entries = std::collections::BTreeMap::new();
     entries.insert(key.to_string(), None);
-    NoteDiff {
-        assets: Some(NoteAssetsDelta { entries }),
-        ..Default::default()
-    }
-}
-
-pub fn diff_from_snapshot(snapshot: NoteSnapshot) -> NoteDiff {
-    diff_set_snapshot(&snapshot)
+    NoteDiff { assets: Some(NoteAssetsDelta { entries }), ..Default::default() }
 }
 //#endregion 🔖️Builders
 

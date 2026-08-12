@@ -55,10 +55,21 @@ pub struct NoteStringList {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct NoteBlocksDelta {
-    pub added: Vec<NoteBlockNode>,
+    pub added: Vec<NoteAddedBlockEntry>,
     pub removed: Vec<String>,
     pub patched: Vec<NoteBlockPatchEntry>,
     pub reordered: Option<Vec<String>>,
+}
+
+/// ➕ One added/reparented block: `parent_id` (`None` = document root) and `index` (`None` =
+/// append) place it — `create-block`/`duplicate-block(s)`/`move-block-to-container` all diff
+/// through this, never a whole-`blocks` vec swap.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct NoteAddedBlockEntry {
+    pub parent_id: Option<String>,
+    pub index: Option<usize>,
+    pub block: NoteBlockNode,
 }
 
 /// 🩹 One patched block entry.

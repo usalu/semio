@@ -1,6 +1,9 @@
 //! 🖼️ Animate present app commands — source media: set-source, set-frame, set-active-example.
 
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
+use crate::artifacts::present::mutations::replace_source::mutation::ReplaceSource;
+use crate::artifacts::present::mutations::replace_tiles::mutation::ReplaceTiles;
+use crate::artifacts::present::mutations::resize_source_frame::mutation::ResizeSourceFrame;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{default_present_snapshot, FigureTileFrame, FigureTileSource, PresentSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -20,10 +23,10 @@ pub mod set_source {
     pub fn handle(payload: &SetSource, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.snapshot;
         let replaced = payload.source.src != deck.source.src;
-        let mut operations = vec![PresentMutation::SetSource { source: payload.source.clone() }];
+        let mut operations = vec![PresentMutation::ReplaceSource(ReplaceSource { new_source: payload.source.clone() })];
         let mut config_mutations = Vec::new();
         if replaced {
-            operations.push(PresentMutation::SetTiles { tiles: Vec::new() });
+            operations.push(PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: Vec::new() }));
             config_mutations.push(PresentConfigMutation::SetSelectedIds { ids: Vec::new() });
         }
         Ok(Emit { artifact_mutations: operations, config_mutations, ..Default::default() })
@@ -42,11 +45,8 @@ pub mod set_frame {
         pub frame: FigureTileFrame,
     }
 
-    pub fn handle(payload: &SetFrame, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
-        let deck = doc.snapshot;
-        let mut source = deck.source.clone();
-        source.frame = payload.frame.clone();
-        Ok(Emit::mutations(vec![PresentMutation::SetSource { source }]))
+    pub fn handle(payload: &SetFrame, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+        Ok(Emit::mutations(vec![PresentMutation::ResizeSourceFrame(ResizeSourceFrame { new_frame: payload.frame.clone() })]))
     }
 }
 //#endregion 🔖️SetFrame
@@ -61,9 +61,17 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
+    /// 🧬️ Whole-document replace has no in-history mutation (`SetSnapshot` is banned outright — see
+    /// `📓️taxonomy.md`'s forbidden vocabulary), so "reset to demo" builds
+    /// `apps::present::reset_present_document_effect` (a `HostEffect::LoadDocument`, outside undo
+    /// history) instead of an `artifact_mutations` entry.
     pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         if payload.example_id == "demo" || payload.example_id.is_empty() {
-            Ok(Emit { artifact_mutations: vec![PresentMutation::SetSnapshot { snapshot: default_present_snapshot() }], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }], ..Default::default() })
+            Ok(Emit {
+                effects: vec![crate::apps::present::reset_present_document_effect(&default_present_snapshot())],
+                config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }],
+                ..Default::default()
+            })
         } else {
             Ok(Emit::default())
         }
@@ -114,20 +122,39 @@ mod tests {
         assert_eq!(frame.height, 0.4);
     }
 
+    /// 🧬️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright), so
+    /// `setActiveExample` now surfaces as a `HostEffect::LoadDocument` carrying the default document's
+    /// pack bytes rather than an `artifact_mutations` entry — `dispatch`'s in-process `VcsArtifactApp`
+    /// never applies `effects` to its own store (that's the real host's job), so this asserts directly
+    /// on the emitted effect rather than through `app.snapshot()`.
     #[test]
-    fn set_active_example_demo_resets_to_default_deck() {
+    fn set_active_example_demo_emits_a_reset_effect() {
+        use semio_framework_plugin::HostEffect;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(crate::apps::present::commands::grid::seed_grid::SeedGrid { rows: 2, columns: 2 }));
-        dispatch(&mut app, PresentCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }));
-        assert!(app.snapshot().expect("projection").tiles.is_empty(), "resetting to demo clears seeded tiles");
+        let deck = app.snapshot().expect("projection");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView { snapshot: &deck, history: &history };
+        let cfg_snapshot = PresentConfig::default();
+        let cfg = ConfigView { snapshot: &cfg_snapshot };
+        let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "demo".into() }, &doc, &cfg).expect("handle");
+        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+            panic!("expected a LoadDocument effect");
+        };
+        let loaded = <PresentSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        assert!(loaded.tiles.is_empty(), "resetting to demo loads the default deck, which has no tiles");
     }
 
     #[test]
     fn set_active_example_unknown_id_is_a_no_op() {
-        let mut app = present_app();
-        dispatch(&mut app, PresentCommand::SeedGrid(crate::apps::present::commands::grid::seed_grid::SeedGrid { rows: 2, columns: 2 }));
-        dispatch(&mut app, PresentCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "other".into() }));
-        assert_eq!(app.snapshot().expect("projection").tiles.len(), 4);
+        let deck = default_present_snapshot();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView { snapshot: &deck, history: &history };
+        let cfg_snapshot = PresentConfig::default();
+        let cfg = ConfigView { snapshot: &cfg_snapshot };
+        let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "other".into() }, &doc, &cfg).expect("handle");
+        assert!(emit.effects.is_empty());
+        assert!(emit.artifact_mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

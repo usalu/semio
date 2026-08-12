@@ -6,6 +6,6 @@ document = artifact mark, subset line, rest of document ;
 artifact mark = 'stdio.semio' ;
 
 subset line = 'subset', '=', subset tag ;
-subset tag = 'brep' | 'mesh' | 'model' | 'object' | 'document' | 'cad' | 'drawing' | 'image' | 'video' | 'audio' | 'animation' | 'presentation' | 'workflow' ;
+subset tag = 'brep' | 'mesh' | 'model' | 'value' | 'document' | 'cad' | 'drawing' | 'image' | 'video' | 'audio' | 'animation' | 'presentation' | 'flow' ;
 
 rest of document = { ? any character up to end of document ? } ;

@@ -1,9 +1,59 @@
 dialect grammar
-grammar 5d.mutations
-extension 5d
-start document
+grammar puzzle.puzzle5d.mutations
+extension puzzle5d
+start line
 
-document = header body
-header = "schema" SP "stdio.json" NL
-body = payload NL?
-payload = OCTET+
+line = create-part / delete-part / move-part-2d / replace-part-2d-geometry / edit-part-2d-text
+     / change-part-2d-icon / change-part-2d-hidden / change-part-2d-locked / move-part-3d
+     / rotate-part-3d / scale-part-3d / change-part-3d-mesh / edit-part-3d-label
+     / change-part-kind / change-part-anchor / add-part-grip / remove-part-grip
+     / replace-part-grip / connect-grips / disconnect-grips / replace-fastener-geometry
+     / change-fastener-kind / rename-puzzle5d / change-domain / change-description
+     / connect-kind-compatibility / disconnect-kind-compatibility / replace-kind-catalogs
+
+create-part = "create-part" SP part-block SP index-opt
+delete-part = "delete-part" SP id
+move-part-2d = "move-part-2d" SP id SP number SP number
+replace-part-2d-geometry = "replace-part-2d-geometry" SP id SP text-opt SP number-opt SP number-opt SP number-opt
+edit-part-2d-text = "edit-part-2d-text" SP id SP text-opt
+change-part-2d-icon = "change-part-2d-icon" SP id SP text-opt
+change-part-2d-hidden = "change-part-2d-hidden" SP id SP boolean-opt
+change-part-2d-locked = "change-part-2d-locked" SP id SP boolean-opt
+move-part-3d = "move-part-3d" SP id SP number SP number SP number
+rotate-part-3d = "rotate-part-3d" SP id SP quat-opt
+scale-part-3d = "scale-part-3d" SP id SP scale-opt
+change-part-3d-mesh = "change-part-3d-mesh" SP id SP text-opt
+edit-part-3d-label = "edit-part-3d-label" SP id SP text-opt
+change-part-kind = "change-part-kind" SP id SP text-opt
+change-part-anchor = "change-part-anchor" SP id SP anchor
+add-part-grip = "add-part-grip" SP id SP grip-block SP index-opt
+remove-part-grip = "remove-part-grip" SP id SP id
+replace-part-grip = "replace-part-grip" SP id SP id SP grip-block
+connect-grips = "connect-grips" SP id SP full-grip-id SP full-grip-id SP fastener-fields
+disconnect-grips = "disconnect-grips" SP id
+replace-fastener-geometry = "replace-fastener-geometry" SP id SP number SP number SP number SP number SP number SP number SP number SP number
+change-fastener-kind = "change-fastener-kind" SP id SP text-opt
+rename-puzzle5d = "rename-puzzle5d" SP text-opt
+change-domain = "change-domain" SP text
+change-description = "change-description" SP text
+connect-kind-compatibility = "connect-kind-compatibility" SP id SP id SP boolean SP boolean SP specificity
+disconnect-kind-compatibility = "disconnect-kind-compatibility" SP id SP id
+replace-kind-catalogs = "replace-kind-catalogs" SP catalogs-block-opt
+
+part-block = "{" NL OCTET+ "}"
+grip-block = "{" NL OCTET+ "}"
+catalogs-block-opt = ( "{" NL OCTET+ "}" ) / "none"
+fastener-fields = text-opt SP number SP number SP number SP number SP number SP number SP number SP number
+full-grip-id = OCTET+
+anchor = "fixed" / "derived"
+specificity = "general" / "part" / "fastener" / "grip" / "rope"
+quat-opt = ( number SP number SP number SP number ) / "none"
+scale-opt = number+ / "none"
+index-opt = number / "none"
+text-opt = text / "none"
+number-opt = number / "none"
+boolean-opt = boolean / "none"
+id = OCTET+
+number = OCTET+
+text = OCTET+
+boolean = "true" / "false"

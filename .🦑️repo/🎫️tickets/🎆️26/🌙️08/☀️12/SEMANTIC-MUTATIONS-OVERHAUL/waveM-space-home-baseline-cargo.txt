@@ -1,0 +1,135 @@
+    Blocking waiting for file lock on build directory
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:6:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:8:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:9:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:10:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔤️token/🦀️component.rs:5:33: warning: unused imports: `Limits` and `TextError`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:41:11: warning: unused import: `self::span::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:42:11: warning: unused import: `self::diagnostic::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:43:11: warning: unused import: `self::token::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:44:11: warning: unused import: `self::lexer::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:45:11: warning: unused import: `self::trust::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🦀️component.rs:18:5: warning: unused imports: `ByteRange`, `ByteReader`, `ByteWriter`, `ChunkId`, `CodecId`, `CompressionCodec`, `KIND_CHUNK_TABLE`, `KIND_CHUNK`, `KIND_DOCUMENT`, `KIND_END`, `KIND_FIELD_INDEX`, `KIND_MANIFEST`, `KIND_PADDING`, `KIND_SCHEMA`, `KIND_SNAPSHOT`, `KIND_SYMBOLS`, `NoCompression`, `PackLimits`, `PackSink`, `PackSource`, `SegmentKind`, `crc32c`, `is_minimal_varint`, `read_varint_i64`, `read_varint_u64`, `write_varint_i64`, and `write_varint_u64`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧾️codec/🦀️component.rs:4:27: warning: unused imports: `ByteRange`, `ChunkId`, and `ContentHash`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:11:76: warning: unused imports: `SignatureVerifier` and `Signer`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:32:31: warning: unused imports: `ActorId`, `ArtifactId`, `ArtifactVersion`, `ConflictRule`, `HybridLogicalTimestamp`, `MergeStrategyKind`, `MutationId`, `PayloadHash`, `SchemaId`, `SchemaVersion`, `StateClass`, `UndoPolicy`, `read_f64`, `read_str`, `read_varint_u64`, `write_f64`, `write_str`, and `write_varint_u64`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:34:31: warning: unused imports: `AckStage`, `ApplyOutcome`, `Bootstrap`, `ClientFrame`, `Lane`, `PresencePeer`, `PresencePoint`, `PresenceViewport`, `ServerFrame`, `decode_client_frame`, `decode_presence_peer`, `decode_server_frame`, `encode_client_frame`, `encode_presence_peer`, and `encode_server_frame`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:478:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:478:47: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:519:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:679:44: warning: unused import: `Serialize`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:191:11: warning: unused import: `self::ids::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:11: warning: unused import: `self::dictionary::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:193:11: warning: unused import: `self::crypto::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:20:5: warning: unused import: `serde_json::Value`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:482:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:483:23: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:493:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:494:23: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:554:41: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:736:42: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:740:38: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1209:37: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1209:104: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1276:37: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:270:9: warning: ambiguous glob re-exports: the name `canonicalize` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:270:9: warning: ambiguous glob re-exports: the name `test_support` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:270:9: warning: ambiguous glob re-exports: the name `Symbol` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:272:9: warning: ambiguous glob re-exports: the name `cli` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:272:9: warning: ambiguous glob re-exports: the name `ids` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:272:9: warning: ambiguous glob re-exports: the name `format` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:272:9: warning: ambiguous glob re-exports: the name `io` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:272:9: warning: ambiguous glob re-exports: the name `testkit` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:273:9: warning: ambiguous glob re-exports: the name `OPTIONAL_CANONICAL` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:273:9: warning: ambiguous glob re-exports: the name `REQUIRED_ENCRYPTED` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:273:9: warning: ambiguous glob re-exports: the name `read_varint_u64` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:273:9: warning: ambiguous glob re-exports: the name `write_varint_u64` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:273:9: warning: ambiguous glob re-exports: the name `recover_file` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:273:9: warning: ambiguous glob re-exports: the name `RecoveryReport` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:273:9: warning: ambiguous glob re-exports: the name `VerificationLevel` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:273:9: warning: ambiguous glob re-exports: the name `WriteOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:273:9: warning: ambiguous glob re-exports: the name `DecodeOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:273:9: warning: ambiguous glob re-exports: the name `EncodeOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:288:9: warning: ambiguous glob re-exports: the name `Alternative` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:289:25: warning: unused imports: `diagnostic::*`, `lexer::*`, `span::*`, `token::*`, and `trust::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4: warning: function `print_edge_label` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2356:19: warning: method `set_envelope` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:154:9: warning: structure field `pendingMutations` should have a snake case name: help: convert the identifier to snake case: `pending_mutations`
+warning: `semio-framework-os-kernel` (lib) generated 60 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 36 suggestions)
+    Checking semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+    Checking semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+    Checking semio-framework-compiler v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust)
+🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust/../../🦀️component.rs:13:5: warning: unused import: `std::sync::OnceLock`
+warning: `semio-framework-compiler` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-compiler` to apply 1 suggestion)
+    Checking semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:5:38: warning: unused import: `Level`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:17:5: warning: unused import: `crate::wgpu::IconName`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:94:52: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:9:26: warning: unused import: `Level`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:438:42: warning: unused import: `render_select_menu`
+warning: `semio-framework-ui` (lib) generated 5 warnings (run `cargo fix --lib -p semio-framework-ui` to apply 5 suggestions)
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+    Checking semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:7:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:448:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:457:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:461:26: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:463:36: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:474:25: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:495:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:496:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:500:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:501:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:521:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:529:25: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:540:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:541:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:545:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:546:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:566:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:574:25: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:627:33: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:639:27: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:640:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4537:61: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6251:41: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6251:96: warning: unnecessary qualification
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/📏️measure/🦀️component.rs:3:26: warning: unused imports: `CoedgeId` and `VertexId`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/📏️measure/🦀️component.rs:4:5: warning: unused import: `crate::brep::curve::Curve3`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🖋️imprint/🦀️component.rs:15:36: warning: unused import: `Vec3`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🔀️boolean/🦀️component.rs:96:24: warning: unnecessary qualification
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧵️sew/🦀️component.rs:15:30: warning: unused import: `Vec3`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/➡️sweep/🦀️component.rs:465:29: warning: unnecessary qualification
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/➡️sweep/🦀️component.rs:527:24: warning: unnecessary qualification
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🎨️blend/🦀️component.rs:13:41: warning: unused import: `solid_volume`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🎨️blend/🦀️component.rs:14:31: warning: unused import: `make_box`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:17:39: warning: unused import: `Vec3`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5415:94: error[E0063]: missing field `member_edits` in initializer of `UndoGroup`: missing `member_edits`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5476:82: error[E0063]: missing field `member_edits` in initializer of `UndoGroup`: missing `member_edits`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6372:17: warning: unnecessary `unsafe` block: unnecessary `unsafe` block
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6112:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6127:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6046:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6077:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6088:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5788:38: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5824:38: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5704:42: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6102:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2404:17: warning: unused variable: `app`: help: if this is intentional, prefix it with an underscore: `_app`
+warning: `semio-framework-plugin` (lib) generated 36 warnings
+error: could not compile `semio-framework-plugin` (lib) due to 2 previous errors; 36 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🌳️bvh/🦀️component.rs:3:26: warning: unused import: `ArenaId`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1270:55: warning: unused variable: `tolerance`: help: if this is intentional, prefix it with an underscore: `_tolerance`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🏷️classify/🦀️component.rs:152:4: warning: function `loop_uv_polygon` is never used
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🏷️classify/🦀️component.rs:449:7: warning: trait `Midpoint` is never used
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/📦️mesh-io/🦀️component.rs:429:8: warning: method `triangle_count` is never used
+warning: `semio-framework-3d` (lib) generated 15 warnings (run `cargo fix --lib -p semio-framework-3d` to apply 11 suggestions)

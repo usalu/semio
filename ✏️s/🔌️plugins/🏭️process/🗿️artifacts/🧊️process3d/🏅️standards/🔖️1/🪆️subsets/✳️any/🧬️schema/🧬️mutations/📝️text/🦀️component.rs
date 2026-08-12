@@ -11,8 +11,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 pub use crate::artifacts::process3d::schema::mutations::Process3dMutation;
 use crate::artifacts::process3d::schema::mutations::{
-    change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, delete_machine, delete_step, machines, rename_machine, rename_step,
-    reorder_steps, replace_machine_capabilities, replace_stock_solid, set_cursor, set_snapshot, set_stock, steps,
+    change_cursor, change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step,
+    move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities, replace_step_measure, replace_stock_solid,
 };
 use crate::artifacts::process3d::{Capability, Pose, ProcessMeasure, ProcessStep, SolidSpec, StepOrigin, WorkshopMachine};
 use protocol::OpText;
@@ -146,22 +146,22 @@ fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationD
 
 fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutation {
     match mutation {
-        Process3dMutationDsl::CreateStep { index, step } => Process3dMutation::CreateStep(steps::mutation::CreateStep { index, step }),
+        Process3dMutationDsl::CreateStep { index, step } => Process3dMutation::CreateStep(create_step::mutation::CreateStep { index, step }),
         Process3dMutationDsl::DeleteStep { id } => Process3dMutation::DeleteStep(delete_step::mutation::DeleteStep { id }),
         Process3dMutationDsl::RenameStep { id, new_label } => Process3dMutation::RenameStep(rename_step::mutation::RenameStep { id, new_label }),
         Process3dMutationDsl::ChangeStepEnabled { id, new_enabled } => Process3dMutation::ChangeStepEnabled(change_step_enabled::mutation::ChangeStepEnabled { id, new_enabled }),
         Process3dMutationDsl::ChangeStepOrigin { id, new_origin } => Process3dMutation::ChangeStepOrigin(change_step_origin::mutation::ChangeStepOrigin { id, new_origin }),
-        Process3dMutationDsl::ReplaceStepMeasure { id, new_measure } => Process3dMutation::ReplaceStepMeasure(set_snapshot::mutation::ReplaceStepMeasure { id, new_measure }),
+        Process3dMutationDsl::ReplaceStepMeasure { id, new_measure } => Process3dMutation::ReplaceStepMeasure(replace_step_measure::mutation::ReplaceStepMeasure { id, new_measure }),
         Process3dMutationDsl::ReorderSteps { id, to_index } => Process3dMutation::ReorderSteps(reorder_steps::mutation::ReorderSteps { id, to_index }),
-        Process3dMutationDsl::CreateMachine { index, machine } => Process3dMutation::CreateMachine(machines::mutation::CreateMachine { index, machine }),
+        Process3dMutationDsl::CreateMachine { index, machine } => Process3dMutation::CreateMachine(create_machine::mutation::CreateMachine { index, machine }),
         Process3dMutationDsl::DeleteMachine { id } => Process3dMutation::DeleteMachine(delete_machine::mutation::DeleteMachine { id }),
         Process3dMutationDsl::RenameMachine { id, new_label } => Process3dMutation::RenameMachine(rename_machine::mutation::RenameMachine { id, new_label }),
         Process3dMutationDsl::ChangeMachineIcon { id, new_icon_id } => Process3dMutation::ChangeMachineIcon(change_machine_icon::mutation::ChangeMachineIcon { id, new_icon_id }),
         Process3dMutationDsl::ReplaceMachineCapabilities { id, new_capabilities } => Process3dMutation::ReplaceMachineCapabilities(replace_machine_capabilities::mutation::ReplaceMachineCapabilities { id, new_capabilities }),
-        Process3dMutationDsl::MoveStock { new_pose } => Process3dMutation::MoveStock(set_stock::mutation::MoveStock { new_pose }),
+        Process3dMutationDsl::MoveStock { new_pose } => Process3dMutation::MoveStock(move_stock::mutation::MoveStock { new_pose }),
         Process3dMutationDsl::ChangeStockLabel { new_label } => Process3dMutation::ChangeStockLabel(change_stock_label::mutation::ChangeStockLabel { new_label }),
         Process3dMutationDsl::ReplaceStockSolid { new_solid } => Process3dMutation::ReplaceStockSolid(replace_stock_solid::mutation::ReplaceStockSolid { new_solid }),
-        Process3dMutationDsl::ChangeCursor { new_resolved_up_to } => Process3dMutation::ChangeCursor(set_cursor::mutation::ChangeCursor { new_resolved_up_to }),
+        Process3dMutationDsl::ChangeCursor { new_resolved_up_to } => Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to }),
     }
 }
 
@@ -220,7 +220,7 @@ mod tests {
 
     #[test]
     fn process3d_op_text_round_trips_create_step() {
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::CreateStep(steps::mutation::CreateStep { index: 0, step: cut_step("cut-1") }));
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::CreateStep(create_step::mutation::CreateStep { index: 0, step: cut_step("cut-1") }));
     }
 
     #[test]
@@ -252,7 +252,7 @@ mod tests {
     #[test]
     fn process3d_op_text_round_trips_replace_step_measure() {
         let new_measure = ProcessMeasure::Drill { radius: 0.03, depth: 0.4, pose: Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.7 } };
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReplaceStepMeasure(set_snapshot::mutation::ReplaceStepMeasure { id: "cut-1".into(), new_measure }));
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReplaceStepMeasure(replace_step_measure::mutation::ReplaceStepMeasure { id: "cut-1".into(), new_measure }));
     }
 
     #[test]
@@ -262,7 +262,7 @@ mod tests {
 
     #[test]
     fn process3d_op_text_round_trips_create_machine() {
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::CreateMachine(machines::mutation::CreateMachine { index: 0, machine: circular_saw_machine() }));
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::CreateMachine(create_machine::mutation::CreateMachine { index: 0, machine: circular_saw_machine() }));
     }
 
     #[test]
@@ -292,7 +292,7 @@ mod tests {
 
     #[test]
     fn process3d_op_text_round_trips_move_stock() {
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::MoveStock(set_stock::mutation::MoveStock { new_pose: Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.7 } }));
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::MoveStock(move_stock::mutation::MoveStock { new_pose: Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.7 } }));
     }
 
     #[test]
@@ -308,18 +308,18 @@ mod tests {
 
     #[test]
     fn process3d_op_text_round_trips_change_cursor_some() {
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeCursor(set_cursor::mutation::ChangeCursor { new_resolved_up_to: Some(3) }));
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to: Some(3) }));
     }
 
     #[test]
     fn process3d_op_text_round_trips_change_cursor_none() {
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeCursor(set_cursor::mutation::ChangeCursor { new_resolved_up_to: None }));
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to: None }));
     }
 
     #[test]
     fn inverse_of_create_step_is_delete_step() {
         let snapshot = empty_process3d_snapshot();
-        let mutation = Process3dMutation::CreateStep(steps::mutation::CreateStep { index: 0, step: cut_step("a") });
+        let mutation = Process3dMutation::CreateStep(create_step::mutation::CreateStep { index: 0, step: cut_step("a") });
         let inverse = mutation.inverse(&snapshot);
         assert_eq!(inverse.len(), 1);
         match &inverse[0] {
@@ -331,7 +331,7 @@ mod tests {
     #[test]
     fn inverse_of_create_machine_is_delete_machine() {
         let snapshot = empty_process3d_snapshot();
-        let mutation = Process3dMutation::CreateMachine(machines::mutation::CreateMachine { index: 0, machine: circular_saw_machine() });
+        let mutation = Process3dMutation::CreateMachine(create_machine::mutation::CreateMachine { index: 0, machine: circular_saw_machine() });
         let inverse = mutation.inverse(&snapshot);
         assert_eq!(inverse.len(), 1);
         match &inverse[0] {

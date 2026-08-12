@@ -1,4 +1,4 @@
-//! ⚖️ EN 1999 app — binary command protocol surface + laws (constitutional: protocol).
+//! ⚖️ En1999 app — binary command protocol surface + laws (constitutional: protocol).
 
 
 //#region 📡️SemioProtocol
@@ -25,12 +25,17 @@ pub fn decode_op(bytes: &[u8]) -> Result<En1999Mutation, protocol::ProtocolError
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::en1999::mutations::change_n_ed_kn;
     use crate::artifacts::en1999::En1999Snapshot;
+
+    fn sample_mutation() -> En1999Mutation {
+        En1999Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 95.0 })
+    }
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let mutation = En1999Mutation::SetSnapshot { snapshot: En1999Snapshot::default() };
-        store::os_store::test_support::assert_op_line_round_trip(&mutation);
+        let mutation = sample_mutation();
+        store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
         let bytes = encode_op(&mutation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), mutation);
     }
@@ -39,7 +44,7 @@ mod tests {
     fn document_text_round_trips_through_store() {
         let envelope = store::create_document_envelope("norm.en1999/v1", "en1999", En1999Snapshot::default(), None);
         let mut store = store::ArtifactStore::new(envelope);
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![En1999Mutation::SetSnapshot { snapshot: En1999Snapshot::default() }], description: None }).expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![sample_mutation()], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }

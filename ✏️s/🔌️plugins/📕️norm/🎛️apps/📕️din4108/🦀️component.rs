@@ -104,7 +104,7 @@ impl ArtifactApp for Din4108PlayApp {
 
     /// 🎞️ `"model:in"`/`"document:in"` — see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, Din4108Snapshot>) -> Result<Emit<Din4108Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
-        crate::app_surface::import_media(port, media, |snapshot| Din4108Mutation::SetSnapshot { snapshot })
+        crate::app_surface::import_media(port, media, |snapshot| vec![Din4108Mutation::SetSnapshot { snapshot }])
     }
     //#endregion 🔖️MediaPorts
 }

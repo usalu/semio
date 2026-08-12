@@ -1,64 +1,26 @@
-//! ⚡️ S Home launcher artifact — operation enum + laws (constitutional: op).
+//! 🧬️ S Home artifact — semantic document mutation dispatch enum. Every variant is a single-field
+//! tuple wrapping a handcrafted `protocol::MutationKind` payload (see the `🧬️mutations/<slug>/`
+//! triad leaves); `#[derive(dsl::Mutations)]` generates `impl protocol::Mutation<SHomeSnapshot>`
+//! and `impl protocol::SemanticMutation<SHomeSnapshot>` from that payload — no hand-written
+//! apply/diff/inverse dispatch here. Whole-document replace (the old `SetSnapshot`) is banned; it
+//! goes through `ArtifactStore::reset` (non-history), never through this enum.
 
-//#region 📖️SemioGrammar
-/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
-pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
-pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
-//#endregion 📖️SemioGrammar
-
-use crate::artifacts::home::diff::{diff_set_snapshot, SHomeDiff};
+use crate::artifacts::home::diff::SHomeDiff;
 use crate::artifacts::home::SHomeSnapshot;
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️Types
-/// @emoji 🔢️ The Home launcher's document operation: pins the catalog-generation counter that forces a
-/// re-materialize of the studio list after a create/import/delete side-effect on the catalog port.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+//#region 🔖️Mutations
+/// 🧮️ Semantic S Home launcher mutation vocabulary: the single root scalar mutable field
+/// (`catalog_generation`, the counter that forces a studio-list re-materialize).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
+#[mutations(snapshot = SHomeSnapshot, diff = SHomeDiff, schema = "s.space.home")]
 pub enum SHomeMutation {
-    /// 🫙️ The identity operation — never emitted by `handle`.
-    #[default]
-    NoMutation,
-    SetCatalogGeneration {
-        value: u64,
-    },
-    SetSnapshot {
-        snapshot: SHomeSnapshot,
-    },
+    ChangeCatalogGeneration(ChangeCatalogGeneration),
 }
+//#endregion 🔖️Mutations
 
-impl protocol::Mutation<SHomeSnapshot> for SHomeMutation {
-    type Diff = SHomeDiff;
-
-    fn diff(&self, _snapshot: &SHomeSnapshot) -> Self::Diff {
-        match self {
-            SHomeMutation::NoMutation => SHomeDiff::default(),
-            SHomeMutation::SetCatalogGeneration { value } => SHomeDiff { catalog_generation: Some(*value), ..Default::default() },
-            SHomeMutation::SetSnapshot { snapshot } => diff_set_snapshot(snapshot),
-        }
-    }
-
-    fn inverse(&self, snapshot: &SHomeSnapshot) -> Vec<Self> {
-        inverse_shome_mutation(snapshot, self)
-    }
-}
-//#endregion 🔖️Types
-
-pub fn apply_shome_mutation(snapshot: &mut SHomeSnapshot, mutation: &SHomeMutation) {
-    match mutation {
-        SHomeMutation::NoMutation => {}
-        SHomeMutation::SetCatalogGeneration { value } => snapshot.catalog_generation = *value,
-        SHomeMutation::SetSnapshot { snapshot: replacement } => *snapshot = replacement.clone(),
-    }
-}
-
-pub fn inverse_shome_mutation(snapshot: &SHomeSnapshot, mutation: &SHomeMutation) -> Vec<SHomeMutation> {
-    match mutation {
-        SHomeMutation::NoMutation => vec![SHomeMutation::NoMutation],
-        SHomeMutation::SetCatalogGeneration { .. } => vec![SHomeMutation::SetCatalogGeneration { value: snapshot.catalog_generation }],
-        SHomeMutation::SetSnapshot { .. } => vec![SHomeMutation::SetSnapshot { snapshot: snapshot.clone() }],
-    }
-}
+pub use super::change_catalog_generation::mutation::{change_catalog_generation, ChangeCatalogGeneration};
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -67,9 +29,16 @@ mod tests {
 
     #[test]
     fn home_op_text_round_trips_every_variant() {
-        store::os_store::test_support::assert_op_line_round_trip(&SHomeMutation::NoMutation);
-        store::os_store::test_support::assert_op_line_round_trip(&SHomeMutation::SetCatalogGeneration { value: 7 });
-        store::os_store::test_support::assert_op_line_round_trip(&SHomeMutation::SetSnapshot { snapshot: SHomeSnapshot::default() });
+        store::os_store::test_support::assert_op_line_round_trip(&change_catalog_generation(7));
+    }
+
+    #[test]
+    fn dispatch_registers_semantic_descriptors() {
+        register_s_home_mutation_descriptors();
+        for kind in <SHomeMutation as protocol::SemanticMutation<SHomeSnapshot>>::kinds() {
+            assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
+        }
+        assert_eq!(<SHomeMutation as protocol::SemanticMutation<SHomeSnapshot>>::kinds().len(), 1);
     }
 }
 //#endregion 🧪️Tests

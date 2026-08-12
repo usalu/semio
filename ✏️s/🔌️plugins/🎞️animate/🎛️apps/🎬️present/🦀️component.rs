@@ -18,9 +18,9 @@ use crate::apps::present::modes::main::windows::tile_editor;
 use crate::apps::present::panels::{artifact, catalogue, inspection};
 use crate::apps::present::terminology::animate_present_labels;
 use crate::artifacts::present::engine::{build_tile_morph_prompt, next_frame_tile_crop, next_frame_tile_id};
+use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{default_present_snapshot, FigureTileDraft, PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
-use protocol::CollectionMutation;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
@@ -79,6 +79,17 @@ fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
 pub(crate) fn tile_morph_prompt_effect(deck: &PresentSnapshot) -> HostEffect {
     HostEffect::DownloadMediaExport { filename: "tile-morph-prompt.md".into(), mime_type: "text/markdown".into(), data: build_tile_morph_prompt(&deck.source, &deck.tiles), encoding: None }
 }
+
+/// 🔁️ Builds a `HostEffect::LoadDocument` for `document` — the sanctioned non-history "reset the
+/// whole document" gesture (`ArtifactStore::reset`, applied host-side) that
+/// `🎮️commands/🖼️source::set_active_example` uses instead of the banned `SetSnapshot` mutation. The
+/// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
+pub fn reset_present_document_effect(document: &PresentSnapshot) -> HostEffect {
+    let pack = <PresentSnapshot as store::ArtifactPack>::encode_pack(document);
+    let envelope = store::create_document_envelope::<PresentSnapshot, PresentMutation>(PRESENT_DOCUMENT_SCHEMA, "present", document.clone(), None);
+    let spr = store::print_document_spr(&envelope).expect("present document spr encode is infallible for a fresh, edit-free envelope");
+    HostEffect::LoadDocument { pack, spr }
+}
 //#endregion 🔖️Helpers
 
 //#region 🔖️Commands
@@ -107,7 +118,7 @@ semio_framework_plugin::app_commands! {
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
         "setLocale" as "set-locale" => set_locale::SetLocale,
-        "noMutation" as "no-op" => no_operation::NoMutation,
+        "noMutation" as "no-op" => no_operation::NoOperation,
         "copyPrompt" as "copy-prompt" => copy_prompt::CopyPrompt,
         "exportVideoFromDeck" as "export-video-from-deck" => export_video_from_deck::ExportVideoFromDeck,
     }
@@ -153,9 +164,9 @@ impl ArtifactApp for AnimatePresentPlayApp {
         Some(crate::artifacts::present::engine::present_io())
     }
 
-    fn whole_document_operation(snapshot: PresentSnapshot) -> Option<PresentMutation> {
-        Some(PresentMutation::SetSnapshot { snapshot })
-    }
+    /// 🌱️ `whole_document_operation` stays the trait default (`None`): per `📓️taxonomy.md`, whole-
+    /// document replace has no in-history mutation at all (there is no import mutation by locked
+    /// decision — see `🎮️commands/🖼️source::set_active_example`'s `HostEffect::LoadDocument` instead).
 
     /// 🎞️ `frames:in` (Wave-2 port recipe): inserts an incoming raster frame as a new tile in a
     /// deterministic contact-sheet grid (see `crate::artifacts::present::engine::next_frame_tile_crop`'s
@@ -172,7 +183,7 @@ impl ArtifactApp for AnimatePresentPlayApp {
         let crop = next_frame_tile_crop(count);
         let name = frame_media_name(port, media)?;
         let tile = FigureTileDraft { id: id.clone(), name, crop };
-        Ok(Emit::mutations(vec![PresentMutation::Tiles(CollectionMutation::Add { index: count, item: tile })]))
+        Ok(Emit::mutations(vec![PresentMutation::CreateTile(CreateTile { index: count, tile })]))
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -522,7 +533,7 @@ mod tests {
             PresentCommand::EngagementInput(engagement_input::EngagementInput { value: "add".into() }),
             PresentCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: Some("t1".into()) }),
             PresentCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
-            PresentCommand::NoMutation(no_operation::NoMutation {}),
+            PresentCommand::NoOperation(no_operation::NoOperation {}),
             PresentCommand::CopyPrompt(copy_prompt::CopyPrompt {}),
             PresentCommand::ExportVideoFromDeck(export_video_from_deck::ExportVideoFromDeck { output_dir: "output/x".into(), scene_json: "{}".into() }),
         ]

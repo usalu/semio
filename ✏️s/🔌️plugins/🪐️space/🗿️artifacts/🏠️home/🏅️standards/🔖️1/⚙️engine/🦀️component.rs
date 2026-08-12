@@ -60,7 +60,7 @@ mod tests {
     #[test]
     fn engine_apply_updates_catalog_generation() {
         let mut engine = SHomeEngine::new(empty_shome_snapshot());
-        let mutation = crate::artifacts::home::mutations::SHomeMutation::SetCatalogGeneration { value: 5 };
+        let mutation = crate::artifacts::home::mutations::change_catalog_generation(5);
         engine.apply(&mutation).expect("apply");
         assert_eq!(engine.snapshot().catalog_generation, 5);
         assert_eq!(engine.artifact().catalog_generation, 5);
