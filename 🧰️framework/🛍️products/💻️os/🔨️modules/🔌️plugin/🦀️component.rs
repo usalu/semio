@@ -5108,6 +5108,17 @@ pub mod app {
             Vec::new()
         }
 
+        /// 🪪️ This app's own config+presence schema descriptor, auto-registered by
+        /// `register_document_app`/`document_app` the moment this type is bound to a plugin (ticket
+        /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c: closes the last legitimate `.setup()`
+        /// reason — app-scope schema is app-scope precisely because it is keyed off `Self`, so the
+        /// builder call that already names `Self` is the correct place to register it, not a plugin-root
+        /// side callback). `None` (the default) means this app has no schema of its own — a plugin
+        /// library with zero document apps, or a document app whose config truly has no dedicated facet.
+        fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+            None
+        }
+
         /// 🔌️ This app's typed media I/O surface — `None` (the default) means "declares no ports beyond
         /// the implicit document ports" (`media_ports` below still returns those two). Override to return
         /// a real `AppIo` (e.g. `shooting_engine::shooting_io()`) to declare extra workflow ports.
@@ -7122,7 +7133,12 @@ pub mod app {
 
         /// @emoji 🧬️ Registers a typed {@link ArtifactApp} as a ZST — turbofish-only, no factory closure.
         /// Wraps each instance in {@link VcsArtifactApp}. Stateful app structs are unrepresentable.
+        /// Also registers `A::app_schema()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) —
+        /// see {@link ArtifactApp::app_schema}'s own doc.
         pub fn register_document_app<A: ArtifactApp>(self, app: App) -> Self {
+            if let Some(descriptor) = A::app_schema() {
+                ::semio_framework_schema::register_app_schema_descriptor(descriptor);
+            }
             let registry = AppActionRegistry::from_definition(&app.definition);
             self.register_app_factory(app, move || Box::new(VcsArtifactApp::with_registry(A::default(), registry.clone())))
         }

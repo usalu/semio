@@ -30,7 +30,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<WriterMutation, protocol::ProtocolError
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::writer::{engine, WriterSnapshot};
+    use crate::artifacts::writer::{schema, WriterSnapshot};
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
@@ -61,7 +61,7 @@ mod tests {
 
     #[test]
     fn writer_document_text_round_trips_through_the_store() {
-        let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", engine::empty_writer_snapshot(), None));
+        let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None));
         store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot"), jack_snapshot());
         store::os_store::test_support::assert_document_text_round_trip(&store);
@@ -76,7 +76,7 @@ mod tests {
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 
-        let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", engine::empty_writer_snapshot(), None));
+        let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None));
         store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).expect("apply");
         let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));

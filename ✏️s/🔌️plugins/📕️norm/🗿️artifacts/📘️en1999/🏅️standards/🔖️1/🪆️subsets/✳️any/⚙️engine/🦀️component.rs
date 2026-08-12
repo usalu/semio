@@ -416,7 +416,6 @@ impl crate::document::NormFamily for En1999Family {
     }
 }
 
-
 //#region 🔖️ArtifactEngine
 /// ⚙️ UI-independent En1999 artifact engine — owns the full artifact; `snapshot()` is persisted only.
 pub struct En1999Engine {
@@ -581,93 +580,6 @@ mod tests {
 }
 //#endregion 🧪️Tests
 
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    register_artifact_schema();
-    dsl::register_language(dsl::LanguageSpec {
-        id: "en1999.document",
-        extension: Some("en1999"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::en1998::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::en1998::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::en1998::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::en1998::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("en1999.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "en1999.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::en1998::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::en1998::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::en1998::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::en1998::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("en1999.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "en1999.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::en1998::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::en1998::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("en1999.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "en1999.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::en1998::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::en1998::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("en1999.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "en1999.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::en1998::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::en1998::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("en1999.spr"),
-    });
-}
-
-//#region 🔖️Register
-/// 🧷️ Registers this artifact's pilot languages/schema descriptor (via `register_pilot_languages`,
-/// which already registers the schema) and its inference descriptor in one call — the fan-out
-/// target for the plugin root's `.setup()` hook (folded in from the deleted `🔧️setup` facet, APA).
-pub fn register() {
-    register_pilot_languages();
-    register_artifact_inferences();
-}
-//#endregion 🔖️Register
-
-//#region 🔖️SchemaRegistry
-use std::sync::{Mutex, OnceLock};
-
-/// 📌️ Registers the twenty handcrafted schema leaves for `s.norm.en1999`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::en1999::schema::en1999_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.norm.en1999.inference`'s facet leaves into the OS-wide inference catalog —
-/// sibling to `register_artifact_schema()` above (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::en1999::standards::v1::subsets::any::schema::inferences::en1999_artifact_inference_descriptor());
-}
-//#endregion 🔖️SchemaRegistry
-
-//#region 🔖️IoFacet
-pub fn register_io() {
-    crate::artifacts::en1999::io_registry::register();
-}
-//#endregion 🔖️IoFacet
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;

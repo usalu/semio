@@ -34,6 +34,91 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
+//#region 🔖️Register
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called five different global registries directly from
+/// a plugin `.setup()` callback. `crate::apps::remodel::config::schema::register_app_schema()` is the
+/// one exception, still called from `📸️remodel/🦀️component.rs`'s own `.setup()`: it registers the
+/// `RemodelPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately
+/// has no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
+/// artifact-scoped function set. Relocated from `⚙️engine/🦀️component.rs` (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g3): `⚙️engine` was removed from the taxonomy
+/// and `declaration()` describes the artifact, not engine behaviour, so its home is the artifact
+/// root alongside `artifact_kind()`.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.remodel")
+        .schema(crate::artifacts::remodel::schema::remodel_artifact_schema_descriptor())
+        .inferences([crate::artifacts::remodel::standards::v1::subsets::any::schema::inferences::remodel_artifact_inference_descriptor()])
+        .composers(crate::artifacts::remodel::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::remodel::RemodelPlayApp>()
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
+/// `OnceLock`-backed `io_registry::entries()` convention.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "remodel.document",
+                    extension: Some("remodel"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::remodel::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::remodel::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::remodel::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::remodel::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("remodel.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "remodel.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::remodel::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::remodel::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::remodel::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::remodel::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("remodel.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "remodel.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::remodel::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::remodel::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("remodel.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "remodel.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::remodel::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::remodel::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("remodel.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "remodel.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::remodel::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::remodel::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("remodel.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Register
+
 pub use crate::artifacts::remodel::schema::mutations::RemodelMutation;
 
 pub use crate::artifacts::remodel::schema::diff::RemodelDiff;

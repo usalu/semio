@@ -2,7 +2,8 @@
 //! JSON/fixture setters, example loading, formatting and rename commit.
 
 use crate::apps::writer::config::{WriterConfig, WriterConfigMutation, WriterEditorSelection};
-use crate::artifacts::writer::engine::{apply_jack_rename, dag_jack_example_document, format_writer_text, jack_example_document, jack_symbol_at_offset, JackSymbolKind};
+use crate::artifacts::writer::schema::{apply_jack_rename, format_writer_text, jack_symbol_at_offset, JackSymbolKind};
+use crate::artifacts::writer::dsl::{dag_jack_example_document, jack_example_document};
 use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::WriterSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -134,7 +135,7 @@ pub mod set_fixture_json {
 //#region 🔖️SetActiveExample
 pub mod set_active_example {
     use super::*;
-    use crate::artifacts::writer::engine::empty_writer_snapshot;
+    use crate::artifacts::writer::schema::empty_writer_snapshot;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "active-example")]
@@ -212,7 +213,7 @@ mod tests {
     use crate::apps::writer::commands::text::{commit_rename, format_document, set_active_example};
     use crate::apps::writer::testkit::{app_with_jack, dispatch, new_app};
     use crate::apps::writer::WriterCommand;
-    use crate::artifacts::writer::engine::jack_variable_occurrences;
+    use crate::artifacts::writer::schema::jack_variable_occurrences;
     use semio_framework_plugin::PluginApp;
 
     const CANONICAL_QUERY: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = 'core'\nRETURN a.name, b.name";

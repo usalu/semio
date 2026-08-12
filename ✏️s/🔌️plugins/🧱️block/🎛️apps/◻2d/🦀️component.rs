@@ -3,7 +3,9 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the board window
 //! in `🎭️modes/✏️edit/🪟️windows/📋️board`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`,
-//! view state in `🦀️config.rs`, and document-side compute in `crate::artifacts::block2d::engine`.
+//! view state in `🦀️config.rs`, document-side compute in `crate::artifacts::block2d::schema`, and this
+//! app's own typed media I/O surface + plugin registration (below — constitutional: general, an
+//! artifact must never depend on an app, so both live here rather than under `🗿️artifacts`).
 
 use crate::apps::block2d::commands::compatibility::{add_compatibility_rule, remove_compatibility_rule};
 use crate::apps::block2d::commands::example;
@@ -19,8 +21,8 @@ use crate::apps::block2d::panels::{document as document_panel, inspection as ins
 use crate::apps::block2d::terminology::block2d_labels;
 use crate::artifacts::block2d::op::Block2dMutation;
 use crate::artifacts::block2d::{artifact_kind, Block2dSnapshot, BLOCK_2D_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionDescriptor, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
+    ActionDescriptor, App, AppIo, ArtifactKindSpec, ArtifactPresentation, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, UiNode,
 };
 use store::EngineHandles;
 use serde_json::Value;
@@ -28,7 +30,7 @@ use serde_json::Value;
 //#region 🔖️Constants
 pub const BLOCK2D_PLAY_APP_ID: &str = "block2d-play";
 /// 🗂️ The `s/plugin/puzzle` 2d catalog artifact kind block2d's `"catalog:out"` port produces — see
-/// `crate::artifacts::block2d::engine::block2d_io` and `Block2dPlayApp::export_media`.
+/// `block2d_io` and `Block2dPlayApp::export_media`.
 const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
@@ -37,6 +39,107 @@ pub fn block2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(BLOCK2D_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️Io
+/// 🔌️ `Block2dPlayApp`'s typed media I/O surface (`AppDefinition.io`) — the implicit document ports
+/// (`Kit×Type`, matching the `"2d.block"` artifact kind) plus a `"catalog:out"` port giving
+/// `puzzle2d_manifest_fragment` a real caller (see `export_media` above).
+pub fn block2d_io() -> AppIo {
+    AppIo::from_document(
+        BLOCK_2D_SCHEMA,
+        MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+        ArtifactPresentation { id: "2d.block".into(), name: "Node Kind".into(), dimension: "2d".into(), component_kind: "block2d".into() },
+    )
+    .with_ports(vec![MediaPortSpec {
+        id: "catalog:out".into(),
+        label: "Kit Catalog".into(),
+        direction: MediaPortDirection::Out,
+        media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+        kind_id: Some("kit.catalog".into()),
+        required: false,
+        multiplicity: PortMultiplicity::Many,
+    }])
+}
+//#endregion 🔖️Io
+
+//#region 🔌️Registration
+/// 🗂️ Registers `Block2dSnapshot`'s pack↔dsl codec under `BLOCK_2D_SCHEMA`. Called from the plugin
+/// root's `register_block_exports` (`📦️glue.rs`). Lives here rather than under `🗿️artifacts/◻2d`
+/// because it binds the codec to `Block2dPlayApp` — an artifact must never depend on an app.
+pub fn register() {
+    crate::artifacts::block2d::io_registry::register();
+
+    register_pilot_languages();
+    register_artifact_schema();
+    register_artifact_inference();
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Block2dPlayApp>(BLOCK_2D_SCHEMA);
+}
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "block.block2d",
+        extension: Some("block2d"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::block2d::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::block2d::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("block.block2d"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "block.block2d.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::block2d::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::block2d::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::block2d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::block2d::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("block.block2d.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "block.block2d.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::block2d::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::block2d::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("block.block2d.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "2d.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("2d.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "2d.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::block2d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::block2d::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("2d.spr"),
+    });
+}
+
+/// 🧬️ Registers `block2d` fifteen-leaf artifact schema descriptor once.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::block2d::schema::block2d_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `block2d`'s `s.block.block2d.inference` descriptor once — sibling to
+/// `register_artifact_schema()` above (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inference() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::block2d::standards::v1::subsets::any::schema::inferences::block2d_artifact_inference_descriptor());
+}
+//#endregion 🔌️Registration
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -82,11 +185,11 @@ impl ArtifactApp for Block2dPlayApp {
     const DOCUMENT_SCHEMA: &'static str = BLOCK_2D_SCHEMA;
 
     fn initial_snapshot() -> Block2dSnapshot {
-        crate::artifacts::block2d::engine::empty_block2d_snapshot()
+        crate::artifacts::block2d::schema::empty_block2d_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
-        Some(crate::artifacts::block2d::engine::block2d_io())
+        Some(block2d_io())
     }
 
     fn command_id(command: &Block2dCommand) -> &'static str {
@@ -139,8 +242,8 @@ impl ArtifactApp for Block2dPlayApp {
     /// 🌉️ `puzzle2d_manifest_fragment`'s first real caller — wraps the block-2d document's
     /// puzzle2d-shaped catalog fragment (`portKinds`/`wireKinds`/`edgeKinds`/`nodeKinds`/
     /// `kindCompatibility`) as a `kit.catalog`-schema `Media` value for the `"catalog:out"` port
-    /// declared in `crate::artifacts::block2d::engine::block2d_io`. Falls through to the default
-    /// whole-document pack export for every other port (`"document:out"`).
+    /// declared in `block2d_io`. Falls through to the default whole-document pack export for every
+    /// other port (`"document:out"`).
     fn export_media(port: &str, doc: &ArtifactView<'_, Block2dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
             // 🌉️ Reimplements `ArtifactApp::export_media`'s default `"document:out"` behavior
@@ -154,7 +257,7 @@ impl ArtifactApp for Block2dPlayApp {
             let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
-        let fragment = crate::artifacts::block2d::engine::puzzle2d_manifest_fragment(doc.snapshot);
+        let fragment = crate::artifacts::block2d::schema::inferences::puzzle2d_manifest_fragment(doc.snapshot);
         Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
@@ -167,7 +270,7 @@ pub fn create_block2d_app() -> App {
             .document(["semio", "block", "2d"])
             .artifact_kind(artifact_kind())
             // 🗂️ The puzzle2d catalog artifact this app's new `"catalog:out"` port produces — see
-            // `crate::artifacts::block2d::engine::block2d_io`/`Block2dPlayApp::export_media`.
+            // `block2d_io`/`Block2dPlayApp::export_media`.
             .artifact_kind(ArtifactKindSpec {
                 id: KIT_CATALOG_ARTIFACT_ID.into(),
                 name: "Kit Catalog".into(),
@@ -199,7 +302,7 @@ pub fn create_block2d_app() -> App {
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
-            .io(crate::artifacts::block2d::engine::block2d_io()),
+            .io(block2d_io()),
     )
     .example(
         example::BLOCK2D_EXAMPLE_LEFT,
@@ -324,6 +427,16 @@ mod tests {
     fn block2d_io_is_wired_into_the_manifest() {
         let definition = create_block2d_app().definition;
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "kit.catalog"));
+    }
+
+    #[test]
+    fn block2d_io_declares_the_catalog_out_port() {
+        let io = block2d_io();
+        assert_eq!(io.document_schema, BLOCK_2D_SCHEMA);
+        let ports = io.all_ports();
+        let catalog = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");
+        assert_eq!(catalog.kind_id.as_deref(), Some("kit.catalog"));
+        assert_eq!(catalog.direction, MediaPortDirection::Out);
     }
 
     #[test]

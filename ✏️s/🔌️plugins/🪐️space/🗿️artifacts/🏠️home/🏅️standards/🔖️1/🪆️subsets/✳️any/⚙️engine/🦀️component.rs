@@ -11,23 +11,9 @@ pub fn empty_shome_snapshot() -> SHomeSnapshot {
 //#region 🔖️SchemaRegistry
 use std::sync::{Mutex, OnceLock};
 
-/// 📎 Registers the home artifact schema descriptor into the process-local registry.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::home::schema::home_artifact_schema_descriptor());
-}
-
 /// 🔎 Returns whether `s.space.home` is present in the process-local schema registry.
 pub fn artifact_schema_registered() -> bool {
     ::schema::artifact_schema_descriptor_registered("s.space.home")
-}
-
-/// 💡️ Registers the home artifact `💡️inference` descriptor into the OS-wide inference catalog —
-/// sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inference() {
-    ::schema::register_artifact_inference_descriptor(
-        crate::artifacts::home::standards::v1::subsets::any::schema::inferences::home_artifact_inference_descriptor(),
-    );
 }
 //#endregion 🔖️SchemaRegistry
 
@@ -68,11 +54,6 @@ mod tests {
 }
 //#endregion 🧪️Tests
 
-//#region 🔖️IoFacet
-pub fn register_io() {
-    crate::artifacts::home::io_registry::register();
-}
-//#endregion 🔖️IoFacet
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;

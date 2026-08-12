@@ -2677,10 +2677,18 @@ pub(crate) fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshDa
 
 /// 🗂️ Registers `Puzzle3dPlaySnapshot`'s pack<->dsl codec under its real `document_schema()` string
 /// so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-3d play documents without
-/// depending on this crate's concrete `Projection`/`Mutation` types. Called by the plugin `setup:`
-/// hook (`crate::artifacts::puzzle2d::engine::register`). The 3d mesh export/import OS-host
-/// registration lives at `crate::artifacts::puzzle3d::engine::register_io` — APA (ticket
-/// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`): OS-host registration belongs to the owning
+/// depending on this crate's concrete `Projection`/`Mutation` types. Puzzle3d's own plugin load path
+/// no longer calls this (ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE` M1: superseded there by
+/// `.document_codec::<Puzzle3dPlayApp>()` on
+/// `crate::artifacts::puzzle3d::standards::v1::engine::declaration()`) — kept `pub` and unchanged
+/// SOLELY because `🎪️demonstrator/🎪️panes/🧩️aggregator/🦀️component.rs::register_exports()` imports
+/// and calls it directly as its one cross-plugin host-export entry point; deleting it would break
+/// that crate's compile. `register_document_codec_for_app` tolerates the resulting double
+/// registration when both plugins load in the same process — true before this conversion too,
+/// since the old umbrella `register()` and demonstrator's aggregator pane already called this same
+/// function independently. The 3d mesh export/import OS-host registration lives at
+/// `crate::artifacts::puzzle3d::standards::v1::engine::register_mesh_io`, wired through
+/// `🧩️puzzle/🦀️component.rs`'s own `.setup()` — APA: OS-host registration belongs to the owning
 /// artifact's own engine, never to an app file.
 pub fn register_puzzle3d_exports() {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle3dPlayApp>(PUZZLE3D_FIXTURE_SCHEMA);

@@ -1,8 +1,8 @@
 //! 🗣️ Flow play app — the compiled-DAG window: the read-only wire literal of the current fixture.
 
 use crate::apps::flow::config::FlowConfig;
+use crate::apps::flow::host_from_snapshot;
 use crate::apps::flow::FLOW_PLAY_APP_ID;
-use crate::artifacts::flow::engine::host_from_snapshot;
 use crate::artifacts::flow::FlowSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};

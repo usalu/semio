@@ -9,8 +9,9 @@ pub fn inverse(payload: &super::mutation::DeletePart, base: &Puzzle5dSnapshot) -
     let Some(part) = base.parts.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
+    let index = base.parts.iter().position(|entry| entry.id == payload.id);
     let grip_ids: Vec<String> = part.grips.iter().map(|grip| format!("{}:{}", part.id, grip.id)).collect();
-    let mut mutations = vec![crate::artifacts::puzzle5d::mutations::create_part::mutation::create_part(part.clone(), None)];
+    let mut mutations = vec![crate::artifacts::puzzle5d::mutations::create_part::mutation::create_part(part.clone(), index)];
     for fastener in base.fasteners.iter().filter(|fastener| grip_ids.contains(&fastener.source) || grip_ids.contains(&fastener.target)) {
         mutations.push(crate::artifacts::puzzle5d::mutations::connect_grips::mutation::connect_grips(
             fastener.id.clone(), fastener.source.clone(), fastener.target.clone(), fastener.fastener_kind.clone(),

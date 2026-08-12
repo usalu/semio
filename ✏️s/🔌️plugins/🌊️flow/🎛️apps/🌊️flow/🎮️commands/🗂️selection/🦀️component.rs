@@ -5,7 +5,8 @@
 //! `DeleteSelection`, which is a real document mutation and clears all three selection domains.
 
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
-use crate::artifacts::flow::engine::{focus_selection_camera, host_operations, sync_host_selection_domains, widget_id};
+use crate::apps::flow::{focus_selection_camera, host_operations, sync_host_selection_domains};
+use crate::artifacts::flow::schema::widget_id;
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

@@ -9,86 +9,12 @@ pub fn empty_playground_snapshot() -> PlaygroundSnapshot {
 }
 //#endregion 🔖️DocumentHelpers
 
-//#region 🔖️Register
-/// 🗂️ Registers playground codecs and the twenty handcrafted schema leaves.
-pub fn register() {
-    crate::artifacts::playground::io_registry::register();
-
-    register_artifact_schema();
-    register_artifact_inferences();
-    register_pilot_languages();
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "playground.document",
-        extension: Some("playground"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::playground::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::playground::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::playground::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::playground::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("playground.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "playground.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::playground::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::playground::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::playground::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::playground::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("playground.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "playground.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::playground::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::playground::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("playground.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "playground.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::playground::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::playground::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("playground.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "playground.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::playground::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::playground::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("playground.spr"),
-    });
-}
-//#endregion 🔖️Register
-
-//#region 🔖️SchemaRegistry
-/// 📌️ Registers the twenty handcrafted schema leaves for `s.demonstrator.playground`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::playground::schema::playground_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.demonstrator.playground.inference`'s facet leaves into the OS-wide
-/// inference catalog — sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(
-        crate::artifacts::playground::standards::v1::subsets::any::schema::inferences::playground_artifact_inference_descriptor(),
-    );
-}
-//#endregion 🔖️SchemaRegistry
+// 🔖️Register region removed (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7 revision):
+// `pilot_languages()` (and its five single-caller `*_language()`/`build_pilot_languages()` helpers)
+// moved to the artifact root's `🦀️component.rs`, private, alongside `declaration()` — the earlier
+// dispatch of this pass had made this function `pub` to reach it from the root by full path instead
+// of moving it; that widened 45 previously-private helpers repo-wide for no reason (measured: 0 of
+// them had a second caller) and is reverted here.
 
 //#region 🔖️ArtifactEngine
 /// ⚙️ UI-independent artifact engine — owns the full artifact; `snapshot()` is its persisted subset.

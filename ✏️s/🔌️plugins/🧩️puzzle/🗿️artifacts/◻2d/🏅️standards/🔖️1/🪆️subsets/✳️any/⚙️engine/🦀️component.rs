@@ -1,7 +1,8 @@
 //! ⚙️ Puzzle 2d artifact — headless compute over the board scene. Puzzle 2d's engine is a thin
 //! domain facade over the `infinite-board` port-directed graph kernel: it re-exports that kernel's
 //! whole surface (`BoardEngine`, `BoardHost`, the vector `canvas`, the force/hierarchical layouts)
-//! under one name, tags it with the `puzzle.2d` canvas extension, and owns the plugin `setup:` hook.
+//! under one name, tags it with the `puzzle.2d` canvas extension, and owns this artifact's
+//! `ArtifactDeclaration` (see `declaration()` in the `🔖️Register` region below).
 //!
 //! 📚️ Sibling topic files: `🦀️board_host.rs` (the themed host constructors + their scene/selection/
 //! hit-test laws), `🦀️linking.rs` (handle-to-handle wiring and compatibility laws), `🦀️brush.rs`
@@ -44,31 +45,12 @@ pub fn empty_puzzle2d_snapshot() -> Puzzle2dSnapshot {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Register
-/// 🔌️ The plugin `setup:` hook (`semio_plugin!{ setup: ... }`): registers every puzzle app's host
-/// exports exactly once at plugin load.
-///
-/// 🚧️ The 🖐️5d port adds its own `crate::apps::puzzle5d::register_puzzle5d_exports()` line right here.
-pub fn register() {
-    crate::artifacts::puzzle2d::io_registry::register();
-
-    register_pilot_languages();
-    register_artifact_schemas();
-    register_artifact_inferences();
-    register_app_schemas();
-    crate::apps::puzzle2d::register_puzzle2d_exports();
-    register_media_io();
-    crate::apps::puzzle3d::register_puzzle3d_exports();
-    crate::artifacts::puzzle3d::engine::register_io();
-    crate::apps::puzzle5d::register_puzzle5d_exports();
-    crate::artifacts::puzzle5d::engine::register_io();
-}
-
-/// 🖼️ Registers the `"2d.puzzle"` SVG/DWG media export-import bridge with the OS host — relocated
-/// from `apps::puzzle2d::register_puzzle2d_exports` (APA, ticket
-/// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: OS-host registration belongs to the owning
-/// artifact's own engine, never to an app file). The callback bodies stay in `apps::puzzle2d` next
-/// to the app-local helpers they depend on and are exposed `pub(crate)` for this call site only.
-fn register_media_io() {
+/// 🖼️ Registers the `"2d.puzzle"` SVG/DWG media export-import bridge with the OS host — no
+/// `ArtifactDeclaration` field covers this OS-host media registry (see `declaration()`'s own doc),
+/// so it stays wired through `🧩️puzzle/🦀️component.rs`'s `.setup()`. The callback bodies stay in
+/// `apps::puzzle2d` next to the app-local helpers they depend on and are exposed `pub(crate)` for
+/// this call site only.
+pub fn register_media_io() {
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     {
         semio_framework_os::register_2d_export_handlers("2d.puzzle", "puzzle2d", crate::apps::puzzle2d::puzzle2d_document_json_to_svg);
@@ -76,92 +58,12 @@ fn register_media_io() {
     }
 }
 
-/// 📎 Registers all puzzle app schema descriptors (config + presence facets) into the open
-/// app-schema registry — mirrors `register_artifact_schemas()` above, one entry per puzzle play app.
+/// 📎 Registers all three puzzle play apps' schema descriptors (config + presence facets) into the
+/// open app-schema registry — app-scope, kept on `.setup()` by design (see `declaration()`'s own doc).
 pub fn register_app_schemas() {
     crate::apps::puzzle2d::config::schema::register_app_schema();
     crate::apps::puzzle5d::config::schema::register_app_schema();
     crate::apps::puzzle3d::config::schema::register_app_schema();
-}
-
-/// 📎 Registers all puzzle artifact schema descriptors into the OS-wide catalog.
-pub fn register_artifact_schemas() {
-    artifact_schema::register_artifact_schema_descriptor(
-        crate::artifacts::puzzle2d::schema::puzzle2d_artifact_schema_descriptor(),
-    );
-    artifact_schema::register_artifact_schema_descriptor(
-        crate::artifacts::puzzle3d::schema::puzzle3d_artifact_schema_descriptor(),
-    );
-    artifact_schema::register_artifact_schema_descriptor(
-        crate::artifacts::puzzle5d::schema::puzzle5d_artifact_schema_descriptor(),
-    );
-}
-
-/// 💡️ Registers all puzzle artifact 💡️inference schema descriptors into the OS-wide inference
-/// catalog — sibling to `register_artifact_schemas()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Puzzle2d has no
-/// InferredFields registered yet (fan-out follow-up).
-pub fn register_artifact_inferences() {
-    artifact_schema::register_artifact_inference_descriptor(
-        crate::artifacts::puzzle3d::standards::v1::subsets::any::schema::inferences::puzzle3d_artifact_inference_descriptor(),
-    );
-    artifact_schema::register_artifact_inference_descriptor(
-        crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::puzzle5d_artifact_inference_descriptor(),
-    );
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "puzzle.puzzle2d",
-        extension: Some("puzzle2d"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::puzzle2d::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::puzzle2d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::puzzle2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("puzzle.puzzle2d"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "puzzle.puzzle2d.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::puzzle2d::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::puzzle2d::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::puzzle2d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle2d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("puzzle.puzzle2d.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "puzzle.puzzle2d.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::puzzle2d::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::puzzle2d::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("puzzle.puzzle2d.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "2d.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::puzzle2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("2d.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "2d.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::puzzle2d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle2d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("2d.spr"),
-    });
 }
 
 //#endregion 🔖️Register

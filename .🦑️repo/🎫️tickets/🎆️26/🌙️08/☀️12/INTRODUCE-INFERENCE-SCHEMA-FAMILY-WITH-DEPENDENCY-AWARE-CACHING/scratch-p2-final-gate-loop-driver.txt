@@ -1,0 +1,2 @@
+=== final-gate attempt 1 at Wed Aug 12 22:00:50 CEST 2026 ===
+SUCCESS (real test run completed) on attempt 1

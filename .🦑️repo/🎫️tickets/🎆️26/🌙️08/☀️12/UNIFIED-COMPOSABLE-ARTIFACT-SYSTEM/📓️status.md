@@ -4,6 +4,16 @@
 
 Peer session *names* rotate after session-limit restarts and I have misrouted messages three times today. **This section is the single source of truth**; any session may read it.
 
+## ⏸️ W3+ PAUSED — stdio is red from DKM's authorized in-flight work
+
+`semio-s-plugin-stdio` currently fails (14 errors) because DKM (#2550) is mid-replacement of the banned whole-document vocabulary in `✳️brep`/`✳️drawing` — subsets **we handed them**. Their dispatch enums now reference triad modules whose `#[path]` mounts are still being added. This is expected churn from an authorized handoff, **not a defect in our work**, and every plugin depends on stdio, so W3 exemplars cannot be verified until it clears.
+
+**Mount ownership transferred**: DKM now owns `📦️glue.rs`'s mount blocks for `✳️brep`/`✳️drawing`/`✳️mesh`. Rationale — the original boundary gave them the *directories* but not the *mounts that make those directories real*, so every deletion was guaranteed to strand a `#[path]` reference in a file they could not touch. DKM's phrasing is worth keeping: **a boundary that separates a definition from its registration is not a boundary, it's a race.** Apply the same test to composition slots in `📸️snapshot/`: if a slot ever needs a matching mount or dispatch entry, one owner takes both.
+
+Orchestrator removed two stale `📄set-snapshot` mounts (`✳️drawing`, `✳️brep`) to unblock; the breakage moved between subsets mid-fix, which is what prompted the transfer.
+
+**Resume condition**: DKM reports brep/drawing/mesh complete → re-run the full stdio suite as the gate → then W3.
+
 # 🧊️ ROSTER FROZEN — 2026-08-12. stdio `🧿️semio` v1 is 18 subsets + `✳️any`. SMO / APA / IIF / DKM / #2553 may start.
 
 **Verified independently by the orchestrator, not taken from an agent report:**

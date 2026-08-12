@@ -1,7 +1,7 @@
 //! 🏃️ Sequence play app commands — run the compiled path and clear the last run result.
 
 use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
-use crate::artifacts::sequence::engine::host_from_snapshot;
+use crate::apps::sequence::host_from_snapshot;
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::SequenceSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

@@ -66,10 +66,10 @@ impl dsl::DslField for StepParams {
 }
 
 /// 🎥️ Camera state for the sequence canvas — the DAG kernel's own `DagCamera` conversions
-/// live in the artifact's `⚙️engine` (see its doc comment), not here: `dag`'s `From`/`Into` impls
+/// live in `crate::apps::sequence` (see its `🔖️Camera` region), not here: `dag`'s `From`/`Into` impls
 /// would require this file to depend on the DAG layout kernel just to move a camera in and out,
 /// which would pull graph-layout machinery into the plain entity component for no reason a data
-/// schema needs.
+/// schema needs — an artifact must never depend on an app either way.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct SequenceCamera {
@@ -251,7 +251,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::sequence::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::sequence::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

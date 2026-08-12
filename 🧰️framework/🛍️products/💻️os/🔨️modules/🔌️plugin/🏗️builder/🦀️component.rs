@@ -17,12 +17,15 @@ pub struct PluginBuilder<State> {
     plugin_id: String,
     label: Option<String>,
     version: Option<String>,
-    // 🚧️ ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1: `setup` is NOT deleted yet — 31 of
-    // 33 plugins still call `.setup(...)`, and deleting the method now would break every one of them
-    // at once (SCOPE DISCIPLINE in the W1 packet: "land the mechanism, keep the tree compiling").
+    // 🚧️ ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c: `setup` is NOT deleted yet — a fixed
+    // set of plugins (SMO-held or otherwise blocked; see `📓️w1c-app-schema-report.md`) still call
+    // `.setup(...)` for registration `ArtifactDeclaration`/`app_schema()` has no field for. `Vec`, not
+    // `Option`, because a single `Option<fn()>` silently drops every call but the last on `.setup(a)
+    // .setup(b)` — a real footgun one plugin's draft nearly shipped; `.artifact()` is already
+    // repeatable, so `setup` matches it instead of being the one non-accumulating registration slot.
     // `.artifact()`/`artifacts` is the new, declarative surface; `setup` retires plugin-by-plugin as
     // each converts, and the field/method/call below are deleted together once none remain.
-    setup: Option<fn()>,
+    setup: Vec<fn()>,
     artifacts: Vec<ArtifactDeclaration>,
     capabilities: Vec<CapabilityRequirement>,
     commands: Vec<CommandDefinition>,
@@ -39,7 +42,7 @@ impl PluginBuilder<NeedsLabel> {
             plugin_id: plugin_id.into(),
             label: None,
             version: None,
-            setup: None,
+            setup: Vec::new(),
             artifacts: Vec::new(),
             capabilities: Vec::new(),
             commands: Vec::new(),
@@ -88,10 +91,12 @@ impl PluginBuilder<NeedsVersion> {
 }
 
 impl PluginBuilder<Ready> {
-    /// 🔧️ Registers a one-shot setup callback (codecs / languages / importers). Retiring in favor
-    /// of `.artifact()` — see the field doc on `PluginBuilder::setup` for why this is still here.
+    /// 🔧️ Registers a one-shot setup callback (codecs / languages / importers). Repeatable — accumulates,
+    /// runs in call order, does NOT overwrite an earlier `.setup(...)` call (see the field doc). Retiring
+    /// in favor of `.artifact()`/`app_schema()` — see `PluginBuilder::setup`'s own doc for why this is
+    /// still here.
     pub fn setup(mut self, setup: fn()) -> Self {
-        self.setup = Some(setup);
+        self.setup.push(setup);
         self
     }
 
@@ -139,8 +144,14 @@ impl PluginBuilder<Ready> {
         self
     }
 
-    /// 🧬️ Registers a typed document app factory.
+    /// 🧬️ Registers a typed document app factory. Also registers `A::app_schema()` (ticket
+    /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) — the last app-scope registration a plugin
+    /// used to reach `.setup()` for, now bound directly to the call site that already names `A`. See
+    /// `ArtifactApp::app_schema`'s own doc for why this belongs here and not in `ArtifactDeclaration`.
     pub fn document_app<A: ArtifactApp>(mut self, app: App) -> Self {
+        if let Some(descriptor) = A::app_schema() {
+            ::semio_framework_schema::register_app_schema_descriptor(descriptor);
+        }
         let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
         let factory: Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static> =
             Box::new(move || Box::new(crate::app::VcsArtifactApp::with_registry(A::default(), registry.clone())));
@@ -158,11 +169,11 @@ impl PluginBuilder<Ready> {
         self.build()
     }
 
-    /// ✅️ Runs `.setup()` (if any — retiring, see the field doc), then walks every `.artifact()`
-    /// declaration (fixed order, ownership-checked — see `ArtifactDeclaration::register_all`), and
-    /// materializes a [`Plugin`].
+    /// ✅️ Runs every `.setup()` callback in call order (retiring, see the field doc), then walks every
+    /// `.artifact()` declaration (fixed order, ownership-checked — see `ArtifactDeclaration::register_all`),
+    /// and materializes a [`Plugin`].
     pub fn build(self) -> Plugin {
-        if let Some(setup) = self.setup {
+        for setup in &self.setup {
             setup();
         }
         let plugin_id = self.plugin_id.clone();

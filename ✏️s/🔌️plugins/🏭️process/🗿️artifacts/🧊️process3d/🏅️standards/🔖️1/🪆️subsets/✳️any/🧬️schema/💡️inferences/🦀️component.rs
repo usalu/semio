@@ -11,6 +11,7 @@
 //! `InferredField`/caching machinery — see `📦bounds/🦀️component.rs` for the derivation).
 
 use crate::artifacts::process3d::Process3dSnapshot;
+use protocol::Inference;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
@@ -98,7 +99,6 @@ pub fn process3d_artifact_inference_descriptor() -> schema::ArtifactInferenceDes
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use protocol::Inference;
 
     //#region 🧪️InferenceLaws
     #[test]

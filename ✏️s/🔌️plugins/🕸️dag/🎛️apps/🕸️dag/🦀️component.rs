@@ -125,6 +125,10 @@ impl ArtifactApp for DagPlayApp {
     const APP_ID: &'static str = DAG_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = DAG_DOCUMENT_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::dag::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> DagSnapshot {
         crate::artifacts::dag::default_snapshot()
     }

@@ -1,0 +1,21 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/semio/inference.json",
+  "title": "SemioInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind"],
+  "properties": {
+    "kind": { "$ref": "#/$defs/SemioKind", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "SemioKind": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag", "ordinal"],
+      "properties": {
+        "tag": { "type": "string" },
+        "ordinal": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

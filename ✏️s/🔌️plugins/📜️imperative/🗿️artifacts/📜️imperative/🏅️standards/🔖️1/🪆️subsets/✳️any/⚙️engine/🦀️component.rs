@@ -23,7 +23,13 @@ pub fn default_imperative_contributions_json() -> String {
         .clone()
 }
 
-fn bootstrap_imperative_runtime() {
+/// ⚠️ DEVIATION (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7): widened from private to
+/// `pub(crate)` — not `pub` — solely so `declaration()`, now at the artifact root, can still call it by
+/// full path. It stays here (not moved with `declaration()`) because it has a SECOND caller in this
+/// same file, `ImperativeHost::from_snapshot`, which move-both cannot serve. `pub(crate)` is a
+/// crate-internal visibility bump, not a public-API change (unlike making `pilot_languages()` `pub`
+/// would have been), so it does not add to the 45-function surface that pass measured and left alone.
+pub(crate) fn bootstrap_imperative_runtime() {
     static ONCE: Once = Once::new();
     ONCE.call_once(|| {
         register_native_imperative_module("imperative-extension-core", crate::extensions::effect::register);
@@ -36,75 +42,11 @@ fn bootstrap_imperative_runtime() {
 }
 //#endregion 🔖️Bootstrap
 
-//#region 🔖️Register
-/// 🗂️ Registers `ImperativeSnapshot`'s pack↔dsl codec under `IMPERATIVE_DOCUMENT_SCHEMA` so
-/// `framework/sync`'s folder endpoints and any other schema-string-keyed caller can print/parse
-/// imperative documents. Called from the plugin root's `semio_plugin!{ setup: … }`.
-pub fn register() {
-    crate::artifacts::imperative::io_registry::register();
-
-    bootstrap_imperative_runtime();
-    register_artifact_schema();
-    register_artifact_inferences();
-    register_pilot_languages();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::imperative::ImperativePlayApp>(crate::artifacts::imperative::IMPERATIVE_DOCUMENT_SCHEMA);
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "imperative.document",
-        extension: Some("imperative"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::imperative::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::imperative::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::imperative::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::imperative::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("imperative.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "imperative.imperative.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::imperative::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::imperative::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::imperative::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::imperative::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("imperative.imperative.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "imperative.imperative.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::imperative::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::imperative::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("imperative.imperative.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "imperative.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::imperative::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::imperative::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("imperative.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "imperative.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::imperative::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::imperative::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("imperative.spr"),
-    });
-}
-
-//#endregion 🔖️Register
+// 🔖️Register region removed (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7): `declaration()`
+// and its private helper `pilot_languages()` moved to the artifact root's `🦀️component.rs` — `declaration()`
+// describes the artifact (kind/schema/io/ownership), it is not engine behaviour. `bootstrap_imperative_runtime()`
+// stays here (second caller below, `ImperativeHost::from_snapshot`) and is now `pub(crate)` so the root can
+// still call it; `io_registry` also stays here, reached by its full path — see both sites' own doc comments.
 
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
@@ -445,19 +387,6 @@ impl ImperativeEngine {
 }
 //#endregion 🔖️ArtifactEngine
 
-//#region 🔖️SchemaRegistry
-/// 📌️ Registers the twenty handcrafted schema leaves for `s.imperative.imperative`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::imperative::schema::imperative_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.imperative.imperative.inference`'s five handcrafted facet leaves into the
-/// OS-wide inference catalog — sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::imperative::standards::v1::subsets::any::schema::inferences::imperative_artifact_inference_descriptor());
-}
-//#endregion 🔖️SchemaRegistry
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;

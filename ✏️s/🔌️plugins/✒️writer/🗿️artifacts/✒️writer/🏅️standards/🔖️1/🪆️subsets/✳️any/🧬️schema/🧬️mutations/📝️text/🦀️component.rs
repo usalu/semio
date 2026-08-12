@@ -51,7 +51,6 @@ impl protocol::OpBinary for WriterMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::writer::engine;
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
     fn jack_snapshot() -> crate::artifacts::writer::WriterSnapshot {

@@ -1,28 +1,17 @@
-/** 🧬️ SemioBrepMutation facet mirror — named-variant enum, discriminated on `mutation`. See the
- * `🦀️component.rs` sibling for the real source of truth. */
-import { BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot, SemioPoint3 } from "../📸️snapshot/🟦️component.ts";
-
+/** 🧬️ SemioBrepMutation facet mirror — real facet mirror of the Rust `🦀️component.rs` sibling.
+ * Closed, thirteen-variant dispatch: SMO's approved verb table exactly (`create-loop`/`delete-loop`
+ * deliberately absent — see the Rust sibling's module doc comment for why). */
 export type SemioBrepMutation =
-  | { mutation: "noMutation" }
-  | { mutation: "setSnapshot"; snapshot: SemioBrepSnapshot }
-  | { mutation: "addVertex"; vertex: BrepVertex }
-  | { mutation: "removeVertex"; id: string }
-  | { mutation: "setVertexPoint"; id: string; point: SemioPoint3 }
-  | { mutation: "addEdge"; edge: BrepEdge }
-  | { mutation: "removeEdge"; id: string }
-  | { mutation: "setEdgeEndpoints"; id: string; startVertex: string; endVertex: string }
-  | { mutation: "setEdgeCurve"; id: string; curve: BrepCurve }
-  | { mutation: "addLoop"; brepLoop: BrepLoop }
-  | { mutation: "removeLoop"; id: string }
-  | { mutation: "setLoopEdges"; id: string; edges: BrepLoopEdge[] }
-  | { mutation: "addFace"; face: BrepFace }
-  | { mutation: "removeFace"; id: string }
-  | { mutation: "setFaceSurface"; id: string; surface: BrepSurface }
-  | { mutation: "setFaceOrientation"; id: string; orientation: boolean }
-  | { mutation: "setFaceLoops"; id: string; outerLoop: string; innerLoops: string[] }
-  | { mutation: "addShell"; shell: BrepShell }
-  | { mutation: "removeShell"; id: string }
-  | { mutation: "setShellFaces"; id: string; faces: BrepShellFace[] }
-  | { mutation: "addSolid"; solid: BrepSolid }
-  | { mutation: "removeSolid"; id: string }
-  | { mutation: "setSolidShells"; id: string; shells: BrepSolidShell[] };
+  | { mutation: "createVertex"; payload: import("../🏗️create-vertex/🦠️mutation/🟦️component.ts").CreateVertex }
+  | { mutation: "deleteVertex"; payload: import("../🗑️delete-vertex/🦠️mutation/🟦️component.ts").DeleteVertex }
+  | { mutation: "createEdge"; payload: import("../🔗create-edge/🦠️mutation/🟦️component.ts").CreateEdge }
+  | { mutation: "deleteEdge"; payload: import("../✂️delete-edge/🦠️mutation/🟦️component.ts").DeleteEdge }
+  | { mutation: "createFace"; payload: import("../🔷create-face/🦠️mutation/🟦️component.ts").CreateFace }
+  | { mutation: "deleteFace"; payload: import("../🚮delete-face/🦠️mutation/🟦️component.ts").DeleteFace }
+  | { mutation: "createShell"; payload: import("../🐚create-shell/🦠️mutation/🟦️component.ts").CreateShell }
+  | { mutation: "deleteShell"; payload: import("../💥delete-shell/🦠️mutation/🟦️component.ts").DeleteShell }
+  | { mutation: "createSolid"; payload: import("../🧊create-solid/🦠️mutation/🟦️component.ts").CreateSolid }
+  | { mutation: "deleteSolid"; payload: import("../🕳️delete-solid/🦠️mutation/🟦️component.ts").DeleteSolid }
+  | { mutation: "replaceCurve"; payload: import("../➰replace-curve/🦠️mutation/🟦️component.ts").ReplaceCurve }
+  | { mutation: "replaceSurface"; payload: import("../🗺️replace-surface/🦠️mutation/🟦️component.ts").ReplaceSurface }
+  | { mutation: "moveVertex"; payload: import("../📍move-vertex/🦠️mutation/🟦️component.ts").MoveVertex };

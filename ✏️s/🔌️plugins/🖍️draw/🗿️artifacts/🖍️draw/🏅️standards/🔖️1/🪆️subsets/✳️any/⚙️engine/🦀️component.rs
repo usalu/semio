@@ -15,91 +15,10 @@ use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Register
-/// 🗂️ Registers `DrawSnapshot`'s pack<->dsl codec under its real `document_schema()` string so
-/// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
-/// draw documents without depending on this crate's concrete `Projection`/`Mutation` types, plus
-/// the 2D export/import media handlers (SVG raster export, DWG export/import).
-pub fn register() {
-    crate::artifacts::draw::io_registry::register();
-
-    register_pilot_languages();
-    register_artifact_schema();
-    register_artifact_inferences();
-    crate::apps::draw::config::schema::register_app_schema();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::draw::DrawPlayApp>(DRAW_DOCUMENT_SCHEMA);
-}
-
-/// 📎 Registers the draw artifact schema descriptor into the process-local registry.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::draw::schema::draw_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.draw.draw.inference`'s facet leaves into the OS-wide inference catalog —
-/// sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::draw::schema::inferences::draw_artifact_inference_descriptor());
-}
-
 /// 🔎 Returns whether `s.draw.draw` is present in the process-local schema registry.
 pub fn artifact_schema_registered() -> bool {
     ::schema::artifact_schema_descriptor_registered("s.draw.draw")
 }
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "draw.document",
-        extension: Some("draw"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::draw::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::draw::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("draw.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "draw.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::draw::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::draw::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::draw::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::draw::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("draw.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "draw.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::draw::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::draw::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("draw.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "draw.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("draw.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "draw.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::draw::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::draw::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("draw.spr"),
-    });
-}
-
 //#endregion 🔖️Register
 
 //#region 🔖️Constants

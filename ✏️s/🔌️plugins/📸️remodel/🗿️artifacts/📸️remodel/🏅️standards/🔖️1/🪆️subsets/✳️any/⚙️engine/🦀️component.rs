@@ -25,78 +25,6 @@ use semio_s_plugin_stdio::artifacts::{
 };
 use serde_json::Value;
 
-//#region 🔖️Register
-/// 🗂️ Host registration for this artifact — the pack<->dsl document codec (keyed by the real
-/// `document_schema()` string so `framework/sync`'s `FolderEndpoint::Pack` can print/parse remodel
-/// documents without reaching for concrete `Projection`/`Mutation` types), every mesh exporter, the
-/// DWG mesh handler and the PNG raster export. Moved verbatim out of the old bundle crate's
-/// `register_remodel_exports`; `semio_plugin!`'s `setup:` now points here.
-pub fn register() {
-    crate::artifacts::remodel::io_registry::register();
-
-    register_artifact_schema();
-    register_artifact_inference();
-    register_pilot_languages();
-    crate::apps::remodel::config::schema::register_app_schema();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::remodel::RemodelPlayApp>(REMODEL_DOCUMENT_SCHEMA);
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "remodel.document",
-        extension: Some("remodel"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::remodel::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::remodel::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::remodel::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::remodel::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("remodel.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "remodel.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::remodel::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::remodel::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::remodel::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::remodel::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("remodel.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "remodel.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::remodel::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::remodel::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("remodel.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "remodel.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::remodel::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::remodel::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("remodel.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "remodel.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::remodel::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::remodel::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("remodel.spr"),
-    });
-}
-
-//#endregion 🔖️Register
-
 //#region 🔖️Ids
 
 /// 🔢️ Replaces every former `RemodelPlayRuntime` id counter (`stream_counter`/`job_counter`/
@@ -557,18 +485,6 @@ impl RemodelEngine {
     pub fn into_snapshot(self) -> crate::artifacts::remodel::RemodelSnapshot {
         self.snapshot
     }
-}
-
-/// 🧬️ Registers the remodel artifact schema descriptor once.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::remodel::schema::remodel_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.remodel.remodel.inference`'s facet leaves into the OS-wide inference catalog —
-/// sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inference() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::remodel::standards::v1::subsets::any::schema::inferences::remodel_artifact_inference_descriptor());
 }
 
 //#endregion 🔖️ArtifactEngine

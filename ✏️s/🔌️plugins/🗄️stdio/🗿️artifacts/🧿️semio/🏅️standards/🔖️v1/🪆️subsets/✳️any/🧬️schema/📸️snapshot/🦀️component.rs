@@ -89,7 +89,10 @@ impl Default for SemioSnapshot {
 //#region 🔖️SubsetDispatch
 /// 🏷️ The wire tag naming which of the 13 domain subsets is carried — shared by the text DSL's
 /// `subset=<tag>` header line and used to select which subset's own REAL codec to delegate to.
-fn subset_tag(s: &SemioSubsetSnapshot) -> &'static str {
+/// `pub(crate)` (not private) since `💡️inferences/🏷️kind/🦀️component.rs`
+/// (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING) is a sibling
+/// module, not a descendant, and needs this same dispatch as its own honest derivation.
+pub(crate) fn subset_tag(s: &SemioSubsetSnapshot) -> &'static str {
     match s {
         SemioSubsetSnapshot::Brep(_) => "brep",
         SemioSubsetSnapshot::Mesh(_) => "mesh",

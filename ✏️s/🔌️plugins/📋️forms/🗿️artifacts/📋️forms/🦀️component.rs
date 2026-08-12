@@ -38,6 +38,90 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
+//#region 🔖️Declaration
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
+/// `OnceLock`-backed `io_registry::entries()` convention already used below (and note's own
+/// `pilot_languages` helper). Sole caller is `declaration()` below (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "forms.forms",
+                    extension: Some("forms"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::forms::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::forms::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::forms::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::forms::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("forms.forms"),
+                },
+                dsl::LanguageSpec {
+                    id: "forms.forms.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::forms::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::forms::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::forms::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::forms::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("forms.forms.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "forms.forms.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::forms::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::forms::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("forms.forms.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "forms.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::forms::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::forms::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("forms.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "forms.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::forms::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::forms::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("forms.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called five different global registries directly from
+/// a plugin `.setup()` callback. `crate::apps::forms::config::schema::register_app_schema()` is the
+/// one exception, still called from `📋️forms/🦀️component.rs`'s own `.setup()`: it registers the
+/// `FormsPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
+/// no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
+/// artifact-scoped function set (mirrors `🗒️note`'s exemplar exactly, see its own engine `declaration()`).
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.forms")
+        .schema(crate::artifacts::forms::schema::forms_artifact_schema_descriptor())
+        .inferences([crate::artifacts::forms::standards::v1::subsets::any::schema::inferences::forms_artifact_inference_descriptor()])
+        .composers(crate::artifacts::forms::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::forms::FormsPlayApp>()
+        .build()
+}
+//#endregion 🔖️Declaration
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

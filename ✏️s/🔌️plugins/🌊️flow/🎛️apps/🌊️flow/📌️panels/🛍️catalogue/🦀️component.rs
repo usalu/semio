@@ -3,8 +3,8 @@
 use crate::apps::flow::commands::extension::FLOW_AUTOMATIONS;
 use crate::apps::flow::config::FlowConfig;
 use crate::apps::flow::flow_action;
+use crate::apps::flow::host_from_snapshot;
 use crate::apps::flow::terminology::{flow_extension_action_title_label, flow_extension_label, FlowPlayLabels};
-use crate::artifacts::flow::engine::{flow_widget_descriptor, flow_widget_drag_json, host_from_snapshot};
 use crate::artifacts::flow::FlowSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{
@@ -15,7 +15,26 @@ use serde_json::{json, Value};
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_BODY_CATALOGUE: &str = "flow.play.catalogue";
+/// 🖱️ MIME key `tree_item_with_action_draggable` reads its drag payload under — see
+/// [`flow_widget_drag_json`].
+pub const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
 //#endregion 🔖️Constants
+
+//#region 🔖️WidgetDescriptors
+pub fn flow_widget_descriptor(kind: &str, neuron_kind: Option<&str>) -> Value {
+    if kind == "neuron" {
+        json!({ "kind": "neuron", "neuronKind": neuron_kind.unwrap_or(kind) })
+    } else {
+        json!({ "kind": kind })
+    }
+}
+
+/// 🪢️ Wraps a widget descriptor into the `{mime: payload}` JSON shape `tree_item_with_action_draggable`
+/// expects for its drag-data map.
+pub fn flow_widget_drag_json(descriptor: &Value) -> Value {
+    json!({ FLOW_WIDGET_DRAG_MIME: descriptor.to_string() })
+}
+//#endregion 🔖️WidgetDescriptors
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
@@ -148,7 +167,13 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
 mod tests {
     use super::*;
     use crate::apps::flow::testkit::{flow_app, render as render_body};
-    use crate::artifacts::flow::engine::FLOW_WIDGET_DRAG_MIME;
+
+    #[test]
+    fn flow_widget_drag_json_wraps_descriptor_under_drag_mime() {
+        let descriptor = flow_widget_descriptor("neuron", Some("math.add"));
+        let drag = flow_widget_drag_json(&descriptor);
+        assert!(drag.get(FLOW_WIDGET_DRAG_MIME).is_some());
+    }
 
     #[test]
     fn catalogue_lists_module_operators() {

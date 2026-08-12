@@ -1,5 +1,52 @@
 # Durable baselines — distinguish "new breakage" from "the tree was already like this"
 
+## 📊 THE TREE-WIDE BASELINE (2026-08-12 ~22:10) — the first honest one
+
+```
+RUSTC_WRAPPER="" cargo check --workspace --all-targets --keep-going
+→ 27 of 96 workspace members fail, 804 errors total
+```
+
+**The same command without `--keep-going`, same tree, same minute, reported 3. A 9× undercount** — and the short answer was the plausible-looking one.
+
+**framework / os (8):** `semio-compose-rs`, `semio-framework-os`, `semio-framework-os-flow`, `semio-framework-os-infinite`, `semio-framework-os-kernel`, `semio-framework-os-renderer-wgpu`, `semio-framework-os-run`, `semio-framework-ui`
+
+**plugins (19):** `architect block cad dag draw flow forms gis layout mathematical procedural process reasoning-mindmap remodel sequence sourcing space vcs writer`
+
+**This is a snapshot of a tree six sessions are writing concurrently, not a fixed target.** Diff against it; do not treat it as ground truth an hour later. APA's own repair wave covers 11 of these crates and is running as it was taken.
+
+**Provenance note that matters more than the number:** the session that produced it declined to claim its own four touched plugins were clean. It had independently verified only `block` (all errors tracing to stdio glue and framework store/spr/dsl, **zero** touching the artifact its exemplar dissolved); `flow`, `sequence` and `writer` rest on their agents' attribution, which it flagged as not yet re-derived. That distinction — *what I verified* versus *what an agent told me* — is what makes the rest of the number usable.
+
+**A live warning attached to it:** `playbook`, `demonstrator` and `raster` are in APA's repair wave but **not** in the 27. Either they already compile or their failures were absorbed elsewhere. Agents must check whether a crate is actually broken before "repairing" it — the cost of a fix applied to a healthy crate is invisible and permanent.
+
+## ⚠️⚠️ THREE INSTRUMENTS THAT RETURN A CONFIDENT, WELL-FORMED, WRONG ANSWER
+
+Every cargo verification in this repo must defeat all three. They share a failure mode: **none of them looks broken.** Each returns a short, clean, plausible result rather than an error, so the reader has no cue to doubt it.
+
+| invocation | blind to | the false conclusion it produces |
+|---|---|---|
+| `cargo check` without `--all-targets` | everything in tests/benches/examples — **exactly where a vocabulary rename lands** | "the crate compiles" |
+| `cargo check` without `RUSTC_WRAPPER=""` | anything sccache serves while failing (`rustc-wrapper = "sccache"` is a **repo-wide default**, so you get it without opting in) | "0 errors" |
+| `cargo check --workspace` without `--keep-going` | **every crate after the first failure** — cargo stops scheduling once something fails | "only 3 crates are red, and none are mine" |
+
+**The mandatory form:**
+```
+RUSTC_WRAPPER="" CARGO_TARGET_DIR=<ticket>/🎯️target cargo check -p <crate> --all-targets
+# or, workspace-wide:
+RUSTC_WRAPPER="" cargo check --workspace --all-targets --keep-going
+```
+**And a green result requires the `Finished` line AND exit status 0.** "Grep found no errors" and "the build completed" are different claims; an aborted run satisfies the first.
+
+### How the third one was caught, because the method generalises
+
+A peer ran `cargo check --workspace --all-targets` to produce a per-crate breakage count. It reported **3 failing crates, no plugins**. That contradicted their own earlier spot-check showing `semio-s-plugin-forms` with 17 errors. **Rather than pick the number they preferred, they re-ran forms alone** — exit 101, `could not compile semio-s-plugin-forms`, errors in its *own* files. The workspace run had died in `compose-rs`/`kernel`/`ui` and never scheduled the other 20+ crates.
+
+This was aimed squarely at APA's plan to run "one comprehensive sweep across all 24 migrated crates". Run as `--workspace` without `--keep-going`, that sweep would have stopped at `semio-compose-rs` — red for reasons belonging to neither ticket — and reported three crates, none of them APA's. **The correct reading of that output is "20 crates were never compiled"; the natural reading is "my 24 are clean."**
+
+### The rule underneath all three
+
+When two measurements disagree, **do not choose the more convenient one — re-measure the disputed item in isolation and attribute it.** Every instance today was resolved that way, and every one of them had a plausible wrong answer available for free.
+
 ## ⚠️⚠️ sccache produces a FALSE CLEAN — disable it for every verification run
 
 `.cargo/config.toml:2` sets `rustc-wrapper = "sccache"` repo-wide. sccache is currently failing with `Operation not permitted`, and the failure mode is **a green result, not an error**. Every cargo verification in this repo must be run as:
@@ -9,6 +56,12 @@ RUSTC_WRAPPER="" CARGO_TARGET_DIR=<ticket>/🎯️target cargo check -p <crate> 
 ```
 
 **A false clean is strictly worse than a red result**: red makes you look, green makes you stop looking. Found by SMO after it cost them a run; it had already tainted an APA sweep over 24 migrated plugins that was in flight when they reported it — those results were discarded and the sweep restarted rather than quoted.
+
+### ⚠️ This is a DEFAULT, not a mistake — and it catches every subagent you spawn
+
+The framing that matters (#2553): **you are not forgetting to unset something; you are failing to set something the repo silently sets for you.** `rustc-wrapper = "sccache"` is a repo-wide config key, so *the default state of this repo is sccache-on*. Anyone who simply runs `cargo check` — **especially every subagent any session spawns** — gets the wrapper without opting in and receives a fabricated green.
+
+**Therefore: `RUSTC_WRAPPER=""` must be written into the agent's instructions, not merely used by the orchestrator.** An orchestrator that is careful itself and dispatches ten agents without the override has ten unreliable verifications. Every APA batch prompt from the declaration-migration wave onward carries it explicitly for this reason.
 
 Combine with the other two rules and the full trust condition for any cargo evidence in this repo is:
 1. `RUSTC_WRAPPER=""` — otherwise the result may be fabricated.
@@ -54,16 +107,35 @@ A depth substitution (`7×../` → `3×../`) was proposed and retracted. Of APA'
 
 SMO found an `//!` inner doc comment at file scope after code in trinity's `📦️glue.rs` (E0753 — the crate could not compile) and asked APA to grep the other 23 plugins. A naive "`//!` after code" scan reported **70 hits, all false**: `//!` inside a `mod { … }` block is legal and common in test harnesses. Re-run with brace-depth tracking so only file-scope occurrences count: **0 real sites**. The class is closed, not merely unobserved — but only because the check was made precise before its output was believed.
 
-## ✅ Compiler-verified APA-migrated plugins (RUSTC_WRAPPER="" , --all-targets)
+## Compiler verification — and a RETRACTED claim of my own
 
-| crate | result |
-|---|---|
-| `semio-s-plugin-gis` | **0 errors** |
-| `semio-s-plugin-fem` | **0 errors** |
-| `semio-s-plugin-trinity` | **0 errors** |
-| `semio-s-plugin-lowpoly` | **0 errors** — after the two repairs below |
+| crate | status | evidence |
+|---|---|---|
+| `semio-s-plugin-lowpoly` | **VERIFIED, 0 errors** | `RUSTC_WRAPPER=""` + `--all-targets`, `Finished` line present |
+| `semio-s-plugin-note` | **VERIFIED, 0 errors** | same flags |
+| `semio-s-plugin-gis` | ~~0 errors~~ **RETRACTED** | plain `cargo check`, sccache active, no `--all-targets` |
+| `semio-s-plugin-fem` | ~~0 errors~~ **RETRACTED** | same |
+| `semio-s-plugin-trinity` | ~~0 errors~~ **RETRACTED** | same |
 
-fem and trinity are the two largest relocations in the ticket (8 and 5 plugin-root compute dirs respectively, moved into artifact engines with crate-root module names kept stable so no call site changed). Both compile clean, which is the first real evidence that the relocation technique is sound and not merely structurally tidy.
+### The retraction, in full, because it is the sharpest lesson in this ticket
+
+gis, fem and trinity were reported as "compiler-verified at 0 errors". They were not. That sweep ran `cargo check -p <crate>` — **no `--all-targets`, and with sccache active** — which is *precisely* the configuration this very document warns produces a fabricated green. **I applied the standard to other sessions' numbers and quoted my own from a run that could not meet it.**
+
+It surfaced only because a peer asked for the exact flags and timestamp before building on the result. That is the behaviour worth copying: they did not take a green light from a session that had been right about several other things.
+
+Re-running trinity under proper flags **never reached trinity** — it died upstream:
+
+```
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:6027,:6029,:6031
+error: couldn't read …/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/📄set-snapshot/{↩️inverse,🔺️diff,🦠️mutation}/🦀️component.rs
+error: could not compile `semio-s-plugin-stdio` (lib)
+```
+
+Three dangling `#[path]` mounts left by another session's targeted removal of `✳️drawing`'s set-snapshot vocabulary (other artifacts still have theirs, so it was not a sweep). **Every plugin depends on stdio, so nothing plugin-side is verifiable until that glue is repaired.**
+
+**The rule, now applied to myself:** a green result only counts if the run *reached* your crate **and** ran under flags that could have shown a failure. My original claim failed the second condition; the honest re-run failed the first.
+
+Structural facts about gis/fem/trinity remain true and independently checkable — every `#[path]` resolves, every `include_str!` resolves, plugin roots are closed. **That tells you the shape is right; only the compiler tells you the shape is true**, and the compiler has not yet spoken for those three.
 
 ### `💠️lowpoly`'s two failures — one APA's, one pre-existing
 

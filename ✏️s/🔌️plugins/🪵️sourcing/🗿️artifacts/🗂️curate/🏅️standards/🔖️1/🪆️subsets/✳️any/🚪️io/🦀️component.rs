@@ -1,5 +1,6 @@
-//! 🚪️ IO s.curate (1/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from ⚙️engine::register), not per-leaf register().
+//! 🚪️ IO s.curate (1/✳️any) — registration now flows through `ArtifactDeclaration.composers`
+//! (declared once by the artifact root's `declaration()`, walked by `PluginBuilder::build()`), not
+//! per-leaf register().
 pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"] }
 pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"] }
 //#region 🎹️DerivedComposition

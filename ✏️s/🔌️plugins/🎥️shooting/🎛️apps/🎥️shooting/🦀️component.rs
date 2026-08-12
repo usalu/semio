@@ -142,6 +142,10 @@ impl ArtifactApp for ShootingPlayApp {
     const APP_ID: &'static str = SHOOTING_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::shooting::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> ShootingSnapshot {
         crate::artifacts::shooting::engine::default_snapshot()
     }

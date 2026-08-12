@@ -202,61 +202,6 @@ mod tests {
 //#endregion 🧪️Tests
 
 
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "puzzle.puzzle5d",
-        extension: Some("puzzle5d"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::puzzle5d::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::puzzle5d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::puzzle5d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle5d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("puzzle.puzzle5d"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "puzzle.puzzle5d.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::puzzle5d::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::puzzle5d::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::puzzle5d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle5d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("puzzle.puzzle5d.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "puzzle.puzzle5d.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::puzzle5d::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::puzzle5d::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("puzzle.puzzle5d.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "5d.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::puzzle5d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle5d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("5d.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "5d.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::puzzle5d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle5d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("5d.spr"),
-    });
-}
-
-
 //#region 🔖️ArtifactEngine
 /// ⚙️ UI-independent puzzle5d artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct Puzzle5dEngine {
@@ -277,13 +222,14 @@ impl Puzzle5dEngine {
 //#endregion 🔖️ArtifactEngine
 
 //#region 🔖️IoFacet
-/// 🔌️ Registers this artifact's `ComposerEntry` io tree plus the `"5d.puzzle"` OS-host mesh
-/// export/import bridge — the latter relocated from `apps::puzzle5d::register_puzzle5d_exports`
-/// (APA, ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: OS-host registration belongs to the
-/// owning artifact's own engine, never to an app file). The importer/dwg callback stays in
-/// `apps::puzzle5d` next to `empty_document`, exposed `pub(crate)` for this call site only.
-pub fn register_io() {
-    crate::artifacts::puzzle5d::io_registry::register();
+/// 🖼️ Registers the `"5d.puzzle"` OS-host mesh export/import bridge — relocated from
+/// `apps::puzzle5d::register_puzzle5d_exports` (APA, ticket
+/// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: OS-host registration belongs to the owning
+/// artifact's own engine, never to an app file). No `ArtifactDeclaration` field covers this OS-host
+/// media registry (see `declaration()`'s own doc), so it stays wired through
+/// `🧩️puzzle/🦀️component.rs`'s `.setup()`. The importer/dwg callback stays in `apps::puzzle5d` next
+/// to `empty_document`, exposed `pub(crate)` for this call site only.
+pub fn register_mesh_io() {
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     {
         semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::ObjExporter));

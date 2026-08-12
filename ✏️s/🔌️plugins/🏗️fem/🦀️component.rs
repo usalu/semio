@@ -2,12 +2,17 @@
 
 use semio_framework_plugin::Plugin;
 
-/// 🔌️ Builds the plugin surface for host registration.
+/// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(register_all_engines)`
+/// escape hatch for both artifacts; `.setup()` itself is gone (W1c) — `Fem2dPlayApp::app_schema()`/
+/// `Fem3dPlayApp::app_schema()` now answer the one thing it used to survive for, registered
+/// automatically by each `register_document_app` call below.
 pub fn plugin() -> Plugin {
     Plugin::builder("fem")
         .label("FEM")
         .version("0.1.0")
-        .setup(crate::register_all_engines)
+        .artifact(crate::artifacts::fem2d::declaration())
+        .artifact(crate::artifacts::fem3d::declaration())
         .register_document_app::<crate::apps::fem2d::Fem2dPlayApp>(crate::apps::fem2d::create_fem2d_app())
         .register_document_app::<crate::apps::fem3d::Fem3dPlayApp>(crate::apps::fem3d::create_fem3d_app())
         .build()

@@ -7,8 +7,8 @@
 //! apps) since flow's document model is a shared kernel crate — see `FlowConfig::generation_json`.
 
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
+use crate::apps::flow::seed_host_catalogue;
 use crate::apps::flow::FLOW_PLAY_APP_ID;
-use crate::artifacts::flow::engine::seed_host_catalogue;
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::{
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},

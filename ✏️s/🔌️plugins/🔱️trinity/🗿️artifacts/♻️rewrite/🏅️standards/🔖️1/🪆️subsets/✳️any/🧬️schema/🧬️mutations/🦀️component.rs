@@ -114,7 +114,8 @@ mod tests {
     use crate::artifacts::jack::PropertyValue;
     use crate::artifacts::rewrite::LayoutPoint;
     use std::collections::BTreeMap;
-    use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_op_line_round_trip};
+    use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
+    use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
     fn sample_rule_state() -> RewriteSnapshot {
         let mut parameter_bindings = BTreeMap::new();

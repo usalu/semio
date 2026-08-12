@@ -1,7 +1,7 @@
 //! 🗂️ Writer play app commands — text/AST selection and hover. All config-only View commands.
 
 use crate::apps::writer::config::{WriterConfig, WriterConfigMutation, WriterEditorSelection};
-use crate::artifacts::writer::engine::{jack_ast_node_by_id, jack_ast_node_for_selection, parse_jack_ast};
+use crate::artifacts::writer::schema::{jack_ast_node_by_id, jack_ast_node_for_selection, parse_jack_ast};
 use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::WriterSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -165,7 +165,7 @@ mod tests {
     use super::set_ast_hover;
     use crate::apps::writer::testkit::app_with_jack;
     use crate::apps::writer::{WriterCommand, WRITER_PLAY_BODY_DOCUMENT, WRITER_PLAY_BODY_MAIN};
-    use crate::artifacts::writer::engine::parse_jack_ast;
+    use crate::artifacts::writer::schema::parse_jack_ast;
     use semio_framework_plugin::{PluginApp, ViewModel};
     use serde_json::Value;
 

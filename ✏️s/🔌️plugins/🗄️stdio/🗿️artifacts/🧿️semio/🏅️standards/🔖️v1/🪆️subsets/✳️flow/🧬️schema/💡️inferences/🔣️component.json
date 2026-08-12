@@ -1,0 +1,23 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/semio/flow/inference.json",
+  "title": "SemioFlowInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topology"],
+  "properties": {
+    "topology": { "$ref": "#/$defs/SemioFlowTopology", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "SemioFlowTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topoOrder", "depth", "cycleFree", "nodeCount"],
+      "properties": {
+        "topoOrder": { "type": "array", "items": { "type": "string" } },
+        "depth": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "cycleFree": { "type": "boolean" },
+        "nodeCount": { "type": "integer" }
+      }
+    }
+  }
+}

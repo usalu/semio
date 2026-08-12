@@ -11,6 +11,7 @@
 //! per-entity or incremental).
 
 use crate::artifacts::home::SHomeSnapshot;
+use protocol::Inference;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
@@ -93,7 +94,6 @@ pub fn home_artifact_inference_descriptor() -> schema::ArtifactInferenceDescript
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use protocol::Inference;
 
     //#region 🧪️InferenceLaws
     #[test]

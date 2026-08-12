@@ -143,6 +143,10 @@ impl ArtifactApp for LayoutPlayApp {
     const APP_ID: &'static str = LAYOUT_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::layout::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> LayoutSnapshot {
         crate::artifacts::layout::engine::default_document()
     }

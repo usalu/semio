@@ -6,11 +6,22 @@
 //! never user-facing manifest actions.
 
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
-use crate::artifacts::flow::engine::{eval_tick_effect, host_from_snapshot};
+use crate::apps::flow::host_from_snapshot;
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
+
+//#region 🔖️Constants
+/// 🧵️ The self-chaining action id of the off-main-thread evaluation loop — dispatched as a
+/// `HostEffect` by `evaluate_result`/`flow_eval_tick::handle` and by `FlowPlayApp::pending_effects`.
+pub const FLOW_EVAL_TICK_ACTION: &str = "flowEvalTick";
+
+/// 🧵️ The `HostEffect` that arms/continues the off-main-thread `flowEvalTick` chain.
+pub fn eval_tick_effect() -> HostEffect {
+    HostEffect::DispatchAction { action: FLOW_EVAL_TICK_ACTION.into(), args: None, delay_ms: 0 }
+}
+//#endregion 🔖️Constants
 
 //#region 🔖️Arm
 /// 🧵️ Probes/arms the `flowEvalTick` chain via `FlowEvalSession::sync` — shared by `FlowCommand::Evaluate`,
@@ -104,6 +115,13 @@ mod tests {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 42, output_json: "{}".into() }));
         assert!(result.mutations.is_empty(), "resolving is not a document edit");
+    }
+
+    #[test]
+    fn flow_eval_session_neural_cache_is_per_instance_not_process_wide() {
+        let a = FlowEvalSession::new();
+        let b = FlowEvalSession::new();
+        assert!(!std::sync::Arc::ptr_eq(&a.neural_cache(), &b.neural_cache()));
     }
 }
 //#endregion 🧪️Tests

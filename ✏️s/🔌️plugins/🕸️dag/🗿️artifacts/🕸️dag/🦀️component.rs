@@ -59,6 +59,91 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
+//#region 🔖️Register
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called four different global registries directly from a
+/// plugin `.setup()` callback. `crate::apps::dag::config::schema::register_app_schema()` is the one
+/// exception, still called from `🕸️dag/🦀️component.rs`'s own `.setup()`: it registers the `DagPlayApp`
+/// CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has no field for
+/// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
+/// function set. Relocated from `⚙️engine` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+/// reloc-g2): `declaration()` describes the artifact (kind, schema, io ports, ownership), which is not
+/// engine behaviour.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.dag")
+        .schema(crate::artifacts::dag::schema::dag_artifact_schema_descriptor())
+        .inferences([crate::artifacts::dag::standards::v1::subsets::any::schema::inferences::dag_artifact_inference_descriptor()])
+        .composers(crate::artifacts::dag::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::dag::DagPlayApp>()
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
+/// `io_registry::entries()`'s own `OnceLock` convention. Relocated alongside `declaration()` (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2) — its only caller.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "dag.document",
+                    extension: Some("dag"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::dag::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::dag::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::dag::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::dag::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("dag.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "dag.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::dag::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::dag::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::dag::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::dag::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("dag.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "dag.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::dag::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::dag::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("dag.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "dag.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::dag::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::dag::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("dag.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "dag.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::dag::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::dag::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("dag.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Register
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

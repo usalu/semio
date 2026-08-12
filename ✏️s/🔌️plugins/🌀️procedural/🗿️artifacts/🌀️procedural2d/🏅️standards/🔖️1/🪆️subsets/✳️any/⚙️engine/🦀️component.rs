@@ -222,32 +222,6 @@ pub fn empty_procedural2d_snapshot() -> Procedural2dSnapshot {
     Procedural2dSnapshot::default()
 }
 
-/// 🔌️ Registers this artifact's plugin-level exports — pack<->dsl document codec. Called once from
-/// the plugin-root `📦️glue.rs`'s `semio_plugin!` `setup:`.
-/// 📎 Registers the procedural2d artifact schema descriptor into the process-local registry.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::procedural2d::schema::procedural2d_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers the procedural2d artifact 💡️inference schema descriptor into the OS-wide
-/// inference catalog — sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(
-        crate::artifacts::procedural2d::standards::v1::subsets::any::schema::inferences::procedural2d_artifact_inference_descriptor(),
-    );
-}
-
-pub fn register() {
-    crate::artifacts::procedural2d::io_registry::register();
-
-    register_artifact_schema();
-    register_artifact_inferences();
-    register_pilot_languages();
-    // 📦️ Registers `Procedural2dSnapshot`'s pack<->dsl codec so `framework/sync`'s `FolderEndpoint`
-    // can print/parse `.procedural2d` packs without depending on this crate's concrete types.
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::procedural2d::Procedural2dPlayApp>(crate::artifacts::procedural2d::PROCEDURAL_2D_SCHEMA);
-}
 //#endregion 🔖️DocumentHelpers
 
 //#region 🧪️Tests
@@ -271,56 +245,6 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "procedural.procedural2d.document",
-        extension: Some("procedural2d"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::procedural2d::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::procedural2d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural.procedural2d.document")});
-    dsl::register_language(dsl::LanguageSpec {
-        id: "procedural.procedural2d.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::procedural2d::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::procedural2d::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural.procedural2d.op")});
-    dsl::register_language(dsl::LanguageSpec {
-        id: "procedural.procedural2d.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::procedural2d::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::procedural2d::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("procedural.procedural2d.diff")});
-    dsl::register_language(dsl::LanguageSpec {
-        id: "procedural2d.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural2d.pack")});
-    dsl::register_language(dsl::LanguageSpec {
-        id: "procedural2d.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural2d.spr")});
-}
 
 
 //#region 🔖️ArtifactEngine

@@ -1,0 +1,100 @@
+     |
+7039 |             let VcsArtifactApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7054:34
+     |
+7054 |             let VcsArtifactApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6715:38
+     |
+6715 |                 let VcsArtifactApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6751:38
+     |
+6751 |                 let VcsArtifactApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6973:34
+     |
+6973 |             let VcsArtifactApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6631:42
+     |
+6631 |                     let VcsArtifactApp { app, cache, .. } = self;
+     |                                          ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2831:17
+     |
+2831 |             let app = A::default();
+     |                 ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: fields `child_slots` and `link_slots` are never read
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:968:9
+    |
+944 |     pub struct ArtifactDeclaration {
+    |                ------------------- fields in this struct
+...
+968 |         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+    |         ^^^^^^^^^^^
+969 |         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+    |         ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-plugin` (lib) generated 41 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 33 suggestions)
+    Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+warning: unused import: `ArenaId`
+ --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🌳️bvh/🦀️component.rs:3:26
+  |
+3 | use crate::brep::arena::{ArenaId, EdgeId, FaceId, SolidId};
+  |                          ^^^^^^^
+
+warning: unused variable: `tolerance`
+    --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1300:55
+     |
+1300 |     fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+     |                                                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tolerance`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+error: couldn't read `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs`: No such file or directory (os error 2)
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5572:37
+     |
+5572 | ...                   pub mod inverse;
+     |                       ^^^^^^^^^^^^^^^^
+
+error: could not compile `semio-s-plugin-stdio` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+warning: function `loop_uv_polygon` is never used
+   --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🏷️classify/🦀️component.rs:152:4
+    |
+152 | fn loop_uv_polygon(body: &Body, loop_id: LoopId, surface: &Surface) -> Result<Vec<Pnt2>, KernelError> {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: trait `Midpoint` is never used
+   --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🏷️classify/🦀️component.rs:449:7
+    |
+449 | trait Midpoint {
+    |       ^^^^^^^^
+
+warning: method `triangle_count` is never used
+   --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/📦️mesh-io/🦀️component.rs:435:8
+    |
+434 | impl TriangleMesh {
+    | ----------------- method in this implementation
+435 |     fn triangle_count(&self) -> usize {
+    |        ^^^^^^^^^^^^^^
+
+warning: `semio-framework-3d` (lib) generated 15 warnings (run `cargo fix --lib -p semio-framework-3d` to apply 11 suggestions)

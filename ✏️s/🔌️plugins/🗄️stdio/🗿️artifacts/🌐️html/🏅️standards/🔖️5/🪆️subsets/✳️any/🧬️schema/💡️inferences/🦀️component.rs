@@ -5,6 +5,7 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
 use crate::artifacts::html::HtmlSnapshot;
+use protocol::Inference;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
@@ -14,7 +15,7 @@ use super::outline::HtmlOutline;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an html snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.html.inference")]
 pub struct HtmlInference {
@@ -25,6 +26,16 @@ pub struct HtmlInference {
 impl protocol::Inference<HtmlSnapshot> for HtmlInference {
     fn infer(snapshot: &HtmlSnapshot) -> Self {
         Self { outline: HtmlOutline::compute(snapshot) }
+    }
+}
+
+/// 🪞️ Hand impl (not derived): `HtmlSnapshot::default()` is not empty — it carries a root element —
+/// so `HtmlOutline::default()`'s all-zero shape disagrees with `HtmlOutline::compute` over that
+/// default snapshot, breaking `inference_default_law`. Defining default as "infer the default
+/// snapshot" makes the two definitionally equal.
+impl Default for HtmlInference {
+    fn default() -> Self {
+        Self::infer(&HtmlSnapshot::default())
     }
 }
 

@@ -1,0 +1,17 @@
+# 💡️ Semio graph inference schema — node/edge topological order (Kahn's algorithm).
+
+type SemioGraphInference {
+  topology: SemioGraphTopology! @state(class: INFERRED)
+}
+
+type SemioGraphTopology {
+  topoOrder: [String!]!
+  depth: [SemioGraphTopologyDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type SemioGraphTopologyDepthEntry {
+  id: String!
+  depth: Int!
+}

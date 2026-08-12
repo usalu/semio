@@ -415,10 +415,18 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod builder {
+                #[path = "../../🎛️apps/📖️playbook/🎭️modes/🏗️builder/🦀️component.rs"]
+                mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
+                    #[path = "."]
+                    pub mod builder {
+                        #[path = "../../🎛️apps/📖️playbook/🎭️modes/🏗️builder/🪟️windows/🏗️builder/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
                 }
             }
         }

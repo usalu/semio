@@ -247,6 +247,89 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     }
 }
 // #endregion 🔖️ArtifactKind
+
+// #region 🔖️Register
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called five different global registries directly from a
+/// plugin `.setup()` callback. `crate::apps::fem2d::config::schema::register_app_schema()` is the one
+/// exception, still called from `🏗️fem/🦀️component.rs`'s own narrowed `.setup()`: it registers
+/// `Fem2dPlayApp`'s CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
+/// no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
+/// artifact-scoped function set.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.fem2d")
+        .schema(crate::artifacts::fem2d::schema::fem2d_artifact_schema_descriptor())
+        .inferences([crate::artifacts::fem2d::standards::v1::subsets::any::schema::inferences::fem2d_artifact_inference_descriptor()])
+        .composers(crate::artifacts::fem2d::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::fem2d::Fem2dPlayApp>()
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
+/// `🗒️note`'s own `pilot_languages()` convention.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "fem.fem2d",
+                    extension: Some("fem2d"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::fem2d::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::fem2d::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::fem2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::fem2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("fem.fem2d"),
+                },
+                dsl::LanguageSpec {
+                    id: "fem.fem2d.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::fem2d::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::fem2d::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::fem2d::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::fem2d::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("fem.fem2d.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "fem.fem2d.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::fem2d::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::fem2d::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("fem.fem2d.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "fem2d.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::fem2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::fem2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("fem2d.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "fem2d.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::fem2d::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::fem2d::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("fem2d.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+// #endregion 🔖️Register
+
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;

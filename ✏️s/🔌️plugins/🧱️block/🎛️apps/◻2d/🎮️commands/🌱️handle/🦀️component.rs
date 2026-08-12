@@ -15,7 +15,7 @@ pub mod add_handle {
         let Some(handle_kind_id) = doc.snapshot.handle_kinds.first().map(|kind| kind.id.clone()) else {
             return Ok(Emit::default());
         };
-        let id = crate::artifacts::block2d::engine::next_id(doc.snapshot.handles.iter().map(|handle| handle.id.as_str()), "handle-");
+        let id = crate::artifacts::block2d::schema::next_id(doc.snapshot.handles.iter().map(|handle| handle.id.as_str()), "handle-");
         let handle = Block2dHandleTemplate { id, handle_kind: handle_kind_id, angle: 0.0, radius: 0.36 };
         Ok(Emit::mutations(vec![crate::artifacts::block2d::mutations::create_handle(handle)]))
     }

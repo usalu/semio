@@ -81,6 +81,54 @@ When a tree-wide relocation leaves stale `include_str!`/`include_bytes!` paths, 
 
 **8 of 14 would have been silently broken by the substitution**, and one would have been broken in the opposite direction from the recipe. The correct method: locate the real file on disk, compute `os.path.relpath` from the referring file's directory, and only rewrite when the target is unambiguous — reporting the ambiguous ones rather than guessing.
 
+## ⛔ THE SILENT REBIND — the one defect that defeats every verification gate
+
+Moving a function changes **what its unqualified paths resolve to**. If the destination scope happens to contain a same-named module, the call **silently rebinds to a different function**. Not a compile error. A different, plausible, wrong answer.
+
+Measured across this ticket's 45 relocated `declaration()` functions:
+
+```
+artifact roots containing a SHADOWING io_registry module ....... 44 / 45
+declaration() bodies now fully qualified ....................... 45 / 45
+unqualified io_registry::entries() remaining .................... 0
+```
+
+**The hazard was live at 44 of 45 sites.** In `📕️norm` the two functions even have different signatures — the engine's `entries()` returns `&'static [ComposerEntry]`, the artifact root's returns `&'static [&'static ComposerEntry]`, a `.iter().collect()` view over it. An unqualified call at the root binds to the wrapper.
+
+### Why this one matters more than the rest
+
+Everything else in this document is a gate that can be hardened. **This defeats all of them at once:**
+
+| gate | sees a silent rebind? |
+|---|---|
+| `--all-targets` | ❌ |
+| `--keep-going` | ❌ |
+| `RUSTC_WRAPPER=""` | ❌ |
+| `Finished` line + exit 0 | ❌ |
+| structural `#[path]` / `include_str!` checks | ❌ |
+
+Had a single call been left bare, the crate would have returned **green, exit 0, `Finished` present** — every check this ticket insists on, all passing, and the wrong function wired in. **Only reading the call site catches it.**
+
+Four independent agent groups hit it in APA's set and a peer session found it at all 17 of theirs, which is what makes it a property of the transform rather than an anecdote.
+
+**Rule: when relocating code, every unqualified path in the moved body is a hazard until proven otherwise.** Qualify it or prove no shadow exists in the destination scope. A mechanical pass cannot do this — the transform is *uniform in shape and non-uniform in meaning*, and its failure mode is a green build.
+
+**Corollary, learned the same day:** a *stopped* pass does not leave nothing behind. Halting the first relocation attempt five minutes in still left `pilot_languages()` stranded as `pub` in two plugins — precisely the artifact being prevented, in a state nothing would ever have flagged. Always re-derive the invariant after aborting a pass; do not assume the abort was clean.
+
+## Measure the property you are about to report, not the one you have cheap access to
+
+This ticket produced three instances of one error, and it is the most reusable thing in the folder.
+
+| claimed | actually measured | what it cost |
+|---|---|---|
+| "root `target/` is stale, **nothing reads it**" | nothing *writes* it (mtime, 2h idle) | deleting it destroyed a build cache five sessions were sharing; load hit 149 |
+| "gis/fem/trinity **compiler-verified**, 0 errors" | `cargo check` under sccache, no `--all-targets` | a false green, retracted; the re-run never even reached the crate |
+| "my pass gets your burn-down **42 directories closer to empty**" | 42 directories *my symbol touched* | those dirs average 737 LOC and 23 items; **zero** would have emptied. A peer would have planned around 53 remaining and found 95 |
+
+In each case the measurement was real and the *inference from it* silently swapped one property for a neighbouring one — writes for reads, "the command exited 0" for "the compiler examined my code", "I removed my thing" for "the thing is now empty". None of the substitutions were noticed at the time; all three were caught by a peer re-measuring.
+
+**Rule:** before reporting a conclusion — especially one that licenses an action or that another session will plan against — write down the predicate you actually evaluated and check it is the predicate you are about to state. If the claim is about *someone else's* work (their directory, their count, their crate), that is when to measure rather than infer, because you are the one least able to notice the gap and they are the one who will act on it.
+
 ## Repo gotchas that cost other sessions real time
 
 12. **Derive crates keep two byte-identical copies**: `<module>/✨️derive/🦀️component.rs` **and** `<module>/✨️derive/📦️packages/🦀️rust/📦️glue.rs`. Cargo compiles the **glue** copy — editing only `component.rs` silently does nothing. Edit one, mirror it exactly, then `diff -q` the pair before reporting done. (`mcp__repo__file_integrate` has corrupted this mirroring before — mirror by hand.)

@@ -24,7 +24,7 @@ pub fn decode(bytes: &[u8]) -> Result<WriterSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::writer::engine;
+    use crate::artifacts::writer::schema;
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
     fn jack_snapshot() -> WriterSnapshot {
@@ -33,7 +33,7 @@ mod tests {
 
     #[test]
     fn writer_projection_dsl_pack_equivalence() {
-        let empty = engine::empty_writer_snapshot();
+        let empty = schema::empty_writer_snapshot();
         store::os_store::test_support::assert_dsl_pack_equivalence(&empty);
         let bytes = encode(&empty);
         assert_eq!(decode(&bytes).expect("decode"), empty);
@@ -54,7 +54,7 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let mut store: ArtifactStore<WriterSnapshot, WriterMutation> = ArtifactStore::new(create_document_envelope("writer.document", "writer", engine::empty_writer_snapshot(), None));
+        let mut store: ArtifactStore<WriterSnapshot, WriterMutation> = ArtifactStore::new(create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None));
         store.dispatch(ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: "hello".into() })], description: None }).expect("apply");
         let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
@@ -77,7 +77,7 @@ mod semio_protocol_conformance {
 
     #[test]
     fn verify_protocol_bytes_against_encoded_pack() {
-        let document = crate::artifacts::writer::engine::empty_writer_snapshot();
+        let document = crate::artifacts::writer::schema::empty_writer_snapshot();
         let bytes = encode(&document);
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes pack bytes");

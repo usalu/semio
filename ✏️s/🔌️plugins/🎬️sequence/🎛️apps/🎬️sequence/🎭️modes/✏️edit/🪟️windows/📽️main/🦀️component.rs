@@ -2,7 +2,7 @@
 
 use crate::apps::sequence::config::SequenceConfig;
 use crate::apps::sequence::SEQUENCE_PLAY_APP_ID;
-use crate::artifacts::sequence::engine::host_from_snapshot;
+use crate::apps::sequence::host_from_snapshot;
 use crate::artifacts::sequence::SequenceSnapshot;
 use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 

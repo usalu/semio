@@ -125,6 +125,10 @@ impl ArtifactApp for DrawPlayApp {
     const APP_ID: &'static str = DRAW_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = DRAW_DOCUMENT_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::draw::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> DrawSnapshot {
         crate::artifacts::draw::engine::default_draw_document("empty", None)
     }

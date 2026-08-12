@@ -53,11 +53,11 @@ pub(crate) fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
 // `set_synapse`/`set_widget`) stay wired by glue.rs's existing sibling `pub mod` blocks, unchanged.
 #[path = "."]
 pub mod create_widget {
-    #[path = "➕create-widget/🦠️mutation/🦀️component.rs"]
+    #[path = "🌱create-widget/🦠️mutation/🦀️component.rs"]
     pub mod mutation;
-    #[path = "➕create-widget/🔺️diff/🦀️component.rs"]
+    #[path = "🌱create-widget/🔺️diff/🦀️component.rs"]
     pub mod diff;
-    #[path = "➕create-widget/↩️inverse/🦀️component.rs"]
+    #[path = "🌱create-widget/↩️inverse/🦀️component.rs"]
     pub mod inverse;
 }
 

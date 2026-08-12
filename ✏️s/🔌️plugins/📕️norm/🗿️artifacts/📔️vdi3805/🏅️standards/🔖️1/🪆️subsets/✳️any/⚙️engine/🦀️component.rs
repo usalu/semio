@@ -592,8 +592,6 @@ impl crate::document::NormFamily for Vdi3805Family {
     }
 }
 
-
-
 //#region 🔖️ArtifactEngine
 /// ⚙️ UI-independent Vdi3805 artifact engine — owns the full artifact; `snapshot()` is persisted only.
 pub struct Vdi3805Engine {
@@ -612,7 +610,6 @@ impl Vdi3805Engine {
     }
 }
 //#endregion 🔖️ArtifactEngine
-
 
 pub type Host = crate::document::NormHost<Vdi3805Family>;
 // #endregion 🔖️Session
@@ -810,94 +807,6 @@ mod tests {
     }
 }
 
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    register_artifact_schema();
-    crate::dsl::register_language(crate::dsl::LanguageSpec {
-        id: "vdi3805.document",
-        extension: Some("vdi3805"),
-        role: crate::dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: crate::dsl::passthrough_hooks("vdi3805.document"),
-    });
-    crate::dsl::register_language(crate::dsl::LanguageSpec {
-        id: "vdi3805.op",
-        extension: None,
-        role: crate::dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::vdi3805::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::vdi3805::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: crate::dsl::passthrough_hooks("vdi3805.op"),
-    });
-    crate::dsl::register_language(crate::dsl::LanguageSpec {
-        id: "vdi3805.diff",
-        extension: None,
-        role: crate::dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::vdi3805::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::vdi3805::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: crate::dsl::passthrough_hooks("vdi3805.diff"),
-    });
-    crate::dsl::register_language(crate::dsl::LanguageSpec {
-        id: "vdi3805.pack",
-        extension: None,
-        role: crate::dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: crate::dsl::passthrough_hooks("vdi3805.pack"),
-    });
-    crate::dsl::register_language(crate::dsl::LanguageSpec {
-        id: "vdi3805.spr",
-        extension: None,
-        role: crate::dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: crate::dsl::passthrough_hooks("vdi3805.spr"),
-    });
-}
-
-//#region 🔖️Register
-/// 🧷️ Registers this artifact's pilot languages/schema descriptor (via `register_pilot_languages`,
-/// which already registers the schema) and its inference descriptor in one call — the fan-out
-/// target for the plugin root's `.setup()` hook (folded in from the deleted `🔧️setup` facet, APA).
-pub fn register() {
-    register_pilot_languages();
-    register_artifact_inferences();
-}
-//#endregion 🔖️Register
-
-
-//#region 🔖️SchemaRegistry
-use std::sync::{Mutex, OnceLock};
-
-/// 📌️ Registers the twenty handcrafted schema leaves for `s.norm.vdi3805`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::vdi3805::schema::vdi3805_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.norm.vdi3805.inference`'s facet leaves into the OS-wide inference catalog —
-/// sibling to `register_artifact_schema()` above (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::vdi3805::standards::v1::subsets::any::schema::inferences::vdi3805_artifact_inference_descriptor());
-}
-//#endregion 🔖️SchemaRegistry
-
-//#region 🔖️IoFacet
-pub fn register_io() {
-    crate::artifacts::vdi3805::io_registry::register();
-}
-//#endregion 🔖️IoFacet
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;

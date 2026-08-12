@@ -4,7 +4,7 @@
 use crate::apps::writer::config::WriterConfig;
 use crate::apps::writer::editor_hover_context;
 use crate::apps::writer::terminology::WriterPlayLabels;
-use crate::artifacts::writer::engine::{jack_ast_tree_icon, parse_jack_ast, JackAstNode};
+use crate::artifacts::writer::schema::{jack_ast_tree_icon, parse_jack_ast, JackAstNode};
 use crate::artifacts::writer::WriterSnapshot;
 use semio_framework_plugin::{
     tree_item, ui_declarative_sections_to_tree, ui_text, ActionDescriptor, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
@@ -100,7 +100,7 @@ mod tests {
     fn renders_document_tree_for_jack() {
         use semio_framework_plugin::PluginApp;
         let mut app = new_app();
-        let node = app.render(WRITER_PLAY_BODY_ARTIFACT, Some(&crate::artifacts::writer::engine::jack_example_json()), &semio_framework_plugin::ViewModel::default()).expect("render");
+        let node = app.render(WRITER_PLAY_BODY_ARTIFACT, Some(&crate::artifacts::writer::dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"type\":\"tree\""));
         assert!(json.contains("Query"));

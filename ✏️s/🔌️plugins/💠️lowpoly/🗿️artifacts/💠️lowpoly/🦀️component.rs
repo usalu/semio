@@ -278,6 +278,96 @@ pub fn mesh_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
+//#region 🔖️Register
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called five different global registries directly from a
+/// plugin `.setup()` callback. Mesh/DWG format handling for `"3d.lowpoly"` flows entirely through
+/// `.composers(...)` below (the same `io_registry::entries()` table `io_registry::register()` used to
+/// call directly) — the former `register_mesh_exporter`/`register_mesh_importer`/`register_mesh_dwg_*`
+/// calls were never carried into this file; they would have duplicated this composer registration
+/// rather than adding anything (see this file's own `io_registry` wrapper below). Relocated from
+/// `⚙️engine/🦀️component.rs` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g3): `⚙️engine`
+/// was removed from the taxonomy and `declaration()` describes the artifact, not engine behaviour, so
+/// its home is the artifact root alongside `artifact_kind()`.
+/// `crate::apps::lowpoly::config::schema::register_app_schema()` is the one exception, still called
+/// from `💠️lowpoly/🦀️component.rs`'s own `.setup()`: it registers the `LowpolyPlayApp`
+/// CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has no field for
+/// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
+/// function set.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.lowpoly")
+        .schema(crate::artifacts::lowpoly::schema::lowpoly_artifact_schema_descriptor())
+        .inferences([crate::artifacts::lowpoly::standards::v1::subsets::any::schema::inferences::lowpoly_artifact_inference_descriptor()])
+        .composers(crate::artifacts::lowpoly::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::lowpoly::LowpolyPlayApp>()
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
+/// `OnceLock`-backed `io_registry::entries()` convention.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "lowpoly.document",
+                    extension: Some("lowpoly"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::lowpoly::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::lowpoly::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::lowpoly::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::lowpoly::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("lowpoly.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "lowpoly.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::lowpoly::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::lowpoly::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::lowpoly::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::lowpoly::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("lowpoly.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "lowpoly.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::lowpoly::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::lowpoly::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("lowpoly.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "lowpoly.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::lowpoly::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::lowpoly::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("lowpoly.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "lowpoly.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::lowpoly::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::lowpoly::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("lowpoly.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Register
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

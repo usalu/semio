@@ -134,6 +134,92 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
+//#region 🔖️Register
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called four different global registries directly from
+/// a plugin `.setup()` callback (a fifth, `crate::artifacts::curate::io_registry::register()`, was a
+/// pure duplicate of what `.composers(...)` now does and was deleted rather than ported — see the
+/// mechanism report's `register_all` composer-registration step). `crate::apps::curate::config::
+/// schema::register_app_schema()` is the one exception, still called from `🪵️sourcing/🦀️component.rs`'s
+/// own `.setup()`: it registers the `SourcingCurateApp` CONFIG/PRESENCE schema, an app-scope concern
+/// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc). Relocated from
+/// `⚙️engine` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes
+/// the artifact (kind, schema, io ports, ownership), which is not engine behaviour.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.curate")
+        .schema(crate::artifacts::curate::schema::curate_artifact_schema_descriptor())
+        .inferences([crate::artifacts::curate::standards::v1::subsets::any::schema::inferences::curate_artifact_inference_descriptor()])
+        .composers(crate::artifacts::curate::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::curate::SourcingCurateApp>()
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
+/// `OnceLock`-backed `io_registry::entries()` convention. Relocated alongside `declaration()` (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2) — its only caller.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "sourcing.curate",
+                    extension: Some("curate"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::curate::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::curate::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::curate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::curate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("sourcing.curate"),
+                },
+                dsl::LanguageSpec {
+                    id: "sourcing.curate.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::curate::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::curate::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::curate::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::curate::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("sourcing.curate.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "sourcing.curate.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::curate::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::curate::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("sourcing.curate.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "curate.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::curate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::curate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("curate.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "curate.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::curate::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::curate::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("curate.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Register
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

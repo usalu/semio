@@ -1279,3 +1279,77 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+//#region 🪪️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`/`register_pilot_languages()`/`register_artifact_schema()`/
+/// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
+/// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.vdi3805")
+        .schema(crate::artifacts::vdi3805::schema::vdi3805_artifact_schema_descriptor())
+        .inferences([crate::artifacts::vdi3805::standards::v1::subsets::any::schema::inferences::vdi3805_artifact_inference_descriptor()])
+        .composers(crate::artifacts::vdi3805::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
+/// `OnceLock`-backed `io_registry::entries()` convention below.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES.get_or_init(|| vec![
+        crate::dsl::LanguageSpec {
+            id: "vdi3805.document",
+            extension: Some("vdi3805"),
+            role: crate::dsl::LanguageRole::Document,
+            grammar: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_SEMIO),
+            grammar_path: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_PATH),
+            protocol: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+            protocol_path: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+            hooks: crate::dsl::passthrough_hooks("vdi3805.document"),
+        },
+        crate::dsl::LanguageSpec {
+            id: "vdi3805.op",
+            extension: None,
+            role: crate::dsl::LanguageRole::Ops,
+            grammar: Some(crate::artifacts::vdi3805::op::COMPONENT_GRAMMAR_SEMIO),
+            grammar_path: Some(crate::artifacts::vdi3805::op::COMPONENT_GRAMMAR_PATH),
+            protocol: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_SEMIO),
+            protocol_path: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_PATH),
+            hooks: crate::dsl::passthrough_hooks("vdi3805.op"),
+        },
+        crate::dsl::LanguageSpec {
+            id: "vdi3805.diff",
+            extension: None,
+            role: crate::dsl::LanguageRole::Diff,
+            grammar: Some(crate::artifacts::vdi3805::diff::COMPONENT_GRAMMAR_SEMIO),
+            grammar_path: Some(crate::artifacts::vdi3805::diff::COMPONENT_GRAMMAR_PATH),
+            protocol: None,
+            protocol_path: None,
+            hooks: crate::dsl::passthrough_hooks("vdi3805.diff"),
+        },
+        crate::dsl::LanguageSpec {
+            id: "vdi3805.pack",
+            extension: None,
+            role: crate::dsl::LanguageRole::Pack,
+            grammar: None,
+            grammar_path: None,
+            protocol: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+            protocol_path: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+            hooks: crate::dsl::passthrough_hooks("vdi3805.pack"),
+        },
+        crate::dsl::LanguageSpec {
+            id: "vdi3805.spr",
+            extension: None,
+            role: crate::dsl::LanguageRole::Spr,
+            grammar: None,
+            grammar_path: None,
+            protocol: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_SEMIO),
+            protocol_path: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_PATH),
+            hooks: crate::dsl::passthrough_hooks("vdi3805.spr"),
+        },
+    ]).as_slice()
+}
+//#endregion 🪪️Declaration

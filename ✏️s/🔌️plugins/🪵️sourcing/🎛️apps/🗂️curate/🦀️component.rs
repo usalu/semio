@@ -93,6 +93,10 @@ impl ArtifactApp for SourcingCurateApp {
     const APP_ID: &'static str = SOURCING_CURATE_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATE_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::curate::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> CurateSnapshot {
         crate::artifacts::curate::engine::default_document()
     }

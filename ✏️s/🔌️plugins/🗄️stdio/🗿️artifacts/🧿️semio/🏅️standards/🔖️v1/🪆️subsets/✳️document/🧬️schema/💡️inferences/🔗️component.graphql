@@ -1,0 +1,16 @@
+# 💡️ Semio document inference schema — heading/word/block-derived document outline.
+
+type SemioDocumentInference {
+  outline: SemioDocumentOutline! @state(class: INFERRED)
+}
+
+type SemioDocumentOutline {
+  sectionOutline: [SemioDocumentHeadingEntry!]!
+  blockCount: Int!
+  wordCount: Int!
+}
+
+type SemioDocumentHeadingEntry {
+  level: Int!
+  text: String!
+}

@@ -39,78 +39,6 @@ pub enum LayoutError {
 }
 //#endregion ⚠️Errors
 
-//#region 🔖️Register
-/// 🗂️ Registers `LayoutSnapshot`'s pack<->dsl codec under its real `document_schema()` string so
-/// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse layout
-/// documents without depending on this crate's concrete `Projection`/`Mutation` types. Also registers
-/// the 2D export handler and the DWG import handler. Called from the plugin root's `semio_plugin!{
-/// setup: … }`.
-pub fn register() {
-    crate::artifacts::layout::io_registry::register();
-
-    register_artifact_schema();
-    register_artifact_inference();
-    register_pilot_languages();
-    crate::apps::layout::config::schema::register_app_schema();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::layout::LayoutPlayApp>(LAYOUT_DOCUMENT_SCHEMA);
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "layout.document",
-        extension: Some("layout"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::layout::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::layout::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::layout::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::layout::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("layout.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "layout.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::layout::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::layout::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::layout::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::layout::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("layout.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "layout.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::layout::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::layout::schema::diff::text::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("layout.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "layout.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::layout::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::layout::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("layout.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "layout.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::layout::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::layout::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("layout.spr"),
-    });
-}
-
-//#endregion 🔖️Register
-
 //#region 🔖️Io
 /// 🔌️ Layout's typed media I/O surface (`AppDefinition.io`) — the implicit `document:in`/`document:out`
 /// pair (keyed by the `2d.layout` artifact kind `create_layout_app` already declares) plus the two
@@ -760,20 +688,6 @@ impl LayoutArtifactEngine {
     }
 }
 //#endregion 🔖️ArtifactEngine
-
-//#region 🔖️SchemaRegistry
-/// 📌️ Registers the twenty handcrafted schema leaves for `s.layout.layout`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::layout::schema::layout_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.layout.layout.inference`'s facet leaves — sibling registry to
-/// `register_artifact_schema()` above (ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inference() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::layout::standards::v1::subsets::any::schema::inferences::layout_artifact_inference_descriptor());
-}
-//#endregion 🔖️SchemaRegistry
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;

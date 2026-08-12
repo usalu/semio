@@ -147,3 +147,85 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+//#region 🪪️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called four different global registries directly from
+/// a plugin `.setup()` callback. `crate::apps::block5d::config::schema::register_app_schema()` is the
+/// one exception, still called from `🧱️block/🦀️component.rs`'s own narrowed `.setup()`: it registers
+/// the `Block5dPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration`
+/// deliberately has no field for (see that struct's own doc) — `register_app_schema_descriptor` is
+/// not in §6's artifact-scoped function set.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.block5d")
+        .schema(crate::artifacts::block5d::schema::block5d_artifact_schema_descriptor())
+        .inferences([crate::artifacts::block5d::standards::v1::subsets::any::schema::inferences::block5d_artifact_inference_descriptor()])
+        .composers(crate::artifacts::block5d::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::block5d::Block5dPlayApp>()
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
+/// `OnceLock`-backed `io_registry::entries()` convention already used below.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "block.block5d",
+                    extension: Some("block5d"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::block5d::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::block5d::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::block5d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::block5d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("block.block5d"),
+                },
+                dsl::LanguageSpec {
+                    id: "block.block5d.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::block5d::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::block5d::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::block5d::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::block5d::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("block.block5d.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "block.block5d.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::block5d::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::block5d::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("block.block5d.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "5d.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::block5d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::block5d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("5d.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "5d.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::block5d::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::block5d::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("5d.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🪪️Declaration

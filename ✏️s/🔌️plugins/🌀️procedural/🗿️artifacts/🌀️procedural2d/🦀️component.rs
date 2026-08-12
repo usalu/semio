@@ -50,6 +50,87 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
+//#region 🔖️Declaration
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
+/// `OnceLock`-backed `io_registry::entries()` convention already used below (note's own exemplar
+/// pattern). Sole caller is `declaration()` below (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES.get_or_init(|| vec![
+        dsl::LanguageSpec {
+            id: "procedural.procedural2d.document",
+            extension: Some("procedural2d"),
+            role: dsl::LanguageRole::Document,
+            grammar: Some(crate::artifacts::procedural2d::dsl::COMPONENT_GRAMMAR_SEMIO),
+            grammar_path: Some(crate::artifacts::procedural2d::dsl::COMPONENT_GRAMMAR_PATH),
+            protocol: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+            protocol_path: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+            hooks: dsl::passthrough_hooks("procedural.procedural2d.document")},
+        dsl::LanguageSpec {
+            id: "procedural.procedural2d.op",
+            extension: None,
+            role: dsl::LanguageRole::Ops,
+            grammar: Some(crate::artifacts::procedural2d::op::COMPONENT_GRAMMAR_SEMIO),
+            grammar_path: Some(crate::artifacts::procedural2d::op::COMPONENT_GRAMMAR_PATH),
+            protocol: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_SEMIO),
+            protocol_path: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_PATH),
+            hooks: dsl::passthrough_hooks("procedural.procedural2d.op")},
+        dsl::LanguageSpec {
+            id: "procedural.procedural2d.diff",
+            extension: None,
+            role: dsl::LanguageRole::Diff,
+            grammar: Some(crate::artifacts::procedural2d::diff::COMPONENT_GRAMMAR_SEMIO),
+            grammar_path: Some(crate::artifacts::procedural2d::diff::COMPONENT_GRAMMAR_PATH),
+            protocol: None,
+            protocol_path: None,
+            hooks: dsl::passthrough_hooks("procedural.procedural2d.diff")},
+        dsl::LanguageSpec {
+            id: "procedural2d.pack",
+            extension: None,
+            role: dsl::LanguageRole::Pack,
+            grammar: None,
+            grammar_path: None,
+            protocol: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+            protocol_path: Some(crate::artifacts::procedural2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+            hooks: dsl::passthrough_hooks("procedural2d.pack")},
+        dsl::LanguageSpec {
+            id: "procedural2d.spr",
+            extension: None,
+            role: dsl::LanguageRole::Spr,
+            grammar: None,
+            grammar_path: None,
+            protocol: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_SEMIO),
+            protocol_path: Some(crate::artifacts::procedural2d::spr::COMPONENT_PROTOCOL_PATH),
+            hooks: dsl::passthrough_hooks("procedural2d.spr")},
+    ]).as_slice()
+}
+
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called four global registries directly from a plugin
+/// `.setup()` callback. `crate::apps::procedural2d::config::schema::register_app_schema()` is the one
+/// exception, still called from `🌀️procedural/🦀️component.rs`'s own `.setup()`: it registers the
+/// `Procedural2dPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration`
+/// deliberately has no field for (see that struct's own doc, and note's exemplar which documents the
+/// same exception).
+///
+/// DEVIATION (26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g1): the `.composers(...)` argument is
+/// qualified to `standards::v1::engine::io_registry::entries()` rather than left as the bare
+/// `io_registry::entries()` this body used while it still lived in the `⚙️engine` file. Left bare it
+/// would now resolve to THIS file's own `io_registry` module below, which has a different, incompatible
+/// return type (`&'static [&'static ComposerEntry]`, wrapping the engine's owned entries) — not the
+/// `&'static [ComposerEntry]` `.composers()` expects.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.procedural2d")
+        .schema(crate::artifacts::procedural2d::schema::procedural2d_artifact_schema_descriptor())
+        .inferences([crate::artifacts::procedural2d::standards::v1::subsets::any::schema::inferences::procedural2d_artifact_inference_descriptor()])
+        .composers(crate::artifacts::procedural2d::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::procedural2d::Procedural2dPlayApp>()
+        .build()
+}
+//#endregion 🔖️Declaration
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

@@ -15,76 +15,6 @@ use serde_json::{json, Value};
 //#region 🔖️Constants
 //#endregion 🔖️Constants
 
-//#region 🔖️Register
-/// 🗂️ Registers the SVG/DWG media handlers and the document codec for the shooting app under
-/// `SHOOTING_DOCUMENT_SCHEMA` so `framework/sync`'s folder endpoints and any other schema-keyed caller
-/// can print/parse/export shooting documents. Called from the plugin root's `semio_plugin!{ setup: … }`.
-pub fn register() {
-    crate::artifacts::shooting::io_registry::register();
-
-    register_artifact_schema();
-    register_artifact_inferences();
-    register_pilot_languages();
-    crate::apps::shooting::config::schema::register_app_schema();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::shooting::ShootingPlayApp>(crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA);
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "shooting.document",
-        extension: Some("shooting"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::shooting::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::shooting::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::shooting::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::shooting::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("shooting.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "shooting.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::shooting::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::shooting::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::shooting::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::shooting::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("shooting.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "shooting.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::shooting::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::shooting::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("shooting.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "shooting.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::shooting::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::shooting::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("shooting.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "shooting.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::shooting::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::shooting::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("shooting.spr"),
-    });
-}
-
-//#endregion 🔖️Register
-
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
 /// `crate::artifacts::shooting::artifact_kind` already declares (schema/media type/presentation fields
@@ -554,21 +484,6 @@ impl ShootingEngine {
 }
 //#endregion 🔖️ArtifactEngine
 
-//#region 🔖️SchemaRegistry
-/// 📌️ Registers the twenty handcrafted schema leaves for `s.shooting.shooting`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::shooting::schema::shooting_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.shooting.shooting.inference`'s facet leaves into the OS-wide
-/// inference catalog — sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(
-        crate::artifacts::shooting::standards::v1::subsets::any::schema::inferences::shooting_artifact_inference_descriptor(),
-    );
-}
-//#endregion 🔖️SchemaRegistry
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;

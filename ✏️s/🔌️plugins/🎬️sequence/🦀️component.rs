@@ -3,7 +3,7 @@
 use semio_framework_plugin::Plugin;
 
 fn register_exports() {
-    crate::artifacts::sequence::engine::register();
+    crate::apps::sequence::register();
     crate::apps::sequence::config::schema::register_app_schema();
 }
 

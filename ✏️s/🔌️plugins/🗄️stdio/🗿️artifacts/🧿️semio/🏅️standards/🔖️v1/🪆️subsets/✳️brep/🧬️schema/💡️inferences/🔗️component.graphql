@@ -1,0 +1,12 @@
+# 💡️ SemioBrepInference facet mirror — see the `🦀️component.rs` sibling for the real source of
+# truth. `tessellation`/`massProperties` are deliberately absent (see that file's module doc
+# comment for why).
+
+type BrepValidationDiagnostic {
+  code: String!
+  message: String!
+}
+
+type SemioBrepInference {
+  validationReport: [BrepValidationDiagnostic!]!
+}

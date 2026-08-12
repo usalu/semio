@@ -341,3 +341,58 @@ UCAS confirmed the grant was explicit and predated the freeze — DKM was not re
 I recorded spatial `object` as downstream of brep/mesh and therefore constraining our triad authoring. **UCAS showed that is much weaker than I claimed.** `ArtifactChild<S>` is `{ child_id, target: ArtifactRef, PhantomData<S> }` — a two-string handle carrying **no snapshot content**, with `S` only keeping the slot compile-time typed. So `SemioBrepSnapshot`/`SemioMeshSnapshot` internals can be restructured freely and `object` never sees it.
 
 That is the child-as-own-document decision paying off: **the parent holds two strings, not a subtree**, so a child's internal churn cannot propagate upward. The only things that would break `object` are renaming/deleting those types or changing the kind strings `s.stdio.semio.{brep,mesh}` — and either would be done in one joint change. **This supersedes the broader warning recorded above.**
+
+## `🧮️math` generated-mirror defect — FIXED and proven (claimed late, announced, unobjected)
+
+**The symptom was local; the defect was repo-wide.** Worth separating, because the framing changed once measured.
+
+**Symptom**: `🤖️generated/🦀️nakagin.rs` and its TS twin still embedded `flatPosition` as `"kind":"derived"` though the JSON source no longer declared it. ⚠️ **But `🤖️generated/` is gitignored** (`.gitignore:86` — `**/🤖️generated/`), so those files are **never committed**. The stale mirror was a per-machine build artifact, not repo debt — a smaller impact than the original report implied.
+
+**Defect**: `🧮️math/📦️packages/🦀️rust/build.rs` — tracked, committed, and shipped to every developer. Its own docstring claims it *"re-runs it whenever a manifest source changes"*. It did not. It registered `cargo:rerun-if-changed` correctly on every source (:22, :31, :32), so cargo re-ran the build script on every edit — and the script then **did nothing**, because the work was gated on `if !generated.is_file()`. Regeneration fired only when the output was *missing*, never when it was *stale*. So the intent was right and the implementation checked the wrong predicate, meaning **every generated artifact in that module silently went stale on every source change, on every machine** (~10 files: `🦀️nakagin.rs` plus TS twins for concrete-forest, draw-layers, flow-dag, note-blocks, puzzle2d/3d/5d, rewrite-lhs/rhs, wires, writer-languages…).
+
+**Fix — both parts, because part 1 alone would silently re-break:**
+1. Resynced via `bun ./📜️script.ts generate` → *"wrote 12 manifests"*; `flatPosition` count **1 → 0** in both mirrors.
+2. **Replaced the existence gate with a real staleness comparison.** Added `note_newest()`, threaded a `newest: &mut Option<SystemTime>` through `watch_manifest_sources`, and made `main` compare the newest watched source against the generated file's mtime — regenerating when the output is missing **or older than any source**.
+
+**Verification — the gate was proven to fire, not assumed:**
+```
+cargo check -p semio-framework-math                       →  Finished, 0 errors
+generated mtime before touch:  Aug 12 21:07:45
+touch 🧮️math/📦️packages/🦀️rust/📜️script.ts   (a watched source)
+cargo check -p semio-framework-math                       →  Finished in 8.35s
+generated mtime after:         Aug 12 21:08:44   ← regenerated
+```
+The old `!is_file()` gate could not have produced that transition — the file existed throughout.
+
+**A cache whose invalidation condition is "the file is missing" has no invalidation condition.** That the module's own docstring already described the correct behaviour makes it a good example of a class worth watching for: **the doc comment was the specification, and it had been silently false for as long as the gate existed.**
+
+## W4 — `✳️brep` DONE and independently verified; `✳️drawing` vocabulary done; `✳️mesh` dispatched
+
+**Independently re-run by the coordinator with a forced recheck** (`touch`ing glue.rs first, because a cached `cargo check` re-emits no diagnostics and looks identical to clean — I nearly reported green off exactly that artefact):
+
+```
+cargo test -p semio-s-plugin-stdio --lib  →  2246 passed; 2 failed; 5 ignored
+```
+Baseline was **2168 passed / 6 failed**. So **+78 tests, and failures 6 → 2**. The 2 remaining are the pre-existing unowned `dwg`/`ifc` `fixture_honesty_law`; **zero failures attributable to DKM**. (The 4 inference failures in the old baseline were fixed by their owner in the interim.)
+
+| subset | triads | `set-snapshot` | inference | banned vocabulary |
+|---|---|---|---|---|
+| `✳️brep` | **13** | gone | `💡️inferences` present | **0 files** |
+| `✳️drawing` | **17** | gone | pending | **0 files** |
+| `✳️mesh` | 1 | present | none | 5 files — **dispatched** |
+
+### `✳️brep` — the finding that mattered
+
+**The facet was not a blank slate.** It carried a fully working but non-conforming **22-variant** enum: banned vocabulary, wrong verbs (`SetEdgeEndpoints`), and **zero matching triad directories**. It was replaced wholesale with SMO's exact 13-verb table. This is worth recording because the ticket's premise — "`✳️brep` has only `set-snapshot`, i.e. no vocabulary" — was **half wrong**: there was vocabulary, it just wasn't conforming and wasn't addressable. A directory census missed it because the variants were inline.
+
+**Cascade reasoning, which is the good part**: `delete-vertex` cascades to `delete-edge` for dependent edges (both addressable, so the cascade is invertible). `delete-edge`/`face`/`shell` deliberately do **not** cascade into `loop.edges`/`shell.faces`/`solid.shells` membership — because no modify-verb exists for those collections, so the cascade could not be inverted, and **an uninvertible cascade would violate the vocabulary rather than serve it**. Flagged in each triad's doc comment rather than silently omitted.
+
+**Inference authored honestly**: only `validation-report` got a real `InferredField` with a genuine `DepHash` chain. `tessellation` and `mass-properties` were **omitted with stated reasoning** (they need real NURBS evaluation not honestly available at that layer) rather than faked. That is the instructed behaviour and the right call.
+
+### 🔑 The laws caught three real bugs that the four gates would have passed
+
+Running the round-trip/consistency/determinism laws — rather than merely authoring them — found and fixed: a Vec-order-vs-set-equality test defect; **all five `delete-*` diffs failing to return a truly empty diff for an absent target**; and a cross-subset `✳️any` test needing restructuring. Direct vindication of the rule adopted from UCAS's `✳️text` incident: **a structural audit is not a correctness audit.** All three would have shipped behind a clean gate pass.
+
+### `✳️mesh` — provenance to preserve
+
+SMO owned stdio mutation vocabulary and **explicitly claimed the `set-primitive-geometry` → `replace-primitive-geometry` rename as theirs**, approving the reasoning but reserving the edit. **They wound down without doing it.** DKM is completing it under the user's explicit instruction to finish end to end. The dispatched agent is required to record this provenance prominently: **SMO-approved in reasoning, SMO-reserved in execution, completed by DKM after SMO ended.** Not presented as ours.

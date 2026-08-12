@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
 /// 🗂️ The store envelope schema AND the plugin's registered document codec key — see
-/// `crate::artifacts::mathematical::engine::register`.
+/// `crate::artifacts::mathematical::declaration`.
 pub const MATH_DOCUMENT_SCHEMA: &str = "semio.mathematical/v1";
 //#endregion 🔖️Constants
 
@@ -136,6 +136,89 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     }
 }
 //#endregion 🔖️ArtifactKind
+
+//#region 🔖️Declaration
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring note's
+/// `pilot_languages()` convention. Sole caller is `declaration()` below (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "mathematical.document",
+                    extension: Some("mathematical"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::mathematical::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::mathematical::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::mathematical::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::mathematical::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("mathematical.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "mathematical.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::mathematical::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::mathematical::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::mathematical::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::mathematical::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("mathematical.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "mathematical.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::mathematical::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::mathematical::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("mathematical.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "mathematical.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::mathematical::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::mathematical::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("mathematical.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "mathematical.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::mathematical::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::mathematical::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("mathematical.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) — replaces
+/// the old side-effecting `register()`, which called five different global registries directly from a
+/// plugin `.setup()` callback (see `🗒️note`'s exemplar conversion, same shape).
+/// `crate::apps::mathematical::config::schema::register_app_schema()` is the one exception, still called
+/// from this file's own `.setup()`: it registers the `MathematicalPlayApp` CONFIG/PRESENCE schema, an
+/// app-scope concern `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) —
+/// `register_app_schema_descriptor` is not in the §6 artifact-scoped set.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.mathematical")
+        .schema(crate::artifacts::mathematical::schema::mathematical_artifact_schema_descriptor())
+        .inferences([crate::artifacts::mathematical::standards::v1::subsets::any::schema::inferences::mathematical_artifact_inference_descriptor()])
+        .composers(crate::artifacts::mathematical::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::mathematical::MathematicalPlayApp>()
+        .build()
+}
+//#endregion 🔖️Declaration
 
 //#region 🧪️Tests
 #[cfg(test)]

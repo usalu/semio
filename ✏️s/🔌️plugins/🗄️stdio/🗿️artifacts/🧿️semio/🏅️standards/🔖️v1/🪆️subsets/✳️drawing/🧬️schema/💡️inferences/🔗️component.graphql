@@ -1,0 +1,16 @@
+# 💡️ SemioDrawing inference schema — flattenedScene (world transform + resolved style) per
+# scene-graph entity.
+
+type SemioDrawingInference {
+  flattenedScene: [SemioDrawingFlattenedSceneEntry!]! @state(class: INFERRED)
+}
+
+type SemioDrawingFlattenedSceneEntry {
+  key: String!
+  node: FlattenedNode!
+}
+
+type FlattenedNode {
+  worldTransform: Transform!
+  resolvedStyle: DrawStyle
+}

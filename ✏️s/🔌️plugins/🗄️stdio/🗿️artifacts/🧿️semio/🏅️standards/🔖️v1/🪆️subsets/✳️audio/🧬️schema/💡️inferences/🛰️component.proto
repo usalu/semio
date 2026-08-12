@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.stdio.semio.audio.inference;
+
+// 💡️ Semio audio inference schema — sample-count-derived playback duration.
+
+message SemioAudioInference {
+  // @state inferred
+  SemioAudioDuration duration = 1;
+}
+
+message SemioAudioDuration {
+  double duration_seconds = 1;
+  uint64 sample_count = 2;
+  uint32 channel_count = 3;
+}

@@ -7,7 +7,7 @@ pub fn plugin() -> Plugin {
     Plugin::builder("flow")
         .label("Flow")
         .version("0.1.0")
-        .setup(crate::artifacts::flow::engine::register)
+        .setup(crate::apps::flow::register)
         .register_document_app::<crate::apps::flow::FlowPlayApp>(crate::apps::flow::create_flow_app())
         .build()
 }

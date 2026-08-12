@@ -1,7 +1,7 @@
 //! 🔗️ Sequence play app commands — connect/disconnect steps.
 
 use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
-use crate::artifacts::sequence::engine::ops_from_host_mutation;
+use crate::apps::sequence::ops_from_host_mutation;
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::SequenceSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

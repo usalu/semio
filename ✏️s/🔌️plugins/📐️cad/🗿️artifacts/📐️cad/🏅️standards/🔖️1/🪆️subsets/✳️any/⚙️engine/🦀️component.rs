@@ -1,6 +1,7 @@
 //! ⚙️ CAD artifact — headless compute over the `CadSnapshot` projection: the shared brep kernel, the
-//! quad play fixture importer, mesh/typology tessellation, native geometry import/export, and the
-//! plugin-level `register()` that wires cad's exporters/importers into the host.
+//! quad play fixture importer, mesh/typology tessellation, native geometry import/export, and this
+//! artifact's `declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) that describes
+//! cad's exporters/importers as data instead of calling registries directly.
 //!
 //! 📚️ Sibling topic folders: `📥️geometry-import/🦀️component.rs` (authored-geometry → kernel handles),
 //! `🔄️transformation/🦀️component.rs` (derive/classify engine), `🕹️interaction/🦀️component.rs` (the
@@ -793,60 +794,6 @@ pub fn cad_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
 //#endregion 🔖️Compute
 
 //#region 🔖️Register
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "cad.document",
-        extension: Some("cad"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::cad::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::cad::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::cad::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::cad::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("cad.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "cad.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::cad::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::cad::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::cad::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::cad::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("cad.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "cad.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::cad::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::cad::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("cad.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "cad.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::cad::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::cad::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("cad.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "cad.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::cad::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::cad::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("cad.spr"),
-    });
-}
-
 //#region 🧩️Contributions
 fn last_cad_computer_contributions_json() -> &'static Mutex<String> {
     static SLOT: OnceLock<Mutex<String>> = OnceLock::new();
@@ -894,36 +841,7 @@ pub fn sync_cad_computer_contributions(contributions_json: &str) {
     *last = contributions_json.to_string();
 }
 //#endregion 🧩️Contributions
-
-/// 🔌️ Plugin setup hook (`semio_plugin!`'s `setup:`): registers the `cad.scene` document codec for
-/// the cad play app plus every native geometry exporter/importer the `3d.cad` artifact kind
-/// advertises. Was the bundle crate's `register_cad_exports`.
-pub fn register() {
-    crate::artifacts::cad::io_registry::register();
-
-    register_artifact_schema();
-    register_artifact_inferences();
-    crate::apps::cad::config::schema::register_app_schema();
-    register_pilot_languages();
-    // 📦️ pack binary codec for `CadSnapshot` (`CadPlayApp::document_schema()` == `CAD_DOCUMENT_SCHEMA`).
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::cad::CadPlayApp>(crate::artifacts::cad::CAD_DOCUMENT_SCHEMA);
-}
 //#endregion 🔖️Register
-
-
-//#region 🔖️ArtifactSchemaRegistry
-/// 📎 Registers the cad artifact schema descriptor into the process-local registry.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::cad::schema::cad_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.cad.cad.inference`'s facet leaves into the OS-wide inference catalog — sibling
-/// to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_artifact_inference_descriptor());
-}
-//#endregion 🔖️ArtifactSchemaRegistry
 
 //#region 🔖️ArtifactEngine
 /// @emoji ⚙️ UI-independent artifact engine — owns the full artifact; `snapshot()` is its persisted subset.

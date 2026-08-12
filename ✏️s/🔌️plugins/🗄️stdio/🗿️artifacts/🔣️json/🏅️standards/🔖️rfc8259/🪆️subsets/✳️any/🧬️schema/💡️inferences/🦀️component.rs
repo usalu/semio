@@ -5,6 +5,7 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
 use crate::artifacts::json::JsonSnapshot;
+use protocol::Inference;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
@@ -14,7 +15,7 @@ use super::outline::JsonOutline;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a json snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.json.inference")]
 pub struct JsonInference {
@@ -25,6 +26,16 @@ pub struct JsonInference {
 impl protocol::Inference<JsonSnapshot> for JsonInference {
     fn infer(snapshot: &JsonSnapshot) -> Self {
         Self { outline: JsonOutline::compute(snapshot) }
+    }
+}
+
+/// 🪞️ Hand impl (not derived): `JsonSnapshot::default()`'s root is `Null`, a real value that
+/// `JsonOutline::compute` reports on, so the derived all-zero `JsonOutline::default()` disagrees
+/// with it and breaks `inference_default_law`. Defining default as "infer the default snapshot"
+/// makes the two definitionally equal.
+impl Default for JsonInference {
+    fn default() -> Self {
+        Self::infer(&JsonSnapshot::default())
     }
 }
 

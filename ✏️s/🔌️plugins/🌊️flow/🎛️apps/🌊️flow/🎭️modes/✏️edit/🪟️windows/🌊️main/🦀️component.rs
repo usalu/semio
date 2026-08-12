@@ -1,13 +1,14 @@
 //! 🌊️ Flow play app — the main node-graph window: the editable flow canvas.
 
 use crate::apps::flow::config::FlowConfig;
+use crate::apps::flow::host_from_snapshot;
 use crate::apps::flow::modes::edit::windows::main::options;
 use crate::apps::flow::terminology::FlowPlayLabels;
 use crate::apps::flow::FLOW_PLAY_APP_ID;
-use crate::artifacts::flow::engine::{fixture_to_workflow, host_from_snapshot};
 use crate::artifacts::flow::FlowSnapshot;
-use flow::{flow_backed_node_graph_extras, FlowEvalSession};
+use flow::{dag::DagFixture, flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
+use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_WINDOW_MAIN: &str = "flow-main";
@@ -43,6 +44,40 @@ pub fn window_measures(config: &FlowConfig, labels: &FlowPlayLabels) -> Vec<Wind
 }
 //#endregion 🔖️Definition
 
+//#region 🔖️Workflow
+pub fn split_endpoint(endpoint: &str) -> (String, String) {
+    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
+}
+
+pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+    let nodes: Vec<NodeGraphNodeRecord> = fixture
+        .nodes
+        .iter()
+        .map(|node| NodeGraphNodeRecord {
+            id: node.id.clone(),
+            label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
+            x: node.x,
+            y: node.y,
+            width: node.width,
+            height: node.height,
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
+            ..Default::default()
+        })
+        .collect();
+    let edges: Vec<NodeGraphEdgeRecord> = fixture
+        .edges
+        .iter()
+        .map(|edge| {
+            let (source_node_id, source_port_id) = split_endpoint(&edge.source);
+            let (target_node_id, target_port_id) = split_endpoint(&edge.target);
+            NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
+        })
+        .collect();
+    (nodes, edges)
+}
+//#endregion 🔖️Workflow
+
 //#region 🔖️Render
 pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
     let host = host_from_snapshot(fixture, config, session);
@@ -76,6 +111,12 @@ pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSes
 mod tests {
     use super::*;
     use crate::apps::flow::testkit::{flow_app, main_window_measures, render as render_body};
+
+    #[test]
+    fn split_endpoint_defaults_port_to_out() {
+        assert_eq!(split_endpoint("node@port"), ("node".to_string(), "port".to_string()));
+        assert_eq!(split_endpoint("node"), ("node".to_string(), "out".to_string()));
+    }
 
     #[test]
     fn renders_node_graph_scene() {

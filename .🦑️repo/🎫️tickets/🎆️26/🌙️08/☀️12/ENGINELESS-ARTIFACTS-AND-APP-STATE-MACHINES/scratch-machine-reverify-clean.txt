@@ -1,0 +1,48 @@
+    Blocking waiting for file lock on build directory
+   Compiling syn v2.0.117
+   Compiling memchr v2.8.0
+   Compiling serde_json v1.0.149
+   Compiling serde_derive v1.0.228
+   Compiling thiserror-impl v2.0.18
+   Compiling semio-framework-machine-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust)
+   Compiling thiserror v2.0.18
+   Compiling serde v1.0.228
+   Compiling semio-framework-machine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 1m 24s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_framework_machine-96746197b6d765a9)
+
+running 31 tests
+test component::checkout_integration::dsl_machine_walks_cart_to_receipt ... ok
+test component::checkout_integration::dsl_machine_cancel_resume_round_trips_via_shallow_history ... ok
+test component::checkout_integration::step_rejects_a_persisted_snapshot_from_another_machine_shape ... ok
+test component::host::tests::test_host_records_effects_and_task_lifecycle ... ok
+test component::inspect::tests::trace_inspector_records_one_microstep_per_transition ... ok
+test component::inspect::tests::null_inspector_observes_nothing_observable ... ok
+test component::checkout_integration::start_produces_a_persistable_initial_configuration ... ok
+test component::kernel::tests::guard_blocks_transition_when_false ... ok
+test component::kernel::tests::hierarchical_machine_enters_default_descendant ... ok
+test component::kernel::tests::hierarchical_machine_transitions_into_compound_default ... ok
+test component::kernel::tests::flat_machine_toggles_and_counts ... ok
+test component::kernel::tests::parallel_regions_enter_together ... ok
+test component::kernel::tests::parallel_done_bubbles_only_once_every_region_finishes ... ok
+test component::kernel::tests::shallow_history_restores_last_active_child ... ok
+test component::persist::tests::persist_then_restore_round_trips_active_state ... ok
+test component::persist::tests::restore_applies_migration_chain_until_fingerprint_matches ... ok
+test component::persist::tests::restore_rejects_fingerprint_mismatch_without_migration ... ok
+test component::runtime::tests::actor_system_drains_sent_events_through_one_macrostep_each ... ok
+test component::checkout_integration::step_reports_entered_and_exited_states ... ok
+test component::checkout_integration::step_round_trips_through_persisted_state_only ... ok
+test component::checkout_integration::step_with_a_blocked_guard_leaves_the_configuration_untouched ... ok
+test component::host::tests::test_host_cancel_timer_removes_pending ... ok
+test component::host::tests::test_host_advance_fires_due_timers_only ... ok
+test component::checkout_integration::dsl_machine_coverage_reaches_every_declared_state ... ok
+test component::testing::tests::conformance_fixture_fails_with_descriptive_message ... ok
+test component::tests::bitset_set_clear_contains ... ok
+test component::testing::tests::conformance_fixture_passes_for_matching_sequence ... ok
+test component::testing::tests::explore_reaches_both_toggle_states ... ok
+test component::testing::tests::invariant_reports_violation_by_name ... ok
+test component::tests::bitset_clear_all_and_is_empty ... ok
+test component::tests::bitset_iter_ones_spans_words ... ok
+
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

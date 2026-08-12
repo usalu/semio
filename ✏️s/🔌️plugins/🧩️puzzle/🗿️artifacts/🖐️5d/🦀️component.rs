@@ -533,6 +533,90 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
+//#region 🔖️Declaration
+/// 🔖️ Puzzle5d's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1, relocated off
+/// `⚙️engine` to the artifact root — `declaration()` describes the artifact itself, not engine
+/// behaviour) — replaces the `ComposerEntry` half of the old `register_io()`. The `"5d.puzzle"`
+/// OS-host mesh export/import bridge (`register_mesh_io()`, still in `⚙️engine`) has NO
+/// `ArtifactDeclaration` field — same OS media-host 14-function family flagged on puzzle2d's
+/// `declaration()` doc — so it stays wired through `🧩️puzzle/🦀️component.rs`'s own `.setup()`, not
+/// here.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.puzzle5d")
+        .schema(crate::artifacts::puzzle5d::schema::puzzle5d_artifact_schema_descriptor())
+        .inferences([crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::puzzle5d_artifact_inference_descriptor()])
+        .composers(crate::artifacts::puzzle5d::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::puzzle5d::Puzzle5dPlayApp>()
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. This function
+/// existed as a side-effecting `register_pilot_languages()` before M1 but was never called from
+/// anywhere (dead code, confirmed by grep) — wiring it into `declaration()`'s `.languages(...)` is
+/// this conversion's one real bug fix: puzzle5d's own grammars were never actually registered.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "puzzle.puzzle5d",
+                    extension: Some("puzzle5d"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::puzzle5d::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::puzzle5d::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::puzzle5d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::puzzle5d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("puzzle.puzzle5d"),
+                },
+                dsl::LanguageSpec {
+                    id: "puzzle.puzzle5d.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::puzzle5d::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::puzzle5d::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::puzzle5d::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::puzzle5d::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("puzzle.puzzle5d.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "puzzle.puzzle5d.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::puzzle5d::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::puzzle5d::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("puzzle.puzzle5d.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "5d.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::puzzle5d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::puzzle5d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("5d.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "5d.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::puzzle5d::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::puzzle5d::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("5d.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Declaration
+
 pub use crate::artifacts::puzzle5d::op::Puzzle5dPlaySnapshot;
 
 //#region 🧪️Tests

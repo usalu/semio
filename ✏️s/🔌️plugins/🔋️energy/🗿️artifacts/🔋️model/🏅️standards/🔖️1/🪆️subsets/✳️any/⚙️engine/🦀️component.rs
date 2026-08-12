@@ -28,87 +28,17 @@ pub fn snapshot_from_model(model: &Model) -> Result<EnergyModelSnapshot, String>
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Register
-/// 🗂️ Registers codecs and the artifact schema descriptor.
-pub fn register() {
-    crate::artifacts::model::io_registry::register();
-
-    register_artifact_schema();
-    register_artifact_inference();
-    register_pilot_languages();
+/// 🗂️ Registers `s.energy.model`'s pack↔dsl document codec directly against `store`'s process-wide
+/// registry — no `ArtifactApp` to bind through `register_document_codec_for_app` (see `declaration`'s
+/// own doc). Called from the plugin root's narrowed `.setup()`.
+pub fn register_document_codec() {
     store::register_document_codec(store::ArtifactCodec::of::<
         EnergyModelSnapshot,
         EnergyModelMutation,
     >(ENERGY_MODEL_DOCUMENT_SCHEMA));
 }
 
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "energy.model",
-        extension: Some("energy"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::model::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::model::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::model::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::model::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("energy.model"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "energy.model.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::model::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::model::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::model::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::model::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("energy.model.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "energy.model.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::model::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::model::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("energy.model.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "energy.model.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::model::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::model::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("energy.model.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "energy.model.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::model::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::model::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("energy.model.spr"),
-    });
-}
 //#endregion 🔖️Register
-
-//#region 🔖️SchemaRegistry
-/// 📌️ Registers the twenty handcrafted schema leaves for `s.energy.model`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::model::schema::energy_model_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.energy.model.inference`'s facet leaves into the OS-wide inference catalog —
-/// sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inference() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::model::standards::v1::subsets::any::schema::inferences::energy_model_artifact_inference_descriptor());
-}
-//#endregion 🔖️SchemaRegistry
 
 //#region 🔖️ArtifactEngine
 /// ⚡️ Headless energy-model artifact engine — owns a real `EnergyModelArtifact`.

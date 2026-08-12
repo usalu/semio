@@ -2,12 +2,32 @@
 
 use semio_framework_plugin::Plugin;
 
-/// 🔌️ Builds the plugin surface for host registration.
+/// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) replaces the deleted `register_norm_exports`
+/// `.setup()` fan-out with fifteen data declarations, one per norm family; `.setup()` survives here
+/// for exactly one call — `register_app_schema()`, which registers the shared `NormConfig`
+/// config/presence schema every one of the fifteen `PlayApp`s uses, an app-scope concern
+/// `ArtifactDeclaration` has no field for by design (see that struct's own doc).
 pub fn plugin() -> Plugin {
     Plugin::builder("norm")
         .label("Norm")
         .version("0.1.0")
-        .setup(crate::register_norm_exports)
+        .setup(crate::config::schema::register_app_schema)
+        .artifact(crate::artifacts::din4108::declaration())
+        .artifact(crate::artifacts::din16798::declaration())
+        .artifact(crate::artifacts::din18599::declaration())
+        .artifact(crate::artifacts::en1990::declaration())
+        .artifact(crate::artifacts::en1991::declaration())
+        .artifact(crate::artifacts::en1992::declaration())
+        .artifact(crate::artifacts::en1993::declaration())
+        .artifact(crate::artifacts::en1994::declaration())
+        .artifact(crate::artifacts::en1995::declaration())
+        .artifact(crate::artifacts::en1996::declaration())
+        .artifact(crate::artifacts::en1997::declaration())
+        .artifact(crate::artifacts::en1998::declaration())
+        .artifact(crate::artifacts::en1999::declaration())
+        .artifact(crate::artifacts::iso16757::declaration())
+        .artifact(crate::artifacts::vdi3805::declaration())
         .register_document_app::<crate::apps::din4108::Din4108PlayApp>(crate::apps::din4108::create_din4108_app())
         .register_document_app::<crate::apps::din16798::Din16798PlayApp>(crate::apps::din16798::create_din16798_app())
         .register_document_app::<crate::apps::din18599::Din18599PlayApp>(crate::apps::din18599::create_din18599_app())

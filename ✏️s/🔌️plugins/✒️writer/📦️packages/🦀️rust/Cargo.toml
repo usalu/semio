@@ -5,7 +5,7 @@ name = "semio-s-plugin-writer"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Writer plugin - one crate for the writer artifact (diff/op/dsl/pack/spr/engine) and the writer play app (commands/modes/windows/panels)"
+description = "Writer plugin - one crate for the writer artifact (diff/op/dsl/pack/spr) and the writer play app (commands/modes/windows/panels)"
 
 [lints]
 workspace = true

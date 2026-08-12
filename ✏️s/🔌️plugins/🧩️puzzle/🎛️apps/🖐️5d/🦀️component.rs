@@ -1993,16 +1993,16 @@ pub(crate) fn puzzle5d_document_from_mesh(_mesh: &semio_framework_plugin::MeshDa
     serde_json::to_value(empty_document()).map_err(|error| error.to_string())
 }
 
-/// 🗂️ Registers `Puzzle5dPlaySnapshot`'s pack<->dsl codec under its real `document_schema()` string
-/// so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-5d play documents without
-/// depending on this crate's concrete `Projection`/`Mutation` types. Called by the plugin `setup:`
-/// hook (`crate::artifacts::puzzle2d::engine::register`). The 5d mesh export/import OS-host
-/// registration lives at `crate::artifacts::puzzle5d::engine::register_io` — APA (ticket
-/// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`): OS-host registration belongs to the owning
-/// artifact's own engine, never to an app file.
-pub fn register_puzzle5d_exports() {
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle5dPlayApp>(PUZZLE5D_SCHEMA);
-}
+// 🗂️ `Puzzle5dPlaySnapshot`'s pack<->dsl codec (so `framework/sync`'s `FolderEndpoint::Pack` can
+// print/parse puzzle-5d play documents without depending on this crate's concrete
+// `Projection`/`Mutation` types) is now declared via `.document_codec::<Puzzle5dPlayApp>()` on
+// `crate::artifacts::puzzle5d::standards::v1::engine::declaration()` (ticket
+// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE` M1) — the old side-effecting
+// `register_puzzle5d_exports()` wrapper (this app file's only caller of
+// `register_document_codec_for_app`) is gone. The 5d mesh export/import OS-host registration lives
+// at `crate::artifacts::puzzle5d::standards::v1::engine::register_mesh_io`, still wired through
+// `🧩️puzzle/🦀️component.rs`'s `.setup()` — APA: OS-host registration belongs to the owning
+// artifact's own engine, never to an app file.
 //#endregion 🔖️Manifest
 
 //#region 🧪️Testkit

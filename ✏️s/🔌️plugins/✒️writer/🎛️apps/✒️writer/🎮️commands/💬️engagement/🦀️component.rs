@@ -40,7 +40,7 @@ struct WriterEngagementOutcome {
 /// form (wgpu REPL) and the React shell's PascalCased, separator-stripped drafts (e.g. `"Font16"`,
 /// `"LineNumbers"` — see `strip_engagement_prefix`).
 fn apply_engagement(config: &WriterConfig, current_text: &str, language_id: &str, value: &str) -> WriterEngagementOutcome {
-    use crate::artifacts::writer::engine::format_writer_text;
+    use crate::artifacts::writer::schema::format_writer_text;
 
     let trimmed = value.trim();
     let mut config_mutations = vec![WriterConfigMutation::SetEngagementInput { value: String::new() }, WriterConfigMutation::SetRevision { value: config.revision + 1 }];

@@ -143,6 +143,18 @@
           "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
         }
       }
+    },
+    "host-handle-lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts host-handle-lint",
+        "forwardAllArgs": true,
+        "env": {
+          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
+          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        }
+      }
     }
   }
 }

@@ -1,0 +1,14 @@
+syntax = "proto3";
+// 💡️ SemioBrepInference facet mirror — see the sibling 🦀️component.rs for the real source of
+// truth. `tessellation`/`massProperties` are deliberately absent (see that file's module doc
+// comment for why).
+package semio.s_stdio_semio_brep.inference;
+
+message BrepValidationDiagnostic {
+  string code = 1;
+  string message = 2;
+}
+
+message SemioBrepInference {
+  repeated BrepValidationDiagnostic validation_report = 1;
+}

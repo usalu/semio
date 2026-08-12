@@ -393,6 +393,92 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         import_stdio_kinds: vec!["stdio.svg", "stdio.png"],
     }
 }
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
+/// `🗒️note`'s own `pilot_languages()` convention. Relocated from `⚙️engine/🦀️component.rs` alongside
+/// `declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) — `declaration()`'s only
+/// caller, kept private.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "draw.document",
+                    extension: Some("draw"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::draw::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::draw::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("draw.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "draw.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::draw::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::draw::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::draw::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::draw::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("draw.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "draw.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::draw::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::draw::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("draw.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "draw.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("draw.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "draw.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::draw::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::draw::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("draw.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) —
+/// replaces the old side-effecting `register()`, which called four different global registries
+/// directly from a plugin `.setup()` callback. `crate::apps::draw::config::schema::register_app_schema()`
+/// is the one exception, still called from `🖍️draw/🦀️component.rs`'s own `.setup()`: it registers the
+/// `DrawPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
+/// no field for (see that struct's own doc).
+/// 🔀️ Deviation from the mechanical move-both: `.composers(...)` is qualified with the full
+/// `crate::artifacts::draw::standards::v1::engine::io_registry::entries()` path here — the original
+/// engine-file body called `io_registry::entries()` unqualified, resolving to the `io_registry`
+/// submodule that still lives in `⚙️engine/🦀️component.rs` (NOT moved, per the ticket's move-both
+/// rule covering only `declaration()`/`pilot_languages()`).
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.draw")
+        .schema(crate::artifacts::draw::schema::draw_artifact_schema_descriptor())
+        .inferences([crate::artifacts::draw::schema::inferences::draw_artifact_inference_descriptor()])
+        .composers(crate::artifacts::draw::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::draw::DrawPlayApp>()
+        .build()
+}
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {

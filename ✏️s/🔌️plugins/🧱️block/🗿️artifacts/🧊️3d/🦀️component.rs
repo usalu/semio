@@ -159,3 +159,85 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+//#region 🪪️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called four different global registries directly from
+/// a plugin `.setup()` callback. `crate::apps::block3d::config::schema::register_app_schema()` is the
+/// one exception, still called from `🧱️block/🦀️component.rs`'s own narrowed `.setup()`: it registers
+/// the `Block3dPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration`
+/// deliberately has no field for (see that struct's own doc) — `register_app_schema_descriptor` is
+/// not in §6's artifact-scoped function set.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.block3d")
+        .schema(crate::artifacts::block3d::schema::block3d_artifact_schema_descriptor())
+        .inferences([crate::artifacts::block3d::standards::v1::subsets::any::schema::inferences::block3d_artifact_inference_descriptor()])
+        .composers(crate::artifacts::block3d::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::block3d::Block3dPlayApp>()
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
+/// `OnceLock`-backed `io_registry::entries()` convention already used below.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "block.block3d",
+                    extension: Some("block3d"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::block3d::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::block3d::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::block3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::block3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("block.block3d"),
+                },
+                dsl::LanguageSpec {
+                    id: "block.block3d.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::block3d::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::block3d::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::block3d::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::block3d::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("block.block3d.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "block.block3d.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::block3d::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::block3d::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("block.block3d.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "3d.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::block3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::block3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("3d.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "3d.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::block3d::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::block3d::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("3d.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🪪️Declaration

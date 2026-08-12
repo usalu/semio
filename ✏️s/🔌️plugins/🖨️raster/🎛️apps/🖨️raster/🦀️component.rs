@@ -153,6 +153,10 @@ impl ArtifactApp for RasterPlayApp {
     const APP_ID: &'static str = RASTER_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::raster::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> RasterSnapshot {
         crate::artifacts::raster::engine::empty_raster_document()
     }

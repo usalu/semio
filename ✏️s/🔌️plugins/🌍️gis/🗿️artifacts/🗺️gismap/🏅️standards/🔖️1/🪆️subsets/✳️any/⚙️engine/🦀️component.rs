@@ -436,21 +436,6 @@ pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Strin
 }
 //#endregion 🔖️MediaImport
 
-//#region 🔖️Registration
-/// 🗂️ Native setup hook for the `gis.map` artifact — the SVG export + DWG import handlers plus the
-/// pack↔dsl document codec `framework/sync`'s `FolderEndpoint` reaches for. Called from the plugin
-/// root's `📦️glue.rs` setup fn.
-pub fn register() {
-    crate::artifacts::gismap::io_registry::register();
-
-    register_pilot_languages();
-    register_artifact_schema();
-    register_artifact_inferences();
-
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::gis2d::Gis2dPlayApp>(GIS_MAP_SCHEMA);
-}
-//#endregion 🔖️Registration
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -589,75 +574,6 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-
-/// Registers the twenty handcrafted schema leaves for `s.gis.gismap`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::gismap::schema::gismap_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.gis.gismap.inference`'s facet leaves into the OS-wide inference catalog —
-/// sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::gismap::standards::v1::subsets::any::schema::inferences::gismap_artifact_inference_descriptor());
-}
-
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "gis.gismap",
-        extension: Some("gismap"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::gismap::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::gismap::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::gismap::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gismap::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("gis.gismap"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "gis.gismap.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::gismap::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::gismap::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::gismap::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gismap::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("gis.gismap.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "gis.gismap.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::gismap::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::gismap::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("gis.gismap.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "gismap.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::gismap::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gismap::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("gismap.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "gismap.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::gismap::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gismap::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("gismap.spr"),
-    });
-}
-
 
 
 //#region 🔹ArtifactEngine

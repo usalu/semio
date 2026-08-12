@@ -1,0 +1,131 @@
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2014 -     crate::apps::block5d::config::schema::register_app_schema();
+2014 +     apps::block5d::config::schema::register_app_schema();
+     |
+
+error[E0308]: `?` operator has incompatible types
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:10:16
+   |
+10 |           value: serde_json::to_value(snapshot)
+   |  ________________^
+11 | |             .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?,
+   | |________________________________________________________________________________________^ expected `JsonValue`, found `Value`
+   |
+   = note: `?` operator cannot convert from `serde_json::Value` to `JsonValue`
+
+error[E0308]: mismatched types
+    --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:9:60
+     |
+   9 |     let mut snap: Block3dSnapshot = serde_json::from_value(from.value.clone())
+     |                                     ---------------------- ^^^^^^^^^^^^^^^^^^ expected `Value`, found `JsonValue`
+     |                                     |
+     |                                     arguments to this function are incorrect
+     |
+note: function defined here
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/value/mod.rs:1037:8
+     |
+1037 | pub fn from_value<T>(value: Value) -> Result<T, Error>
+     |        ^^^^^^^^^^
+
+error[E0308]: mismatched types
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:19:76
+   |
+19 |     deserialize(&JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
+   |                                                                            ^^^^^ expected `JsonValue`, found `Value`
+
+error[E0308]: `?` operator has incompatible types
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:10:16
+   |
+10 |           value: serde_json::to_value(snapshot)
+   |  ________________^
+11 | |             .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?,
+   | |________________________________________________________________________________________^ expected `JsonValue`, found `Value`
+   |
+   = note: `?` operator cannot convert from `serde_json::Value` to `JsonValue`
+
+error[E0308]: mismatched types
+    --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:9:60
+     |
+   9 |     let mut snap: Block5dSnapshot = serde_json::from_value(from.value.clone())
+     |                                     ---------------------- ^^^^^^^^^^^^^^^^^^ expected `Value`, found `JsonValue`
+     |                                     |
+     |                                     arguments to this function are incorrect
+     |
+note: function defined here
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/value/mod.rs:1037:8
+     |
+1037 | pub fn from_value<T>(value: Value) -> Result<T, Error>
+     |        ^^^^^^^^^^
+
+error[E0308]: mismatched types
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:19:76
+   |
+19 |     deserialize(&JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
+   |                                                                            ^^^^^ expected `JsonValue`, found `Value`
+
+error[E0080]: evaluation panicked: #[derive(Mutations)]: Block5dMutation::UpdatePart2d's MutationKind::SEMANTICS.kind must equal "update-part2d" (its own kebab form)
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:30:73
+   |
+30 | #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+   |                                                                         ^^^^^^^^^^^^^^ evaluation of `artifacts::block5d::standards::v1::subsets::any::schema::mutations::component::_` failed here
+
+error[E0080]: evaluation panicked: #[derive(Mutations)]: Block5dMutation::UpdatePart3d's MutationKind::SEMANTICS.kind must equal "update-part3d" (its own kebab form)
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:30:73
+   |
+30 | #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+   |                                                                         ^^^^^^^^^^^^^^ evaluation of `artifacts::block5d::standards::v1::subsets::any::schema::mutations::component::_` failed here
+
+error[E0308]: `?` operator has incompatible types
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:10:16
+   |
+10 |           value: serde_json::to_value(snapshot)
+   |  ________________^
+11 | |             .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?,
+   | |________________________________________________________________________________________^ expected `JsonValue`, found `Value`
+   |
+   = note: `?` operator cannot convert from `serde_json::Value` to `JsonValue`
+
+error[E0080]: evaluation panicked: #[derive(Mutations)]: Block5dMutation::MoveGrip2d's MutationKind::SEMANTICS.kind must equal "move-grip2d" (its own kebab form)
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:30:73
+   |
+30 | #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+   |                                                                         ^^^^^^^^^^^^^^ evaluation of `artifacts::block5d::standards::v1::subsets::any::schema::mutations::component::_` failed here
+
+error[E0080]: evaluation panicked: #[derive(Mutations)]: Block5dMutation::MoveGrip3d's MutationKind::SEMANTICS.kind must equal "move-grip3d" (its own kebab form)
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:30:73
+   |
+30 | #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+   |                                                                         ^^^^^^^^^^^^^^ evaluation of `artifacts::block5d::standards::v1::subsets::any::schema::mutations::component::_` failed here
+
+error[E0080]: evaluation panicked: #[derive(Mutations)]: Block5dMutation::ResizeGrip3d's MutationKind::SEMANTICS.kind must equal "resize-grip3d" (its own kebab form)
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:30:73
+   |
+30 | #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+   |                                                                         ^^^^^^^^^^^^^^ evaluation of `artifacts::block5d::standards::v1::subsets::any::schema::mutations::component::_` failed here
+
+error[E0308]: mismatched types
+    --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:9:60
+     |
+   9 |     let mut snap: Block2dSnapshot = serde_json::from_value(from.value.clone())
+     |                                     ---------------------- ^^^^^^^^^^^^^^^^^^ expected `Value`, found `JsonValue`
+     |                                     |
+     |                                     arguments to this function are incorrect
+     |
+note: function defined here
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/value/mod.rs:1037:8
+     |
+1037 | pub fn from_value<T>(value: Value) -> Result<T, Error>
+     |        ^^^^^^^^^^
+
+error[E0308]: mismatched types
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:19:76
+   |
+19 |     deserialize(&JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
+   |                                                                            ^^^^^ expected `JsonValue`, found `Value`
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:10:9
+   |

@@ -59,7 +59,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::flow::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::flow::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

@@ -159,6 +159,10 @@ impl ArtifactApp for Fem2dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem2d::FEM_2D_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::fem2d::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> Fem2dSnapshot {
         crate::artifacts::fem2d::engine::empty_fem2d_snapshot()
     }

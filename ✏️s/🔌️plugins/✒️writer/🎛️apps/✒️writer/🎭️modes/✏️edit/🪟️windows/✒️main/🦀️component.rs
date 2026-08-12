@@ -4,7 +4,8 @@ use crate::apps::writer::config::WriterConfig;
 use crate::apps::writer::modes::edit::windows::main::options;
 use crate::apps::writer::terminology::WriterPlayLabels;
 use crate::apps::writer::editor_hover_context;
-use crate::artifacts::writer::engine::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, language_completions_json, language_diagnostics_json, language_tokens_json, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
+use crate::artifacts::writer::schema::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, language_completions_json, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
+use crate::artifacts::writer::schema::inferences::{language_diagnostics_json, language_tokens_json};
 use crate::artifacts::writer::WriterSnapshot;
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 use serde_json::{json, Value};
@@ -138,7 +139,7 @@ mod tests {
     #[test]
     fn scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack() {
         let mut app = new_app();
-        let node = app.render(WRITER_PLAY_BODY_MAIN, Some(&crate::artifacts::writer::engine::jack_example_json()), &semio_framework_plugin::ViewModel::default()).expect("render");
+        let node = app.render(WRITER_PLAY_BODY_MAIN, Some(&crate::artifacts::writer::dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("placeholdersJson"));
         assert!(json.contains("selectableSpansJson"));

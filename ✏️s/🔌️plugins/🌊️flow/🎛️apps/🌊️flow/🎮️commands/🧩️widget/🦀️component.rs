@@ -1,12 +1,13 @@
 //! 🧩️ Flow play app commands — widget lifecycle (add / remove / rename / patch / move).
 //!
 //! Every handler here mutates the DOCUMENT: it runs the stateful `FlowHost` mutation through
-//! `engine::host_operations` and lets the fixture diff produce granular `FlowMutation`s with true
-//! inverses. Payload field names and order are load-bearing — they ARE the `dsl` record shape of the
+//! `crate::apps::flow::host_operations` and lets the fixture diff produce granular `FlowMutation`s with
+//! true inverses. Payload field names and order are load-bearing — they ARE the `dsl` record shape of the
 //! matching `FlowCommand` variant (see `crate::apps::flow::FlowCommand`).
 
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
-use crate::artifacts::flow::engine::{host_operations, widget_id};
+use crate::apps::flow::host_operations;
+use crate::artifacts::flow::schema::widget_id;
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::{ FlowEvalSession, Widget};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -126,7 +127,7 @@ pub mod rename_flow_widget {
         let config = cfg.snapshot;
         match renamed_fixture(fixture, &payload.old_id, &payload.value) {
             Some(next) => Ok(Emit {
-                artifact_mutations: crate::artifacts::flow::engine::snapshot_operations(fixture, &next),
+                artifact_mutations: crate::artifacts::flow::schema::mutations::snapshot_operations(fixture, &next),
                 config_mutations: vec![FlowConfigMutation::SetSelection { node_ids: vec![payload.value.trim().to_string()], edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }],
                 ..Default::default()
             }),
@@ -173,7 +174,7 @@ pub mod patch_flow_widgets {
     pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let next = patched_widgets_fixture(fixture, &payload.widget_ids, &payload.field, &payload.value);
-        let operations = crate::artifacts::flow::engine::snapshot_operations(fixture, &next);
+        let operations = crate::artifacts::flow::schema::mutations::snapshot_operations(fixture, &next);
         if operations.is_empty() {
             Ok(Emit::default())
         } else {

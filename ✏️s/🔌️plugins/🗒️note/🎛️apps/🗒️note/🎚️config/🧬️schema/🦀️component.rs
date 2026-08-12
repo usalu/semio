@@ -15,10 +15,11 @@ pub struct NoteConfig {
     #[state(local_ui)] pub locale: String,
 }
 
-//region 📎 App-schema self-registration
-/// 📎 Registers `s.note.note`'s config+presence schema descriptor into the process-local registry.
-pub fn register_app_schema() {
-    ::schema::register_app_schema_descriptor(::schema::AppSchemaDescriptor {
+//region 📎 App-schema descriptor
+/// 📎 `s.note.note`'s config+presence schema descriptor — returned, not self-registered; `ArtifactApp::app_schema`
+/// (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) hands it to `register_document_app` for registration.
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+    ::schema::AppSchemaDescriptor {
         id: "s.note.note",
         config: ::schema::FacetLeaves {
             rust: include_str!("🦀️component.rs"),
@@ -34,7 +35,7 @@ pub fn register_app_schema() {
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️component.json"),
             proto: include_str!("../../👥️presence/🧬️schema/🛰️component.proto"),
         },
-    });
+    }
 }
-//endregion 📎 App-schema self-registration
+//endregion 📎 App-schema descriptor
 

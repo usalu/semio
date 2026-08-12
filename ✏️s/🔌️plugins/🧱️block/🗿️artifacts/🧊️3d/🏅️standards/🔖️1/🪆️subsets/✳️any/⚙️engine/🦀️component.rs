@@ -9,74 +9,6 @@
 use crate::artifacts::block3d::{Block3dSnapshot, BLOCK_3D_SCHEMA};
 use serde_json::{json, Value};
 
-//#region 🔖️Register
-/// 🗂️ Registers `Block3dSnapshot`'s pack↔dsl codec under `BLOCK_3D_SCHEMA`. Called from the plugin
-/// root's `semio_plugin!{ setup: … }`.
-pub fn register() {
-    crate::artifacts::block3d::io_registry::register();
-
-    register_pilot_languages();
-    register_artifact_schema();
-    register_artifact_inference();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::block3d::Block3dPlayApp>(BLOCK_3D_SCHEMA);
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "block.block3d",
-        extension: Some("block3d"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::block3d::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::block3d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::block3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::block3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("block.block3d"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "block.block3d.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::block3d::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::block3d::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::block3d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::block3d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("block.block3d.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "block.block3d.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::block3d::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::block3d::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("block.block3d.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "3d.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::block3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::block3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("3d.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "3d.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::block3d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::block3d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("3d.spr"),
-    });
-}
-
-//#endregion 🔖️Register
-
 //#region 🔖️DocumentHelpers
 pub fn empty_block3d_snapshot() -> Block3dSnapshot {
     Block3dSnapshot::default()
@@ -202,23 +134,6 @@ mod tests {
 }
 //#endregion 🧪️Tests
 
-
-
-//#region 🔖️ArtifactSchemaRegistry
-/// 🧬️ Registers `block3d` fifteen-leaf artifact schema descriptor once.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::block3d::schema::block3d_artifact_schema_descriptor());
-}
-//#endregion 🔖️ArtifactSchemaRegistry
-
-//#region 🔖️ArtifactInferenceRegistry
-/// 💡️ Registers `block3d`'s `s.block.block3d.inference` descriptor once — sibling to
-/// `register_artifact_schema()` above (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inference() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::block3d::standards::v1::subsets::any::schema::inferences::block3d_artifact_inference_descriptor());
-}
-//#endregion 🔖️ArtifactInferenceRegistry
-
 //#region 🔖️ArtifactEngine
 /// ⚙️ UI-independent block3d artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct Block3dEngine {
@@ -308,7 +223,6 @@ pub mod io_registry {
         Ok(ComposedArtifact { dialect: EXPORT_OBJ_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
     }
     //#endregion 🔖️ExportEntries
-
 
     pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![

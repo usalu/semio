@@ -1,0 +1,10 @@
+{
+  "title": "Fix Missing Ephemeralbox Import In Framework Glue Ts",
+  "emoji": "📦",
+  "status": "closed",
+  "description": "Fix missing ephemeralBox import in framework glue.ts tests",
+  "summary": "Added ephemeralBox and EphemeralBox imports to glue.ts and verified framework tests pass.",
+  "sessions": [
+    "b62595bf-3127-427d-b96c-f179891a16db"
+  ]
+}

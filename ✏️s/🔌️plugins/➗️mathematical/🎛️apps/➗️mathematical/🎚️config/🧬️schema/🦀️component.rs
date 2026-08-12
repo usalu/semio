@@ -18,9 +18,11 @@ pub struct MathematicalConfig {
 //#endregion 🔖️Config
 
 //#region 🔖️Registration
-/// 📎 Registers `s.mathematical.mathematical`'s config+presence schema descriptor into the process-local registry.
-pub fn register_app_schema() {
-    ::schema::register_app_schema_descriptor(::schema::AppSchemaDescriptor {
+/// 📎 `s.mathematical.mathematical`'s config+presence schema descriptor — returned, not
+/// self-registered; `ArtifactApp::app_schema` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+/// W1c) hands it to `register_document_app` for registration.
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+    ::schema::AppSchemaDescriptor {
         id: "s.mathematical.mathematical",
         config: ::schema::FacetLeaves {
             rust: include_str!("🦀️component.rs"),
@@ -36,7 +38,7 @@ pub fn register_app_schema() {
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️component.json"),
             proto: include_str!("../../👥️presence/🧬️schema/🛰️component.proto"),
         },
-    });
+    }
 }
 //#endregion 🔖️Registration
 

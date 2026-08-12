@@ -43,6 +43,102 @@ pub struct PathRef {
 }
 //#endregion 🔖️Types
 
+//#region 🔖️Register
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called four different global registries directly from a
+/// plugin `.setup()` callback. `bootstrap_imperative_runtime()` runs here too, NOT as a §6 registrar
+/// (`register_language`/`register_artifact_schema_descriptor`/… all ARE §6 and now live in the builder
+/// chain below) but as this artifact's OWN native-module bootstrap
+/// (`register_native_imperative_module` × 4 + `register_default_imperative_contributions`) — it has no
+/// `ArtifactDeclaration` field because it isn't one of the census's global SDK registrars, it is
+/// imperative's private compute-runtime setup. `Once`-guarded, so calling it eagerly here reproduces
+/// the old `register()`'s timing exactly (native modules populated before any `ImperativeHost`/
+/// `render()` call can observe an empty registry) without adding a second purpose to `.setup()` — see
+/// the plugin root's own doc for why `.setup()` stays narrowed to `register_app_schema` alone. Lives at
+/// the artifact root, not `⚙️engine` (reloc-g7 revision of that same ticket) — `declaration()` describes
+/// the artifact (kind/schema/io/ownership), it is not engine behaviour.
+///
+/// ⚠️ DEVIATION from plain move-both: `bootstrap_imperative_runtime()` and `io_registry` did NOT move
+/// here with `declaration()` — `bootstrap_imperative_runtime` has a second caller
+/// (`ImperativeHost::from_snapshot`) inside `⚙️engine`, and `io_registry` is a real module, not a
+/// single-caller helper. Both stayed put and are reached below by their full qualified path instead
+/// (`bootstrap_imperative_runtime` widened only to `pub(crate)` to allow that, not `pub`).
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    crate::artifacts::imperative::standards::v1::engine::bootstrap_imperative_runtime();
+    semio_framework_plugin::ArtifactDeclaration::builder("s.imperative")
+        .schema(crate::artifacts::imperative::schema::imperative_artifact_schema_descriptor())
+        .inferences([crate::artifacts::imperative::standards::v1::subsets::any::schema::inferences::imperative_artifact_inference_descriptor()])
+        .composers(crate::artifacts::imperative::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::imperative::ImperativePlayApp>()
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Private:
+/// `declaration()` above is its only caller (moved here with it from `⚙️engine`, ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7 — kept unexported, not widened).
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "imperative.document",
+                    extension: Some("imperative"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::imperative::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::imperative::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::imperative::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::imperative::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("imperative.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "imperative.imperative.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::imperative::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::imperative::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::imperative::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::imperative::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("imperative.imperative.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "imperative.imperative.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::imperative::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::imperative::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("imperative.imperative.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "imperative.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::imperative::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::imperative::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("imperative.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "imperative.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::imperative::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::imperative::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("imperative.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Register
+
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::apps::imperative::create_imperative_app`'s `🔖️Manifest` region.

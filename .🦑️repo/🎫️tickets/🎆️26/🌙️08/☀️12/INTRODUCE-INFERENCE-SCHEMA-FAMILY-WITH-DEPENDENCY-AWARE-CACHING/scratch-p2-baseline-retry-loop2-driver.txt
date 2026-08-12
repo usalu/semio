@@ -1,0 +1,16 @@
+=== attempt 1 at Wed Aug 12 21:29:47 CEST 2026 ===
+attempt 1 hit compile-time churn (no test summary), waiting 60s
+=== attempt 2 at Wed Aug 12 21:32:24 CEST 2026 ===
+attempt 2 hit compile-time churn (no test summary), waiting 60s
+=== attempt 3 at Wed Aug 12 21:34:15 CEST 2026 ===
+attempt 3 hit compile-time churn (no test summary), waiting 60s
+=== attempt 4 at Wed Aug 12 21:36:07 CEST 2026 ===
+attempt 4 hit compile-time churn (no test summary), waiting 60s
+=== attempt 5 at Wed Aug 12 21:39:02 CEST 2026 ===
+attempt 5 hit compile-time churn (no test summary), waiting 60s
+=== attempt 6 at Wed Aug 12 21:41:22 CEST 2026 ===
+attempt 6 hit compile-time churn (no test summary), waiting 60s
+=== attempt 7 at Wed Aug 12 21:42:58 CEST 2026 ===
+attempt 7 hit compile-time churn (no test summary), waiting 60s
+=== attempt 8 at Wed Aug 12 21:44:32 CEST 2026 ===
+SUCCESS (real test run completed) on attempt 8

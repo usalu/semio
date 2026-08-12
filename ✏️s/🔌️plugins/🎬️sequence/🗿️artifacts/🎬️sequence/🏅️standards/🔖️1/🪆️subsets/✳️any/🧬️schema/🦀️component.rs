@@ -1,8 +1,9 @@
 //! 🧬️ Sequence artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::sequence::{SequenceCamera, SequenceEdge, SequenceStep, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceEdge, SequenceSnapshot, SequenceStep, SEQUENCE_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use store::ArtifactDsl;
 
 //#region 🔖️Artifact
 /// 🧬️ Full sequence artifact state across persistent, shared-ui and local-ui classes.
@@ -110,6 +111,19 @@ pub fn sequence_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor
     }
 }
 //#endregion 🔖️Descriptor
+
+//#region 🔖️Example
+/// 📄️ JSON re-serialization of `default_snapshot()`, round-tripped through its own `.sequence` DSL
+/// first (see `crate::artifacts::sequence::dsl`), to prove the fixture is fully expressible in text —
+/// for the framework-generic call site that contractually requires JSON (`App::example`'s manifest
+/// `document_json` is loaded via `serde_json::from_str` by `ArtifactApp::load_document`'s default impl)
+/// — out of scope to change, since both are defined in `framework/plugin`.
+pub fn sequence_example_json() -> String {
+    let fixture = <SequenceSnapshot as ArtifactDsl>::parse_dsl(&default_snapshot().print_dsl()).expect("default_snapshot round-trips through its own DSL");
+    serde_json::to_string(&fixture).expect("default_snapshot is a static, hand-built value with no non-finite floats or non-UTF8 keys")
+}
+//#endregion 🔖️Example
+
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use semio_framework_plugin::ArtifactBuilder;

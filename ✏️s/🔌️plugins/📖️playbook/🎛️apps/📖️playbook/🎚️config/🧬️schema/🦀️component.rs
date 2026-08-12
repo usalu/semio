@@ -12,13 +12,13 @@ pub struct PlaybookConfig {
 }
 
 //#region 🔖️Register
-/// 📌️ Self-registers this app owner's config + presence schema facets into the framework's open
-/// `AppSchemaRegistry` (`schema::register_app_schema_descriptor`), replacing the entry framework's
-/// closed `register_all_app_schema_descriptors()` still hardcodes for `"s.playbook.playbook"` — see
-/// https://github.com/usalu/semio/issues/2543. Called from `artifacts::playbook::engine::register()`
-/// (this app's real setup path); mirrors the parked `catalog-integration` call site's exact fn path.
-pub fn register_app_schema() {
-    schema::register_app_schema_descriptor(schema::AppSchemaDescriptor {
+/// 📌️ This app owner's config + presence schema facets, replacing the entry framework's closed
+/// `register_all_app_schema_descriptors()` still hardcodes for `"s.playbook.playbook"` — see
+/// https://github.com/usalu/semio/issues/2543. Returned, not self-registered; `ArtifactApp::app_schema`
+/// (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) hands it to `register_document_app`, which
+/// replaces the narrowed `.setup()` this used to run through — `.setup()` is gone from this plugin root.
+pub fn app_schema_descriptor() -> schema::AppSchemaDescriptor {
+    schema::AppSchemaDescriptor {
         id: "s.playbook.playbook",
         config: schema::FacetLeaves {
             rust: include_str!("🦀️component.rs"),
@@ -34,7 +34,7 @@ pub fn register_app_schema() {
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️component.json"),
             proto: include_str!("../../👥️presence/🧬️schema/🛰️component.proto"),
         },
-    });
+    }
 }
 //#endregion 🔖️Register
 

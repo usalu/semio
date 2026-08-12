@@ -1,0 +1,14 @@
+syntax = "proto3";
+package semio.s.stdio.semio.inference;
+
+// 💡️ Semio envelope inference schema — the wrapped subset's dispatch tag/ordinal.
+
+message SemioInference {
+  // @state inferred
+  SemioKind kind = 1;
+}
+
+message SemioKind {
+  string tag = 1;
+  uint32 ordinal = 2;
+}

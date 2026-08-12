@@ -182,6 +182,46 @@ Identical by mutability, entirely different violations. In APA's phrasing: **it 
 
 **Binding consequence for DKM's W6 rules.** `policyEngineCacheScopeBreaches`, `policyEngineRepEscapeBreaches` and `policyEngineConsumptionOutsideFacetBreaches` must be written to detect **what a construct reaches**, not whether it mutates. A rule keyed on `&mut`/`static mut` will pass every handle-shaped violation. And widening a mutability rule to cover reach produces false positives against sanctioned tables — the two need **separate** checks, not one broadened one.
 
+## ⚠️ A FACET MUST LAND ATOMICALLY — a partial facet is a workspace-wide build failure
+
+Learned expensively: DKM's brep and drawing authoring took `semio-s-plugin-stdio` red, and **every plugin in the repo depends on stdio**, so four other sessions could not gate anything for the duration.
+
+Three references point at each other, and a gap in any one is a **hard build error, not an incomplete feature**:
+- the **triad leaves** (`🦠️mutation`/`🔺️diff`/`↩️inverse`) reference **enum variants**;
+- the **dispatch enum** references the **triad modules**;
+- **`📦️glue.rs`'s `#[path]` mount** references the **triad directories**.
+
+**Binding rules:**
+1. **Author one triad at a time — mutation + diff + inverse + enum variant + glue mount in the SAME change — and compile after each one.** Never batch several triads and reconcile at the end.
+2. **Never delete a mounted directory without removing its mount in the same change.** A `#[path]` (or `Cargo.toml` `members`) entry pointing at a vanished path **aborts the build before compilation**, so it is not hidden behind `--tests` and it breaks every session on the machine, not just yours. This is the same failure that took the whole workspace down earlier via a relocated `🖍️draw/🔄️fsm`.
+3. **If a verb cannot be authored conformingly, remove its directory, its enum variant and its mount together.** A missing verb is fine; a dangling reference is not.
+4. **Generate mount paths by listing the directory — never hand-type them.** The emoji segments are unicode-normalization traps: a literal `↩️inverse` typed into a script silently failed to byte-match the on-disk name and produced *empty modules*, which presents as "the triad doesn't work" rather than "the path is wrong".
+
+**The coordinator's error, recorded because the lesson is about propagation, not knowledge:** I had personally recorded the `🔄️fsm` lesson hours earlier — *a directory containing a `Cargo.toml` is inventory-only; a dangling workspace member breaks cargo machine-wide* — and then wrote two dispatch briefs that walked straight into the `#[path]` variant of it. **Knowing a rule and propagating it into the instructions that need it are different acts**, and I had done only the first.
+
+**And the boundary lesson**, adopted by a peer as a general rule: the agents owned the triad *directories* but not the *mount that makes them real*, so every deletion was guaranteed to strand a reference in a file they could not touch. **A boundary that separates a definition from its registration is not a boundary, it's a race.** Whoever owns one must own both for the duration.
+
+## 🔍 Sweep the pattern, don't wait for the compiler
+
+A scoped `cargo check` only surfaces the crate you asked for, and a workspace build stops at the first failing crate — so latent instances of a known defect stay invisible for hours, surfacing one crate at a time.
+
+Proven twice in one evening: a 30-second script walking every `#[path = "…"]` in the repo and `stat`-ing its target checked **8,328 mounts and found 20 dangling**, including two nobody had hit — one where a rename left `📄️document`→`📄️artifact` stranded, and one where **the emoji changed** (`➕create-widget` → `🌱create-widget`) so a text search for the slug still matched and only a filesystem check caught it. Separately, grepping for a *pattern* (`Self::infer` with its trait imported inside `mod tests`) found a second latent instance in 30 seconds that the compiler would have revealed hours later.
+
+**When you fix a defect, grep for its shape across the whole tree before declaring it fixed.**
+
+### …but: **grep to find, enumerate to count**
+
+The other half, learned the same evening by two sessions making the *identical* error within an hour:
+- One grepped a symbol, got **46 files**, and reported 46 broken. Exactly **1** imported it via the wrong path; the other 45 merely *used* it. "Mentions" is not "is broken".
+- The other pattern-matched `#[path = "…"]`, got **20 dangling**, and broadcast that. **18 were prose inside `//!` doc comments** — one "dangling target" was literally the string `...`. Real count: **2**. They made this error *in the message praising the first session's retraction of the same error*.
+
+**A pattern match locates candidates; it does not size a problem.** Check what each hit actually *does* before quoting a number — especially before sending it to another session, where an inflated number can trigger a wave of work against nothing.
+
+### ⚠️ Two cargo artefacts that manufacture false confidence
+
+1. **`cargo check` does not compile `#[cfg(test)]`.** Six separate instances in this repo in one day, including test code that **landed unverified in a closed ticket** because its own gate could not see it. Use `--tests`/`--all-targets`, and treat a green `check` as saying nothing about test code.
+2. **A cached `cargo check` re-emits no diagnostics.** A second run over an unchanged crate prints nothing and exits 0 — which looks identical to "clean". The coordinator nearly reported stdio green off exactly this artefact. **If a result matters, `touch` a file in the crate to force a real recheck**, and treat any zero-diagnostic run you did not force as unverified.
+
 ## Report shape (every agent, every wave)
 
 Append to your assigned report file in this ticket folder. Sections, in order: **what changed** (file:line + grep anchors) · **files touched** (created/updated/removed) · **verification commands run, with real output pasted** · `## sharedFileRequests` (file, region, reason, patch file path) · `## Concurrent-churn observations` · honest pass/fail. A wave is not done until its report exists.

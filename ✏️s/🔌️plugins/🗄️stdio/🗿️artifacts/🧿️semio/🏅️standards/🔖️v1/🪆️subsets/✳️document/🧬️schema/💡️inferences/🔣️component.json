@@ -1,0 +1,31 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/semio/document/inference.json",
+  "title": "SemioDocumentInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/SemioDocumentOutline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "SemioDocumentHeadingEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "text"],
+      "properties": {
+        "level": { "type": "integer", "minimum": 0 },
+        "text": { "type": "string" }
+      }
+    },
+    "SemioDocumentOutline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sectionOutline", "blockCount", "wordCount"],
+      "properties": {
+        "sectionOutline": { "type": "array", "items": { "$ref": "#/$defs/SemioDocumentHeadingEntry" } },
+        "blockCount": { "type": "integer", "minimum": 0 },
+        "wordCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

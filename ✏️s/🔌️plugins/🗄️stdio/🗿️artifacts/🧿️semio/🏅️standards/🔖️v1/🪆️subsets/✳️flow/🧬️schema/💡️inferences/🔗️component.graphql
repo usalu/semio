@@ -1,0 +1,17 @@
+# 💡️ Semio flow inference schema — node/edge topological order (Kahn's algorithm).
+
+type SemioFlowInference {
+  topology: SemioFlowTopology! @state(class: INFERRED)
+}
+
+type SemioFlowTopology {
+  topoOrder: [String!]!
+  depth: [SemioFlowTopologyDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type SemioFlowTopologyDepthEntry {
+  id: String!
+  depth: Int!
+}

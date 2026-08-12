@@ -10,8 +10,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 /// 📄️ The `jack` example document, handcrafted in the `.writer` DSL (see `store::ArtifactDsl`) instead
-/// of JSON — {@link crate::artifacts::writer::engine::jack_example_document}/
-/// {@link crate::artifacts::writer::engine::jack_example_json} are the only ways it should be consumed.
+/// of JSON — {@link jack_example_document}/{@link jack_example_json} are the only ways it should be
+/// consumed.
 pub const JACK_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 /// 📄️ The `dag.jack` example document, handcrafted in the `.writer` DSL — see {@link JACK_EXAMPLE_TEXT}.
 pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️dag-example.dsl.semio");
@@ -26,11 +26,36 @@ pub fn print_dsl(projection: &WriterSnapshot) -> String {
     store::ArtifactDsl::print_dsl(projection)
 }
 
+//#region 🔖️Examples
+/// 📄️ The `jack` example, parsed once from {@link JACK_EXAMPLE_TEXT} — the source of truth for every
+/// call site below (`setActiveExample`, `.example("jack", ...)`, tests, "file-text"); never re-embed the
+/// raw text.
+pub fn jack_example_document() -> WriterSnapshot {
+    parse_dsl(JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::writer::schema::empty_writer_snapshot())
+}
+
+/// 📄️ JSON re-serialization of {@link jack_example_document}, for the framework-generic call sites
+/// (`.example(...)`, `render(...)`) that still take a document as a JSON string.
+pub fn jack_example_json() -> String {
+    serde_json::to_string(&jack_example_document()).expect("serialize jack example document")
+}
+
+/// 📄️ The `dag.jack` example, parsed once from {@link DAG_JACK_EXAMPLE_TEXT} — see {@link jack_example_document}.
+pub fn dag_jack_example_document() -> WriterSnapshot {
+    parse_dsl(DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::writer::schema::empty_writer_snapshot())
+}
+
+/// 📄️ JSON re-serialization of {@link dag_jack_example_document} — see {@link jack_example_json}.
+pub fn dag_jack_example_json() -> String {
+    serde_json::to_string(&dag_jack_example_document()).expect("serialize dag.jack example document")
+}
+//#endregion 🔖️Examples
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::writer::engine;
+    use crate::artifacts::writer::schema;
 
     #[test]
     fn jack_example_dsl_round_trips() {
@@ -51,7 +76,7 @@ mod tests {
 
     #[test]
     fn writer_dsl_round_trips_empty_and_jack_snapshots() {
-        store::os_store::test_support::assert_dsl_round_trip(&engine::empty_writer_snapshot());
+        store::os_store::test_support::assert_dsl_round_trip(&schema::empty_writer_snapshot());
         store::os_store::test_support::assert_dsl_round_trip(&jack_snapshot());
     }
 

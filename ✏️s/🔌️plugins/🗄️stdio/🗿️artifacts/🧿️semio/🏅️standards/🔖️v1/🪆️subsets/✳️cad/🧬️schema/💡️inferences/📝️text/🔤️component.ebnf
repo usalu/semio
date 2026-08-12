@@ -1,0 +1,3 @@
+(* ebnf s.stdio.semio.cad.inference *)
+document = header, body ;
+header = 'schema', space, 's.stdio.semio.cad.inference', newline ;

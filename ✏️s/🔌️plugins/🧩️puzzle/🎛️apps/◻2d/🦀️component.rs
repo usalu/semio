@@ -1355,16 +1355,16 @@ pub(crate) fn puzzle2d_document_json_from_dwg(_drawing: &semio_framework::DwgDra
     Ok(default_empty_fixture())
 }
 
-/// 🗂️ Registers `Puzzle2dPlaySnapshot`'s pack<->dsl codec under its real `document_schema()` string
-/// so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-2d play documents without
-/// depending on this crate's concrete `Projection`/`Mutation` types. Called by the plugin `setup:`
-/// hook (`crate::artifacts::puzzle2d::engine::register`). The 2d media export/import OS-host
-/// registration lives at `crate::artifacts::puzzle2d::engine::register_media_io` — APA (ticket
-/// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`): OS-host registration belongs to the owning
-/// artifact's own engine, never to an app file.
-pub fn register_puzzle2d_exports() {
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle2dPlayApp>(PUZZLE2D_FIXTURE_SCHEMA);
-}
+// 🗂️ `Puzzle2dPlaySnapshot`'s pack<->dsl codec (so `framework/sync`'s `FolderEndpoint::Pack` can
+// print/parse puzzle-2d play documents without depending on this crate's concrete
+// `Projection`/`Mutation` types) is now declared via `.document_codec::<Puzzle2dPlayApp>()` on
+// `crate::artifacts::puzzle2d::standards::v1::engine::declaration()` (ticket
+// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE` M1) — the old side-effecting
+// `register_puzzle2d_exports()` wrapper (this app file's only caller of
+// `register_document_codec_for_app`) is gone. The 2d media export/import OS-host registration lives
+// at `crate::artifacts::puzzle2d::standards::v1::engine::register_media_io`, still wired through
+// `🧩️puzzle/🦀️component.rs`'s `.setup()` — APA: OS-host registration belongs to the owning
+// artifact's own engine, never to an app file.
 //#endregion 🔖️Manifest
 
 //#region 🧪️Testkit

@@ -1,0 +1,9 @@
+dialect grammar
+grammar semio.drawing.inference
+extension semio.drawing.inference
+start document
+
+document = header body
+header = "schema" SP "semio.drawing.inference" NL
+body = payload NL?
+payload = OCTET+

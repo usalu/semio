@@ -2,7 +2,7 @@
 
 use crate::apps::sequence::config::SequenceConfig;
 use crate::apps::sequence::SEQUENCE_PLAY_APP_ID;
-use crate::artifacts::sequence::engine::host_from_snapshot;
+use crate::apps::sequence::host_from_snapshot;
 use crate::artifacts::sequence::SequenceSnapshot;
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};
 

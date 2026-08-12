@@ -951,16 +951,6 @@ pub mod apps {
 //#endregion 🔖️Apps
 
 //#region 🔖️Bundle
-/// 🗂️ Registers this crate's two document kinds' pack↔dsl codecs so `framework/sync`'s
-/// `FolderEndpoint::Pack` (and any other schema-string-keyed caller) can print/parse them without
-/// depending on the artifacts' concrete `Projection`/`Mutation` types.
-fn register_trinity_exports() {
-    artifacts::jack::engine::register();
-    artifacts::rewrite::engine::register();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::jack::TrinityJackPlayApp>(artifacts::jack::TRINITY_GRAPH_SCHEMA);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::rewrite::TrinityRewritePlayApp>(artifacts::rewrite::REWRITE_RULE_SCHEMA);
-}
-
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;

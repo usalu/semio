@@ -14,6 +14,7 @@ use crate::artifacts::block2d::Block2dSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 
 use super::bounds::{compute_block2d_bounds, Block2dBounds};
 
@@ -54,6 +55,39 @@ impl ArtifactInferrer for crate::artifacts::block2d::standards::v1::subsets::any
 }
 //#endregion 🔖️ArtifactInferrer
 
+//#region 🔖️PuzzleCatalogFragment
+/// 🌉️ Maps this `NodeKind` definition into the `s/plugin/puzzle` 2d manifest shape (`portKinds`/
+/// `wireKinds`/`edgeKinds`/`nodeKinds`/`kindCompatibility` — see
+/// `s/plugin/puzzle/app/2d/manifest/🛂️manifest.jsonconcrete-forest.manifest.json`), the seam puzzle imports through
+/// its `Kit×Type` media port. Block owns no wire/edge-kind rows (`AGENTS.md`: referenced by
+/// `default_wire_kind` only), so those arrays stay empty here — a merge keeps the puzzle manifest's
+/// existing rows.
+pub fn puzzle2d_manifest_fragment(definition: &Block2dSnapshot) -> Value {
+    let port_kinds: Vec<Value> = definition.handle_kinds.iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "presentation": { "color": kind.color, "defaultWireKind": kind.default_wire_kind } })).collect();
+    let handles: Vec<Value> = definition.handles.iter().map(|handle| json!({ "handleKind": handle.handle_kind, "angle": handle.angle, "radius": handle.radius })).collect();
+    let node_kind = json!({
+        "id": definition.node_kind.id,
+        "name": definition.node_kind.name,
+        "presentation": {
+            "meshUrl": Value::Null,
+            "handles": handles,
+        },
+    });
+    let kind_compatibility: Vec<Value> = definition.compatibility.iter().map(|rule| json!({ "bidirectional": rule.bidirectional, "specificity": "handle", "source": rule.source, "target": rule.target })).collect();
+    json!({
+        "schema": "manifest",
+        "id": definition.node_kind.id,
+        "name": definition.node_kind.name,
+        "axes": { "portModel": "ported", "directedness": "directed" },
+        "portKinds": port_kinds,
+        "wireKinds": Vec::<Value>::new(),
+        "edgeKinds": Vec::<Value>::new(),
+        "nodeKinds": [node_kind],
+        "kindCompatibility": kind_compatibility,
+    })
+}
+//#endregion 🔖️PuzzleCatalogFragment
+
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.block.block2d.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `block2d_artifact_schema_descriptor`'s registration.
@@ -75,7 +109,7 @@ pub fn block2d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescr
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::block2d::Block2dHandleTemplate;
+    use crate::artifacts::block2d::{Block2dHandleKind, Block2dHandleTemplate, BLOCK_2D_SCHEMA};
     use crate::BlockKindIdentity;
     use protocol::Inference;
     use std::f64::consts::FRAC_PI_2;
@@ -118,5 +152,18 @@ mod tests {
         assert_eq!(inferred.bounds.vertex_count, 2);
     }
     //#endregion 🧪️InferenceLaws
+
+    //#region 🧪️PuzzleCatalogFragment
+    #[test]
+    fn puzzle2d_manifest_fragment_maps_kind_identity_and_handles() {
+        let mut definition = Block2dSnapshot { schema: BLOCK_2D_SCHEMA.into(), node_kind: BlockKindIdentity { id: "left".into(), name: "left".into(), label: "Left".into(), ..Default::default() }, ..Block2dSnapshot::default() };
+        definition.handle_kinds.push(Block2dHandleKind { id: "b-l".into(), name: "b-l".into(), label: "b-l".into(), color: "hsl(206 52% 48%)".into(), default_wire_kind: "cable.link".into() });
+        definition.handles.push(Block2dHandleTemplate { id: "h0".into(), handle_kind: "b-l".into(), angle: -1.57, radius: 0.36 });
+        let fragment = puzzle2d_manifest_fragment(&definition);
+        assert_eq!(fragment["nodeKinds"][0]["id"], "left");
+        assert_eq!(fragment["nodeKinds"][0]["presentation"]["handles"][0]["handleKind"], "b-l");
+        assert_eq!(fragment["portKinds"][0]["id"], "b-l");
+    }
+    //#endregion 🧪️PuzzleCatalogFragment
 }
 //#endregion 🧪️Tests

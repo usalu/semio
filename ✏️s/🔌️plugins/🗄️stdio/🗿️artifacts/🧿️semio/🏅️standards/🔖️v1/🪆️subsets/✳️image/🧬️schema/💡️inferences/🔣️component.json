@@ -1,0 +1,25 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/semio/image/inference.json",
+  "title": "SemioImageInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dimensions"],
+  "properties": {
+    "dimensions": { "$ref": "#/$defs/SemioImageDimensions", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "SemioImageDimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "bitDepth", "hasAlpha", "pixelCount", "frameCount"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 0 },
+        "height": { "type": "integer", "minimum": 0 },
+        "bitDepth": { "type": "integer", "minimum": 0 },
+        "hasAlpha": { "type": "boolean" },
+        "pixelCount": { "type": "integer", "minimum": 0 },
+        "frameCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

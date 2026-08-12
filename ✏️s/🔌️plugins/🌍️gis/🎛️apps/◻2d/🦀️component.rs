@@ -150,6 +150,10 @@ impl ArtifactApp for Gis2dPlayApp {
     const APP_ID: &'static str = GIS2D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::gis2d::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> GisMapSnapshot {
         crate::artifacts::gismap::engine::default_document()
     }

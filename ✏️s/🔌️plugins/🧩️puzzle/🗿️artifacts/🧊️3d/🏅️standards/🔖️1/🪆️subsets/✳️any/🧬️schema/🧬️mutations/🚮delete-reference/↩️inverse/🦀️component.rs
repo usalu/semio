@@ -8,6 +8,7 @@ pub fn inverse(payload: &super::mutation::DeleteReference, base: &Puzzle3dSnapsh
     let Some(item) = base.references.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
-    vec![crate::artifacts::puzzle3d::mutations::create_reference::mutation::create_reference(item.clone(), None)]
+    let index = base.references.iter().position(|entry| entry.id == payload.id);
+    vec![crate::artifacts::puzzle3d::mutations::create_reference::mutation::create_reference(item.clone(), index)]
 }
 //#endregion 🔖️Inverse

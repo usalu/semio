@@ -4,7 +4,7 @@
 //! nothing in it survives into the `.flow` document. It still round-trips through a real `ArtifactStore`
 //! (with a real `backwards`), so selection/camera/grid edits are VCS'd exactly like document content.
 
-use crate::artifacts::flow::engine::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROXIMITY_DISTANCE};
+use crate::artifacts::flow::schema::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROXIMITY_DISTANCE};
 use flow::{CameraJson, FLOW_LOD_MODE_AUTOMATIC};
 use crate::playbook::GenerationPlayState;
 use protocol::Mutation;

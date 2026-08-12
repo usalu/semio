@@ -3,9 +3,11 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the window render
 //! in `🎭️modes/*/🪟️windows/*`, chrome measures in that window's `🎚️options/*`, panel trees in
-//! `📌️panels/*`, labels in `🦀️terminology.rs`, view state in `🦀️config.rs`, shared compute in the
-//! artifact's `⚙️engine`. This file is a routing table: `handle` → `WriterCommand::dispatch`, `render` →
-//! body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
+//! `📌️panels/*`, labels in `🦀️terminology.rs`, view state in `🦀️config.rs`, document-side pure compute
+//! in the artifact's `🧬️schema`, and this app's own typed media I/O surface + plugin registration
+//! (below — constitutional: general, an artifact must never depend on an app, so both live here rather
+//! than under `🗿️artifacts`). This file is a routing table: `handle` → `WriterCommand::dispatch`,
+//! `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::apps::writer::commands::camera::set_camera;
 use crate::apps::writer::commands::editor_settings::{set_font_px, set_line_height, set_tab_size, toggle_line_numbers};
@@ -27,6 +29,7 @@ use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, WindowMeasure,
 };
 use store::EngineHandles;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use store::ArtifactPack;
@@ -57,15 +60,154 @@ fn writer_hidden_view(id: &str, label: LocalizedLabel) -> ActionDefinition {
 }
 //#endregion 🔖️Constants
 
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document ports plus one
+/// extra output, `text:out` (Text×Document, kind `text.document`, `Many` — a workflow may fan this
+/// writer's text out to several consumers, e.g. `playbook`'s `chapters:in`).
+pub fn writer_io() -> AppIo {
+    AppIo {
+        document_schema: WRITER_DOCUMENT_SCHEMA.into(),
+        document_media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
+        ports: vec![semio_framework_plugin::MediaPortSpec {
+            id: "text:out".into(),
+            label: "Text".into(),
+            direction: semio_framework_plugin::MediaPortDirection::Out,
+            media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
+            kind_id: Some("text.document".into()),
+            required: false,
+            multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+        }],
+        export_formats: vec![],
+        import_formats: vec![],
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "text.document".into(), name: "Text Document".into(), dimension: "text".into(), component_kind: "writer".into() },
+    }
+}
+
+/// 📤️ The JSON shape `"text:out"` exports and `playbook`'s `"chapters:in"` imports — one writer
+/// document's text as one "chapter" (`title` mirrors the document id, `language_id` lets an importer
+/// route jack/wire content differently from prose if it ever wants to). Single consumer (this file's
+/// `export_media`), so it lives here rather than in the artifact's `🧬️schema`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WriterChapterPayload {
+    pub id: String,
+    pub title: String,
+    pub text: String,
+    pub language_id: String,
+}
+
+/// 🎞️ Projects a `WriterSnapshot` onto the `"text:out"` chapter payload shape.
+pub fn writer_chapter_payload(document: &WriterSnapshot) -> WriterChapterPayload {
+    WriterChapterPayload { id: document.id.clone(), title: document.id.clone(), text: document.text.clone(), language_id: document.language_id.clone() }
+}
+//#endregion 🔖️Io
+
+//#region 🔌️Registration
+/// 🗂️ Registers `WriterSnapshot`'s pack↔dsl codec under `WRITER_DOCUMENT_SCHEMA` so `framework/sync`'s
+/// folder endpoints and any other schema-string-keyed caller can print/parse writer documents. Called
+/// from the plugin root's `semio_plugin!{ setup: … }`.
+pub fn register() {
+    crate::artifacts::writer::io_registry::register();
+
+    register_writer_languages();
+    register_artifact_schema();
+    register_artifact_inferences();
+    crate::apps::writer::config::schema::register_app_schema();
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<WriterPlayApp>(WRITER_DOCUMENT_SCHEMA);
+}
+
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::writer::schema::writer_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.writer.writer.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::writer::schema::inferences::writer_artifact_inference_descriptor());
+}
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution, plus
+/// the `jack`/`wire` `dsl::DslIdiom`s — pub(crate) so `🧬️schema`'s own test module can exercise
+/// `jack_completions_json` without a full app bootstrap.
+pub(crate) fn register_writer_languages() {
+    use crate::artifacts::writer::schema::{JackWriterIdiom, WireWriterIdiom};
+
+    dsl::register_idiom(dsl::hooks_for::<JackWriterIdiom>());
+    dsl::register_idiom(dsl::hooks_for::<WireWriterIdiom>());
+    let jack_hooks = dsl::hooks_for::<JackWriterIdiom>();
+    dsl::register_language(dsl::LanguageSpec {
+        id: "jack",
+        extension: None,
+        role: dsl::LanguageRole::Embedded,
+        grammar: None,
+        grammar_path: None,
+        protocol: None,
+        protocol_path: None,
+        hooks: jack_hooks,
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "writer.document",
+        extension: Some("writer"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::writer::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::writer::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::writer::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::writer::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("writer.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "writer.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::writer::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::writer::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::writer::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::writer::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("writer.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "writer.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::writer::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::writer::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("writer.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "writer.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::writer::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::writer::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("writer.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "writer.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::writer::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::writer::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("writer.spr"),
+    });
+}
+//#endregion 🔌️Registration
+
 //#region 🔖️DocumentHelpers
 /// 🐁️ (highlighted AST id, tree-hover span, hover occurrences) — the tuple [`editor_hover_context`] resolves.
 type HoverContext = (Option<String>, Option<(usize, usize)>, Vec<(usize, usize)>);
 
-/// 🐁️ Resolves tree/editor hover cross-highlighting. Lives at APP level, not the artifact's `⚙️engine`,
+/// 🐁️ Resolves tree/editor hover cross-highlighting. Lives at APP level, not the artifact's `🧬️schema`,
 /// even though it has two consumers (the main window and the document panel) — it takes `WriterConfig`,
 /// an app-only view-state type, and artifacts must never depend on apps.
 pub fn editor_hover_context(document: &WriterSnapshot, config: &WriterConfig) -> HoverContext {
-    use crate::artifacts::writer::engine::{find_deepest_jack_ast_node_at, jack_ast_node_by_id, jack_symbol_at_offset, parse_jack_ast, JackSymbolKind};
+    use crate::artifacts::writer::schema::{find_deepest_jack_ast_node_at, jack_ast_node_by_id, jack_symbol_at_offset, parse_jack_ast, JackSymbolKind};
 
     if document.language_id != "jack" {
         return (None, None, Vec::new());
@@ -196,11 +338,11 @@ impl ArtifactApp for WriterPlayApp {
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> WriterSnapshot {
-        crate::artifacts::writer::engine::empty_writer_snapshot()
+        crate::artifacts::writer::schema::empty_writer_snapshot()
     }
 
     fn io() -> Option<AppIo> {
-        Some(crate::artifacts::writer::engine::writer_io())
+        Some(writer_io())
     }
 
     fn whole_document_operation(snapshot: WriterSnapshot) -> Option<WriterMutation> {
@@ -218,12 +360,12 @@ impl ArtifactApp for WriterPlayApp {
     }
 
     /// 🎞️ `"text:out"` exports the writer document's current text as one "chapter" payload (see
-    /// `crate::artifacts::writer::engine::writer_chapter_payload`) — `playbook`'s `"chapters:in"` is the
-    /// intended consumer. Falls through to the default whole-document-pack export for `"document:out"`
-    /// (duplicated inline, not delegated — Rust traits have no `super` call for an overridden default).
+    /// `writer_chapter_payload`) — `playbook`'s `"chapters:in"` is the intended consumer. Falls through
+    /// to the default whole-document-pack export for `"document:out"` (duplicated inline, not delegated
+    /// — Rust traits have no `super` call for an overridden default).
     fn export_media(port: &str, doc: &ArtifactView<'_, WriterSnapshot>) -> Result<Media, MediaError> {
         if port == "text:out" {
-            let payload = crate::artifacts::writer::engine::writer_chapter_payload(doc.snapshot);
+            let payload = writer_chapter_payload(doc.snapshot);
             let json = serde_json::to_string(&payload).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             return Ok(Media { media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json } });
         }
@@ -354,13 +496,13 @@ pub fn create_writer_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             // 🎯️ Typed channel surface (mirrors `shooting_ui::create_shooting_app`'s identical wiring) —
-            // `crate::artifacts::writer::engine::writer_io()` is the single source of truth for both the
-            // trait's `io()` override and this manifest declaration.
+            // `writer_io()` is the single source of truth for both the trait's `io()` override and this
+            // manifest declaration.
             .config(WriterPlayApp::config_spec())
-            .io(crate::artifacts::writer::engine::writer_io()),
+            .io(writer_io()),
     )
-    .example("jack", LocalizedLabel::native("Jack", "Jack"), crate::artifacts::writer::engine::jack_example_json(), "file-text")
-    .example("dag.jack", LocalizedLabel::native("Dag Jack", "Dag Jack"), crate::artifacts::writer::engine::dag_jack_example_json(), "file-text")
+    .example("jack", LocalizedLabel::native("Jack", "Jack"), crate::artifacts::writer::dsl::jack_example_json(), "file-text")
+    .example("dag.jack", LocalizedLabel::native("Dag Jack", "Dag Jack"), crate::artifacts::writer::dsl::dag_jack_example_json(), "file-text")
     .workflow("writer", "Writer", "text.document")
 }
 //#endregion 🔖️Manifest
@@ -560,7 +702,7 @@ mod tests {
     //#region 🔖️PortTests
     #[test]
     fn writer_io_declares_the_extra_text_out_port() {
-        let io = crate::artifacts::writer::engine::writer_io();
+        let io = writer_io();
         let ports = io.all_ports();
         assert!(ports.iter().any(|port| port.id == "document:in"));
         assert!(ports.iter().any(|port| port.id == "document:out"));
@@ -572,13 +714,13 @@ mod tests {
     #[test]
     fn export_media_text_out_projects_the_document_as_a_chapter() {
         let app = WriterPlayApp;
-        let document = crate::artifacts::writer::engine::jack_example_document();
+        let document = crate::artifacts::writer::dsl::jack_example_document();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView { snapshot: &document, history: &history };
         let media = WriterPlayApp::export_media("text:out", &doc_view).expect("export text:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "text.document");
-        let payload: crate::artifacts::writer::engine::WriterChapterPayload = serde_json::from_str(&json).expect("decode chapter payload");
+        let payload: WriterChapterPayload = serde_json::from_str(&json).expect("decode chapter payload");
         assert_eq!(payload.text, document.text);
         assert_eq!(payload.language_id, document.language_id);
     }
@@ -586,7 +728,7 @@ mod tests {
     #[test]
     fn export_media_rejects_unknown_ports() {
         let app = WriterPlayApp;
-        let document = crate::artifacts::writer::engine::empty_writer_snapshot();
+        let document = crate::artifacts::writer::schema::empty_writer_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView { snapshot: &document, history: &history };
         assert!(matches!(WriterPlayApp::export_media("nonsense:out", &doc_view), Err(MediaError::NotImplemented)));
@@ -600,7 +742,7 @@ mod tests {
     #[test]
     fn context_menu_is_grouped_and_keeps_cut_last_and_destructive() {
         let app = WriterPlayApp;
-        let document = crate::artifacts::writer::engine::jack_example_document();
+        let document = crate::artifacts::writer::dsl::jack_example_document();
         let config = WriterConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView { snapshot: &document, history: &history };

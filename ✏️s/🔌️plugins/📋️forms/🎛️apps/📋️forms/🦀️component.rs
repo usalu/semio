@@ -279,6 +279,10 @@ impl ArtifactApp for FormsPlayApp {
     const APP_ID: &'static str = FORMS_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::forms::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> FormsSnapshot {
         crate::artifacts::forms::engine::building_component_spec()
     }

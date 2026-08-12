@@ -340,6 +340,10 @@ impl ArtifactApp for RemodelPlayApp {
     const APP_ID: &'static str = REMODEL_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = REMODEL_DOCUMENT_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::remodel::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> RemodelSnapshot {
         default_remodel_scene()
     }

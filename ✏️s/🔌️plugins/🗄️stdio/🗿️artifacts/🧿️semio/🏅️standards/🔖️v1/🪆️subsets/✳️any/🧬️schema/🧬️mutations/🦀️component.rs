@@ -365,21 +365,29 @@ impl protocol::OpBinary for SemioMutation {
 /// wrapped-kind representative variants) — full dispatch-table coverage for this facet's
 /// grammar/protocol conformance-law tests. Single source of truth shared with
 /// `🎹️composer/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`. `text`/
-/// `table`/`graph` (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a/W2b) have no `NoMutation`-equivalent
-/// variant — that vocabulary is banned for new facets (`📓️taxonomy.md`) — so each's representative
-/// case is a real out-of-range/absent-target op, a genuine no-op at the snapshot-apply level.
+/// `table`/`graph` (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a/W2b) and `brep` (DKM #2550, SMO's
+/// approved 13-verb vocabulary) have no bare-no-op-variant equivalent — that vocabulary is banned
+/// for new facets (`📓️taxonomy.md`) — so each's representative case is a real out-of-range/
+/// absent-target op, a genuine no-op at the snapshot-apply level.
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
     vec![
         SemioMutation::NoMutation,
         SemioMutation::SetSnapshot { snapshot: SemioSnapshot::default() },
-        SemioMutation::Brep(SemioBrepMutation::NoMutation),
+        SemioMutation::Brep(SemioBrepMutation::DeleteVertex(
+            crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::delete_vertex::mutation::DeleteVertex { id: "v-absent".into() },
+        )),
         SemioMutation::Mesh(SemioMeshMutation::NoMutation),
         SemioMutation::Model(SemioModelMutation::NoMutation),
         SemioMutation::Value(SemioValueMutation::NoMutation),
         SemioMutation::Document(SemioDocumentMutation::NoMutation),
         SemioMutation::Cad(SemioCadMutation::NoMutation),
-        SemioMutation::Drawing(SemioDrawingMutation::NoMutation),
+        SemioMutation::Drawing(SemioDrawingMutation::DragNodes(
+            crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::drag_nodes::mutation::DragNodes {
+                ats: Vec::new(),
+                offset: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2::default(),
+            },
+        )),
         SemioMutation::Image(SemioImageMutation::NoMutation),
         SemioMutation::Video(SemioVideoMutation::NoMutation),
         SemioMutation::Audio(SemioAudioMutation::NoMutation),
@@ -480,16 +488,19 @@ mod tests {
         assert_eq!(inv, vec![SemioMutation::NoMutation]);
     }
 
-    /// 🧪️ Dispatch-table coverage: every one of the 13 legacy wrapped-kind arms round-trips a
-    /// `NoMutation`-shaped payload (proves the 13-arm `diff`/`inverse` match compiles and routes
-    /// correctly for every subset). `text` (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a) has no
-    /// `NoMutation`-equivalent variant — that vocabulary is banned for new facets — so it is
-    /// exercised separately below (`wrapped_text_kind_diff_and_inverse_route_correctly`), NOT
-    /// folded into this loop's `is_empty()` assumption.
+    /// 🧪️ Dispatch-table coverage: every one of the (now 12) legacy wrapped-kind arms round-trips a
+    /// `NoMutation`-shaped payload (proves the exhaustive `diff`/`inverse` match compiles and routes
+    /// correctly for every subset still carrying that vocabulary). `text` (UNIFIED-COMPOSABLE-
+    /// ARTIFACT-SYSTEM W2a) and `brep` (DKM #2550, SMO's approved 13-verb vocabulary) have no
+    /// `NoMutation`-equivalent variant — that vocabulary is banned for new facets — so each is
+    /// exercised separately below (`wrapped_text_kind_diff_and_inverse_route_correctly`,
+    /// `wrapped_brep_kind_diff_and_inverse_route_correctly`), NOT folded into this loop's
+    /// `is_empty()`/`inv.len() == 1` assumptions (a real `NoMutation` variant's inverse is always
+    /// `vec![NoMutation]` unconditionally — brep's absent-target verbs correctly return `Vec::new()`
+    /// instead, since there is nothing to undo, which is the opposite shape this loop assumes).
     #[test]
-    fn all_thirteen_wrapped_kinds_diff_and_inverse_route_correctly() {
+    fn all_twelve_wrapped_kinds_diff_and_inverse_route_correctly() {
         let bases: Vec<SemioSubsetSnapshot> = vec![
-            SemioSubsetSnapshot::Brep(Default::default()),
             SemioSubsetSnapshot::Mesh(Default::default()),
             SemioSubsetSnapshot::Model(Default::default()),
             SemioSubsetSnapshot::Value(Default::default()),
@@ -507,13 +518,18 @@ mod tests {
         // the `Text` arm is never reached since `bases` above excludes it.
         let wrap_absent_mutation = |s: &SemioSubsetSnapshot| -> SemioMutation {
             match s {
-                SemioSubsetSnapshot::Brep(_) => SemioMutation::Brep(SemioBrepMutation::NoMutation),
+                SemioSubsetSnapshot::Brep(_) => unreachable!("excluded from bases above"),
                 SemioSubsetSnapshot::Mesh(_) => SemioMutation::Mesh(SemioMeshMutation::NoMutation),
                 SemioSubsetSnapshot::Model(_) => SemioMutation::Model(SemioModelMutation::NoMutation),
                 SemioSubsetSnapshot::Value(_) => SemioMutation::Value(SemioValueMutation::NoMutation),
                 SemioSubsetSnapshot::Document(_) => SemioMutation::Document(SemioDocumentMutation::NoMutation),
                 SemioSubsetSnapshot::Cad(_) => SemioMutation::Cad(SemioCadMutation::NoMutation),
-                SemioSubsetSnapshot::Drawing(_) => SemioMutation::Drawing(SemioDrawingMutation::NoMutation),
+                SemioSubsetSnapshot::Drawing(_) => SemioMutation::Drawing(SemioDrawingMutation::DragNodes(
+                    crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::drag_nodes::mutation::DragNodes {
+                        ats: Vec::new(),
+                        offset: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2::default(),
+                    },
+                )),
                 SemioSubsetSnapshot::Image(_) => SemioMutation::Image(SemioImageMutation::NoMutation),
                 SemioSubsetSnapshot::Video(_) => SemioMutation::Video(SemioVideoMutation::NoMutation),
                 SemioSubsetSnapshot::Audio(_) => SemioMutation::Audio(SemioAudioMutation::NoMutation),
@@ -551,6 +567,33 @@ mod tests {
         }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
         assert!(matches!(diff, SemioDiff::Text(_)));
+        assert!(!diff.is_empty());
+        let mut applied = base.clone();
+        let returned_diff = apply_semio_mutation(&mut applied, &m);
+        assert_eq!(diff.apply(&base), applied);
+        assert_eq!(returned_diff, diff);
+        let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
+        assert_eq!(inv.len(), 1);
+        let mut restored = applied;
+        let _ = apply_semio_mutation(&mut restored, &inv[0]);
+        assert_eq!(restored, base);
+    }
+
+    /// 🧪️ `brep`'s own wrapped-kind coverage (mirrors `wrapped_text_kind_…` above, same reason:
+    /// DKM #2550 migrated `✳️brep` off the banned `NoMutation`/`SetSnapshot` vocabulary onto SMO's
+    /// approved 13-verb table). A real `CreateVertex` routes through the any-level dispatch,
+    /// produces a nested `SemioDiff::Brep`, and its inverse restores `base` exactly.
+    #[test]
+    fn wrapped_brep_kind_diff_and_inverse_route_correctly() {
+        use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::create_vertex;
+
+        let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Brep(Default::default()) };
+        let m = SemioMutation::Brep(SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex {
+            id: "v1".into(),
+            point: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 },
+        }));
+        let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
+        assert!(matches!(diff, SemioDiff::Brep(_)));
         assert!(!diff.is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);

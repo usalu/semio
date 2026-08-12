@@ -5866,28 +5866,6 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️Plugin
-/// 🔌️ Registers the shared app schema plus every norm artifact's languages/schema/inferences —
-/// the plugin's `.setup()` fan-out. Replaces the deleted `🔧️setup` facet (APA): each call below now
-/// delegates to that artifact's own `⚙️engine::register()` instead of a plugin-root facet directory.
-pub fn register_norm_exports() {
-    crate::config::schema::register_app_schema();
-    crate::artifacts::din4108::engine::register();
-    crate::artifacts::din16798::engine::register();
-    crate::artifacts::din18599::engine::register();
-    crate::artifacts::en1990::engine::register();
-    crate::artifacts::en1991::engine::register();
-    crate::artifacts::en1992::engine::register();
-    crate::artifacts::en1993::engine::register();
-    crate::artifacts::en1994::engine::register();
-    crate::artifacts::en1995::engine::register();
-    crate::artifacts::en1996::engine::register();
-    crate::artifacts::en1997::engine::register();
-    crate::artifacts::en1998::engine::register();
-    crate::artifacts::en1999::engine::register();
-    crate::artifacts::iso16757::engine::register();
-    crate::artifacts::vdi3805::engine::register();
-}
-
 #[path = "../../🦀️component.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin);

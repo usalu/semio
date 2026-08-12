@@ -135,12 +135,19 @@ pub struct BlockMeta {
 //#endregion 🔖️Meta
 
 //#region 🔌️Registration
-/// 🔌️ Builds the block plugin surface for host registration.
+/// 🔌️ Builds the block plugin surface for host registration. `.artifact(…)` (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the block3d/block5d halves of the old
+/// `.setup(register_block_exports)` escape hatch; block2d stays on `.setup()` for now — its own
+/// registration surface is mid-restructure under a concurrent session (see that report's
+/// concurrent-churn notes) — plus every app's CONFIG/PRESENCE schema, an app-scope concern
+/// `ArtifactDeclaration` has no field for by design (see that struct's doc).
 pub fn plugin() -> Plugin {
     Plugin::builder("block")
         .label("Block")
         .version("0.1.0")
         .setup(crate::register_block_exports)
+        .artifact(crate::artifacts::block3d::declaration())
+        .artifact(crate::artifacts::block5d::declaration())
         .register_document_app::<crate::apps::block2d::Block2dPlayApp>(crate::apps::block2d::create_block2d_app())
         .register_document_app::<crate::apps::block3d::Block3dPlayApp>(crate::apps::block3d::create_block3d_app())
         .register_document_app::<crate::apps::block5d::Block5dPlayApp>(crate::apps::block5d::create_block5d_app())

@@ -102,7 +102,7 @@ pub fn semio_brep_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
 pub mod derived_construction {
     use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::SemioBrepDiff;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation, apply_semio_brep_mutation};
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
     #[derive(Clone, Debug, Default)]
@@ -121,7 +121,8 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<SemioBrepSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
-            let diff = apply_semio_brep_mutation(&mut self.snapshot, &mutation);
+            let diff = <Self::Mutation as protocol::Mutation<SemioBrepSnapshot>>::diff(&mutation, &self.snapshot);
+            self.snapshot = <Self::Diff as protocol::MutationDiff<SemioBrepSnapshot>>::apply(&diff, &self.snapshot);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> Self {

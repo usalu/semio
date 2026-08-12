@@ -139,6 +139,10 @@ impl ArtifactApp for Fem3dPlayApp {
 
     type Command = Fem3dCommand;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::fem3d::config::schema::app_schema_descriptor())
+    }
+
     const APP_ID: &'static str = FEM3D_APP_ID;
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem3d::FEM_3D_SCHEMA;

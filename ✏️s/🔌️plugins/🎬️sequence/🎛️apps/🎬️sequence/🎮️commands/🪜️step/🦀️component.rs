@@ -2,7 +2,7 @@
 //! current selection.
 
 use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
-use crate::artifacts::sequence::engine::{host_from_snapshot, ops_from_host_mutation};
+use crate::apps::sequence::{host_from_snapshot, ops_from_host_mutation};
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::{SequenceSnapshot, SlotRef};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

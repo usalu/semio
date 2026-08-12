@@ -39,8 +39,6 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -508,9 +506,6 @@ pub mod artifacts {
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod engine {
-            pub use super::standards::v1::engine::*;
         }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
@@ -2004,11 +1999,15 @@ pub mod apps {
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
-/// 🔌️ Registers block artifact codecs and pilot languages.
+/// 🔌️ Registers block2d's codecs (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1: block3d
+/// and block5d declare via `.artifact(crate::artifacts::block{3,5}d::declaration())` in the plugin
+/// root — see `🧱️block/🦀️component.rs`; ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES
+/// then lifted `declaration()` out of `⚙️engine` to the artifact root, and dissolved block2d's
+/// `⚙️engine` entirely, so `crate::apps::block2d::register()` below now lives app-side where the
+/// behaviour belongs) plus every app's own CONFIG/PRESENCE schema — an app-scope concern
+/// `ArtifactDeclaration` deliberately has no field for.
 pub fn register_block_exports() {
-    crate::artifacts::block2d::engine::register();
-    crate::artifacts::block3d::engine::register();
-    crate::artifacts::block5d::engine::register();
+    crate::apps::block2d::register();
 
     crate::apps::block2d::config::schema::register_app_schema();
     crate::apps::block3d::config::schema::register_app_schema();

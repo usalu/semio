@@ -12,12 +12,12 @@ pub struct ImperativeConfig {
     #[state(local_ui)] pub contributions_json: String,
 }
 
-//region 📎 App-schema self-registration
-/// 📎 Registers the `s.imperative.imperative` app-schema descriptor (config + presence facets) into
-/// the open [`::schema::AppSchemaRegistry`], mirroring the transplanted-from-framework closed-catalog
-/// entry — see `🧰️framework/🔨️modules/🧬️schema/🦀️component.rs::register_all_app_schema_descriptors()`.
-pub fn register_app_schema() {
-    ::schema::register_app_schema_descriptor(::schema::AppSchemaDescriptor {
+//region 📎 App-schema descriptor
+/// 📎 The `s.imperative.imperative` app-schema descriptor (config + presence facets) — returned, not
+/// self-registered; `ArtifactApp::app_schema` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+/// W1c) hands it to `register_document_app` for registration.
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+    ::schema::AppSchemaDescriptor {
         id: "s.imperative.imperative",
         config: ::schema::FacetLeaves {
             rust: include_str!("🦀️component.rs"),
@@ -33,7 +33,7 @@ pub fn register_app_schema() {
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️component.json"),
             proto: include_str!("../../👥️presence/🧬️schema/🛰️component.proto"),
         },
-    });
+    }
 }
-//endregion 📎 App-schema self-registration
+//endregion 📎 App-schema descriptor
 

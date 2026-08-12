@@ -1,0 +1,20 @@
+syntax = "proto3";
+package semio.s.stdio.semio.cad.inference;
+
+// 💡️ Semio cad inference schema — entity-derived planar bounding box.
+
+message SemioCadInference {
+  // @state inferred
+  SemioCadBounds bounds = 1;
+}
+
+message SemioPoint2 {
+  double x = 1;
+  double y = 2;
+}
+
+message SemioCadBounds {
+  SemioPoint2 min = 1;
+  SemioPoint2 max = 2;
+  uint32 entity_count = 3;
+}

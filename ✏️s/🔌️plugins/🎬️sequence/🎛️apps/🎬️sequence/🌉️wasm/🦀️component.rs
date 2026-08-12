@@ -3,7 +3,7 @@
 //! (raw GPU frame painting, pointer/wheel routing). Only compiled for `target_arch = "wasm32"` (see
 //! the `#[cfg(target_arch = "wasm32")]` on this file's `mod wasm;` declaration in `📦️glue.rs`).
 
-use crate::artifacts::sequence::engine::{sequence_camera_from_dag, SequenceHost};
+use crate::apps::sequence::{sequence_camera_from_dag, SequenceHost};
 use crate::artifacts::sequence::{SequenceSnapshot, SlotRef};
 use infinite_board_port_directed_dag::DagLayoutOptions;
 use std::cell::RefCell;

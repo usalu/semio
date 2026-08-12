@@ -365,6 +365,87 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 }
 // #endregion 🔖️Runtime
 
+//#region 🔖️Register
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
+/// `io_registry::entries()`'s own `OnceLock` convention.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "jack.document",
+                    extension: Some("trinity"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::jack::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::jack::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::jack::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::jack::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("jack.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "jack.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::jack::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::jack::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::jack::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::jack::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("jack.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "jack.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::jack::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::jack::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("jack.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "jack.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::jack::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::jack::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("jack.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "jack.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::jack::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::jack::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("jack.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called four different global registries directly from
+/// a plugin `.setup()` callback. `crate::apps::jack::config::schema::register_app_schema()` is the
+/// one exception, kept alive via the plugin root's own narrowed `.setup()`: it registers the
+/// `TrinityJackPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration`
+/// deliberately has no field for (see that struct's own doc).
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.jack")
+        .schema(crate::artifacts::jack::schema::jack_artifact_schema_descriptor())
+        .inferences([crate::artifacts::jack::standards::v1::subsets::any::schema::inferences::jack_artifact_inference_descriptor()])
+        .composers(crate::artifacts::jack::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::jack::TrinityJackPlayApp>()
+        .build()
+}
+//#endregion 🔖️Register
+
 // #region 🧪️Tests
 #[cfg(test)]
 mod tests {

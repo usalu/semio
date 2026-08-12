@@ -34,6 +34,90 @@ pub fn flatten_playbook_blocks(snapshot: &PlaybookSnapshot) -> Vec<PlaybookBlock
 }
 //#endregion 🔖️Types
 
+//#region 🔖️Register
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called five different global registries directly from
+/// a plugin `.setup()` callback. `crate::apps::playbook::config::schema::register_app_schema()` is the
+/// one exception, still called from this file's own `.setup()`: it registers the `PlaybookPlayApp`
+/// CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has no field for
+/// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
+/// function set. Lives at the artifact root, not `⚙️engine` (reloc-g7 revision of that same ticket) —
+/// `declaration()` describes the artifact (kind/schema/io/ownership), it is not engine behaviour.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.playbook")
+        .schema(crate::artifacts::playbook::schema::playbook_artifact_schema_descriptor())
+        .inferences([crate::artifacts::playbook::standards::v1::subsets::any::schema::inferences::playbook_artifact_inference_descriptor()])
+        .composers(crate::artifacts::playbook::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::playbook::PlaybookPlayApp>()
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Private:
+/// `declaration()` above is its only caller (moved here with it from `⚙️engine`, ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7 — kept unexported, not widened).
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "playbook.playbook",
+                    extension: Some("playbook"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::playbook::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::playbook::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::playbook::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::playbook::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("playbook.playbook"),
+                },
+                dsl::LanguageSpec {
+                    id: "playbook.playbook.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::playbook::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::playbook::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::playbook::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::playbook::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("playbook.playbook.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "playbook.playbook.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::playbook::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::playbook::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("playbook.playbook.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "playbook.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::playbook::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::playbook::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("playbook.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "playbook.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::playbook::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::playbook::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("playbook.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Register
+
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::apps::playbook::create_playbook_play_app`'s `🔖️Manifest` region.

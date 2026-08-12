@@ -1,0 +1,14 @@
+# 💡️ Semio image inference schema — header-derived raster geometry.
+
+type SemioImageInference {
+  dimensions: SemioImageDimensions! @state(class: INFERRED)
+}
+
+type SemioImageDimensions {
+  width: Int!
+  height: Int!
+  bitDepth: Int!
+  hasAlpha: Boolean!
+  pixelCount: Int!
+  frameCount: Int!
+}

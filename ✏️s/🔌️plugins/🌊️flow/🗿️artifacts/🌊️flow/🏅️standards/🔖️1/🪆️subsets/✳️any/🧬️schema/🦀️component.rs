@@ -6,6 +6,58 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+//#region 🔖️Constants
+/// 🖱️ Default proximity-select distance — also `FlowConfig`'s own default (`crate::apps::flow::config`),
+/// homed here rather than app-side because this schema's own `FlowArtifact::from_snapshot` needs it too
+/// and an artifact must never depend on an app.
+pub const FLOW_DEFAULT_PROXIMITY_DISTANCE: f64 = 48.0;
+/// 🔳️ Default canvas grid factor — see [`FLOW_DEFAULT_PROXIMITY_DISTANCE`] for why it lives here.
+pub const FLOW_DEFAULT_GRID_FACTOR: f64 = 10.0;
+//#endregion 🔖️Constants
+
+//#region 🔖️Widgets
+/// 🎛️ Every `Widget` variant carries its own `id: String` as its first field — this reaches through
+/// the tag to read it generically.
+pub fn widget_id(widget: &Widget) -> &str {
+    match widget {
+        Widget::Neuron { id, .. }
+        | Widget::InputSlider { id, .. }
+        | Widget::InputNote { id, .. }
+        | Widget::InputImage { id, .. }
+        | Widget::Variable { id, .. }
+        | Widget::OutputPreview { id, .. }
+        | Widget::OutputAction { id, .. }
+        | Widget::OutputExport { id, .. }
+        | Widget::Cluster { id, .. } => id,
+    }
+}
+
+pub fn widget_kind_label(widget: &Widget) -> &'static str {
+    match widget {
+        Widget::Neuron { .. } => "neuron",
+        Widget::InputSlider { .. } => "inputSlider",
+        Widget::InputNote { .. } => "inputNote",
+        Widget::InputImage { .. } => "inputImage",
+        Widget::Variable { .. } => "variable",
+        Widget::OutputPreview { .. } => "outputPreview",
+        Widget::OutputAction { .. } => "outputAction",
+        Widget::OutputExport { .. } => "outputExport",
+        Widget::Cluster { .. } => "cluster",
+    }
+}
+
+pub fn widget_tree_label(widget: &Widget) -> String {
+    match widget {
+        Widget::Neuron { id, neuron_kind, .. } => format!("{id} ({neuron_kind})"),
+        Widget::InputSlider { id, .. } => format!("{id} (slider)"),
+        Widget::InputNote { id, .. } => format!("{id} (note)"),
+        Widget::OutputPreview { id, .. } => format!("{id} (preview)"),
+        Widget::Variable { id, name, .. } => format!("{id} ({name})"),
+        widget => format!("{} ({})", widget_id(widget), widget_kind_label(widget)),
+    }
+}
+//#endregion 🔖️Widgets
+
 //#region 🔹Artifact
 /// 🧬️ Full flow artifact state across persistent, shared-ui and local-ui classes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
@@ -66,10 +118,10 @@ impl FlowArtifact {
             selected_handle_ids: Vec::new(),
             preview_off_node_ids: Vec::new(),
             lod_mode: FLOW_LOD_MODE_AUTOMATIC.into(),
-            proximity_distance: crate::artifacts::flow::engine::FLOW_DEFAULT_PROXIMITY_DISTANCE,
+            proximity_distance: FLOW_DEFAULT_PROXIMITY_DISTANCE,
             grid_visible: true,
             grid_snap_enabled: false,
-            grid_factor: crate::artifacts::flow::engine::FLOW_DEFAULT_GRID_FACTOR,
+            grid_factor: FLOW_DEFAULT_GRID_FACTOR,
             catalogue_sections_json: "[]".into(),
             automation_enabled_json: String::new(),
             contributions_json: "[]".into(),
@@ -226,3 +278,18 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: FlowComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn widget_id_and_kind_label_agree_across_variants() {
+        let widget = Widget::InputSlider { id: "slider".into(), value: 3.0, min: 0.0, max: 10.0, step: 0.1 };
+        assert_eq!(widget_id(&widget), "slider");
+        assert_eq!(widget_kind_label(&widget), "inputSlider");
+        assert_eq!(widget_tree_label(&widget), "slider (slider)");
+    }
+}
+//#endregion 🧪️Tests

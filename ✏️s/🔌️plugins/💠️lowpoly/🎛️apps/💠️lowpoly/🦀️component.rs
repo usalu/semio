@@ -265,6 +265,10 @@ impl ArtifactApp for LowpolyPlayApp {
     const APP_ID: &'static str = LOWPOLY_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::lowpoly::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> LowpolySnapshot {
         crate::artifacts::lowpoly::engine::default_snapshot()
     }

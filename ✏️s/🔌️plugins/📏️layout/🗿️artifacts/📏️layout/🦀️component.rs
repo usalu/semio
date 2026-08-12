@@ -339,6 +339,93 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         import_stdio_kinds: vec!["stdio.svg", "stdio.png"],
     }
 }
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
+/// `OnceLock`-backed `io_registry::entries()` convention used by `standards::v1::engine::io_registry`.
+/// Relocated from `⚙️engine/🦀️component.rs` alongside `declaration()` (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) — `declaration()`'s only caller, kept private.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "layout.document",
+                    extension: Some("layout"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::layout::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::layout::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::layout::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::layout::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("layout.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "layout.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::layout::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::layout::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::layout::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::layout::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("layout.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "layout.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::layout::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::layout::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("layout.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "layout.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::layout::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::layout::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("layout.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "layout.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::layout::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::layout::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("layout.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called five different global registries directly from
+/// a plugin `.setup()` callback, including `crate::artifacts::layout::io_registry::register()` — a
+/// DUPLICATE registration of the exact `standards::v1::engine::io_registry::entries()` slice the
+/// `.composers(…)` call below now registers once (that top-level `artifacts::layout::io_registry`
+/// module has no other caller in the repo — deleting its call here rather than keeping it, per the
+/// W1b duplicate-IO-registration finding; the module itself is left in place as inert dead code,
+/// matching `🗒️note`'s own unreferenced sibling module). `crate::apps::layout::config::schema::
+/// register_app_schema()` is the one exception, still called from `📏️layout/🦀️component.rs`'s own
+/// `.setup()`: it registers the `LayoutPlayApp` CONFIG/PRESENCE schema, an app-scope concern
+/// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) —
+/// `register_app_schema_descriptor` is not in §6's artifact-scoped function set.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.layout")
+        .schema(crate::artifacts::layout::schema::layout_artifact_schema_descriptor())
+        .inferences([crate::artifacts::layout::standards::v1::subsets::any::schema::inferences::layout_artifact_inference_descriptor()])
+        .composers(crate::artifacts::layout::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::layout::LayoutPlayApp>()
+        .build()
+}
 //#endregion 🔖️ArtifactKind
 
 //#region 🔖️CollectionSupport

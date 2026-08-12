@@ -4,7 +4,8 @@
 //! `🔖️HomeCommand` region, which `use`s each of these modules flat).
 
 use crate::apps::home::config::{HomeConfig, HomeConfigMutation};
-use crate::artifacts::home::op::{change_catalog_generation, SHomeMutation};
+use crate::artifacts::home::mutations::change_catalog_generation;
+use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
 

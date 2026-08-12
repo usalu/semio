@@ -75,93 +75,9 @@ pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
 //#endregion 🔖️Io
 
 //#region 🔖️Register
-/// 🗂️ Registers lowpoly document codecs, handcrafted language specs, the app schema descriptor, and
-/// the document codec for `LowpolyPlayApp` — this plugin's sole `.setup(...)` target, folded in from
-/// the deleted `🔧️setup` facet. Mesh/DWG format handling for `"3d.lowpoly"` already flows through
-/// `io_registry::register()` (called first below), which wires the `LowpolyComposerComposition`
-/// composer entries declared in `🗿️artifacts/💠️lowpoly/🦀️component.rs`, so the former
-/// `register_mesh_exporter`/`register_mesh_importer`/`register_mesh_dwg_*` calls are not carried over
-/// — they duplicated this composer registration rather than adding anything.
-pub fn register() {
-    crate::artifacts::lowpoly::io_registry::register();
-
-    register_pilot_languages();
-    register_artifact_schema();
-    register_artifact_inferences();
-
-    crate::apps::lowpoly::config::schema::register_app_schema();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::lowpoly::LowpolyPlayApp>(crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA);
-}
-
-/// 📎 Registers the lowpoly artifact schema descriptor into the process-local registry.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::lowpoly::schema::lowpoly_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.lowpoly.lowpoly.inference`'s facet leaves into the OS-wide inference catalog —
-/// sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::lowpoly::standards::v1::subsets::any::schema::inferences::lowpoly_artifact_inference_descriptor());
-}
-
 /// 🔎 Returns whether `s.lowpoly.lowpoly` is present in the process-local schema registry.
 pub fn artifact_schema_registered() -> bool {
     ::schema::artifact_schema_descriptor_registered("s.lowpoly.lowpoly")
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "lowpoly.document",
-        extension: Some("lowpoly"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::lowpoly::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::lowpoly::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::lowpoly::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::lowpoly::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("lowpoly.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "lowpoly.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::lowpoly::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::lowpoly::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::lowpoly::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::lowpoly::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("lowpoly.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "lowpoly.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::lowpoly::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::lowpoly::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("lowpoly.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "lowpoly.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::lowpoly::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::lowpoly::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("lowpoly.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "lowpoly.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::lowpoly::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::lowpoly::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("lowpoly.spr"),
-    });
 }
 //#endregion 🔖️Register
 

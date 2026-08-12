@@ -1,7 +1,7 @@
 //! 🔗️ Flow play app commands — synapse (edge) wiring: connect / disconnect.
 
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
-use crate::artifacts::flow::engine::host_operations;
+use crate::apps::flow::host_operations;
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

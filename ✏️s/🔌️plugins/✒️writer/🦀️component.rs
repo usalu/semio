@@ -7,7 +7,7 @@ pub fn plugin() -> Plugin {
     Plugin::builder("writer")
         .label("Writer")
         .version("0.1.0")
-        .setup(crate::artifacts::writer::engine::register)
+        .setup(crate::apps::writer::register)
         .register_document_app::<crate::apps::writer::WriterPlayApp>(crate::apps::writer::create_writer_app())
         .build()
 }

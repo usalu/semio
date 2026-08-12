@@ -1,7 +1,7 @@
 //! 🔺️ SemioDrawingDiff — handcrafted recursive sparse diff over `SemioDrawingSnapshot`
 //! (canvas/styles/layers, each layer a recursive `DrawNode` tree). No `snapshot:
-//! Option<SemioDrawingSnapshot>` full-replace slot — even `SetSnapshot`'s diff is the sparse
-//! field-by-field `SemioDrawingDiff::between(base, next)`. `styles` is name-keyed
+//! Option<SemioDrawingSnapshot>` full-replace slot — even a whole-document swap's diff is the
+//! sparse field-by-field `SemioDrawingDiff::between(base, next)`. `styles` is name-keyed
 //! (`engine::triples::NamedTripleDiff`), `layers` and every `Group.children` are index-keyed
 //! (`engine::triples::IndexedTripleDiff`) — both reused from the shared engine rather than
 //! reinvented, per this ticket's brief. Built directly off svg's own `SvgNodeDiff` recursive-diff
@@ -711,11 +711,6 @@ impl DiffAlgebra<SemioDrawingSnapshot> for SemioDrawingDiff {
     }
 }
 
-/// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
-/// Option<SemioDrawingSnapshot>` full-replace slot -- this IS `SemioDrawingDiff::between`.
-pub fn diff_set_snapshot(base: &SemioDrawingSnapshot, next: &SemioDrawingSnapshot) -> SemioDrawingDiff {
-    SemioDrawingDiff::between(base, next)
-}
 //#endregion 🔖️DiffAlgebra
 
 //#region 🔖️NodePath
@@ -753,6 +748,60 @@ pub fn node_at<'a>(snapshot: &'a SemioDrawingSnapshot, np: &NodePath) -> Option<
     Some(current)
 }
 //#endregion 🔖️NodePath
+
+//#region 🔖️NodeSpatialHelpers
+/// 🧭️ Shared by `📍move-node`/`🖐️drag-nodes` (`Group.transform.translation.{x,y}` for a group,
+/// `at` for `Text`/`Image`) -- `Path` has no origin field of its own (its geometry lives entirely
+/// in `segments`), so it is honestly excluded rather than approximated.
+pub fn node_origin(snapshot: &SemioDrawingSnapshot, np: &NodePath) -> Option<SemioPoint2> {
+    match node_at(snapshot, np)? {
+        DrawNode::Group { transform, .. } => Some(SemioPoint2 { x: transform.translation.x, y: transform.translation.y }),
+        DrawNode::Text { at, .. } => Some(*at),
+        DrawNode::Image { at, .. } => Some(*at),
+        DrawNode::Path { .. } => None,
+    }
+}
+
+/// 📍️ Builds the sparse diff that repositions the node at `np` to `new_origin` -- empty (no-op)
+/// diff when the node is absent or is a `Path` (no origin field).
+pub fn diff_move_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_origin: SemioPoint2) -> SemioDrawingDiff {
+    match node_at(snapshot, np) {
+        Some(DrawNode::Group { transform, .. }) => {
+            let mut next = *transform;
+            next.translation.x = new_origin.x;
+            next.translation.y = new_origin.y;
+            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None }))
+        }
+        Some(DrawNode::Text { .. }) => diff_at_path(np, DrawNodeDiff::Text(DrawTextDiff { value: None, at: Some(new_origin), style: None })),
+        Some(DrawNode::Image { .. }) => diff_at_path(np, DrawNodeDiff::Image(DrawImageDiff { at: Some(new_origin), width: None, height: None, mime: None, bytes: None })),
+        _ => SemioDrawingDiff::default(),
+    }
+}
+
+/// 🔄️ Builds the sparse diff that sets a `Group` node's `transform.rotation` -- empty (no-op) for
+/// every other node kind (`Path`/`Text`/`Image` carry no rotation field).
+pub fn diff_rotate_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_rotation: crate::artifacts::semio::standards::v1::engine::geometry::SemioQuaternion) -> SemioDrawingDiff {
+    match node_at(snapshot, np) {
+        Some(DrawNode::Group { transform, .. }) => {
+            let next = SemioTransform { translation: transform.translation, rotation: new_rotation, scale: transform.scale };
+            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None }))
+        }
+        _ => SemioDrawingDiff::default(),
+    }
+}
+
+/// 📏️ Builds the sparse diff that sets a `Group` node's `transform.scale` -- empty (no-op) for
+/// every other node kind.
+pub fn diff_scale_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_scale: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3) -> SemioDrawingDiff {
+    match node_at(snapshot, np) {
+        Some(DrawNode::Group { transform, .. }) => {
+            let next = SemioTransform { translation: transform.translation, rotation: transform.rotation, scale: new_scale };
+            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None }))
+        }
+        _ => SemioDrawingDiff::default(),
+    }
+}
+//#endregion 🔖️NodeSpatialHelpers
 
 //#region 🔖️HandcraftedDiffCodec
 /// 🧪️ Hand-rolled `protocol::DiffCodec` -- top-level `canvas=`/`styles=`/`layers=` space-separated

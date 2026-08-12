@@ -2,7 +2,7 @@
 
 use crate::apps::flow::flow_action;
 use crate::apps::flow::terminology::FlowPlayLabels;
-use crate::artifacts::flow::engine::{widget_id, widget_kind_label};
+use crate::artifacts::flow::schema::{widget_id, widget_kind_label};
 use crate::artifacts::flow::FlowSnapshot;
 use flow::Widget;
 use semio_framework_plugin::{

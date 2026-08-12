@@ -223,6 +223,94 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
+//#region 🔖️Register
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) —
+/// replaces the old side-effecting `register()`, which called four different global registries
+/// directly from a plugin `.setup()` callback. `crate::apps::raster::config::schema::
+/// register_app_schema()` is the one exception, still called from `🖨️raster/🦀️component.rs`'s own
+/// `.setup()`: it registers the `RasterPlayApp` CONFIG schema, an app-scope concern
+/// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) —
+/// `register_app_schema_descriptor` is not in the W1 census's artifact-scoped function set.
+/// Relocated from `⚙️engine/🦀️component.rs` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+/// reloc-g3): `⚙️engine` was removed from the taxonomy and `declaration()` describes the artifact,
+/// not engine behaviour, so its home is the artifact root alongside `artifact_kind()`. The
+/// `io_registry::entries()` call below is now qualified (`standards::v1::engine::io_registry`) since
+/// that module still lives in the engine file this function moved out of — a deviation from the
+/// plain move-both, reported per the pass's own instruction.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.raster")
+        .schema(crate::artifacts::raster::schema::raster_artifact_schema_descriptor())
+        .inferences([crate::artifacts::raster::schema::inferences::raster_artifact_inference_descriptor()])
+        .composers(crate::artifacts::raster::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::raster::RasterPlayApp>()
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
+/// 🗒️note's own `pilot_languages()` convention.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "raster.document",
+                    extension: Some("raster"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::raster::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::raster::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::raster::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::raster::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("raster.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "raster.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::raster::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::raster::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::raster::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::raster::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("raster.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "raster.document.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::raster::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::raster::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("raster.document.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "raster.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::raster::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::raster::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("raster.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "raster.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::raster::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::raster::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("raster.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Register
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

@@ -3,8 +3,9 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
 //! `🎭️modes/*/🪟️windows/*`, chrome measures in those windows' `🎚️options/*`, panel trees in `📌️panels/*`,
-//! labels in `🗣️terminology/🦀️component.rs`, view state in `🎚️config/🦀️component.rs`, shared compute in
-//! the artifact's `⚙️engine`.
+//! labels in `🗣️terminology/🦀️component.rs`, view state in `🎚️config/🦀️component.rs`, plugin registration
+//! and `FlowHost` bridging (below — constitutional: general, an artifact must never depend on an app, so
+//! both live here rather than under `🗿️artifacts`).
 //! This file is a routing table: `handle` → `FlowCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
@@ -17,9 +18,13 @@ use crate::apps::flow::modes::generate::windows::{form, generations, preview};
 use crate::apps::flow::modes::{edit, generate};
 use crate::apps::flow::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::flow::terminology::{flow_play_labels, FlowPlayLabels};
-use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot, FLOW_DOCUMENT_SCHEMA};
-use flow::{with_process_flow_eval_session, FlowEvalSession, Widget};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
+use crate::artifacts::flow::op::FlowMutation;
+use crate::artifacts::flow::{FlowSnapshot, FLOW_DOCUMENT_SCHEMA};
+use flow::{
+    dag::DagDrawLod, flow_fixture_operations, flow_host_with_session, with_process_flow_eval_session,
+    CameraJson, FlowEvalSession, FlowHost, Widget, FLOW_LOD_MODE_AUTOMATIC,
+};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel,
     UiNode, WindowMeasure,
 };
@@ -49,6 +54,79 @@ fn flow_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> Ac
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 //#endregion 🔖️Constants
+
+//#region 🔌️Registration
+/// 🗂️ Registers `FlowSnapshot`'s pack↔dsl codec under `FLOW_DOCUMENT_SCHEMA` so `framework/sync`'s folder
+/// endpoints and any other schema-string-keyed caller can print/parse flow documents. Called from the
+/// plugin root's `semio_plugin!{ setup: … }`.
+pub fn register() {
+    crate::artifacts::flow::io_registry::register();
+
+    register_artifact_schema();
+    register_pilot_languages();
+    crate::apps::flow::config::schema::register_app_schema();
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<FlowPlayApp>(FLOW_DOCUMENT_SCHEMA);
+}
+
+/// 🧬️ Registers this artifact's fifteen schema leaves with the framework table.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::flow::schema::flow_artifact_schema_descriptor());
+}
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "flow.artifact",
+        extension: Some("flow"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::flow::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::flow::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::flow::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::flow::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("flow.artifact"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "flow.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::flow::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::flow::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::flow::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::flow::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("flow.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "flow.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::flow::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::flow::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("flow.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "flow.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::flow::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::flow::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("flow.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "flow.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::flow::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::flow::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("flow.spr"),
+    });
+}
+//#endregion 🔌️Registration
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -273,6 +351,78 @@ impl ArtifactApp for FlowPlayApp {
     }
 }
 //#endregion 🔖️FlowPlayApp
+
+//#region 🔖️Host
+pub fn seed_host_catalogue(host: &mut FlowHost, extra_sections_json: &str) {
+    let mut sections = flow::flow_catalogue_sections();
+    if let Ok(extra) = serde_json::from_str::<Vec<flow::CatalogueSection>>(extra_sections_json) {
+        sections.extend(extra);
+    }
+    host.set_host_catalogue_json(&serde_json::to_string(&sections).unwrap_or_else(|_| "[]".into()));
+}
+
+/// 🎚️ Pushes the view-state canvas options (LOD mode, proximity distance, grid) onto a freshly built host.
+pub fn apply_canvas_options(host: &mut FlowHost, config: &FlowConfig) {
+    if config.lod_mode != FLOW_LOD_MODE_AUTOMATIC && DagDrawLod::from_id(&config.lod_mode).is_some() {
+        host.dag.set_automatic_lod(false);
+        host.dag.set_forced_draw_lod_label(&config.lod_mode);
+    } else {
+        host.dag.set_automatic_lod(true);
+    }
+    host.dag.set_proximity_distance(config.proximity_distance);
+    host.set_grid_visible(config.grid_visible);
+    host.set_grid_snap_enabled(config.grid_snap_enabled);
+    let _ = host.set_grid_factor(config.grid_factor);
+}
+
+/// 🏗️ Rebuilds the stateful `FlowHost` from the document projection + view config + eval session — the
+/// single entry point every command handler and every window renderer goes through.
+pub fn host_from_snapshot(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> FlowHost {
+    let mut host = flow_host_with_session(&fixture.to_fixture(), session);
+    seed_host_catalogue(&mut host, &config.catalogue_sections_json);
+    apply_canvas_options(&mut host, config);
+    host
+}
+
+/// ✏️ Runs a stateful `FlowHost` mutation and diffs the result back into granular `FlowMutation`s —
+/// returns an empty vec when `mutate` reports "nothing changed".
+pub fn host_operations(snapshot: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowMutation> {
+    let mut host = host_from_snapshot(snapshot, config, session);
+    if !mutate(&mut host) {
+        return Vec::new();
+    }
+    flow_fixture_operations(&snapshot.to_fixture(), &host.fixture)
+        .into_iter()
+        .filter_map(crate::artifacts::flow::schema::mutations::from_framework_mutation)
+        .collect()
+}
+//#endregion 🔖️Host
+
+//#region 🔖️Selection
+pub fn sync_host_selection(host: &mut FlowHost, selected: &[String]) {
+    sync_host_selection_domains(host, selected, &[], &[]);
+}
+
+pub fn sync_host_selection_domains(host: &mut FlowHost, nodes: &[String], edges: &[String], handles: &[String]) {
+    if nodes.is_empty() && edges.is_empty() && handles.is_empty() {
+        let _ = host.dag.cancel_area_select();
+        return;
+    }
+    let json = serde_json::json!({ "nodes": nodes, "edges": edges, "handles": handles });
+    host.dag.set_selection_domains_json(&json.to_string());
+}
+
+/// 🔍️ The camera that frames the current node selection, or `None` when nothing is selected.
+pub fn focus_selection_camera(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> Option<CameraJson> {
+    if config.selected_node_ids.is_empty() {
+        return None;
+    }
+    let mut host = host_from_snapshot(fixture, config, session);
+    host.dag.set_viewport(1280, 800, 1.0);
+    host.dag.set_selection(&config.selected_node_ids);
+    host.focus_selection_camera(1.2)
+}
+//#endregion 🔖️Selection
 
 //#region 🔖️Manifest
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
@@ -601,8 +751,20 @@ mod tests {
     }
 
     #[test]
+    fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
+        let config = FlowConfig::default();
+        let fixture = FlowSnapshot::default();
+        let session = FlowEvalSession::new();
+        let mut host = host_from_snapshot(&fixture, &config, &session);
+        sync_host_selection_domains(&mut host, &[], &["s1".into()], &[]);
+        assert!(host.has_selection(), "s1 must resolve through host_from_snapshot edge map");
+        host.delete_selection().expect("deleteSelection");
+        assert!(!host.fixture.synapses.iter().any(|synapse| synapse.id == "s1"));
+    }
+
+    #[test]
     fn two_instances_converge_on_disjoint_edits() {
-        use crate::artifacts::flow::engine::widget_id;
+        use crate::artifacts::flow::schema::widget_id;
         use semio_framework_plugin::testkit::paired_apps;
         let (mut instance_a, mut instance_b) = paired_apps::<FlowPlayApp>("mem://flow-convergence");
 

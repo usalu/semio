@@ -1,6 +1,6 @@
 //! 🔺️ SemioBrepDiff — handcrafted sparse diff over `SemioBrepSnapshot`. No
-//! `replacement: Option<SemioBrepSnapshot>` full-replace slot — even `SetSnapshot`'s diff is the
-//! sparse field-by-field `SemioBrepDiff::between(base, next)`.
+//! `replacement: Option<SemioBrepSnapshot>` full-replace slot — even a whole-document overwrite's
+//! diff is the sparse field-by-field `SemioBrepDiff::between(base, next)`.
 //!
 //! All 6 collections (`vertices`/`edges`/`loops`/`faces`/`shells`/`solids`) are id-keyed and
 //! diffed via the SHARED `crate::artifacts::semio::standards::v1::engine::triples::NamedTripleDiff`
@@ -427,12 +427,6 @@ impl DiffAlgebra<SemioBrepSnapshot> for SemioBrepDiff {
     fn is_empty(&self) -> bool {
         self.vertices.is_none() && self.edges.is_none() && self.loops.is_none() && self.faces.is_none() && self.shells.is_none() && self.solids.is_none()
     }
-}
-
-/// 🧩 Set-snapshot diff helper — used by the `📄set-snapshot/🔺️diff` leaf. No full-replace slot:
-/// this IS `SemioBrepDiff::between`.
-pub fn diff_set_snapshot(base: &SemioBrepSnapshot, snapshot: &SemioBrepSnapshot) -> SemioBrepDiff {
-    <SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::between(base, snapshot)
 }
 //#endregion 🔖️DiffAlgebra
 

@@ -37,6 +37,97 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
+//#region 🔖️Declaration
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
+/// `OnceLock`-backed `io_registry::entries()` convention already used below. Sole caller is
+/// `declaration()` below (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "shooting.document",
+                    extension: Some("shooting"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::shooting::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::shooting::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::shooting::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::shooting::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("shooting.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "shooting.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::shooting::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::shooting::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::shooting::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::shooting::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("shooting.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "shooting.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::shooting::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::shooting::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("shooting.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "shooting.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::shooting::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::shooting::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("shooting.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "shooting.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::shooting::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::shooting::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("shooting.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called the io registry/schema/inference/language
+/// registries and the document codec registrar directly from a plugin `.setup()` callback.
+/// `crate::apps::shooting::config::schema::register_app_schema()` is the one exception, still called
+/// from `🎥️shooting/🦀️component.rs`'s own `.setup()`: it registers `ShootingPlayApp`'s own
+/// CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has no field for
+/// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
+/// function set.
+///
+/// DEVIATION (26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g1): the `.composers(...)` argument is
+/// qualified to `standards::v1::engine::io_registry::entries()` rather than left as the bare
+/// `io_registry::entries()` this body used while it still lived in the `⚙️engine` file. Left bare it
+/// would now resolve to THIS file's own `io_registry` module below, which has a different, incompatible
+/// return type (`&'static [&'static ComposerEntry]`, wrapping the engine's owned entries) — not the
+/// `&'static [ComposerEntry]` `.composers()` expects.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.shooting")
+        .schema(crate::artifacts::shooting::standards::v1::subsets::any::schema::shooting_artifact_schema_descriptor())
+        .inferences([crate::artifacts::shooting::standards::v1::subsets::any::schema::inferences::shooting_artifact_inference_descriptor()])
+        .composers(crate::artifacts::shooting::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::shooting::ShootingPlayApp>()
+        .build()
+}
+//#endregion 🔖️Declaration
+
 //#region 🔖️Domain
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, DslRecord)]
 #[serde(rename_all = "camelCase")]

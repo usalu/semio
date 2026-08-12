@@ -282,6 +282,10 @@ impl ArtifactApp for TrinityJackPlayApp {
     const APP_ID: &'static str = TRINITY_JACK_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::jack::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> JackSnapshot {
         default_fixture()
     }

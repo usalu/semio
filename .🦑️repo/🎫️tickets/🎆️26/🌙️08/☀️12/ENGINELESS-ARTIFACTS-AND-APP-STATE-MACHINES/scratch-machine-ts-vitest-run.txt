@@ -1,0 +1,66 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework:test
+
+> nx run @semio-tech/framework:test
+
+> bun ./📜️script.ts test
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript
+
+ ❯ |@semio-tech/framework| 🟦️glue.ts (73 tests | 2 failed) 41ms
+     × stores a function-typed init as the current value (not as a lazy factory) 8ms
+     × stores a no-op function init without invoking it 0ms
+ ❯ |@semio-tech/framework| 🟦️glue.ts (73 tests | 2 failed) 45ms
+     × stores a function-typed init as the current value (not as a lazy factory) 9ms
+     × stores a no-op function init without invoking it 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework| 🟦️glue.ts > ephemeralBox > stores a function-typed init as the current value (not as a lazy factory)
+ FAIL  |@semio-tech/framework| 🟦️glue.ts > ephemeralBox > stores a function-typed init as the current value (not as a lazy factory)
+ReferenceError: ephemeralBox is not defined
+ ❯ ð¦ï¸glue.ts:463:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  |@semio-tech/framework| 🟦️glue.ts > ephemeralBox > stores a no-op function init without invoking it
+ FAIL  |@semio-tech/framework| 🟦️glue.ts > ephemeralBox > stores a no-op function init without invoking it
+ReferenceError: ephemeralBox is not defined
+ ❯ ð¦ï¸glue.ts:473:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 142 passed (146)
+   Start at  21:37:30
+   Duration  736ms (transform 487ms, setup 0ms, import 566ms, tests 90ms, environment 13ms)
+
+Warning: command "bun ./📜️script.ts test" exited with non-zero status code
+
+
+ NX   Running target test for project @semio-tech/framework failed
+
+Failed tasks:
+
+- @semio-tech/framework:test
+
+Hint: run the command with --verbose for more details.
+
+1385 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1386 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1387 |  */
+1388 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1389 |   const status = runCmdInternal(cmd, args, opts);
+1390 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/framework:test exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1390:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:599:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:829:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:864:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:11610:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1
+EXIT:1

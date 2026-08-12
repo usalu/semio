@@ -8,6 +8,8 @@ use crate::artifacts::writer::WriterSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
+use trinity::core::{example_graph, lint};
 
 use super::outline::WriterOutline;
 
@@ -75,6 +77,58 @@ pub fn writer_artifact_inference_descriptor() -> schema::ArtifactInferenceDescri
     }
 }
 //#endregion 🔖️Descriptor
+
+//#region 🔖️LanguageInferences
+/// 📡️ Semantic token payload for the text editor scene (LSP `data` array or grammar tokens) — derived
+/// straight from a `WriterSnapshot` (its `language_id`/`text` fields), so it lives here beside
+/// `WriterInference` rather than in `🧬️schema`'s text-only helpers.
+pub fn language_tokens_json(document: &WriterSnapshot) -> Option<String> {
+    eprintln!(
+        "[DEBUG] writer.schema.inferences language_tokens_json language_id={} text_len={}",
+        document.language_id,
+        document.text.len()
+    );
+    if let Some(spec) = dsl::language(&document.language_id) {
+        let session = dsl::lsp::LanguageSession::open(spec, document.text.clone());
+        return serde_json::to_string(&session.semantic_tokens_lsp()).ok();
+    }
+    if dsl::idiom(&document.language_id).is_some() {
+        let tokens = crate::artifacts::writer::schema::tokenize_language(&document.text, &document.language_id);
+        return serde_json::to_string(&tokens).ok();
+    }
+    None
+}
+
+pub fn language_diagnostics_json(document: &WriterSnapshot, lint_signal: u32) -> Option<String> {
+    if document.language_id == "jack" {
+        let graph = example_graph();
+        let diagnostics: Vec<Value> = lint(&graph, &document.text)
+            .into_iter()
+            .map(|diag| json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message }))
+            .collect();
+        return serde_json::to_string(&diagnostics).ok();
+    }
+    if let Some(hooks) = dsl::idiom(&document.language_id) {
+        if let Err(err) = (hooks.canonicalize)(&document.text) {
+            let end = document.text.len().max(1);
+            return serde_json::to_string(&[json!({ "start": 0, "end": end, "severity": "error", "message": err.message })]).ok();
+        }
+    } else if let Some(spec) = dsl::language(&document.language_id) {
+        let session = dsl::lsp::LanguageSession::open(spec, document.text.clone());
+        if let Err(err) = session.canonicalize() {
+            let end = document.text.len().max(1);
+            return serde_json::to_string(&[json!({ "start": 0, "end": end, "severity": "error", "message": err.message })]).ok();
+        }
+    }
+    if lint_signal > 0 {
+        return Some(
+            json!([{ "start": 0, "end": document.text.len().max(1), "severity": "info", "message": format!("Lint pass #{lint_signal}") }])
+                .to_string(),
+        );
+    }
+    None
+}
+//#endregion 🔖️LanguageInferences
 
 #[cfg(test)]
 //#region 🧪️Tests

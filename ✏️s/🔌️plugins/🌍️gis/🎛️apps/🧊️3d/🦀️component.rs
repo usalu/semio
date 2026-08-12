@@ -66,6 +66,10 @@ impl ArtifactApp for Gis3dPlayApp {
     const APP_ID: &'static str = GIS3D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::gis3d::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> GisTerrainSnapshot {
         default_terrain_document()
     }

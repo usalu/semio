@@ -29,7 +29,39 @@ framework enum, or handcrafted per variant as space does — not merely unwrappe
 replace is banned; route through `ArtifactStore::reset`"* — evidence the locked no-import decision
 is already enforced at the wire boundary.)
 
-## 🔴 THE LAW HARNESS RAN AND FOUND 6 REAL FAILURES IN MIGRATED FACETS
+## 🟡 LAW-FAILURE STATUS: 3 of 6 puzzle failures FIXED; 3 open; sweep blocked
+
+**Fixed (cascade-inverse family, all 3).** Root cause found and repaired: `delete-*` inverses
+rebuilt the entity with `create_*(entity, None)`, and that second argument is a **FINAL-state
+index**. Passing `None` appends, so a node deleted from position 0 was restored at the end — the
+snapshot round-tripped with the right contents in the wrong order, which
+`assert_mutation_inverse_law` correctly rejects. Fix: capture
+`base.<collection>.iter().position(|e| e.id == payload.id)` and pass it through.
+
+Applied to 4 leaves: puzzle2d `🗑delete-node`, puzzle3d `🗑delete-object` and `🚮delete-reference`,
+puzzle5d `🗑delete-part`. **`cargo test -p semio-s-plugin-puzzle --lib`: 443/6 → 446 passed / 3
+failed.**
+
+Note the cascade re-`connect` logic was already correct in those inverses — the defect was purely
+positional. Worth checking every other facet's `delete-*`/`remove-*` inverse for the same
+`None`-index pattern; it is invisible to `cargo check` and only a law test catches it.
+
+**Still open (delta-granularity family, 3).**
+`puzzle2d_delta_ops_are_granular_and_round_trip` and its 3d/5d twins. These do not exercise triad
+leaves directly — they call `puzzle<N>d_document_delta_operations(&before, &after)`, a
+JSON-level delta generator, then assert forward replay reproduces `after` **and** that replaying
+each operation's inverse in reverse restores `before` exactly. Diagnosis needs a working build.
+
+**Sweep blocked, not finished.** The full 32-crate law sweep could not complete:
+`semio-s-plugin-stdio` is being actively restructured by peers (DKM authoring `✳️brep`, UCAS's
+`✳️table`), and it went red mid-sweep — first 4 unresolved `include_str!` targets, then a deleted
+`✳️brep/📄set-snapshot/↩️inverse` still glue-mounted. Every plugin depends on stdio, so most crates
+report BUILD-FAIL for that reason alone and the results are not attributable.
+
+Captured before the block: **`🔋️energy` 257 passed / 0 failed**, **`🖨️raster` 66 passed / 0
+failed**, **`🧩️puzzle` 446/3**. Everything else remains unmeasured.
+
+## 🔴 ORIGINAL FINDING: the law harness had never run — 6 real failures on first execution
 
 First time this ticket's triad law tests have actually executed. `cargo test -p semio-s-plugin-puzzle
 --lib` → **443 passed, 6 failed**. These are genuine defects in this ticket's own migration work,

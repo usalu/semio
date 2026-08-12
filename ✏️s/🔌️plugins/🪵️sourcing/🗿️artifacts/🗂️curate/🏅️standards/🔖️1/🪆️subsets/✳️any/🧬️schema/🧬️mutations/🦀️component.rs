@@ -27,12 +27,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-//#region 🔖️Leaves
-use super::change_curated_item_count;
-use super::create_curated_item;
-use super::delete_curated_item;
-//#endregion 🔖️Leaves
-
 //#region 🔖️Mutations
 /// 🧮️ Closed semantic mutation vocabulary for the curate document, derived per
 /// `📓️derivation-rules.md` from `CurateSnapshot::curated`'s id-keyed shape.
@@ -40,15 +34,21 @@ use super::delete_curated_item;
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = CurateSnapshot, diff = CurateDiff, schema = "sourcing.curate")]
 pub enum SourcingMutation {
-    CreateCuratedItem(create_curated_item::mutation::CreateCuratedItem),
-    DeleteCuratedItem(delete_curated_item::mutation::DeleteCuratedItem),
-    ChangeCuratedItemCount(change_curated_item_count::mutation::ChangeCuratedItemCount),
+    CreateCuratedItem(CreateCuratedItem),
+    DeleteCuratedItem(DeleteCuratedItem),
+    ChangeCuratedItemCount(ChangeCuratedItemCount),
 }
 //#endregion 🔖️Mutations
 
-pub use change_curated_item_count::mutation::{change_curated_item_count, ChangeCuratedItemCount};
-pub use create_curated_item::mutation::{create_curated_item, CreateCuratedItem};
-pub use delete_curated_item::mutation::{delete_curated_item, DeleteCuratedItem};
+// 🐛️ ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b fix: the bare `use super::<leaf>;` aliases this
+// region used to carry (removed) collided (E0252) with the `pub use` below re-exporting each
+// leaf's identically-named free function — the module alias and the function occupied the same
+// import slot once both were in scope. Fixed by dropping the aliases and qualifying every
+// `pub use` with `super::` directly, matching every sibling artifact's mutations component.rs in
+// this taxonomy (e.g. `s/plugin/dag`'s identical triad list).
+pub use super::change_curated_item_count::mutation::{change_curated_item_count, ChangeCuratedItemCount};
+pub use super::create_curated_item::mutation::{create_curated_item, CreateCuratedItem};
+pub use super::delete_curated_item::mutation::{delete_curated_item, DeleteCuratedItem};
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -72,9 +72,9 @@ mod tests {
     /// iterate, mirroring `din16798`'s own `every_mutation()` fixture.
     fn every_mutation() -> Vec<SourcingMutation> {
         vec![
-            SourcingMutation::CreateCuratedItem(create_curated_item::mutation::CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 3 } }),
-            SourcingMutation::DeleteCuratedItem(delete_curated_item::mutation::DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }),
-            SourcingMutation::ChangeCuratedItemCount(change_curated_item_count::mutation::ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 5 }),
+            SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 3 } }),
+            SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }),
+            SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 5 }),
         ]
     }
 
@@ -116,11 +116,11 @@ mod tests {
     #[test]
     fn create_curated_item_satisfies_the_inverse_and_absorb_laws() {
         let base = sample_snapshot();
-        let mutation = SourcingMutation::CreateCuratedItem(create_curated_item::mutation::CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 2 } });
+        let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 2 } });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base);
         let mid = protocol::MutationDiff::apply(&d1, &base);
-        let d2 = SourcingMutation::ChangeCuratedItemCount(change_curated_item_count::mutation::ChangeCuratedItemCount { object_id: "beam-kvh-c24".into(), new_count: 5 }).diff(&mid);
+        let d2 = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-kvh-c24".into(), new_count: 5 }).diff(&mid);
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -128,20 +128,20 @@ mod tests {
     fn delete_curated_item_satisfies_the_inverse_and_absorb_laws() {
         let mut base = sample_snapshot();
         base.curated.push(CuratedItem { object_id: "beam-steel-ipe200".into(), count: 4 });
-        let mutation = SourcingMutation::DeleteCuratedItem(delete_curated_item::mutation::DeleteCuratedItem { object_id: "beam-steel-ipe200".into() });
+        let mutation = SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-steel-ipe200".into() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base);
-        let d2 = SourcingMutation::CreateCuratedItem(create_curated_item::mutation::CreateCuratedItem { item: CuratedItem { object_id: "beam-steel-hea160".into(), count: 1 } }).diff(&base);
+        let d2 = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-steel-hea160".into(), count: 1 } }).diff(&base);
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
     #[test]
     fn change_curated_item_count_satisfies_the_inverse_and_absorb_laws() {
         let base = sample_snapshot();
-        let mutation = SourcingMutation::ChangeCuratedItemCount(change_curated_item_count::mutation::ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 6 });
+        let mutation = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 6 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base);
-        let d2 = SourcingMutation::DeleteCuratedItem(delete_curated_item::mutation::DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }).diff(&base);
+        let d2 = SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }).diff(&base);
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws

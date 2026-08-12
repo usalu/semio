@@ -3,7 +3,7 @@
 
 use crate::apps::sequence::sequence_action;
 use crate::apps::sequence::terminology::SequenceLabels;
-use crate::artifacts::sequence::engine::{control_slots, is_control_kind};
+use crate::apps::sequence::{control_slots, is_control_kind};
 use crate::artifacts::sequence::SequenceSnapshot;
 use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use serde_json::json;

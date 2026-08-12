@@ -5,6 +5,7 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
 use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
+use protocol::Inference;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
@@ -14,7 +15,7 @@ use super::outline::PdfOutline;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a pdf (1.4) snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf.inference")]
 pub struct PdfInference {
@@ -25,6 +26,17 @@ pub struct PdfInference {
 impl protocol::Inference<PdfSnapshot> for PdfInference {
     fn infer(snapshot: &PdfSnapshot) -> Self {
         Self { outline: PdfOutline::compute(snapshot) }
+    }
+}
+
+/// 🪞️ Hand impl (not derived): a pdf 1.4 document always has at least one page, so
+/// `PdfSnapshot::default()` is non-empty and `PdfOutline::compute` over it reports a real page
+/// count — which the derived all-zero `PdfOutline::default()` contradicts, breaking
+/// `inference_default_law`. Defining default as "infer the default snapshot" makes the two
+/// definitionally equal.
+impl Default for PdfInference {
+    fn default() -> Self {
+        Self::infer(&PdfSnapshot::default())
     }
 }
 

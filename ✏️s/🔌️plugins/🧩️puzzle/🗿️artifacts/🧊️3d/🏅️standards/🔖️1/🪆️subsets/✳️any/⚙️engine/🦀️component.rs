@@ -564,61 +564,6 @@ mod tests {
 //#endregion 🧪️Tests
 
 
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "puzzle.puzzle3d",
-        extension: Some("puzzle3d"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::puzzle3d::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::puzzle3d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::puzzle3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("puzzle.puzzle3d"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "puzzle.puzzle3d.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::puzzle3d::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::puzzle3d::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::puzzle3d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle3d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("puzzle.puzzle3d.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "puzzle.puzzle3d.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::puzzle3d::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::puzzle3d::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("puzzle.puzzle3d.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "3d.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::puzzle3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("3d.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "3d.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::puzzle3d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::puzzle3d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("3d.spr"),
-    });
-}
-
-
 //#region 🔖️ArtifactEngine
 /// ⚙️ UI-independent puzzle3d artifact engine — owns the full artifact; `snapshot()` is its persisted subset.
 pub struct Puzzle3dEngine {
@@ -639,14 +584,15 @@ impl Puzzle3dEngine {
 //#endregion 🔖️ArtifactEngine
 
 //#region 🔖️IoFacet
-/// 🔌️ Registers this artifact's `ComposerEntry` io tree plus the `"3d.puzzle"` OS-host mesh
-/// export/import bridge — the latter relocated from `apps::puzzle3d::register_puzzle3d_exports`
-/// (APA, ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: OS-host registration belongs to the
-/// owning artifact's own engine, never to an app file). The callback bodies stay in `apps::puzzle3d`
-/// next to the app-local helpers (mesh registry, fixture types) they depend on, exposed `pub(crate)`
-/// for this call site only.
-pub fn register_io() {
-    crate::artifacts::puzzle3d::io_registry::register();
+/// 🖼️ Registers the `"3d.puzzle"` OS-host mesh export/import bridge — relocated from
+/// `apps::puzzle3d::register_puzzle3d_exports` (APA, ticket
+/// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: OS-host registration belongs to the owning
+/// artifact's own engine, never to an app file). No `ArtifactDeclaration` field covers this OS-host
+/// media registry (see `declaration()`'s own doc), so it stays wired through
+/// `🧩️puzzle/🦀️component.rs`'s `.setup()`. The callback bodies stay in `apps::puzzle3d` next to the
+/// app-local helpers (mesh registry, fixture types) they depend on, exposed `pub(crate)` for this
+/// call site only.
+pub fn register_mesh_io() {
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     {
         semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", crate::apps::puzzle3d::puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));

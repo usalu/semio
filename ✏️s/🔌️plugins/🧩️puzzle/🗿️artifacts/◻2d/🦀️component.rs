@@ -433,6 +433,91 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
+//#region 🔖️Declaration
+/// 🔖️ Puzzle2d's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1, relocated off
+/// `⚙️engine` to the artifact root — `declaration()` describes the artifact itself, not engine
+/// behaviour) — replaces the puzzle2d slice of the old umbrella `register()`, which also drove
+/// puzzle3d's and puzzle5d's own registration (see their sibling `declaration()`s) and two OS-host
+/// escape hatches from one plugin `setup:` hook. `register_app_schemas()` (all three play apps'
+/// config/presence schema) is kept live on `🧩️puzzle/🦀️component.rs`'s own `.setup()` — app-scope,
+/// `ArtifactDeclaration` has no field for it by design (see that struct's own doc).
+/// `register_media_io()` (`register_2d_export_handlers`/`register_dwg_import_handler`, still in
+/// `⚙️engine`) is ALSO kept on `.setup()`, but for a different reason: it is the OS media-host
+/// registry, an entirely separate 14-function family (`register_2d_export_handlers`/
+/// `register_mesh_exporter`/…) from the nine §6 registrars `ArtifactDeclaration` covers — no field
+/// exists for it, loudly flagged here and in the W1b report rather than silently left behind.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.puzzle2d")
+        .schema(crate::artifacts::puzzle2d::schema::puzzle2d_artifact_schema_descriptor())
+        .composers(crate::artifacts::puzzle2d::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::puzzle2d::Puzzle2dPlayApp>()
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "puzzle.puzzle2d",
+                    extension: Some("puzzle2d"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::puzzle2d::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::puzzle2d::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::puzzle2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::puzzle2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("puzzle.puzzle2d"),
+                },
+                dsl::LanguageSpec {
+                    id: "puzzle.puzzle2d.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::puzzle2d::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::puzzle2d::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::puzzle2d::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::puzzle2d::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("puzzle.puzzle2d.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "puzzle.puzzle2d.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::puzzle2d::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::puzzle2d::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("puzzle.puzzle2d.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "2d.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::puzzle2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::puzzle2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("2d.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "2d.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::puzzle2d::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::puzzle2d::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("2d.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Declaration
+
 pub use crate::artifacts::puzzle2d::op::Puzzle2dPlaySnapshot;
 
 //#region 🧪️Tests

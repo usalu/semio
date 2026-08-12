@@ -1,0 +1,53 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.drawing/inference.json",
+  "title": "SemioDrawingInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["flattenedScene"],
+  "properties": {
+    "flattenedScene": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/FlattenedNode" },
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "Rgba": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["r", "g", "b", "a"],
+      "properties": { "r": { "type": "number" }, "g": { "type": "number" }, "b": { "type": "number" }, "a": { "type": "number" } }
+    },
+    "DrawStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "fill": { "$ref": "#/$defs/Rgba" },
+        "stroke": { "$ref": "#/$defs/Rgba" },
+        "strokeWidth": { "type": "number" },
+        "opacity": { "type": "number" }
+      }
+    },
+    "Transform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["translation", "rotation", "scale"],
+      "properties": {
+        "translation": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "rotation": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 },
+        "scale": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+      }
+    },
+    "FlattenedNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["worldTransform"],
+      "properties": {
+        "worldTransform": { "$ref": "#/$defs/Transform" },
+        "resolvedStyle": { "$ref": "#/$defs/DrawStyle" }
+      }
+    }
+  }
+}

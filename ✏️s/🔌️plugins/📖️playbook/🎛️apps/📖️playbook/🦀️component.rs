@@ -78,6 +78,10 @@ impl ArtifactApp for PlaybookPlayApp {
     const APP_ID: &'static str = PLAYBOOK_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;
 
+    fn app_schema() -> Option<schema::AppSchemaDescriptor> {
+        Some(crate::apps::playbook::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> PlaybookSnapshot {
         crate::artifacts::playbook::engine::empty_playbook_snapshot()
     }
@@ -168,12 +172,6 @@ pub fn create_playbook_play_app() -> App {
     )
 }
 //#endregion 🔖️Manifest
-
-//#region 🔖️Setup
-/// 🗂️ Called from the plugin root's `semio_plugin!{ setup: … }` — re-exported so `📦️glue.rs` names one
-/// symbol instead of reaching into the artifact `⚙️engine` node directly.
-pub use crate::artifacts::playbook::engine::register as setup;
-//#endregion 🔖️Setup
 
 //#region 🧪️Testkit
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be

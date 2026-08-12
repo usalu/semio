@@ -2,28 +2,10 @@
 //! own widget/synapse graph (topological order, per-widget longest-path depth, cycle-freedom,
 //! widget count).
 
+use crate::artifacts::flow::schema::widget_id;
 use flow::{SynapseSpec, Widget};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
-
-//#region 🔖️WidgetId
-/// 🎛️ Every `Widget` variant carries its own `id: String` as its first field — this reaches
-/// through the tag to read it generically, mirroring `flow`'s own internal `widget_id_for`
-/// (private to the host crate, so re-derived here rather than depended on).
-fn widget_id(widget: &Widget) -> &str {
-    match widget {
-        Widget::Neuron { id, .. } => id,
-        Widget::InputSlider { id, .. } => id,
-        Widget::InputNote { id, .. } => id,
-        Widget::InputImage { id, .. } => id,
-        Widget::Variable { id, .. } => id,
-        Widget::OutputPreview { id, .. } => id,
-        Widget::OutputAction { id, .. } => id,
-        Widget::OutputExport { id, .. } => id,
-        Widget::Cluster { id, .. } => id,
-    }
-}
-//#endregion 🔖️WidgetId
 
 //#region 🔖️Topology
 /// 🧭 Whole-snapshot topology summary — a plain scalar inference (no per-entity `InferredField`

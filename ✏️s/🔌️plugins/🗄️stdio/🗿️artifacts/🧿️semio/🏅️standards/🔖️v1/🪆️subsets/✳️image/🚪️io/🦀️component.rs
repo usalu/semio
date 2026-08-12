@@ -108,6 +108,14 @@ pub mod derived_composition {
         store::register_document_codec(store::ArtifactCodec::of::<SemioImageSnapshot, crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation>(crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA));
         register_subset_validator(validator_entry());
         register_composer_entries(io_entries());
+        register_artifact_inferences();
+    }
+
+    /// 💡️ Registers `s.stdio.semio.image.inference`'s facet leaves into the OS-wide inference
+    /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
+    /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::image::schema::inferences::semio_image_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 

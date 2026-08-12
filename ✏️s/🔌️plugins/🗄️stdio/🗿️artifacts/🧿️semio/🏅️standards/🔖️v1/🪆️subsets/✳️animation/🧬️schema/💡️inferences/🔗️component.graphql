@@ -1,0 +1,12 @@
+# 💡️ Semio animation inference schema — keyframe-derived playback duration.
+
+type SemioAnimationInference {
+  duration: SemioAnimationDuration! @state(class: INFERRED)
+}
+
+type SemioAnimationDuration {
+  durationSeconds: Float!
+  timelineCount: Int!
+  channelCount: Int!
+  keyframeCount: Int!
+}

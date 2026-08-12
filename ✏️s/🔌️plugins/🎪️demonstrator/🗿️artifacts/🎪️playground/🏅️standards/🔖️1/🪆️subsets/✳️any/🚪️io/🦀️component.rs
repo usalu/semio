@@ -1,5 +1,5 @@
-//! 🚪️ IO s.playground (1/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from ⚙️engine::register), not per-leaf register().
+//! 🚪️ IO s.playground (1/✳️any) — registration now flows through `ArtifactDeclaration::register_all`
+//! (`.composers(engine::io_registry::entries())` on the artifact root's `declaration()`), not per-leaf register().
 pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"] }
 pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"] }
 //#region 🎹️DerivedComposition

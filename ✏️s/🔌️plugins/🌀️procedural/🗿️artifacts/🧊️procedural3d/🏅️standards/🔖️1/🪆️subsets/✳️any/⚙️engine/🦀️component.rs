@@ -624,33 +624,18 @@ pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &s
 }
 //#endregion 🔖️GumballTransforms
 
-/// 🔌️ Registers this artifact's plugin-level exports — mesh export/import bridges, DWG mesh bridge,
-/// pack<->dsl document codec. Called once from the plugin-root `📦️glue.rs`'s `semio_plugin!` `setup:`.
-/// 📎 Registers the procedural3d artifact schema descriptor into the process-local registry.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::procedural3d::schema::procedural3d_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers the procedural3d artifact 💡️inference schema descriptor into the OS-wide
-/// inference catalog — sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(
-        crate::artifacts::procedural3d::standards::v1::subsets::any::schema::inferences::procedural3d_artifact_inference_descriptor(),
-    );
-}
-
-pub fn register() {
-    crate::artifacts::procedural3d::io_registry::register();
-
-    register_artifact_schema();
-    register_artifact_inferences();
-    register_pilot_languages();
+//#region 🔖️Register
+/// 🗺️ Registers a DWG import bridge for procedural3d's own kind — self-registration, the COMPLIANT
+/// shape ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE's plugin dispatch calls out explicitly (unlike a foreign
+/// plugin naming a kind it does not own). No `ArtifactDeclaration` field models
+/// `register_mesh_dwg_import_handler` (not one of §6's covered registrars — see
+/// `📓️w1-mechanism-report.md`'s exhaustive field↔registrar census), so this stays a `.setup()` call
+/// from `🌀️procedural/🦀️component.rs`, flagged loudly as a genuine declaration gap in
+/// `📓️w1b-semio-s-plugin-procedural-report.md` rather than silently dropped.
+pub fn register_dwg_mesh_bridge() {
     semio_framework_os::register_mesh_dwg_import_handler("3d.procedural", procedural3d_document_from_mesh);
-    // 📦️ Registers `Procedural3dSnapshot`'s pack<->dsl codec so `framework/sync`'s `FolderEndpoint`
-    // can print/parse `.procedural3d` packs without depending on this crate's concrete types.
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::procedural3d::Procedural3dPlayApp>(crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA);
 }
+//#endregion 🔖️Register
 //#endregion 🔖️DocumentHelpers
 
 
@@ -864,56 +849,6 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "procedural.procedural3d.document",
-        extension: Some("procedural3d"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::procedural3d::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::procedural3d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::procedural3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::procedural3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural.procedural3d.document")});
-    dsl::register_language(dsl::LanguageSpec {
-        id: "procedural.procedural3d.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::procedural3d::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::procedural3d::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::procedural3d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::procedural3d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural.procedural3d.op")});
-    dsl::register_language(dsl::LanguageSpec {
-        id: "procedural.procedural3d.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::procedural3d::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::procedural3d::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("procedural.procedural3d.diff")});
-    dsl::register_language(dsl::LanguageSpec {
-        id: "procedural3d.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::procedural3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::procedural3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural3d.pack")});
-    dsl::register_language(dsl::LanguageSpec {
-        id: "procedural3d.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::procedural3d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::procedural3d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("procedural3d.spr")});
-}
 
 
 //#region 🔖️ArtifactEngine

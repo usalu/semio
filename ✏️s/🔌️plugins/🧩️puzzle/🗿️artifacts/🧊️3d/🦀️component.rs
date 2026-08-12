@@ -537,6 +537,90 @@ pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
+//#region 🔖️Declaration
+/// 🔖️ Puzzle3d's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1, relocated off
+/// `⚙️engine` to the artifact root — `declaration()` describes the artifact itself, not engine
+/// behaviour) — replaces the `ComposerEntry` half of the old `register_io()`. The `"3d.puzzle"`
+/// OS-host mesh export/import bridge (`engine::register_mesh_io()`) has NO `ArtifactDeclaration`
+/// field — it belongs to the same OS media-host 14-function family flagged on puzzle2d's
+/// `declaration()` doc, a different mechanism from the nine §6 registrars this struct covers — so it
+/// stays wired through `🧩️puzzle/🦀️component.rs`'s own `.setup()`, not here.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.puzzle3d")
+        .schema(crate::artifacts::puzzle3d::schema::puzzle3d_artifact_schema_descriptor())
+        .inferences([crate::artifacts::puzzle3d::standards::v1::subsets::any::schema::inferences::puzzle3d_artifact_inference_descriptor()])
+        .composers(crate::artifacts::puzzle3d::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::puzzle3d::Puzzle3dPlayApp>()
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. This function
+/// existed as a side-effecting `register_pilot_languages()` before M1 but was never called from
+/// anywhere (dead code, confirmed by grep) — wiring it into `declaration()`'s `.languages(...)` is
+/// this conversion's one real bug fix: puzzle3d's own grammars were never actually registered.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "puzzle.puzzle3d",
+                    extension: Some("puzzle3d"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::puzzle3d::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::puzzle3d::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::puzzle3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::puzzle3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("puzzle.puzzle3d"),
+                },
+                dsl::LanguageSpec {
+                    id: "puzzle.puzzle3d.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::puzzle3d::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::puzzle3d::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::puzzle3d::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::puzzle3d::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("puzzle.puzzle3d.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "puzzle.puzzle3d.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::puzzle3d::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::puzzle3d::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("puzzle.puzzle3d.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "3d.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::puzzle3d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::puzzle3d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("3d.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "3d.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::puzzle3d::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::puzzle3d::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("3d.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Declaration
+
 pub use crate::artifacts::puzzle3d::op::Puzzle3dPlaySnapshot;
 
 

@@ -13,14 +13,16 @@ pub struct SourcingCurateConfig {
     #[state(local_ui)] pub contributions_json: String,
 }
 
-//#region 🔖️AppSchemaRegistration
-/// 📎 Self-registers the curate app's config + presence schema facets into the OS-wide
-/// [`schema::AppSchemaRegistry`] — the open replacement for this app's entry in framework schema's
-/// closed `register_all_app_schema_descriptors()` catalog (see
-/// `🧰️framework/🔨️modules/🧬️schema/🦀️component.rs`, `s.sourcing.curate`). Called from
-/// `crate::artifacts::curate::engine::register()`, the plugin root's `setup` hook.
-pub fn register_app_schema() {
-    ::schema::register_app_schema_descriptor(::schema::AppSchemaDescriptor {
+//#region 🔖️AppSchemaDescriptor
+/// 📎 The curate app's config + presence schema facets — the open replacement for this app's entry
+/// in framework schema's closed `register_all_app_schema_descriptors()` catalog (see
+/// `🧰️framework/🔨️modules/🧬️schema/🦀️component.rs`, `s.sourcing.curate`). Returned, not
+/// self-registered; `SourcingCurateApp::app_schema` (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) hands it to `register_document_app` — app-scope
+/// config/presence schema is the one registration `ArtifactDeclaration` deliberately has no field
+/// for (see that struct's own doc). `🪵️sourcing/🦀️component.rs` no longer needs `.setup()` for this.
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+    ::schema::AppSchemaDescriptor {
         id: "s.sourcing.curate",
         config: ::schema::FacetLeaves {
             rust: include_str!("🦀️component.rs"),
@@ -36,7 +38,7 @@ pub fn register_app_schema() {
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️component.json"),
             proto: include_str!("../../👥️presence/🧬️schema/🛰️component.proto"),
         },
-    });
+    }
 }
-//#endregion 🔖️AppSchemaRegistration
+//#endregion 🔖️AppSchemaDescriptor
 

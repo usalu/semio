@@ -44,11 +44,6 @@ pub mod sparse;
 #[path = "../../🎛️apps/◻2d/⚙️engine/🖥️app-surface/🦀️component.rs"]
 pub mod app_surface;
 
-/// 🗂️ Registers both artifacts' engines with the host.
-pub fn register_all_engines() {
-    crate::artifacts::fem2d::engine::register();
-    crate::artifacts::fem3d::engine::register();
-}
 //#endregion 🏗️Kernel modules
 
 //#region 🗿️Artifacts

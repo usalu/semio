@@ -1,0 +1,4 @@
+=== attempt 1 at Wed Aug 12 21:24:25 CEST 2026 ===
+attempt 1 hit glue.rs churn, waiting 45s
+=== attempt 2 at Wed Aug 12 21:25:20 CEST 2026 ===
+SUCCESS on attempt 2

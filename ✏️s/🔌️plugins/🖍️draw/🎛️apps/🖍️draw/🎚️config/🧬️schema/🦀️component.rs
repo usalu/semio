@@ -25,12 +25,12 @@ pub struct DrawConfig {
 }
 //#endregion 🔖️Config
 
-//#region 🔖️AppSchemaSelfRegistration
-/// 📎 Registers the `s.draw.draw` app-schema descriptor (config + presence facets) into the open
-/// [`::schema::AppSchemaRegistry`], mirroring the transplanted-from-framework closed-catalog entry —
-/// see `🧰️framework/🔨️modules/🧬️schema/🦀️component.rs::register_all_app_schema_descriptors()`.
-pub fn register_app_schema() {
-    ::schema::register_app_schema_descriptor(::schema::AppSchemaDescriptor {
+//#region 🔖️AppSchemaDescriptor
+/// 📎 The `s.draw.draw` app-schema descriptor (config + presence facets) — returned, not
+/// self-registered; `ArtifactApp::app_schema` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+/// W1c) hands it to `register_document_app` for registration.
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+    ::schema::AppSchemaDescriptor {
         id: "s.draw.draw",
         config: ::schema::FacetLeaves {
             rust: include_str!("🦀️component.rs"),
@@ -46,7 +46,7 @@ pub fn register_app_schema() {
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️component.json"),
             proto: include_str!("../../👥️presence/🧬️schema/🛰️component.proto"),
         },
-    });
+    }
 }
-//#endregion 🔖️AppSchemaSelfRegistration
+//#endregion 🔖️AppSchemaDescriptor
 

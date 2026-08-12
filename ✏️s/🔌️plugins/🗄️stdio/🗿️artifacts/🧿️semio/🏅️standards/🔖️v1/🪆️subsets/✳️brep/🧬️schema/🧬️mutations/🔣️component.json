@@ -1,19 +1,25 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.brep/mutations.json",
   "title": "SemioBrepMutation",
-  "description": "Named-variant enum, tag field `mutation`, camelCase. See the sibling 🦀️component.rs for the real source of truth.",
+  "description": "Named-variant enum, tag field `mutation`, camelCase. SMO's approved 13-verb brep vocabulary (create/delete-{vertex,edge,face,shell,solid}, replace-{curve,surface}, move-vertex). See the sibling 🦀️component.rs for the real source of truth.",
   "type": "object",
   "properties": {
     "mutation": {
       "type": "string",
       "enum": [
-        "noMutation", "setSnapshot",
-        "addVertex", "removeVertex", "setVertexPoint",
-        "addEdge", "removeEdge", "setEdgeEndpoints", "setEdgeCurve",
-        "addLoop", "removeLoop", "setLoopEdges",
-        "addFace", "removeFace", "setFaceSurface", "setFaceOrientation", "setFaceLoops",
-        "addShell", "removeShell", "setShellFaces",
-        "addSolid", "removeSolid", "setSolidShells"
+        "createVertex",
+        "deleteVertex",
+        "createEdge",
+        "deleteEdge",
+        "createFace",
+        "deleteFace",
+        "createShell",
+        "deleteShell",
+        "createSolid",
+        "deleteSolid",
+        "replaceCurve",
+        "replaceSurface",
+        "moveVertex"
       ]
     }
   },

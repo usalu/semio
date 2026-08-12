@@ -54,13 +54,20 @@ pub fn demo_space_projection() -> WorkflowSnapshot {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔌️Registration
-/// 🔌️ Builds the S Studio plugin surface for host registration.
+/// 🔌️ Builds the S Studio plugin surface for host registration. `.artifact(…)` (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old imperative `register_s_exports()`
+/// pre-call for everything artifact-scoped (`🏠️home`'s schema/inferences/composers/languages/document
+/// codec); `.setup()` survives here for the two things `ArtifactDeclaration` has no field for: BOTH
+/// apps' config/presence schema, and `SpaceApp`'s own document codec — `🪐️space`'s app wraps the
+/// kernel-owned `WorkflowSnapshot` and owns no `🗿️artifacts` node of its own in this plugin (see this
+/// file's own module doc), so it cannot be expressed as an `ArtifactDeclaration.document_codec` either.
 pub fn plugin() -> Plugin {
-    crate::register_s_exports();
     Plugin::builder("s")
         .label("S Studio")
         .version("0.1.0")
         .local_backbone_storage()
+        .setup(crate::register_s_exports)
+        .artifact(crate::artifacts::home::declaration())
         .register_document_app::<crate::apps::home::HomeApp>(crate::apps::home::create_home_app())
         .register_document_app::<crate::apps::space::SpaceApp>(crate::apps::space::create_space_app())
         .build()

@@ -13,76 +13,10 @@ use serde::{Deserialize, Serialize};
 pub use crate::artifacts::playbook::{empty_playbook_snapshot, flatten_playbook_blocks, PlaybookBlock};
 //#endregion 🔖️Types
 
-//#region 🔖️Register
-/// 🗂️ Registers `PlaybookSnapshot`'s pack↔dsl codec under `PLAYBOOK_DOCUMENT_SCHEMA` so `framework/sync`'s
-/// `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse playbook documents without
-/// depending on this crate's concrete `Projection`/`Mutation` types. Called from the plugin root's
-/// `semio_plugin!{ setup: … }`.
-pub fn register() {
-    crate::artifacts::playbook::io_registry::register();
-
-    register_artifact_schema();
-    register_artifact_inference();
-    crate::apps::playbook::config::schema::register_app_schema();
-    register_pilot_languages();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::playbook::PlaybookPlayApp>(PLAYBOOK_DOCUMENT_SCHEMA);
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "playbook.playbook",
-        extension: Some("playbook"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::playbook::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::playbook::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::playbook::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::playbook::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("playbook.playbook"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "playbook.playbook.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::playbook::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::playbook::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::playbook::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::playbook::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("playbook.playbook.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "playbook.playbook.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::playbook::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::playbook::schema::diff::text::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("playbook.playbook.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "playbook.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::playbook::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::playbook::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("playbook.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "playbook.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::playbook::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::playbook::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("playbook.spr"),
-    });
-}
-
-//#endregion 🔖️Register
+// 🔖️Register region removed (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7): `declaration()`
+// and its private helper `pilot_languages()` moved to the artifact root's `🦀️component.rs` — `declaration()`
+// describes the artifact (kind/schema/io/ownership), it is not engine behaviour. `io_registry` below stays
+// here; the root now reaches it by its full path (`standards::v1::engine::io_registry::entries()`).
 
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document ports plus one
@@ -195,19 +129,10 @@ impl PlaybookEngine {
 }
 //#endregion 🔖️ArtifactEngine
 
-//#region 🔖️SchemaRegistry
-/// 📌️ Registers the twenty handcrafted schema leaves for `s.playbook.playbook`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::playbook::schema::playbook_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.playbook.playbook.inference`'s facet leaves — sibling registry to
-/// `register_artifact_schema()` above (ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inference() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::playbook::standards::v1::subsets::any::schema::inferences::playbook_artifact_inference_descriptor());
-}
-//#endregion 🔖️SchemaRegistry
+// 🔖️SchemaRegistry region removed (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1): the
+// two side-effecting registrars this used to hold (`register_artifact_schema`,
+// `register_artifact_inference`) had exactly one call site each, both inside the old `register()`
+// above — now expressed as `.schema(...)`/`.inferences([...])` data on `declaration()` instead.
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;

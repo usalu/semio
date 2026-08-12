@@ -2,8 +2,20 @@
 
 use semio_framework_plugin::Plugin;
 
-/// 🔌️ Builds the demonstrator plugin via pane registration.
+const PLUGIN_ID: &str = "demonstrator";
+const PLUGIN_LABEL: &str = "Entwerfen mit Bestand";
+const PLUGIN_VERSION: &str = "0.1.0";
+
+/// 🔌️ Builds the demonstrator plugin: `.artifact(...)` declares the owned `playground` artifact
+/// (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1, replacing the old side-effecting
+/// `crate::artifacts::playground::engine::register()`), then `panes::bundle` layers the six panes'
+/// host exports + apps onto the already-built `Plugin`. Playground has no app-scope config/presence
+/// schema of its own, so unlike `🗒️note` this plugin needs no narrowed `.setup()` call at all.
 pub fn plugin() -> Plugin {
-    crate::artifacts::playground::engine::register();
-    crate::panes::bundle()
+    let plugin = Plugin::builder(PLUGIN_ID)
+        .label(PLUGIN_LABEL)
+        .version(PLUGIN_VERSION)
+        .artifact(crate::artifacts::playground::declaration())
+        .build();
+    crate::panes::bundle(plugin)
 }

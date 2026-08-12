@@ -470,14 +470,17 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️ArtifactCodecs
-/// 🗂️ Registers `s.home`/`s.space`'s pack<->dsl codecs under their real `document_schema()` strings so
-/// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse these
-/// documents without depending on this crate's concrete `Projection`/`Mutation` types.
+/// 🗂️ `.setup()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — kept for exactly the two
+/// things `ArtifactDeclaration` has no field for: both apps' own config/presence schema, and
+/// `SpaceApp`'s document codec (`s.space`'s pack<->dsl codec, keyed by `OS_SPACE_SCHEMA` so
+/// `framework/sync`'s `FolderEndpoint::Pack` can print/parse it without depending on this crate's
+/// concrete `WorkflowMutation` type) — `SpaceApp` wraps the kernel-owned `WorkflowSnapshot` and owns
+/// no `🗿️artifacts` node in this plugin, so it has no declaration to attach a `.document_codec()` to.
+/// `HomeApp`'s own document codec (`s.home`) and its 5 pilot languages moved to
+/// `crate::artifacts::home::engine::declaration()`, wired via `.artifact(...)` in `🦀️component.rs`.
 fn register_s_exports() {
-    crate::artifacts::home::register_pilot_languages();
     apps::home::config::schema::register_app_schema();
     apps::space::config::schema::register_app_schema();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::home::HomeApp>("s.home");
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::space::SpaceApp>(semio_framework_os::OS_SPACE_SCHEMA);
 }
 //#endregion 🔖️ArtifactCodecs

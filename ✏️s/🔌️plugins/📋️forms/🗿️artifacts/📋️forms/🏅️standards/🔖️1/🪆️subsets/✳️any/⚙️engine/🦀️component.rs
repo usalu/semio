@@ -26,77 +26,6 @@ pub fn initial_try_values(spec: &FormsSnapshot, overrides: &serde_json::Map<Stri
 }
 //#endregion 🔖️Types
 
-//#region 🔖️Register
-/// 🗂️ Registers `FormsSnapshot`'s pack↔dsl codec under `FORMS_DOCUMENT_SCHEMA` so `framework/sync`'s
-/// `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse forms documents without
-/// depending on this crate's concrete `Projection`/`Mutation` types. Called from the plugin root's
-/// `semio_plugin!{ setup: … }`.
-pub fn register() {
-    crate::artifacts::forms::io_registry::register();
-
-    register_artifact_schema();
-    register_artifact_inference();
-    register_pilot_languages();
-    crate::apps::forms::config::schema::register_app_schema();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::forms::FormsPlayApp>(FORMS_DOCUMENT_SCHEMA);
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "forms.forms",
-        extension: Some("forms"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::forms::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::forms::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::forms::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::forms::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("forms.forms"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "forms.forms.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::forms::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::forms::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::forms::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::forms::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("forms.forms.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "forms.forms.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::forms::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::forms::schema::diff::text::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("forms.forms.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "forms.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::forms::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::forms::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("forms.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "forms.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::forms::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::forms::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("forms.spr"),
-    });
-}
-
-//#endregion 🔖️Register
-
 //#region 🔖️Io
 /// 🔌️ Forms' typed media I/O surface (`AppDefinition.io`) — the implicit `document:in`/`document:out`
 /// pair (keyed by the `forms.form` document schema) plus the WORKFLOWS-END-TO-END-TYPED-PORTS
@@ -364,19 +293,6 @@ impl FormsEngine {
 }
 //#endregion 🔖️ArtifactEngine
 
-//#region 🔖️SchemaRegistry
-/// 📌️ Registers the twenty handcrafted schema leaves for `s.forms.forms`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::forms::schema::forms_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.forms.forms.inference`'s facet leaves — sibling registry to
-/// `register_artifact_schema()` above (ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inference() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::forms::standards::v1::subsets::any::schema::inferences::forms_artifact_inference_descriptor());
-}
-//#endregion 🔖️SchemaRegistry
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;

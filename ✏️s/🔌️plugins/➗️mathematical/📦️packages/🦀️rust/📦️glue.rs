@@ -413,7 +413,7 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/📄️document/🦀️component.rs"]
+            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/📄️artifact/🦀️component.rs"]
             pub mod document;
             #[path = "../../🎛️apps/➗️mathematical/🎮️commands/🕸️graph/🦀️component.rs"]
             pub mod graph;

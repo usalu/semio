@@ -9,8 +9,9 @@ pub fn inverse(payload: &super::mutation::DeleteObject, base: &Puzzle3dSnapshot)
     let Some(object) = base.objects.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
+    let index = base.objects.iter().position(|entry| entry.id == payload.id);
     let vortex_ids: Vec<String> = object.vortices.iter().map(|vortex| format!("{}:{}", object.id, vortex.id)).collect();
-    let mut mutations = vec![crate::artifacts::puzzle3d::mutations::create_object::mutation::create_object(object.clone(), None)];
+    let mut mutations = vec![crate::artifacts::puzzle3d::mutations::create_object::mutation::create_object(object.clone(), index)];
     for attraction in base.attractions.iter().filter(|attraction| vortex_ids.contains(&attraction.attracting) || vortex_ids.contains(&attraction.attracted)) {
         mutations.push(crate::artifacts::puzzle3d::mutations::connect_vortices::mutation::connect_vortices(
             attraction.id.clone(), attraction.attracting.clone(), attraction.attracted.clone(),

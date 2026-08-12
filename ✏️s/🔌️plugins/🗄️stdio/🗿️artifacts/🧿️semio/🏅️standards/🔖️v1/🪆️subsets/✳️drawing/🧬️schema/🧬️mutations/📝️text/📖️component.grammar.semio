@@ -3,49 +3,41 @@ grammar semio.drawing.mutations
 extension semio
 start op
 
-# drawing wave: real one-line `OpText::print_op`/`parse_op` shape emitted by
-# `🧬️mutations/🦀️component.rs` (`print_semio_drawing_mutation`/`parse_semio_drawing_mutation`) —
-# "keyword arg=value ..." (space-separated; space is lexer trivia at this dialect level). Every
-# keyword/field-name token below is copied verbatim from the real `format!(...)` call sites in that
-# file's `print_semio_drawing_mutation`, not invented. Replaces the old whole-enum `serde_json`
-# shortcut this facet's `OpText` used before this wave.
-op = no-mutation | set-snapshot | set-canvas-size | set-canvas-background | set-style | remove-style | insert-layer | remove-layer | set-layer-meta | move-layer | set-group-transform | set-path-segments | set-node-style | set-text | set-image | insert-node | remove-node | replace-node
+# DKM drawing-vocabulary wave: real one-line `OpText::print_op`/`parse_op` shape emitted by
+# `../📝️text/🦀️component.rs` (`print_drawing_mutation`/`parse_drawing_mutation`) — `tag:args` (no
+# space; `:` separates the keyword from its positional, comma-separated argument list), same
+# convention `✳️text`'s own mutations grammar established. Seventeen keywords, one per SMO-approved
+# verb this facet registers (`📌️important.md`'s binding vocabulary ruling) — no
+# `noMutation`/`setSnapshot`/`set*` (banned/superseded vocabulary). `NodePath` addresses a
+# scene-graph node: `layer` selects `layers[layer]`, `path` is a chain of child indices from that
+# layer's `root`.
+op = create-layer | delete-layer | create-node | delete-node | move-node | drag-nodes | rotate | scale | reorder-nodes | group | ungroup | flatten | unflatten | replace-path | replace-fill | change-stroke-color | change-stroke-width
 
-no-mutation = "no-mutation"
-set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
-set-canvas-size = "set-canvas-size" "width" "=" number "height" "=" number
-set-canvas-background = "set-canvas-background" "background" "=" option-rgba
-set-style = "set-style" "name" "=" hex "fill" "=" option-rgba "stroke" "=" option-rgba "stroke-width" "=" option-number "opacity" "=" option-number
-remove-style = "remove-style" "name" "=" hex
-insert-layer = "insert-layer" "index" "=" number "layer" "=" layer
-remove-layer = "remove-layer" "index" "=" number
-set-layer-meta = "set-layer-meta" "index" "=" number "id" "=" hex "name" "=" hex "visible" "=" bool
-move-layer = "move-layer" "from" "=" number "to" "=" number
-set-group-transform = "set-group-transform" "path" "=" node-path "transform" "=" transform
-set-path-segments = "set-path-segments" "path" "=" node-path "segments" "=" segment-list
-set-node-style = "set-node-style" "path" "=" node-path "style" "=" option-hex
-set-text = "set-text" "path" "=" node-path "value" "=" hex "at" "=" point2
-set-image = "set-image" "path" "=" node-path "at" "=" point2 "width" "=" number "height" "=" number "mime" "=" hex "bytes" "=" hex
-insert-node = "insert-node" "path" "=" node-path "index" "=" number "node" "=" node
-remove-node = "remove-node" "path" "=" node-path "index" "=" number
-replace-node = "replace-node" "path" "=" node-path "node" "=" node
+create-layer = "createLayer" ":" INT "," layer
+delete-layer = "deleteLayer" ":" hex
+create-node = "createNode" ":" node-path "," INT "," node
+delete-node = "deleteNode" ":" node-path
+move-node = "moveNode" ":" node-path "," point2
+drag-nodes = "dragNodes" ":" "[" node-path-items? "]" "," point2
+rotate = "rotate" ":" node-path "," quaternion
+scale = "scale" ":" node-path "," point3
+reorder-nodes = "reorderNodes" ":" node-path "," INT "," INT
+group = "group" ":" node-path "," "[" index-items? "]" "," transform
+ungroup = "ungroup" ":" node-path
+flatten = "flatten" ":" node-path
+unflatten = "unflatten" ":" node-path "," node
+replace-path = "replacePath" ":" node-path "," segment-list
+replace-fill = "replaceFill" ":" hex "," option-rgba
+change-stroke-color = "changeStrokeColor" ":" hex "," option-rgba
+change-stroke-width = "changeStrokeWidth" ":" hex "," option-number
 
-# `NodePath`: `[layer,[p0,p1,...]]` — a chain of child indices from `layers[layer].root`.
-node-path = "[" number "," "[" index-items? "]" "]"
-index-items = number {"," number}*
+node-path = "[" INT "," "[" index-items? "]" "]"
+node-path-items = node-path {"," node-path}*
+index-items = INT {"," INT}*
 
-# `enc_drawing_snapshot`/`dec_drawing_snapshot` — `[hex(schema),canvas,[style,...],[layer,...]]`.
-snapshot-lit = "[" hex "," canvas "," "[" style-items? "]" "," "[" layer-items? "]" "]"
-style-items = style {"," style}*
-layer-items = layer {"," layer}*
-
-# `enc_style`/`enc_layer`/`enc_node`/`enc_path_segment` — the same full-VALUE codecs
-# `📸️snapshot/📝️text/📖️component.grammar.semio` declares (restated here so this leaf grammar is
-# self-contained, matching the repo's existing per-facet convention).
-canvas = "[" number "," number "," option-rgba "]"
-style = "[" hex "," option-rgba "," option-rgba "," option-number "," option-number "]"
+# Same full-VALUE codecs `📸️snapshot/📝️text/📖️component.grammar.semio` declares (restated here so
+# this leaf grammar is self-contained, matching the repo's existing per-facet convention).
 layer = "[" hex "," hex "," bool "," node "]"
-
 node = "P" "[" segment-list "," option-hex "]" | "T" "[" hex "," point2 "," option-hex "]" | "G" "[" transform "," node-list "]" | "I" "[" point2 "," number "," number "," hex "," hex "]"
 node-list = "[" node-items? "]"
 node-items = node {"," node}*
@@ -63,14 +55,10 @@ bool = "0" | "1"
 
 number = INT | FLOAT
 
+option-hex = "[" "0" "]" | "[" "1" "," hex "]"
 option-rgba = "[" "0" "]" | "[" "1" "," rgba "]"
 option-number = "[" "0" "]" | "[" "1" "," number "]"
-option-hex = "[" "0" "]" | "[" "1" "," hex "]"
 
 # `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
-# `hex` MACRO — a run of lowercase hex digits (`enc_str`/`hex_encode`'s own alphabet), incl. the
-# empty string. `Symbol::Ref` already falls back from "no production of this name" to "macro of
-# this name", so referencing `hex` with no matching production routes here automatically. Using a
-# hand-rolled `{INT|IDENT}*` production instead would be wrong: it never backtracks and would
-# silently swallow the next literal keyword token (e.g. `id=<hex> name=<hex>` — the literal `name`
-# tokenizes as a plain `IDENT`, exactly like a stray hex letter run would).
+# `hex` MACRO — a run of lowercase hex digits, incl. the empty string. `Symbol::Ref` already falls
+# back from "no production of this name" to "macro of this name".

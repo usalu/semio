@@ -139,10 +139,14 @@ mod tests {
 
     #[test]
     fn snapshot_mutations_capture_move_and_connect() {
-        let mut host = crate::artifacts::sequence::engine::SequenceHost::default();
-        let before = host.snapshot.clone();
-        let id = host.add_step("math.add", 40.0, 40.0);
-        let mutations = sequence_snapshot_mutations(&before, &host.snapshot);
+        // 🧭️ Built by hand rather than via `SequenceHost` (that editing host now lives in
+        // `crate::apps::sequence` — an artifact must never depend on an app): a step add is enough
+        // to exercise `sequence_snapshot_mutations`'s before/after diff directly.
+        let before = default_snapshot();
+        let id = "step-99".to_string();
+        let mut after = before.clone();
+        after.steps.push(SequenceStep { id: id.clone(), kind: "math.add".into(), params: StepParams::new(), x: 40.0, y: 40.0, slot: None, collapsed: false });
+        let mutations = sequence_snapshot_mutations(&before, &after);
         assert!(mutations.iter().any(|mutation| matches!(mutation, SequenceMutation::CreateStep(payload) if payload.step.id == id)));
     }
 

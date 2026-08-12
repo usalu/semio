@@ -1,5 +1,47 @@
 # Status
 
+## 🔴 ALL PLUGIN GATES BLOCKED — `semio-s-plugin-stdio` is red, and every plugin depends on it
+
+Measured directly (`RUSTC_WRAPPER="" … --all-targets`), state has moved twice in ~20 minutes:
+
+| time | stdio state |
+|---|---|
+| earlier | `Finished dev profile in 1m 04s` — **clean** |
+| then | 1 error — dangling `#[path]` at `📦️glue.rs:6028` → `✳️drawing/…/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs` (dir deleted, mount left behind) |
+| then | **14 errors** — `apply_semio_brep_mutation`, `create_edge`/`create_face`/`create_shell`/`create_solid` unresolved (`subsets::brep`) |
+| now | **3 errors** — `SemioDrawingMutation: OpBinary` unsatisfied, `encode_op`/`decode_op` missing (`subsets::drawing`) |
+
+**Four distinct error sets in ~40 minutes.** This is not one problem being fixed; it is a sequence of different in-flight changes (drawing mount → brep vocabulary → drawing codec traits). **Do not treat any single stdio reading as durable** — re-measure immediately before acting, and never plan a wave around a stdio state observed more than a few minutes ago. APA reports two sessions nearly edited files on stale stdio measurements.
+
+**Ownership is settled and none of it is ours:** `subsets::brep` is DKM's; `subsets::drawing` mutation vocabulary/codecs belong to the mutation lanes. We touch neither.
+
+Verified the dangling mount by content: `✳️drawing/🧬️schema/🧬️mutations/` contains `➕create-node ➖delete-node 🌱create-layer 🎈unflatten 💫ungroup` — **no `📄set-snapshot`**. Someone's in-flight mutation-vocabulary removal took the directory but not the mount. The newer brep errors look like a second, separate in-flight change.
+
+**Not ours; not fixable by us** (stdio mutation vocabulary belongs to SMO/UCAS/DKM). **Consequence: no P2 gate can pass, and neither can trinity's, until stdio settles.** P2 *authoring* continues regardless — writing inference facets does not require stdio to compile.
+
+## ⚠️ TRINITY — do NOT record as green. APA retracted their claim; my own runs agree it is red.
+
+APA's "trinity 0 errors" came from a plain `cargo check` **with sccache active** — no `--all-targets`, and sccache has a known false-green failure mode. They retracted it themselves. My own two runs, including one with APA's exact flags (`RUSTC_WRAPPER="" … --all-targets`), both show:
+
+```
+error[E0432]: unresolved imports `store::os_store::test_support::assert_mutation_diff_absorb_law`,
+              `store::os_store::test_support::assert_mutation_inverse_law`
+error: could not compile `semio-s-plugin-trinity` (lib test)
+```
+
+**Root cause found, and it is not ours:** `os_store::test_support` *does* exist (`🏪️store/🦀️component.rs:5015`), but those two symbols live in a **different module** — `📡️spr/🧪️testkit/🦀️component.rs:507,523`. A stale import path in SMO's mutation-law code.
+
+> ### 🔻 MY "8+ PLUGINS" CLAIM WAS WRONG — and I broadcast it to every peer
+> I reported this as repo-wide across "remodel, raster, process, norm×several". **It was ONE file** — `♻️rewrite/…/🧬️mutations/🦀️component.rs:117` — and only **2 of the 5 symbols on that line** were wrong (a mixed import, not a wholesale bad path). APA found the real scope and has already fixed it by splitting the import.
+>
+> **How I got it wrong:** I grepped for `assert_mutation_inverse_law` (46 files match — they *use* the symbol) and reported that as the count of files *importing it via the wrong path* (1). I conflated "mentions the symbol" with "has the bug". Verified now: `grep -rn "os_store::test_support::assert_mutation"` returns **zero** matches repo-wide.
+>
+> **APA's rule, adopted: "grep to find, enumerate to count."** A pattern grep is the right tool to *locate* candidates and the wrong tool to *size* a problem — check what each hit actually does before quoting a number. Especially before broadcasting one: an inflated count sends peers hunting for bugs that do not exist.
+>
+> Correction sent to all peers.
+
+**Provenance check on our own fem "green":** it was my own independent run, not APA's retracted sweep — but it ran **with sccache active**, so by the standard APA just applied to themselves it deserves a re-run under `RUSTC_WRAPPER=""` before the closing summary. Queued; currently blocked behind stdio.
+
 ## ✅ DISK RESOLVED (was 100% full)
 
 The user approved deleting the repo-root `target/` (428 G of regenerable build cache); the parent
@@ -346,7 +388,55 @@ Consequence for planning: there is **no bulk repair lane**. P1 shrinks to the tw
 
 Also folded into the worker's scope: a schema-level `PropertyKind::Derived` declaration of `flatPosition` (`🗿️artifacts/🔌️jack/🦀️component.rs:507`) and its guard test (:702) must go once `flatPosition` is no longer a stored property. Chosen leaf shape: **pure-fn**, mirroring the sibling `🧭topology`, whose own module doc gives the rationale verbatim — *"a plain whole-snapshot scalar … no `InferredField`/incremental caching needed for a single BFS pass."* Consistent with the parent's ruling.
 
-### P2 — stdio fan-out remainder: BLOCKED on UCAS
+### ✅ BUG FIXED — `Inference` trait out of scope in 2 families (ours, from the earlier fan-out)
+
+UCAS reported `semio-s-plugin-process` failing with 4 errors, "inference-related, not mine." **Half right — triaged precisely:**
+
+| errors | cause | owner |
+|---|---|---|
+| **2** — `no associated function named 'infer' found for Process3dInference` at `💡️inferences/🦀️component.rs:45` | `impl Default` calls `Self::infer(…)`, but `use protocol::Inference` sat **inside `mod tests`** instead of at module level, so the trait was not in scope at the `impl` | **OURS** |
+| **2** — `expected Value, found JsonValue` in `🚪️io/📥️import/…/🔣️json/` + `📤️export/…` | stdio's `JsonSnapshot` value type changed under process's io codecs | **NOT ours** (stdio type work) |
+
+**Found a second, latent instance the compiler had not reached yet.** Swept every `💡️inferences/🦀️component.rs` that calls `Self::infer(&…)` in its `Default` and checked whether the trait import precedes `#[cfg(test)]`:
+- `🏛️architect/🏛️program` — import at module level (line 15) ✅ compiles
+- `🏭️process/🧊️process3d` — tests-only ❌
+- `🪐️space/🏠️home` — tests-only ❌ **latent, would have failed the moment anyone built space**
+
+**Fixed both** by adding `use protocol::Inference;` at module level (matching architect, the working sibling) and removing the now-redundant tests-scope import. Exactly 3 families use this pattern; all 3 are now consistent.
+
+**Not compiler-verified yet** — `cargo check -p semio-s-plugin-space --all-targets` dies upstream in stdio (14 errors, above). Correct by inspection against a known-good sibling; re-verify when stdio clears.
+
+**⚠️ Ownership overlap on `🪐️space` — resolved, no conflict.** APA confirmed the space bug as real, credited the catch, and said they would fix it (space is APA-held). **We had already fixed it** — verified on disk: single `use protocol::Inference;` at line 14, mtime 21:24:51 (our edit), no duplicate import, file intact. **Told APA to skip it** so they don't spend a wave re-fixing a fixed file. Going forward on APA-held plugins: report the finding and let them fix, or fix and tell them immediately — doing both invites duplicate work.
+
+*Lesson: `cargo check` on one crate does not surface identical bugs in unbuilt siblings. Grepping for the pattern found in 30 seconds what the compiler would have surfaced one crate at a time.*
+
+### P2 — stdio fan-out remainder: AUTHORING IN PROGRESS (gates blocked)
+
+**Target list re-derived from disk (not from the stale plan).** 40 stdio subsets own a `📸️snapshot` and lack `💡️inferences`; the non-`✳️any` subsets (pdf `✳️a`, step `✳️cc1`…) hold only `🦀️`+`🟦️component.ts` and are **delegating stamps needing no inference files**. Ours = **36**:
+- **semio v1 × 16** — any, animation, audio, cad, document, flow, graph, image, kit, model, object, presentation, table, text, value, video (**brep/drawing/mesh → DKM**, skipped, no placeholder)
+- **geometry/BIM × 13** — gltf, stl, las, obj, step/ap214, dwg×2, bcf, dxf, ifc×2, epw, ply
+- **media × 4** — mp4, avi, wav, mp3 · **containers × 3** — deflate, zip, binary
+
+Dispatched: D1 fixes (html/json/pdf/md), S1a (semio × 8). S1b/S2/S3/S4 to follow serially (shared `📦️glue.rs`).
+
+**S1a: 8/8 subsets AUTHORED AND MOUNTED** — any, animation, audio, cad, document, flow, graph, image. Coordinator-verified per subset: **5 root leaves + 8 `📝️text` + 6 `💾️binary` + 1 slug dir**, uniformly, no gaps. All 8 appear as distinct `#[path]` mounts in stdio's `📦️glue.rs`. Agent still finishing (registration/tests/gate); glue.rs touched seconds before this check, so it is live, not stalled. `✳️any` took a `🏷️kind` slug — sensible for a union/dispatch subset.
+
+**Remaining P2 batches** (serial on the shared glue.rs): **S1b** semio × 8 (kit, model, object, presentation, table, text, value, video) · **S2** geometry/BIM × 13 · **S3** media × 4 · **S4** containers × 3.
+
+### ✅ D1's 4 fixes — LANDED, applied by the coordinator directly
+
+The D1 agent spent **125k tokens / 40 tool calls / ~20 min and landed ZERO edits** — it insisted on establishing a baseline test run first, and that run can never complete while stdio is red. It looped on retry/backoff instead of doing the work. Took it over:
+
+| artifact | fix |
+|---|---|
+| `📝️md` `🧾outline` | fixture `block_count` **3 → 4**. Verified against the code: `walk_block` increments for *every* block and recurses into `BlockQuote.blocks`, so the fixture's 3 top-level blocks + the Heading nested in the BlockQuote = **4**. **Code was right, test was wrong** — exactly as D1 diagnosed. |
+| `🌐️html`, `🔣️json`, `📄️pdf 1.4` | dropped `Default` from the `#[derive(…)]` list and hand-rolled `impl Default { Self::infer(&XSnapshot::default()) }`, each with an emoji docstring naming the specific reason its snapshot default is non-empty (html root element / json `Null` root / pdf's always-≥1 page). Added the module-level `use protocol::Inference;` each needs. |
+
+**The hand-rolled-Default fix is the same definitional pattern already used by `🏭️process`, `🪐️space` and `🏛️architect`** — `default() == infer(default())` by construction, so the law cannot drift again. Left `📄️pdf 1.7` alone: same shape, but not in the failing set, and minimal-change discipline applies.
+
+**Not compiler-verified** — blocked behind the stdio breakage above. Correct by inspection against three known-good siblings.
+
+*Lesson for worker prompts: an agent told to "establish a baseline first" will deadlock when the baseline is unobtainable. Prompts should say **author first, gate second, and report an ungated result honestly** when the tree is red.*
 **Target is now 22 subsets, not 34.** 🧿️semio v1 = **11** (14 minus `✳️brep`/`✳️drawing`/`✳️mesh`) + geometry/BIM = 11 (ifc×2, step/ap214, dwg×2, dxf, stl, gltf, obj, ply, las) + media 4 + containers 3 + bcf/epw 2. **`✳️brep`/`✳️drawing`/`✳️mesh` are reassigned to DKM outright** — not deferred, off our plate — since their derived fields (tessellation, mass-properties, validation-report, flattened-scene) are by-products of DKM's engine dissolution. Contingency: DKM's write access to those stdio dirs is still an open request to UCAS; if it falls through DKM hands the three back.
 Target roster is actively moving under us — do not start.
 

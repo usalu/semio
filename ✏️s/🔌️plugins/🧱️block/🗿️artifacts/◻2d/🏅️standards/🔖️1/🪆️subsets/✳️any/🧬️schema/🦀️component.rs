@@ -221,3 +221,42 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: Block2dComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+/// 📸️ A fresh, empty `Block2dSnapshot` (all fields at their `Default`).
+pub fn empty_block2d_snapshot() -> Block2dSnapshot {
+    Block2dSnapshot::default()
+}
+
+/// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.
+pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> String {
+    let ids: std::collections::HashSet<&str> = existing.collect();
+    let mut i = ids.len();
+    loop {
+        let candidate = format!("{prefix}{i}");
+        if !ids.iter().any(|id| *id == candidate) {
+            return candidate;
+        }
+        i += 1;
+    }
+}
+//#endregion 🔖️DocumentHelpers
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_definition_matches_default() {
+        assert_eq!(empty_block2d_snapshot(), Block2dSnapshot::default());
+    }
+
+    #[test]
+    fn next_id_skips_existing() {
+        let existing = ["h0", "h1"];
+        assert_eq!(next_id(existing.into_iter(), "h"), "h2");
+        assert_eq!(next_id(std::iter::empty(), "h"), "h0");
+    }
+}
+//#endregion 🧪️Tests

@@ -2,7 +2,7 @@
 
 use crate::apps::sequence::sequence_action;
 use crate::apps::sequence::terminology::SequenceLabels;
-use crate::artifacts::sequence::engine::{control_slots, is_control_kind};
+use crate::apps::sequence::{control_slots, is_control_kind};
 use crate::artifacts::sequence::{SequenceSnapshot, SequenceStep};
 use semio_framework_plugin::{
     tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiControlNode, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,

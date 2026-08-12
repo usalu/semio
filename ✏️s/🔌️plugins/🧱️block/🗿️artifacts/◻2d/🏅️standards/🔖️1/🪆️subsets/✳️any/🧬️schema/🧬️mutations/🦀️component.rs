@@ -99,7 +99,7 @@ pub fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2d
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::block2d::engine::empty_block2d_snapshot;
+    use crate::artifacts::block2d::schema::empty_block2d_snapshot;
     use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::SemanticMutation;

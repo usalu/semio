@@ -43,6 +43,76 @@ Two mechanism findings worth keeping:
 
 Calibration for anyone reading the gate: **22188 pre-existing high-priority breaches across 27 rules**, 19601 of them handcrafted-grammar/spec-distinctness. None new.
 
+## W1c — `.setup()` eliminated from 19 plugins; and the design premise was WRONG
+
+`ArtifactApp::app_schema()` landed (`🔌️plugin/🦀️component.rs:5118`), so an app's config/presence schema is now answered by the app type itself rather than by a setup callback. **19 of 33 plugins now have no `.setup()` call at all**: `➗️mathematical 🌍️gis 🎥️shooting 🎪️demonstrator 🏗️fem 💠️lowpoly 📋️forms 📏️layout 📐️cad 📖️playbook 📜️imperative 📸️remodel 🔱️trinity 🕸️dag 🖍️draw 🖨️raster 🗄️stdio 🗒️note 🪵️sourcing`.
+
+### The correction: app-schema was NOT the last holdout
+
+The W1c design rested on a premise this ticket asserted and did not verify — that `register_app_schema` was the *only* remaining legitimate use of `.setup()`. **The conversion found at least four distinct categories**, each discovered by an agent hitting it rather than by design review:
+
+1. **App-scope config/presence schema** — the known one. Closed by `app_schema()`.
+2. **OS media-host bridges** (`🧩️puzzle`) — no `ArtifactDeclaration` field covers them.
+3. **A bare document codec with no `ArtifactApp` to bind to** (`🔋️energy`) — `.document_codec::<A: ArtifactApp>()` requires an app; a library plugin with zero apps registers a `Snapshot`/`Mutation` codec directly.
+4. **An app whose document codec has no artifact node** (`🪐️space`) — `SpaceApp` owns no `🗿️artifacts` node in its own plugin, so its codec cannot live in any artifact declaration.
+
+So `.setup()` cannot be deleted by closing category 1 alone. **The honest status is: the mechanism works and is proven across 19 plugins; the remaining 14 split into 8 peer-held and 6 with genuine, now-documented coverage gaps** (`🌀️procedural 📕️norm 🔋️energy 🧩️puzzle 🧱️block 🪐️space`).
+
+This is the ticket's clearest case of *the plan being corrected by contact with the code*. Categories 2–4 were invisible from the design and are exactly the kind of thing a mechanical conversion surfaces and a review does not.
+
+### Also fixed, unprompted, by conversion agents
+
+`🪵️sourcing` reached **exit 0** after its agent found and repaired two genuine pre-existing in-plugin bugs the conversion exposed — a `JsonValue`/`serde_json::Value` stdio gap (fixed with the *already-verified* note/lowpoly text-bridge pattern rather than an invented one) and an `E0252` self-collision in its mutations enum. The pattern propagating correctly between agents, without my involvement, is the strongest evidence that documenting a verified fix beats describing a correct one.
+
+## W1b — declarative registration across the tree: 24 of 33 plugins
+
+Every plugin available to APA now registers its artifacts as **data** (`.artifact(declaration())`) rather than through an imperative `.setup(fn)` callback. Nine remain, all held by peer sessions: `✒️writer`, `🌊️flow`, `🌿️vcs`, `🎞️animate`, `🎬️sequence`, `🏛️architect`, `🏭️process`, `💡️reasoning`, plus `🗄️stdio`.
+
+`💠️lowpoly` — the plugin this ticket was opened against — is converted **and compiler-verified at 0 errors** under `RUSTC_WRAPPER=""` + `--all-targets`.
+
+### Two findings the conversion surfaced that the design had missed
+
+**1. `PluginBuilder::setup` silently drops earlier callbacks.** It stores a single `fn()`, so `.setup(a).setup(b)` keeps only `b` — no compile error, no warning. The `🧩️puzzle` agent wrote four `.setup()` calls in its draft, **caught the bug in its own work before landing it**, and collapsed them into one. Nothing in the tree is broken by it today, but the next author to reach for a second `.setup()` loses three registrations silently. `.artifact()` is already repeatable and accumulating, so the two behave inconsistently for no reason a caller could guess. Handed to the W1c agent: if `.setup()` survives at all, double-set must become impossible rather than merely unlikely.
+
+**2. `ArtifactDeclaration` has no field for OS media-host bridges.** `🧩️puzzle` had to keep a `.setup()` call purely for them — a *second* legitimate escape-hatch category beyond the app-schema one W1c is closing. So closing app-schema may not be sufficient to delete the hook. The real remaining work is the complete classification of surviving `.setup()` calls by what each registers, which is now W1c's first task.
+
+**3. Two real pre-existing bugs fixed as a side effect**, both found by conversion rather than by search: puzzle3d's and puzzle5d's own DSL grammars were dead code — defined and never called — now wired through `.languages(pilot_languages())`. And `📓️iso16757`'s pilot languages point at `en1999`'s grammar paths, a copy-paste bug that was **carried forward unfixed and flagged** rather than quietly corrected, since it is out of this ticket's scope.
+
+### Judgement calls the agents made correctly
+
+- **`📕️norm`'s four root dirs were deliberately NOT split.** `🎚️config`/`👥️presence`/`📄️artifact`/`🖥️app-surface` are genuinely shared across all 15 artifacts and apps — verified by reading each rather than inferred — so per this ticket's own instruction they were filed as a question, not force-split. A wrong split across 15 apps is expensive to undo.
+- **`🎪️demonstrator`'s `🎪️panes` restructure was deferred with a written plan** rather than half-done: six thin wiring shims gain little from the move, and the 96-mount `glue.rs` blast radius was judged too risky to rush.
+- **`✒️writer`, `🌊️flow`, `🌿️vcs`, `🎬️sequence` refused outright.** All four are *explicitly* listed HELD in SMO's ledger — a positive entry, not an absence — so the "absence means free" clause correctly did not apply.
+
+### Relocation: COMPLETE, and it validated the stop-and-redispatch
+
+Final invariants, measured:
+
+```
+declaration() in ⚙️engine ................. 0
+declaration() at artifact root ........... 45
+pub fn pilot_languages ................... 0   ← nothing widened
+real engine::declaration code hits ....... 0   (2 remaining hits are doc comments)
+```
+
+**The decision to stop the first pass five minutes in was vindicated by the second.** Two agents (`➗️mathematical`, `🌍️gis`) found `pilot_languages()` *already stranded as `pub`* in `⚙️engine` — the v1 pass had begun widening before it was stopped — and reverted it. Had it run to completion, 45 public functions would have landed, each looking locally necessary in its own diff.
+
+**A subtler defect the agents caught that the design missed entirely.** Several `declaration()` bodies called `io_registry::entries()` **unqualified**, resolving to a sibling module in the engine file. Moved to the artifact root and left bare, that call would have **silently rebound to a differently-typed `io_registry` wrapper that exists at the artifact root** — not a compile error, a *different function*. Agents in g1, g3, g4 and g5 independently spotted it and qualified the path (`crate::artifacts::<x>::standards::v1::engine::io_registry::entries()`).
+
+This is the strongest argument in the ticket for per-site verification over pattern substitution: the transform was uniform in shape and non-uniform in meaning, and the failure mode was silent rebinding rather than a broken build.
+
+**Compiler-verified green at 0 errors** (`RUSTC_WRAPPER=""`, `--all-targets`, `Finished` + exit 0): `💠️lowpoly`, `🖨️raster`, `📸️remodel`, `🔱️trinity`, `🏗️fem`, `📐️cad`, `🪵️sourcing`, `🧩️puzzle`, `🗒️note`.
+
+### The `⚙️engine` relocation, and why it was needed mid-flight
+
+While the conversion batches ran, another session **removed `⚙️engine` from the taxonomy** — gone from `artifactComponentDirs`, `artifactChildDirs`, `subsetComponentDirs`, `subsetChildDirs`; both mandating policy rules deleted; a forbidding rule now censusing all 95 remaining dirs. APA's agents were writing `declaration()` into exactly that directory class.
+
+Rather than kill 27 in-flight agents (a half-converted plugin is far worse than a file in a known wrong place), the batches were allowed to finish and a **relocation pass** moves `declaration()` to the artifact root, where `artifact_kind()` and identity already live. That is also simply the right home: `declaration()` returns *data describing the artifact*, which is not engine behaviour under any definition.
+
+**A near-miss inside that pass, worth keeping.** The first dispatch told agents to qualify the one local call (`pilot_languages()`) and make it `pub`. A peer flagged that this would add **45 newly-public functions** — an API-surface change smuggled in by a mechanical refactor, invisible in review because each individual `pub` looks obviously necessary, and surfacing later as a lint failure nobody can attribute. Verified before acting: 45 definitions, **0 public**, and `declaration()` is the **only** caller. The pass was stopped five minutes in and re-dispatched with *move both functions, widen nothing*.
+
+The verification of that claim nearly misfired too: a first count reported **162 other callers**, which would have killed the fix. The regex was matching inside `register_pilot_languages()` — a different function containing the substring. True count: **zero**; all nine apparent hits are doc comments. Third variant of the same error in one hour, across three sessions. Hence the rule now in `📌️important.md`: **grep to find, enumerate to count.**
+
 ## W1 — the mechanism: LANDED
 
 UCAS explicitly released `🔌️plugin/🦀️component.rs` after a handshake; APA took it, landed the mechanism, and released it back. Their composition runtime was untouched throughout.

@@ -96,6 +96,88 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     }
 }
 //#endregion 🔖️ArtifactKind
+
+//#region 🔖️Register
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
+/// `io_registry::entries()`'s own `OnceLock` convention.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "rewrite.document",
+                    extension: Some("rewrite"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::rewrite::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::rewrite::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::rewrite::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::rewrite::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("rewrite.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "rewrite.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::rewrite::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::rewrite::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::rewrite::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::rewrite::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("rewrite.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "rewrite.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::rewrite::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::rewrite::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("rewrite.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "rewrite.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::rewrite::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::rewrite::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("rewrite.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "rewrite.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::rewrite::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::rewrite::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("rewrite.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called four different global registries directly from
+/// a plugin `.setup()` callback. `crate::apps::rewrite::config::schema::register_app_schema()` is the
+/// one exception, kept alive via the plugin root's own narrowed `.setup()`: it registers the
+/// `TrinityRewritePlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration`
+/// deliberately has no field for (see that struct's own doc).
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.rewrite")
+        .schema(crate::artifacts::rewrite::schema::rewrite_artifact_schema_descriptor())
+        .inferences([crate::artifacts::rewrite::standards::v1::subsets::any::schema::inferences::rewrite_artifact_inference_descriptor()])
+        .composers(crate::artifacts::rewrite::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::rewrite::TrinityRewritePlayApp>()
+        .build()
+}
+//#endregion 🔖️Register
+
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;

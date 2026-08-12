@@ -1,0 +1,18 @@
+syntax = "proto3";
+package semio.s.stdio.semio.image.inference;
+
+// 💡️ Semio image inference schema — header-derived raster geometry.
+
+message SemioImageInference {
+  // @state inferred
+  SemioImageDimensions dimensions = 1;
+}
+
+message SemioImageDimensions {
+  uint32 width = 1;
+  uint32 height = 2;
+  uint32 bit_depth = 3;
+  bool has_alpha = 4;
+  uint64 pixel_count = 5;
+  uint32 frame_count = 6;
+}

@@ -6,7 +6,7 @@
 //! untouched) — distinct from the top-level `FlowCommand::DeleteSelection`, which clears all three.
 
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
-use crate::artifacts::flow::engine::{host_operations, sync_host_selection};
+use crate::apps::flow::{host_operations, sync_host_selection};
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

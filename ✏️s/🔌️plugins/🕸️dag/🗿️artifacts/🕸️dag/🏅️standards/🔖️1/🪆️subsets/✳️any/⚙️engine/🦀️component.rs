@@ -8,83 +8,10 @@
 
 use crate::artifacts::dag::mutations::delete_node;
 use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::{DagSnapshot, DAG_DOCUMENT_SCHEMA};
+use crate::artifacts::dag::DagSnapshot;
 use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
 use std::collections::BTreeSet;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
-
-//#region 🔖️Register
-/// 🗂️ Registers `DagSnapshot`'s pack<->dsl codec under its real `document_schema()` string so
-/// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse DAG
-/// documents without depending on this crate's concrete `Projection`/`Mutation` types. Called from the
-/// plugin root's `semio_plugin!{ setup: … }`.
-pub fn register() {
-    crate::artifacts::dag::io_registry::register();
-
-    register_pilot_languages();
-    register_artifact_schema();
-    register_artifact_inferences();
-    crate::apps::dag::config::schema::register_app_schema();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::dag::DagPlayApp>(DAG_DOCUMENT_SCHEMA);
-}
-
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "dag.document",
-        extension: Some("dag"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::dag::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::dag::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::dag::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::dag::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("dag.document"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "dag.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::dag::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::dag::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::dag::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::dag::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("dag.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "dag.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::dag::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::dag::schema::diff::text::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("dag.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "dag.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::dag::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::dag::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("dag.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "dag.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::dag::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::dag::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("dag.spr"),
-    });
-}
-
-
-//#endregion 🔖️Register
 
 //#region 🔖️ArtifactEngine
 /// 🧬️ UI-independent document engine — every transition is a `DagMutation`.
@@ -104,20 +31,6 @@ impl DagEngine {
     }
 }
 //#endregion 🔖️ArtifactEngine
-
-//#region 🔖️SchemaRegistry
-/// 📌️ Registers the twenty handcrafted schema leaves for `s.dag.dag`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::dag::schema::dag_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.dag.dag.inference`'s five handcrafted facet leaves into the OS-wide inference
-/// catalog — sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::dag::standards::v1::subsets::any::schema::inferences::dag_artifact_inference_descriptor());
-}
-//#endregion 🔖️SchemaRegistry
 
 //#region ⚠️ Errors
 /// ⚠️ Errors from DAG play app edge-connection building.

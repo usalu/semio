@@ -55,6 +55,13 @@ pub fn inverse_flow_mutation(snapshot: &FlowSnapshot, mutation: &FlowMutation) -
 /// The framework's own diffing helper (`flow::flow_fixture_operations`) never emits `SetFixture`
 /// (only `Widgets`/`Synapses`/`SetLayout`), so this arm is unreachable on the live host-bridge path
 /// and only matters for a hand-authored/decoded `flow.op` line.
+/// ✏️ Runs a stateful host mutation and diffs the result back into granular `FlowMutation`s — pure
+/// over two snapshots, so it lives here beside [`from_framework_mutation`] rather than under an app.
+/// Returns an empty vec when the two fixtures are identical.
+pub fn snapshot_operations(before: &FlowSnapshot, after: &FlowSnapshot) -> Vec<FlowMutation> {
+    flow::flow_fixture_operations(&before.to_fixture(), &after.to_fixture()).into_iter().filter_map(from_framework_mutation).collect()
+}
+
 pub fn from_framework_mutation(mutation: flow::FlowMutation) -> Option<FlowMutation> {
     Some(match mutation {
         flow::FlowMutation::Widgets(operation) => match operation {

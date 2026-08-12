@@ -226,20 +226,6 @@ pub fn gis3d_scene_media(document: &GisTerrainSnapshot) -> semio_framework_plugi
 }
 //#endregion 🔖️Io
 
-//#region 🔖️Registration
-/// 🗂️ Native setup hook for the `gis.terrain` artifact — registers the pack↔dsl document codec
-/// `framework/sync`'s `FolderEndpoint` reaches for. Called from the plugin root's `📦️glue.rs` setup fn.
-pub fn register() {
-    crate::artifacts::gisterrain::io_registry::register();
-
-    register_pilot_languages();
-    register_artifact_schema();
-    register_artifact_inferences();
-
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::gis3d::Gis3dPlayApp>(GIS_3D_TERRAIN_SCHEMA);
-}
-//#endregion 🔖️Registration
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -299,75 +285,6 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-
-/// Registers the twenty handcrafted schema leaves for `s.gis.gisterrain`.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::gisterrain::schema::gisterrain_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `s.gis.gisterrain.inference`'s facet leaves into the OS-wide inference catalog —
-/// sibling to `register_artifact_schema()` (separate registry, ticket
-/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::gisterrain_artifact_inference_descriptor());
-}
-
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "gis.gisterrain",
-        extension: Some("gisterrain"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::gisterrain::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::gisterrain::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::gisterrain::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gisterrain::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("gis.gisterrain"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "gis.gisterrain.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::gisterrain::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::gisterrain::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::gisterrain::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gisterrain::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("gis.gisterrain.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "gis.gisterrain.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::gisterrain::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::gisterrain::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("gis.gisterrain.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "gisterrain.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::gisterrain::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gisterrain::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("gisterrain.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "gisterrain.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::gisterrain::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gisterrain::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("gisterrain.spr"),
-    });
-}
-
 
 
 //#region 🔹ArtifactEngine

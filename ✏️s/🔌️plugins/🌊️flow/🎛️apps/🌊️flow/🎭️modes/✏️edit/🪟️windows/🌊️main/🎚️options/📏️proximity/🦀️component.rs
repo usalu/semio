@@ -30,7 +30,7 @@ pub fn measure(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
 mod tests {
     use super::*;
     use crate::apps::flow::terminology::flow_play_labels;
-    use crate::artifacts::flow::engine::FLOW_DEFAULT_PROXIMITY_DISTANCE;
+    use crate::artifacts::flow::schema::FLOW_DEFAULT_PROXIMITY_DISTANCE;
 
     #[test]
     fn the_slider_range_brackets_the_default_distance() {

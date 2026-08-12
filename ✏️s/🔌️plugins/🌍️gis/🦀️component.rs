@@ -2,25 +2,17 @@
 
 use semio_framework_plugin::Plugin;
 
-/// 🔌️ Registers GIS host exports (languages/app schema) once at plugin load — folded in from the
-/// dissolved `🔧️setup` facet per APA (`26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`): all
-/// registration belongs to the plugin's own load path, never a standalone setup facet, and this
-/// fan-out spans both owned artifacts (`gismap`, `gisterrain`) plus both apps' schemas, so no
-/// single artifact `⚙️engine` is the sole owner.
-fn register_gis_exports() {
-    crate::artifacts::gismap::engine::register_pilot_languages();
-    crate::artifacts::gisterrain::engine::register_pilot_languages();
-
-    crate::apps::gis2d::config::schema::register_app_schema();
-    crate::apps::gis3d::config::schema::register_app_schema();
-}
-
-/// 🔌️ Builds the plugin surface for host registration.
+/// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)`
+/// escape hatch for both owned artifacts (`gismap`, `gisterrain`); `.setup()` itself is gone (W1c)
+/// — `Gis2dPlayApp::app_schema()`/`Gis3dPlayApp::app_schema()` now answer the one thing it used to
+/// survive for, registered automatically by each `register_document_app` call below.
 pub fn plugin() -> Plugin {
     Plugin::builder("gis")
         .label("GIS")
         .version("0.1.0")
-        .setup(register_gis_exports)
+        .artifact(crate::artifacts::gismap::declaration())
+        .artifact(crate::artifacts::gisterrain::declaration())
         .register_document_app::<crate::apps::gis2d::Gis2dPlayApp>(crate::apps::gis2d::create_gis2d_app())
         .register_document_app::<crate::apps::gis3d::Gis3dPlayApp>(crate::apps::gis3d::create_gis3d_app())
         .build()

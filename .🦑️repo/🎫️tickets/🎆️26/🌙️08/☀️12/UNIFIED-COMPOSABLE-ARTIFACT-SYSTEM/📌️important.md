@@ -57,6 +57,22 @@ Three agents in this ticket burned **~600k tokens each (≈1.8M total) producing
 
 Corollary for the orchestrator: an agent's *final message before dying* is worth reading — C1's dying line ("the plugin check failed with real compile errors") is the only reason a false "green" claim didn't go out to another session.
 
+## 🔎️ Sweep the PATTERN, don't wait for the compiler
+
+A scoped `cargo check -p X` surfaces only the crate you asked for, and in a 100+ crate workspace a systemic defect then reveals itself **one crate at a time over hours** — worse, a crate that fails early (stdio) hides every latent defect downstream of it.
+
+**Proven here**: a script walking every `#[path = "…"]` in the repo and `stat`-ing its target found **2 genuinely dangling mounts** among **8,345 real ones** — both latent, neither yet reached by the compiler:
+- `➗️mathematical`'s glue mounted `🎮️commands/📄️document/` where the dir is now `📄️artifact` — the same closed-ticket rename debt that stranded nine `📌️panels` mounts.
+- `🌀️procedural`'s mutations dispatch mounted `➕create-widget/` where the dir is `🌱create-widget/` — **the emoji changed**, so a text search for the slug still matched.
+
+Both were latent: the workspace build never reached them because stdio failed first. Both are now fixed and the repo is at **0 dangling mounts**.
+
+⚠️ **And a cautionary tale about the sweep itself.** The first run of that script reported **20** dangling, not 2. Eighteen were false positives: the regex matched `#[path = "…"]` written as *prose inside `//!` doc comments*. That inflated number was broadcast to a peer before being checked — minutes after praising that same peer for retracting an inflated count of their own (they had grepped for a symbol, got 46 files, and reported it as 46 broken files when exactly 1 was).
+
+**So the sweep rule has a second half, and it is not optional**: *grep to find, enumerate to count.* A pattern match locates candidates; it does not size a problem. Before quoting a number — especially before sending it to another session — confirm each hit is the thing you think it is. Strip comments, check the target, count what survives.
+
+**Do this whenever a class of defect is suspected** — dangling mounts, missing struct fields, stale import paths. Peer sessions independently found the same leverage: one grep for `Self::infer` with the trait imported inside `mod tests` found a second instance in `🪐️space` in 30 seconds that the compiler would have surfaced days later.
+
 ## Repo conventions learned during this ticket (obey these)
 
 1. **Derive crates keep two byte-identical copies.** `<module>/✨️derive/🦀️component.rs` and `<module>/✨️derive/📦️packages/🦀️rust/📦️glue.rs` must stay identical — Cargo compiles the *glue* copy, so editing only `component.rs` silently does nothing. Verified true for both `🧬️schema/✨️derive` and `🗣️dsl/✨️derive`. Edit one, then mirror it exactly, then `diff -q` the pair before reporting done.

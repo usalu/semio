@@ -390,6 +390,88 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         import_stdio_kinds: vec!["dwg", "glb", "gltf", "ifc", "json", "obj", "png", "step", "stl"],
     }
 }
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
+/// `🗒️note`'s own `pilot_languages()` convention (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+/// M1/W1b). Relocated from `⚙️engine/🦀️component.rs` alongside `declaration()` (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) — `declaration()`'s only caller, kept private.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "cad.document",
+                    extension: Some("cad"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::cad::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::cad::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::cad::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::cad::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("cad.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "cad.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::cad::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::cad::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::cad::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::cad::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("cad.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "cad.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::cad::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::cad::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("cad.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "cad.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::cad::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::cad::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("cad.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "cad.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::cad::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::cad::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("cad.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1/W1b) —
+/// replaces the old side-effecting `register()`, which called five different global registries
+/// directly from a plugin `.setup()` callback. `crate::apps::cad::config::schema::register_app_schema()`
+/// is the one exception, still called from `📐️cad/🦀️component.rs`'s own `.setup()`: it registers
+/// `CadPlayApp`'s own config/presence schema, an app-scope concern `ArtifactDeclaration` deliberately
+/// has no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
+/// artifact-scoped function set.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.cad")
+        .schema(crate::artifacts::cad::schema::cad_artifact_schema_descriptor())
+        .inferences([crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_artifact_inference_descriptor()])
+        .composers(crate::artifacts::cad::standards::v1::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::cad::CadPlayApp>()
+        .build()
+}
 //#endregion 🔖️ArtifactKind
 
 //#region 🧪️Testkit

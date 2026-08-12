@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.stdio.semio.flow.inference;
+
+// 💡️ Semio flow inference schema — node/edge topological order (Kahn's algorithm).
+
+message SemioFlowInference {
+  // @state inferred
+  SemioFlowTopology topology = 1;
+}
+
+message SemioFlowTopology {
+  repeated string topo_order = 1;
+  map<string, uint32> depth = 2;
+  bool cycle_free = 3;
+  uint32 node_count = 4;
+}
