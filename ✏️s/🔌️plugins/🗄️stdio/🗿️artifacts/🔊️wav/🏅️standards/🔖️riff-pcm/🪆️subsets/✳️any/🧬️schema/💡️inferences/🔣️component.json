@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/wav/inference.json",
+  "title": "WavInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["duration"],
+  "properties": {
+    "duration": { "$ref": "#/$defs/WavDuration", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "WavDuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["durationSeconds", "frameCount", "bitsPerSample"],
+      "properties": {
+        "durationSeconds": { "type": "number", "minimum": 0 },
+        "frameCount": { "type": "integer", "minimum": 0 },
+        "bitsPerSample": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

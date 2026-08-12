@@ -11,8 +11,9 @@ pub fn register() {}
 /// `serde_json::to_vec_pretty(&value)`, which would have serialized the internally-tagged
 /// `JsonValue` shape verbatim instead of real JSON text.
 pub fn serialize(snapshot: &ImperativeSnapshot) -> Result<JsonSnapshot, store::TextError> {
-    let text = serde_json::to_string(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: parse_json_text(&text)? })
+    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
+    let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    Ok(JsonSnapshot::from_value(value))
 }
 
 pub fn serialize_bytes(snapshot: &ImperativeSnapshot) -> Result<Vec<u8>, store::TextError> {

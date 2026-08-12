@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     fn empty_diff_is_a_no_operation() {
-        let base = crate::artifacts::playground::engine::empty_playground_snapshot();
+        let base = crate::artifacts::playground::schema::empty_playground_snapshot();
         let diff = PlaygroundDiff::default();
         assert_eq!(diff.apply(&base), base);
     }

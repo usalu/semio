@@ -40,15 +40,17 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `S_HOME_DOCUMENT_SCHEMA` above — NOT `space.shome` (the OS-level `ArtifactKindSpec.id`, a
 /// different namespace) or `s.space.home` (the schema-descriptor id) — see
 /// `ArtifactDeclaration::register_all`'s ownership check, which is enforced against the composer
-/// table's own dialects. `apps::home::config::schema::register_app_schema()` and
-/// `apps::space::config::schema::register_app_schema()` are the exceptions, still called from
-/// `🪐️space/🦀️component.rs`'s own `.setup()`: app-scope config/presence schema, which
-/// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc).
+/// table's own dialects. Both apps' own config/presence schema (`apps::home::config::schema::
+/// app_schema_descriptor()`/`apps::space::config::schema::app_schema_descriptor()`) moved off
+/// `.setup()` onto `ArtifactApp::app_schema()` overrides (ticket W1c) — `ArtifactDeclaration`
+/// deliberately has no field for app-scope schema (see that struct's own doc); it is registered by
+/// `.register_document_app::<A>()` instead, keyed off `A` the same way this declaration is keyed off
+/// `kind`.
 pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.home")
         .schema(crate::artifacts::home::schema::home_artifact_schema_descriptor())
         .inferences([crate::artifacts::home::standards::v1::subsets::any::schema::inferences::home_artifact_inference_descriptor()])
-        .composers(crate::artifacts::home::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::home::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::home::HomeApp>()
         .build()
@@ -126,7 +128,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::home::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::home::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

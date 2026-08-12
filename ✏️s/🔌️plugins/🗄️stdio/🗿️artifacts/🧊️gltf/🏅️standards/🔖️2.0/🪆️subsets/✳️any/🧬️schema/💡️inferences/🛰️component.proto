@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.s.stdio.gltf.inference;
+
+// 💡️ Gltf inference schema — mesh-primitive POSITION-accessor-derived bounding box.
+
+message GltfInference {
+  // @state inferred
+  GltfBounds bounds = 1;
+}
+
+message GltfBounds {
+  repeated double min = 1;
+  repeated double max = 2;
+  uint32 vertex_count = 3;
+  uint32 mesh_count = 4;
+  uint32 primitive_count = 5;
+}

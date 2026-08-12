@@ -1,9 +1,18 @@
 //! 🧬️ GIS map artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::gismap::MapFeature;
+use crate::artifacts::gismap::dsl::REUSE_MAP_EXAMPLE_TEXT;
+use crate::artifacts::gismap::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, replace_position_data, replace_region_data, replace_route_data};
+use crate::artifacts::gismap::op::GisMapMutation;
+use crate::artifacts::gismap::{GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
+use semio_framework_plugin::{ArtifactSerializer, DwgDrawing, DwgGeometry, ErasedComposeSource, IoDirection, IoKey, IoPayload, io_dispatch};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use serde_json::{json, Value};
+use std::collections::{BTreeMap, HashSet};
 
 //#region 🔹Artifact
 /// 🧬️ Full GIS map artifact state across persistent, shared-ui and local-ui classes.

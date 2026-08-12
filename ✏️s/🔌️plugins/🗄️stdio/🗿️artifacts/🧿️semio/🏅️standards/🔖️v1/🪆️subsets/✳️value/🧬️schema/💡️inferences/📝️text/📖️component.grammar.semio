@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.semio.value.inference
+extension semio.value.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.semio.value.inference" NL
+body = payload NL?
+payload = OCTET+

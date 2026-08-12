@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/avi/inference.json",
+  "title": "AviInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["duration"],
+  "properties": {
+    "duration": { "$ref": "#/$defs/AviDuration", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "AviDuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["durationSeconds", "streamCount", "totalFrames"],
+      "properties": {
+        "durationSeconds": { "type": "number", "minimum": 0 },
+        "streamCount": { "type": "integer", "minimum": 0 },
+        "totalFrames": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

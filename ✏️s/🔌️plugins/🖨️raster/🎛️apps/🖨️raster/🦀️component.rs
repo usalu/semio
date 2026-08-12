@@ -10,7 +10,7 @@ use crate::apps::raster::presence::{RasterPresence, RasterPresenceMutation};
 use crate::apps::raster::modes::edit;
 use crate::apps::raster::modes::edit::windows::{composite, navigator};
 use crate::apps::raster::terminology::raster_play_labels;
-use crate::artifacts::raster::engine::{raster_composite_media, raster_io, semio_example_json};
+use crate::artifacts::raster::schema::semio_example_json;
 use crate::artifacts::raster::op::RasterMutation;
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot as RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
@@ -41,7 +41,7 @@ pub fn layer_row_id(layer: &RasterLayerNode) -> String {
         RasterLayerNode::Adjustment { .. } => "adjustment",
         RasterLayerNode::Pixel { .. } => "layer",
     };
-    format!("{RASTER_TREE_PREFIX}.{segment}.{}", crate::artifacts::raster::engine::layer_node_id(layer))
+    format!("{RASTER_TREE_PREFIX}.{segment}.{}", crate::artifacts::raster::schema::layer_node_id(layer))
 }
 
 pub fn layer_id_from_tree_row_id(row_id: &str) -> Option<String> {
@@ -158,15 +158,15 @@ impl ArtifactApp for RasterPlayApp {
     }
 
     fn initial_snapshot() -> RasterSnapshot {
-        crate::artifacts::raster::engine::empty_raster_document()
+        crate::artifacts::raster::schema::empty_raster_document()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(raster_io())
     }
 
-    /// 🎞️ `image:in`/`image:out` (see `crate::artifacts::raster::engine::{raster_append_image_layer,
-    /// raster_composite_media}`) plus the inherited `document:out` default (the pack of
+    /// 🎞️ `image:in`/`image:out` (see `crate::artifacts::raster::io::raster_image_layer_and_asset`,
+    /// `raster_composite_media`) plus the inherited `document:out` default (the pack of
     /// `doc.snapshot`, replicated inline — overriding `export_media` shadows the trait's provided
     /// body for every port on this app, not just the new ones).
     fn export_media(port: &str, doc: &ArtifactView<'_, RasterSnapshot>) -> Result<Media, MediaError> {
@@ -193,7 +193,7 @@ impl ArtifactApp for RasterPlayApp {
         let MediaPayload::Structured { json: png_base64, .. } = &media.payload else {
             return Err(MediaError::Payload(port.to_string(), "image:in only accepts a Structured (base64 PNG) payload".into()));
         };
-        let (asset_id, asset, layer) = crate::artifacts::raster::engine::raster_image_layer_and_asset(png_base64);
+        let (asset_id, asset, layer) = crate::artifacts::raster::io::raster_image_layer_and_asset(png_base64);
         Ok(Emit::mutations(vec![
             RasterMutation::AddLayerAsset(crate::artifacts::raster::mutations::add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
             RasterMutation::CreateLayer(crate::artifacts::raster::mutations::create_layer::mutation::CreateLayer { parent_id: None, index: doc.snapshot.layers.len(), layer: Box::new(layer) }),
@@ -228,6 +228,75 @@ impl ArtifactApp for RasterPlayApp {
     }
 }
 //#endregion 🔖️RasterPlayApp
+
+//#region 🔖️Io
+/// 🔌️ Relocated verbatim from `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES,
+/// rule 4: anything returning `AppIo` or referencing an app type lives in `🎛️apps/<app>/`). This app's
+/// typed media I/O surface (`AppDefinition.io`) — mirrors the `2d.raster` `ArtifactKindSpec` literal
+/// `crate::artifacts::raster::artifact_kind` already declares, plus the app-specific `image:in`/
+/// `image:out` ports (see below).
+pub fn raster_io() -> semio_framework::AppIo {
+    semio_framework::AppIo {
+        document_schema: RASTER_DOCUMENT_SCHEMA.into(),
+        document_media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Raster },
+        ports: vec![raster_image_in_port(), raster_image_out_port()],
+        export_formats: Vec::new(),
+        import_formats: Vec::new(),
+        artifact: semio_framework::ArtifactPresentation { id: "2d.raster".into(), name: "2D Raster".into(), dimension: "2d".into(), component_kind: "raster".into() },
+    }
+}
+
+/// 🔌️ `image:in` — accepts raster imagery from upstream producers (e.g. draw's `vector:out`,
+/// converted Vector→Raster) as a new composited layer. `Many`/optional: several upstream images may
+/// feed in, and the port may sit unconnected.
+pub fn raster_image_in_port() -> semio_framework::MediaPortSpec {
+    semio_framework::MediaPortSpec {
+        id: "image:in".into(),
+        label: "Image".into(),
+        direction: semio_framework::MediaPortDirection::In,
+        media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Raster },
+        kind_id: None,
+        required: false,
+        multiplicity: semio_framework::PortMultiplicity::Many,
+    }
+}
+
+/// 🔌️ `image:out` — the raster document's current composited raster, as `2d.image` media (workflow
+/// port surface; WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe). `kind_id: "2d.image"` — the
+/// shared framework-builtin interchange kind (declared on this app's `.artifact_kind(...)` below;
+/// `shooting`'s `photos:out` declares the identical shape, harmless duplicate registrations).
+pub fn raster_image_out_port() -> semio_framework::MediaPortSpec {
+    semio_framework::MediaPortSpec {
+        id: "image:out".into(),
+        label: "Image".into(),
+        direction: semio_framework::MediaPortDirection::Out,
+        media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Raster },
+        kind_id: Some("2d.image".into()),
+        required: false,
+        multiplicity: semio_framework::PortMultiplicity::Many,
+    }
+}
+
+/// 🖼️ Composites the current raster document to a PNG `Media` payload for the `image:out` port —
+/// `crate::artifacts::raster::io::raster_document_json_to_svg` renders the document's real layer
+/// stack (not a placeholder title card) via the `s.stdio.semio/v1/drawing` bridge; the vector→pixels
+/// render step still has no stdio bridge (real pixel compositing is wgpu/canvas-host-side, out of
+/// this pure headless compute node's reach — see that function's own doc), so its raw renderer
+/// output is canonicalized through the real `s.stdio.semio/v1/image` ↔ png round trip inside
+/// `🚪️io/🦀️component.rs` before leaving this port.
+pub fn raster_composite_media(document: &RasterSnapshot) -> Result<semio_framework::Media, semio_framework::MediaError> {
+    let value = serde_json::to_value(document).map_err(|error| semio_framework::MediaError::Payload("image:out".into(), error.to_string()))?;
+    let (svg, width, height) = crate::artifacts::raster::io::raster_document_json_to_svg(&value).map_err(|error| semio_framework::MediaError::Payload("image:out".into(), error))?;
+    let rendered = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).map_err(|error| semio_framework::MediaError::Payload("image:out".into(), error))?;
+    let raw_bytes = base64::engine::general_purpose::STANDARD.decode(rendered.as_bytes()).map_err(|error| semio_framework::MediaError::Payload("image:out".into(), error.to_string()))?;
+    let canonical = crate::artifacts::raster::io::canonicalize_png_bytes(&raw_bytes).map_err(|error| semio_framework::MediaError::Payload("image:out".into(), error))?;
+    let png_base64 = base64::engine::general_purpose::STANDARD.encode(canonical);
+    Ok(semio_framework::Media {
+        media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Raster },
+        payload: semio_framework::MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 },
+    })
+}
+//#endregion 🔖️Io
 
 //#region 🔖️Manifest
 /// 🛠️ An internal (non-palette) action declaration — the panel/pointer/gesture-bound vocabulary

@@ -1,0 +1,3 @@
+# s.stdio.dwg.inference (ac1024) text grammar schema
+scalar Bytes
+type Document { schema: String! payload: String! }

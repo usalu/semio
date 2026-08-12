@@ -27,7 +27,7 @@ pub enum PlaygroundMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::playground::engine;
+    use crate::artifacts::playground::schema;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     #[test]
@@ -35,7 +35,7 @@ mod tests {
         let mut store = store::ArtifactStore::<PlaygroundSnapshot, PlaygroundMutation>::new(store::create_document_envelope(
             "playground.document",
             "playground",
-            engine::empty_playground_snapshot(),
+            schema::empty_playground_snapshot(),
             None,
         ));
         store

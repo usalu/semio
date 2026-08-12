@@ -28,7 +28,7 @@ mod tests {
 
     #[test]
     fn playground_snapshot_dsl_round_trips() {
-        store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::playground::engine::empty_playground_snapshot());
+        store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::playground::schema::empty_playground_snapshot());
     }
 
     #[test]

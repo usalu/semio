@@ -1,0 +1,11 @@
+# 💡️ STEP AP214 inference schema — CARTESIAN_POINT-derived spatial bounding box.
+
+type StepInference {
+  bounds: StepBounds! @state(class: INFERRED)
+}
+
+type StepBounds {
+  min: [Float!]!
+  max: [Float!]!
+  pointCount: Int!
+}

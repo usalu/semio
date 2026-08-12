@@ -6,7 +6,7 @@ pub fn register() {}
 
 pub fn serialize(from: &DagSnapshot) -> Result<JsonSnapshot, store::PackError> {
     let value = serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
+    Ok(JsonSnapshot::from_value(value))
 }
 
 pub fn serialize_text(from: &DagSnapshot) -> Result<String, store::PackError> {

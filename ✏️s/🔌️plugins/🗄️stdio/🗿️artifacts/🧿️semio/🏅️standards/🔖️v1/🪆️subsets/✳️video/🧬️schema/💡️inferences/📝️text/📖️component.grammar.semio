@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.semio.video.inference
+extension semio.video.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.semio.video.inference" NL
+body = payload NL?
+payload = OCTET+

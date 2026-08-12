@@ -149,7 +149,7 @@ mod tests {
     }
 
     fn sample_node(id: &str, x: f64, y: f64) -> crate::artifacts::dag::DagNodeSpec {
-        crate::artifacts::dag::engine::default_node_for_kind("note", id, x, y)
+        crate::artifacts::dag::schema::default_node_for_kind("note", id, x, y)
     }
 
     #[test]

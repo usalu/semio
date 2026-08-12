@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/mp3/inference.json",
+  "title": "Mp3Inference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["duration"],
+  "properties": {
+    "duration": { "$ref": "#/$defs/Mp3Duration", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "Mp3Duration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["durationSeconds", "frameCount", "channelCount"],
+      "properties": {
+        "durationSeconds": { "type": "number", "minimum": 0 },
+        "frameCount": { "type": "integer", "minimum": 0 },
+        "channelCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.stdio.mp4.inference;
+
+// 💡️ mp4 inference schema — real ISO-BMFF `stts`-derived (per-track sample-table) duration.
+
+message Mp4Inference {
+  // @state inferred
+  Mp4Duration duration = 1;
+}
+
+message Mp4Duration {
+  double duration_seconds = 1;
+  uint32 track_count = 2;
+  uint32 sample_count = 3;
+}

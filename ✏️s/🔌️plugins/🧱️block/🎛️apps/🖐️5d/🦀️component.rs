@@ -76,6 +76,10 @@ impl ArtifactApp for Block5dPlayApp {
     const APP_ID: &'static str = BLOCK5D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_5D_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::block5d::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> Block5dSnapshot {
         crate::artifacts::block5d::engine::empty_block5d_snapshot()
     }

@@ -486,9 +486,20 @@ pub fn demo_dwg_snapshot() -> DwgSnapshot {
 pub fn register() {
     crate::artifacts::dwg::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<DwgSnapshot, DwgMutation>(STDIO_DWG_DOCUMENT_SCHEMA));
+}
+
+/// 💡️ Registers `s.stdio.dwg.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Fully qualified to
+/// `standards::v_ac1024::subsets::any::schema` — mirrors ac1018's own fully-qualified form even
+/// though `crate::artifacts::dwg::schema` is aliased to THIS (ac1024, canonical) standard, so
+/// both engines' registration calls stay symmetric and unambiguous.
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::inferences::dwg_artifact_inference_descriptor());
 }
 
 /// 📌️ 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG2: 5-role

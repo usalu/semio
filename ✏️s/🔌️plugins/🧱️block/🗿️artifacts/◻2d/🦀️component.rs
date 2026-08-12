@@ -124,3 +124,84 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+//#region 🪪️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `crate::apps::block2d::register()`, which called four different global
+/// registries directly, and the plugin root's `.setup(crate::register_block_exports)` escape hatch
+/// that invoked it. `crate::apps::block2d::config::schema::app_schema_descriptor()` is handed to
+/// `ArtifactApp::app_schema` instead (ticket W1c), not declared here: an app-scope concern
+/// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc).
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.block2d")
+        .schema(crate::artifacts::block2d::standards::v1::subsets::any::schema::block2d_artifact_schema_descriptor())
+        .inferences([crate::artifacts::block2d::standards::v1::subsets::any::schema::inferences::block2d_artifact_inference_descriptor()])
+        .composers(crate::artifacts::block2d::standards::v1::subsets::any::io::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<crate::apps::block2d::Block2dPlayApp>()
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
+/// `OnceLock`-backed `io_registry::entries()` convention already used above.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "block.block2d",
+                    extension: Some("block2d"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::block2d::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::block2d::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("block.block2d"),
+                },
+                dsl::LanguageSpec {
+                    id: "block.block2d.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::block2d::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::block2d::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::block2d::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::block2d::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("block.block2d.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "block.block2d.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::block2d::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::block2d::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("block.block2d.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "2d.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("2d.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "2d.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::block2d::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::block2d::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("2d.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🪪️Declaration

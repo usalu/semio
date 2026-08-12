@@ -1,0 +1,3 @@
+; abnf s.stdio.wav.inference
+document = payload
+payload = *OCTET

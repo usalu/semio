@@ -1,0 +1,3 @@
+; abnf s.stdio.semio.kit.inference
+document = payload
+payload = *OCTET

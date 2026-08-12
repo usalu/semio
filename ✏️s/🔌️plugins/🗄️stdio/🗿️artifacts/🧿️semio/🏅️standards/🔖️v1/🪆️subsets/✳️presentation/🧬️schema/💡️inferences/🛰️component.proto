@@ -1,0 +1,22 @@
+syntax = "proto3";
+package semio.s.stdio.semio.presentation.inference;
+
+// 💡️ Semio presentation inference schema — heading outline + census over masters/layouts/slides.
+
+message SemioPresentationInference {
+  // @state inferred
+  SemioPresentationOutline outline = 1;
+}
+
+message SemioPresentationOutline {
+  repeated SemioPresentationHeadingEntry section_outline = 1;
+  uint32 slide_count = 2;
+  uint32 shape_count = 3;
+  uint32 block_count = 4;
+  uint32 word_count = 5;
+}
+
+message SemioPresentationHeadingEntry {
+  uint32 level = 1;
+  string text = 2;
+}

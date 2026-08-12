@@ -220,3 +220,13 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: ImperativeComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+/// 📄️ The default `imperative` document, handcrafted in the `.imperative` DSL (see `🗣️dsl`) instead of a
+/// hand-built Rust literal or a JSON fixture — {@link default_snapshot} is the only way it should be
+/// consumed. Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
+/// — pure over document types, no app-runtime parameter, so it belongs beside the schema it builds.
+pub fn default_snapshot() -> crate::artifacts::imperative::ImperativeSnapshot {
+    crate::artifacts::imperative::dsl::parse_dsl(crate::artifacts::imperative::dsl::IMPERATIVE_EXAMPLE_TEXT).expect("📜️default.imperative is a static, hand-authored fixture that must always parse")
+}
+//#endregion 🔖️DocumentHelpers

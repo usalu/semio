@@ -46,8 +46,6 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -267,9 +265,6 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v1::engine::*;
-        }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
@@ -470,17 +465,28 @@ pub mod apps {
 //#endregion 🎛️Apps
 
 //#region 🔖️ArtifactCodecs
-/// 🗂️ `.setup()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — kept for exactly the two
-/// things `ArtifactDeclaration` has no field for: both apps' own config/presence schema, and
-/// `SpaceApp`'s document codec (`s.space`'s pack<->dsl codec, keyed by `OS_SPACE_SCHEMA` so
-/// `framework/sync`'s `FolderEndpoint::Pack` can print/parse it without depending on this crate's
-/// concrete `WorkflowMutation` type) — `SpaceApp` wraps the kernel-owned `WorkflowSnapshot` and owns
-/// no `🗿️artifacts` node in this plugin, so it has no declaration to attach a `.document_codec()` to.
-/// `HomeApp`'s own document codec (`s.home`) and its 5 pilot languages moved to
-/// `crate::artifacts::home::engine::declaration()`, wired via `.artifact(...)` in `🦀️component.rs`.
+/// 🗂️ `.setup()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d) — narrowed to the ONE thing
+/// left that no `ArtifactDeclaration` field can express: `SpaceApp`'s document codec. Both apps'
+/// config/presence schema moved to `ArtifactApp::app_schema()` overrides (`HomeApp`/`SpaceApp` in
+/// their own `🦀️component.rs`), auto-registered by `.register_document_app::<A>()` — see that
+/// method's own doc. `HomeApp`'s own document codec (`s.home`) and its 5 pilot languages already live
+/// on `crate::artifacts::home::declaration()`, wired via `.artifact(...)` in `🦀️component.rs`.
+///
+/// This residue is genuinely category-4 (see the master ticket's gap taxonomy), not merely
+/// unattempted: `.document_codec_bare::<Snapshot, Mutation>(schema)` (added in W1d gap A for exactly
+/// this "no `ArtifactApp`/no local declaration" shape) still requires a mandatory `.schema(...)` call
+/// first — `ArtifactDeclarationBuilder<NeedsSchema>` only unlocks `.document_codec_bare()` once a real
+/// `ArtifactSchemaDescriptor` is supplied. The schema this call would need to supply belongs to
+/// `OS_SPACE_SCHEMA` ("os.space" = `SpaceSnapshot`, a type this plugin does not own — it is declared in
+/// `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🦀️component.rs`), yet the codec being registered is
+/// for `WorkflowSnapshot`/`WorkflowMutation` (`SpaceApp`'s own types, `os.workflow`) — the two types
+/// don't match, so this plugin has no schema it could honestly hand over. This is `framework/sync`'s
+/// `FolderEndpoint::Pack` reusing "os.space" as a legacy folder-format tag, decoupled from any
+/// artifact this plugin declares; it needs either (a) a schema-less `document_codec`-only builder
+/// entrypoint, or (b) for "os.space"'s pack codec to be registered by whoever truly owns that kind
+/// (framework/os), not borrowed here. Reported, not forced — see
+/// `📓️w1d-semio-s-plugin-space-report.md`.
 fn register_s_exports() {
-    apps::home::config::schema::register_app_schema();
-    apps::space::config::schema::register_app_schema();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::space::SpaceApp>(semio_framework_os::OS_SPACE_SCHEMA);
 }
 //#endregion 🔖️ArtifactCodecs

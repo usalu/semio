@@ -1,0 +1,18 @@
+syntax = "proto3";
+package semio.s.puzzle.puzzle2d.inference;
+
+// 💡️ Puzzle2d inference schema — flatPosition (BFS-resolved node position) per node.
+
+message Puzzle2dInference {
+  // @state inferred
+  Puzzle2dFlatPosition flat_position = 1;
+}
+
+message Puzzle2dFlatPosition {
+  map<string, Puzzle2dFlatPositionXy> positions = 1;
+}
+
+message Puzzle2dFlatPositionXy {
+  double x = 1;
+  double y = 2;
+}

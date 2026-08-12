@@ -1,7 +1,7 @@
 //! 🎛️ Trinity Rewrite app — Parameters window (editable form over the RHS's declared parameters).
 
 use crate::apps::rewrite::terminology::TrinityRewriteLabels;
-use crate::artifacts::rewrite::engine::{ParameterKind, Rhs};
+use crate::artifacts::rewrite::schema::{ParameterKind, Rhs};
 use crate::artifacts::rewrite::RewriteSnapshot;
 use crate::artifacts::jack::PropertyValue;
 use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, UiFieldNode, UiNode, UiPresence, UiSectionNode};
@@ -10,7 +10,7 @@ trait ParameterKindLabel {
     fn kind_label(&self) -> String;
 }
 
-impl ParameterKindLabel for crate::artifacts::rewrite::engine::ParameterSpec {
+impl ParameterKindLabel for crate::artifacts::rewrite::schema::ParameterSpec {
     fn kind_label(&self) -> String {
         match self.kind {
             ParameterKind::String => "string".into(),

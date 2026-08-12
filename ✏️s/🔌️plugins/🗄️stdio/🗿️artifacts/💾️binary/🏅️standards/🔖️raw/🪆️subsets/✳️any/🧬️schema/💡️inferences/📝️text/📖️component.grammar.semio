@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.binary.inference
+extension binary.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.binary.inference" NL
+body = payload NL?
+payload = OCTET+

@@ -6,7 +6,7 @@ pub fn register() {}
 
 pub fn deserialize(from: &MdSnapshot) -> Result<SequenceSnapshot, store::TextError> {
     let _ = STDIO_MD_DOCUMENT_SCHEMA;
-    <SequenceSnapshot as store::ArtifactDsl>::parse_dsl(&from.body)
+    <SequenceSnapshot as store::ArtifactDsl>::parse_dsl(&from.to_text())
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<SequenceSnapshot, store::TextError> {

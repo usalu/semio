@@ -539,6 +539,7 @@ pub fn demo_gltf_snapshot() -> GltfSnapshot {
 pub fn register() {
     crate::artifacts::gltf::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<GltfSnapshot, GltfMutation>(STDIO_GLTF_DOCUMENT_SCHEMA));
 }
@@ -605,6 +606,13 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.gltf`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::gltf::schema::gltf_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.stdio.gltf.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::gltf::standards::v2_0::subsets::any::schema::inferences::gltf_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 

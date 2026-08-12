@@ -1,0 +1,20 @@
+syntax = "proto3";
+package semio.s.stdio.semio.table.inference;
+
+// 💡️ Semio table inference schema — dimensions + declared column-kind census.
+
+message SemioTableInference {
+  // @state inferred
+  SemioTableShape shape = 1;
+}
+
+message SemioTableShape {
+  uint32 column_count = 1;
+  uint32 row_count = 2;
+  uint32 null_column_count = 3;
+  uint32 bool_column_count = 4;
+  uint32 int_column_count = 5;
+  uint32 float_column_count = 6;
+  uint32 str_column_count = 7;
+  uint32 bytes_column_count = 8;
+}

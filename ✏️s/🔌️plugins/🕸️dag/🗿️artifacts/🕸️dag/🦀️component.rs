@@ -73,7 +73,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.dag")
         .schema(crate::artifacts::dag::schema::dag_artifact_schema_descriptor())
         .inferences([crate::artifacts::dag::standards::v1::subsets::any::schema::inferences::dag_artifact_inference_descriptor()])
-        .composers(crate::artifacts::dag::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::dag::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::dag::DagPlayApp>()
         .build()
@@ -165,7 +165,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::dag::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::dag::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

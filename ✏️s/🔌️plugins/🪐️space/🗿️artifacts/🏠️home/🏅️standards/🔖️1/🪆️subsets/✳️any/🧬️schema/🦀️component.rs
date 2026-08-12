@@ -197,3 +197,37 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: SHomeComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+/// 🌱️ Relocated from `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 3:
+/// pure helpers over document types live in `🧬️schema/`).
+pub fn empty_shome_snapshot() -> crate::artifacts::home::SHomeSnapshot {
+    crate::artifacts::home::SHomeSnapshot::default()
+}
+
+/// 🔎 Returns whether `s.space.home` is present in the process-local schema registry. Relocated from
+/// `⚙️engine` alongside `empty_shome_snapshot` (same rule).
+pub fn artifact_schema_registered() -> bool {
+    ::schema::artifact_schema_descriptor_registered("s.space.home")
+}
+//#endregion 🔖️DocumentHelpers
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 🌱️ Relocated verbatim from `⚙️engine`'s own test module — the sibling
+    /// `engine_apply_updates_catalog_generation` test is NOT carried forward: it exercised
+    /// `SHomeEngine::apply` via `use dsl::ArtifactEngine;`, a trait that has zero implementations and
+    /// zero definitions anywhere in shipped source (`grep -rn "trait ArtifactEngine"` → 0 repo-wide),
+    /// so that test could never have compiled — a pre-existing dead reference to the never-shipped
+    /// trait this whole ticket is repealing, not a surviving assertion. `SHomeEngine` itself had zero
+    /// external references and is deleted outright per the ticket's D5a ruling.
+    #[test]
+    fn empty_snapshot_uses_home_schema() {
+        let snapshot = empty_shome_snapshot();
+        assert_eq!(snapshot.schema, crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA);
+    }
+}
+//#endregion 🧪️Tests

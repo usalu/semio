@@ -1,0 +1,30 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/semio/value/inference.json",
+  "title": "SemioValueInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["census"],
+  "properties": {
+    "census": { "$ref": "#/$defs/SemioValueCensus", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "SemioValueCensus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nullCount", "boolCount", "intCount", "floatCount", "strCount", "bytesCount", "listCount", "mapCount", "refCount", "nodeCount", "maxDepth"],
+      "properties": {
+        "nullCount": { "type": "integer", "minimum": 0 },
+        "boolCount": { "type": "integer", "minimum": 0 },
+        "intCount": { "type": "integer", "minimum": 0 },
+        "floatCount": { "type": "integer", "minimum": 0 },
+        "strCount": { "type": "integer", "minimum": 0 },
+        "bytesCount": { "type": "integer", "minimum": 0 },
+        "listCount": { "type": "integer", "minimum": 0 },
+        "mapCount": { "type": "integer", "minimum": 0 },
+        "refCount": { "type": "integer", "minimum": 0 },
+        "nodeCount": { "type": "integer", "minimum": 0 },
+        "maxDepth": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

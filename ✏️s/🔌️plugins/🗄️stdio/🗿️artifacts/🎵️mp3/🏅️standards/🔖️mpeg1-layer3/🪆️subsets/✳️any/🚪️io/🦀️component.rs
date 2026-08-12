@@ -49,6 +49,14 @@ pub mod derived_composition {
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor());
         store::register_document_codec(store::ArtifactCodec::of::<Mp3Snapshot, crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::STDIO_MP3_DOCUMENT_SCHEMA));
+        register_artifact_inferences();
+    }
+
+    /// 💡️ Registers `s.stdio.mp3.inference`'s facet leaves into the OS-wide inference
+    /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
+    /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }

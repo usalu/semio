@@ -1,0 +1,24 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/epw/inference.json",
+  "title": "EpwInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["climate"],
+  "properties": {
+    "climate": { "$ref": "#/$defs/EpwClimateSummary", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "EpwClimateSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recordCount", "parsedTempCount", "minDryBulbC", "maxDryBulbC", "avgDryBulbC"],
+      "properties": {
+        "recordCount": { "type": "integer", "minimum": 0 },
+        "parsedTempCount": { "type": "integer", "minimum": 0 },
+        "minDryBulbC": { "type": "number" },
+        "maxDryBulbC": { "type": "number" },
+        "avgDryBulbC": { "type": "number" }
+      }
+    }
+  }
+}

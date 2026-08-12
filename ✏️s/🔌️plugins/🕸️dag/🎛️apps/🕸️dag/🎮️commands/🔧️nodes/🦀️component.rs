@@ -6,7 +6,7 @@
 //! documented in the migration TEMPLATE §12.3, also hit by cad/vcs/shooting/sourcing's old ui crates);
 //! fixed here as part of the port, not a behavior change.
 
-use crate::artifacts::dag::engine;
+use crate::artifacts::dag::schema;
 use crate::artifacts::dag::mutations::{change_node_name, create_node, rename_node, replace_node_kind, resize_node};
 use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagSnapshot;

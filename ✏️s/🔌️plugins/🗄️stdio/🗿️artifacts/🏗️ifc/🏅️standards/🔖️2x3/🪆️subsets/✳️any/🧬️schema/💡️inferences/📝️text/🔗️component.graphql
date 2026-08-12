@@ -1,0 +1,3 @@
+# s.stdio.ifc.2x3.inference text grammar schema
+scalar Bytes
+type Document { schema: String! payload: String! }

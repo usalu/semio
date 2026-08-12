@@ -57,10 +57,15 @@ pub fn demo_space_projection() -> WorkflowSnapshot {
 /// 🔌️ Builds the S Studio plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old imperative `register_s_exports()`
 /// pre-call for everything artifact-scoped (`🏠️home`'s schema/inferences/composers/languages/document
-/// codec); `.setup()` survives here for the two things `ArtifactDeclaration` has no field for: BOTH
-/// apps' config/presence schema, and `SpaceApp`'s own document codec — `🪐️space`'s app wraps the
-/// kernel-owned `WorkflowSnapshot` and owns no `🗿️artifacts` node of its own in this plugin (see this
-/// file's own module doc), so it cannot be expressed as an `ArtifactDeclaration.document_codec` either.
+/// codec). Both apps' config/presence schema (ticket W1c) moved off `.setup()` onto
+/// `ArtifactApp::app_schema()` overrides on `HomeApp`/`SpaceApp`, auto-registered by
+/// `.register_document_app::<A>()` below. `.setup()` survives narrowed to exactly ONE residue item:
+/// `SpaceApp`'s own document codec — `🪐️space`'s app wraps the kernel-owned `WorkflowSnapshot` and owns
+/// no `🗿️artifacts` node of its own in this plugin (see this file's own module doc), and the codec is
+/// keyed by a foreign kind (`OS_SPACE_SCHEMA`/`"os.space"`, owned by framework/os's `SpaceSnapshot`,
+/// not by any type this plugin declares) — see `📦️glue.rs::register_s_exports()`'s own doc for why
+/// `.document_codec_bare()` cannot honestly close this gap, and
+/// `📓️w1d-semio-s-plugin-space-report.md` for the full writeup.
 pub fn plugin() -> Plugin {
     Plugin::builder("s")
         .label("S Studio")

@@ -1,0 +1,3 @@
+(* ebnf s.stdio.semio.object.inference *)
+document = header, body ;
+header = 'schema', space, 's.stdio.semio.object.inference', newline ;

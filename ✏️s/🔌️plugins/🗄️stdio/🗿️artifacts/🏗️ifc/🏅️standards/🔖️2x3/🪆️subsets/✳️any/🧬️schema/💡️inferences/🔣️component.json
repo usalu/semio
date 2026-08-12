@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/inference.json",
+  "title": "Ifc2x3Inference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bounds"],
+  "properties": {
+    "bounds": { "$ref": "#/$defs/Ifc2x3Bounds", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "Ifc2x3Bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max", "pointCount"],
+      "properties": {
+        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "pointCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

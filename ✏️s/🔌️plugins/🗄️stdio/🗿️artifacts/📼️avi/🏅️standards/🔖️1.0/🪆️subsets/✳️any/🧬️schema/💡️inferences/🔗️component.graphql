@@ -1,0 +1,11 @@
+# 💡️ avi inference schema — real `avih` MainAVIHeader-derived playback duration.
+
+type AviInference {
+  duration: AviDuration! @state(class: INFERRED)
+}
+
+type AviDuration {
+  durationSeconds: Float!
+  streamCount: Int!
+  totalFrames: Int!
+}

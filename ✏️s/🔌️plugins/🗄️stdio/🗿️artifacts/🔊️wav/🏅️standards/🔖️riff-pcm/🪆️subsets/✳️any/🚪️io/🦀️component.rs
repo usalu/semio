@@ -48,7 +48,15 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor());
+        register_artifact_inferences();
         store::register_document_codec(store::ArtifactCodec::of::<WavSnapshot, crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA));
+    }
+
+    /// 💡️ Registers `s.stdio.wav.inference`'s facet leaves into the OS-wide inference
+    /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
+    /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::inferences::wav_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }

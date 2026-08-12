@@ -132,6 +132,10 @@ impl ArtifactApp for Block3dPlayApp {
     const APP_ID: &'static str = BLOCK3D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;
 
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::block3d::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> Block3dSnapshot {
         crate::artifacts::block3d::engine::empty_block3d_snapshot()
     }

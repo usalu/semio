@@ -28,8 +28,9 @@ fn serde_to_json_value(value: &serde_json::Value) -> JsonValue {
 }
 
 pub fn serialize(snapshot: &RemodelSnapshot) -> Result<JsonSnapshot, store::TextError> {
+    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: serde_to_json_value(&value) })
+    Ok(JsonSnapshot::from_value(value))
 }
 
 pub fn serialize_bytes(snapshot: &RemodelSnapshot) -> Result<Vec<u8>, store::TextError> {

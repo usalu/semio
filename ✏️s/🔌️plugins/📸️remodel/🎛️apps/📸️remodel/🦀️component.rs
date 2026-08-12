@@ -6,7 +6,8 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window scenes in
 //! `🎭️modes/*/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`, view state in
-//! `🦀️config.rs`, the photogrammetry stack in the artifact's `⚙️engine` topic files. This file is a
+//! `🦀️config.rs`, the photogrammetry stack in this app's own `⚙️engine` topic files (relocated from the
+//! artifact tree, 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, #2553). This file is a
 //! routing table: `handle` → `RemodelCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
@@ -15,14 +16,14 @@ use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::apps::remodel::presence::{RemodelPresence, RemodelPresenceMutation};
 use crate::apps::remodel::modes::{analyze, capture, model};
 use crate::apps::remodel::panels::{calibration as calibration_panel, document, media, parameters, quality, results, tracks};
+use crate::apps::remodel::engine::images as remodel_image;
 use crate::apps::remodel::terminology::remodel_labels;
-use crate::artifacts::remodel::engine::decode_still_image;
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{default_remodel_scene, FrameRef, ImageAsset, MediaKind, MediaStream, RemodelSnapshot, REMODEL_DOCUMENT_SCHEMA};
 use base64::Engine as _;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPayload, MediaType, MeshExporter, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
+    MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MeshExporter, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use store::EngineHandles;
 use serde_json::Value;
@@ -43,6 +44,86 @@ pub fn remodel_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(REMODEL_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
+/// `create_remodel_app` already declares via `.artifact_kind(...)`, plus the two Wave-2 port-recipe ports:
+/// `photos:in` (incoming source images for reconstruction) and `mesh:out` (the current reconstructed mesh).
+/// 🗄️ `export_formats`/`import_formats` are left empty, matching this same plugin's sibling
+/// `artifact_kind()` (`🗿️artifacts/📸️remodel/🦀️component.rs`), which already carries the real dialect
+/// ids on `ArtifactKindSpec::export_stdio_kinds`/`import_stdio_kinds` (`s.stdio.glb`/`obj`/`stl`/`ply`/
+/// `las`/`png`) instead of the deprecated enum this file used to import from `semio_framework_plugin` — see
+/// `26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT` W6. `AppIo` itself has no
+/// such additive string-id peer fields yet (unlike `ArtifactKindSpec`), so unlike that sibling, this
+/// list cannot be repopulated with real dialect ids without a framework-level `AppIo` change — out of
+/// this plugin's write scope; flagged for the ticket's framework closer.
+///
+/// 🧭️ Relocated from the artifact's `⚙️engine/🦀️component.rs` (26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
+/// STATE-MACHINES, #2553): it returns `AppIo` — app-owned by construction — so it never belonged on
+/// the artifact side.
+pub fn remodel_io() -> AppIo {
+    AppIo {
+        document_schema: "remodel.scene".into(),
+        document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+        ports: vec![remodel_photos_in_port(), remodel_mesh_out_port()],
+        export_formats: vec![],
+        import_formats: vec![],
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.remodel".into(), name: "3D Remodel".into(), dimension: "3d".into(), component_kind: "remodel".into() },
+    }
+}
+
+/// 🔌️ `photos:in` — incoming photos to insert as source images for reconstruction; pinned to the
+/// `2d.image` kind (declared by `shooting`'s manifest — identical-shape duplicates are harmless, so this
+/// app does not redeclare it).
+pub fn remodel_photos_in_port() -> MediaPortSpec {
+    MediaPortSpec {
+        id: "photos:in".into(),
+        label: "Photos".into(),
+        direction: MediaPortDirection::In,
+        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
+        kind_id: Some("2d.image".into()),
+        required: false,
+        multiplicity: semio_framework::PortMultiplicity::Many,
+    }
+}
+
+/// 🔌️ `mesh:out` — the current reconstructed mesh; pinned to the `3d.mesh` kind (declared by `lowpoly`'s
+/// manifest — reused rather than redeclared, per the port recipe).
+pub fn remodel_mesh_out_port() -> MediaPortSpec {
+    MediaPortSpec {
+        id: "mesh:out".into(),
+        label: "Mesh".into(),
+        direction: MediaPortDirection::Out,
+        media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+        kind_id: Some("3d.mesh".into()),
+        required: false,
+        multiplicity: semio_framework::PortMultiplicity::Many,
+    }
+}
+//#endregion 🔖️Io
+
+//#region 🔖️Payloads
+/// 📦️ Decodes a `requestFileOpen(readAs: "dataUrl")`/`RequestMediaFrames` payload into `(mime, bytes)`.
+/// Relocated from the artifact's `⚙️engine/🦀️component.rs` (#2553): its only three consumers are all
+/// app-side (`🎮️commands/📥️ingest`, `🎮️commands/🚀️reconstruction`, this app's own `import_media`).
+pub fn payload_from_data_url(data_url: &str) -> Option<(String, Vec<u8>)> {
+    let (header, encoded) = data_url.split_once(',')?;
+    let mime = header.strip_prefix("data:")?.split(';').next().unwrap_or("application/octet-stream").to_string();
+    let bytes = base64::engine::general_purpose::STANDARD.decode(encoded).ok()?;
+    Some((mime, bytes))
+}
+
+/// 🖼️ Decodes a still-image payload by mime — three consumers (`🎮️commands/📥️ingest`,
+/// `🎮️commands/🚀️reconstruction`, this app's own `import_media`), and it takes no artifact-schema
+/// type, so it stays app-side (relocated from `⚙️engine/🦀️component.rs`, #2553).
+pub fn decode_still_image(mime: &str, bytes: &[u8]) -> Result<remodel_image::ImageRgba8, remodel_image::ImageError> {
+    if mime.contains("jpeg") || mime.contains("jpg") {
+        remodel_image::decode_jpeg(bytes)
+    } else {
+        remodel_image::decode_png(bytes)
+    }
+}
+//#endregion 🔖️Payloads
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -349,7 +430,7 @@ impl ArtifactApp for RemodelPlayApp {
     }
 
     fn io() -> Option<AppIo> {
-        Some(crate::artifacts::remodel::engine::remodel_io())
+        Some(remodel_io())
     }
 
     /// 🎞️ `mesh:out` (the current reconstructed mesh, GLB-encoded) plus the inherited `document:out`
@@ -473,8 +554,8 @@ pub fn create_remodel_app() -> App {
             .artifact_kind(crate::artifacts::remodel::artifact_kind())
             // 🔌️ `photos:in`/`mesh:out` — `2d.image`/`3d.mesh` are declared by `shooting`/`lowpoly`
             // respectively (reused here, not redeclared).
-            .media_input(crate::artifacts::remodel::engine::remodel_photos_in_port())
-            .media_output(crate::artifacts::remodel::engine::remodel_mesh_out_port())
+            .media_input(remodel_photos_in_port())
+            .media_output(remodel_mesh_out_port())
             .icon_id("remodel-app")
             .mode_def(capture::definition())
             .mode_def(model::definition())
@@ -664,7 +745,7 @@ pub fn create_remodel_app() -> App {
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("gcpPlace", LocalizedLabel::native("Place GCP", "Passpunkt setzen"), "crosshair") })
             // 🎯️ Typed channel surface — `io()` is this same information's single source of truth,
             // reused here rather than duplicated.
-            .io(crate::artifacts::remodel::engine::remodel_io()),
+            .io(remodel_io()),
     )
     .example("default", LocalizedLabel::native("Default", "Standard"), &default_example, "file")
     .workflow("remodel", "Remodel", "mesh")
@@ -986,7 +1067,7 @@ mod tests {
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
             payload: MediaPayload::Structured {
                 schema: "2d.image".into(),
-                json: base64::engine::general_purpose::STANDARD.encode(crate::artifacts::remodel::engine::images::encode_png(&crate::artifacts::remodel::engine::images::ImageRgba8::new(4, 4)).expect("encode png")),
+                json: base64::engine::general_purpose::STANDARD.encode(crate::apps::remodel::engine::images::encode_png(&crate::apps::remodel::engine::images::ImageRgba8::new(4, 4)).expect("encode png")),
             },
         };
         let emit = RemodelPlayApp::import_media("photos:in", &media, &doc).expect("photos:in import");
@@ -1021,5 +1102,26 @@ mod tests {
         }
     }
     //#endregion 🔖️MediaPortTests
+
+    //#region 🔖️IoTests
+    /// 🧪️ Relocated from the artifact's `⚙️engine/🦀️component.rs` (#2553): `remodel_io()` returns
+    /// `AppIo` and lives app-side now, so its own declaration test travels with it.
+    #[test]
+    fn remodel_io_declares_photos_in_and_mesh_out() {
+        let io = remodel_io();
+        assert_eq!(io.document_schema, "remodel.scene");
+        assert_eq!(io.artifact.id, "3d.remodel");
+        let photos_in = io.ports.iter().find(|port| port.id == "photos:in").expect("photos:in declared");
+        assert_eq!(photos_in.direction, MediaPortDirection::In);
+        assert_eq!(photos_in.kind_id.as_deref(), Some("2d.image"));
+        assert!(!photos_in.required);
+        assert_eq!(photos_in.multiplicity, semio_framework::PortMultiplicity::Many);
+        let mesh_out = io.ports.iter().find(|port| port.id == "mesh:out").expect("mesh:out declared");
+        assert_eq!(mesh_out.direction, MediaPortDirection::Out);
+        assert_eq!(mesh_out.kind_id.as_deref(), Some("3d.mesh"));
+        assert!(!mesh_out.required);
+        assert_eq!(mesh_out.multiplicity, semio_framework::PortMultiplicity::Many);
+    }
+    //#endregion 🔖️IoTests
 }
 //#endregion 🧪️Tests

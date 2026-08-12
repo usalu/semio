@@ -1,0 +1,18 @@
+# 💡️ Semio object inference schema — composition census + own placement.
+
+type SemioObjectInference {
+  composition: SemioObjectComposition! @state(class: INFERRED)
+}
+
+type SemioObjectComposition {
+  hasBrep: Boolean!
+  hasMesh: Boolean!
+  hasProperties: Boolean!
+  position: SemioPoint3!
+}
+
+type SemioPoint3 {
+  x: Float!
+  y: Float!
+  z: Float!
+}

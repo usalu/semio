@@ -5,7 +5,7 @@
 
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::{effective_try_values, parse_value_json, reset_try_config_mutations, try_values_json_text, try_values_map};
-use crate::artifacts::forms::engine::can_advance;
+use crate::artifacts::forms::schema::can_advance;
 use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -229,8 +229,8 @@ mod tests {
         seed_example(&mut app, "onboarding");
         let spec = app.snapshot().expect("projection");
         let advanced = spec.steps.iter().find(|step| step.id == "advanced").expect("advanced step");
-        let values = crate::artifacts::forms::engine::initial_try_values(&spec, &Map::new());
-        assert_eq!(crate::artifacts::forms::engine::visible_questions(advanced, &values).len(), 1);
+        let values = crate::artifacts::forms::schema::initial_try_values(&spec, &Map::new());
+        assert_eq!(crate::artifacts::forms::schema::visible_questions(advanced, &values).len(), 1);
     }
 
     #[test]

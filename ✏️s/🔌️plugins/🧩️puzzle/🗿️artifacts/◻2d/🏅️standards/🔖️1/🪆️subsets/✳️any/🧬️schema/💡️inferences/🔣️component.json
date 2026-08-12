@@ -1,0 +1,35 @@
+{
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/inference.json",
+  "title": "Puzzle2dInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["flatPosition"],
+  "properties": {
+    "flatPosition": {
+      "$ref": "#/$defs/Puzzle2dFlatPosition",
+      "x-semio-state": "inferred"
+    }
+  },
+  "$defs": {
+    "Puzzle2dFlatPositionXy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "Puzzle2dFlatPosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["positions"],
+      "properties": {
+        "positions": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/Puzzle2dFlatPositionXy" }
+        }
+      }
+    }
+  }
+}

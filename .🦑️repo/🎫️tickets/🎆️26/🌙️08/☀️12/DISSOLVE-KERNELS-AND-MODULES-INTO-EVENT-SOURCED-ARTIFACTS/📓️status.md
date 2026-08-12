@@ -396,3 +396,57 @@ Running the round-trip/consistency/determinism laws — rather than merely autho
 ### `✳️mesh` — provenance to preserve
 
 SMO owned stdio mutation vocabulary and **explicitly claimed the `set-primitive-geometry` → `replace-primitive-geometry` rename as theirs**, approving the reasoning but reserving the edit. **They wound down without doing it.** DKM is completing it under the user's explicit instruction to finish end to end. The dispatched agent is required to record this provenance prominently: **SMO-approved in reasoning, SMO-reserved in execution, completed by DKM after SMO ended.** Not presented as ours.
+
+## W4 final state — DKM's boundary is CLEAN; residual belongs to a concurrent session
+
+Measured authoritatively (`RUSTC_WRAPPER="" … --all-targets`, forced recheck):
+
+| subset | triads | glue mounts | banned-vocabulary files | errors |
+|---|---|---|---|---|
+| `✳️brep` | 13 | 13 | **0** | **0** |
+| `✳️drawing` | 17 | 17 | **0** | **0** |
+| `✳️mesh` | 1 | 1 | 5 | 0 — **not started** (agent died at dispatch) |
+
+**Errors attributable to DKM: 0.** The 8 remaining stdio errors are all one kind — `cannot find 'inferences' in 'schema'` across `✳️animation`, `✳️any`, `✳️audio`, `✳️cad`, `✳️document`, `✳️flow`, `✳️graph`, `✳️image` — i.e. inference-facet mounts for **other** subsets, belonging to the concurrent inference fan-out. `📦️glue.rs` mtime was **21 seconds old** at measurement: that session is actively mid-edit. **Not touched.**
+
+### What the coordinator repaired directly
+
+All three agents died simultaneously on a session limit, two of them mid-edit. Repairs, all inside DKM's boundary:
+- **Added brep's 13 missing triad mounts** to `📦️glue.rs` — the dispatch imported 13 leaf modules and the glue mounted only `component`/`binary`/`text`. Generated from a real `os.listdir()`, never hand-typed, with each triad's three leaves verified present before emitting its block. Errors 61 → 44.
+- Drawing's 34 errors cleared without intervention (its mounts were already complete; the failures were transient mid-edit state).
+
+### ⚠️ Two measurement lessons, both learned by getting them wrong first
+
+1. **My verification flags were inadequate all evening.** `cargo test -p semio-s-plugin-stdio --lib` reported **2246 passed / 2 failed**. The same tree at the same moment under `RUSTC_WRAPPER="" cargo check --all-targets` reported **61 errors**. The repo sets `rustc-wrapper = "sccache"` in `.cargo/config.toml:2`, and the default target set excludes exactly where a vocabulary rename leaves casualties. **Both flags are now mandatory for every DKM verification and every dispatch brief.**
+2. **A Unicode-normalization mismatch silently defeated my own tooling — twice.** A Python script matching the emoji path `✳️brep/…/📄set-snapshot` returned **no match** while `rustc` reported that exact mount as dangling at `glue.rs:5572`, and a shell `grep -c` for the same string returned **0**. The literal in my script did not byte-match the on-disk name. **Fix: discriminate on ASCII-only substrings** (`"brep" in body and "set-snapshot" in body`) and never on emoji literals. This is the same trap UCAS warned about producing silently-empty modules — it also produces silently-empty *searches*, which is worse, because an empty search reads as "already clean".
+
+### ⚠️ "A verification is a timestamp, not a property"
+
+Adopted verbatim from session #2553. Demonstrated three times in ten minutes on one file: the dangling `set_snapshot` block was **present, absent, present, then absent again** across successive reads — removed concurrently between my read and my write, twice. I stopped chasing it and re-measured instead. Corollary for a shared tree: **never act on a measurement you did not take in the same command as the action**, and prefer re-measuring to re-fixing.
+
+## W6 — Policy ratchet LANDED in `📜️script.ts` (report mode)
+
+Queue position 5 confirmed clear before writing: `📜️script.ts` was **not dirty**, mtime 4h old, four prior peer edits committed (flags 489/490/494/495/496). New region `//#region 🔧️PolicyRuleDissolvedKernels` inserted after `PolicyRuleSchemaOverhaulPC`, registered in the top-level aggregator, following the file's existing conventions (`BreachRecord`, shrink-only allowlist **with stale-entry detection**, `priority: "medium"` = reports, never gates).
+
+### The three rules
+
+1. **`policyDissolvedRepEscapeBreaches` — measures REACH, not mutability.** Flags a durable field *or static* holding `HalfedgeMesh`/`BrepEngineHost`/`DrawingStore`/`DrawingEngine`/`EngineCache`. The docstring states why this is a *separate* rule from any `&mut`/`static mut` check: a `static HOST: OnceLock<BrepEngineHost>` is write-once, so every mutability-based rule passes it, and it is still a plugin holding a handle to host-owned engine state for the process lifetime. (Adopted from APA, who found their own `PolicyRulePluginPurity` had exactly this hole.)
+2. **`policyDissolvedEngineCacheScopeBreaches`** — `EngineCache::new`/`impl EngineHost for` outside the sanctioned wasm-boundary modules. **No seed allowlist**: the narrowed scope is the target state, so it fails on new violations rather than burning down a backlog.
+3. **`policyDissolvedWholeDocumentReplaceBreaches`** — any `📄set-snapshot` triad directory. Deliberately a **directory-level** check, because the dispatch arm and the triad dir fail independently and an identifier grep sees only one of them. Its `solution` text carries the hard-won rule: delete the dir, its dispatch arm **and its `📦️glue.rs` mount in the same change**, since a mount pointing at a removed directory aborts the build for every crate in the workspace.
+
+### Verified standalone against the real tree (8,818 Rust files)
+
+The full `bun ./📜️script.ts policy` run **cannot complete** — but not because of this work (see below). The detection logic was therefore verified in isolation:
+
+- **rep-escape: 8 hits**, and they are exactly the known census — `📐️cad`'s `BrepEngineHost` reach, `◻2d/🗄️store` (`DrawingStore` + `EngineCache`), `🧊️3d/📐️brep/⚙️engine/🖥️host` (`EngineCache`), `💻️os/🔨️modules/🌊️flow/🖍️drawing` (`DrawingStore`), and `🔌️plugin/🖥️host` (`EngineCache`, sanctioned). 4 are seeded in the shrink-only allowlist; 1 is in a sanctioned dir; the remainder report.
+- **whole-document-replace: 51 triad dirs**, down from the **70** measured at W0 — the difference is largely the three subsets this ticket cleared.
+
+That 51 is the honest, countable measure of how much of the mandate remains: those directories belong to other tickets, and the rule now makes them visible rather than assumed.
+
+### ⚠️ Blocker, not ours: `bun ./📜️script.ts policy` throws before reaching any rule
+
+```
+ReferenceError: policyArtifactRootOfMutationsDir is not defined
+  at policyMutationTriadCompletenessBreaches (📜️script.ts:6332)
+```
+**Attributed, not assumed**: that identifier appears **0 times in `HEAD`** — both its three call sites *and* its definition are another session's **uncommitted, in-flight** work. DKM's region sits ~5,000 lines below it and cannot cause a `ReferenceError` at 6332. The module parses and executes as far as 6332, which also proves DKM's region is syntactically valid. **Not fixed** — it is another session's live edit, and the standing rule is to work on something else and say so rather than repair a file mid-edit.

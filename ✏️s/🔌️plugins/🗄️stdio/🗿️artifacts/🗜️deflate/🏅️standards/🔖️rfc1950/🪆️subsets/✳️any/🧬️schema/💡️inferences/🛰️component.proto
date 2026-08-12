@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.s.stdio.deflate.inference;
+
+// 💡️ deflate inference schema — real RFC1950 zlib header semantics (CMF window size, FLG.FLEVEL, FDICT).
+
+message DeflateInference {
+  // @state inferred
+  DeflateWindow window = 1;
+}
+
+message DeflateWindow {
+  uint32 window_size = 1;
+  string compression_level_hint = 2;
+  bool has_preset_dictionary = 3;
+  uint64 payload_size = 4;
+  string content_digest = 5;
+}

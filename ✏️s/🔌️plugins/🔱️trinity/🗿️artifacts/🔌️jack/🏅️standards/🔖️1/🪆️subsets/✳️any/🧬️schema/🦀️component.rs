@@ -156,6 +156,28 @@ pub fn jack_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     }
 }
 //#endregion 🔖️Descriptor
+
+//#region 🔖️EmptyDocument
+/// 📦️ An empty trinity graph fixture — the app's zero-state initial document.
+pub fn empty_jack_document() -> crate::artifacts::jack::JackSnapshot {
+    crate::artifacts::jack::empty_trinity_graph_fixture()
+}
+//#endregion 🔖️EmptyDocument
+
+//#region 🧪️EmptyDocumentTests
+#[cfg(test)]
+mod empty_document_tests {
+    use super::*;
+
+    #[test]
+    fn empty_jack_document_has_no_nodes_or_edges() {
+        let fixture = empty_jack_document();
+        assert!(fixture.nodes.is_empty());
+        assert!(fixture.edges.is_empty());
+    }
+}
+//#endregion 🧪️EmptyDocumentTests
+
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use semio_framework_plugin::ArtifactBuilder;

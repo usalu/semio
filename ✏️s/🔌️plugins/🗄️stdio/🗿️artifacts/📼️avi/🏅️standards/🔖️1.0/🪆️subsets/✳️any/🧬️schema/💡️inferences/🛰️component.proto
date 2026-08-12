@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.stdio.avi.inference;
+
+// 💡️ avi inference schema — real `avih` MainAVIHeader-derived playback duration.
+
+message AviInference {
+  // @state inferred
+  AviDuration duration = 1;
+}
+
+message AviDuration {
+  double duration_seconds = 1;
+  uint32 stream_count = 2;
+  uint32 total_frames = 3;
+}

@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s_stdio_ifc_2x3.inference;
+
+// 💡️ IFC2X3 inference schema — IFCCARTESIANPOINT-derived spatial bounding box.
+
+message Ifc2x3Inference {
+  // @state inferred
+  Ifc2x3Bounds bounds = 1;
+}
+
+message Ifc2x3Bounds {
+  repeated double min = 1;
+  repeated double max = 2;
+  uint32 point_count = 3;
+}

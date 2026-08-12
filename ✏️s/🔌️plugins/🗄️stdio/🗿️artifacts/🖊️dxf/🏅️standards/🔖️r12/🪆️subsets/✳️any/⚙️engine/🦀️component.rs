@@ -51,8 +51,16 @@ pub fn demo_dxf_snapshot() -> DxfSnapshot {
 pub fn register() {
     crate::artifacts::dxf::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<DxfSnapshot, DxfMutation>(STDIO_DXF_DOCUMENT_SCHEMA));
+}
+
+/// 💡️ Registers `s.stdio.dxf.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::dxf::standards::v_r12::subsets::any::schema::inferences::dxf_artifact_inference_descriptor());
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) — the full 5-role

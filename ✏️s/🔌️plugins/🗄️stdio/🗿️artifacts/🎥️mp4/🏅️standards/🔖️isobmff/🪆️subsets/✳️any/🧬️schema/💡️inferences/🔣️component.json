@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/mp4/inference.json",
+  "title": "Mp4Inference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["duration"],
+  "properties": {
+    "duration": { "$ref": "#/$defs/Mp4Duration", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "Mp4Duration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["durationSeconds", "trackCount", "sampleCount"],
+      "properties": {
+        "durationSeconds": { "type": "number", "minimum": 0 },
+        "trackCount": { "type": "integer", "minimum": 0 },
+        "sampleCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

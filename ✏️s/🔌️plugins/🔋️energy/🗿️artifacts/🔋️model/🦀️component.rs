@@ -47,22 +47,24 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// — exactly what `.composers(...)` below now does through `register_all` — so it is dropped here
 /// rather than kept as a duplicate call; the outer fn itself is left in place as orphaned dead code
 /// (see report), matching the `🗒️note` exemplar's own precedent for its orphaned `io_registry` module.
-/// `.composers(...)` below reaches the `⚙️engine` file's OWN `io_registry` module (the one with the
-/// actual `ComposerEntry` rows, distinct from this file's thin wrapper above) by its full path —
-/// deviation from the plain move: the original `declaration()` called it unqualified as a same-file
-/// sibling, which does not survive the relocation, so it is qualified here instead of moved.
-/// `register_document_codec()` (still in `⚙️engine`) is deliberately NOT folded into this
-/// declaration: `.document_codec::<A: ArtifactApp>()` requires an `ArtifactApp` to bind
-/// `A::Snapshot`/`A::Mutation`, and this plugin is a headless library with ZERO apps — there is no
-/// `ArtifactApp` to name. It is kept alive via a narrowed `.setup()` on the plugin root; this is a
-/// genuine `ArtifactDeclaration` coverage gap, not app-scope config/presence schema, and is reported
-/// as a finding rather than silently ported or dropped.
+/// `.composers(...)` below reaches `🚪️io/🦀️component.rs`'s OWN `io_registry` module (the one with
+/// the actual `ComposerEntry` rows, distinct from this file's thin wrapper above) by its full path —
+/// ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES relocated it off the now-deleted
+/// `⚙️engine` (an artifact is a schema + io system, never an engine) into `🚪️io/`, updating this
+/// qualified reference in lockstep.
+/// `register_document_codec()` — folded into this declaration via `.document_codec_bare::<Snapshot,
+/// Mutation>(schema)` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d): `.document_codec::<A:
+/// ArtifactApp>()` requires an `ArtifactApp` to bind `A::Snapshot`/`A::Mutation`, and this plugin is a
+/// headless library with ZERO apps — there is no `ArtifactApp` to name. `document_codec_bare` is the
+/// new sibling closing exactly that gap (see its own doc); the old free fn in `⚙️engine` is deleted
+/// with this — nothing else called it.
 pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.model")
         .schema(crate::artifacts::model::standards::v1::subsets::any::schema::energy_model_artifact_schema_descriptor())
         .inferences([crate::artifacts::model::standards::v1::subsets::any::schema::inferences::energy_model_artifact_inference_descriptor()])
-        .composers(crate::artifacts::model::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::model::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
+        .document_codec_bare::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA)
         .build()
 }
 
@@ -134,7 +136,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::model::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::model::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

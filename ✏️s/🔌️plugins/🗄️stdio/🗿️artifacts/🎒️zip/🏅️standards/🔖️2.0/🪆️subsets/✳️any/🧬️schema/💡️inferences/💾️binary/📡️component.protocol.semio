@@ -1,0 +1,16 @@
+dialect protocol
+protocol zip.inference
+version 1
+schema s.stdio.zip.inference
+start frame
+framing magic 0x5a6970496e666572
+header fixed 32
+field format_major u16
+field format_minor u16
+field flags u32
+field domain_tag u32
+field header_crc32 u32
+segment payload varint bytes
+footer fixed 64
+field artifact_mark utf8
+field body_crc32 u32

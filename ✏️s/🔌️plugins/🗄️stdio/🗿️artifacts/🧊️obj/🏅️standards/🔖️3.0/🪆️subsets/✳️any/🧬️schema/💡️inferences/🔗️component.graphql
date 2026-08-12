@@ -1,0 +1,13 @@
+# 💡️ Obj inference schema — vertex-derived bounding box.
+
+type ObjInference {
+  bounds: ObjBounds! @state(class: INFERRED)
+}
+
+type ObjBounds {
+  min: [Float!]!
+  max: [Float!]!
+  vertexCount: Int!
+  faceCount: Int!
+  groupCount: Int!
+}

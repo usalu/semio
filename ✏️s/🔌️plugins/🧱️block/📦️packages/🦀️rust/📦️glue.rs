@@ -1999,20 +1999,6 @@ pub mod apps {
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
-/// 🔌️ Registers block2d's codecs (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1: block3d
-/// and block5d declare via `.artifact(crate::artifacts::block{3,5}d::declaration())` in the plugin
-/// root — see `🧱️block/🦀️component.rs`; ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES
-/// then lifted `declaration()` out of `⚙️engine` to the artifact root, and dissolved block2d's
-/// `⚙️engine` entirely, so `crate::apps::block2d::register()` below now lives app-side where the
-/// behaviour belongs) plus every app's own CONFIG/PRESENCE schema — an app-scope concern
-/// `ArtifactDeclaration` deliberately has no field for.
-pub fn register_block_exports() {
-    crate::apps::block2d::register();
-
-    crate::apps::block2d::config::schema::register_app_schema();
-    crate::apps::block3d::config::schema::register_app_schema();
-    crate::apps::block5d::config::schema::register_app_schema();
-}
 
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 

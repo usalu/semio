@@ -240,3 +240,35 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: Block3dComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+/// 📸️ A fresh, empty `Block3dSnapshot` (all fields at their `Default`).
+pub fn empty_block3d_snapshot() -> Block3dSnapshot {
+    Block3dSnapshot::default()
+}
+
+/// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.
+pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> String {
+    let ids: std::collections::HashSet<&str> = existing.collect();
+    let mut i = ids.len();
+    loop {
+        let candidate = format!("{prefix}{i}");
+        if !ids.iter().any(|id| *id == candidate) {
+            return candidate;
+        }
+        i += 1;
+    }
+}
+//#endregion 🔖️DocumentHelpers
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_definition_matches_default() {
+        assert_eq!(empty_block3d_snapshot(), Block3dSnapshot::default());
+    }
+}
+//#endregion 🧪️Tests

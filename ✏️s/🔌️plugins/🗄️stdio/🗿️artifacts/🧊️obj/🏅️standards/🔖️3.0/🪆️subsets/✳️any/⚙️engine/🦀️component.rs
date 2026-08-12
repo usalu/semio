@@ -358,6 +358,7 @@ pub fn encode_obj(snap: &ObjSnapshot) -> String {
 pub fn register() {
     crate::artifacts::obj::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<ObjSnapshot, ObjMutation>(STDIO_OBJ_DOCUMENT_SCHEMA));
@@ -441,6 +442,13 @@ pub fn register_schema_specs() {}
 /// 📌️ Registers schema leaves for `s.stdio.obj`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::obj::schema::obj_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.stdio.obj.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::obj::standards::v3_0::subsets::any::schema::inferences::obj_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 

@@ -1,0 +1,33 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/semio/object/inference.json",
+  "title": "SemioObjectInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["composition"],
+  "properties": {
+    "composition": { "$ref": "#/$defs/SemioObjectComposition", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "SemioObjectComposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hasBrep", "hasMesh", "hasProperties", "position"],
+      "properties": {
+        "hasBrep": { "type": "boolean" },
+        "hasMesh": { "type": "boolean" },
+        "hasProperties": { "type": "boolean" },
+        "position": { "$ref": "#/$defs/SemioPoint3" }
+      }
+    },
+    "SemioPoint3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "z"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" }
+      }
+    }
+  }
+}

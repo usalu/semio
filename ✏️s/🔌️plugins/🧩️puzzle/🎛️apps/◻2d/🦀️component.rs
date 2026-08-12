@@ -848,6 +848,15 @@ impl ArtifactApp for Puzzle2dPlayApp {
     type PresenceMutation = Puzzle2dPresenceMutation;
     type Command = Puzzle2dCommand;
 
+    /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old
+    /// `crate::apps::puzzle2d::config::schema::register_app_schema()` self-registering call, which
+    /// puzzle's plugin root used to reach `.setup()` for — `register_document_app`/`document_app`
+    /// now call this automatically the moment `Puzzle2dPlayApp` is bound to a plugin, exactly like
+    /// `🗒️note`'s own `app_schema` override.
+    fn app_schema() -> Option<artifact_schema::AppSchemaDescriptor> {
+        Some(crate::apps::puzzle2d::config::schema::app_schema_descriptor())
+    }
+
     fn initial_snapshot() -> Puzzle2dPlaySnapshot {
         Puzzle2dPlaySnapshot(serde_json::to_value(default_empty_fixture()).unwrap_or(serde_json::Value::Null))
     }

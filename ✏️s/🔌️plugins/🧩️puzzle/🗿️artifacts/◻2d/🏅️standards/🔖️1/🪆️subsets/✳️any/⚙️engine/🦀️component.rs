@@ -58,13 +58,14 @@ pub fn register_media_io() {
     }
 }
 
-/// 📎 Registers all three puzzle play apps' schema descriptors (config + presence facets) into the
-/// open app-schema registry — app-scope, kept on `.setup()` by design (see `declaration()`'s own doc).
-pub fn register_app_schemas() {
-    crate::apps::puzzle2d::config::schema::register_app_schema();
-    crate::apps::puzzle5d::config::schema::register_app_schema();
-    crate::apps::puzzle3d::config::schema::register_app_schema();
-}
+// 📎 `register_app_schemas()` (self-registered all three puzzle play apps' schema descriptors) is
+// DELETED (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d): this was NOT actually a distinct
+// `ArtifactDeclaration` coverage gap — `Puzzle2dPlayApp`/`Puzzle3dPlayApp`/`Puzzle5dPlayApp` now each
+// override `ArtifactApp::app_schema()`, so `register_document_app` auto-registers all three the
+// moment the plugin root binds them, exactly like `🗒️note`'s exemplar. The three
+// `crate::apps::puzzle{2,3,5}d::config::schema::register_app_schema()` functions this called are
+// themselves replaced by `app_schema_descriptor()` (returns instead of self-registers) in the same
+// files.
 
 //#endregion 🔖️Register
 

@@ -11,7 +11,7 @@
 //! TEMPLATE §12.3); fixed here as part of the port, not a behavior change.
 
 use crate::apps::dag::config::{dag_config_camera, DagConfig, DagConfigMutation};
-use crate::artifacts::dag::engine;
+use crate::artifacts::dag::schema;
 use crate::artifacts::dag::mutations::{connect_nodes, dag_snapshot_mutations, disconnect_nodes, move_node};
 use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagSnapshot;

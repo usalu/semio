@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.s.stdio.semio.text.inference;
+
+// 💡️ Semio text inference schema — word/mark census + distinct languages used.
+
+message SemioTextInference {
+  // @state inferred
+  SemioTextProfile profile = 1;
+}
+
+message SemioTextProfile {
+  uint32 word_count = 1;
+  uint32 char_count = 2;
+  uint32 run_count = 3;
+  uint32 mark_count = 4;
+  repeated string languages = 5;
+}

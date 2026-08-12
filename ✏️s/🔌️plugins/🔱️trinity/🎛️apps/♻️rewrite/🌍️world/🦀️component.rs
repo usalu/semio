@@ -1,11 +1,11 @@
 //! 🌐️ Trinity Rewrite app — retained WASM canvas host + LOD scale (scene compute needing both the
 //! live document AND its own view-only camera/LOD state, so — like `block`/`cad`'s app-level
-//! `world.rs` precedent — this lives at app level rather than in the artifact's `⚙️engine`).
+//! `world.rs` precedent — this lives at app level rather than in the artifact's `🧬️schema`).
 
 use crate::artifacts::jack::mutations::move_node;
 use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::{port_key, Graph, JackSnapshot, Node, PortDirection};
-use crate::artifacts::rewrite::engine::{ApplyRuleResult, Rule};
+use crate::artifacts::rewrite::schema::{ApplyRuleResult, Rule};
 use crate::ast::QueryResult;
 use crate::executor::execute;
 use crate::language_service::{complete as complete_jack, parse};
@@ -452,8 +452,8 @@ impl TrinityBridge {
 
     pub fn apply_rewrite_json(&mut self, rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewriteError> {
         let rule: Rule = serde_json::from_str(rule_json)?;
-        let bindings = crate::artifacts::rewrite::engine::parse_bindings_json(bindings_json)?;
-        let query = crate::artifacts::rewrite::engine::build_rule_query(&rule, &bindings);
+        let bindings = crate::artifacts::rewrite::schema::parse_bindings_json(bindings_json)?;
+        let query = crate::artifacts::rewrite::schema::build_rule_query(&rule, &bindings);
         let parsed = parse(&query).map_err(TrinityRewriteError::Jack)?;
         let (result, operations) = execute(&self.graph, &parsed).map_err(TrinityRewriteError::Jack)?;
         if !operations.is_empty() {
@@ -948,7 +948,7 @@ mod wasm_session {
 
     #[wasm_bindgen(js_name = ruleQueryJson)]
     pub fn rule_query_json(rule_json: &str, bindings_json: &str) -> Result<String, JsValue> {
-        crate::artifacts::rewrite::engine::rule_query_json(rule_json, bindings_json).map_err(|e| JsValue::from_str(&e.to_string()))
+        crate::artifacts::rewrite::schema::rule_query_json(rule_json, bindings_json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 }
 
@@ -961,7 +961,7 @@ pub use wasm_session::TrinitySession;
 mod tests {
     use super::*;
     use crate::artifacts::jack::PropertyValue;
-    use crate::artifacts::rewrite::engine::{AssignmentJson, Lhs, PatternJson, Rhs};
+    use crate::artifacts::rewrite::schema::{AssignmentJson, Lhs, PatternJson, Rhs};
     use crate::lexer::{TokenSpan as JackTokenSpan}; use math::graph::dsl::Completion as JackCompletion;
     use store::ArtifactDsl;
 

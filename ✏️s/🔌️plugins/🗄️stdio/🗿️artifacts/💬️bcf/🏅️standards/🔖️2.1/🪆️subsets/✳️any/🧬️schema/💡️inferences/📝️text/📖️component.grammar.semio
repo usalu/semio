@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.bcf.inference
+extension bcf.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.bcf.inference" NL
+body = payload NL?
+payload = OCTET+

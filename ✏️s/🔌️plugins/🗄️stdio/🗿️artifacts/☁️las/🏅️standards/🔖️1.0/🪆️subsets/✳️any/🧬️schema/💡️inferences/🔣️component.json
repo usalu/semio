@@ -1,0 +1,26 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/las/inference.json",
+  "title": "LasInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bounds"],
+  "properties": {
+    "bounds": { "$ref": "#/$defs/LasBounds", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "LasBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minX", "minY", "minZ", "maxX", "maxY", "maxZ", "pointCount"],
+      "properties": {
+        "minX": { "type": "number" },
+        "minY": { "type": "number" },
+        "minZ": { "type": "number" },
+        "maxX": { "type": "number" },
+        "maxY": { "type": "number" },
+        "maxZ": { "type": "number" },
+        "pointCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

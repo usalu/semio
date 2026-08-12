@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/deflate/inference/text.json",
+  "title": "DeflateInferenceText",
+  "type": "object"
+}

@@ -13,7 +13,8 @@ use crate::apps::imperative::modes::edit;
 use crate::apps::imperative::modes::edit::windows::{main, script};
 use crate::apps::imperative::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::imperative::terminology::imperative_labels;
-use crate::artifacts::imperative::engine::{default_snapshot, imperative_io};
+use crate::artifacts::imperative::schema::default_snapshot;
+use crate::apps::imperative::engine::imperative_io;
 use crate::artifacts::imperative::mutations::ImperativeMutation;
 use crate::artifacts::imperative::{ImperativeSnapshot, IMPERATIVE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode};
@@ -116,7 +117,7 @@ impl ArtifactApp for ImperativePlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, ImperativeSnapshot>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
-                let host = crate::artifacts::imperative::engine::ImperativeHost::from_snapshot(doc.snapshot.clone());
+                let host = crate::apps::imperative::engine::ImperativeHost::from_snapshot(doc.snapshot.clone());
                 let result = host.run();
                 let json = serde_json::to_string(&result.scope).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.imperative".into(), json } })

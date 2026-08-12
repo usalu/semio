@@ -1,0 +1,4 @@
+module Stdio_deflate_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

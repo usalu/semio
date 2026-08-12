@@ -1,0 +1,19 @@
+# 💡️ Puzzle2d inference schema — flatPosition (BFS-resolved node position) per node.
+
+type Puzzle2dInference {
+  flatPosition: Puzzle2dFlatPosition! @state(class: INFERRED)
+}
+
+type Puzzle2dFlatPosition {
+  positions: [Puzzle2dFlatPositionEntry!]!
+}
+
+type Puzzle2dFlatPositionEntry {
+  nodeId: String!
+  xy: Puzzle2dFlatPositionXy!
+}
+
+type Puzzle2dFlatPositionXy {
+  x: Float!
+  y: Float!
+}

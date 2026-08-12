@@ -1081,6 +1081,23 @@ pub mod app {
             self
         }
 
+        /// 🗂️ Sibling of `.document_codec::<A>()` for a library artifact with ZERO `ArtifactApp`s to
+        /// bind to (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d, gap A — see
+        /// `📓️w1d-declaration-gaps-report.md`). `.document_codec::<A>()` is keyed off `A::DOCUMENT_SCHEMA`
+        /// and calls `register_document_codec_for_app::<A>`, which requires a real `ArtifactApp`; a
+        /// headless library plugin (energy's `EnergyModelSnapshot`/`EnergyModelMutation` is the
+        /// motivating case) has no such type. Same bounds as `store::ArtifactCodec::of`, same
+        /// last-write-wins convention as `document_codec` above — the two share one `Option` slot since
+        /// an artifact has exactly one document codec either way it's expressed.
+        pub fn document_codec_bare<Snapshot, Mutation>(mut self, schema: impl Into<String>) -> Self
+        where
+            Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
+            Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
+        {
+            self.document_codec = Some(DocumentCodecSpec::bare::<Snapshot, Mutation>(schema));
+            self
+        }
+
         /// 🧭️ Appends dialect migrations (`register_dialect_migration`). Both `from.artifact_kind`
         /// and `to.artifact_kind` must equal this declaration's `kind` — checked at `build()` time.
         pub fn migrations(mut self, items: impl IntoIterator<Item = store::DialectMigration>) -> Self {
@@ -1127,20 +1144,43 @@ pub mod app {
         }
     }
 
-    /// 🗂️ A monomorphized, non-capturing thunk for `register_document_codec_for_app::<A>` — lets
-    /// `.document_codec::<A>()` store the registration as inert data (a bare `fn()`) instead of
-    /// performing it immediately, matching every other declaration field's "described now, run once
-    /// at `PluginBuilder::build()`" contract.
+    /// 🗂️ A monomorphized, non-capturing thunk pairing a `schema` string with the fn pointer that
+    /// registers a document codec under it — lets `.document_codec::<A>()`/`.document_codec_bare()`
+    /// store the registration as inert data instead of performing it immediately, matching every
+    /// other declaration field's "described now, run once at `PluginBuilder::build()`" contract. The
+    /// `schema` sits alongside the thunk (not baked into it) because `bare`'s schema is a runtime
+    /// `impl Into<String>`, not a type-level const like `A::DOCUMENT_SCHEMA` — a `fn()` thunk cannot
+    /// close over it without capturing, which would break the "plain fn pointer" contract this type
+    /// exists to keep.
     pub struct DocumentCodecSpec {
-        register: fn(),
+        schema: String,
+        register: fn(String),
     }
 
     impl DocumentCodecSpec {
         fn of<A: ArtifactApp>() -> Self {
-            fn register_thunk<A: ArtifactApp>() {
-                super::plugin_runtime::register_document_codec_for_app::<A>(A::DOCUMENT_SCHEMA);
+            fn register_thunk<A: ArtifactApp>(schema: String) {
+                super::plugin_runtime::register_document_codec_for_app::<A>(schema);
             }
-            DocumentCodecSpec { register: register_thunk::<A> }
+            DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), register: register_thunk::<A> }
+        }
+
+        /// 🗂️ `of::<A>()`'s app-less sibling — see `.document_codec_bare()`'s own doc for why this
+        /// exists. Registers straight against `store::register_document_codec`, bypassing
+        /// `register_document_codec_for_app`'s `A::` indirection since there is no `A` to name.
+        fn bare<Snapshot, Mutation>(schema: impl Into<String>) -> Self
+        where
+            Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
+            Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
+        {
+            fn register_thunk<Snapshot, Mutation>(schema: String)
+            where
+                Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
+                Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
+            {
+                store::register_document_codec(store::ArtifactCodec::of::<Snapshot, Mutation>(schema));
+            }
+            DocumentCodecSpec { schema: schema.into(), register: register_thunk::<Snapshot, Mutation> }
         }
     }
 
@@ -1225,7 +1265,7 @@ pub mod app {
                 dsl::register_language(*spec);
             }
             if let Some(codec) = self.document_codec {
-                (codec.register)();
+                (codec.register)(codec.schema);
             }
             for migration in self.migrations {
                 store::register_dialect_migration(migration);

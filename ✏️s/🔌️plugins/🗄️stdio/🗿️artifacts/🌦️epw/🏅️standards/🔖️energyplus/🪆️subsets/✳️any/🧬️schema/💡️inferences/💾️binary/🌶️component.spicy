@@ -1,0 +1,4 @@
+module Stdio_epw_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

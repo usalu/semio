@@ -1,0 +1,82 @@
+P2/S2/Batch2 scratch notes — gltf + obj inference families
+=============================================================
+
+SCOPE
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/
+
+EXEMPLARS READ
+- semio cad family root + 📦bounds slug dir (🦀+🟦), text/binary leaves, root ts/graphql/json/proto.
+- png family root (for magic-number/domain_tag envelope confirmation — generic, not per-artifact).
+- gltf/obj snapshot component.rs (real field shapes), gltf ⚙️engine (GltfAccessorType/GltfComponentType enums),
+  gltf/obj mutations component.rs (import-alias convention: crate::artifacts::<x>::schema::... short alias
+  is real and used repo-wide by sibling files; ArtifactInferrer target type still uses the FULL raw
+  standards::vX::subsets::any::schema path, matching every existing inference exemplar).
+
+TYPO-TRAP INCIDENT (self-corrected, no lasting damage)
+- Path auto-complete twice pulled me into 🏅️标准 (Chinese, WRONG) instead of 🏅️standards (Latin, CORRECT)
+  for gltf text/component.proto (Write) and obj engine component.rs (Edit).
+  - Write case: file WAS created at the wrong path — caught immediately, rm -rf'd the whole
+    🧊️gltf/🏅️标准 tree, confirmed via find it's gone, confirmed correct-path sibling files untouched.
+  - Edit case: Edit tool safely no-op'd (old_string/new_string identical, target file never existed —
+    no file was created). Verified via find: nothing at 🧊️obj/🏅️标准.
+  - Real edits were then made to the CORRECT 🏅️standards paths only (verified via git diff below).
+
+GLTF — s.stdio.gltf.inference
+- Slug: 📦bounds (real fields: min/max [f64;3], vertexCount, meshCount, primitiveCount — folded from
+  every document.meshes[].primitives[]'s own "POSITION" attribute -> accessors[index].min/max
+  (spec-mandated per glTF 2.0 §5.1), honest skip if POSITION missing or accessor lacks min/max).
+- Files created (21):
+  🧬️schema/💡️inferences/{🦀️component.rs,🟦️component.ts,🔗️component.graphql,🔣️component.json,🛰️component.proto}
+  🧬️schema/💡️inferences/📝️text/{🅰️component.g4,📖️component.grammar.semio,🔗️component.graphql,🔣️component.json,🔤️component.ebnf,🛰️component.proto,🟦️component.ts,🦀️component.rs}
+  🧬️schema/💡️inferences/💾️binary/{🌶️component.spicy,📡️component.protocol.semio,🔠️component.abnf,🟦️component.ts,🥋️component.ksy,🦀️component.rs}
+  🧬️schema/💡️inferences/📦bounds/{🦀️component.rs,🟦️component.ts}
+- register() wiring: ⚙️engine/🦀️component.rs
+  - pub fn register() { ... register_artifact_schema(); register_artifact_inferences(); ... } — line 542 call site
+  - new pub fn register_artifact_inferences() { ... } added right after register_artifact_schema() — line 610-616
+    (register_artifact_schema fn itself at line 607; new fn body calls
+    crate::artifacts::gltf::standards::v2_0::subsets::any::schema::inferences::gltf_artifact_inference_descriptor())
+- ArtifactInferrer target: crate::artifacts::gltf::standards::v2_0::subsets::any::schema::GltfBuilder
+- Tests in family-root 🦀️component.rs: inference_determinism_law, inference_default_law.
+- Tests in 📦bounds/🦀️component.rs: bounds_matches_hand_built_position_accessor_extent (2 meshes, 3
+  primitives, one NORMAL-only primitive correctly skipped; hand-built GltfAccessor literals with real
+  min/max/count), inference_determinism_law, inference_default_law.
+
+OBJ — s.stdio.obj.inference
+- Slug: 📦bounds (real fields: min/max [f64;3], vertexCount, faceCount, groupCount — folded from
+  vertices[].{x,y,z} only, ignoring optional homogeneous w; faceCount/groupCount are direct
+  faces.len()/groups.len() tallies, no fold).
+- Files created (21): same 5+8+6+2 shape as gltf, mirrored under 🧊️obj/.../🧬️schema/💡️inferences/.
+- register() wiring: ⚙️engine/🦀️component.rs
+  - pub fn register() { ... register_artifact_schema(); register_artifact_inferences(); ... } — line 361 call site
+  - new pub fn register_artifact_inferences() { ... } added right after register_artifact_schema() — line 449-455
+    (register_artifact_schema fn itself at line 443; new fn body calls
+    crate::artifacts::obj::standards::v3_0::subsets::any::schema::inferences::obj_artifact_inference_descriptor())
+- ArtifactInferrer target: crate::artifacts::obj::standards::v3_0::subsets::any::schema::ObjBuilder
+- Tests in family-root 🦀️component.rs: inference_determinism_law, inference_default_law.
+- Tests in 📦bounds/🦀️component.rs: bounds_matches_hand_built_vertex_extent (3 hand-built ObjVertex,
+  2 ObjFace, 1 ObjGroup — real ObjFaceVertex/ObjGroup literals), inference_determinism_law,
+  inference_default_law.
+
+SELF-CHECKS RUN
+1. find <subset>/🧬️schema/💡️inferences -type f | wc -l  -> 21 for BOTH gltf and obj (matches the
+   cad/png exemplar's own real file count: 5 root + 8 text + 6 binary + 2 slug-dir = 21; note the
+   brief said "23" but no exemplar family anywhere in the tree has 23 — treated 21 as ground truth
+   since it's what every verified completed family (cad, png, txt) actually has).
+2. Python brace/paren/bracket balance check on all 8 new 🦀️component.rs files (family-root x2,
+   📦bounds x2, 📝️text leaf x2, 💾️binary leaf x2) — all OK, all counts matched exactly.
+3. Python brace/paren/bracket balance check on the 2 edited ⚙️engine/🦀️component.rs files:
+   - gltf: braces 274/274 OK, brackets 210/210 OK, PARENS 811/810 MISMATCH (pre-existing, confirmed
+     via `git diff` that my own edit's added lines are balanced — the 1-paren imbalance already
+     existed in the file before my edit, almost certainly a `'('`/`')'` char literal elsewhere in
+     the file; not touched, not mine, left alone per "don't fix other sessions' churn").
+   - obj: braces/parens/brackets all balanced OK (201/201 braces, checked full triple — no mismatch).
+4. `git diff` on both engine files reviewed by eye — each shows exactly the 2 intended additions
+   (register_artifact_inferences() call-site line + new fn definition), nothing else touched.
+5. Did NOT run cargo check per hard rule #5 in 📌️important.md (never bare, and this batch's brief
+   said don't run it at all — leaving that gate to the coordinator after glue.rs mounts).
+
+NOT DONE (per scope)
+- Did not touch 📦️glue.rs, 📜️script.ts, 🔣️taxonomy.json, 🧰️framework/, 🧩️puzzle, 🧿️semio, or any
+  other artifact/subset.
+- Did not call ticket_close/ticket_reopen.

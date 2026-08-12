@@ -1,0 +1,13 @@
+# 💡️ Epw inference schema — hourly dry-bulb temperature min/max/avg derived from `records`.
+
+type EpwInference {
+  climate: EpwClimateSummary! @state(class: INFERRED)
+}
+
+type EpwClimateSummary {
+  recordCount: Int!
+  parsedTempCount: Int!
+  minDryBulbC: Float!
+  maxDryBulbC: Float!
+  avgDryBulbC: Float!
+}

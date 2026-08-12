@@ -26,8 +26,9 @@ fn serde_to_json_value(v: &serde_json::Value) -> JsonValue {
 //#endregion 🔖️SerdeBridge
 
 pub fn serialize(snapshot: &Fem3dSnapshot) -> Result<JsonSnapshot, store::TextError> {
+    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     let raw = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: serde_to_json_value(&raw) })
+    Ok(JsonSnapshot::from_value(raw))
 }
 
 pub fn serialize_bytes(snapshot: &Fem3dSnapshot) -> Result<Vec<u8>, store::TextError> {

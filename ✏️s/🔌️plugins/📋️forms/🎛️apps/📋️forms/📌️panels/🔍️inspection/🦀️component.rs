@@ -3,7 +3,7 @@
 use crate::apps::forms::config::FormsConfig;
 use crate::apps::forms::terminology::FormsLabels;
 use crate::apps::forms::{catalogue_kinds, forms_action, parse_contributions, render_extension_question, ProgramContributionEntry};
-use crate::artifacts::forms::engine::{dsl_f64_value, dsl_string_value, is_extension_question_kind, locate_question};
+use crate::artifacts::forms::schema::{dsl_f64_value, dsl_string_value, is_extension_question_kind, locate_question};
 use crate::artifacts::forms::{FormQuestion, FormsSnapshot};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_text, ActionDescriptor, Label, LocalizedLabel, PanelGroup,
@@ -102,7 +102,7 @@ fn question_kind_editor_fields(question: &FormQuestion, question_ids: &[String],
             }
         }
         "boolean" => {
-            let pressed = question.default.as_ref().and_then(|default| crate::artifacts::forms::engine::dsl_to_value(default).as_bool()).unwrap_or(false);
+            let pressed = question.default.as_ref().and_then(|default| crate::artifacts::forms::schema::dsl_to_value(default).as_bool()).unwrap_or(false);
             fields.push(UiNode::Field(UiFieldNode {
                 id: fid("default"),
                 label: labels.default.into(),
@@ -271,7 +271,7 @@ pub fn render(spec: &FormsSnapshot, config: &FormsConfig, term_labels: &FormsLab
             children: vec![
                 ui_text(Label::data(format!("Schema: {}", crate::artifacts::forms::FORMS_DOCUMENT_SCHEMA))),
                 ui_text(Label::data(format!("Steps: {}", spec.steps.len()))),
-                ui_text(Label::data(format!("Questions: {}", crate::artifacts::forms::engine::flatten_questions(spec).len()))),
+                ui_text(Label::data(format!("Questions: {}", crate::artifacts::forms::schema::flatten_questions(spec).len()))),
             ],
             presence: UiPresence::default(),
             menu: None,

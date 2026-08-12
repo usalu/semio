@@ -178,7 +178,7 @@ mod tests {
         use crate::artifacts::imperative::{Dictionary, Step};
         use std::collections::BTreeMap;
 
-        let document = crate::artifacts::imperative::engine::default_snapshot();
+        let document = crate::artifacts::imperative::schema::default_snapshot();
         let envelope = store::create_document_envelope::<ImperativeSnapshot, ImperativeMutation>("imperative.document/v1", "test", document, None);
         let mut doc_store = store::ArtifactStore::new(envelope);
         let step = Step { id: "step-x".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };

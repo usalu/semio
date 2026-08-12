@@ -30,16 +30,16 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = FormsSnapshot, diff = FormsDiff, schema = "s.forms.forms")]
 pub enum FormMutation {
-    CreateStep(super::add_step::mutation::CreateStep),
-    DeleteStep(super::remove_step::mutation::DeleteStep),
-    ReorderStep(super::move_step::mutation::ReorderStep),
-    RenameStep(super::update_step::mutation::RenameStep),
-    ChangeStepDescription(super::update_step::mutation::ChangeStepDescription),
-    CreateBlock(super::add_block::mutation::CreateBlock),
-    DeleteBlock(super::remove_block::mutation::DeleteBlock),
-    MoveBlockToStep(super::move_block::mutation::MoveBlockToStep),
-    ReplaceBlock(super::update_block::mutation::ReplaceBlock),
-    ChangeFormTitle(super::update_playbook::mutation::ChangeFormTitle),
+    CreateStep(super::create_step::mutation::CreateStep),
+    DeleteStep(super::delete_step::mutation::DeleteStep),
+    ReorderStep(super::reorder_step::mutation::ReorderStep),
+    RenameStep(super::rename_step::mutation::RenameStep),
+    ChangeStepDescription(super::change_step_description::mutation::ChangeStepDescription),
+    CreateBlock(super::create_block::mutation::CreateBlock),
+    DeleteBlock(super::delete_block::mutation::DeleteBlock),
+    MoveBlockToStep(super::move_block_to_step::mutation::MoveBlockToStep),
+    ReplaceBlock(super::replace_block::mutation::ReplaceBlock),
+    ChangeFormTitle(super::change_form_title::mutation::ChangeFormTitle),
 }
 //#endregion 🔖️FormMutation
 
@@ -131,12 +131,12 @@ mod tests {
     #[test]
     fn create_then_delete_step_round_trips() {
         let base = base_snapshot();
-        let create = FormMutation::CreateStep(add_step::mutation::CreateStep { step: sample_step("s3"), index: None });
+        let create = FormMutation::CreateStep(create_step::mutation::CreateStep { step: sample_step("s3"), index: None });
         let after_create = create.diff(&base).apply(&base);
         assert!(after_create.steps.iter().any(|step| step.id == "s3"));
 
         let undo = create.inverse(&base);
-        assert_eq!(undo, vec![FormMutation::DeleteStep(remove_step::mutation::DeleteStep { id: "s3".into() })]);
+        assert_eq!(undo, vec![FormMutation::DeleteStep(delete_step::mutation::DeleteStep { id: "s3".into() })]);
         let mut state = after_create;
         for step in &undo {
             state = step.diff(&base).apply(&state);
@@ -148,7 +148,7 @@ mod tests {
     fn delete_step_inverse_recreates_step_with_its_blocks_at_original_index() {
         let mut base = base_snapshot();
         base.steps[0].blocks.push(sample_block("b1"));
-        let delete = FormMutation::DeleteStep(remove_step::mutation::DeleteStep { id: "s1".into() });
+        let delete = FormMutation::DeleteStep(delete_step::mutation::DeleteStep { id: "s1".into() });
         let after_delete = delete.diff(&base).apply(&base);
         assert!(!after_delete.steps.iter().any(|step| step.id == "s1"));
 
@@ -170,7 +170,7 @@ mod tests {
     #[test]
     fn reorder_step_round_trips() {
         let base = base_snapshot();
-        let mutation = FormMutation::ReorderStep(move_step::mutation::ReorderStep { id: "s2".into(), to_index: 0 });
+        let mutation = FormMutation::ReorderStep(reorder_step::mutation::ReorderStep { id: "s2".into(), to_index: 0 });
         let after = mutation.diff(&base).apply(&base);
         assert_eq!(after.steps[0].id, "s2");
 
@@ -185,7 +185,7 @@ mod tests {
     #[test]
     fn rename_step_and_change_description_round_trip() {
         let base = base_snapshot();
-        let rename = FormMutation::RenameStep(update_step::mutation::RenameStep { id: "s1".into(), new_title: "Renamed".into() });
+        let rename = FormMutation::RenameStep(rename_step::mutation::RenameStep { id: "s1".into(), new_title: "Renamed".into() });
         let after_rename = rename.diff(&base).apply(&base);
         assert_eq!(after_rename.steps[0].title, "Renamed");
         let undo = rename.inverse(&base);
@@ -195,7 +195,7 @@ mod tests {
         }
         assert_eq!(state, base);
 
-        let change = FormMutation::ChangeStepDescription(update_step::mutation::ChangeStepDescription { id: "s1".into(), new_description: Some("desc".into()) });
+        let change = FormMutation::ChangeStepDescription(change_step_description::mutation::ChangeStepDescription { id: "s1".into(), new_description: Some("desc".into()) });
         let after_change = change.diff(&base).apply(&base);
         assert_eq!(after_change.steps[0].description.as_deref(), Some("desc"));
         let undo = change.inverse(&base);
@@ -209,12 +209,12 @@ mod tests {
     #[test]
     fn create_then_delete_block_round_trips() {
         let base = base_snapshot();
-        let create = FormMutation::CreateBlock(add_block::mutation::CreateBlock { step_id: "s1".into(), block: sample_block("b1"), index: None });
+        let create = FormMutation::CreateBlock(create_block::mutation::CreateBlock { step_id: "s1".into(), block: sample_block("b1"), index: None });
         let after_create = create.diff(&base).apply(&base);
         assert!(after_create.steps[0].blocks.iter().any(|block| block.id == "b1"));
 
         let undo = create.inverse(&base);
-        assert_eq!(undo, vec![FormMutation::DeleteBlock(remove_block::mutation::DeleteBlock { step_id: "s1".into(), id: "b1".into() })]);
+        assert_eq!(undo, vec![FormMutation::DeleteBlock(delete_block::mutation::DeleteBlock { step_id: "s1".into(), id: "b1".into() })]);
         let mut state = after_create;
         for step in &undo {
             state = step.diff(&base).apply(&state);
@@ -226,7 +226,7 @@ mod tests {
     fn delete_block_inverse_recreates_block_at_original_index() {
         let mut base = base_snapshot();
         base.steps[0].blocks = vec![sample_block("b1"), sample_block("b2")];
-        let delete = FormMutation::DeleteBlock(remove_block::mutation::DeleteBlock { step_id: "s1".into(), id: "b1".into() });
+        let delete = FormMutation::DeleteBlock(delete_block::mutation::DeleteBlock { step_id: "s1".into(), id: "b1".into() });
         let after_delete = delete.diff(&base).apply(&base);
         assert_eq!(after_delete.steps[0].blocks.len(), 1);
 
@@ -246,7 +246,7 @@ mod tests {
     fn move_block_to_step_round_trips_across_steps() {
         let mut base = base_snapshot();
         base.steps[0].blocks = vec![sample_block("b1")];
-        let mutation = FormMutation::MoveBlockToStep(move_block::mutation::MoveBlockToStep { step_id: "s1".into(), block_id: "b1".into(), to_step_id: "s2".into(), index: 0 });
+        let mutation = FormMutation::MoveBlockToStep(move_block_to_step::mutation::MoveBlockToStep { step_id: "s1".into(), block_id: "b1".into(), to_step_id: "s2".into(), index: 0 });
         let after = mutation.diff(&base).apply(&base);
         assert!(after.steps[0].blocks.is_empty());
         assert!(after.steps[1].blocks.iter().any(|block| block.id == "b1"));
@@ -263,7 +263,7 @@ mod tests {
     fn move_block_to_step_reorders_within_the_same_step() {
         let mut base = base_snapshot();
         base.steps[0].blocks = vec![sample_block("b1"), sample_block("b2")];
-        let mutation = FormMutation::MoveBlockToStep(move_block::mutation::MoveBlockToStep { step_id: "s1".into(), block_id: "b2".into(), to_step_id: "s1".into(), index: 0 });
+        let mutation = FormMutation::MoveBlockToStep(move_block_to_step::mutation::MoveBlockToStep { step_id: "s1".into(), block_id: "b2".into(), to_step_id: "s1".into(), index: 0 });
         let after = mutation.diff(&base).apply(&base);
         assert_eq!(after.steps[0].blocks.iter().map(|block| block.id.clone()).collect::<Vec<_>>(), vec!["b2".to_string(), "b1".to_string()]);
 
@@ -281,7 +281,7 @@ mod tests {
         base.steps[0].blocks = vec![sample_block("b1")];
         let mut replacement = sample_block("b1");
         replacement.label = "Renamed block".into();
-        let mutation = FormMutation::ReplaceBlock(update_block::mutation::ReplaceBlock { step_id: "s1".into(), block: replacement });
+        let mutation = FormMutation::ReplaceBlock(replace_block::mutation::ReplaceBlock { step_id: "s1".into(), block: replacement });
         let after = mutation.diff(&base).apply(&base);
         assert_eq!(after.steps[0].blocks[0].label, "Renamed block");
 
@@ -296,7 +296,7 @@ mod tests {
     #[test]
     fn change_form_title_round_trips_including_clearing() {
         let base = base_snapshot();
-        let mutation = FormMutation::ChangeFormTitle(update_playbook::mutation::ChangeFormTitle { new_title: Some("Renamed".into()) });
+        let mutation = FormMutation::ChangeFormTitle(change_form_title::mutation::ChangeFormTitle { new_title: Some("Renamed".into()) });
         let after = mutation.diff(&base).apply(&base);
         assert_eq!(after.title.as_deref(), Some("Renamed"));
 
@@ -307,14 +307,14 @@ mod tests {
         }
         assert_eq!(state, base);
 
-        let clear = FormMutation::ChangeFormTitle(update_playbook::mutation::ChangeFormTitle { new_title: None });
+        let clear = FormMutation::ChangeFormTitle(change_form_title::mutation::ChangeFormTitle { new_title: None });
         assert_eq!(clear.diff(&base).apply(&base).title, None);
     }
 
     #[test]
     fn semantic_kinds_cover_every_variant() {
         assert_eq!(FormMutation::kinds().len(), 10);
-        let mutation = FormMutation::RenameStep(update_step::mutation::RenameStep { id: "s1".into(), new_title: "x".into() });
+        let mutation = FormMutation::RenameStep(rename_step::mutation::RenameStep { id: "s1".into(), new_title: "x".into() });
         assert_eq!(mutation.semantics().kind, "rename-step");
         assert_eq!(mutation.semantics().record, "RenamedStep");
     }
@@ -322,7 +322,7 @@ mod tests {
     #[test]
     fn apply_form_edit_mutation_and_inverse_form_mutation_delegate_to_the_derive() {
         let base = base_snapshot();
-        let mutation = FormMutation::ChangeFormTitle(update_playbook::mutation::ChangeFormTitle { new_title: Some("Delegated".into()) });
+        let mutation = FormMutation::ChangeFormTitle(change_form_title::mutation::ChangeFormTitle { new_title: Some("Delegated".into()) });
         assert_eq!(apply_form_edit_mutation(&base, &mutation).title.as_deref(), Some("Delegated"));
         assert_eq!(inverse_form_mutation(&base, &mutation), mutation.inverse(&base));
     }

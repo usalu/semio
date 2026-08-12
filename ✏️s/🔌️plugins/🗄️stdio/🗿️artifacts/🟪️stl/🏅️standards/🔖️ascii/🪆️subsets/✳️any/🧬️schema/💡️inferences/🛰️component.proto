@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.stdio.stl.inference;
+
+// 💡️ Stl inference schema — triangle-soup bounding box and triangle count.
+
+message StlInference {
+  // @state inferred
+  StlBounds bounds = 1;
+}
+
+message StlBounds {
+  repeated double min = 1;
+  repeated double max = 2;
+  uint32 triangle_count = 3;
+}

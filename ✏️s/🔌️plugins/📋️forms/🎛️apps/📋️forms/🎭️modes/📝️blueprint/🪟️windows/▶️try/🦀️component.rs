@@ -3,7 +3,7 @@
 use crate::apps::forms::config::FormsConfig;
 use crate::apps::forms::terminology::FormsLabels;
 use crate::apps::forms::{effective_try_values, forms_action, parse_contributions, render_extension_question, ProgramContributionEntry};
-use crate::artifacts::forms::engine::{can_advance, default_value_for_question, is_extension_question_kind, json_f64_value, json_string_value, step_errors, visible_questions};
+use crate::artifacts::forms::schema::{can_advance, default_value_for_question, is_extension_question_kind, json_f64_value, json_string_value, step_errors, visible_questions};
 use crate::artifacts::forms::FormQuestion;
 use semio_framework_plugin::{
     ActionDescriptor, Label, LocalizedLabel, SurfaceKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, WindowKindDefinition, WindowOptions,
@@ -250,7 +250,7 @@ fn render_try_question(question: &FormQuestion, values: &Map<String, Value>, con
 /// 🔄️ The question's typed default, as a `serde_json::Value` — used when no try value has been entered
 /// for it yet.
 fn json_value_from_dsl(question: &FormQuestion) -> Value {
-    crate::artifacts::forms::engine::dsl_to_value(&default_value_for_question(question))
+    crate::artifacts::forms::schema::dsl_to_value(&default_value_for_question(question))
 }
 
 pub fn render(spec: &crate::artifacts::forms::FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {

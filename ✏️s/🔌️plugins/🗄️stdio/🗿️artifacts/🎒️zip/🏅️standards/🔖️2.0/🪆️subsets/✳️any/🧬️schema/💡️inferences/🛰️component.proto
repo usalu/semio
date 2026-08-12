@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.stdio.zip.inference;
+
+// 💡️ zip inference schema — real central-directory-style census over decompressed `entries`.
+
+message ZipInference {
+  // @state inferred
+  ZipEntries entries = 1;
+}
+
+message ZipEntries {
+  uint32 entry_count = 1;
+  uint64 total_uncompressed_size = 2;
+  string content_digest = 3;
+}

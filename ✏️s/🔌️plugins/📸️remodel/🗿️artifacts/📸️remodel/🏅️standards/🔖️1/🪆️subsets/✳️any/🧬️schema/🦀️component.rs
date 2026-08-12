@@ -2,11 +2,65 @@
 
 use crate::artifacts::remodel::{
     CalibrationState, GroundControlPoint, ImageAsset, MediaStream, ReconstructionJob,
-    ReconstructionParams, ReconstructionResults, RemodelSnapshot,
+    ReconstructionParams, ReconstructionResults, ReconstructionStage, RemodelSnapshot, VideoCodec,
 };
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+
+//#region 🔖️Ids
+/// 🔢️ Replaces every former `RemodelPlayRuntime` id counter (`stream_counter`/`job_counter`/
+/// `gcp_counter`/`import_counter`) — mirrors `shooting_engine::next_shooting_id`'s precedent (a plain
+/// global monotonic counter, not VCS-tracked config state: uniqueness is all id generation needs, and
+/// the generated id itself becomes real, undoable document content the moment an operation stores it).
+/// Relocated from `⚙️engine/🦀️component.rs` (26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES,
+/// #2553): a pure document-side id generator, not app or engine behaviour.
+pub fn next_remodel_id(prefix: &str) -> String {
+    static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+    let next = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    format!("{prefix}-{next}")
+}
+//#endregion 🔖️Ids
+
+//#region 🔖️Codecs
+/// 🏷️ Display label for one `ReconstructionStage` — pure document-enum formatting, no engine
+/// dependency (relocated from `⚙️engine/🦀️component.rs`, #2553).
+pub fn stage_display(stage: ReconstructionStage) -> &'static str {
+    match stage {
+        ReconstructionStage::Idle => "Idle",
+        ReconstructionStage::Ingesting => "Ingesting",
+        ReconstructionStage::Calibrating => "Calibrating",
+        ReconstructionStage::ExtractingFeatures => "Extracting Features",
+        ReconstructionStage::MatchingFeatures => "Matching Features",
+        ReconstructionStage::EstimatingPoses => "Estimating Poses",
+        ReconstructionStage::BundleAdjusting => "Bundle Adjusting",
+        ReconstructionStage::Georeferencing => "Georeferencing",
+        ReconstructionStage::DenseStereo => "Dense Stereo",
+        ReconstructionStage::FusingVolume => "Fusing Volume",
+        ReconstructionStage::ExtractingSurface => "Extracting Surface",
+        ReconstructionStage::CleaningMesh => "Cleaning Mesh",
+        ReconstructionStage::Texturing => "Texturing",
+        ReconstructionStage::TrackingMotion => "Tracking Motion",
+        ReconstructionStage::DerivingGeoProducts => "Deriving Geo Products",
+        ReconstructionStage::ReportingQc => "Reporting QC",
+        ReconstructionStage::Done => "Done",
+        ReconstructionStage::Failed => "Failed",
+    }
+}
+
+/// 🎞️ Label → document `VideoCodec` — pure string parsing, no engine dependency (relocated from
+/// `⚙️engine/🦀️component.rs`, #2553).
+pub fn video_codec_from_label(label: &str) -> VideoCodec {
+    match label.to_ascii_lowercase().as_str() {
+        "avc" | "h264" | "h.264" => VideoCodec::Avc,
+        "hevc" | "h265" | "h.265" => VideoCodec::Hevc,
+        "vp9" => VideoCodec::Vp9,
+        "av1" => VideoCodec::Av1,
+        "mjpeg" | "mjpg" => VideoCodec::Mjpeg,
+        _ => VideoCodec::Unknown,
+    }
+}
+//#endregion 🔖️Codecs
 
 //#region 🔖️Artifact
 /// 🧬️ Full remodel artifact state across persistent, shared-ui and local-ui classes.
@@ -282,3 +336,39 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: RemodelComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn next_remodel_id_is_monotonic_and_prefixed() {
+        let a = next_remodel_id("stream");
+        let b = next_remodel_id("stream");
+        assert!(a.starts_with("stream-"));
+        assert!(b.starts_with("stream-"));
+        assert_ne!(a, b);
+    }
+
+    #[test]
+    fn stage_display_covers_every_stage() {
+        let cases = [
+            (ReconstructionStage::Idle, "Idle"),
+            (ReconstructionStage::Done, "Done"),
+            (ReconstructionStage::Failed, "Failed"),
+        ];
+        for (stage, expected) in cases {
+            assert_eq!(stage_display(stage), expected);
+        }
+    }
+
+    #[test]
+    fn video_codec_from_label_recognizes_common_aliases() {
+        assert_eq!(video_codec_from_label("h264"), VideoCodec::Avc);
+        assert_eq!(video_codec_from_label("h.265"), VideoCodec::Hevc);
+        assert_eq!(video_codec_from_label("mjpg"), VideoCodec::Mjpeg);
+        assert_eq!(video_codec_from_label("weird"), VideoCodec::Unknown);
+    }
+}
+//#endregion 🧪️Tests

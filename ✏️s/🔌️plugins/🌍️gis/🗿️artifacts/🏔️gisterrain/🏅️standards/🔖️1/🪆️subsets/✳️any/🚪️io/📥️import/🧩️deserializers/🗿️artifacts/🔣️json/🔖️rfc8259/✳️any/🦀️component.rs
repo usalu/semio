@@ -32,7 +32,7 @@ fn serde_value_to_json(value: &serde_json::Value) -> JsonValue {
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<GisTerrainSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let mut snap: GisTerrainSnapshot = serde_json::from_value(json_value_to_serde(&from.value))
+    let snap: GisTerrainSnapshot = serde_json::from_value(from.to_serde_value())
         .map_err(|e| store::TextError::new(format!("gisterrain<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
 
     Ok(snap)
@@ -41,5 +41,5 @@ pub fn deserialize(from: &JsonSnapshot) -> Result<GisTerrainSnapshot, store::Tex
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<GisTerrainSnapshot, store::TextError> {
     let text = std::str::from_utf8(bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
     let raw: serde_json::Value = serde_json::from_str(text).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    deserialize(&JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: serde_value_to_json(&raw) })
+    deserialize(&JsonSnapshot::from_value(raw))
 }

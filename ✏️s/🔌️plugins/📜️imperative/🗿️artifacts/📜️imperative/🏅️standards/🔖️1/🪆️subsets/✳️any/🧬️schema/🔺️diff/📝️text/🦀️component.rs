@@ -187,7 +187,7 @@ pub fn diff_set_snapshot(snapshot: ImperativeSnapshot) -> ImperativeDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::imperative::engine::default_snapshot;
+    use crate::artifacts::imperative::schema::default_snapshot;
     use std::collections::BTreeMap;
 
     fn step(id: &str, kind: &str) -> Step {

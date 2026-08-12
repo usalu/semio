@@ -2224,7 +2224,14 @@ impl ArtifactApp for Puzzle3dPlayApp {
     type PresenceMutation = Puzzle3dPresenceMutation;
     type Command = Puzzle3dCommand;
 
-
+    /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old
+    /// `crate::apps::puzzle3d::config::schema::register_app_schema()` self-registering call, which
+    /// puzzle's plugin root used to reach `.setup()` for — `register_document_app`/`document_app`
+    /// now call this automatically the moment `Puzzle3dPlayApp` is bound to a plugin, exactly like
+    /// `🗒️note`'s own `app_schema` override.
+    fn app_schema() -> Option<artifact_schema::AppSchemaDescriptor> {
+        Some(crate::apps::puzzle3d::config::schema::app_schema_descriptor())
+    }
 
     fn initial_snapshot() -> Puzzle3dPlaySnapshot {
         Puzzle3dPlaySnapshot(serde_json::to_value(default_fixture()).unwrap_or_else(|_| serde_json::to_value(empty_fixture()).unwrap_or(Value::Null)))

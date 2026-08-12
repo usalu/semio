@@ -8,9 +8,9 @@ use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::s
 use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 pub fn register() {}
 pub fn serialize(snapshot: &DrawSnapshot) -> Result<JsonSnapshot, String> {
-    let text = serde_json::to_string(snapshot).map_err(|e| e.to_string())?;
-    let value = parse_json_text(&text).map_err(|e| e.to_string())?;
-    Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
+    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
+    let value = serde_json::to_value(snapshot).map_err(|e| e.to_string())?;
+    Ok(JsonSnapshot::from_value(value))
 }
 pub fn serialize_bytes(snapshot: &DrawSnapshot) -> Result<Vec<u8>, String> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())

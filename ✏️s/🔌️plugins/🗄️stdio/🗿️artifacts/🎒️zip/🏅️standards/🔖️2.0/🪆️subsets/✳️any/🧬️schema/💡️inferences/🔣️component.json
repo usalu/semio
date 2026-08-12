@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/zip/inference.json",
+  "title": "ZipInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["entries"],
+  "properties": {
+    "entries": { "$ref": "#/$defs/ZipEntries", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "ZipEntries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entryCount", "totalUncompressedSize", "contentDigest"],
+      "properties": {
+        "entryCount": { "type": "integer", "minimum": 0 },
+        "totalUncompressedSize": { "type": "integer", "minimum": 0 },
+        "contentDigest": { "type": "string" }
+      }
+    }
+  }
+}

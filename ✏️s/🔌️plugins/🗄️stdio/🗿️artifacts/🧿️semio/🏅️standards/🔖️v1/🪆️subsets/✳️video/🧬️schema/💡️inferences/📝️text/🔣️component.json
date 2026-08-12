@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/semio/video/inference/text.json",
+  "title": "SemioVideoInferenceText",
+  "type": "object"
+}

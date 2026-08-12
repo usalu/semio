@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.dwg.ac1024.inference
+extension stdio.dwg.ac1024.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.dwg.inference" NL
+body = payload NL?
+payload = OCTET+

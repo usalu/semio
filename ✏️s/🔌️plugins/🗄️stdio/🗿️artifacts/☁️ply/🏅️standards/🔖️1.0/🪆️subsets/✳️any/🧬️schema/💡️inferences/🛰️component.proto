@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.stdio.ply.inference;
+
+// 💡️ Ply inference schema — vertex-element bounding box plus vertex/face counts.
+
+message PlyInference {
+  // @state inferred
+  PlyBounds bounds = 1;
+}
+
+message PlyBounds {
+  repeated double min = 1;
+  repeated double max = 2;
+  uint32 vertex_count = 3;
+  uint32 face_count = 4;
+}

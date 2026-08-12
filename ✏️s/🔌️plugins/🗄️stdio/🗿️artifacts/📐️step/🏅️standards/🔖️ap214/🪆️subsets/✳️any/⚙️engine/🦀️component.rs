@@ -66,6 +66,7 @@ pub fn demo_step_snapshot() -> StepSnapshot {
 pub fn register() {
     crate::artifacts::step::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     register_subset_validators();
     store::register_document_codec(store::ArtifactCodec::of::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA));
@@ -150,6 +151,13 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.step`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::step::schema::step_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.stdio.step.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::step::standards::v_ap214::subsets::any::schema::inferences::step_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 

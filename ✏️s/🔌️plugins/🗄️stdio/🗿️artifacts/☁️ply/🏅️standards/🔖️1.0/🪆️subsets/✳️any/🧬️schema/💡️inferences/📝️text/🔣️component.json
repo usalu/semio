@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/ply/inference/text.json",
+  "title": "PlyInferenceText",
+  "type": "object"
+}

@@ -92,7 +92,7 @@ impl store::ArtifactPack for ImperativeConfig {
 
 
 fn default_contributions_json() -> String {
-    crate::artifacts::imperative::engine::default_imperative_contributions_json()
+    crate::artifacts::imperative::io::default_imperative_contributions_json()
 }
 
 impl Default for ImperativeConfig {

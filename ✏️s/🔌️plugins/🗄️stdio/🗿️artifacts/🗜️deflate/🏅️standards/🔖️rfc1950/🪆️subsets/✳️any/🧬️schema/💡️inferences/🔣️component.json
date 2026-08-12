@@ -1,0 +1,24 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/deflate/inference.json",
+  "title": "DeflateInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["window"],
+  "properties": {
+    "window": { "$ref": "#/$defs/DeflateWindow", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "DeflateWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["windowSize", "compressionLevelHint", "hasPresetDictionary", "payloadSize", "contentDigest"],
+      "properties": {
+        "windowSize": { "type": "integer", "minimum": 0 },
+        "compressionLevelHint": { "type": "string", "enum": ["Fastest", "Fast", "Default", "Maximum"] },
+        "hasPresetDictionary": { "type": "boolean" },
+        "payloadSize": { "type": "integer", "minimum": 0 },
+        "contentDigest": { "type": "string" }
+      }
+    }
+  }
+}

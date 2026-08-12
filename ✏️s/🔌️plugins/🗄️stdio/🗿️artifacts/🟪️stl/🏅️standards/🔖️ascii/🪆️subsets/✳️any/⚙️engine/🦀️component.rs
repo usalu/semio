@@ -209,6 +209,7 @@ pub fn decode_stl_auto(bytes: &[u8]) -> Result<StlSnapshot, String> {
 pub fn register() {
     crate::artifacts::stl::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<StlSnapshot, StlMutation>(STDIO_STL_DOCUMENT_SCHEMA));
 }
@@ -285,6 +286,13 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.stl`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::stl::schema::stl_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.stdio.stl.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::stl::standards::v_ascii::subsets::any::schema::inferences::stl_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 

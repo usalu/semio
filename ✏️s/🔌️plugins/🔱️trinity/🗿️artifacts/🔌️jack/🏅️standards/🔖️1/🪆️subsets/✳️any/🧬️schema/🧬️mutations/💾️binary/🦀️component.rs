@@ -237,7 +237,7 @@ mod tests {
     }
 
     fn create_document_envelope_for_test() -> store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
-        create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::artifacts::jack::engine::empty_jack_document(), None)
+        create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::artifacts::jack::schema::empty_jack_document(), None)
     }
     use store::create_document_envelope;
 

@@ -1,0 +1,3 @@
+(* ebnf s.stdio.obj.inference *)
+document = header, body ;
+header = 'schema', space, 's.stdio.obj.inference', newline ;

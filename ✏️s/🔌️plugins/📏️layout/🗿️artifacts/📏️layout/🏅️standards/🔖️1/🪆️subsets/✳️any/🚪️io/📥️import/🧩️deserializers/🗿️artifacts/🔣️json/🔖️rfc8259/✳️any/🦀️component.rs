@@ -24,7 +24,7 @@ fn json_value_to_serde(value: &JsonValue) -> serde_json::Value {
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<LayoutSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    serde_json::from_value(json_value_to_serde(&from.value)).map_err(|e| store::TextError::new(format!("layout<-json: {e}"), dsl::TextSpan::at(1, 1)))
+    serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("layout<-json: {e}"), dsl::TextSpan::at(1, 1)))
 }
 
 pub fn deserialize_text(text: &str) -> Result<LayoutSnapshot, store::TextError> {

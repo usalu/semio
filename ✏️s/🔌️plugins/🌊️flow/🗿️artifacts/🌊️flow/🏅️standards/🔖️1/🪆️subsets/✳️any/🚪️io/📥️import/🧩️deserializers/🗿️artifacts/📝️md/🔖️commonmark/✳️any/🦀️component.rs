@@ -6,7 +6,7 @@ pub fn register() {}
 
 pub fn deserialize(from: &MdSnapshot) -> Result<FlowSnapshot, store::TextError> {
     let _ = STDIO_MD_DOCUMENT_SCHEMA;
-    <FlowSnapshot as store::ArtifactDsl>::parse_dsl(&from.body)
+    <FlowSnapshot as store::ArtifactDsl>::parse_dsl(&from.to_text())
 }
 
 pub fn deserialize_text(text: &str) -> Result<FlowSnapshot, store::TextError> {

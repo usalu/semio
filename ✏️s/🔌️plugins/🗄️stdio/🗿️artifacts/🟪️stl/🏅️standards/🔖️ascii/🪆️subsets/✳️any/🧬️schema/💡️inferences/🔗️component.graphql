@@ -1,0 +1,11 @@
+# 💡️ Stl inference schema — triangle-soup bounding box and triangle count.
+
+type StlInference {
+  bounds: StlBounds! @state(class: INFERRED)
+}
+
+type StlBounds {
+  min: [Float!]!
+  max: [Float!]!
+  triangleCount: Int!
+}

@@ -1,5 +1,19 @@
 # Durable baselines — distinguish "new breakage" from "the tree was already like this"
 
+## ⏱️ A VERIFICATION IS A TIMESTAMP, NOT A PROPERTY
+
+`semio-s-plugin-stdio` was measured **green on both forms, exit 0**, at ~21:55 — by a session that deliberately double-checked the `Finished` line and exit status before broadcasting, precisely because four sessions were waiting on it. It was **red again by ~23:20**, with the same dangling-`#[path]`-after-vocabulary-rename signature, this time in `✳️brep` rather than `✳️drawing`.
+
+**That is the third instance of the identical pattern in one evening.** A mutation-vocabulary rename lands on the directories and leaves the `#[path]` mount behind. Every plugin depends on stdio, so each occurrence turns the whole tree red.
+
+The rule this forces, and it supersedes every gate in this document:
+
+> **"Verified" is a claim about a moment, not about a crate.** In a tree with six concurrent sessions, a green result decays. Re-measure before *acting* on it, and timestamp every number you publish or quote.
+
+Two corollaries, both learned the expensive way here:
+- **Do not start a verification wave on the strength of someone else's green** without re-taking it yourself at dispatch time. A wave launched on a one-hour-old green produces results that cannot be attributed.
+- **A dangling `#[path]` mount is a trap disguised as a two-minute fix.** It *looks* unambiguously safe — the directory is gone, nothing can reference it. Two sessions talked themselves into fixing it and were wrong both times: the file had already changed under their measurements, and a half-finished vocabulary rename is exactly what a second editor corrupts. Report it; do not repair another session's mid-flight rename.
+
 ## 📊 THE TREE-WIDE BASELINE (2026-08-12 ~22:10) — the first honest one
 
 ```

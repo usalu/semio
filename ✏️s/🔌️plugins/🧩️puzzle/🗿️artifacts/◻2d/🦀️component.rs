@@ -437,18 +437,21 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// 🔖️ Puzzle2d's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1, relocated off
 /// `⚙️engine` to the artifact root — `declaration()` describes the artifact itself, not engine
 /// behaviour) — replaces the puzzle2d slice of the old umbrella `register()`, which also drove
-/// puzzle3d's and puzzle5d's own registration (see their sibling `declaration()`s) and two OS-host
-/// escape hatches from one plugin `setup:` hook. `register_app_schemas()` (all three play apps'
-/// config/presence schema) is kept live on `🧩️puzzle/🦀️component.rs`'s own `.setup()` — app-scope,
-/// `ArtifactDeclaration` has no field for it by design (see that struct's own doc).
+/// puzzle3d's and puzzle5d's own registration (see their sibling `declaration()`s).
+///
+/// **W1d update.** `register_app_schemas()` is GONE — it was never a genuine coverage gap, just
+/// category-1 app-scope schema under a different name; `Puzzle2dPlayApp::app_schema()` (see that
+/// impl's own doc) now covers it, auto-registered by `.register_document_app()` on the plugin root.
 /// `register_media_io()` (`register_2d_export_handlers`/`register_dwg_import_handler`, still in
-/// `⚙️engine`) is ALSO kept on `.setup()`, but for a different reason: it is the OS media-host
-/// registry, an entirely separate 14-function family (`register_2d_export_handlers`/
-/// `register_mesh_exporter`/…) from the nine §6 registrars `ArtifactDeclaration` covers — no field
-/// exists for it, loudly flagged here and in the W1b report rather than silently left behind.
+/// `⚙️engine`) is a genuinely DIFFERENT case and is still kept on `🧩️puzzle/🦀️component.rs`'s own
+/// `.setup()` — it is the OS media-host registry, an entirely separate 14-function family
+/// (`register_2d_export_handlers`/`register_mesh_exporter`/…) from the nine §6 registrars
+/// `ArtifactDeclaration` covers, keyed by a legacy OS-kind string this declaration's own `kind` isn't
+/// — see `🧩️puzzle/🦀️component.rs`'s `plugin()` doc for the full judgement.
 pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.puzzle2d")
         .schema(crate::artifacts::puzzle2d::schema::puzzle2d_artifact_schema_descriptor())
+        .inferences([crate::artifacts::puzzle2d::standards::v1::subsets::any::schema::inferences::puzzle2d_artifact_inference_descriptor()])
         .composers(crate::artifacts::puzzle2d::standards::v1::engine::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::puzzle2d::Puzzle2dPlayApp>()

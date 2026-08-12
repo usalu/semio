@@ -397,39 +397,74 @@ fn absorb_texture_diff(mut a: SemioTextureDiff, b: SemioTextureDiff) -> SemioTex
 }
 //#endregion 🔖️DiffAlgebra
 
-//#region 🔖️SetSnapshot
-/// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No
-/// `snapshot: Option<SemioMeshSnapshot>` full-replace slot — this IS `SemioMeshDiff::between`.
-pub fn diff_set_snapshot(base: &SemioMeshSnapshot, snapshot: &SemioMeshSnapshot) -> SemioMeshDiff {
-    <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(base, snapshot)
+//#region 🔖️EntityLookup
+/// 🔎 Shared id-lookup helpers — moved here (from the now-deleted hand-rolled dispatch) so every
+/// triad leaf's `diff`/`inverse` (17 of them) can reuse one copy instead of re-deriving the same
+/// four one-line finders (`if code is repeated it must be close together`).
+pub(crate) fn mesh_at<'a>(base: &'a SemioMeshSnapshot, mesh_id: &str) -> Option<&'a SemioMesh> {
+    base.meshes.iter().find(|m| m.id == mesh_id)
 }
-//#endregion 🔖️SetSnapshot
+pub(crate) fn primitive_at<'a>(base: &'a SemioMeshSnapshot, mesh_id: &str, primitive_id: &str) -> Option<&'a SemioPrimitive> {
+    mesh_at(base, mesh_id)?.primitives.iter().find(|p| p.id == primitive_id)
+}
+pub(crate) fn material_at<'a>(base: &'a SemioMeshSnapshot, id: &str) -> Option<&'a SemioMaterial> {
+    base.materials.iter().find(|m| m.id == id)
+}
+pub(crate) fn texture_at<'a>(base: &'a SemioMeshSnapshot, id: &str) -> Option<&'a SemioTexture> {
+    base.textures.iter().find(|t| t.id == id)
+}
+//#endregion 🔖️EntityLookup
 
 //#region 🔖️MutationDiffHelpers
-/// 🧩️ Per-mutation-variant sparse diff constructors — each `SemioMeshMutation` variant's
-/// `diff()` calls exactly one of these (never apply-and-capture). Mirrors docx's
+/// 🧩️ Per-mutation-variant sparse diff constructors — each triad leaf's `diff(payload, base)`
+/// calls exactly one of these (never apply-and-capture). Mirrors docx's
 /// `diff_insert_block`/`diff_remove_block`/... precedent.
-/// ➕️ `base` supplies the real target position for the new entry's `NamedAdded<T>.index` (its
+/// ⚠️ Every constructor now takes `base` and checks presence/duplication FIRST, returning
+/// `SemioMeshDiff::default()` on a missing target or a duplicate-id create — brep's law-testing
+/// wave caught the identical bug class here (an unconditional `removed`/`modified` entry made
+/// `is_empty()` lie for an absent target), so these are authored already-fixed rather than
+/// reproducing that defect.
+/// ➕️ `base` also supplies the real target position for a new entry's `NamedAdded<T>.index` (its
 /// natural append position — the current collection length — same convention `value`'s own
 /// `SetMapEntry`/`SetNode` diff constructors use).
 pub fn diff_add_mesh(base: &SemioMeshSnapshot, mesh: SemioMesh) -> SemioMeshDiff {
+    if mesh_at(base, &mesh.id).is_some() {
+        return SemioMeshDiff::default();
+    }
     SemioMeshDiff { meshes: Some(SemioMeshesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.meshes.len(), item: mesh }] }), materials: None, textures: None }
 }
-pub fn diff_remove_mesh(id: &str) -> SemioMeshDiff {
+pub fn diff_remove_mesh(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff {
+    if mesh_at(base, id).is_none() {
+        return SemioMeshDiff::default();
+    }
     SemioMeshDiff { meshes: Some(SemioMeshesDiff { removed: vec![id.to_string()], modified: Vec::new(), added: Vec::new() }), materials: None, textures: None }
 }
 pub fn diff_add_primitive(base: &SemioMeshSnapshot, mesh_id: &str, primitive: SemioPrimitive) -> SemioMeshDiff {
-    let idx = base.meshes.iter().find(|m| m.id == mesh_id).map(|m| m.primitives.len()).unwrap_or(0);
-    wrap_mesh_diff(mesh_id, SemioMeshItemDiff { primitives: Some(SemioPrimitivesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: idx, item: primitive }] }) })
+    let Some(mesh) = mesh_at(base, mesh_id) else { return SemioMeshDiff::default() };
+    if mesh.primitives.iter().any(|p| p.id == primitive.id) {
+        return SemioMeshDiff::default();
+    }
+    wrap_mesh_diff(mesh_id, SemioMeshItemDiff { primitives: Some(SemioPrimitivesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: mesh.primitives.len(), item: primitive }] }) })
 }
-pub fn diff_remove_primitive(mesh_id: &str, primitive_id: &str) -> SemioMeshDiff {
+pub fn diff_remove_primitive(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str) -> SemioMeshDiff {
+    if primitive_at(base, mesh_id, primitive_id).is_none() {
+        return SemioMeshDiff::default();
+    }
     wrap_mesh_diff(mesh_id, SemioMeshItemDiff { primitives: Some(SemioPrimitivesDiff { removed: vec![primitive_id.to_string()], modified: Vec::new(), added: Vec::new() }) })
 }
-pub fn diff_set_primitive_topology(mesh_id: &str, primitive_id: &str, topology: SemioTopology) -> SemioMeshDiff {
+pub fn diff_set_primitive_topology(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str, topology: SemioTopology) -> SemioMeshDiff {
+    if primitive_at(base, mesh_id, primitive_id).is_none() {
+        return SemioMeshDiff::default();
+    }
     wrap_primitive_diff(mesh_id, primitive_id, SemioPrimitiveDiff { topology: Some(topology), ..Default::default() })
 }
+/// 📐 `replace-primitive-geometry` — SMO-approved rename of the old `set-primitive-geometry`
+/// (a positions/normals/uvs/colors/indices blob is a structured sub-payload, so `set` was the
+/// wrong verb; `replace` is a whole-value swap of it). SMO approved the reasoning and reserved the
+/// edit; SMO wound down without doing it; DKM completes it here.
 #[allow(clippy::too_many_arguments)]
-pub fn diff_set_primitive_geometry(
+pub fn diff_replace_primitive_geometry(
+    base: &SemioMeshSnapshot,
     mesh_id: &str,
     primitive_id: &str,
     positions: Vec<SemioPoint3>,
@@ -438,6 +473,9 @@ pub fn diff_set_primitive_geometry(
     colors: Vec<SemioRgba>,
     indices: Vec<u32>,
 ) -> SemioMeshDiff {
+    if primitive_at(base, mesh_id, primitive_id).is_none() {
+        return SemioMeshDiff::default();
+    }
     wrap_primitive_diff(mesh_id, primitive_id, SemioPrimitiveDiff {
         positions: Some(positions),
         normals: Some(normals),
@@ -447,40 +485,114 @@ pub fn diff_set_primitive_geometry(
         ..Default::default()
     })
 }
-pub fn diff_set_primitive_material(mesh_id: &str, primitive_id: &str, material_id: Option<String>) -> SemioMeshDiff {
+pub fn diff_set_primitive_material(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str, material_id: Option<String>) -> SemioMeshDiff {
+    if primitive_at(base, mesh_id, primitive_id).is_none() {
+        return SemioMeshDiff::default();
+    }
     wrap_primitive_diff(mesh_id, primitive_id, SemioPrimitiveDiff { material_id: Some(material_id), ..Default::default() })
 }
+/// 📍 `move-vertex` — repositions ONE element of `positions` by BASE-state index, leaving every
+/// other element (and `normals`/`uvs`/`colors`/`indices`) untouched. `SemioPrimitiveDiff.positions`
+/// only expresses a whole-array replace, so this reads the primitive's CURRENT positions from
+/// `base`, clones, and patches just `vertex_index` — a real diff built from `(payload, base)`,
+/// never apply-then-capture.
+pub fn diff_move_vertex(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str, vertex_index: usize, new_point: SemioPoint3) -> SemioMeshDiff {
+    let Some(primitive) = primitive_at(base, mesh_id, primitive_id) else { return SemioMeshDiff::default() };
+    if vertex_index >= primitive.positions.len() {
+        return SemioMeshDiff::default();
+    }
+    let mut positions = primitive.positions.clone();
+    positions[vertex_index] = new_point;
+    wrap_primitive_diff(mesh_id, primitive_id, SemioPrimitiveDiff { positions: Some(positions), ..Default::default() })
+}
 pub fn diff_add_material(base: &SemioMeshSnapshot, material: SemioMaterial) -> SemioMeshDiff {
+    if material_at(base, &material.id).is_some() {
+        return SemioMeshDiff::default();
+    }
     SemioMeshDiff { meshes: None, materials: Some(SemioMaterialsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.materials.len(), item: material }] }), textures: None }
 }
-pub fn diff_remove_material(id: &str) -> SemioMeshDiff {
+pub fn diff_remove_material(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff {
+    if material_at(base, id).is_none() {
+        return SemioMeshDiff::default();
+    }
     SemioMeshDiff { meshes: None, materials: Some(SemioMaterialsDiff { removed: vec![id.to_string()], modified: Vec::new(), added: Vec::new() }), textures: None }
 }
-pub fn diff_set_material_base_color(id: &str, base_color: SemioRgba) -> SemioMeshDiff {
+/// 🌈 `change-material-base-color` — SMO's stroke-color precedent: a color is treated as ONE
+/// cohesive value field (never edited channel-by-channel from outside), so `change`, not `replace`.
+pub fn diff_change_material_base_color(base: &SemioMeshSnapshot, id: &str, new_base_color: SemioRgba) -> SemioMeshDiff {
+    if material_at(base, id).is_none() {
+        return SemioMeshDiff::default();
+    }
     SemioMeshDiff {
         meshes: None,
-        materials: Some(SemioMaterialsDiff { removed: Vec::new(), modified: vec![NamedModified { key: id.to_string(), diff: SemioMaterialDiff { base_color: Some(base_color), ..Default::default() } }], added: Vec::new() }),
+        materials: Some(SemioMaterialsDiff { removed: Vec::new(), modified: vec![NamedModified { key: id.to_string(), diff: SemioMaterialDiff { base_color: Some(new_base_color), ..Default::default() } }], added: Vec::new() }),
         textures: None,
     }
 }
-pub fn diff_set_material_pbr(id: &str, metallic: f32, roughness: f32) -> SemioMeshDiff {
+/// ⚙️ `change-material-metallic` — decomposed from the old bundled `SetMaterialPbr{metallic,
+/// roughness}`: `SemioMaterial.metallic`/`.roughness` are two independent top-level scalar fields
+/// (not grouped into one value type the way `base_color` is `SemioRgba`), and every real
+/// metallic/roughness PBR editor sets them via two independent sliders — same decompose test SMO's
+/// `StrokeStyle` ruling already applies (`change-stroke-width`/`change-stroke-color`/… kept
+/// separate because the editor sets fields one at a time).
+pub fn diff_change_material_metallic(base: &SemioMeshSnapshot, id: &str, new_metallic: f32) -> SemioMeshDiff {
+    if material_at(base, id).is_none() {
+        return SemioMeshDiff::default();
+    }
     SemioMeshDiff {
         meshes: None,
-        materials: Some(SemioMaterialsDiff { removed: Vec::new(), modified: vec![NamedModified { key: id.to_string(), diff: SemioMaterialDiff { metallic: Some(metallic), roughness: Some(roughness), ..Default::default() } }], added: Vec::new() }),
+        materials: Some(SemioMaterialsDiff { removed: Vec::new(), modified: vec![NamedModified { key: id.to_string(), diff: SemioMaterialDiff { metallic: Some(new_metallic), ..Default::default() } }], added: Vec::new() }),
+        textures: None,
+    }
+}
+/// 🧱 `change-material-roughness` — see [`diff_change_material_metallic`]'s doc comment; the same
+/// decompose reasoning applies symmetrically to `roughness`.
+pub fn diff_change_material_roughness(base: &SemioMeshSnapshot, id: &str, new_roughness: f32) -> SemioMeshDiff {
+    if material_at(base, id).is_none() {
+        return SemioMeshDiff::default();
+    }
+    SemioMeshDiff {
+        meshes: None,
+        materials: Some(SemioMaterialsDiff { removed: Vec::new(), modified: vec![NamedModified { key: id.to_string(), diff: SemioMaterialDiff { roughness: Some(new_roughness), ..Default::default() } }], added: Vec::new() }),
         textures: None,
     }
 }
 pub fn diff_add_texture(base: &SemioMeshSnapshot, texture: SemioTexture) -> SemioMeshDiff {
+    if texture_at(base, &texture.id).is_some() {
+        return SemioMeshDiff::default();
+    }
     SemioMeshDiff { meshes: None, materials: None, textures: Some(SemioTexturesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.textures.len(), item: texture }] }) }
 }
-pub fn diff_remove_texture(id: &str) -> SemioMeshDiff {
+pub fn diff_remove_texture(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff {
+    if texture_at(base, id).is_none() {
+        return SemioMeshDiff::default();
+    }
     SemioMeshDiff { meshes: None, materials: None, textures: Some(SemioTexturesDiff { removed: vec![id.to_string()], modified: Vec::new(), added: Vec::new() }) }
 }
-pub fn diff_set_texture_bytes(id: &str, mime: String, bytes: Vec<u8>) -> SemioMeshDiff {
+/// 🏷️ `change-texture-mime` — decomposed from the old bundled `SetTextureBytes{mime, bytes}`:
+/// `SemioTexture.mime`/`.bytes` are two independent top-level fields (rule 2's "per remaining
+/// scalar" for `mime`, "per large structured field" for `bytes`).
+pub fn diff_change_texture_mime(base: &SemioMeshSnapshot, id: &str, new_mime: String) -> SemioMeshDiff {
+    if texture_at(base, id).is_none() {
+        return SemioMeshDiff::default();
+    }
     SemioMeshDiff {
         meshes: None,
         materials: None,
-        textures: Some(SemioTexturesDiff { removed: Vec::new(), modified: vec![NamedModified { key: id.to_string(), diff: SemioTextureDiff { mime: Some(mime), bytes: Some(bytes) } }], added: Vec::new() }),
+        textures: Some(SemioTexturesDiff { removed: Vec::new(), modified: vec![NamedModified { key: id.to_string(), diff: SemioTextureDiff { mime: Some(new_mime), ..Default::default() } }], added: Vec::new() }),
+    }
+}
+/// 📀 `replace-texture-bytes` — see [`diff_change_texture_mime`]'s doc comment; raw image bytes
+/// are the "large" swapped payload (matches `replace-primitive-geometry`'s exact rename rationale),
+/// never edited byte-by-byte from outside, so `replace`, not `change`.
+pub fn diff_replace_texture_bytes(base: &SemioMeshSnapshot, id: &str, new_bytes: Vec<u8>) -> SemioMeshDiff {
+    if texture_at(base, id).is_none() {
+        return SemioMeshDiff::default();
+    }
+    SemioMeshDiff {
+        meshes: None,
+        materials: None,
+        textures: Some(SemioTexturesDiff { removed: Vec::new(), modified: vec![NamedModified { key: id.to_string(), diff: SemioTextureDiff { bytes: Some(new_bytes), ..Default::default() } }], added: Vec::new() }),
     }
 }
 //#endregion 🔖️MutationDiffHelpers

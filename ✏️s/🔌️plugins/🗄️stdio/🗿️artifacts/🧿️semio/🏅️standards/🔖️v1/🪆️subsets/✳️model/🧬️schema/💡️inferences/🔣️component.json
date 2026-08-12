@@ -1,0 +1,32 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/semio/model/inference.json",
+  "title": "SemioModelInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bounds"],
+  "properties": {
+    "bounds": { "$ref": "#/$defs/SemioModelBounds", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "SemioModelBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max", "entityCount"],
+      "properties": {
+        "min": { "$ref": "#/$defs/SemioPoint3" },
+        "max": { "$ref": "#/$defs/SemioPoint3" },
+        "entityCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "SemioPoint3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "z"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" }
+      }
+    }
+  }
+}

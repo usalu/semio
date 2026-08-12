@@ -1,0 +1,3 @@
+(* ebnf s.stdio.gltf.inference *)
+document = header, body ;
+header = 'schema', space, 's.stdio.gltf.inference', newline ;

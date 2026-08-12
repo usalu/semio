@@ -1,0 +1,3 @@
+(* ebnf s.stdio.deflate.inference *)
+document = header, body ;
+header = 'schema', space, 's.stdio.deflate.inference', newline ;

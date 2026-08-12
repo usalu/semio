@@ -1,0 +1,4 @@
+module Stdio_dwg_ac1024_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

@@ -52,7 +52,7 @@ mod tests {
 
         let document = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() };
         let mut store: ArtifactStore<DagSnapshot, DagMutation> = ArtifactStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None));
-        let node = crate::artifacts::dag::engine::default_node_for_kind("note", "node-1", 0.0, 0.0);
+        let node = crate::artifacts::dag::schema::default_node_for_kind("note", "node-1", 0.0, 0.0);
         store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::dag::mutations::create_node(node)], description: None }).expect("apply");
         let edit: &Edit<DagMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));

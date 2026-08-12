@@ -8,8 +8,9 @@ use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SC
 pub fn register() {}
 
 pub fn serialize(snapshot: &PlaygroundSnapshot) -> Result<JsonSnapshot, store::TextError> {
-    let text = serde_json::to_string(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: parse_json_text(&text)? })
+    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
+    let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    Ok(JsonSnapshot::from_value(value))
 }
 
 pub fn serialize_bytes(snapshot: &PlaygroundSnapshot) -> Result<Vec<u8>, store::TextError> {

@@ -1,0 +1,3 @@
+; abnf s.stdio.deflate.inference
+document = payload
+payload = *OCTET

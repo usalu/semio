@@ -1,0 +1,3 @@
+(* ebnf s.stdio.bcf.inference *)
+document = header, body ;
+header = 'schema', space, 's.stdio.bcf.inference', newline ;

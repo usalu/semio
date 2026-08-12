@@ -1,0 +1,3 @@
+; abnf s.stdio.zip.inference
+document = payload
+payload = *OCTET

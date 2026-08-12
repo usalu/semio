@@ -1,0 +1,16 @@
+# 💡️ Semio table inference schema — dimensions + declared column-kind census.
+
+type SemioTableInference {
+  shape: SemioTableShape! @state(class: INFERRED)
+}
+
+type SemioTableShape {
+  columnCount: Int!
+  rowCount: Int!
+  nullColumnCount: Int!
+  boolColumnCount: Int!
+  intColumnCount: Int!
+  floatColumnCount: Int!
+  strColumnCount: Int!
+  bytesColumnCount: Int!
+}

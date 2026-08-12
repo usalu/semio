@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.ifc.2x3.inference
+extension ifc.2x3.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.ifc.2x3.inference" NL
+body = payload NL?
+payload = OCTET+

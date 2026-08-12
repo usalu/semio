@@ -43,7 +43,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.playground")
         .schema(crate::artifacts::playground::schema::playground_artifact_schema_descriptor())
         .inferences([crate::artifacts::playground::standards::v1::subsets::any::schema::inferences::playground_artifact_inference_descriptor()])
-        .composers(crate::artifacts::playground::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::playground::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .build()
 }

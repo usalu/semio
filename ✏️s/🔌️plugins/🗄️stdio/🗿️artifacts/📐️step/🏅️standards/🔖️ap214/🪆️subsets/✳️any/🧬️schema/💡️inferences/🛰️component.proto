@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s_stdio_step.inference;
+
+// 💡️ STEP AP214 inference schema — CARTESIAN_POINT-derived spatial bounding box.
+
+message StepInference {
+  // @state inferred
+  StepBounds bounds = 1;
+}
+
+message StepBounds {
+  repeated double min = 1;
+  repeated double max = 2;
+  uint32 point_count = 3;
+}

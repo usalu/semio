@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.stdio.mp3.inference;
+
+// 💡️ mp3 inference schema — real MPEG-1/2/2.5 Layer III frame-header-derived playback duration.
+
+message Mp3Inference {
+  // @state inferred
+  Mp3Duration duration = 1;
+}
+
+message Mp3Duration {
+  double duration_seconds = 1;
+  uint32 frame_count = 2;
+  uint32 channel_count = 3;
+}

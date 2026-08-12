@@ -1,0 +1,33 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/semio/presentation/inference.json",
+  "title": "SemioPresentationInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/SemioPresentationOutline", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "SemioPresentationOutline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sectionOutline", "slideCount", "shapeCount", "blockCount", "wordCount"],
+      "properties": {
+        "sectionOutline": { "type": "array", "items": { "$ref": "#/$defs/SemioPresentationHeadingEntry" } },
+        "slideCount": { "type": "integer", "minimum": 0 },
+        "shapeCount": { "type": "integer", "minimum": 0 },
+        "blockCount": { "type": "integer", "minimum": 0 },
+        "wordCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "SemioPresentationHeadingEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "text"],
+      "properties": {
+        "level": { "type": "integer", "minimum": 0 },
+        "text": { "type": "string" }
+      }
+    }
+  }
+}

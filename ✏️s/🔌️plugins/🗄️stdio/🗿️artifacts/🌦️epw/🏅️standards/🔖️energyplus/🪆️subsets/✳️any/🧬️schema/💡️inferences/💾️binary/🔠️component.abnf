@@ -1,0 +1,3 @@
+; abnf s.stdio.epw.inference
+document = payload
+payload = *OCTET

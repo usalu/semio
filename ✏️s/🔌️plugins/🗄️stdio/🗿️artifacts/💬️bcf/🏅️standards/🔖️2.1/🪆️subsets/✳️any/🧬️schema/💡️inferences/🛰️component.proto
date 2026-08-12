@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.stdio.bcf.inference;
+
+// 💡️ Bcf inference schema — topic/comment/viewpoint/author counts derived from the topic tree.
+
+message BcfInference {
+  // @state inferred
+  BcfTopicStats topic_stats = 1;
+}
+
+message BcfTopicStats {
+  uint32 topic_count = 1;
+  uint32 comment_count = 2;
+  uint32 viewpoint_count = 3;
+  uint32 author_count = 4;
+}

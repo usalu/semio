@@ -8,9 +8,9 @@ use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SC
 pub fn register() {}
 
 pub fn serialize(from: &FormsSnapshot) -> Result<JsonSnapshot, store::PackError> {
-    let text = serde_json::to_string(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    let value = parse_json_text(&text).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
+    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
+    let value = serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    Ok(JsonSnapshot::from_value(value))
 }
 
 pub fn serialize_text(from: &FormsSnapshot) -> Result<String, store::PackError> {

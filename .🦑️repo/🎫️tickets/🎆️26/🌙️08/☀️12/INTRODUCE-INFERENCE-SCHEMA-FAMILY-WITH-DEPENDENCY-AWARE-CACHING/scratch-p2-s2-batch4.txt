@@ -1,0 +1,75 @@
+P2/S2/Batch4 scratch notes — ifc 2x3, ifc 4, step ap214 (✳️any only)
+
+== Ground truth established before writing any file ==
+- Exemplar (semio-cad ✳️cad) and txt (📄txt ✳️any) both verified at 21 files per inferences dir,
+  NOT 23 as the batch brief's self-check line claimed. Counted by hand from `find | sort` on both
+  exemplars: family root 5 + 📝️text 8 + 💾️binary 6 + 📦bounds/ 2 (🦀️component.rs + 🟦️component.ts
+  only, no graphql/json/proto in the slug dir) = 21. Used 21 as the real target throughout; the
+  "23" line in the brief is stale/wrong.
+- Real arg shape confirmed from already-committed test fixtures (not assumed):
+  - IFC (both 2x3 and 4): `IFCCARTESIANPOINT((0.,0.,0.));` -> args[0] IS the coordinate
+    aggregate directly (no label). Confirmed via ifc4's own
+    engine/🏛️spatial/🦀️component.rs `cartesian_point()` fn (args.first()?.as_list()) and its
+    fixture, plus ifc2x3's own engine/component.rs IFC2X3_FIXTURE.
+  - STEP AP214: `CARTESIAN_POINT('',(0.,0.,0.));` -> args[0] is a String label, args[1] is the
+    coordinate Aggregate. Confirmed via step's own snapshot/component.rs FIXTURE and
+    engine/component.rs demo_step_snapshot(). StepValue has NO as_aggregate/as_real helpers
+    (unlike IfcValue/Part21Value) — wrote a local step_value_as_real() and coordinate_aggregate()
+    that scans args for the first Aggregate of 2-4 all-numeric members, per the brief's own
+    fallback guidance (did NOT need the entity-tally fallback — bounds derivation worked cleanly
+    once the real arg order was accounted for).
+- ifc2x3's Ifc2x3Snapshot really does still wrap the shared `step::engine::part21::Part21Document`
+  (confirmed via 📸️snapshot/🦀️component.rs's own doc comment) — left as-is per instructions, fold
+  reads `snapshot.document.instances` through `Part21Instance::entity`/`Part21Value::as_list`/
+  `Part21Value::as_real`.
+- ifc4 and step ap214 both have their OWN typed models (IfcEntity/IfcValue,
+  StepEntity/StepValue) — confirmed via each's own snapshot/component.rs doc comment citing the
+  W0 "shared-type violation" finding. Folds match on `entity.name.eq_ignore_ascii_case(...)`.
+- Builder type names for ArtifactInferrer impl target, confirmed present via
+  `derive_artifact_facets!` macro invocations: Ifc2x3Builder, IfcBuilder, StepBuilder — all at
+  the exact module paths the brief specified.
+- proto package naming: family-root facets use `s_stdio_<artifact>[_<std>]` prefix (matches each
+  subset's existing artifact/snapshot .proto), 📝️text/💾️binary leaves use `stdio_<artifact>...
+  _text`/`_binary` (no leading s_) — matched both conventions exactly per subset (had to avoid a
+  bare `2x3.` proto package segment, which is illegal — digit-leading identifier).
+
+== Typo-trap self-correction ==
+Fell into the documented 🏅️标准 (Chinese "standards") autocomplete trap 3 times while typing the
+Write tool's file_path for ifc paths by hand (not on step or ifc4-via-heredoc). Each time caught
+immediately via `ls` on the parent dir right after, and `rm -rf` the wrongly-created 🏅️标准
+directory before it could contaminate anything. From the 3rd IFC file onward switched to Bash
+heredocs with a $BASE shell variable (set once via a verified `ls`) instead of retyping the long
+path manually in Write calls — eliminated the problem entirely for the remaining ~50 files across
+ifc4 and step ap214. No 🏅️标准 directory exists in the tree as of this session's end (verified).
+
+== glue.rs observations (read-only, never edited) ==
+- ifc 2x3's `💡️inferences` mount in 📦️glue.rs already exists and is COMPLETE (component/text/
+  binary/bounds all four `pub mod`s present) — pre-wired ahead of my work, matches my file paths
+  exactly (`#[path=...]` lines correct 1:1 against what I wrote).
+- ifc 4's `💡️inferences` mount exists but is PARTIAL — only `mod component` (family root) and
+  `pub mod bounds` are wired; `pub mod text`/`pub mod binary` submodules are missing (present for
+  every sibling facet: snapshot/diff/mutations all have their own text+binary pub mods). Does not
+  block compilation of what I wrote (nothing calls `inferences::text::`/`inferences::binary::`
+  for the inference family — register_pilot_languages() only wires snapshot/mutations/diff), but
+  flagging for the mounting session's final pass since it's an inconsistency vs. every other
+  facet's mount shape.
+- step ap214's `💡️inferences` mount does NOT exist yet in glue.rs at all (no `pub mod inferences`
+  block between its `diff` and `mutations` blocks, verified by direct search). Expected — the
+  mounting session mounts after all batches finish, and I authored these files during this batch.
+- Did not edit 📦️glue.rs in any way, per hard rule.
+
+== Verification performed ==
+- `find <dir> -type f | wc -l` = 21 for all three subsets (matches verified exemplar shape).
+- Python brace-balance ({ vs }) on every new 🦀️component.rs: all OK (counts logged inline during
+  session, all 4 files per subset balanced — family root ~20{}, 📦bounds ~22-27{} depending on
+  subset, text/binary leaf .rs files 0{} since they're const-only).
+- Confirmed via `ls` after every mkdir/heredoc batch that paths resolved under the correct
+  🏅️standards (Latin) segment, not 🏅️标准.
+- Did NOT run cargo check/test (forbidden this session — crate red on/off from concurrent churn,
+  another session runs the final gate after glue.rs mounting, per 📌️important.md rule 5).
+
+== Sibling-skip confirmation ==
+- ifc 2x3: verified `✳️cobie`, `✳️cv20`, `✳️sav` have NO `💡️inferences` dir (find returned empty
+  for all three) — confirmed untouched.
+- step ap214: verified `✳️cc1` through `✳️cc6` have NO `💡️inferences` dir — confirmed untouched.
+- ifc 4 has only `✳️any` as a subset (no siblings to skip) — confirmed via directory listing.

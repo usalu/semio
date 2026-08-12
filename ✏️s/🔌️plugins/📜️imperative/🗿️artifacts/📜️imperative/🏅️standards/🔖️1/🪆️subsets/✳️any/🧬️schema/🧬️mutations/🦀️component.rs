@@ -52,7 +52,7 @@ pub fn resolve_steps<'a>(snapshot: &'a ImperativeSnapshot, path_ref: &PathRef) -
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::imperative::engine::default_snapshot;
+    use crate::artifacts::imperative::schema::default_snapshot;
     use crate::artifacts::imperative::Dictionary;
     use neural_engine::{Atom, Value};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};

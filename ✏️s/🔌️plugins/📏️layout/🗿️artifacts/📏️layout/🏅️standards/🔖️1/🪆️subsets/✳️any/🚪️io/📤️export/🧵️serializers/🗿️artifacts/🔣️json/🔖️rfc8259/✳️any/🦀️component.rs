@@ -25,8 +25,9 @@ fn serde_to_json_value(value: &serde_json::Value) -> JsonValue {
 }
 
 pub fn serialize(from: &LayoutSnapshot) -> Result<JsonSnapshot, store::PackError> {
+    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     let value = serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: serde_to_json_value(&value) })
+    Ok(JsonSnapshot::from_value(value))
 }
 
 pub fn serialize_text(from: &LayoutSnapshot) -> Result<String, store::PackError> {

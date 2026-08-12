@@ -24,6 +24,7 @@ pub fn demo_binary_snapshot() -> BinarySnapshot {
 pub fn register() {
     crate::artifacts::binary::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<BinarySnapshot, BinaryMutation>(STDIO_BINARY_DOCUMENT_SCHEMA));
@@ -107,6 +108,13 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.binary`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::binary::schema::binary_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.stdio.binary.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema` above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::binary::schema::inferences::binary_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 

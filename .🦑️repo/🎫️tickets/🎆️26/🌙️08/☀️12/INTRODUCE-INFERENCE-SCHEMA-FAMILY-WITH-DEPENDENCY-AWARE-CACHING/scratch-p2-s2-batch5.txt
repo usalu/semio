@@ -1,0 +1,91 @@
+P2/S2/Batch5 scratch notes — bcf (2.1/any) + epw (energyplus/any)
+
+## Scope
+- bcf: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/
+- epw: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/
+
+## Exemplars read (literal templates)
+- semio/v1/document 💡️inferences (family root + 🧾outline slug dir) — count/fold-style, closest in
+  spirit to bcf/epw.
+- semio/v1/cad 💡️inferences (family root + 📦bounds slug dir) — general family-root shape,
+  Default-handling pattern.
+- Both exemplars' 📝️text/💾️binary leaves are minimal generic envelope grammars — copied that
+  pattern verbatim with schema-id substituted (never copy-pasted the family-root's real
+  graphql/json/proto/ts — those carry real field-level schema per artifact).
+- register()/register_artifact_inferences() wiring pattern verified against txt (utf-8/any) and
+  png (1.2/any) engine component.rs files — both insert `register_artifact_inferences();` right
+  after the line that calls `register_artifact_schema_descriptor`, and define the fn using the
+  FULL canonical module path (`crate::artifacts::<x>::standards::<vmod>::subsets::any::schema::
+  inferences::<x>_artifact_inference_descriptor()`) — NOT the short `<x>::schema` alias used
+  elsewhere in the same file for the pre-existing snapshot/diff/mutations family (that alias isn't
+  mounted for `inferences` yet — glue.rs does that centrally, out of this batch's scope).
+
+## bcf — BcfTopicStats
+- Real fields used (from 📸️snapshot/🦀️component.rs, re-verified): `BcfSnapshot.topics: Vec<BcfTopic>`,
+  each `BcfTopic.comments: Vec<BcfComment>`, `.viewpoints: Vec<BcfViewpoint>`, `.creation_author:
+  String`; each `BcfComment.author: String`.
+- Derivation: topicCount = topics.len(); commentCount = sum(topic.comments.len()); viewpointCount =
+  sum(topic.viewpoints.len()); authorCount = size of BTreeSet<&str> built from every
+  topic.creation_author PLUS every comment.author (no filtering of blanks — literal per spec).
+- BcfTopicStats derives `Default` (plain `#[derive(Default)]`) — all-zero matches empty `topics`,
+  confirmed by `inference_default_law`.
+- Module paths: schema `crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::
+  BcfSnapshot`; builder `crate::artifacts::bcf::standards::v2_1::subsets::any::schema::BcfBuilder`.
+- Slug dir: 🗒topicstats (emoji: 🗒️ tag character variant, dir literally `🗒topicstats`, matching
+  ticket's exact spelling).
+
+## epw — EpwClimateSummary
+- Real field used: `EpwSnapshot.records: Vec<EpwRecord>`, each `EpwRecord.dry_bulb_temp: String`
+  (all EPW record columns are String by the snapshot's own deliberate lossless-retention design,
+  confirmed reading the snapshot's module doc comment).
+- Derivation: iterate records, `record.dry_bulb_temp.trim().parse::<f64>()`, skip (no
+  panic/error) on failure; recordCount = total records seen; parsedTempCount = successfully-parsed
+  count; min/max/avg fold only over parsed values; if parsedTempCount==0 all three temp fields
+  default to 0.0 (guards divide-by-zero AND matches `EpwSnapshot::default()`'s empty `records`).
+- EpwClimateSummary needed a HAND-ROLLED `Default` (not derive) — explicit all-zero, since the
+  "no data" identity logic lives in `compute_epw_climate_summary`'s guard, not derivable
+  structurally. Confirmed via `inference_default_law`.
+- Module paths: schema `crate::artifacts::epw::standards::energyplus::subsets::any::schema::
+  snapshot::EpwSnapshot`; builder `crate::artifacts::epw::standards::energyplus::subsets::any::
+  schema::EpwBuilder`. Standard mod segment: `energyplus` (bare, no `v_` prefix) — confirmed via
+  live grep of pre-existing `crate::artifacts::epw::standards::energyplus::subsets::any::...`
+  usages already in 🚪️io/🦀️component.rs and ⚙️engine/🦀️component.rs.
+- Slug dir: 🌡climate.
+
+## register() wiring
+- bcf: ⚙️engine/🦀️component.rs — `register_artifact_inferences();` inserted right after the
+  existing `::schema::register_artifact_schema_descriptor(...)` line inside `pub fn register()`
+  (line 524), new fn defined immediately after (~line 535).
+- epw: ⚙️engine/🦀️component.rs — epw's own `register()` (line 188) doesn't call
+  `register_artifact_schema_descriptor` directly (that call lives nested inside
+  `🚪️io/🦀️component.rs`'s `derived_composition::register()`, invoked via
+  `...subsets::any::io::register()`); inserted `register_artifact_inferences();` right after that
+  io::register() call (the closest analog to "right after register_artifact_schema()"), new fn
+  defined immediately after (~line 197).
+
+## Self-check: file counts
+- bcf 💡️inferences: `find ... -type f | wc -l` = 21
+- epw 💡️inferences: `find ... -type f | wc -l` = 21
+- NOTE: batch instructions' "Self-check" section says "should be 23 per subset" but the explicitly
+  enumerated shape in the same instructions (family root 5 + text 8 + binary 6 + ONE slug dir × 2
+  files = 21) matches BOTH completed exemplars (semio/v1/cad and semio/v1/document) exactly at 21
+  files each (verified via `find`). Treating 21 as correct (matches exemplars + explicit shape
+  spec + single slug-dir-per-subset instruction); flagging the "23" figure as likely stale/typo in
+  the batch brief rather than a real discrepancy.
+
+## Typo trap
+- Hit the documented `🏅️标准` (Chinese) vs `🏅️standards` (Latin) autocomplete trap once, while
+  writing epw's 🌡climate/🦀️component.rs. Caught immediately via `ls`, removed the stray
+  `🏅️标准` directory tree with `rm -rf`, rewrote the file at the correct `🏅️standards` path.
+  Re-verified afterward: `find ... -iname "*标准*"` returns nothing under either bcf or epw.
+
+## Brace-balance check
+- Python brace-counter run over all 8 new `.rs` files across both subsets (family roots, text/
+  binary envelope leaves, slug-dir files) — all OK (balanced, never negative depth).
+
+## NOT done (out of scope per instructions)
+- No `cargo check`/`cargo build`/`cargo test` run (explicitly forbidden this batch — another
+  session runs the final gate after glue.rs mounting).
+- `📦️glue.rs` untouched — mounting `pub mod inferences { ... }` (and the `🗒topicstats`/
+  `🌡climate` slug submodules) into each subset's `schema` module is the other session's job.
+- No ticket_close/ticket_reopen called.

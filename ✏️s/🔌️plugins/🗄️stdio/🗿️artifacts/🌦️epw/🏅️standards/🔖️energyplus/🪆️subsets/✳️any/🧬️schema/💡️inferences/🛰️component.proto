@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.s.stdio.epw.inference;
+
+// 💡️ Epw inference schema — hourly dry-bulb temperature min/max/avg derived from `records`.
+
+message EpwInference {
+  // @state inferred
+  EpwClimateSummary climate = 1;
+}
+
+message EpwClimateSummary {
+  uint32 record_count = 1;
+  uint32 parsed_temp_count = 2;
+  double min_dry_bulb_c = 3;
+  double max_dry_bulb_c = 4;
+  double avg_dry_bulb_c = 5;
+}

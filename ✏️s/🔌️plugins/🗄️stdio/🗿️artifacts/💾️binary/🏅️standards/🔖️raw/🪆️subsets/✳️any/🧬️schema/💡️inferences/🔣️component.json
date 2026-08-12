@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/binary/inference.json",
+  "title": "BinaryInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["extent"],
+  "properties": {
+    "extent": { "$ref": "#/$defs/BinaryExtent", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "BinaryExtent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["byteLength", "isEmpty", "contentDigest"],
+      "properties": {
+        "byteLength": { "type": "integer", "minimum": 0 },
+        "isEmpty": { "type": "boolean" },
+        "contentDigest": { "type": "string" }
+      }
+    }
+  }
+}

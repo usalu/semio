@@ -90,6 +90,7 @@ pub fn register() {
     ::schema::register_artifact_schema_descriptor(
         crate::artifacts::ifc::standards::v2x3::subsets::any::schema::ifc2x3_artifact_schema_descriptor(),
     );
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<Ifc2x3Snapshot, Ifc2x3Mutation>(STDIO_IFC2X3_DOCUMENT_SCHEMA));
     // 🛡️ D5's generic validate-on-build hook: registers each real subset's `SubsetValidator` so
@@ -98,6 +99,13 @@ pub fn register() {
     crate::artifacts::ifc::standards::v2x3::subsets::cv20::io::register();
     crate::artifacts::ifc::standards::v2x3::subsets::sav::io::register();
     crate::artifacts::ifc::standards::v2x3::subsets::cobie::io::register();
+}
+
+/// 💡️ Registers `s.stdio.ifc.2x3.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to the schema descriptor registration above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v2x3::subsets::any::schema::inferences::ifc2x3_artifact_inference_descriptor());
 }
 
 /// 📌️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: 5-role

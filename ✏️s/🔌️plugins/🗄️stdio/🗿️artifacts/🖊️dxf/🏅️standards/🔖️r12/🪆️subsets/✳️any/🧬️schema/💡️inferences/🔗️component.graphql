@@ -1,0 +1,11 @@
+# 💡️ Dxf inference schema — entity-derived 3D bounding box over top-level and block-nested entities.
+
+type DxfInference {
+  bounds: DxfBounds! @state(class: INFERRED)
+}
+
+type DxfBounds {
+  min: [Float!]!
+  max: [Float!]!
+  entityCount: Int!
+}

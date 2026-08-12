@@ -1,0 +1,11 @@
+# 💡️ zip inference schema — real central-directory-style census over decompressed `entries`.
+
+type ZipInference {
+  entries: ZipEntries! @state(class: INFERRED)
+}
+
+type ZipEntries {
+  entryCount: Int!
+  totalUncompressedSize: Float!
+  contentDigest: String!
+}

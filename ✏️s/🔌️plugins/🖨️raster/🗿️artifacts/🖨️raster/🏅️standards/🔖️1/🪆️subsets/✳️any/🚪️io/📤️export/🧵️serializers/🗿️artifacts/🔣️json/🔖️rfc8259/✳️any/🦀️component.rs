@@ -25,8 +25,9 @@ fn serde_to_json_value(value: &serde_json::Value) -> JsonValue {
 }
 
 pub fn serialize(snapshot: &RasterSnapshot) -> Result<JsonSnapshot, String> {
+    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     let value = serde_json::to_value(snapshot).map_err(|e| e.to_string())?;
-    Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: serde_to_json_value(&value) })
+    Ok(JsonSnapshot::from_value(value))
 }
 pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())

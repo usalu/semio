@@ -1,0 +1,18 @@
+# 💡️ Semio presentation inference schema — heading outline + census over masters/layouts/slides.
+
+type SemioPresentationInference {
+  outline: SemioPresentationOutline! @state(class: INFERRED)
+}
+
+type SemioPresentationOutline {
+  sectionOutline: [SemioPresentationHeadingEntry!]!
+  slideCount: Int!
+  shapeCount: Int!
+  blockCount: Int!
+  wordCount: Int!
+}
+
+type SemioPresentationHeadingEntry {
+  level: Int!
+  text: String!
+}

@@ -1,0 +1,24 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/obj/inference.json",
+  "title": "ObjInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bounds"],
+  "properties": {
+    "bounds": { "$ref": "#/$defs/ObjBounds", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "ObjBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max", "vertexCount", "faceCount", "groupCount"],
+      "properties": {
+        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "vertexCount": { "type": "integer", "minimum": 0 },
+        "faceCount": { "type": "integer", "minimum": 0 },
+        "groupCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

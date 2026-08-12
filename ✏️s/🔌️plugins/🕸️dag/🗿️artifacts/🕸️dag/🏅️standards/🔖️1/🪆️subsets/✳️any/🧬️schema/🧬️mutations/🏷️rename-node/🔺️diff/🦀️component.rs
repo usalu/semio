@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RenameNode` — patches the node's `id` in place (no reorder side
 //! effect) and rewrites every edge endpoint string that pointed at the old id.
 use crate::artifacts::dag::diff::{DagDiff, DagEdgePatchEntry, DagEdgesDelta, DagNodeExtraPatch, DagNodeExtraPatchEntry, DagNodesDelta};
-use crate::artifacts::dag::engine::split_endpoint;
+use crate::artifacts::dag::schema::split_endpoint;
 use crate::artifacts::dag::DagSnapshot;
 use infinite_board_port_directed_dag::DagEdgePatch;
 

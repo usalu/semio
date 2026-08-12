@@ -1,0 +1,3 @@
+(* ebnf s.stdio.dwg.inference (ac1024) *)
+document = header, body ;
+header = 'schema', space, 's.stdio.dwg.inference', newline ;

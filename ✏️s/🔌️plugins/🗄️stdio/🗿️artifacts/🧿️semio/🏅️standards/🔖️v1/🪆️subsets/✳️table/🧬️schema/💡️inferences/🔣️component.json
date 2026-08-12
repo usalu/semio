@@ -1,0 +1,27 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/semio/table/inference.json",
+  "title": "SemioTableInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["shape"],
+  "properties": {
+    "shape": { "$ref": "#/$defs/SemioTableShape", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "SemioTableShape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["columnCount", "rowCount", "nullColumnCount", "boolColumnCount", "intColumnCount", "floatColumnCount", "strColumnCount", "bytesColumnCount"],
+      "properties": {
+        "columnCount": { "type": "integer", "minimum": 0 },
+        "rowCount": { "type": "integer", "minimum": 0 },
+        "nullColumnCount": { "type": "integer", "minimum": 0 },
+        "boolColumnCount": { "type": "integer", "minimum": 0 },
+        "intColumnCount": { "type": "integer", "minimum": 0 },
+        "floatColumnCount": { "type": "integer", "minimum": 0 },
+        "strColumnCount": { "type": "integer", "minimum": 0 },
+        "bytesColumnCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

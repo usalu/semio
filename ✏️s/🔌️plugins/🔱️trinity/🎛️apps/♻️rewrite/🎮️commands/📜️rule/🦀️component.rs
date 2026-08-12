@@ -8,7 +8,7 @@
 
 use crate::apps::rewrite::config::RewriteConfigMutation;
 use crate::artifacts::jack::{Graph, JackSnapshot, PropertyValue};
-use crate::artifacts::rewrite::engine::{ParameterKind, Rhs};
+use crate::artifacts::rewrite::schema::{ParameterKind, Rhs};
 use crate::artifacts::rewrite::mutations::rewrite_snapshot_mutations;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use crate::artifacts::rewrite::RewriteSnapshot;
@@ -74,7 +74,7 @@ pub(crate) fn delete_rule_clause(state: &mut RewriteSnapshot, node_id: &str) -> 
     let Some(clause_ref) = parse_clause_ref(node_id) else {
         return false;
     };
-    let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::engine::Lhs>(&state.lhs_json) else {
+    let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
         return false;
     };
     let Ok(mut rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
@@ -110,7 +110,7 @@ pub(crate) fn delete_rule_clause(state: &mut RewriteSnapshot, node_id: &str) -> 
 
 /// ➕️ Appends a default instance of `clause_kind` to the rule (rewrite.where/create/merge/set/delete/parameter).
 fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
-    let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::engine::Lhs>(&state.lhs_json) else {
+    let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
         return false;
     };
     let Ok(mut rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
@@ -127,15 +127,15 @@ fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
             }
         }
         "create" => {
-            rhs.create.push(crate::artifacts::rewrite::engine::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
+            rhs.create.push(crate::artifacts::rewrite::schema::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
             true
         }
         "merge" => {
-            rhs.merge.push(crate::artifacts::rewrite::engine::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
+            rhs.merge.push(crate::artifacts::rewrite::schema::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
             true
         }
         "set" => {
-            rhs.set.push(crate::artifacts::rewrite::engine::AssignmentJson { var: left_var, prop: "label".into(), value: PropertyValue::String(String::new()) });
+            rhs.set.push(crate::artifacts::rewrite::schema::AssignmentJson { var: left_var, prop: "label".into(), value: PropertyValue::String(String::new()) });
             true
         }
         "delete" => {
@@ -145,7 +145,7 @@ fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
         "parameter" => {
             let name = format!("param{}", rhs.parameters.len());
             state.parameter_bindings.insert(name.clone(), PropertyValue::String(String::new()));
-            rhs.parameters.push(crate::artifacts::rewrite::engine::ParameterSpec { name, kind: ParameterKind::String, default: PropertyValue::String(String::new()) });
+            rhs.parameters.push(crate::artifacts::rewrite::schema::ParameterSpec { name, kind: ParameterKind::String, default: PropertyValue::String(String::new()) });
             true
         }
         _ => false,

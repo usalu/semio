@@ -30,11 +30,12 @@ fn json_value_to_serde(value: &JsonValue) -> serde_json::Value {
 }
 
 pub fn serialize(snapshot: &GisMapSnapshot) -> Result<JsonSnapshot, store::TextError> {
+    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     let raw = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: serde_value_to_json(&raw) })
+    Ok(JsonSnapshot::from_value(raw))
 }
 
 pub fn serialize_bytes(snapshot: &GisMapSnapshot) -> Result<Vec<u8>, store::TextError> {
-    let value = json_value_to_serde(&serialize(snapshot)?.value);
+    let value = serialize(snapshot)?.to_serde_value();
     serde_json::to_vec_pretty(&value).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
 }

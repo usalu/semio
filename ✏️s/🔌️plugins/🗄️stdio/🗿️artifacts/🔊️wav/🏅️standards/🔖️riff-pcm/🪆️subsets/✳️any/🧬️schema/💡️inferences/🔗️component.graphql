@@ -1,0 +1,11 @@
+# 💡️ wav inference schema — real RIFF/WAVE `fmt ` + decoded `data` sample-count playback duration.
+
+type WavInference {
+  duration: WavDuration! @state(class: INFERRED)
+}
+
+type WavDuration {
+  durationSeconds: Float!
+  frameCount: Int!
+  bitsPerSample: Int!
+}

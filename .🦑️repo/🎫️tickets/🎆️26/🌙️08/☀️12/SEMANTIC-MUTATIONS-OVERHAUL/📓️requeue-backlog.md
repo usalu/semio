@@ -29,6 +29,77 @@ framework enum, or handcrafted per variant as space does — not merely unwrappe
 replace is banned; route through `ArtifactStore::reset`"* — evidence the locked no-import decision
 is already enforced at the wire boundary.)
 
+## ✅ STRUCTURAL COMPLETION — all 54 non-stdio facets
+
+| invariant | result |
+|---|---|
+| facets on `#[derive(dsl::Mutations)]` | **54 / 54** |
+| triad-dir set ≡ dispatch-variant set (both directions) | **0 mismatches** |
+| banned tokens in real (non-comment) code | **1 file** — flow's kernel bridge, staged, blocked on DKM |
+| unresolved `include_str!`/`include_bytes!` targets | **0** in this ticket's scope (4 remain in stdio's new `✳️table`, UCAS's) |
+| compile, `--all-targets --keep-going`, no sccache | **0 errors in any migrated facet** |
+
+Final structural work landed in this pass:
+- **`🌀️procedural2d`** — the 6 remaining inline `pub mod` payloads (`ReplaceWidget`,
+  `ReplaceSynapse`, `CreateGeneration`, `DeleteGeneration`, `RenameGeneration`,
+  `ChangeGenerationValue`) extracted into real triad directories with glue mounts. Facet went
+  8 dirs / 14 variants → **14 / 14**.
+- **`📋️forms`** — all 9 playbook-shaped dir names renamed to their payloads
+  (`➕add-step`→`🌱create-step`, `🩹update-block`→`🔁replace-block`,
+  `📖update-playbook`→`🏷️change-form-title`, …), and the one directory serving **two** variants
+  (`🩹update-step` held both `RenameStep` and `ChangeStepDescription`) split into
+  `✏️rename-step` + `📝change-step-description`. Facet went 9 / 10 → **10 / 10**. That shared
+  directory was the entire 9-vs-10 discrepancy.
+
+### Remaining: emoji-uniqueness collisions (4 facets) — currently INERT
+
+`policyMutationEmojiUniquenessBreaches` is high-priority but is one of the four wrong-depth rules,
+so it does not currently fire. Census for whoever lands Wave R3, which must either dedup these or
+seed the shrink-only allowlist the plan already calls for:
+
+| facet | duplicated prefixes |
+|---|---|
+| `🏗️fem/🧊️3d` | `🌱`×8, `🔁`×5, `🗑`×8 |
+| `🏗️fem/◻2d` | `🌱`, `🔁`, `🗑` |
+| `📐️cad/📐️cad` | `➕ 🏷 👁 📍 📏 🔒 🗑` |
+| `🌊️flow/🌊️flow` | `🔀️` (reorder-synapses / reorder-widgets) |
+
+Note these are *semantically coherent* groupings (every `create-*` sharing `🌱`), so deduping trades
+readability for the rule. Worth deciding deliberately rather than mechanically.
+
+## ✅ AUTHORITATIVE COMPILE MEASUREMENT — zero errors in any migrated facet
+
+Run with all three correctness flags simultaneously, which no earlier run in this ticket had:
+
+```
+RUSTC_WRAPPER="" cargo check --workspace --all-targets --keep-going --message-format short
+```
+
+- `RUSTC_WRAPPER=""` — the repo sets `rustc-wrapper = "sccache"` (`.cargo/config.toml:2`) and
+  sccache currently fails with `Operation not permitted`, producing a **false clean** (cargo exits
+  0, compiles nothing, names no crate).
+- `--all-targets` — plain `check` never builds `#[cfg(test)]` code, where this ticket's law tests
+  live and where four repo-wide breaks hid today.
+- `--keep-going` — **bare `--workspace` silently truncates after the first failing crate.** A peer
+  measured 3 failing crates bare vs **27 of 96** with `--keep-going`, same tree, same minute.
+
+Result: **446 error lines, 8 crates that could not compile — and ZERO in any migrated mutation
+facet.**
+
+| failing crate | owner |
+|---|---|
+| `semio-s-plugin-stdio` | UCAS `✳️table` + DKM `✳️brep`/`✳️drawing`, both mid-authoring |
+| `semio-framework-os-kernel`, `-os`, `-os-flow`, `-os-infinite`, `-os-run`, `semio-framework-ui`, `semio-compose-rs` | other tickets' framework work |
+
+Every one of this ticket's 54 non-stdio facets compiles, including test targets. That is the
+strongest compile-level statement available, and it is *not* a claim about behaviour — see the law
+status below.
+
+**Calibration note from the peer who found the truncation**: the hidden failures were all genuine,
+so truncation *hides* failures rather than inventing them. Prior "zero in my facets" readings were
+therefore **unsupported rather than false** — the correct response was to re-run, which is what
+this is.
+
 ## 🟡 LAW-FAILURE STATUS: 3 of 6 puzzle failures FIXED; 3 open; sweep blocked
 
 **Fixed (cascade-inverse family, all 3).** Root cause found and repaired: `delete-*` inverses

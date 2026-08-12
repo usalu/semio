@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.stl.inference
+extension stl.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.stl.inference" NL
+body = payload NL?
+payload = OCTET+

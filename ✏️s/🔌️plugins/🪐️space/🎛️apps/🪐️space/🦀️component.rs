@@ -288,6 +288,13 @@ impl ArtifactApp for SpaceApp {
         command.command_id()
     }
 
+    /// 🪪️ `s.space.space`'s config+presence schema descriptor (ticket
+    /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) — `register_document_app` registers it the
+    /// moment this type is bound to the plugin, closing the app-schema half of `🪐️space`'s `.setup()`.
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::space::config::schema::app_schema_descriptor())
+    }
+
     /// 🎯️ Bridges shell `{action,args}` JSON onto typed `SpaceCommand` until every call site speaks OpBinary.
     fn command_from_action(action: &str, args: Option<&Value>) -> Result<SpaceCommand, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);

@@ -27,7 +27,7 @@ fn json_value_to_serde(value: &JsonValue) -> serde_json::Value {
 }
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<PlaybookSnapshot, String> {
-    let mut snap: PlaybookSnapshot = serde_json::from_value(json_value_to_serde(&from.value)).map_err(|e| e.to_string())?;
+    let mut snap: PlaybookSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| e.to_string())?;
     if snap.schema.is_empty() { snap.schema = PLAYBOOK_DOCUMENT_SCHEMA.into(); }
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     Ok(snap)
@@ -35,5 +35,5 @@ pub fn deserialize(from: &JsonSnapshot) -> Result<PlaybookSnapshot, String> {
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<PlaybookSnapshot, String> {
     let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
     let value = parse_json_text(text).map_err(|e| e.to_string())?;
-    deserialize(&JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
+    deserialize(&JsonSnapshot::from_value(value))
 }

@@ -1,6 +1,6 @@
 //! 📝️ Imperative play app — the script window: the compiled, read-only textual form of the document.
 
-use crate::artifacts::imperative::engine::ImperativeHost;
+use crate::apps::imperative::engine::ImperativeHost;
 use crate::artifacts::imperative::ImperativeSnapshot;
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};
 

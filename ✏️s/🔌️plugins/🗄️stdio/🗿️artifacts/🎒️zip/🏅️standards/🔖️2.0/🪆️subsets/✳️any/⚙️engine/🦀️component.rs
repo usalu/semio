@@ -654,6 +654,7 @@ pub fn demo_zip_snapshot() -> ZipSnapshot {
 pub fn register() {
     crate::artifacts::zip::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<ZipSnapshot, ZipMutation>(
         STDIO_ZIP_DOCUMENT_SCHEMA,
@@ -734,6 +735,15 @@ pub fn register_pilot_languages() {
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(
         crate::artifacts::zip::schema::zip_artifact_schema_descriptor(),
+    );
+}
+
+/// 💡️ Registers `s.stdio.zip.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema` above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(
+        crate::artifacts::zip::schema::inferences::zip_artifact_inference_descriptor(),
     );
 }
 //#endregion Register

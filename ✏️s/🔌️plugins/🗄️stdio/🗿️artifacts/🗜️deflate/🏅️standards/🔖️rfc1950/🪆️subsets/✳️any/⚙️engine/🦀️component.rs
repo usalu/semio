@@ -676,6 +676,7 @@ pub fn demo_deflate_snapshot() -> DeflateSnapshot {
 pub fn register() {
     crate::artifacts::deflate::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<DeflateSnapshot, DeflateMutation>(
@@ -774,6 +775,15 @@ pub fn register_pilot_languages() {
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(
         crate::artifacts::deflate::schema::deflate_artifact_schema_descriptor(),
+    );
+}
+
+/// 💡️ Registers `s.stdio.deflate.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema` above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(
+        crate::artifacts::deflate::schema::inferences::deflate_artifact_inference_descriptor(),
     );
 }
 //#endregion Register

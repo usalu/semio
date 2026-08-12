@@ -3,13 +3,14 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
 //! `🎭️modes/📝️blueprint/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`, view
-//! state in `🦀️config.rs`, shared compute in the artifact's `⚙️engine`. This file is a routing table:
+//! state in `🦀️config.rs`, shared document compute in the artifact's `🧬️schema`, this app's own IO
+//! surface in the `🔖️Io` region below. This file is a routing table:
 //! `handle` → `FormsCommand::dispatch`, `render` → body-key → node, plus the app-level `🔖️Contributions`
 //! region — host-declared plugin contributions (`config.contributions_json`) are consumed by THREE
 //! taxonomy nodes (the blueprint builder's palette, the try wizard, and the inspection panel), and every
 //! helper in that region takes `&FormsConfig` (an app-only view-state type) or an app-level
 //! `ProgramContributionEntry`, so per the DocumentHelpers placement rule they stay here rather than in the
-//! artifact `⚙️engine`.
+//! artifact's `🧬️schema`.
 
 use crate::apps::forms::commands::{contribution, export, import, locale, option, question, selection, step, try_wizard, vector};
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
@@ -18,11 +19,11 @@ use crate::apps::forms::modes::blueprint;
 use crate::apps::forms::modes::blueprint::windows::{builder, try_wizard as try_window};
 use crate::apps::forms::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::forms::terminology::{forms_play_labels, FormsLabels};
-use crate::artifacts::forms::engine::{default_example_json, forms_io, onboarding_example_json};
+use crate::artifacts::forms::schema::{default_example_json, onboarding_example_json};
 use crate::artifacts::forms::op::FormMutation;
 // 🧷️ Aliased: `app_commands!` below derives `dsl::DslOps` off the EXTERN `dsl` crate — importing the
 // artifact's own `dsl` submodule under the bare name would shadow it (see the identical note in the
-// artifact's `⚙️engine/🦀️component.rs`).
+// artifact's `🧬️schema/🦀️component.rs`).
 use crate::artifacts::forms::dsl as forms_dsl;
 use crate::artifacts::forms::{FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
@@ -62,7 +63,7 @@ pub fn try_values_json_text(values: &Map<String, Value>) -> String {
 }
 
 pub fn effective_try_values(spec: &FormsSnapshot, config: &FormsConfig) -> Map<String, Value> {
-    crate::artifacts::forms::engine::initial_try_values(spec, &try_values_map(config))
+    crate::artifacts::forms::schema::initial_try_values(spec, &try_values_map(config))
 }
 
 /// 🌱️ Building block for every `handle()` arm that must both clear the Try wizard's answers and reset its
@@ -128,7 +129,7 @@ pub fn find_question_kind_contribution<'a>(contributions: &'a [ProgramContributi
 }
 
 fn extension_params_value(question: &FormQuestion, values: &Map<String, Value>) -> Value {
-    values.get(&question.id).cloned().or_else(|| question.params.as_ref().map(crate::artifacts::forms::engine::dsl_to_value)).unwrap_or_else(|| json!({}))
+    values.get(&question.id).cloned().or_else(|| question.params.as_ref().map(crate::artifacts::forms::schema::dsl_to_value)).unwrap_or_else(|| json!({}))
 }
 
 fn extension_render_payload(question: &FormQuestion, params: &Value, surface: &str, interactive: bool) -> String {
@@ -258,6 +259,34 @@ use try_wizard::{next_step, previous_step, reset_try, set_try_value, set_try_val
 use vector::{add_vector_field, patch_vector_field, remove_vector_field};
 //#endregion 🔖️Commands
 
+//#region 🔖️Io
+/// 🔌️ Forms' typed media I/O surface (`AppDefinition.io`) — the implicit `document:in`/`document:out`
+/// pair (keyed by the `forms.form` document schema) plus the WORKFLOWS-END-TO-END-TYPED-PORTS
+/// `dictionary:out` port: the form's currently-configured default field values (see
+/// `crate::artifacts::forms::schema::initial_try_values`), re-exported as a `form.dictionary` JSON
+/// object keyed by question id — the layout app's `fields:in` counterpart. Relocated from the deleted
+/// artifact `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this is the app's
+/// own IO surface, not artifact behaviour.
+pub fn forms_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: FORMS_DOCUMENT_SCHEMA.into(),
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+        ports: vec![semio_framework_plugin::MediaPortSpec {
+            id: "dictionary:out".into(),
+            label: "Dictionary".into(),
+            direction: semio_framework_plugin::MediaPortDirection::Out,
+            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+            kind_id: Some("form.dictionary".into()),
+            required: false,
+            multiplicity: semio_framework::PortMultiplicity::Many,
+        }],
+        export_formats: Vec::new(),
+        import_formats: Vec::new(),
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "form.dictionary".into(), name: "Form".into(), dimension: "data".into(), component_kind: "forms".into() },
+    }
+}
+//#endregion 🔖️Io
+
 //#region 🔖️FormsPlayApp
 /// 🧪️ B1: unit struct — every former `FormsPlayRuntime` field now lives in `FormsConfig`, written through
 /// `FormsConfigMutation`s.
@@ -284,7 +313,7 @@ impl ArtifactApp for FormsPlayApp {
     }
 
     fn initial_snapshot() -> FormsSnapshot {
-        crate::artifacts::forms::engine::building_component_spec()
+        crate::artifacts::forms::schema::building_component_spec()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -316,7 +345,7 @@ impl ArtifactApp for FormsPlayApp {
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: FORMS_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "dictionary:out" => {
-                let values = crate::artifacts::forms::engine::initial_try_values(doc.snapshot, &Map::new());
+                let values = crate::artifacts::forms::schema::initial_try_values(doc.snapshot, &Map::new());
                 let json = serde_json::to_string(&Value::Object(values)).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "form.dictionary".into(), json } })
             }
@@ -485,7 +514,7 @@ pub(crate) mod testkit {
     pub fn building_component_question() -> FormQuestion {
         let mut question = question::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
         question.fixture_slug = Some("hexagonal-mushroom-column".into());
-        question.params = Some(crate::artifacts::forms::engine::value_to_dsl(&json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
+        question.params = Some(crate::artifacts::forms::schema::value_to_dsl(&json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
         question
     }
 }
@@ -612,15 +641,15 @@ mod tests {
         assert!(steps_before > 0, "seeded fixture has at least one step to receive the question");
         app.dispatch_typed(FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }), &meta("local")).expect("add question");
         let spec = app.snapshot().expect("projection");
-        assert!(crate::artifacts::forms::engine::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "text"), "kind default materialized from the registry");
+        assert!(crate::artifacts::forms::schema::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "text"), "kind default materialized from the registry");
     }
 
     #[test]
     fn initial_document_seeds_building_component_fixture() {
         let app = forms_app();
         let spec = app.snapshot().expect("projection");
-        assert!(!crate::artifacts::forms::engine::flatten_questions(&spec).is_empty());
-        assert!(crate::artifacts::forms::engine::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "buildingComponent"));
+        assert!(!crate::artifacts::forms::schema::flatten_questions(&spec).is_empty());
+        assert!(crate::artifacts::forms::schema::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "buildingComponent"));
     }
 
     #[test]
@@ -732,6 +761,22 @@ mod tests {
     fn forms_io_exposes_dictionary_out_port() {
         let io = FormsPlayApp::io().expect("forms declares io");
         assert!(io.ports.iter().any(|port| port.id == "dictionary:out"));
+    }
+
+    /// 🔌️ Relocated from the deleted artifact `⚙️engine`'s own `forms_io()` unit test (ticket
+    /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — asserts the full port shape, not just
+    /// presence, alongside `forms_io_exposes_dictionary_out_port` above.
+    #[test]
+    fn forms_io_declares_dictionary_out_port() {
+        let io = forms_io();
+        assert_eq!(io.document_schema, FORMS_DOCUMENT_SCHEMA);
+        let dictionary_out = io.ports.iter().find(|port| port.id == "dictionary:out").expect("dictionary:out declared");
+        assert_eq!(dictionary_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert_eq!(dictionary_out.kind_id.as_deref(), Some("form.dictionary"));
+        assert_eq!(dictionary_out.multiplicity, semio_framework::PortMultiplicity::Many);
+        let all_ports = io.all_ports();
+        assert!(all_ports.iter().any(|port| port.id == "document:in"));
+        assert!(all_ports.iter().any(|port| port.id == "document:out"));
     }
     //#endregion 🔖️MediaPorts
 }

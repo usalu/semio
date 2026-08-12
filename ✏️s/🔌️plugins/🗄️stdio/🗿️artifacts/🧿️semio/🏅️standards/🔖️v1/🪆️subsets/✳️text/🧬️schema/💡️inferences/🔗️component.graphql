@@ -1,0 +1,13 @@
+# 💡️ Semio text inference schema — word/mark census + distinct languages used.
+
+type SemioTextInference {
+  profile: SemioTextProfile! @state(class: INFERRED)
+}
+
+type SemioTextProfile {
+  wordCount: Int!
+  charCount: Int!
+  runCount: Int!
+  markCount: Int!
+  languages: [String!]!
+}

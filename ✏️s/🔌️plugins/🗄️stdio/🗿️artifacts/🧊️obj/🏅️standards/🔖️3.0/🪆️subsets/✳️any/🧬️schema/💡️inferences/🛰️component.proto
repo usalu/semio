@@ -1,0 +1,17 @@
+syntax = "proto3";
+package semio.s.stdio.obj.inference;
+
+// 💡️ Obj inference schema — vertex-derived bounding box.
+
+message ObjInference {
+  // @state inferred
+  ObjBounds bounds = 1;
+}
+
+message ObjBounds {
+  repeated double min = 1;
+  repeated double max = 2;
+  uint32 vertex_count = 3;
+  uint32 face_count = 4;
+  uint32 group_count = 5;
+}

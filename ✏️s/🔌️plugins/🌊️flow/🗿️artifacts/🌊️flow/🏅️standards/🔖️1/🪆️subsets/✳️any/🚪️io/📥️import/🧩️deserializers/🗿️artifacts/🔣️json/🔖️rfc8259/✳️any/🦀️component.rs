@@ -6,7 +6,7 @@ pub fn register() {}
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<FlowSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    serde_json::from_value(from.value.clone()).map_err(|e| store::TextError::new(format!("flow<-json: {e}"), dsl::TextSpan::at(1, 1)))
+    serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("flow<-json: {e}"), dsl::TextSpan::at(1, 1)))
 }
 
 pub fn deserialize_text(text: &str) -> Result<FlowSnapshot, store::TextError> {

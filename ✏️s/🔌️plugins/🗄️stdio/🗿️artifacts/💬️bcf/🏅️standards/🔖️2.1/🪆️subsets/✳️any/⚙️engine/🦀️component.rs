@@ -524,8 +524,16 @@ pub fn demo_bcf_snapshot() -> BcfSnapshot {
 pub fn register() {
     crate::artifacts::bcf::io_registry::register();
     ::schema::register_artifact_schema_descriptor(crate::artifacts::bcf::schema::bcf_artifact_schema_descriptor());
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<BcfSnapshot, BcfMutation>(STDIO_BCF_DOCUMENT_SCHEMA));
+}
+
+/// 💡️ Registers `s.stdio.bcf.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema_descriptor` above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::bcf::standards::v2_1::subsets::any::schema::inferences::bcf_artifact_inference_descriptor());
 }
 
 /// 📌️ FG-wave: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per

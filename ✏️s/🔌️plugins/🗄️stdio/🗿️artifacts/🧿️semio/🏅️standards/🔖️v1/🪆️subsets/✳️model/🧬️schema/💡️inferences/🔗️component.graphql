@@ -1,0 +1,17 @@
+# 💡️ Semio model inference schema — position envelope over spatial nodes + elements.
+
+type SemioModelInference {
+  bounds: SemioModelBounds! @state(class: INFERRED)
+}
+
+type SemioModelBounds {
+  min: SemioPoint3!
+  max: SemioPoint3!
+  entityCount: Int!
+}
+
+type SemioPoint3 {
+  x: Float!
+  y: Float!
+  z: Float!
+}

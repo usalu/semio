@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/wav/inference/text.json",
+  "title": "WavInferenceText",
+  "type": "object"
+}

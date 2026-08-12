@@ -1,0 +1,13 @@
+# 💡️ Gltf inference schema — mesh-primitive POSITION-accessor-derived bounding box.
+
+type GltfInference {
+  bounds: GltfBounds! @state(class: INFERRED)
+}
+
+type GltfBounds {
+  min: [Float!]!
+  max: [Float!]!
+  vertexCount: Int!
+  meshCount: Int!
+  primitiveCount: Int!
+}

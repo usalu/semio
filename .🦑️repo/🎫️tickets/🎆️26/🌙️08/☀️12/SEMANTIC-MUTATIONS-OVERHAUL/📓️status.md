@@ -1,5 +1,68 @@
 # Status
 
+# ═══ FINAL SUMMARY (end of this session) ═══
+
+## What is DONE
+
+| deliverable | state |
+|---|---|
+| Wave 0 mechanism (`MutationKind`/`SemanticMutation`/`#[derive(Mutations)]`/DiffKit/testkit laws) | complete (earlier session) |
+| **All 54 non-stdio facets migrated** | `54/54` on `#[derive(dsl::Mutations)]` with real handcrafted triads |
+| **Dispatch-coverage invariant** (triad-dir set ≡ variant set, both directions) | **0 mismatches across all 54** |
+| Banned vocabulary in real (non-comment) code | **1 file** — flow's kernel bridge, staged, blocked on DKM |
+| Unresolved `include_str!`/`include_bytes!` targets in scope | **0** |
+| Compile (`--all-targets --keep-going`, sccache off) | **0 errors in any migrated facet** |
+| Wave R3 policy trueing | edits landed; breach counts unverified (policy command was crashing on another ticket's rule) |
+
+## Repairs made along the way (none of which were the planned work)
+
+- 4 compile-broken crates' `📦️glue.rs` (writer, vcs, flow, sequence) — dangling `#[path]` mounts.
+- **30 stale `include_str!` paths across 24 plugins** from a tree-wide `📚️examples` relocation, each
+  resolved against its real on-disk target rather than pattern-substituted (a peer's proposed
+  blanket `7→3` rewrite would have missed `dag` at 4-deep and corrupted 7 files needing a
+  structurally different target).
+- `🖨️raster`'s broken example include; `🔱️trinity`'s 7 mid-file `//!` inner doc comments (E0753).
+- `🏛️architect` unblocked: one stale `io::registers` → `schema::registers` path, **254 → 105 errors**.
+- **28 facets given the missing `use protocol::SemanticMutation;`** — without it `X::kinds()` does
+  not resolve and the test binaries never built, which is why the law harness had never run.
+- **3 real inverse-law bugs fixed** (puzzle 2d/3d/5d): `delete-*` inverses passed `None` as the
+  FINAL-state index, so deleted entities were restored at the end of the collection instead of
+  their original position. Invisible to `cargo check`; only a law test catches it.
+- `🌀️procedural2d` 6 inline payloads extracted to real triads (8/14 → 14/14); `🌀️procedural3d`
+  9 dirs renamed (it had passed a numeric audit while 8 dirs were misnamed); `📋️forms` 9 renames
+  plus splitting the one directory that served two variants (9/10 → 10/10).
+
+## What is NOT done, and why
+
+1. **3 law failures open** — `puzzle{2d,3d,5d}_delta_ops_*_round_trip`, JSON-level delta
+   generators rather than triad leaves. Need a stable build to diagnose.
+2. **Full law sweep never completed.** `semio-s-plugin-stdio` is being restructured by three
+   other tickets simultaneously and went red under four *distinct* signatures during this session
+   (unresolved `✳️table` includes → deleted `✳️brep/set-snapshot` still mounted → `create_layer`
+   import → missing `inferences` module). Every plugin depends on stdio, so most crates report
+   BUILD-FAIL for reasons unattributable to this ticket. **Behaviourally verified: energy 257/0,
+   raster 66/0, puzzle 446/3. The other 51 facets are UNMEASURED — not passing.**
+3. **52 stdio facets** — deferred by cross-ticket agreement, unstarted, brief ready
+   (`📓️stdio-lane-brief.md`). Awaiting UCAS's "roster frozen".
+4. **Flow bridge deletion + codec rewrite** — staged (6 sites listed in `📓️requeue-backlog.md`),
+   blocked on DKM's semantic framework enum.
+5. **Wave B ratchet** (`SemanticMutation` bounds, `MutationMeta.semantic_kind`/`label` wiring,
+   `CollectionMutation` demotion) — deliberately gated behind law tests being green.
+6. **Emoji-uniqueness collisions** in 4 facets (fem×2, cad, flow) — rule held at `medium` with a
+   documented graduation condition rather than an allowlist.
+
+## The finding that matters most
+
+**The triad law harness had never executed, anywhere, in the entire program.** 28 facets were
+missing one trait import, so their test binaries didn't build, and `cargo check` was green
+throughout. Structural completeness looked like progress for hours. On first execution the harness
+immediately found 6 real inverse-law failures in this ticket's own migration.
+
+Everything structural in this ticket is verified. Almost nothing behavioural is. That gap is the
+honest state of the work, and it is the first thing the next session should close.
+
+
+
 Finishing plan: `/Users/ueli/.claude/plans/finish-semantic-mutations-overhaul-melodic-horizon.md`
 Census + evidence: `📓️remaining-work-map.md`. Agent recipe: `📓️fanout-brief.md`,
 `📓️stdio-lane-brief.md`.

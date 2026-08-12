@@ -58,17 +58,18 @@ pub struct PathRef {
 /// the artifact root, not `⚙️engine` (reloc-g7 revision of that same ticket) — `declaration()` describes
 /// the artifact (kind/schema/io/ownership), it is not engine behaviour.
 ///
-/// ⚠️ DEVIATION from plain move-both: `bootstrap_imperative_runtime()` and `io_registry` did NOT move
-/// here with `declaration()` — `bootstrap_imperative_runtime` has a second caller
-/// (`ImperativeHost::from_snapshot`) inside `⚙️engine`, and `io_registry` is a real module, not a
-/// single-caller helper. Both stayed put and are reached below by their full qualified path instead
-/// (`bootstrap_imperative_runtime` widened only to `pub(crate)` to allow that, not `pub`).
+/// 🔄️ UPDATE (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): `⚙️engine` is deleted.
+/// `bootstrap_imperative_runtime()` and `io_registry` now live in `🚪️io` (multi-caller: this
+/// `declaration()`, the app's `🎚️config`, and the app engine's `ImperativeHost::from_snapshot` — an
+/// artifact must not depend on its app, so both stayed artifact-side rather than moving to the app),
+/// reached below by their full qualified path. `bootstrap_imperative_runtime` stays `pub` (widened from
+/// its former `pub(crate)`) since the app engine module now reaches it by the same long qualified path.
 pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
-    crate::artifacts::imperative::standards::v1::engine::bootstrap_imperative_runtime();
+    crate::artifacts::imperative::standards::v1::subsets::any::io::bootstrap_imperative_runtime();
     semio_framework_plugin::ArtifactDeclaration::builder("s.imperative")
         .schema(crate::artifacts::imperative::schema::imperative_artifact_schema_descriptor())
         .inferences([crate::artifacts::imperative::standards::v1::subsets::any::schema::inferences::imperative_artifact_inference_descriptor()])
-        .composers(crate::artifacts::imperative::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::imperative::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::imperative::ImperativePlayApp>()
         .build()
@@ -188,7 +189,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::imperative::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::imperative::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/stl/inference.json",
+  "title": "StlInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bounds"],
+  "properties": {
+    "bounds": { "$ref": "#/$defs/StlBounds", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "StlBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max", "triangleCount"],
+      "properties": {
+        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "triangleCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

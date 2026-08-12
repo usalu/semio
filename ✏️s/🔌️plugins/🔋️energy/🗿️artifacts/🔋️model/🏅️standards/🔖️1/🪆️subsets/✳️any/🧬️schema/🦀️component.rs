@@ -1,8 +1,30 @@
 //! 🧬️ EnergyModel artifact schema — every field with its state class.
 
-use crate::artifacts::model::{EnergyModelSnapshot, ENERGY_MODEL_ARTIFACT_SCHEMA_ID};
+use crate::artifacts::model::{EnergyModelSnapshot, ENERGY_MODEL_ARTIFACT_SCHEMA_ID, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+
+//#region 🔖️DocumentHelpers
+/// 🌱 Empty persisted snapshot. Relocated from `⚙️engine/🦀️component.rs` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — a pure codec helper over the document
+/// type, not engine behaviour.
+pub fn empty_energy_model_snapshot() -> EnergyModelSnapshot {
+    EnergyModelSnapshot::default()
+}
+
+/// 🏢️ Decode the typed `Model` from a snapshot's opaque JSON body.
+pub fn model_from_snapshot(snapshot: &EnergyModelSnapshot) -> Result<crate::model::Model, String> {
+    serde_json::from_str(&snapshot.model_json).map_err(|e| e.to_string())
+}
+
+/// 📕️ Encode a typed `Model` into snapshot form.
+pub fn snapshot_from_model(model: &crate::model::Model) -> Result<EnergyModelSnapshot, String> {
+    Ok(EnergyModelSnapshot {
+        schema: ENERGY_MODEL_DOCUMENT_SCHEMA.into(),
+        model_json: serde_json::to_string(model).map_err(|e| e.to_string())?,
+    })
+}
+//#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Artifact
 /// 🧬️ Full energy-model artifact across persistent and preview classes (no UI app).
@@ -191,3 +213,28 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: EnergyModelComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_snapshot_matches_schema() {
+        let snapshot = empty_energy_model_snapshot();
+        assert_eq!(snapshot.schema, ENERGY_MODEL_DOCUMENT_SCHEMA);
+    }
+
+    /// 🌱 Relocated from `⚙️engine/🦀️component.rs` — DSL-parse sanity check with zero
+    /// `EnergyModelEngine` dependency, so it survives that struct's deletion.
+    #[test]
+    fn example_fixture_parses() {
+        let document = crate::artifacts::model::dsl::parse_dsl(
+            crate::artifacts::model::dsl::SEMIO_ENERGY_MODEL_EXAMPLE_TEXT,
+        )
+        .expect("parse");
+        assert_eq!(document.schema, ENERGY_MODEL_DOCUMENT_SCHEMA);
+        assert!(!document.model_json.is_empty());
+    }
+}
+//#endregion 🧪️Tests

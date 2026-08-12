@@ -82,6 +82,45 @@ Two plugins carry **36%** of the total in a single directory each (`📸️remod
 
 **Rust constructs that did not map cleanly** (decisions recorded in `📓️b-machine-ts-twin-report.md`): static `Machine::definition()` → explicit `Machine<M>` param; associated types → `MachineSpec["Context"]` bundling; `BitSet<const W>` → dynamic `Set`-backed; `u64` fingerprint → `bigint`; `Result`/`thiserror` → discriminated-union returns; `M::Context: Clone` → runtime `structuredClone` (**a narrower guarantee, documented**); `ActorLogic`/`MachineLogic` markers omitted (redundant under structural typing); `StatechartSchema` omitted (nothing to generate in TS). **WasmBridge deliberately not ported** — the TS side is the *consumer* via kernel's existing plugin-wasm bridge, not a reimplementation.
 
+## Packet results — burn-down 95 → 91, all four cleared by DIRECT evidence
+
+| packet | engine dir | attribution of remaining crate errors | basis |
+|---|---|---|---|
+| `🧱️block/◻2d` (exemplar) | deleted | not ours | errors in `🗄️stdio/📦️glue.rs` + framework `🏪️store`/`📡️spr`/`🗣️dsl`; **0** touching `block2d` |
+| `🌊️flow` | deleted | not ours | `could not compile semio-s-plugin-stdio` |
+| `✒️writer` | deleted | not ours | `could not compile semio-s-plugin-stdio` |
+| `🎬️sequence` | deleted | not ours | `could not compile semio-s-plugin-stdio` |
+
+The last three fail with an **identical single upstream error**, and the compiler *names the failing crate*. Our crates are never compiled at all. That is direct evidence, not inference from file paths — which is the standard adopted after agent reports twice attributed errors by guesswork.
+
+`📕️norm` + `🧱️block` relocation (17 sites): `semio-s-plugin-norm --all-targets` → **green, exit 0**. Reconciled with APA: 45 declarations at artifact root, **0** in `⚙️engine`, **0** `pub fn pilot_languages`, **0** real `engine::declaration` call sites.
+
+## ⚠️ stdio REGRESSED — and this ticket supplied the stale "green"
+
+Declared green (both forms, `Finished`, exit 0) and broadcast to four sessions. **Now red again:**
+
+```
+error: couldn't read `…/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs`
+       No such file or directory (os error 2)
+```
+
+Verified on disk: `✳️brep/…/📄set-snapshot` is gone; that directory now holds a **new vocabulary** (`🔗create-edge ✂️delete-edge 🏗️create-vertex 📍move-vertex 🐚create-shell 💥delete-shell ➰replace-curve`). The rename landed on directories and left the `#[path]` mount behind — **third instance of this pattern today**, after `✳️drawing` twice. Another session's lane; **not to be fixed here**, despite looking like a two-minute edit. Two sessions already talked themselves into that edit and were wrong both times.
+
+> **A verification is a timestamp, not a property.** This ticket broadcast a green that was true when measured and false an hour later, and four sessions may have acted on it. The same decay hit the `🖨️raster` baseline row (absent from the 27 because it was *fixed*, not because it was *unbroken*) and APA's 40-minute-stale line numbers.
+
+## The four instruments that return a confident, well-formed, WRONG answer
+
+| instrument | blind to |
+|---|---|
+| `cargo check` without `--all-targets` | tests/benches/examples — exactly where a vocabulary rename lands |
+| `cargo check` without `RUSTC_WRAPPER=""` | anything sccache serves from a stale cache (`.cargo/config.toml:2` sets it repo-wide) |
+| `cargo check --workspace` without `--keep-going` | **every crate after the first failure** — reported **3** failing crates where the truth was **27 of 96 / 804 errors** |
+| **all of the above**, for a relocated unqualified path | **a silent rebind to a different function** |
+
+The last defeats the whole stack. Across two sessions, **44 of 45** artifact roots contain a shadowing `io_registry` whose `entries()` returns a differently-typed view (`&[&ComposerEntry]` vs `&[ComposerEntry]`). A bare `io_registry::entries()` in a moved body binds to the wrapper: no error, green build, wrong function. **All 17 sites here were qualified** — verified, not assumed.
+
+> **Rule: when relocating code, every unqualified path in the moved body is a hazard until proven otherwise.** Qualify it, or prove no shadow exists in the destination scope. Corollary, learned the hard way by APA: **a stopped pass does not leave nothing behind** — halting one mid-flight still stranded two `pub fn pilot_languages`.
+
 ## Two verification rules that override convenience
 
 **1. `RUSTC_WRAPPER=""` on every cargo command, in addition to `--all-targets`.** This repo sets `rustc-wrapper = "sccache"` at `.cargo/config.toml:2`, so **the default state of the repo is sccache-on**. You are not forgetting to unset something; you are failing to set something the repo silently sets for you. APA (#2549) retracted three "compiler-verified at 0 errors" claims (`🔱️trinity`, `🌍️gis`, `🏗️fem`) that came from this configuration — and their proper re-run *died before reaching trinity at all*, so the false green had been reporting success for a crate the compiler never compiled.

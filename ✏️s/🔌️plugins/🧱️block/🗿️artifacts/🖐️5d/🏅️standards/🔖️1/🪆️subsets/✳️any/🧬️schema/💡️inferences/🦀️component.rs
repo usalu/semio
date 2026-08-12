@@ -15,6 +15,7 @@ use crate::artifacts::block5d::Block5dSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 
 use super::bounds::{compute_block5d_bounds, Block5dBounds};
 
@@ -55,6 +56,42 @@ impl ArtifactInferrer for crate::artifacts::block5d::standards::v1::subsets::any
 }
 //#endregion 🔖️ArtifactInferrer
 
+//#region 🔖️PuzzleCatalogFragment
+/// 🌉️ Maps this `PartKind` definition into the `s/plugin/puzzle` 5d catalog shape
+/// (`Puzzle5dKindCatalogs`: `parts`/`grips`/`fasteners`/`ropes`), the seam puzzle imports through its
+/// `Kit×Type` media port. Block owns no fastener/rope-kind rows, so those arrays stay empty here.
+pub fn puzzle5d_catalog_fragment(definition: &Block5dSnapshot) -> Value {
+    let grips: Vec<Value> = definition
+        .grips
+        .iter()
+        .map(|grip| {
+            json!({
+                "gripKind": grip.grip_kind,
+                "2d": { "angle": grip.angle, "gripKind": grip.grip_kind, "radius": grip.radius_2d },
+                "3d": { "position": grip.position, "direction": grip.direction, "radius": grip.radius_3d },
+            })
+        })
+        .collect();
+    let mesh_url = definition.representations.first().and_then(|representation| representation.mesh_url.clone());
+    let part = json!({
+        "id": definition.part_kind.id,
+        "name": definition.part_kind.name,
+        "label": definition.part_kind.label,
+        "meshUrl": mesh_url,
+        "grips": grips,
+    });
+    let grip_kinds: Vec<Value> = definition.grip_kinds.iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.label, "color": kind.color, "defaultRopeKind": kind.default_rope_kind })).collect();
+    json!({
+        "schema": "manifest",
+        "parts": [part],
+        "grips": grip_kinds,
+        "fasteners": Vec::<Value>::new(),
+        "ropes": Vec::<Value>::new(),
+        "kindCompatibility": definition.compatibility.iter().map(|rule| json!({ "source": rule.source, "target": rule.target, "bidirectional": rule.bidirectional })).collect::<Vec<_>>(),
+    })
+}
+//#endregion 🔖️PuzzleCatalogFragment
+
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.block.block5d.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `block5d_artifact_schema_descriptor`'s registration.
@@ -76,7 +113,7 @@ pub fn block5d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescr
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::block5d::Block5dGripTemplate;
+    use crate::artifacts::block5d::{Block5dGripTemplate, BLOCK_5D_SCHEMA};
     use crate::BlockKindIdentity;
     use protocol::Inference;
 
@@ -116,5 +153,16 @@ mod tests {
         assert_eq!(inferred.bounds.vertex_count, 2);
     }
     //#endregion 🧪️InferenceLaws
+
+    //#region 🧪️PuzzleCatalogFragment
+    #[test]
+    fn puzzle5d_catalog_fragment_maps_grips() {
+        let mut definition = Block5dSnapshot { schema: BLOCK_5D_SCHEMA.into(), part_kind: BlockKindIdentity { id: "left".into(), name: "left".into(), label: "Left".into(), ..Default::default() }, ..Block5dSnapshot::default() };
+        definition.grips.push(Block5dGripTemplate { id: "g0".into(), grip_kind: "b-l".into(), angle: -1.57, radius_2d: 0.36, position: [4.05, 4.68, 3.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.36 });
+        let fragment = puzzle5d_catalog_fragment(&definition);
+        assert_eq!(fragment["parts"][0]["id"], "left");
+        assert_eq!(fragment["parts"][0]["grips"][0]["gripKind"], "b-l");
+    }
+    //#endregion 🧪️PuzzleCatalogFragment
 }
 //#endregion 🧪️Tests

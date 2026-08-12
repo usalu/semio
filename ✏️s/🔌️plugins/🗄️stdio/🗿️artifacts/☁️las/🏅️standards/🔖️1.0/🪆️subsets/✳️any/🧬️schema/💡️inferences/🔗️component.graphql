@@ -1,0 +1,15 @@
+# 💡️ Las inference schema — header-declared bounding box and point count.
+
+type LasInference {
+  bounds: LasBounds! @state(class: INFERRED)
+}
+
+type LasBounds {
+  minX: Float!
+  minY: Float!
+  minZ: Float!
+  maxX: Float!
+  maxY: Float!
+  maxZ: Float!
+  pointCount: Int!
+}

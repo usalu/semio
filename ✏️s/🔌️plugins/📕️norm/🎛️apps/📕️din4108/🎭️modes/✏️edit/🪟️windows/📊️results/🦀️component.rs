@@ -1,6 +1,6 @@
 //! 📊️ DIN 4108 play app — the results window: every computed compliance check, one line each.
 
-use crate::artifacts::din4108::engine::Din4108Family;
+use crate::apps::din4108::Din4108Family;
 use crate::document::NormHost;
 use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
 

@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.ply.inference
+extension ply.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.ply.inference" NL
+body = payload NL?
+payload = OCTET+

@@ -2,7 +2,7 @@
 //! evaluates into config, `setLocale` is config-only (was ephemeral `ViewModel::locale`).
 
 use crate::apps::imperative::config::ImperativeConfigMutation;
-use crate::artifacts::imperative::engine::ImperativeHost;
+use crate::apps::imperative::engine::ImperativeHost;
 use crate::artifacts::imperative::mutations::ImperativeMutation;
 use crate::artifacts::imperative::ImperativeSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

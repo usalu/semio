@@ -1,0 +1,27 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/dwg/ac1024/inference.json",
+  "title": "DwgInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["structure"],
+  "properties": {
+    "structure": { "$ref": "#/$defs/DwgStructure", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "DwgStructure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["byteCount", "sectionCount", "pageCount", "decodedPageCount", "errorPageCount", "declaredTotalSize", "codepage", "version"],
+      "properties": {
+        "byteCount": { "type": "integer", "minimum": 0 },
+        "sectionCount": { "type": "integer", "minimum": 0 },
+        "pageCount": { "type": "integer", "minimum": 0 },
+        "decodedPageCount": { "type": "integer", "minimum": 0 },
+        "errorPageCount": { "type": "integer", "minimum": 0 },
+        "declaredTotalSize": { "type": "integer", "minimum": 0 },
+        "codepage": { "type": "integer", "minimum": 0 },
+        "version": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.stdio.binary.inference;
+
+// 💡️ binary inference schema — a raw opaque byte blob's honest real extent.
+
+message BinaryInference {
+  // @state inferred
+  BinaryExtent extent = 1;
+}
+
+message BinaryExtent {
+  uint64 byte_length = 1;
+  bool is_empty = 2;
+  string content_digest = 3;
+}

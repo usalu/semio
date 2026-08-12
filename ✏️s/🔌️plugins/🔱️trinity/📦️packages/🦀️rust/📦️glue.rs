@@ -21,20 +21,21 @@ extern crate semio_framework_schema as schema;
 #[allow(clippy::unnecessary_wraps)]
 
 //#region 🔤️Jack kernel
-// 🫀️ Cross-artifact query-language kernel, physically homed under `jack`'s own artifact engine
+// 🫀️ Cross-artifact query-language kernel, physically homed under `jack`'s own artifact `🧬️schema`
 // (the DSL it implements is literally the "jack query language" per every file's own docstring)
 // but consumed unchanged as `crate::{ast,lexer,executor,language_service}` by both the `jack` app
-// and the `rewrite` artifact's `apply_rule` — see `🗿️artifacts/♻️rewrite/…/⚙️engine/🦀️component.rs`
-// header comment, which names this exact sharing relationship. Moved
+// and the `rewrite` artifact's `apply_rule` — see `🗿️artifacts/♻️rewrite/…/🧬️schema/🦀️component.rs`'s
+// `🔖️RuleApplication` region, which names this exact sharing relationship (rehomed off the deleted
+// `⚙️engine` dir by `26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES`). Moved
 // `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`; module names kept stable at crate root so no call
 // site elsewhere in the crate needed to change.
-#[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🌳️ast/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🦀️component.rs"]
 pub mod ast;
-#[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔤️lexer/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔤️lexer/🦀️component.rs"]
 pub mod lexer;
-#[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🧮️executor/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🦀️component.rs"]
 pub mod executor;
-#[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🗣️language-service/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗣️language-service/🦀️component.rs"]
 pub mod language_service;
 pub use language_service as core;
 //#endregion 🔤️Jack kernel
@@ -52,8 +53,6 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -327,9 +326,6 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v1::engine::*;
-        }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
@@ -364,8 +360,6 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -677,9 +671,6 @@ pub mod artifacts {
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod engine {
-            pub use super::standards::v1::engine::*;
         }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;

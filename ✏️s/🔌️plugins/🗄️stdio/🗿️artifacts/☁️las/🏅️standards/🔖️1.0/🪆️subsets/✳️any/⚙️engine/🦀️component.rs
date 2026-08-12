@@ -451,6 +451,7 @@ pub fn demo_las_snapshot() -> LasSnapshot {
 pub fn register() {
     crate::artifacts::las::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<LasSnapshot, LasMutation>(STDIO_LAS_DOCUMENT_SCHEMA));
@@ -522,6 +523,13 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.las`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::las::schema::las_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.stdio.las.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::las::standards::v1_0::subsets::any::schema::inferences::las_artifact_inference_descriptor());
 }
 
 /// 📇️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION:

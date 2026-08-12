@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.stdio.semio.video.inference;
+
+// 💡️ Semio video inference schema — real per-stream max-pts elapsed time.
+
+message SemioVideoInference {
+  // @state inferred
+  SemioVideoDuration duration = 1;
+}
+
+message SemioVideoDuration {
+  double duration_seconds = 1;
+  uint32 stream_count = 2;
+  uint32 sample_count = 3;
+}

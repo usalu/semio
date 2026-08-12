@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/mp4/inference/text.json",
+  "title": "Mp4InferenceText",
+  "type": "object"
+}

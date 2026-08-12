@@ -1,0 +1,11 @@
+# 💡️ mp3 inference schema — real MPEG-1/2/2.5 Layer III frame-header-derived playback duration.
+
+type Mp3Inference {
+  duration: Mp3Duration! @state(class: INFERRED)
+}
+
+type Mp3Duration {
+  durationSeconds: Float!
+  frameCount: Int!
+  channelCount: Int!
+}

@@ -1,0 +1,11 @@
+# 💡️ mp4 inference schema — real ISO-BMFF `stts`-derived (per-track sample-table) duration.
+
+type Mp4Inference {
+  duration: Mp4Duration! @state(class: INFERRED)
+}
+
+type Mp4Duration {
+  durationSeconds: Float!
+  trackCount: Int!
+  sampleCount: Int!
+}

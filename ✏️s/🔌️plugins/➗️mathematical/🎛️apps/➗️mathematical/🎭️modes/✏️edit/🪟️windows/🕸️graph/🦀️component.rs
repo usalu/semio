@@ -1,6 +1,6 @@
 //! 🕸️ Mathematical play app — the graph window: the editable node-graph canvas.
 
-use crate::artifacts::mathematical::engine::{empty_component_scene, workflow_json};
+use crate::apps::mathematical::{empty_component_scene, workflow_json};
 use crate::artifacts::mathematical::{MathematicalCamera, MathematicalGraph};
 use semio_framework_plugin::{LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 

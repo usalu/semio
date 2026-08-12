@@ -4,15 +4,16 @@ use semio_framework_plugin::Plugin;
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) replaces the deleted `register_norm_exports`
-/// `.setup()` fan-out with fifteen data declarations, one per norm family; `.setup()` survives here
-/// for exactly one call — `register_app_schema()`, which registers the shared `NormConfig`
-/// config/presence schema every one of the fifteen `PlayApp`s uses, an app-scope concern
-/// `ArtifactDeclaration` has no field for by design (see that struct's own doc).
+/// `.setup()` fan-out with fifteen data declarations, one per norm family. `.setup()` is gone
+/// entirely (W1d): the one remaining reason, the shared `NormConfig` config/presence schema every
+/// one of the fifteen `PlayApp`s uses, is now an `ArtifactApp::app_schema()` override on each of the
+/// fifteen — all fifteen return the identical `crate::config::schema::app_schema_descriptor()`
+/// literal, and `register_document_app` (called once per `.register_document_app::<…>()` below)
+/// registers it, mirroring the `🗒️note` exemplar exactly.
 pub fn plugin() -> Plugin {
     Plugin::builder("norm")
         .label("Norm")
         .version("0.1.0")
-        .setup(crate::config::schema::register_app_schema)
         .artifact(crate::artifacts::din4108::declaration())
         .artifact(crate::artifacts::din16798::declaration())
         .artifact(crate::artifacts::din18599::declaration())

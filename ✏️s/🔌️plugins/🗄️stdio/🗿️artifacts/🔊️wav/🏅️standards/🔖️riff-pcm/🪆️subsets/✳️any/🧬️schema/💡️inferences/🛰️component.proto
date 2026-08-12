@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.s.stdio.wav.inference;
+
+// 💡️ wav inference schema — real RIFF/WAVE `fmt ` + decoded `data` sample-count playback duration.
+
+message WavInference {
+  // @state inferred
+  WavDuration duration = 1;
+}
+
+message WavDuration {
+  double duration_seconds = 1;
+  uint64 frame_count = 2;
+  uint32 bits_per_sample = 3;
+}

@@ -1,0 +1,32 @@
+glue files scanned: 100
+#[path] mounts resolved: 8145
+DANGLING: 14
+
+node_modules/@semio-tech/framework-renderer-wgpu/📦️glue.rs:25
+    -> ../../../../🧱️elements/Dock/🧊️component.rs
+node_modules/@semio-tech/framework-renderer-wgpu/📦️glue.rs:28
+    -> ../../../../🧱️elements/EngineCanvas/🧊️component.rs
+node_modules/@semio-tech/framework-renderer-wgpu/📦️glue.rs:31
+    -> ../../../../🧱️elements/Interpreter/🧊️component.rs
+node_modules/@semio-tech/framework-renderer-wgpu/📦️glue.rs:34
+    -> ../../../../🧱️elements/ProgramBridge/🧊️component.rs
+node_modules/@semio-tech/framework-renderer-wgpu/📦️glue.rs:41
+    -> ../../../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🦀️hosts.rs
+node_modules/@semio-tech/framework-renderer-wgpu/📦️glue.rs:45
+    -> ../../../../🧱️elements/Scenes/🧊️component.rs
+node_modules/@semio-tech/framework-renderer-wgpu/📦️glue.rs:48
+    -> ../../../../🧱️elements/Shell/🧊️component.rs
+node_modules/@semio-tech/framework-renderer-wgpu/📦️glue.rs:51
+    -> ../../../../🧱️elements/IconRenderHost/🧊️component.rs
+node_modules/@semio-tech/framework-surface-rs/📦️glue.rs:9
+    -> ../../🎨️paint/🦀️component.rs
+node_modules/@semio-tech/framework-surface-rs/📦️glue.rs:12
+    -> ../../🏔️terrain/🦀️component.rs
+node_modules/@semio-tech/framework-surface-rs/📦️glue.rs:15
+    -> ../../🕸️node-graph/🦀️component.rs
+node_modules/@semio-tech/framework-surface-rs/📦️glue.rs:18
+    -> ../../🗺️tiled-map/🦀️component.rs
+node_modules/@semio-tech/framework-editor-rs/📦️glue.rs:5
+    -> ../../🦀️component.rs
+node_modules/@semio-tech/framework-schema/📦️glue.rs:6
+    -> ../../🦀️component.rs

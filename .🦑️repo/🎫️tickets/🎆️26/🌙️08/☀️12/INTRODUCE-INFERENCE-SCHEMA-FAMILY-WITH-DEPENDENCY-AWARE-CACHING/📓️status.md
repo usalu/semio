@@ -1,5 +1,35 @@
 # Status
 
+## ✅✅ stdio is GREEN — S1a fully verified (files + mounts + registration + gate)
+
+```
+RUSTC_WRAPPER="" cargo check -p semio-s-plugin-stdio --all-targets
+EXIT=0 · total errors: 0 · "could not find `inferences` in `schema`": 0
+```
+All 8 S1a subsets mounted, **32/32 `#[path]` targets resolve on disk**, 4 mounts each (root + `📝️text` + `💾️binary` + slug). Slugs: any→`🏷️kind`, animation/audio→`⏱duration`, cad→`📦bounds`, document→`🧾outline`, flow/graph→`🧭topology`, image→`📐dimensions`.
+
+### 🔻 Two failures of mine on the way here — both recorded in full
+
+**1. My "all 8 mounted" report was true when made, then silently became false.** I verified the mounts at 23:30 and reported them. At 23:35 glue.rs was rewritten by a concurrent writer and **all 8 mounts were gone** — confirmed by grep returning 0 for a pattern that had returned 8 five minutes earlier, with the file's mtime 5 seconds old at the time of checking. The uncommitted mounts were clobbered wholesale.
+
+*This is the live-predicate lesson in its nastiest form: not a stale report I trusted, but **my own correct verification decaying underneath me**. On a file with a concurrent whole-file rewriter, verification has a shelf life measured in minutes.* Hence the new rule below.
+
+**2. I corrupted glue.rs and had to revert it.** My first insertion script matched subsets with a regex that did not require `🧿️semio`, so it also matched every non-semio artifact's `🪆️subsets/✳️any/…/🧬️mutations` block — **inserting 47 blocks instead of 8**, most of them pointing non-semio artifacts at semio paths.
+
+Caught it immediately (the script printed its insert list). Reverted surgically rather than with git: removed every 16-line `pub mod inferences` block containing a `🧿️semio…💡️inferences` path, then verified restoration three ways — semio inference refs back to **0**, total `💡️inferences` refs back to exactly **76**, and `git diff HEAD` showing **zero** `🧿️semio.*💡️inferences` lines (the remaining ±260 lines are other sessions' uncommitted work, untouched). Then re-ran with a strict `🧿️semio/🏅️standards/🔖️v1/…` matcher and a **dry run that aborts unless the count is exactly 8**.
+
+*Lessons, both now standing practice: **dry-run any multi-site scripted edit and assert the expected count before writing**; and **never reach for git to undo a mistake in this tree** — a targeted structural revert is both safer and permitted, where `git checkout` is forbidden and would have destroyed other sessions' uncommitted work in the same file.*
+
+### 📏 NEW DEFINITION OF DONE — applies to every remaining batch
+
+A batch is complete only when **all four** hold, checked by the coordinator, not reported by the agent:
+1. files exist on disk (per-subset leaf counts)
+2. glue mounts exist **and every `#[path]` resolves** (`[ -f "$dir/$p" ]` per path, not a grep for the block)
+3. registration call sites exist
+4. `RUSTC_WRAPPER="" cargo check -p <crate> --all-targets` shows **no error naming that batch's files**
+
+And because of failure 1 above: **re-check (2) immediately before declaring done, and again after any other session touches glue.rs.** "Agent said mounted" and "was mounted five minutes ago" are both insufficient.
+
 ## 🔴 ALL PLUGIN GATES BLOCKED — `semio-s-plugin-stdio` is red, and every plugin depends on it
 
 Measured directly (`RUSTC_WRAPPER="" … --all-targets`), state has moved twice in ~20 minutes:

@@ -1586,7 +1586,14 @@ impl ArtifactApp for Puzzle5dPlayApp {
     type PresenceMutation = Puzzle5dPresenceMutation;
     type Command = Puzzle5dCommand;
 
-
+    /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old
+    /// `crate::apps::puzzle5d::config::schema::register_app_schema()` self-registering call, which
+    /// puzzle's plugin root used to reach `.setup()` for — `register_document_app`/`document_app`
+    /// now call this automatically the moment `Puzzle5dPlayApp` is bound to a plugin, exactly like
+    /// `🗒️note`'s own `app_schema` override.
+    fn app_schema() -> Option<artifact_schema::AppSchemaDescriptor> {
+        Some(crate::apps::puzzle5d::config::schema::app_schema_descriptor())
+    }
 
     fn initial_snapshot() -> Puzzle5dPlaySnapshot {
         Puzzle5dPlaySnapshot(serde_json::to_value(default_document()).unwrap_or(Value::Null))

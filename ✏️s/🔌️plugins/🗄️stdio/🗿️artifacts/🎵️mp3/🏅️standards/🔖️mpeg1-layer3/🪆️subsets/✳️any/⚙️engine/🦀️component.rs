@@ -151,8 +151,11 @@ fn bitrate_kbps(version_id: u8, layer: u8, index: u8) -> Option<u16> {
     Some(table[index as usize])
 }
 
-/// 📐️ Sample rate table (Hz), keyed by `(version_id, index)`. Index `3` is reserved.
-fn sample_rate_hz(version_id: u8, index: u8) -> Option<u32> {
+/// 📐️ Sample rate table (Hz), keyed by `(version_id, index)`. Index `3` is reserved. `pub(crate)`
+/// (not private) so `🧬️schema/💡️inferences/⏱duration/🦀️component.rs` can reuse the same real
+/// table for its duration derivation rather than re-declaring it (ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
+pub(crate) fn sample_rate_hz(version_id: u8, index: u8) -> Option<u32> {
     match (version_id, index) {
         (3, 0) => Some(44_100),
         (3, 1) => Some(48_000),

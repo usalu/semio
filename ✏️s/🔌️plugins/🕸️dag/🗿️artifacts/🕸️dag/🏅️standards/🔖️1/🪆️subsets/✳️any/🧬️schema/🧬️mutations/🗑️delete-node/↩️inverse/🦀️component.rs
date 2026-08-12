@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteNode` — reconstructs a `create-node` of the captured BASE node, then
 //! re-`connect-nodes`s every edge BASE shows touching it (severed cascade). Missing target ⇒
 //! `Vec::new()`.
-use crate::artifacts::dag::engine::split_endpoint;
+use crate::artifacts::dag::schema::split_endpoint;
 use crate::artifacts::dag::mutations::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
 

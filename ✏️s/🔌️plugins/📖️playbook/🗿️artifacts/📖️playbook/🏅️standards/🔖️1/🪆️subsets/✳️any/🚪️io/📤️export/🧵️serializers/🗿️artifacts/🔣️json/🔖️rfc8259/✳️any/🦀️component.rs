@@ -24,10 +24,11 @@ fn serde_to_json_value(value: &serde_json::Value) -> JsonValue {
     }
 }
 
-pub fn serialize(snapshot: &PlaybookSnapshot) -> Result<JsonSnapshot, String> {
-    let value = serde_json::to_value(snapshot).map_err(|e| e.to_string())?;
-    Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: serde_to_json_value(&value) })
+pub fn serialize(snapshot: &PlaybookSnapshot) -> Result<JsonSnapshot, store::TextError> {
+    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
+    let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    Ok(JsonSnapshot::from_value(value))
 }
 pub fn serialize_bytes(snapshot: &PlaybookSnapshot) -> Result<Vec<u8>, String> {
-    Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())
+    Ok(write_json_pretty(&serialize(snapshot).map_err(|e| e.to_string())?.value).into_bytes())
 }

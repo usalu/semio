@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.dxf.inference
+extension stdio.dxf.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.dxf.inference" NL
+body = payload NL?
+payload = OCTET+

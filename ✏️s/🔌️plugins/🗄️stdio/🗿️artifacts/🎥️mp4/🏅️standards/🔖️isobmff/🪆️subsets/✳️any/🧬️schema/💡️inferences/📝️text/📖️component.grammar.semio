@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.mp4.inference
+extension mp4.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.mp4.inference" NL
+body = payload NL?
+payload = OCTET+

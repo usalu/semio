@@ -1,8 +1,8 @@
-//! 🌡️ DIN 4108 play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and
+//! ð¡ï¸ DIN 4108 play app â the `ArtifactApp` impl (dispatch-only), the aggregated command enum and
 //! the manifest stitch.
 //!
-//! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the two surfaces
-//! in `🎭️modes/✏️edit/🪟️windows/*`, panel trees in `📌️panels/*`, compliance compute in
+//! Everything substantive lives in a taxonomy node: command bodies in `ð®ï¸commands/*`, the two surfaces
+//! in `ð­ï¸modes/âï¸edit/ðªï¸windows/*`, panel trees in `ðï¸panels/*`, compliance compute in
 //! `crate::artifacts::din4108::engine`, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
@@ -10,7 +10,7 @@ use crate::apps::din4108::commands::{evaluate, selected_check, set_snapshot};
 use crate::apps::din4108::modes::edit as edit_mode;
 use crate::apps::din4108::modes::edit::windows::{inputs, results};
 use crate::apps::din4108::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::artifacts::din4108::engine::Din4108Family;
+use crate::apps::din4108::Din4108Family;
 use crate::artifacts::din4108::op::Din4108Mutation;
 use crate::artifacts::din4108::Din4108Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
@@ -18,22 +18,22 @@ use crate::presence::{NormPresence, NormPresenceMutation};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
 use store::EngineHandles;
 
-//#region 🔖️Constants
+//#region ðï¸Constants
 pub const APP_ID: &str = "norm-din-4108-play";
-/// 🏷️ This standard's display name — the app label, its artifact-kind name and the catalogue headline.
+/// ð·ï¸ This standard's display name â the app label, its artifact-kind name and the catalogue headline.
 pub const LABEL: &str = "DIN 4108";
-/// 🆔️ The playground/registry variant key — every body key, window id and schema is derived from it.
+/// ðï¸ The playground/registry variant key â every body key, window id and schema is derived from it.
 pub const VARIANT: &str = "din4108";
 pub const DOCUMENT_SCHEMA: &str = "semio.norm.din4108/v1";
 pub const CONFIG_SCHEMA: &str = "config.norm.din4108";
-//#endregion 🔖️Constants
+//#endregion ðï¸Constants
 
-//#region 🔖️Commands
+//#region ðï¸Commands
 semio_framework_plugin::app_commands! {
-    /// 🎯️ `Din4108PlayApp::Command` — the SOLE dispatch surface for this app's own behavior, covering every
+    /// ð¯ï¸ `Din4108PlayApp::Command` â the SOLE dispatch surface for this app's own behavior, covering every
     /// action `create_din4108_app` declares. Row order IS the binary variant ordinal (appending is safe,
     /// reordering is a wire-format break) and each row's two literals are the camelCase manifest action
-    /// id and the kebab `#[dsl(key)]` wire keyword respectively — both copied verbatim off the
+    /// id and the kebab `#[dsl(key)]` wire keyword respectively â both copied verbatim off the
     /// pre-migration enum, never derived from one another.
     pub enum Din4108Command for Din4108Snapshot, Din4108Mutation, NormConfig, NormConfigMutation {
         "setSnapshot" as "set-snapshot" => set_snapshot::ReplaceSnapshot,
@@ -41,9 +41,9 @@ semio_framework_plugin::app_commands! {
         "setSelectedCheckIndex" as "selected-check" => selected_check::SetSelectedCheckIndex,
     }
 }
-//#endregion 🔖️Commands
+//#endregion ðï¸Commands
 
-//#region 🔖️Din4108PlayApp
+//#region ðï¸Din4108PlayApp
 #[derive(Default)]
 pub struct Din4108PlayApp;
 
@@ -64,6 +64,12 @@ impl ArtifactApp for Din4108PlayApp {
 
     fn config_schema() -> &'static str {
         CONFIG_SCHEMA
+    }
+
+    /// 📎️ All fifteen norm apps share NormConfig (see crate::config::schema doc) — one
+    /// AppSchemaDescriptor for all fifteen, registered idempotently by whichever app binds first.
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::config::schema::app_schema_descriptor())
     }
 
     fn initial_snapshot() -> Din4108Snapshot {
@@ -94,24 +100,47 @@ impl ArtifactApp for Din4108PlayApp {
         }
     }
 
-    //#region 🔖️MediaPorts
-    /// 🎞️ `"report:out"`/`"document:out"` — see `crate::app_surface::export_media`, which all fifteen apps
+    //#region ðï¸MediaPorts
+    /// ðï¸ `"report:out"`/`"document:out"` â see `crate::app_surface::export_media`, which all fifteen apps
     /// share (overriding this method shadows the SDK default entirely, so `"document:out"` is
     /// re-implemented there rather than left unreachable).
     fn export_media(port: &str, doc: &ArtifactView<'_, Din4108Snapshot>) -> Result<Media, MediaError> {
         crate::app_surface::export_media::<Din4108Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
     }
 
-    /// 🎞️ `"model:in"`/`"document:in"` — see `crate::app_surface::import_media`.
+    /// ðï¸ `"model:in"`/`"document:in"` â see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Din4108Snapshot>) -> Result<Emit<Din4108Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
         let base = doc.snapshot.clone();
         crate::app_surface::import_media(port, media, move |snapshot: Din4108Snapshot| Din4108Mutation::from_snapshot(&base, &snapshot))
     }
-    //#endregion 🔖️MediaPorts
+    //#endregion ðï¸MediaPorts
 }
-//#endregion 🔖️Din4108PlayApp
+//#endregion ðï¸Din4108PlayApp
 
-//#region 🔖️Manifest
+//#region 🧩️ComplianceFamily
+/// 🧩️ Headless `NormFamily` binding (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
+/// relocated verbatim from the deleted `⚙️engine`. This is stateful/host-facing behaviour, so it
+/// belongs to the app that edits the artifact, not the artifact's own `🧬️schema`.
+pub struct Din4108Family;
+
+impl crate::document::NormFamily for Din4108Family {
+    type Document = Din4108Snapshot;
+    type Mutation = Din4108Mutation;
+
+    fn family_id() -> crate::document::NormFamilyId {
+        crate::document::NormFamilyId::Din4108
+    }
+
+    fn evaluate(document: &Din4108Snapshot) -> crate::document::CheckReport {
+        crate::artifacts::din4108::standards::v1::subsets::any::schema::inferences::evaluate(document)
+    }
+}
+
+pub type Host = crate::document::NormHost<Din4108Family>;
+//#endregion 🧩️ComplianceFamily
+
+
+//#region ðï¸Manifest
 pub fn create_din4108_app() -> App {
     App::from_builder(
         App::builder(APP_ID, LocalizedLabel::data(LABEL))
@@ -128,16 +157,16 @@ pub fn create_din4108_app() -> App {
             .panel_tab_def(inspection_panel::definition())
             .mutation("setSnapshot", LocalizedLabel::native("Set Snapshot", "Dokument setzen"))
             .view_action("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"))
-            .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "Ausgewählte Prüfung setzen"))
+            .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "AusgewÃ¤hlte PrÃ¼fung setzen"))
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
     .example("default", LocalizedLabel::native("Default", "Standard"), serde_json::to_string(&Din4108Snapshot::default()).expect("default document serializes"), "file")
     .workflow(VARIANT, LABEL, "compliance")
 }
-//#endregion 🔖️Manifest
+//#endregion ðï¸Manifest
 
-//#region 🧪️Testkit
+//#region ð§ªï¸Testkit
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
@@ -150,7 +179,7 @@ pub(crate) mod testkit {
         sdk_new_app::<Din4108PlayApp>()
     }
 
-    /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
+    /// ð§¬ï¸ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub fn app_with_registry() -> NormApp {
         new_app_with_registry::<Din4108PlayApp>(create_din4108_app)
     }
@@ -163,16 +192,16 @@ pub(crate) mod testkit {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
-//#endregion 🧪️Testkit
+//#endregion ð§ªï¸Testkit
 
-//#region 🧪️Tests
+//#region ð§ªï¸Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use semio_framework_plugin::PluginApp;
 
-    //#region 🔖️CommandSurface
-    /// 🎯️ One value per `Din4108Command` row — the whole-command-surface laws below iterate it, so a new row
+    //#region ðï¸CommandSurface
+    /// ð¯ï¸ One value per `Din4108Command` row â the whole-command-surface laws below iterate it, so a new row
     /// that is not listed here fails `command_ids_cover_every_row`.
     fn every_command() -> Vec<Din4108Command> {
         vec![
@@ -193,7 +222,7 @@ mod tests {
         assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex"]);
     }
 
-    /// 🧷️ The permanent wire guard: every row round-trips text↔binary and prints under its own declared
+    /// ð§·ï¸ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
     /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
     #[test]
     fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
@@ -205,10 +234,10 @@ mod tests {
         }
     }
 
-    /// 🧷️ Pins the exact pre-migration bytes for the rows whose shape the `app_commands!` decomposition
-    /// could have silently rewritten — the fieldless `Evaluate` (was a unit variant) and both `Option`
+    /// ð§·ï¸ Pins the exact pre-migration bytes for the rows whose shape the `app_commands!` decomposition
+    /// could have silently rewritten â the fieldless `Evaluate` (was a unit variant) and both `Option`
     /// cases of `SetSelectedCheckIndex`. Hex copied verbatim from the ticket's
-    /// `🧪️wire-baseline-before.txt`; these bytes are identical for all fifteen norm apps because none
+    /// `ð§ªï¸wire-baseline-before.txt`; these bytes are identical for all fifteen norm apps because none
     /// of the three payload shapes involves the per-standard `Din4108Snapshot`.
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
@@ -217,9 +246,9 @@ mod tests {
         assert_eq!(hex(&Din4108Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01020001000402");
         assert_eq!(hex(&Din4108Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01020000");
     }
-    //#endregion 🔖️CommandSurface
+    //#endregion ðï¸CommandSurface
 
-    //#region 🔖️Manifest
+    //#region ðï¸Manifest
     #[test]
     fn the_manifest_stitches_every_taxonomy_node() {
         let definition = create_din4108_app().definition;
@@ -232,7 +261,7 @@ mod tests {
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::app_surface::artifact_kind_id(VARIANT)));
     }
 
-    /// 🔌️ Port recipe: every norm app declares `model:in`/`report:out` alongside the implicit document
+    /// ðï¸ Port recipe: every norm app declares `model:in`/`report:out` alongside the implicit document
     /// ports, and `report:out` is pinned to this family's already-declared artifact kind.
     #[test]
     fn declares_model_in_and_report_out_ports() {
@@ -255,15 +284,25 @@ mod tests {
             assert!(!testkit::render(&mut app, body_key).contains("Unknown body"), "{body_key} must render its own node");
         }
     }
-    //#endregion 🔖️Manifest
+    //#endregion ðï¸Manifest
 
-    //#region 🔖️Behavior
+    //#region ðï¸Behavior
     #[test]
     fn set_snapshot_commits_a_host_backed_report() {
         let mut app = testkit::new_app();
         testkit::dispatch(&mut app, Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Din4108Snapshot::default() }));
         let host = NormHost::<Din4108Family>::from_document(app.snapshot().expect("projection"));
         assert!(!host.report().checks.is_empty());
+    }
+
+    #[test]
+    fn host_updates_report_after_document_replace() {
+        let mut host = Host::default();
+        assert!(host.report().all_pass());
+        let mut document = Din4108Snapshot::default();
+        document.layers.clear();
+        host.replace_document(document);
+        assert!(!host.report().all_pass());
     }
 
     #[test]
@@ -274,7 +313,7 @@ mod tests {
         assert_eq!(before, app.snapshot().expect("projection"));
     }
 
-    /// 🧮️ `setSelectedCheckIndex` is config-only — it must dispatch cleanly and never touch the document.
+    /// ð§®ï¸ `setSelectedCheckIndex` is config-only â it must dispatch cleanly and never touch the document.
     #[test]
     fn selected_check_index_is_a_config_only_edit() {
         let mut app = testkit::new_app();
@@ -284,7 +323,7 @@ mod tests {
         assert_eq!(before, app.snapshot().expect("projection"), "a config-only command must never mutate the document");
     }
 
-    /// 🧬️ Kind-discipline wrapper: the real registry enforces that View actions never emit document
+    /// ð§¬ï¸ Kind-discipline wrapper: the real registry enforces that View actions never emit document
     /// operations.
     #[test]
     fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
@@ -302,7 +341,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("projection"), Din4108Snapshot::default());
     }
 
-    /// 🎞️ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
+    /// ðï¸ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
     #[test]
     fn report_out_exports_the_computed_check_report() {
         let mut app = testkit::new_app();
@@ -312,6 +351,6 @@ mod tests {
         let report: crate::document::CheckReport = serde_json::from_str(&json).expect("report json parses");
         assert!(!report.checks.is_empty());
     }
-    //#endregion 🔖️Behavior
+    //#endregion ðï¸Behavior
 }
-//#endregion 🧪️Tests
+//#endregion ð§ªï¸Tests

@@ -413,6 +413,7 @@ pub fn empty_ply_snapshot() -> PlySnapshot {
 pub fn register() {
     crate::artifacts::ply::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<PlySnapshot, PlyMutation>(STDIO_PLY_DOCUMENT_SCHEMA));
 }
@@ -478,6 +479,13 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.ply`.
 pub fn register_artifact_schema() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::ply::schema::ply_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.stdio.ply.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::ply::standards::v1_0::subsets::any::schema::inferences::ply_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 

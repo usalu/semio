@@ -42,6 +42,90 @@ impl Default for JsonValue {
         JsonValue::Null
     }
 }
+
+impl From<serde_json::Value> for JsonValue {
+    fn from(v: serde_json::Value) -> Self {
+        match v {
+            serde_json::Value::Null => JsonValue::Null,
+            serde_json::Value::Bool(b) => JsonValue::Bool { value: b },
+            serde_json::Value::Number(n) => JsonValue::Number { lexeme: n.to_string() },
+            serde_json::Value::String(s) => JsonValue::String { value: s },
+            serde_json::Value::Array(arr) => JsonValue::Array { items: arr.into_iter().map(JsonValue::from).collect() },
+            serde_json::Value::Object(map) => JsonValue::Object {
+                members: map.into_iter().map(|(k, v)| JsonMember { key: k, value: JsonValue::from(v) }).collect(),
+            },
+        }
+    }
+}
+
+impl From<&serde_json::Value> for JsonValue {
+    fn from(v: &serde_json::Value) -> Self {
+        match v {
+            serde_json::Value::Null => JsonValue::Null,
+            serde_json::Value::Bool(b) => JsonValue::Bool { value: *b },
+            serde_json::Value::Number(n) => JsonValue::Number { lexeme: n.to_string() },
+            serde_json::Value::String(s) => JsonValue::String { value: s.clone() },
+            serde_json::Value::Array(arr) => JsonValue::Array { items: arr.iter().map(JsonValue::from).collect() },
+            serde_json::Value::Object(map) => JsonValue::Object {
+                members: map.iter().map(|(k, v)| JsonMember { key: k.clone(), value: JsonValue::from(v) }).collect(),
+            },
+        }
+    }
+}
+
+impl From<JsonValue> for serde_json::Value {
+    fn from(v: JsonValue) -> Self {
+        match v {
+            JsonValue::Null => serde_json::Value::Null,
+            JsonValue::Bool { value } => serde_json::Value::Bool(value),
+            JsonValue::Number { lexeme } => {
+                if let Ok(n) = lexeme.parse::<serde_json::Number>() {
+                    serde_json::Value::Number(n)
+                } else if let Ok(val) = serde_json::from_str::<serde_json::Value>(&lexeme) {
+                    val
+                } else {
+                    serde_json::Value::String(lexeme)
+                }
+            }
+            JsonValue::String { value } => serde_json::Value::String(value),
+            JsonValue::Array { items } => serde_json::Value::Array(items.into_iter().map(serde_json::Value::from).collect()),
+            JsonValue::Object { members } => {
+                let mut map = serde_json::Map::with_capacity(members.len());
+                for m in members {
+                    map.insert(m.key, serde_json::Value::from(m.value));
+                }
+                serde_json::Value::Object(map)
+            }
+        }
+    }
+}
+
+impl From<&JsonValue> for serde_json::Value {
+    fn from(v: &JsonValue) -> Self {
+        match v {
+            JsonValue::Null => serde_json::Value::Null,
+            JsonValue::Bool { value } => serde_json::Value::Bool(*value),
+            JsonValue::Number { lexeme } => {
+                if let Ok(n) = lexeme.parse::<serde_json::Number>() {
+                    serde_json::Value::Number(n)
+                } else if let Ok(val) = serde_json::from_str::<serde_json::Value>(lexeme) {
+                    val
+                } else {
+                    serde_json::Value::String(lexeme.clone())
+                }
+            }
+            JsonValue::String { value } => serde_json::Value::String(value.clone()),
+            JsonValue::Array { items } => serde_json::Value::Array(items.iter().map(serde_json::Value::from).collect()),
+            JsonValue::Object { members } => {
+                let mut map = serde_json::Map::with_capacity(members.len());
+                for m in members {
+                    map.insert(m.key.clone(), serde_json::Value::from(&m.value));
+                }
+                serde_json::Value::Object(map)
+            }
+        }
+    }
+}
 //#endregion 🔖️JsonModel
 
 //#region 🔖️Parser
@@ -450,6 +534,19 @@ impl Default for JsonSnapshot {
             schema: STDIO_JSON_DOCUMENT_SCHEMA.into(),
             value: JsonValue::Null,
         }
+    }
+}
+
+impl JsonSnapshot {
+    pub fn from_value(value: impl Into<JsonValue>) -> Self {
+        Self {
+            schema: STDIO_JSON_DOCUMENT_SCHEMA.into(),
+            value: value.into(),
+        }
+    }
+
+    pub fn to_serde_value(&self) -> serde_json::Value {
+        serde_json::Value::from(&self.value)
     }
 }
 //#endregion 🔖️Snapshot

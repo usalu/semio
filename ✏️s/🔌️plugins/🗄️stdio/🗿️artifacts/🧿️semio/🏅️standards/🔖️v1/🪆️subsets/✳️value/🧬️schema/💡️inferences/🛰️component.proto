@@ -1,0 +1,23 @@
+syntax = "proto3";
+package semio.s.stdio.semio.value.inference;
+
+// 💡️ Semio value inference schema — real variant census + max depth over the value graph.
+
+message SemioValueInference {
+  // @state inferred
+  SemioValueCensus census = 1;
+}
+
+message SemioValueCensus {
+  uint32 null_count = 1;
+  uint32 bool_count = 2;
+  uint32 int_count = 3;
+  uint32 float_count = 4;
+  uint32 str_count = 5;
+  uint32 bytes_count = 6;
+  uint32 list_count = 7;
+  uint32 map_count = 8;
+  uint32 ref_count = 9;
+  uint32 node_count = 10;
+  uint32 max_depth = 11;
+}

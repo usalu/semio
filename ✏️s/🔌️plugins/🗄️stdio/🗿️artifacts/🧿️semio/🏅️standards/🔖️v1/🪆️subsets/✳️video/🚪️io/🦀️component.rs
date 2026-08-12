@@ -142,6 +142,14 @@ pub mod derived_composition {
         store::register_document_codec(store::ArtifactCodec::of::<SemioVideoSnapshot, crate::artifacts::semio::standards::v1::subsets::video::schema::mutations::SemioVideoMutation>(crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA));
         register_subset_validator(validator_entry());
         register_composer_entries(bridge_entries());
+        register_artifact_inferences();
+    }
+
+    /// 💡️ Registers `s.stdio.semio.video.inference`'s facet leaves into the OS-wide inference
+    /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
+    /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::video::schema::inferences::semio_video_artifact_inference_descriptor());
     }
 
     /// 🌉️ video↔mp4 / video↔avi bridge entries (W4) -- forward (writes video, reads the format) +

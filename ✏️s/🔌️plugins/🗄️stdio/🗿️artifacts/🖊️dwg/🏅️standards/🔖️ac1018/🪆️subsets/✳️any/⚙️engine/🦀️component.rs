@@ -33,9 +33,21 @@ pub fn demo_dwg_snapshot() -> crate::artifacts::dwg::standards::v_ac1018::subset
 pub fn register() {
     crate::artifacts::dwg::io_registry::register();
     register_artifact_schema();
+    register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
     store::register_document_codec(store::ArtifactCodec::of::<DwgSnapshot, DwgMutation>(STDIO_DWG_AC1018_DOCUMENT_SCHEMA));
+}
+
+/// 💡️ Registers `s.stdio.dwg.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Fully qualified to
+/// `standards::v_ac1018::subsets::any::schema` — deliberately NOT the top-level
+/// `crate::artifacts::dwg::schema` shim (aliased to the CANONICAL ac1024 standard, per
+/// `register_pilot_languages`'s own doc comment above) — so this registers ac1018's OWN inference
+/// descriptor, not ac1024's.
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::inferences::dwg_ac1018_artifact_inference_descriptor());
 }
 
 /// 📌️ P2-P3-style 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr) for ac1018's

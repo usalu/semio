@@ -1,0 +1,16 @@
+# 💡️ Semio kit inference schema — catalog census over the kit's own collections.
+
+type SemioKitInference {
+  entries: SemioKitEntries! @state(class: INFERRED)
+}
+
+type SemioKitEntries {
+  typeCount: Int!
+  designCount: Int!
+  pieceCount: Int!
+  connectionCount: Int!
+  objectCount: Int!
+  modelCount: Int!
+  hasProperties: Boolean!
+  representationCount: Int!
+}

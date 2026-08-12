@@ -1,0 +1,446 @@
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1744:30: error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`: not found in `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1751:30: error[E0425]: cannot find function `assert_dsl_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1766:30: error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`: not found in `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1794:30: error[E0425]: cannot find function `assert_dsl_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1801:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1802:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1803:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1804:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1805:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1806:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1807:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1808:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1809:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1810:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1811:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1818:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1819:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1825:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1826:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1827:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1828:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1829:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1830:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1831:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1832:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1835:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1836:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1848:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1849:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1850:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1891:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1892:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1893:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1894:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1895:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1896:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1897:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1898:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1899:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1900:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1901:30: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1906:30: error[E0425]: cannot find function `assert_op_text_binary_equivalence` in module `store::test_support`: not found in `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1908:30: error[E0425]: cannot find function `assert_op_text_binary_equivalence` in module `store::test_support`: not found in `store::test_support`
+🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust/../../📦️bin.rs:206:22: error[E0308]: arguments to this function are incorrect
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1914:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1915:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1916:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1917:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1918:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1919:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1920:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1921:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1922:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:2127:30: error[E0425]: cannot find function `assert_operation_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1514:34: error[E0425]: cannot find function `assert_dsl_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1515:34: error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`: not found in `store::test_support`
+🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust/../../📦️bin.rs:233:29: error[E0308]: arguments to this method are incorrect
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1520:34: error[E0425]: cannot find function `assert_dsl_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1521:34: error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`: not found in `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1526:34: error[E0425]: cannot find function `assert_dsl_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1527:34: error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`: not found in `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1532:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1553:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1558:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1577:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1582:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1587:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1592:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1593:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1594:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1595:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1600:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1605:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1610:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1615:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1620:34: error[E0425]: cannot find function `assert_op_line_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1628:34: error[E0425]: cannot find function `assert_document_text_round_trip` in module `store::test_support`: not found in `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1629:34: error[E0425]: cannot find function `assert_document_pack_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3921:38: error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`: not found in `store::test_support`
+error: could not compile `semio-framework-os-run` (bin "semio-framework-os-run") due to 2 previous errors
+error: could not compile `semio-framework-os-run` (bin "semio-framework-os-run" test) due to 2 previous errors
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2045:5: error[E0046]: not all trait items implemented, missing: `EXTENSION`: missing `EXTENSION` in implementation
+compose/client/lib/rs/lib.rs:7816:13: error[E0432]: unresolved import `semio_framework_os_kernel::os_vcs::ArtifactVcsCommand`
+compose/client/lib/rs/lib.rs:7817:49: error[E0432]: unresolved imports `semio_framework_os_kernel::os_vcs::create_document_vcs_envelope`, `semio_framework_os_kernel::os_vcs::materialize_document_projection`, `semio_framework_os_kernel::os_vcs::ArtifactVcsEnvelope`, `semio_framework_os_kernel::os_vcs::ArtifactVcsStore`, `semio_framework_os_kernel::os_vcs::Operation`, `semio_framework_os_kernel::os_vcs::OperationDiff`: no `create_document_vcs_envelope` in `os_vcs`, no `materialize_document_projection` in `os_vcs`, no `ArtifactVcsEnvelope` in `os_vcs`, no `ArtifactVcsStore` in `os_vcs`, no `OperationDiff` in `os_vcs`
+compose/client/lib/rs/lib.rs:19209:13: error[E0432]: unresolved import `vcs`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1214:30: error[E0425]: cannot find function `assert_dsl_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1215:30: error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`: not found in `store::test_support`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1220:30: error[E0425]: cannot find function `assert_dsl_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1221:30: error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`: not found in `store::test_support`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2187:45: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2187:67: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2187:79: error[E0425]: cannot find type `EvalError` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2190:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2190:48: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2190:98: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2190:116: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2194:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2194:46: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2194:94: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2194:112: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2198:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2198:47: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2198:98: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2198:116: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2201:194: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2203:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2203:45: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2203:95: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2203:113: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2206:167: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2207:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2207:48: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2207:98: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2207:116: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2210:107: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2211:98: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2212:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2214:13: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2326:39: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2327:35: error[E0425]: cannot find function `slider_widget_height` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2329:36: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2331:34: error[E0425]: cannot find function `computation_node_width` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2333:40: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2600:27: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:38: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:91: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:109: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:159: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:177: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2602:41: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2602:91: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2602:109: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2603:26: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:40: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:77: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:101: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+compose/client/lib/rs/lib.rs:852:67: error[E0433]: cannot find `dsl` in the crate root: could not find `dsl` in the list of imported crates
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:154: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:172: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2605:24: error[E0422]: cannot find struct, variant or union type `EvalChannels` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2619:48: error[E0425]: cannot find type `HashMap` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2619:64: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2631:27: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:38: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:91: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:109: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:157: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:175: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:41: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:75: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:99: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:148: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:166: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2640:27: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2643:13: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:34: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:58: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:102: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:126: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:183: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:201: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2646:24: error[E0422]: cannot find struct, variant or union type `EvalChannels` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2646:56: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2662:20: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2662:57: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2662:75: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2664:35: error[E0433]: cannot find type `DagPreviewContent` in this scope: use of undeclared type `DagPreviewContent`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2670:20: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2670:55: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2670:73: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2673:13: error[E0433]: cannot find type `DagPreviewContent` in this scope: use of undeclared type `DagPreviewContent`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2684:37: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2713:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2813:25: error[E0433]: cannot find type `Evaluator` in this scope: use of undeclared type `Evaluator`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2814:45: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2815:25: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2816:39: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2816:64: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2816:114: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2816:132: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2866:102: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2868:21: error[E0433]: cannot find type `BTreeMap` in this scope: use of undeclared type `BTreeMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2978:37: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2996:38: error[E0425]: cannot find function `create_document_envelope` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2998:24: error[E0433]: cannot find type `ArtifactCommand` in this scope: use of undeclared type `ArtifactCommand`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2998:49: error[E0425]: cannot find value `mutations` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3001:24: error[E0433]: cannot find type `ArtifactCommand` in this scope: use of undeclared type `ArtifactCommand`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3006:24: error[E0433]: cannot find type `ArtifactCommand` in this scope: use of undeclared type `ArtifactCommand`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3030:229: error[E0433]: cannot find type `BTreeMap` in this scope: use of undeclared type `BTreeMap`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2245:20: error[E0432]: unresolved import `super::kernel_3d_scene`: could not find `kernel_3d_scene` in `super`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3037:57: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3037:79: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3037:91: error[E0425]: cannot find type `EvalError` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3040:23: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3040:73: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3040:91: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3043:24: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3045:94: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3049:24: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3051:26: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3053:108: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3056:12: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3067:102: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3068:72: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3068:101: error[E0433]: cannot find type `BTreeSet` in this scope: use of undeclared type `BTreeSet`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3075:21: error[E0433]: cannot find type `BTreeMap` in this scope: use of undeclared type `BTreeMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3131:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3150:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3194:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3228:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3335:30: error[E0433]: cannot find type `BTreeMap` in this scope: use of undeclared type `BTreeMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3338:13: error[E0425]: cannot find function `fit_node_size` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3485:101: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3486:99: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3487:93: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3557:102: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3558:90: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3559:88: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3766:21: error[E0422]: cannot find struct, variant or union type `Tree` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:17: error[E0433]: cannot find type `Neuron` in this scope: use of undeclared type `Neuron`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:43: error[E0425]: cannot find value `INPUT_KIND` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:55: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:91: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:109: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:156: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:174: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:17: error[E0433]: cannot find type `Neuron` in this scope: use of undeclared type `Neuron`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:46: error[E0425]: cannot find value `OUTPUT_KIND` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:59: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:95: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:113: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:162: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:180: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3774:70: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+compose/client/lib/rs/lib.rs:860:67: error[E0433]: cannot find `dsl` in the crate root: could not find `dsl` in the list of imported crates
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1271:129: error[E0433]: cannot find type `UiTreeActionPlacement` in this scope: use of undeclared type `UiTreeActionPlacement`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1298:129: error[E0433]: cannot find type `UiTreeActionPlacement` in this scope: use of undeclared type `UiTreeActionPlacement`
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🦀️component.rs:3587:24: error[E0608]: cannot index into a value of type `DslValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🦀️component.rs:3646:24: error[E0608]: cannot index into a value of type `DslValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🦀️component.rs:3647:21: error[E0608]: cannot index into a value of type `DslValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🦀️component.rs:4076:24: error[E0608]: cannot index into a value of type `DslValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🦀️component.rs:4077:24: error[E0608]: cannot index into a value of type `DslValue`
+compose/client/lib/rs/lib.rs:868:67: error[E0433]: cannot find `dsl` in the crate root: could not find `dsl` in the list of imported crates
+compose/client/lib/rs/lib.rs:875:67: error[E0433]: cannot find `dsl` in the crate root: could not find `dsl` in the list of imported crates
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:853:39: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1090:35: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1112:35: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1176:27: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1188:26: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1192:144: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🌍️world/🦀️component.rs:3587:24: error[E0608]: cannot index into a value of type `DslValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🌍️world/🦀️component.rs:3646:24: error[E0608]: cannot index into a value of type `DslValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🌍️world/🦀️component.rs:3647:21: error[E0608]: cannot index into a value of type `DslValue`
+compose/client/lib/rs/lib.rs:882:58: error[E0433]: cannot find `dsl` in the crate root: could not find `dsl` in the list of imported crates
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🌍️world/🦀️component.rs:4076:24: error[E0608]: cannot index into a value of type `DslValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🌍️world/🦀️component.rs:4077:24: error[E0608]: cannot index into a value of type `DslValue`
+compose/client/lib/rs/lib.rs:901:67: error[E0433]: cannot find `dsl` in the crate root: could not find `dsl` in the list of imported crates
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2245:19: error[E0616]: field `registry` of struct `FlowExtensionRegistryState` is private: private field
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2246:19: error[E0616]: field `generation` of struct `FlowExtensionRegistryState` is private: private field
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1775:89: error[E0599]: no method named `expect` found for struct `Vec<u8>` in the current scope: method not found in `Vec<u8>`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1785:130: error[E0599]: no method named `expect` found for struct `Vec<u8>` in the current scope: method not found in `Vec<u8>`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:980:35: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:984:106: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:988:41: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:974:28: error[E0063]: missing field `artifact_kinds` in initializer of `PluginManifest`: missing `artifact_kinds`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1035:31: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1039:102: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1043:37: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1078:31: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1082:102: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1086:37: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+compose/client/lib/rs/lib.rs:202:80: error[E0433]: cannot find `dsl` in the crate root: could not find `dsl` in the list of imported crates
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1144:31: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1148:102: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1152:37: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1269:30: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1273:102: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1277:34: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:1103:23: error[E0433]: cannot find module or crate `vcs` in this scope: use of unresolved module or unlinked crate `vcs`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:1107:24: error[E0433]: cannot find module or crate `vcs` in this scope: use of unresolved module or unlinked crate `vcs`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:1145:84: error[E0433]: cannot find module or crate `vcs` in this scope: use of unresolved module or unlinked crate `vcs`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3894:32: error[E0277]: the trait bound `workflow_kernel::WorkflowFixture: ArtifactDsl` is not satisfied: unsatisfied trait bound
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3916:32: error[E0277]: the trait bound `workflow_kernel::WorkflowFixture: ArtifactDsl` is not satisfied: unsatisfied trait bound
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3917:33: error[E0277]: the trait bound `workflow_kernel::WorkflowFixture: ArtifactPack` is not satisfied: unsatisfied trait bound
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3919:58: error[E0277]: the trait bound `workflow_kernel::WorkflowFixture: ArtifactDsl` is not satisfied: unsatisfied trait bound
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3920:61: error[E0277]: the trait bound `workflow_kernel::WorkflowFixture: ArtifactPack` is not satisfied: unsatisfied trait bound
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4426:31: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4430:102: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4434:35: error[E0277]: the trait bound `LocalizedLabel: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `LocalizedLabel`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4490:43: error[E0277]: the trait bound `Vec<NodeGraphNodeRecord>: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `Vec<NodeGraphNodeRecord>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4490:56: error[E0277]: the trait bound `Vec<NodeGraphEdgeRecord>: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `Vec<NodeGraphEdgeRecord>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4490:69: error[E0277]: the trait bound `NodeGraphViewport: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4564:85: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4565:129: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:298:48: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:321:48: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:325:103: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:420:108: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:431:26: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:470:42: error[E0308]: mismatched types: expected `Label`, found `&str`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:525:99: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+error: could not compile `semio-framework-os-infinite` (lib test) due to 12 previous errors; 82 warnings emitted
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:48:58: error[E0433]: cannot find `table` in `subsets`: could not find `table` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:49:58: error[E0433]: cannot find `graph` in `subsets`: could not find `graph` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:50:58: error[E0433]: cannot find `object` in `subsets`: could not find `object` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:51:58: error[E0433]: cannot find `kit` in `subsets`: could not find `kit` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:29:58: error[E0433]: cannot find `table` in `subsets`: could not find `table` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:30:58: error[E0433]: cannot find `graph` in `subsets`: could not find `graph` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:31:58: error[E0433]: cannot find `object` in `subsets`: could not find `object` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:32:58: error[E0433]: cannot find `kit` in `subsets`: could not find `kit` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:23:54: error[E0433]: cannot find `table` in `subsets`: could not find `table` in `subsets`
+error: could not compile `semio-framework-os-flow` (lib test) due to 160 previous errors; 136 warnings emitted
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:24:54: error[E0433]: cannot find `graph` in `subsets`: could not find `graph` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:25:54: error[E0433]: cannot find `object` in `subsets`: could not find `object` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:26:54: error[E0433]: cannot find `kit` in `subsets`: could not find `kit` in `subsets`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️cursor.rs:318:73: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️cursor.rs:325:76: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:25:54: error[E0433]: cannot find `table` in `subsets`: could not find `table` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:26:54: error[E0433]: cannot find `graph` in `subsets`: could not find `graph` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:27:54: error[E0433]: cannot find `object` in `subsets`: could not find `object` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:28:54: error[E0433]: cannot find `kit` in `subsets`: could not find `kit` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:27:54: error[E0433]: cannot find `table` in `subsets`: could not find `table` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:28:54: error[E0433]: cannot find `graph` in `subsets`: could not find `graph` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:29:54: error[E0433]: cannot find `object` in `subsets`: could not find `object` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:30:54: error[E0433]: cannot find `kit` in `subsets`: could not find `kit` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs:42:5: error[E0432]: unresolved import `super::create_edge`
+compose/client/lib/rs/lib.rs:8229:66: error[E0433]: cannot find `ArtifactVcsCommand` in `os_vcs`: could not find `ArtifactVcsCommand` in `os_vcs`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs:43:5: error[E0432]: unresolved import `super::create_face`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs:44:5: error[E0432]: unresolved import `super::create_shell`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs:45:5: error[E0432]: unresolved import `super::create_solid`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs:46:5: error[E0432]: unresolved import `super::create_vertex`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs:47:5: error[E0432]: unresolved import `super::delete_edge`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:305:48: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs:48:5: error[E0432]: unresolved import `super::delete_face`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:396:80: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:417:93: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs:49:5: error[E0432]: unresolved import `super::delete_shell`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs:50:5: error[E0432]: unresolved import `super::delete_solid`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs:51:5: error[E0432]: unresolved import `super::delete_vertex`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs:52:5: error[E0432]: unresolved import `super::move_vertex`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs:53:5: error[E0432]: unresolved import `super::replace_curve`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs:54:5: error[E0432]: unresolved import `super::replace_surface`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:899:48: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:910:23: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:922:23: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1016:100: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1031:74: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1046:74: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1114:176: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1126:176: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1212:28: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1238:51: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1254:176: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1290:74: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1290:132: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1392:51: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1510:104: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1385:70: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1385:125: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1436:48: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1444:100: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+error: could not compile `semio-framework-os` (lib test) due to 106 previous errors; 173 warnings emitted
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:2009:53: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:2032:53: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs:102:48: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs:152:72: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:270:103: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:277:84: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:296:75: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:408:28: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:411:69: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:436:61: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:438:129: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:440:138: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:445:102: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:446:30: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:449:157: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:450:122: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:458:83: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:459:81: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:461:94: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:462:93: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:926:58: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:711:137: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:720:120: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:721:118: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:729:125: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:484:122: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:485:150: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:783:26: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:489:97: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:490:30: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:493:145: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:827:28: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:856:35: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:859:69: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:875:107: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:494:128: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:507:121: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:508:149: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:512:97: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:513:30: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:516:144: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:517:127: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:526:66: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:532:20: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:551:54: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:643:58: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:653:88: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:658:139: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:694:78: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:694:136: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:614:62: error[E0433]: cannot find `table` in `subsets`: could not find `table` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:615:62: error[E0433]: cannot find `table` in `subsets`: could not find `table` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:641:62: error[E0433]: cannot find `graph` in `subsets`: could not find `graph` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:642:62: error[E0433]: cannot find `graph` in `subsets`: could not find `graph` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:674:62: error[E0433]: cannot find `object` in `subsets`: could not find `object` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:699:62: error[E0433]: cannot find `kit` in `subsets`: could not find `kit` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:588:13: error[E0432]: unresolved import `crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::create_vertex`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🚪️io/🦀️component.rs:139:126: error[E0433]: cannot find `inferences` in `schema`: could not find `inferences` in `schema`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:96:145: error[E0433]: cannot find `table` in `subsets`: could not find `table` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:97:145: error[E0433]: cannot find `graph` in `subsets`: could not find `graph` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:98:147: error[E0433]: cannot find `object` in `subsets`: could not find `object` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:99:141: error[E0433]: cannot find `kit` in `subsets`: could not find `kit` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:146:120: error[E0433]: cannot find `inferences` in `schema`: could not find `inferences` in `schema`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🚪️io/🦀️component.rs:148:122: error[E0433]: cannot find `inferences` in `schema`: could not find `inferences` in `schema`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🚪️io/🦀️component.rs:154:120: error[E0433]: cannot find `inferences` in `schema`: could not find `inferences` in `schema`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:203:125: error[E0433]: cannot find `inferences` in `schema`: could not find `inferences` in `schema`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/🦀️component.rs:118:122: error[E0433]: cannot find `inferences` in `schema`: could not find `inferences` in `schema`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🚪️io/🦀️component.rs:145:121: error[E0433]: cannot find `inferences` in `schema`: could not find `inferences` in `schema`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:24:54: error[E0433]: cannot find `table` in `subsets`: could not find `table` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:25:54: error[E0433]: cannot find `graph` in `subsets`: could not find `graph` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:26:54: error[E0433]: cannot find `object` in `subsets`: could not find `object` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:27:54: error[E0433]: cannot find `kit` in `subsets`: could not find `kit` in `subsets`
+error: could not compile `semio-framework-os-kernel` (lib test) due to 1 previous error; 137 warnings emitted
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:378:87: error[E0433]: cannot find `delete_vertex` in `mutations`: could not find `delete_vertex` in `mutations`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:398:109: error[E0433]: cannot find `table` in `subsets`: could not find `table` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:400:66: error[E0433]: cannot find `graph` in `subsets`: could not find `graph` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:402:112: error[E0433]: cannot find `object` in `subsets`: could not find `object` in `subsets`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:403:106: error[E0433]: cannot find `kit` in `subsets`: could not find `kit` in `subsets`
+error: could not compile `semio-framework-ui` (lib test) due to 89 previous errors; 8 warnings emitted
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:399:110: error[E0433]: cannot find `graph` in `subsets`: could not find `graph` in `subsets`
+error: could not compile `semio-compose-rs` (lib test) due to 94 previous errors; 895 warnings emitted
+error: could not compile `semio-compose-rs` (lib) due to 92 previous errors; 824 warnings emitted
+error: could not compile `semio-s-plugin-stdio` (lib) due to 48 previous errors; 579 warnings emitted
+error: could not compile `semio-s-plugin-stdio` (lib test) due to 61 previous errors; 716 warnings emitted

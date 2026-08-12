@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.mp3.inference
+extension mp3.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.mp3.inference" NL
+body = payload NL?
+payload = OCTET+

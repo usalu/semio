@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/dwg/ac1024/inference/text.json",
+  "title": "DwgAc1024InferenceText",
+  "type": "object"
+}

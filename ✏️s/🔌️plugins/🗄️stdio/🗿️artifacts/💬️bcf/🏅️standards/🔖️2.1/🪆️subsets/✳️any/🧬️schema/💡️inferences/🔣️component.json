@@ -1,0 +1,23 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/bcf/inference.json",
+  "title": "BcfInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topicStats"],
+  "properties": {
+    "topicStats": { "$ref": "#/$defs/BcfTopicStats", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "BcfTopicStats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topicCount", "commentCount", "viewpointCount", "authorCount"],
+      "properties": {
+        "topicCount": { "type": "integer", "minimum": 0 },
+        "commentCount": { "type": "integer", "minimum": 0 },
+        "viewpointCount": { "type": "integer", "minimum": 0 },
+        "authorCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

@@ -29,13 +29,14 @@ pub struct Puzzle2dConfig {
     #[state(local_ui)] pub terminology: String,
 }
 
-//region 📎 App-schema self-registration
-/// 📎 Registers the `s.puzzle.puzzle2d` app-schema descriptor (config + presence facets) into the
-/// open [`artifact_schema::AppSchemaRegistry`], mirroring the transplanted-from-framework
-/// closed-catalog entry — see
-/// `🧰️framework/🔨️modules/🧬️schema/🦀️component.rs::register_all_app_schema_descriptors()`.
-pub fn register_app_schema() {
-    artifact_schema::register_app_schema_descriptor(artifact_schema::AppSchemaDescriptor {
+//region 📎 App-schema descriptor
+/// 📎 `s.puzzle.puzzle2d`'s config+presence schema descriptor — returned, not self-registered
+/// (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d, replacing the old self-registering
+/// `register_app_schema()` this file used to export); `ArtifactApp::app_schema` (on
+/// `Puzzle2dPlayApp`) hands it to `register_document_app` for registration, exactly like
+/// `🗒️note`'s own `app_schema_descriptor()`.
+pub fn app_schema_descriptor() -> artifact_schema::AppSchemaDescriptor {
+    artifact_schema::AppSchemaDescriptor {
         id: "s.puzzle.puzzle2d",
         config: artifact_schema::FacetLeaves {
             rust: include_str!("🦀️component.rs"),
@@ -51,7 +52,7 @@ pub fn register_app_schema() {
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️component.json"),
             proto: include_str!("../../👥️presence/🧬️schema/🛰️component.proto"),
         },
-    });
+    }
 }
-//endregion 📎 App-schema self-registration
+//endregion 📎 App-schema descriptor
 

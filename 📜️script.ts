@@ -2964,7 +2964,7 @@ const POLICY_OPS_STRUCTURAL_KEYWORDS = ["@doc", "@edit", "@change", "@checkpoint
 function policyOpsGrammarBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyDiscoverOpsFiles(repoRoot)) {
-    const text = readFileSync(join(repoRoot, relPath), "utf8");
+    const text = policyReadFileSafe(repoRoot, relPath);
     const rawLines = text.split(/\r?\n/);
     const lines = rawLines.length > 0 && rawLines[rawLines.length - 1] === "" ? rawLines.slice(0, -1) : rawLines;
     lines.forEach((line, i) => {
@@ -3129,7 +3129,7 @@ function policyResolveAlias(aliasOf: ReadonlyMap<string, string>, typeName: stri
 function policyDslCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const paths = policyAllRustFiles(repoRoot);
-  const files = paths.map((relPath) => ({ relPath, content: readFileSync(join(repoRoot, relPath), "utf8") }));
+  const files = paths.map((relPath) => ({ relPath, content: policyReadFileSafe(repoRoot, relPath) }));
   const complete = policyDslCompleteTypeNames(files);
   const aliasOf = policyTypeAliasMap(files);
 
@@ -3176,7 +3176,7 @@ function policyPackCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyAllRustFiles(repoRoot)) {
     if (POLICY_PACK_COMPLETENESS_ALLOWLIST.has(policyNormalizeRelPath(relPath))) continue;
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const hasDslCheck = content.includes("assert_dsl_round_trip(") || content.includes("assert_document_text_round_trip(");
     if (!hasDslCheck) continue;
     const hasPackCheck = content.includes("assert_dsl_pack_equivalence(") || content.includes("assert_document_pack_round_trip(");
@@ -3209,7 +3209,7 @@ function policyCommandEnvelopeCompletenessBreaches(repoRoot: string): BreachReco
   const breaches: BreachRecord[] = [];
   for (const relPath of policyAllRustFiles(repoRoot)) {
     if (POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST.has(policyNormalizeRelPath(relPath))) continue;
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const hasPackCheck = content.includes("assert_dsl_pack_equivalence(") || content.includes("assert_document_pack_round_trip(");
     if (!hasPackCheck) continue;
     if (content.includes("assert_command_envelope_round_trip")) continue;
@@ -3245,7 +3245,7 @@ function policyDiffCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const diffImplPattern = /\bimpl\b[^\n{]*\bMutationDiff\s*</;
   for (const relPath of policyAllRustFiles(repoRoot)) {
     if (POLICY_DIFF_COMPLETENESS_ALLOWLIST.has(policyNormalizeRelPath(relPath))) continue;
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     if (!diffImplPattern.test(content)) continue;
     const hasDiffCodec = content.includes("dsl::DslDiff") || content.includes("DiffCodec for");
     if (hasDiffCodec) continue;
@@ -3352,7 +3352,7 @@ function policyTsFacadeBreaches(repoRoot: string): BreachRecord[] {
   walk("✏️s");
   for (const relPath of files.sort()) {
     if (!relPath.replaceAll("\\", "/").includes("/🗿️artifacts/")) continue;
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     if (!policyTsFacadeIsScaffoldStub(content)) continue;
     if (policyIsConstitutionalTsFacadePath(relPath)) continue;
     breaches.push({
@@ -3410,7 +3410,7 @@ function policyProtocolMigrationBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyAllRustFiles(repoRoot)) {
     if (relPath === "./🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/📦️lib.rs") continue; // the crate that used to own the shim; never reaches itself via "vcs::"
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const seenLines = new Set<number>();
     const lineOf = (index: number): number => content.slice(0, index).split(/\r?\n/).length;
     const isCommentLine = (line: number): boolean => /^\s*(\/\/|\*)/.test(content.split(/\r?\n/)[line - 1] ?? "");
@@ -3511,7 +3511,7 @@ function policyDbServerOnlyBreaches(repoRoot: string): BreachRecord[] {
     const lastSlash = relPath.lastIndexOf("/");
     const dir = lastSlash === -1 ? "" : relPath.slice(0, lastSlash + 1);
     if (policyDbAllowedDir(dir)) continue;
-    const text = readFileSync(join(repoRoot, relPath), "utf8");
+    const text = policyReadFileSafe(repoRoot, relPath);
     let m: RegExpExecArray | null;
     POLICY_DB_DEP_RE.lastIndex = 0;
     while ((m = POLICY_DB_DEP_RE.exec(text))) {
@@ -3570,7 +3570,7 @@ function policyOsStateAuthorityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyAllRustFiles(repoRoot)) {
     if (!policyOsStateAuthorityPathInScope(relPath)) continue;
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const lines = content.split(/\r?\n/);
     const testSpans = policyTestModSpans(lines);
     let depth = 0;
@@ -3721,7 +3721,7 @@ function policyDocumentAppShapeBreaches(repoRoot: string): BreachRecord[] {
     const n = relPath.replace(/^\.\//, "");
     if (POLICY_OS_STATE_AUTHORITY_EXCLUDED_PREFIXES.some((p) => n.startsWith(p))) continue;
 
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const lines = content.split(/\r?\n/);
     const testSpans = policyTestModSpans(lines);
 
@@ -3886,7 +3886,7 @@ function policyRawSpawnBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyDiscoverScriptTsFiles(repoRoot)) {
     if (POLICY_RAW_SPAWN_EXEMPT.has(relPath)) continue;
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const stripped = policyStripTsCommentsAndStrings(content);
     const seenLines = new Set<number>();
     const lineOf = (index: number): number => content.slice(0, index).split(/\r?\n/).length;
@@ -3921,7 +3921,7 @@ function policyRawSpawnBreaches(repoRoot: string): BreachRecord[] {
 function policyBudgetNullBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyDiscoverScriptTsFiles(repoRoot)) {
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const seenLines = new Set<number>();
     const lineOf = (index: number): number => content.slice(0, index).split(/\r?\n/).length;
     const re = /budgetMs:\s*null/g;
@@ -4028,6 +4028,25 @@ function policyReaddirSafe(repoRoot: string, relDir: string): { name: string; is
       .map((e) => ({ name: e.name, isDirectory: e.isDirectory() }));
   } catch {
     return [];
+  }
+}
+
+/**
+ * 📖️Reads a repo-relative file, returning `""` when it has vanished between the directory walk and
+ * the read. Sibling of [[policyReaddirSafe]].
+ *
+ * Every rule here walks a file list and then reads each entry, which races against concurrent
+ * sessions deleting files mid-run — a real crash, not a hypothetical: `policyDeclarativeRegistration`
+ * died on `ENOENT` while artifact `⚙️engine/` directories were being dissolved beneath it, taking the
+ * whole `policy` command down for every session. `""` rather than a skip is deliberate and correct:
+ * these rules pattern-match content to find violations, and **a file that no longer exists has no
+ * violations in it**, so empty content yields the right answer with no call-site restructuring.
+ */
+function policyReadFileSafe(repoRoot: string, ...parts: string[]): string {
+  try {
+    return readFileSync(join(repoRoot, ...parts), "utf8");
+  } catch {
+    return "";
   }
 }
 
@@ -5080,7 +5099,7 @@ function policyPluginPurityBreaches(repoRoot: string): BreachRecord[] {
   for (const relPath of policyAllRustFiles(repoRoot)) {
     if (!relPath.startsWith(`${POLICY_APA_PLUGINS_ROOT}/`)) continue;
     if (POLICY_PLUGIN_PURITY_ALLOWLIST.has(relPath)) continue;
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const lines = content.split(/\r?\n/);
     const skipSpans = [...policyTestModSpans(lines), ...policyPluginPurityTestFnSpans(lines)];
     let depth = 0;
@@ -5181,7 +5200,7 @@ function policyPluginPurityBreaches(repoRoot: string): BreachRecord[] {
 
   for (const relPath of policyPluginPurityTsFiles(repoRoot, POLICY_APA_PLUGINS_ROOT)) {
     if (POLICY_PLUGIN_PURITY_ALLOWLIST.has(relPath)) continue;
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const lines = content.split(/\r?\n/);
     lines.forEach((raw, i) => {
       const lineNo = i + 1;
@@ -5295,7 +5314,7 @@ function policyDeclarativeRegistrationBreaches(repoRoot: string): BreachRecord[]
   for (const relPath of policyAllRustFiles(repoRoot)) {
     if (!relPath.startsWith(`${POLICY_APA_PLUGINS_ROOT}/`)) continue;
     if (POLICY_DECLARATIVE_REGISTRATION_ALLOWLIST.has(relPath)) continue;
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
 
     const builderRe = /Plugin::builder\s*\(/g;
     let bm: RegExpExecArray | null;
@@ -5393,7 +5412,7 @@ function policyPluginDependencyAllowlistBreaches(repoRoot: string): BreachRecord
     if (!relPath.includes("/📦️packages/🦀️rust/")) continue;
     if (POLICY_PLUGIN_DEP_ALLOWLIST.has(relPath)) continue;
     const owner = policyPluginOwnerFromApaPath(relPath);
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
 
     const sectionStarts: number[] = [];
     POLICY_PLUGIN_DEP_SECTION_RE.lastIndex = 0;
@@ -5524,7 +5543,7 @@ function policyEffectCapabilityParityBreaches(repoRoot: string): BreachRecord[] 
           continue;
         }
         if (!entry.name.endsWith(".rs")) continue;
-        const content = readFileSync(join(repoRoot, childRel), "utf8");
+        const content = policyReadFileSafe(repoRoot, childRel);
         const lines = content.split(/\r?\n/);
         const testSpans = policyTestModSpans(lines);
         lines.forEach((raw, i) => {
@@ -5873,7 +5892,7 @@ function policySpecDistinctnessBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const byHash = new Map<string, string[]>();
   for (const relPath of policyDiscoverGrammarAndProtocolSpecs(repoRoot)) {
-    const raw = readFileSync(join(repoRoot, relPath), "utf8");
+    const raw = policyReadFileSafe(repoRoot, relPath);
     const hash = policyHashSpecContent(policyNormalizeSpecContent(raw));
     const group = byHash.get(hash);
     if (group) group.push(relPath);
@@ -5911,7 +5930,7 @@ function policyGenericSpecBreaches(repoRoot: string): BreachRecord[] {
   const grammars = policyWalkRelFiles(repoRoot, ["✏️s"], (_p, name) => name.endsWith(".grammar.semio"));
   for (const relPath of grammars) {
     if (POLICY_GENERIC_SPEC_EXEMPTIONS.has(relPath)) continue;
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const reasons: string[] = [];
     if (/prop\s*=\s*IDENT\s*"="\s*\(/.test(content) || /prop\s*=\s*IDENT\s*=/.test(content)) {
       reasons.push("catch-all prop = IDENT");
@@ -5950,7 +5969,7 @@ function policyLoadFamilyFragments(repoRoot: string): Map<string, { relPath: str
   for (const relPath of files) {
     const leaf = relPath.split("/").pop()!;
     const id = leaf.replace(/^📖️/, "").replace(/\.grammar\.semio$/, "");
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const productions: string[] = [];
     for (const m of content.matchAll(/^([A-Za-z_][\w-]*)\s*=/gm)) {
       const name = m[1]!;
@@ -5971,7 +5990,7 @@ function policyDeclaredUseBreaches(repoRoot: string): BreachRecord[] {
   const grammars = policyWalkRelFiles(repoRoot, ["✏️s"], (_p, name) => name.endsWith(".grammar.semio"));
   for (const relPath of grammars) {
     if (POLICY_DECLARED_USE_EXEMPTIONS.has(relPath)) continue;
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const uses = [...content.matchAll(/^use\s+(family-[\w-]+)/gm)].map((m) => m[1]!);
     if (uses.length === 0) continue;
     for (const fam of uses) {
@@ -6022,7 +6041,7 @@ function policyListPluginArtifactDirs(repoRoot: string): string[] {
 function policyArtifactHasRegisterLanguage(repoRoot: string, artRel: string): boolean {
   const rsFiles = policyWalkRelFiles(repoRoot, [artRel], (_p, name) => name.endsWith(".rs"));
   for (const rel of rsFiles) {
-    if (readFileSync(join(repoRoot, rel), "utf8").includes("register_language")) return true;
+    if (policyReadFileSafe(repoRoot, rel).includes("register_language")) return true;
   }
   return false;
 }
@@ -6047,7 +6066,7 @@ function policySpecWiringBreaches(repoRoot: string): BreachRecord[] {
       const rsRel = `${facetRel}/${POLICY_RS_COMPONENT_LEAF}`;
       if (!existsSync(join(repoRoot, rsRel))) continue;
       if (POLICY_SPEC_WIRING_INCLUDE_EXEMPTIONS.has(rsRel)) continue;
-      const rsBody = readFileSync(join(repoRoot, rsRel), "utf8");
+      const rsBody = policyReadFileSafe(repoRoot, rsRel);
       const specs: string[] = [];
       if (hasGrammar) specs.push(POLICY_GRAMMAR_SPEC_LEAF);
       if (hasProtocol) specs.push(POLICY_PROTOCOL_SPEC_LEAF);
@@ -6131,7 +6150,7 @@ function policyGenericCodecDeriveBreaches(repoRoot: string): BreachRecord[] {
     { re: /dsl::op_rt::|store::op_rt::/g, label: "op_rt generic OpBinary" },
   ];
   for (const relPath of files) {
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     for (const { re, label } of banned) {
       re.lastIndex = 0;
       let match: RegExpExecArray | null;
@@ -6328,20 +6347,8 @@ function policyListMutationDirs(repoRoot: string, mutationsRel: string): string[
  */
 function policyMutationTriadCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
-    const mutationsRel = `${artRel}/${POLICY_MUTATIONS_FACET}`;
-    if (!existsSync(join(repoRoot, mutationsRel))) {
-      breaches.push({
-        id: `mutation-facet-missing-${artRel}`,
-        summary: `"${artRel}" is missing required ${POLICY_MUTATIONS_FACET}/ facet`,
-        kind: "mutation-migration/triad-completeness",
-        scope: artRel,
-        priority: "high",
-        reason: "Every artifact must decompose document changes into 🧬️mutations/<mut>/{🦠️mutation,🔺️diff,↩️inverse}.",
-        solution: `Create ${mutationsRel}/ with a dispatch 🦀️component.rs and one triad dir per mutation.`,
-      });
-      continue;
-    }
+  for (const mutationsRel of policyFindAllMutationsDirs(repoRoot)) {
+    const artRel = policyArtifactRootOfMutationsDir(mutationsRel);
     const mutDirs = policyListMutationDirs(repoRoot, mutationsRel);
     if (mutDirs.length === 0) {
       breaches.push({
@@ -6382,9 +6389,8 @@ function policyMutationTriadCompletenessBreaches(repoRoot: string): BreachRecord
 function policyMutationImplPresenceBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const implPattern = /\bimpl\b[^\n{]*\bMutation\s*</;
-  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
-    const mutationsRel = `${artRel}/${POLICY_MUTATIONS_FACET}`;
-    if (!existsSync(join(repoRoot, mutationsRel))) continue;
+  for (const mutationsRel of policyFindAllMutationsDirs(repoRoot)) {
+    const artRel = policyArtifactRootOfMutationsDir(mutationsRel);
     for (const mutName of policyListMutationDirs(repoRoot, mutationsRel)) {
       const rsRel = `${mutationsRel}/${mutName}/🦠️mutation/${POLICY_RS_COMPONENT_LEAF_NAME}`;
       const abs = join(repoRoot, rsRel);
@@ -6415,7 +6421,7 @@ function policyOpGrammarStartMutationBreaches(repoRoot: string): BreachRecord[] 
     return relPath.replaceAll("\\", "/").includes(`/${POLICY_OP_FACET}/`);
   });
   for (const relPath of grammars) {
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     if (/^start\s+mutation\b/m.test(content)) continue;
     const legacy = /^start\s+operation\b/m.test(content);
     breaches.push({
@@ -6435,12 +6441,19 @@ function policyOpGrammarStartMutationBreaches(repoRoot: string): BreachRecord[] 
 
 /**
  * 📏️Specific mutation directory emojis must be unique within one artifact's `🧬️mutations/` tree.
+ *
+ * Held at `"medium"` (advisory) rather than `"high"`: this rule was silently inert until its scan
+ * depth was fixed (it walked the nonexistent `<artifact>/🧬️mutations` shape), and activating it at
+ * gate strength would immediately red four facets whose collisions are semantically coherent —
+ * `🏗️fem/🧊️3d` and `🏗️fem/◻2d` (`🌱`create-*, `🔁`replace-*, `🗑`delete-*), `📐️cad` (7 prefixes) and
+ * `🌊️flow` (`🔀️`reorder-*). Deliberately NOT seeded into a shrink-only allowlist: an allowlist is a
+ * timestamp too, and this tree moves faster than a constant can track. Graduate to `"high"` once
+ * those four dedup — the rule derives its population at run time, so no constant needs updating.
  */
 function policyMutationEmojiUniquenessBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
-    const mutationsRel = `${artRel}/${POLICY_MUTATIONS_FACET}`;
-    if (!existsSync(join(repoRoot, mutationsRel))) continue;
+  for (const mutationsRel of policyFindAllMutationsDirs(repoRoot)) {
+    const artRel = policyArtifactRootOfMutationsDir(mutationsRel);
     const seen = new Map<string, string>();
     for (const mutName of policyListMutationDirs(repoRoot, mutationsRel)) {
       const emoji = policyLeadingEmojiPrefix(mutName);
@@ -6450,7 +6463,7 @@ function policyMutationEmojiUniquenessBreaches(repoRoot: string): BreachRecord[]
           summary: `"${mutationsRel}/${mutName}" has no leading emoji prefix`,
           kind: "mutation-migration/emoji-uniqueness",
           scope: artRel,
-          priority: "high",
+          priority: "medium",
           reason: "Each concrete mutation directory must pick a unique emoji within its artifact.",
           solution: `Rename ${mutName} to include a unique emoji prefix (e.g. ➕️objects-add).`,
         });
@@ -6463,7 +6476,7 @@ function policyMutationEmojiUniquenessBreaches(repoRoot: string): BreachRecord[]
           summary: `"${mutationsRel}/${mutName}" reuses emoji "${emoji}" already used by "${prev}"`,
           kind: "mutation-migration/emoji-uniqueness",
           scope: artRel,
-          priority: "high",
+          priority: "medium",
           reason: "Specific mutation dir emojis must be unique within an artifact.",
           solution: `Give ${mutName} a different emoji than ${prev}.`,
         });
@@ -6476,10 +6489,11 @@ function policyMutationEmojiUniquenessBreaches(repoRoot: string): BreachRecord[]
 }
 
 /**
- * 🔍️Every `🧬️mutations` facet dir anywhere under `✏️s` (the real taxonomy nests it under
- * `🏅️standards/<slug>/🪆️subsets/<slug>/🧬️schema/🧬️mutations`, deeper than `policyListPluginArtifactDirs`'s
- * `<artifact>/🧬️mutations` assumption — that shallower shape is `policyMutationTriadCompletenessBreaches`'s
- * own pre-existing scope and is left untouched here) — shared by the SEMANTIC-MUTATIONS-OVERHAUL rules below.
+ * 🔍️Every `🧬️mutations` facet dir anywhere under `✏️s`. The real taxonomy nests it under
+ * `<artifact>/🏅️standards/<slug>/🪆️subsets/<slug>/🧬️schema/🧬️mutations`, which is deeper than the
+ * `<artifact>/🧬️mutations` shape `policyListPluginArtifactDirs` assumes — that shallower path matches
+ * nothing on disk, so every rule driven by it was either firing bogus breaches or silently inert.
+ * All mutation rules now share this walker.
  */
 function policyFindAllMutationsDirs(repoRoot: string): string[] {
   const found: string[] = [];
@@ -6496,6 +6510,19 @@ function policyFindAllMutationsDirs(repoRoot: string): string[] {
   };
   walk("✏️s");
   return found.sort();
+}
+
+/**
+ * 🗿️The owning artifact root for a `🧬️mutations` facet dir — everything above
+ * `🏅️standards/…`, else the dir's own parent. Used as the `scope` on mutation breaches so they
+ * report against `✏️s/🔌️plugins/<p>/🗿️artifacts/<a>` rather than the full nested facet path.
+ */
+function policyArtifactRootOfMutationsDir(mutationsRel: string): string {
+  const marker = mutationsRel.indexOf("/🏅️standards/");
+  if (marker > 0) return mutationsRel.slice(0, marker);
+  const parts = mutationsRel.split("/");
+  parts.pop();
+  return parts.join("/");
 }
 
 /**
@@ -6882,7 +6909,7 @@ function policyListSemanticVocabularyScanFiles(repoRoot: string): string[] {
 function policySemanticVocabularyBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyListSemanticVocabularyScanFiles(repoRoot)) {
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const hitTokens = POLICY_SEMANTIC_VOCABULARY_HIGH_TOKENS.filter((t) => t.re.test(content)).map((t) => t.label);
     const allowlisted = POLICY_SEMANTIC_VOCABULARY_ALLOWLIST.has(relPath);
     if (hitTokens.length > 0) {
@@ -6967,7 +6994,7 @@ function policyMutationDispatchCoverageBreaches(repoRoot: string): BreachRecord[
   for (const mutationsRel of policyFindAllMutationsDirs(repoRoot)) {
     const dispatchRel = `${mutationsRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
     if (!existsSync(join(repoRoot, dispatchRel))) continue;
-    const variantNames = new Set(policyMutationEnumVariantNames(readFileSync(join(repoRoot, dispatchRel), "utf8")));
+    const variantNames = new Set(policyMutationEnumVariantNames(policyReadFileSafe(repoRoot, dispatchRel)));
     if (variantNames.size === 0) continue;
     const triadPascalNames = new Set(policyListMutationDirs(repoRoot, mutationsRel).map((dir) => policyKebabToPascal(policyStripEmoji(dir))));
     const uncoveredVariants = [...variantNames].filter((v) => !triadPascalNames.has(v));
@@ -6997,7 +7024,7 @@ function policyMutationTsMirrorBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const tsFiles = policyWalkRelFiles(repoRoot, ["✏️s"], (relPath, name) => name === POLICY_TS_COMPONENT_LEAF && relPath.replaceAll("\\", "/").includes(`/${POLICY_MUTATIONS_FACET}/`));
   for (const relPath of tsFiles) {
-    const stripped = readFileSync(join(repoRoot, relPath), "utf8")
+    const stripped = policyReadFileSafe(repoRoot, relPath)
       .replace(/\/\*[\s\S]*?\*\//g, "")
       .replace(/\/\/.*$/gm, "")
       .trim();
@@ -7010,6 +7037,19 @@ function policyMutationTsMirrorBreaches(repoRoot: string): BreachRecord[] {
       priority: "low",
       reason: "A triad leaf's TS mirror should eventually re-export the same MutationKind payload shape as its Rust sibling, not stay an empty stub.",
       solution: `Give ${relPath} real content mirroring its 🦀️component.rs sibling once the DSL TS codegen for this triad lands.`,
+    });
+  }
+  for (const rsRel of policyWalkRelFiles(repoRoot, ["✏️s"], (relPath, name) => name === POLICY_RS_COMPONENT_LEAF_NAME && relPath.replaceAll("\\", "/").includes(`/${POLICY_MUTATIONS_FACET}/`))) {
+    const tsRel = `${rsRel.slice(0, rsRel.lastIndexOf("/"))}/${POLICY_TS_COMPONENT_LEAF}`;
+    if (existsSync(join(repoRoot, tsRel))) continue;
+    breaches.push({
+      id: `mutation-ts-mirror-absent-${tsRel}`,
+      summary: `"${rsRel}" has no 🟦️component.ts mirror beside it at all`,
+      kind: "mutation-migration/ts-mirror",
+      scope: tsRel,
+      priority: "low",
+      reason: "An ABSENT mirror is invisible to the stub scan above, so a facet that never scaffolded its .ts leaves looked cleaner than one that did — this half closes that blind spot.",
+      solution: `Create ${tsRel} mirroring its 🦀️component.rs sibling's MutationKind payload shape.`,
     });
   }
   return breaches;
@@ -7910,7 +7950,7 @@ export function policyDiscoverAppSchemaOwners(repoRoot: string): PolicyAppSchema
       const appRel = `${appsRel}/${app.name}`;
       const componentRel = `${appRel}/🦀️component.rs`;
       if (!existsSync(join(repoRoot, componentRel))) continue;
-      const text = readFileSync(join(repoRoot, componentRel), "utf8");
+      const text = policyReadFileSafe(repoRoot, componentRel);
       const m = /\btype\s+Config\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*;/.exec(text);
       if (!m) continue;
       const configType = m[1]!;
@@ -7926,7 +7966,7 @@ export function policyDiscoverAppSchemaOwners(repoRoot: string): PolicyAppSchema
         const pluginCfgRs = `${pluginConfigRel}/🦀️component.rs`;
         if (
           existsSync(join(repoRoot, pluginCfgRs)) &&
-          new RegExp(`\\bpub\\s+struct\\s+${configType}\\b`).test(readFileSync(join(repoRoot, pluginCfgRs), "utf8"))
+          new RegExp(`\\bpub\\s+struct\\s+${configType}\\b`).test(policyReadFileSafe(repoRoot, pluginCfgRs))
         ) {
           ownerRel = pluginConfigRel;
         }
@@ -8142,7 +8182,7 @@ function policyAppSchemaConfigFidelityBreaches(repoRoot: string): BreachRecord[]
     const cfgRs = `${owner.ownerRel}/🦀️component.rs`;
     const facetAbs = `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}`;
     if (!existsSync(join(repoRoot, cfgRs)) || !existsSync(join(repoRoot, facetAbs))) continue;
-    const real = policyExtractRustSchemaFields(readFileSync(join(repoRoot, cfgRs), "utf8"), owner.configType);
+    const real = policyExtractRustSchemaFields(policyReadFileSafe(repoRoot, cfgRs), owner.configType);
     const jsonLeaf = policyLoadAppSchemaFacetLeaves(repoRoot, facetAbs, owner.configType).find((l) => l.formatId === "🔣️jsonschema");
     if (!jsonLeaf?.extract) continue;
     const truth = new Map(real.fields.map((f) => [f.name, f]));
@@ -8526,7 +8566,7 @@ function policyStdioFacetRsTsBreaches(
       solution: `Add ${rsRel} implementing ${traitName}.`,
     });
   } else {
-    const body = readFileSync(join(repoRoot, rsRel), "utf8");
+    const body = policyReadFileSafe(repoRoot, rsRel);
     if (!policyRustFileHasRealTraitImpl(body, traitName)) {
       breaches.push({
         id: `${kind}-trait-${facetRel}`,
@@ -9112,8 +9152,8 @@ function policySchemaIsDelegatingPair(repoRoot: string, schemaRoot: string): boo
   if (entries.some((e) => e.isDirectory)) return false;
   const names = new Set(entries.map((e) => e.name));
   if (!names.has(POLICY_RS_COMPONENT_LEAF) || !names.has(POLICY_TS_COMPONENT_LEAF)) return false;
-  const rs = readFileSync(join(repoRoot, schemaRoot, POLICY_RS_COMPONENT_LEAF), "utf8");
-  const ts = readFileSync(join(repoRoot, schemaRoot, POLICY_TS_COMPONENT_LEAF), "utf8");
+  const rs = policyReadFileSafe(repoRoot, schemaRoot, POLICY_RS_COMPONENT_LEAF);
+  const ts = policyReadFileSafe(repoRoot, schemaRoot, POLICY_TS_COMPONENT_LEAF);
   const rsReexports = /pub\s+use\s+[\w:]+::any::schema::\*\s*;/.test(policyStripRustCommentsAndStrings(rs));
   const tsHasOwnType = /export\s+(interface|type|enum)\s+\w+/.test(ts);
   if (tsHasOwnType) return false;
@@ -9471,7 +9511,7 @@ export function policyCodecFidelityBreaches(repoRoot: string): BreachRecord[] {
   ];
   const rsFiles = policyWalkRelFiles(repoRoot, scanRoots, (_p, name) => name.endsWith(".rs"));
   for (const rel of rsFiles) {
-    const body = readFileSync(join(repoRoot, rel), "utf8");
+    const body = policyReadFileSafe(repoRoot, rel);
     for (const marker of POLICY_STDIO_CODEC_BANNED_MARKERS) {
       if (!body.includes(marker)) continue;
       breaches.push({
@@ -9532,7 +9572,7 @@ function policyDialectLiteralPathBreaches(repoRoot: string): BreachRecord[] {
     const ownArtifactKind = `s.stdio.${ownKey}`;
     const standardMatch = relPath.match(/🏅️standards\/🔖️([^/]+)\//);
     const subsetMatch = relPath.match(/🪆️subsets\/✳️([^/]+)\//);
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     POLICY_DIALECT_LITERAL_RE.lastIndex = 0;
     let m: RegExpExecArray | null;
     while ((m = POLICY_DIALECT_LITERAL_RE.exec(content))) {
@@ -9593,7 +9633,7 @@ function policyStdioCodecIdUniquenessBreaches(repoRoot: string): BreachRecord[] 
   const constValue = new Map<string, string>();
   const CONST_RE = /(?:pub\s+)?const\s+([A-Z0-9_]+)\s*:\s*&str\s*=\s*"([^"]*)"\s*;/g;
   for (const relPath of files) {
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     CONST_RE.lastIndex = 0;
     let cm: RegExpExecArray | null;
     while ((cm = CONST_RE.exec(content))) constValue.set(cm[1], cm[2]);
@@ -9603,7 +9643,7 @@ function policyStdioCodecIdUniquenessBreaches(repoRoot: string): BreachRecord[] 
   const CALL_RE = /register_document_codec\(\s*store::ArtifactCodec::of::<[\s\S]*?>\(\s*([\w:]+|"[^"]*")\s*\)\s*\)/g;
   const claims = new Map<string, { relPath: string; line: number }[]>();
   for (const relPath of files) {
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     CALL_RE.lastIndex = 0;
     let m: RegExpExecArray | null;
     while ((m = CALL_RE.exec(content))) {
@@ -9724,7 +9764,7 @@ function policyRoundTripTestBreaches(repoRoot: string): BreachRecord[] {
     if (!relPath.includes("🏅️standards/🔖️")) continue;
     const normalized = policyNormalizeRelPath(relPath);
     const allowlisted = POLICY_ROUND_TRIP_TEST_ALLOWLIST.has(normalized);
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const hasSignal = content.includes("#[cfg(test)]") && POLICY_ROUND_TRIP_SIGNAL_RE.test(content);
     if (!hasSignal) {
       if (allowlisted) continue;
@@ -9780,7 +9820,7 @@ function policyComposerDependencyBreaches(repoRoot: string): BreachRecord[] {
   for (const relPath of policyAllRustFiles(repoRoot)) {
     if (!relPath.endsWith(`🚪️io/${POLICY_RS_COMPONENT_LEAF}`)) continue;
     if (!relPath.startsWith(`${POLICY_STDIO_ARTIFACTS_REL}/`)) continue;
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     POLICY_DEP_DIALECT_RE.lastIndex = 0;
     let m: RegExpExecArray | null;
     while ((m = POLICY_DEP_DIALECT_RE.exec(content))) {
@@ -9878,7 +9918,7 @@ function policyMutationVocabularyBreaches(repoRoot: string): BreachRecord[] {
     if (!relPath.endsWith(`🧬️mutations/${POLICY_RS_COMPONENT_LEAF}`)) continue;
     if (!flagshipDirs.some((dir) => relPath.startsWith(`${dir}/`))) continue;
     const normalized = policyNormalizeRelPath(relPath);
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const variants = policyRustMutationEnumVariants(content);
     const realVariantCount = variants ? variants.filter((v) => v !== "NoMutation" && v !== "SetSnapshot").length : 0;
     const allowlisted = POLICY_FLAGSHIP_MUTATION_ALLOWLIST.has(normalized);
@@ -10015,7 +10055,7 @@ const POLICY_SNIFF_REALITY_ALLOWLIST = new Set<string>([
 function policySniffRealityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyAllRustFiles(repoRoot)) {
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     if (!content.includes("fn sniff(")) continue;
     const hasUnusedParam = /fn\s+sniff\(\s*_[A-Za-z0-9_]*\s*:/.test(content);
     const normalized = policyNormalizeRelPath(relPath);
@@ -10079,7 +10119,7 @@ function policyStdioVcsMachineryBanBreaches(repoRoot: string): BreachRecord[] {
   const prefix = `${POLICY_STDIO_ARTIFACTS_REL}/`;
   for (const relPath of policyAllRustFiles(repoRoot)) {
     if (!relPath.startsWith(prefix)) continue;
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const stripped = policyStripRustCommentsAndStrings(content);
     const hit = stripped.match(POLICY_STDIO_VCS_MACHINERY_BAN_RE)?.[1];
     const normalized = policyNormalizeRelPath(relPath);
@@ -10158,7 +10198,7 @@ function policyDiffAlgebraBreaches(repoRoot: string): BreachRecord[] {
   for (const entry of policyListStdioSchemaOwningEntries(repoRoot)) {
     const rustRel = `${entry.subsetRel}/🧬️schema/🔺️diff/🦀️component.rs`;
     if (!existsSync(join(repoRoot, rustRel))) continue;
-    const content = readFileSync(join(repoRoot, rustRel), "utf8");
+    const content = policyReadFileSafe(repoRoot, rustRel);
     const hasImpl = policyRustFileHasRealTraitImpl(content, "DiffAlgebra");
     const normalized = policyNormalizeRelPath(rustRel);
     const allowlisted = POLICY_DIFF_ALGEBRA_ALLOWLIST.has(normalized);
@@ -10216,7 +10256,7 @@ function policyFieldSweepPresenceBreaches(repoRoot: string): BreachRecord[] {
     // 🔒 Scoped to the subset's OWN tree, not the whole standard — a standard with several
     // schema-owning subsets (semio v1's 13) must not let one subset's sweep cover its siblings.
     const rsFiles = policyWalkRelFiles(repoRoot, [entry.subsetRel], (_p, name) => name.endsWith(".rs"));
-    const found = rsFiles.some((f) => fieldSweepRe.test(readFileSync(join(repoRoot, f), "utf8")));
+    const found = rsFiles.some((f) => fieldSweepRe.test(policyReadFileSafe(repoRoot, f)));
     const key = policyStdioSubsetKey(entry.artifactId, entry.standardSlug, entry.subsetId);
     const allowlisted = POLICY_FIELD_SWEEP_ALLOWLIST.has(key);
     if (!found) {
@@ -10635,7 +10675,7 @@ function policyGrammarHonestyBreaches(repoRoot: string): BreachRecord[] {
       }
       const marker = POLICY_GRAMMAR_HONESTY_LEAF_MARKERS[ent.name];
       if (!marker) continue;
-      const content = readFileSync(join(repoRoot, childRel), "utf8");
+      const content = policyReadFileSafe(repoRoot, childRel);
       const isPlaceholder = content.includes(marker);
       const normalized = policyNormalizeRelPath(childRel);
       const allowlisted = POLICY_GRAMMAR_HONESTY_ALLOWLIST.has(normalized);
@@ -10935,7 +10975,7 @@ function policyFacetMirrorDriftBreaches(repoRoot: string): BreachRecord[] {
       const facetRel = `${entry.subsetRel}/🧬️schema/${facet}`;
       const rustRel = `${facetRel}/🦀️component.rs`;
       if (!existsSync(join(repoRoot, rustRel))) continue;
-      const rustContent = readFileSync(join(repoRoot, rustRel), "utf8");
+      const rustContent = policyReadFileSafe(repoRoot, rustRel);
       const camelFields = policyFacetRustFieldNames(rustContent);
       // 🩹 compareFields also folds in serde tag discriminants (`#[serde(tag = "kind")]`) and
       // camelCased enum variant names — real fields every non-Rust mirror must spell out even
@@ -11143,7 +11183,7 @@ function policyGrammarParseabilityBreaches(repoRoot: string): BreachRecord[] {
     for (const facet of POLICY_GRAMMAR_PARSEABILITY_FACETS) {
       const rel = `${entry.subsetRel}/🧬️schema/${facet}/📝️text/📖️component.grammar.semio`;
       if (!existsSync(join(repoRoot, rel))) continue;
-      const content = readFileSync(join(repoRoot, rel), "utf8");
+      const content = policyReadFileSafe(repoRoot, rel);
       const looksReal = policyLooksLikeRealGrammarOrProtocolDialect(content, "grammar");
       const normalized = policyNormalizeRelPath(rel);
       const allowlisted = POLICY_GRAMMAR_PARSEABILITY_ALLOWLIST.has(normalized);
@@ -11248,7 +11288,7 @@ function policyProtocolParseabilityBreaches(repoRoot: string): BreachRecord[] {
     for (const facet of POLICY_GRAMMAR_PARSEABILITY_FACETS) {
       const rel = `${entry.subsetRel}/🧬️schema/${facet}/💾️binary/📡️component.protocol.semio`;
       if (!existsSync(join(repoRoot, rel))) continue;
-      const content = readFileSync(join(repoRoot, rel), "utf8");
+      const content = policyReadFileSafe(repoRoot, rel);
       const looksReal = policyLooksLikeRealGrammarOrProtocolDialect(content, "protocol");
       const normalized = policyNormalizeRelPath(rel);
       const allowlisted = POLICY_PROTOCOL_PARSEABILITY_ALLOWLIST.has(normalized);
@@ -11379,7 +11419,7 @@ function policyLanguageRegistrationBreaches(repoRoot: string): BreachRecord[] {
     if (seenStandards.has(key)) continue; // 🔒 one check per (artifact, standard), not per schema-owning subset
     seenStandards.add(key);
     const engineRel = `${standardRel}/⚙️engine/🦀️component.rs`;
-    const count = existsSync(join(repoRoot, engineRel)) ? (readFileSync(join(repoRoot, engineRel), "utf8").match(/register_language/g) ?? []).length : 0;
+    const count = existsSync(join(repoRoot, engineRel)) ? (policyReadFileSafe(repoRoot, engineRel).match(/register_language/g) ?? []).length : 0;
     const allowlisted = POLICY_LANGUAGE_REGISTRATION_ALLOWLIST.has(key);
     const ok = count >= POLICY_LANGUAGE_REGISTRATION_MIN_CALLS;
     if (!ok) {
@@ -11479,7 +11519,7 @@ function policyStdioJsonTransferBanBreaches(repoRoot: string): BreachRecord[] {
   const prefix = `${POLICY_STDIO_ARTIFACTS_REL}/`;
   for (const relPath of policyAllRustFiles(repoRoot)) {
     if (!relPath.startsWith(prefix)) continue;
-    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const content = policyReadFileSafe(repoRoot, relPath);
     const traitHit = policyStdioJsonTransferTraitHit(content);
     const ioHit =
       relPath.includes("🚪️io") &&
@@ -11524,6 +11564,129 @@ export function policySchemaOverhaulPCBreaches(repoRoot: string): BreachRecord[]
   ];
 }
 //#endregion 🔧️PolicyRuleSchemaOverhaulPC
+
+//#region 🔧️PolicyRuleDissolvedKernels
+/** 🧊️ Doctrine tier (d) ephemeral working representations — legal only as locals inside a diff
+ * constructor or an `InferredField::{plan,dep_input,compute}` body, never as durable state. */
+const POLICY_DISSOLVED_EPHEMERAL_REP_TYPES = ["HalfedgeMesh", "BrepEngineHost", "DrawingStore", "DrawingEngine", "EngineCache"] as const;
+
+/** 🧊️ Modules sanctioned to own an `EngineCache`/`EngineHost`: the wasm guest↔host boundary only. */
+const POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS = ["🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin"] as const;
+
+/** 🧊️ Shrink-only. Every entry is a known tier-(d) escape awaiting its dissolution wave. */
+const POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST = new Set<string>([
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs",
+  "🧰️framework/🔨️modules/◻2d/🗄️store/🦀️component.rs",
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🖥️host/🦀️component.rs",
+]);
+
+/** 🧊️ A durable field or static holding an ephemeral representation — measures REACH, not mutability.
+ *
+ * A `static HOST: OnceLock<BrepEngineHost>` is write-once, so every mutability-based rule passes it,
+ * and it is still a plugin holding a handle to host-owned engine state for the process lifetime.
+ * Reach is the property that matters; a separate rule from any `&mut`/`static mut` check. */
+function policyDissolvedRepEscapeBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    const normalized = policyNormalizeRelPath(relPath);
+    const content = policyReadFileSafe(repoRoot, relPath);
+    const held: string[] = [];
+    for (const repType of POLICY_DISSOLVED_EPHEMERAL_REP_TYPES) {
+      const fieldHit = new RegExp(`^\\s*(pub\\s+)?[a-z_][a-z0-9_]*\\s*:\\s*[^,;]*\\b${repType}\\b`, "m").test(content);
+      const staticHit = new RegExp(`static\\s+[A-Z0-9_]+\\s*:\\s*[^=;]*\\b${repType}\\b`).test(content);
+      if (fieldHit || staticHit) held.push(repType);
+    }
+    const allowlisted = POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST.has(normalized);
+    if (held.length > 0) {
+      if (allowlisted) continue;
+      breaches.push({
+        id: `dissolved-rep-escape-${relPath}`,
+        summary: `"${relPath}" holds an ephemeral working representation (${held.join(", ")}) in a durable field or static`,
+        kind: "dissolved-kernels/rep-escape",
+        scope: relPath,
+        priority: "medium",
+        reason:
+          "Doctrine tier (d): a working representation (halfedge adjacency, BVH, brep arena, tessellation buffer, engine cache) may exist only as a local inside a 🔺️diff constructor or an InferredField::{plan,dep_input,compute} body. Held durably it becomes authoritative state living outside the ArtifactStore — and a write-once wrapper such as OnceLock does not help, because the violation is ambient REACH, not ambient mutability.",
+        solution: `Rebuild the representation from the snapshot via EngineRep::build(&base) at each use in ${relPath}, or if this file's dissolution wave has not landed yet, add "${normalized}" to POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST citing ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS.`,
+      });
+    } else if (allowlisted) {
+      breaches.push({
+        id: `dissolved-rep-escape-stale-${relPath}`,
+        summary: `"${relPath}" is allowlisted in POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST but no longer holds an ephemeral representation`,
+        kind: "dissolved-kernels/rep-escape",
+        scope: relPath,
+        priority: "low",
+        reason: "Shrink-only allowlists must be pruned as soon as the underlying file is dissolved.",
+        solution: `Remove "${normalized}" from POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/** 🧊️ `EngineCache`/`EngineHost` reachable outside the wasm guest↔host boundary.
+ *
+ * Its general "kernel cache" role is over: derived values belong in a 💡️inference facet keyed by
+ * DepHash, ephemeral representations in an EngineRep. No seed — the narrowed scope is the target
+ * state going forward, so this fails on new violations rather than burning down a backlog. */
+function policyDissolvedEngineCacheScopeBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    if (POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS.some((dir) => relPath.startsWith(dir))) continue;
+    const normalized = policyNormalizeRelPath(relPath);
+    if (POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST.has(normalized)) continue;
+    const content = policyReadFileSafe(repoRoot, relPath);
+    if (!/\bEngineCache::new\b|\bEngineHost\s+for\b/.test(content)) continue;
+    breaches.push({
+      id: `dissolved-engine-cache-scope-${relPath}`,
+      summary: `"${relPath}" constructs or implements an engine cache outside the sanctioned wasm-boundary modules`,
+      kind: "dissolved-kernels/engine-cache-scope",
+      scope: relPath,
+      priority: "medium",
+      reason:
+        "EngineCache survives only at the wasm guest↔host boundary, where byte serialization is unavoidable. Elsewhere a cache of derived values is state outside the ArtifactStore: derived values belong in a 💡️inference facet with a real DepHash chain, ephemeral representations in an EngineRep rebuilt from the snapshot.",
+      solution: `Move the derived value in ${relPath} into a 💡️inference facet, or rebuild it per call via EngineRep::build(&base).`,
+    });
+  }
+  return breaches;
+}
+
+/** 🧊️ A whole-document-replace triad directory — banned vocabulary with no replacement.
+ *
+ * Whole-document replace is not expressible as an in-history mutation; it goes through
+ * `ArtifactStore::reset`, outside history. A directory-level check catches what an identifier grep
+ * misses, because the dispatch arm and the triad dir fail independently. */
+function policyDissolvedWholeDocumentReplaceBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    if (!relPath.includes("🧬️mutations/")) continue;
+    if (!/\/📄set-snapshot\//.test(relPath)) continue;
+    const dir = relPath.slice(0, relPath.indexOf("/📄set-snapshot/") + "/📄set-snapshot".length);
+    breaches.push({
+      id: `dissolved-whole-document-replace-${dir}`,
+      summary: `"${dir}" is a whole-document-replace triad directory`,
+      kind: "dissolved-kernels/whole-document-replace",
+      scope: dir,
+      priority: "medium",
+      reason:
+        "Whole-document replace is not an in-history mutation at all — it records what the document became, never what the user did, and has no meaningful inverse. It goes through ArtifactStore::reset (a non-undoable rebase used for file-open/import), entirely outside the mutation vocabulary.",
+      solution: `Delete ${dir}, its dispatch arm, and its 📦️glue.rs #[path] mount in the SAME change — a mount pointing at a removed directory aborts the build before compilation, for every crate in the workspace.`,
+    });
+  }
+  return Array.from(new Map(breaches.map((b) => [b.id, b])).values());
+}
+
+/** ⚖️ Aggregates the dissolved-kernels doctrine rules (ticket 26/08/12/DISSOLVE-KERNELS…). */
+export function policyDissolvedKernelsBreaches(repoRoot: string): BreachRecord[] {
+  return [
+    ...policyDissolvedRepEscapeBreaches(repoRoot),
+    ...policyDissolvedEngineCacheScopeBreaches(repoRoot),
+    ...policyDissolvedWholeDocumentReplaceBreaches(repoRoot),
+  ];
+}
+//#endregion 🔧️PolicyRuleDissolvedKernels
+
 //#region 🔖️PolicyExport
 /**
  * ⚖️Runs every Wave 4 app-plugin rule over every discovered crate that belongs to a plugin, plus the
@@ -11586,6 +11749,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyMutationArtifactEngineBreaches(repoRoot));
   breaches.push(...policySchemaOverhaulS2Breaches(repoRoot));
   breaches.push(...policySchemaOverhaulPCBreaches(repoRoot));
+  breaches.push(...policyDissolvedKernelsBreaches(repoRoot));
   breaches.push(...policyHandcraftedSpecP3Breaches(repoRoot));
   breaches.push(...policyArtifactSchemaBreaches(repoRoot));
   breaches.push(...policyAppSchemaBreaches(repoRoot));

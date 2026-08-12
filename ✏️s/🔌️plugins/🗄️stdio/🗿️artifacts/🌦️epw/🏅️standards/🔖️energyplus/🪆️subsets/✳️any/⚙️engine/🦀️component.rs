@@ -187,7 +187,15 @@ pub fn encode_epw(snap: &EpwSnapshot) -> String {
 /// standard `energyplus` is this artifact's whole registration entrypoint).
 pub fn register() {
     crate::artifacts::epw::standards::energyplus::subsets::any::io::register();
+    register_artifact_inferences();
     register_pilot_languages();
+}
+
+/// 💡️ Registers `s.stdio.epw.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `io::register()`'s own `register_artifact_schema_descriptor` call above (separate
+/// registry, ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::epw::standards::energyplus::subsets::any::schema::inferences::epw_artifact_inference_descriptor());
 }
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).

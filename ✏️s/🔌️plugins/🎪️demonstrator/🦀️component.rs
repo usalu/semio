@@ -8,7 +8,8 @@ const PLUGIN_VERSION: &str = "0.1.0";
 
 /// 🔌️ Builds the demonstrator plugin: `.artifact(...)` declares the owned `playground` artifact
 /// (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1, replacing the old side-effecting
-/// `crate::artifacts::playground::engine::register()`), then `panes::bundle` layers the six panes'
+/// per-leaf `register()` the artifact used to expose from its now-deleted engine dir), then
+/// `panes::bundle` layers the six panes'
 /// host exports + apps onto the already-built `Plugin`. Playground has no app-scope config/presence
 /// schema of its own, so unlike `🗒️note` this plugin needs no narrowed `.setup()` call at all.
 pub fn plugin() -> Plugin {

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteNode` — a real cascade-aware removal (node + any edge that
 //! touches it), never a whole-snapshot capture.
 use crate::artifacts::dag::diff::{DagDiff, DagEdgesDelta, DagNodesDelta};
-use crate::artifacts::dag::engine::split_endpoint;
+use crate::artifacts::dag::schema::split_endpoint;
 use crate::artifacts::dag::DagSnapshot;
 
 //#region 🔖️Diff

@@ -63,82 +63,14 @@ pub fn block2d_io() -> AppIo {
 //#endregion 🔖️Io
 
 //#region 🔌️Registration
-/// 🗂️ Registers `Block2dSnapshot`'s pack↔dsl codec under `BLOCK_2D_SCHEMA`. Called from the plugin
-/// root's `register_block_exports` (`📦️glue.rs`). Lives here rather than under `🗿️artifacts/◻2d`
-/// because it binds the codec to `Block2dPlayApp` — an artifact must never depend on an app.
-pub fn register() {
-    crate::artifacts::block2d::io_registry::register();
-
-    register_pilot_languages();
-    register_artifact_schema();
-    register_artifact_inference();
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Block2dPlayApp>(BLOCK_2D_SCHEMA);
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "block.block2d",
-        extension: Some("block2d"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::block2d::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::block2d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("block.block2d"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "block.block2d.op",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::block2d::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::block2d::op::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::block2d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::block2d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("block.block2d.op"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "block.block2d.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::block2d::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::block2d::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: dsl::passthrough_hooks("block.block2d.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "2d.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::block2d::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("2d.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "2d.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::block2d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::block2d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("2d.spr"),
-    });
-}
-
-/// 🧬️ Registers `block2d` fifteen-leaf artifact schema descriptor once.
-pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::block2d::schema::block2d_artifact_schema_descriptor());
-}
-
-/// 💡️ Registers `block2d`'s `s.block.block2d.inference` descriptor once — sibling to
-/// `register_artifact_schema()` above (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub fn register_artifact_inference() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::block2d::standards::v1::subsets::any::schema::inferences::block2d_artifact_inference_descriptor());
-}
+/// 🗂️ `Block2dSnapshot`'s pack↔dsl codec, `block2d`'s artifact schema/inference descriptors, its
+/// composer table and its pilot-language grammars now register declaratively via
+/// `crate::artifacts::block2d::declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+/// M1/W1d), consumed by `.artifact(crate::artifacts::block2d::declaration())` in the plugin root
+/// (`🧱️block/🦀️component.rs`) — replacing this app's former side-effecting `register()`. Nothing
+/// app-scope-only remains here: `Block2dPlayApp::app_schema()` now returns
+/// `crate::apps::block2d::config::schema::app_schema_descriptor()` directly (ticket W1c), so the
+/// plugin root's `.setup()` escape hatch is gone entirely.
 //#endregion 🔌️Registration
 
 //#region 🔖️Commands
@@ -183,6 +115,10 @@ impl ArtifactApp for Block2dPlayApp {
 
     const APP_ID: &'static str = BLOCK2D_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_2D_SCHEMA;
+
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+        Some(crate::apps::block2d::config::schema::app_schema_descriptor())
+    }
 
     fn initial_snapshot() -> Block2dSnapshot {
         crate::artifacts::block2d::schema::empty_block2d_snapshot()

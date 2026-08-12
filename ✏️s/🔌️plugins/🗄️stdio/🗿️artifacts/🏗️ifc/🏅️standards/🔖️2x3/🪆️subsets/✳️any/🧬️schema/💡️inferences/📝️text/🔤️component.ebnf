@@ -1,0 +1,3 @@
+(* ebnf s.stdio.ifc.2x3.inference *)
+document = header, body ;
+header = 'schema', space, 's.stdio.ifc.2x3.inference', newline ;

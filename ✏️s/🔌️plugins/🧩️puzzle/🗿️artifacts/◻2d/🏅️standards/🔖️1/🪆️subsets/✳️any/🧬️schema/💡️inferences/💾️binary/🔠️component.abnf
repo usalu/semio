@@ -1,0 +1,3 @@
+; abnf puzzle.puzzle2d.inference
+document = payload
+payload = *OCTET

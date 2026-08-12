@@ -4,8 +4,9 @@
 //! `acquirePluginModule`'s lease pool in framework core `📦️index.ts`) instead of statically
 //! duplicating the SDK six times over.
 //!
-//! This crate also owns the minimal `🎪️playground` artifact (schema/snapshot/diff/dsl/op/spr/engine)
-//! so the demonstrator taxonomy slot is complete. Pane apps still come from the six source plugins.
+//! This crate also owns the minimal `🎪️playground` artifact (schema/snapshot/diff/dsl/op/spr — no
+//! engine, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) so the demonstrator taxonomy
+//! slot is complete. Pane apps still come from the six source plugins.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]`
 //! written in full, relative to THIS file's directory (`📦️packages/🦀️rust`, hence the `../../` climb
@@ -32,8 +33,6 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -252,9 +251,6 @@ pub mod artifacts {
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod engine {
-            pub use super::standards::v1::engine::*;
         }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;

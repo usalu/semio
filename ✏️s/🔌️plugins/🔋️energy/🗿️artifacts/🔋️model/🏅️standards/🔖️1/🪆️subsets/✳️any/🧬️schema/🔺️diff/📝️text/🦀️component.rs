@@ -101,14 +101,14 @@ mod tests {
 
     #[test]
     fn empty_diff_is_a_no_operation() {
-        let base = crate::artifacts::model::engine::empty_energy_model_snapshot();
+        let base = crate::artifacts::model::schema::empty_energy_model_snapshot();
         let diff = EnergyModelDiff::default();
         assert_eq!(diff.apply(&base), base);
     }
 
     #[test]
     fn preview_results_do_not_enter_snapshot() {
-        let base = crate::artifacts::model::engine::empty_energy_model_snapshot();
+        let base = crate::artifacts::model::schema::empty_energy_model_snapshot();
         let diff = diff_set_results_json("{\"ok\":true}");
         assert_eq!(diff.apply(&base), base);
         let artifact = EnergyModelArtifact::from_snapshot(base);

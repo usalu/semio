@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.zip.inference
+extension zip.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.zip.inference" NL
+body = payload NL?
+payload = OCTET+

@@ -1,0 +1,20 @@
+syntax = "proto3";
+package semio.s.stdio.semio.kit.inference;
+
+// 💡️ Semio kit inference schema — catalog census over the kit's own collections.
+
+message SemioKitInference {
+  // @state inferred
+  SemioKitEntries entries = 1;
+}
+
+message SemioKitEntries {
+  uint32 type_count = 1;
+  uint32 design_count = 2;
+  uint32 piece_count = 3;
+  uint32 connection_count = 4;
+  uint32 object_count = 5;
+  uint32 model_count = 6;
+  bool has_properties = 7;
+  uint32 representation_count = 8;
+}

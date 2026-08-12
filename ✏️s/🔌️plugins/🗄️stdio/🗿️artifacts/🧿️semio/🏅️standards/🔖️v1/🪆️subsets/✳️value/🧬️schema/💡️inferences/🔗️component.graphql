@@ -1,0 +1,19 @@
+# 💡️ Semio value inference schema — real variant census + max depth over the value graph.
+
+type SemioValueInference {
+  census: SemioValueCensus! @state(class: INFERRED)
+}
+
+type SemioValueCensus {
+  nullCount: Int!
+  boolCount: Int!
+  intCount: Int!
+  floatCount: Int!
+  strCount: Int!
+  bytesCount: Int!
+  listCount: Int!
+  mapCount: Int!
+  refCount: Int!
+  nodeCount: Int!
+  maxDepth: Int!
+}

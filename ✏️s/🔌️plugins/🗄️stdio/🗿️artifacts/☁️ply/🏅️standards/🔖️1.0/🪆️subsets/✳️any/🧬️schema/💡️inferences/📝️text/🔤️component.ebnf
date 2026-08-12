@@ -1,0 +1,3 @@
+(* ebnf s.stdio.ply.inference *)
+document = header, body ;
+header = 'schema', space, 's.stdio.ply.inference', newline ;

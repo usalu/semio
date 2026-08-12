@@ -1,0 +1,3 @@
+(* ebnf s.stdio.dxf.inference *)
+document = header, body ;
+header = 'schema', space, 's.stdio.dxf.inference', newline ;

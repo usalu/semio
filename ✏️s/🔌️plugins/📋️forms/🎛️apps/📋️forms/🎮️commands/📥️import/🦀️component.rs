@@ -4,7 +4,7 @@
 
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::reset_try_config_mutations;
-use crate::artifacts::forms::engine::{default_example_spec, empty_forms_snapshot, onboarding_example_spec};
+use crate::artifacts::forms::schema::{default_example_spec, empty_forms_snapshot, onboarding_example_spec};
 // 🧷️ Aliased: the payload structs below derive the EXTERN `dsl` crate's `dsl::DslRecord` — importing the
 // artifact's own `dsl` submodule under the bare name would shadow it.
 use crate::artifacts::forms::dsl as forms_dsl;
@@ -103,7 +103,7 @@ mod tests {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::SetActiveExample(SetActiveExample { example_id: "".into() }));
         let spec = app.snapshot().expect("projection");
-        assert!(crate::artifacts::forms::engine::flatten_questions(&spec).is_empty());
+        assert!(crate::artifacts::forms::schema::flatten_questions(&spec).is_empty());
     }
 
     #[test]

@@ -108,6 +108,20 @@ impl Default for MdSnapshot {
         }
     }
 }
+
+impl MdSnapshot {
+    pub fn from_text(text: &str) -> Self {
+        let blocks = crate::artifacts::md::engine::parse_markdown_blocks(text);
+        Self {
+            schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
+            blocks,
+        }
+    }
+
+    pub fn to_text(&self) -> String {
+        crate::artifacts::md::engine::render_markdown_blocks(&self.blocks)
+    }
+}
 //#endregion 🔖️CommonMarkModel
 
 //#region 🔖️HandcraftedArtifactCodecs

@@ -1,0 +1,3 @@
+(* ebnf s.stdio.avi.inference *)
+document = header, body ;
+header = 'schema', space, 's.stdio.avi.inference', newline ;

@@ -45,6 +45,15 @@ impl PlaygroundArtifact {
 }
 //#endregion 🔖️Conversions
 
+//#region 🔖️DocumentHelpers
+/// 🏗️ Empty default playground snapshot (relocated from the deleted `⚙️engine`, ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES: pure document helper, no `&mut self`,
+/// no app type — belongs beside the snapshot it builds).
+pub fn empty_playground_snapshot() -> crate::artifacts::playground::PlaygroundSnapshot {
+    crate::artifacts::playground::PlaygroundSnapshot::default()
+}
+//#endregion 🔖️DocumentHelpers
+
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.demonstrator.playground` — twenty handcrafted schema leaves.
 pub fn playground_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
@@ -171,6 +180,19 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_snapshot_matches_schema() {
+        let snapshot = empty_playground_snapshot();
+        assert_eq!(snapshot.schema, crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA);
+    }
+}
+//#endregion 🧪️Tests
 
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(

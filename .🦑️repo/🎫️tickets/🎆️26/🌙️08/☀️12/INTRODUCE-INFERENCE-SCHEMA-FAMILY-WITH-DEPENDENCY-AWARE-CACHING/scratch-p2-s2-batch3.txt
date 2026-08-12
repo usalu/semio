@@ -1,0 +1,156 @@
+P2/S2/Batch3 scratch notes — dxf r12, dwg ac1018, dwg ac1024 inference families
+================================================================================
+
+Scope (3 subsets only):
+1. ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/
+2. ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/
+3. ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/
+
+Exemplars read in full before writing anything:
+- semio-cad's 💡️inferences family root + 📦bounds/ slug dir (🦀️component.rs + 🟦️component.ts)
+- png's 💡️inferences family root + 📐dimensions/ slug dir + engine register() wiring (already-wired
+  exemplar confirmed the fully-qualified-path pattern for both ArtifactInferrer impl target and
+  register_artifact_inferences()'s descriptor call: crate::artifacts::png::standards::v1_2::
+  subsets::any::schema::inferences::png_artifact_inference_descriptor(), coexisting with the
+  pre-existing SHORT alias crate::artifacts::png::schema::png_artifact_schema_descriptor() used by
+  register_artifact_schema()).
+- Read each subset's own 📸️snapshot/🦀️component.rs (DxfSnapshot / DwgSnapshot x2) directly, not
+  assumed, to get real field names/types and each Default impl.
+- Read each subset's own 🧬️schema/🦀️component.rs (non-snapshot) to confirm DxfBuilder/DwgBuilder
+  names and existing dxf_artifact_schema_descriptor / dwg_artifact_schema_descriptor fns + ids.
+- Read each subset's own ⚙️engine/🦀️component.rs register()/register_artifact_schema() to find the
+  exact insertion point and to see ac1018's own documented pitfall: crate::artifacts::dwg::schema
+  is a SHIM ALIASED TO AC1024 (canonical) — register_pilot_languages() in ac1018's own engine file
+  explicitly avoids it and uses the fully-qualified `standards::v_ac1018::subsets::any::schema`
+  path instead, with a doc comment warning about exactly this pitfall. Both dwg engines' EXISTING
+  register_artifact_schema() calls use the SHORT `crate::artifacts::dwg::schema::
+  dwg_artifact_schema_descriptor()` alias — meaning both currently register the SAME (ac1024's)
+  schema descriptor twice; this is the pre-existing, documented, intentional collision the ticket
+  told me to reproduce, not fix. For MY register_artifact_inferences() in both dwg engines I used
+  the FULLY QUALIFIED per-standard path (matching ac1018's own register_pilot_languages precedent
+  and the ticket brief's explicit instruction), so ac1018's engine registers ac1018's OWN inference
+  descriptor and ac1024's engine registers ac1024's OWN inference descriptor — both under the SAME
+  id string "s.stdio.dwg.inference" and SAME fn name `dwg_artifact_inference_descriptor` (per
+  standard's own module), matching the intentional id collision at the STRING level while each
+  physically registers its own real descriptor value (byte-identical shape isn't required, only
+  the id string collision is the documented pattern to reproduce).
+
+Typo-trap incident (self-caught, self-fixed): twice wrote to the WRONG path segment
+"🏅️标准" (Chinese "biāozhǔn") instead of "🏅️standards" (Latin) — once under 🖊️dxf/, once under
+🖊️dwg/. Both caught immediately via `ls`/`find` verification and removed with `rm -rf` BEFORE any
+further files were written under the wrong tree (verified with `find -maxdepth 1` that only the
+correct 🏅️standards subtree existed afterward, and confirmed via `git status --short` that the
+stray dxf/dwg-root-level 🟦️component.ts + 🦀️component.rs files noticed during cleanup were
+pre-existing, untouched, unrelated artifact-root files — NOT something I created or broke).
+
+============================================================
+1. DXF r12/any — slug `📦bounds` (real geometry — DXF R12 decodes real vector CAD entities)
+============================================================
+Real fields used (compute_dxf_bounds):
+  DxfBounds { min: [f64;3], max: [f64;3], entity_count: u32 }
+  Walks snapshot.entities.iter().chain(snapshot.blocks.iter().flat_map(|b| b.entities.iter())).
+  Per-variant: Line{start,end}, Circle{center,radius} and Arc{center,radius} both use full-circle
+  center±radius bbox, Polyline{vertices} (DxfVertex.x/y/z), Text{position}, Solid{points:[[f64;3];4]},
+  Insert{position} (insertion point only, NOT the referenced block's own geometry — referential
+  concern out of scope), Other{..} skipped for the fold but counted in entity_count.
+  DxfSnapshot module path used: crate::artifacts::dxf::DxfSnapshot (short form — dxf has only one
+  standard/subset so this is unambiguous, matches dxf's own existing schema/component.rs import).
+  ArtifactInferrer impl target: crate::artifacts::dxf::standards::v_r12::subsets::any::schema::DxfBuilder
+
+Files created (21 total, self-check matches):
+  🧬️schema/💡️inferences/🦀️component.rs
+  🧬️schema/💡️inferences/🟦️component.ts
+  🧬️schema/💡️inferences/🔗️component.graphql
+  🧬️schema/💡️inferences/🔣️component.json
+  🧬️schema/💡️inferences/🛰️component.proto
+  🧬️schema/💡️inferences/📝️text/{🅰️component.g4, 📖️component.grammar.semio, 🔗️component.graphql,
+    🔣️component.json, 🔤️component.ebnf, 🛰️component.proto, 🟦️component.ts, 🦀️component.rs}
+  🧬️schema/💡️inferences/💾️binary/{🌶️component.spicy, 📡️component.protocol.semio, 🔠️component.abnf,
+    🟦️component.ts, 🥋️component.ksy, 🦀️component.rs}
+  🧬️schema/💡️inferences/📦bounds/{🦀️component.rs, 🟦️component.ts}
+
+register() edit: ⚙️engine/🦀️component.rs — added register_artifact_inferences() call at line 54
+(inside register(), right after register_artifact_schema()); new fn defined at line 62.
+
+============================================================
+2. DWG ac1018/any — slug `🗂structure` (no decoded geometry — deliberately frozen legacy shim)
+============================================================
+Real fields used (compute_dwg_structure), directly off DwgSnapshot{schema,version,
+maintenance_version,codepage,bytes,section_names}:
+  DwgStructure { byte_count: bytes.len(), section_count: section_names.len(), codepage, version }
+DwgSnapshot module path used (FULLY QUALIFIED — the short crate::artifacts::dwg::schema alias
+resolves to AC1024, would be WRONG here):
+  crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::snapshot::DwgSnapshot
+ArtifactInferrer impl target: crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::DwgBuilder
+Verified DwgSnapshot::default() (ac1018): bytes=[], section_names=[], codepage=0, version="" — so
+hand-rolled DwgStructure::default() = {0,0,0,""} matches compute() over the real empty default
+exactly (verified against the file, not assumed).
+
+Files created (21 total, self-check matches):
+  🧬️schema/💡️inferences/🦀️component.rs (id "s.stdio.dwg.inference", fn dwg_artifact_inference_descriptor
+    — SAME id/fn name as ac1024's own, intentional collision reproduced per ticket instruction)
+  🧬️schema/💡️inferences/🟦️component.ts
+  🧬️schema/💡️inferences/🔗️component.graphql
+  🧬️schema/💡️inferences/🔣️component.json
+  🧬️schema/💡️inferences/🛰️component.proto
+  🧬️schema/💡️inferences/📝️text/{8 files, same shape as dxf's}
+  🧬️schema/💡️inferences/💾️binary/{6 files, same shape as dxf's}
+  🧬️schema/💡️inferences/🗂structure/{🦀️component.rs, 🟦️component.ts}
+
+register() edit: ⚙️engine/🦀️component.rs — added register_artifact_inferences() call at line 36
+(inside register(), right after register_artifact_schema()); new fn defined at line 49, using the
+FULLY QUALIFIED standards::v_ac1018::... path (mirrors register_pilot_languages()'s own documented
+avoidance of the ac1024-aliased short form).
+
+============================================================
+3. DWG ac1024/any — slug `🗂structure` (real D1/D2 section+page decode, no geometric entities)
+============================================================
+Real fields used (compute_dwg_structure), folding sections[].pages[] plus O(1) top-level reads:
+  DwgStructure { byte_count: bytes.len(), section_count: sections.len(), page_count (sum pages),
+    decoded_page_count (pages where !decoded.is_empty()), error_page_count (pages where
+    error.is_some()), declared_total_size (sum sections[].declared_size), codepage, version }
+  DELIBERATELY a different, richer struct than ac1018's own (per ticket instruction — ac1024's
+  snapshot genuinely has more decoded structure: DwgSection{name,compressed,declared_size,pages:
+  Vec<DwgSectionPage>}, DwgSectionPage{page_number,file_address,compressed_size,decoded,error}).
+DwgSnapshot module path used (fully qualified, matching ac1018's own precedent even though the
+short alias happens to be correct here since ac1024 IS canonical — kept symmetric/unambiguous):
+  crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot
+ArtifactInferrer impl target: crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::DwgBuilder
+Verified DwgSnapshot::default() (ac1024): bytes=[], sections=[], codepage=0, version="" — hand-rolled
+DwgStructure::default() = {0,0,0,0,0,0,0,""} matches compute() over the real empty default exactly.
+
+Files created (21 total, self-check matches):
+  🧬️schema/💡️inferences/🦀️component.rs (id "s.stdio.dwg.inference", fn dwg_artifact_inference_descriptor
+    — SAME id/fn name as ac1018's own, intentional collision reproduced per ticket instruction)
+  🧬️schema/💡️inferences/🟦️component.ts
+  🧬️schema/💡️inferences/🔗️component.graphql
+  🧬️schema/💡️inferences/🔣️component.json
+  🧬️schema/💡️inferences/🛰️component.proto
+  🧬️schema/💡️inferences/📝️text/{8 files, same shape as dxf's}
+  🧬️schema/💡️inferences/💾️binary/{6 files, same shape as dxf's}
+  🧬️schema/💡️inferences/🗂structure/{🦀️component.rs, 🟦️component.ts}
+
+register() edit: ⚙️engine/🦀️component.rs — added register_artifact_inferences() call at line 489
+(inside register(), right after register_artifact_schema()); new fn defined at line 501, using the
+FULLY QUALIFIED standards::v_ac1024::... path (symmetric with ac1018's own engine edit).
+
+============================================================
+Self-check results
+============================================================
+find <dir> -type f | wc -l for all three subsets' 💡️inferences trees: 21 each.
+NOTE: the task brief's step 1 said "should be 23 per subset" — I did NOT take this on faith; I
+independently re-verified the real, already-completed exemplar trees (semio-cad's own 💡️inferences,
+AND png's own 💡️inferences, a DIFFERENT already-shipped subset) and BOTH give exactly 21 files for
+the family-root(5) + text(8) + binary(6) + one-slug-dir(2) shape — matching what I built for all
+three of my subsets. Flagging the "23" figure in the brief as apparently stale/incorrect rather than
+silently complying with it or silently ignoring the discrepancy.
+
+Python brace-balance check: ran a standalone python3 script counting {/} per character (not a full
+Rust parser, but decisive for detecting an unterminated/extra brace) over all 12 newly-written .rs
+files across the three subsets (family root + text-leaf + binary-leaf + slug-dir, x3 subsets, minus
+dxf/ac1018/ac1024 all having exactly 4 new .rs files each = 12). All 12 reported OK (net-zero depth,
+never negative).
+
+Did NOT run cargo check/build/test (per hard rule #5 in 📌️important.md — another session runs the
+final gate after glue.rs mounting). Did NOT touch 📦️glue.rs, 📜️script.ts, 🔣️taxonomy.json,
+🧰️framework/, 🧩️puzzle, 🧿️semio, or any other subset/artifact outside my assigned 3.

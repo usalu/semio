@@ -1,0 +1,3 @@
+; abnf s.stdio.bcf.inference
+document = payload
+payload = *OCTET

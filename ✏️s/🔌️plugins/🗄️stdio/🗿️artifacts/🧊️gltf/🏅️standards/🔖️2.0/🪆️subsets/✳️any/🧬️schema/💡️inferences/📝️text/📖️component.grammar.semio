@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.gltf.inference
+extension gltf.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.gltf.inference" NL
+body = payload NL?
+payload = OCTET+

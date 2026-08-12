@@ -163,11 +163,10 @@ pub mod io_registry {
 //#region 🪪️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `register()`, which called four different global registries directly from
-/// a plugin `.setup()` callback. `crate::apps::block3d::config::schema::register_app_schema()` is the
-/// one exception, still called from `🧱️block/🦀️component.rs`'s own narrowed `.setup()`: it registers
-/// the `Block3dPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration`
-/// deliberately has no field for (see that struct's own doc) — `register_app_schema_descriptor` is
-/// not in §6's artifact-scoped function set.
+/// a plugin `.setup()` callback. `Block3dPlayApp`'s CONFIG/PRESENCE schema — an app-scope concern
+/// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) — now registers via
+/// `ArtifactApp::app_schema()` returning `crate::apps::block3d::config::schema::app_schema_descriptor()`
+/// (ticket W1c), so `.setup()` is gone from `🧱️block/🦀️component.rs` entirely.
 pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.block3d")
         .schema(crate::artifacts::block3d::schema::block3d_artifact_schema_descriptor())

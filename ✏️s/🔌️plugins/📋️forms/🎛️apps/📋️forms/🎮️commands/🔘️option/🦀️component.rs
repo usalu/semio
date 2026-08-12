@@ -3,7 +3,7 @@
 
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::parse_value_json;
-use crate::artifacts::forms::engine::{create_form_id, update_block_operation};
+use crate::artifacts::forms::schema::{create_form_id, update_block_operation};
 use crate::artifacts::forms::{op::FormMutation, FormQuestionOption, FormsSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -116,7 +116,7 @@ mod tests {
 
     fn single_or_multi_question_id(app: &mut crate::apps::forms::testkit::FormsApp) -> String {
         dispatch(app, FormsCommand::AddQuestion(crate::apps::forms::commands::question::add_question::AddQuestion { kind: "single".into(), step_id: None }));
-        crate::artifacts::forms::engine::flatten_questions(&app.snapshot().expect("projection")).into_iter().map(|(_, question)| question).find(|question| question.kind == "single").expect("single question").id
+        crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).into_iter().map(|(_, question)| question).find(|question| question.kind == "single").expect("single question").id
     }
 
     #[test]
@@ -125,11 +125,11 @@ mod tests {
         let question_id = single_or_multi_question_id(&mut app);
         dispatch(&mut app, FormsCommand::AddQuestionOption(AddQuestionOption { question_id: question_id.clone(), label: "New option".into() }));
         let spec = app.snapshot().expect("projection");
-        let (_, question) = crate::artifacts::forms::engine::flatten_questions(&spec).into_iter().find(|(_, question)| question.id == question_id).expect("question");
+        let (_, question) = crate::artifacts::forms::schema::flatten_questions(&spec).into_iter().find(|(_, question)| question.id == question_id).expect("question");
         let added = question.options.as_ref().expect("options").iter().find(|option| option.label == "New option").expect("added option").value.clone();
         dispatch(&mut app, FormsCommand::RemoveQuestionOption(RemoveQuestionOption { question_id: question_id.clone(), option_value: added.clone() }));
         let spec = app.snapshot().expect("projection");
-        let (_, question) = crate::artifacts::forms::engine::flatten_questions(&spec).into_iter().find(|(_, question)| question.id == question_id).expect("question");
+        let (_, question) = crate::artifacts::forms::schema::flatten_questions(&spec).into_iter().find(|(_, question)| question.id == question_id).expect("question");
         assert!(question.options.as_ref().expect("options").iter().all(|option| option.value != added));
     }
 }

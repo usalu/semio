@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/step/inference.json",
+  "title": "StepInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bounds"],
+  "properties": {
+    "bounds": { "$ref": "#/$defs/StepBounds", "x-semio-state": "inferred" }
+  },
+  "$defs": {
+    "StepBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max", "pointCount"],
+      "properties": {
+        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "pointCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
