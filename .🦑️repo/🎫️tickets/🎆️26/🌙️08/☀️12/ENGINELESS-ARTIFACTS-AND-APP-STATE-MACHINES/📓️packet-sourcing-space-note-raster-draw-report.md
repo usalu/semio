@@ -11,11 +11,11 @@ in this folder.
 
 | plugin | engine dir gone | structural grep (0 required) | compiler | destinations | notes |
 |---|---|---|---|---|---|
-| 🪐️space | ✅ deleted | 0 (excl. `apps::space::engine::`/`base64::engine::`, both legitimate) | pre-existing red, NOT mine (see below) | schema (2 helpers), io (io_registry) | `SHomeEngine` deleted outright, 0 external refs; broken never-compiled `dsl::ArtifactEngine` test dropped with it |
-| 🖨️raster | ✅ deleted | 0 (excl. `base64::engine::`/`semio_s_plugin_stdio::…::engine::`, both legitimate) | blocked on stdio (upstream, see below) | schema (DocumentHelpers+Tree), io (SemioBridge+MediaExport+MediaImport+io_registry), apps (Io region) | `RasterEngine` deleted outright, 0 external refs; ~50 external call sites across the plugin repointed |
+| 🪐️space | ✅ deleted | 0 (excl. `apps::space::engine::`/`base64::engine::`, both legitimate) | pre-existing red ×2 reproductions, NOT mine (see below) | schema (2 helpers), io (io_registry) | `SHomeEngine` deleted outright, 0 external refs; broken never-compiled `dsl::ArtifactEngine` test dropped with it |
+| 🖨️raster | ✅ deleted | 0 (excl. `base64::engine::`/`semio_s_plugin_stdio::…::engine::`, both legitimate) | ✅ green, exit 0, `Finished` in 3m30s | schema (DocumentHelpers+Tree), io (SemioBridge+MediaExport+MediaImport+io_registry), apps (Io region) | `RasterEngine` deleted outright, 0 external refs; ~50 external call sites repointed; found+fixed 1 real bug (missing `base64::Engine` trait import) before going green |
 | 🪵️sourcing | pending (agent running) | pending | pending | pending | delegated |
-| 🗒️note | pending (agent running) | pending | pending | pending | delegated |
-| 🖍️draw | pending (agent running) | pending | pending | pending | delegated |
+| 🗒️note | ✅ deleted | 0 (6 legitimate stdio-engine false positives) | ✅ green, exit 0, `Finished` in 6m39s | schema (DocumentHelpers), io (MediaExport+MediaImport+io_registry) | delegated; `NoteEngine` deleted outright, 0 external refs; 62 external call sites fixed; 9/9 tests preserved |
+| 🖍️draw | ✅ deleted | 0 (1 legitimate stdio-engine false positive) | ✅ green, exit 0, `Finished` in 2m36s | schema (DocumentHelpers+Tree+SegmentGeometry+KernelResolve), io (SemioBridge+io_registry), apps (Io region) | delegated; `DrawEngine` deleted outright, 0 external refs; 33 external call-site files fixed; 34/34 tests preserved; `🔄️fsm` scope trap respected (verified untouched) |
 
 ## 🪐️space — done by orchestrator
 
@@ -71,6 +71,12 @@ that regression (it got past stdio compilation to its own 6 errors), so the two 
 even the same failure; stdio has been flapping through several distinct red states during this session,
 consistent with `📓️io-registry-shadow-list.md`'s "verification is a timestamp, not a property" warning.
 
+**Re-run after stdio recovered** (background poll confirmed `cargo check -p semio-s-plugin-stdio
+--all-targets` → `Finished` in 10m07s, exit 0): re-ran `cargo check -p semio-s-plugin-space --all-targets`
+a second time. **Identical 6 errors, same files, same line numbers, same error codes** (E0308/E0560/E0609)
+— stable and reproduced twice independently of stdio's state, confirming these are genuinely space-local/
+stdio-schema-drift pre-existing issues, not a stdio compile failure and not caused by this packet's edits.
+
 ## 🖨️raster — done by orchestrator
 
 **Source file**: `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs` (786 lines).
@@ -111,17 +117,133 @@ No such file or directory (os error 2)
     --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:7024:37
 error: could not compile `semio-s-plugin-stdio` (lib) due to 1 previous error
 ```
-**Attribution**: this is `semio-s-plugin-stdio` itself, a dangling `#[path]` mount left behind by another
+**Attribution**: this was `semio-s-plugin-stdio` itself, a dangling `#[path]` mount left behind by another
 session's in-flight mutation-vocabulary rename under `✳️mesh` — exactly the documented pattern in this
 ticket's own `📓️packet-manifest.md` ("A rename landed on directories, left the `#[path]` mount behind —
-third instance of this pattern today"). `semio-s-plugin-raster` was never actually compiled by this run;
+third instance of this pattern today"). `semio-s-plugin-raster` was never actually compiled by that run;
 the compiler never got past its dependency, `semio-s-plugin-stdio`. Not touched, not fixed here, per the
-explicit instruction not to patch stdio. A background poll (`scratch-stdio-poll.txt`) is retrying
-`cargo check -p semio-s-plugin-stdio` every ~45s to catch it going green so raster can be re-verified;
-results will be appended below once it resolves or the packet closes, whichever first.
+explicit instruction not to patch stdio.
 
-## 🪵️sourcing / 🗒️note / 🖍️draw
+**Re-run after stdio recovered** (background poll confirmed `cargo check -p semio-s-plugin-stdio
+--all-targets` → `Finished` in 10m07s, exit 0): re-ran raster's own check.
+- **First re-run**: 1 real error, MINE — `error[E0599]: no method named 'decode' found for struct
+  'GeneralPurpose'` at `🧬️schema/🦀️component.rs:379` (inside the relocated `semio_fixture_snapshot`,
+  which calls `base64::engine::general_purpose::STANDARD.decode(...)`) — the engine file's own top-level
+  `use base64::Engine;` didn't travel with the relocated body. Fixed: added `use base64::Engine as _;` to
+  `🧬️schema/🦀️component.rs`'s top-of-file imports (the `🚪️io/🦀️component.rs` and app-file copies of this
+  same relocated code already had their own `Engine` import, added correctly the first time).
+- **Second re-run**: **green.**
+```
+warning: `semio-s-plugin-raster` (lib) generated 36 warnings (run `cargo fix --lib -p semio-s-plugin-raster` to apply 31 suggestions)
+warning: `semio-s-plugin-raster` (lib test) generated 39 warnings (34 duplicates)
+    Finished `dev` profile [unoptimized] target(s) in 3m 30s
+EXIT:0
+```
+`grep -c "^error"` on the full log → **0**. All 36/39 warnings are pre-existing (unused-import/dead-code/
+unused-variable style, in both touched and untouched files) — none are new compile errors. **Net result:
+`semio-s-plugin-raster --all-targets` compiles clean.**
 
-Delegated to three parallel background agents (dispatched with the full rule set, the shadow-io_registry
-hazard, the module-nesting-is-not-uniform warning, and — for sourcing specifically — the pre-derived
-region map covering its three dependent extension crates). Results pending; appended below on completion.
+## 🗒️note — delegated agent, STATUS: green (full worklog: `scratch-note-worklog.txt`)
+
+**Source file**: `…/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs` (1109 lines), module
+mounted at `standards::v1::engine` (verified via `📦️glue.rs`, not assumed).
+
+**Destinations:**
+- `NoteEngine` (struct+impl) → **DELETED OUTRIGHT** (zero external refs, confirmed by grep before deleting).
+- Pure document helpers (`create_note_id`, `semio_example_snapshot/json`, `empty_note_snapshot`, block
+  tree helpers `block_id/name/kind/visible/locked/icon`, `block_tree_row_id`, `find_block(_location)`,
+  `flatten_blocks`, `create_block_by_kind`, `remove_block_from_tree`, `reid_block_tree`, `clone_block`,
+  `offset_block_tree`, `insert_after/block`, `update/mutate_block_in_tree`, `block_bounds`,
+  `patch_block_field`) → `🧬️schema/🦀️component.rs`, new `🔖️DocumentHelpers` region.
+- MediaExport/MediaImport bridge (`note_document_bounds`, `note_document_to_svg`,
+  `note_document_json_to_svg`, `note_document_json_from_dwg`, `ensure_semio_drawing_bridge_registered`,
+  etc.) + the real `io_registry` → `🚪️io/🦀️component.rs`, added alongside its pre-existing
+  `derived_composition` module (not replaced).
+- **Nothing moved to `💡️inferences/`** (no derived-compute helper existed in the engine file — note's
+  only inference already lives elsewhere) and **nothing moved to `🎛️apps/`** (no `AppIo` builder, no
+  `register*()` wiring existed; `declaration()`/`pilot_languages()` were already relocated by an earlier
+  pass and correctly left alone). Reported as an honest "nothing to do here" rather than inventing a
+  destination to match the map.
+
+**Shadow trap**: root's shadowing `io_registry` present and handled — both the `declaration()` composers
+call and the shadow's own `use … as v1` repointed by full canonical path
+(`standards::v1::subsets::any::io::io_registry`), never via the ambiguous `crate::artifacts::note::io::`
+shim.
+
+**Call sites**: 62 files referenced `crate::artifacts::note::engine::X`; all fixed — 57 to `schema::`, 5
+hand-corrected to `io::` (including one file whose `use {flatten_blocks, note_document_bounds}` had to be
+*split* across both modules since the two symbols now live in different places).
+
+**Tests**: 9 before (`git show HEAD:<engine-file> | grep -c '#\[test\]'`) → 9 after (1 in schema, 8 in
+io). **Delta: 0.**
+
+**Compiler**: `RUSTC_WRAPPER="" CARGO_TARGET_DIR=.../🎯️target cargo check -p semio-s-plugin-note --all-targets`
+→ **exit 0, `Finished` in 6m39s, zero `^error` lines.** Self-reported run history in full: run 1 was red
+with 2 lib + 4 lib-test errors (`NoteTextParagraph`/`NoteTextRun` not imported after relocation) — these
+were the agent's own bugs, fixed rather than attributed away; run 2 was killed by the harness mid-lock-wait
+(exit 144, shared-target contention, not a real failure); run 3 is the green one reported above. All
+remaining warnings proven pre-existing via `git show HEAD` on the same lines. Net new warnings introduced: 0.
+
+**Files touched**: 0 created, 68 edited (glue.rs, artifact root, schema/component.rs, io/component.rs,
+and 64 call-site leaf files), 1 file + 1 dir deleted (the engine component + its directory).
+
+## 🖍️draw — delegated agent, STATUS: green (full worklog: `scratch-draw-worklog.txt`)
+
+**Source file**: `…/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs` (2054 lines, the
+largest of the five), module mounted at `standards::v1::engine` directly (verified via `📦️glue.rs`).
+`✏️s/🔌️plugins/🖍️draw/🔄️fsm/**` (a sibling state-machine crate pair belonging to a different workstream
+of this same ticket) was explicitly out of scope and confirmed untouched (`git status --porcelain` empty,
+both its `Cargo.toml`s intact).
+
+**Destinations:**
+- `DrawEngine` (struct+impl) → **DELETED OUTRIGHT** (0 external refs, confirmed by grep before deleting).
+- Pure document helpers/types (scene node types, id/tree/kind helpers, layer constructors, path-segment
+  geometry — hex/rgba, transform↔matrix, curve sampling/flattening, boolean/trace layer resolution,
+  kernel segment conversion, `artifact_schema_registered`) → `🧬️schema/🦀️component.rs`, new
+  `🔖️DocumentHelpers` region (with `🔖️SceneTypes`/`🔖️Tree`/`🔖️SegmentGeometry`/`🔖️KernelResolve`
+  sub-regions) + a new `🧪️Tests` region (the destination file had none before).
+- `io_registry` + the semio/drawing↔svg bridge (`ensure_semio_drawing_bridge_registered` — confirmed
+  present, contrary to an earlier report's suspicion that draw might be missing this pattern) →
+  `🚪️io/🦀️component.rs`, added alongside its pre-existing `🎹️DerivedComposition` region (not replaced).
+- `draw_io`/`draw_vector_out_port`/`draw_vector_media` (`AppIo`-returning) → `🎛️apps/🖍️draw/🦀️component.rs`,
+  new `🔖️Io` region. The empty `🎛️apps/🖍️draw/⚙️engine` stub was confirmed still empty and left alone.
+- Nothing routed to `💡️inferences/` (draw's only such compute, `compute_draw_topology`, already lives
+  there and was untouched) — reported explicitly rather than assumed.
+
+**Shadow trap**: confirmed real and handled at all three affected sites (root `declaration()`, the root's
+own shadow module's `as v1` alias, and the real `io_registry`'s own internal call into the relocated
+`draw_document_to_semio_drawing`) — all fully re-qualified onto `standards::v1::subsets::any::io::io_registry`
+/`crate::artifacts::draw::io::`, never left as a bare/ambiguous name.
+
+**Call sites**: 33 files outside the engine referenced `crate::artifacts::draw::engine::X`; all rewritten
+to `crate::artifacts::draw::schema::X` (5 app panel/command files, 6 io deserializer leaves, 20 schema
+mutation/snapshot/diff leaves, plus the app root itself, which now calls its own local `draw_io()`/
+`draw_vector_media()` directly instead of importing them).
+
+**Tests**: 34 before (`git show HEAD:<engine-file> | grep -c '#\[test\]'`) → 34 after (33 in schema, 1 in
+io — the semio/svg bridge test). **Delta: 0.** Cross-checked plugin-wide test count too (133 in the
+working tree vs 167 in `git grep HEAD`, where HEAD still double-counts the pre-relocation engine file
+alongside the already-auto-committed destinations — 167 = 133 + the same 34, confirming no loss).
+
+**Compiler**: `RUSTC_WRAPPER="" CARGO_TARGET_DIR=.../🎯️target cargo check -p semio-s-plugin-draw --all-targets`.
+Run 1 was red on `semio-s-plugin-stdio` (E0308, live churn — `git status --porcelain` on stdio showed an
+uncommitted `M` + a batch of newly `A`dded files at that moment, i.e. another session mid-edit; draw's own
+crate never got compiled). Run 2, after stdio settled, was green — `Finished` in 2m36s, 0 errors — and the
+agent additionally found and fixed 2 warnings genuinely introduced by its own relocation (`unnecessary
+qualification`: `std::collections::BTreeMap::new()` → `BTreeMap::new()`, redundant once inside a file that
+already imports `BTreeMap` at its top) rather than leaving them. Run 3 re-confirmed clean after that
+cleanup. `grep -c "^error"` on the full log → 0 in every green run.
+
+**Files touched**: 0 created, 37 edited (glue.rs, artifact root, schema/component.rs, io/component.rs,
+app root, 32 call-site leaf files), 1 file + 1 dir deleted.
+
+**Self-reported gaps** (agent's own honesty section): `cargo test` was not run (only `--all-targets`
+check, per the brief) — type-correctness of the relocated tests is proven, runtime behavior of the
+relocated bridge test is not independently re-verified beyond compiling.
+
+## 🪵️sourcing
+
+Delegated to a background agent (dispatched with the full rule set, the shadow-io_registry hazard, the
+module-nesting-is-not-uniform warning, and the pre-derived region map covering its three dependent
+extension crates). Resumed once to wait out its own compiles after `semio-s-plugin-stdio` went green
+mid-packet. Results pending; appended below on completion.

@@ -1,7 +1,7 @@
 //! 🔍️ ISO 16757 play app panel — the inspection tab: one computed check in full, chosen by the config's
 //! `selected_check_index` (the only view state a norm app carries).
 
-use crate::artifacts::iso16757::engine::Iso16757Family;
+use crate::apps::iso16757::Iso16757Family;
 use crate::document::NormHost;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, UiNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 

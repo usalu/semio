@@ -40,22 +40,6 @@ pub mod artifacts {
             #[path = "."]
             pub mod v1 {
                 #[path = "."]
-                pub mod engine {
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎲️board-host/🦀️component.rs"]
-                    pub mod board_host;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📐️layout/🦀️component.rs"]
-                    pub mod layout;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔗️linking/🦀️component.rs"]
-                    pub mod linking;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔣️icons/🦀️component.rs"]
-                    pub mod icons;
-                    #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🖌️brush/🦀️component.rs"]
-                    pub mod brush;
-                }
-                #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
@@ -546,9 +530,6 @@ pub mod artifacts {
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod engine {
-            pub use super::standards::v1::engine::*;
         }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
@@ -1093,26 +1074,6 @@ pub mod artifacts {
             #[path = "."]
             pub mod v1 {
                 #[path = "."]
-                pub mod engine {
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/⏳️session/🦀️component.rs"]
-                    pub mod session;
-                    #[path = "."]
-                    pub mod geometry {
-                        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📐️geometry/🦀️component.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📐️geometry/🎛flatten/🦀️component.rs"]
-                        pub mod flatten;
-                    }
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🖌️brush/🦀️component.rs"]
-                    pub mod brush;
-                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🪣️fill/🦀️component.rs"]
-                    pub mod fill;
-                }
-                #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
@@ -1143,6 +1104,12 @@ pub mod artifacts {
                                 #[path = "."]
                                 pub mod flat_position {
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛flat-position/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                                #[path = "."]
+                                pub mod flatten {
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛flatten/🦀️component.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
@@ -1733,9 +1700,6 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v1::engine::*;
-        }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
@@ -1786,6 +1750,23 @@ pub mod apps {
         pub mod terminology;
         #[path = "../../🎛️apps/◻2d/🌉️wasm/🦀️component.rs"]
         pub mod wasm;
+
+        #[path = "."]
+        pub mod engine {
+            #[path = "../../🎛️apps/◻2d/⚙️engine/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "../../🎛️apps/◻2d/⚙️engine/🎲️board-host/🦀️component.rs"]
+            pub mod board_host;
+            #[path = "../../🎛️apps/◻2d/⚙️engine/📐️layout/🦀️component.rs"]
+            pub mod layout;
+            #[path = "../../🎛️apps/◻2d/⚙️engine/🔗️linking/🦀️component.rs"]
+            pub mod linking;
+            #[path = "../../🎛️apps/◻2d/⚙️engine/🔣️icons/🦀️component.rs"]
+            pub mod icons;
+            #[path = "../../🎛️apps/◻2d/⚙️engine/🖌️brush/🦀️component.rs"]
+            pub mod brush;
+        }
 
         #[path = "."]
         pub mod commands {
@@ -1876,6 +1857,19 @@ pub mod apps {
         #[path = "../../🎛️apps/🧊️3d/🦀️component.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod precompute {
+            #[path = "../../🎛️apps/🧊️3d/⏳️precompute/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "../../🎛️apps/🧊️3d/⏳️precompute/📐️geometry/🦀️component.rs"]
+            pub mod geometry;
+            #[path = "../../🎛️apps/🧊️3d/⏳️precompute/🖌️brush/🦀️component.rs"]
+            pub mod brush;
+            #[path = "../../🎛️apps/🧊️3d/⏳️precompute/🪣️fill/🦀️component.rs"]
+            pub mod fill;
+        }
 
         #[path = "."]
         pub mod config {

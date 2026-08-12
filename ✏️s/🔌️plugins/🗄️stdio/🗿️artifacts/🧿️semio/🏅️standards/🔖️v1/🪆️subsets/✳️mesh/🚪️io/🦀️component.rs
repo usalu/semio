@@ -156,6 +156,14 @@ pub mod derived_composition {
         store::register_document_codec(store::ArtifactCodec::of::<SemioMeshSnapshot, crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation>(crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA));
         register_subset_validator(validator_entry());
         register_composer_entries(io_bridge_entries());
+        register_artifact_inferences();
+    }
+
+    /// 💡️ Registers `s.stdio.semio.mesh.inference`'s facet leaves into the OS-wide inference
+    /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
+    /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::mesh::schema::inferences::semio_mesh_artifact_inference_descriptor());
     }
 
     //#region 🔖️IoBridgeEntries
@@ -278,7 +286,7 @@ pub mod derived_composition {
             fn grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
-                let text = crate::artifacts::semio::standards::v1::subsets::mesh::engine::print_mesh_dsl(&crate::artifacts::semio::standards::v1::subsets::mesh::engine::demo_mesh_snapshot());
+                let text = crate::artifacts::semio::standards::v1::engine::print_mesh_dsl(&crate::artifacts::semio::standards::v1::engine::demo_mesh_snapshot());
                 let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
                 let reconstructed = format!("{}\n{body}", envelope.envelope_id());
                 assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
@@ -315,7 +323,7 @@ pub mod derived_composition {
             #[test]
             fn protocol_walk_law() {
                 let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-                let packed = crate::artifacts::semio::standards::v1::subsets::mesh::engine::encode_mesh_pack(&crate::artifacts::semio::standards::v1::subsets::mesh::engine::demo_mesh_snapshot());
+                let packed = crate::artifacts::semio::standards::v1::engine::encode_mesh_pack(&crate::artifacts::semio::standards::v1::engine::demo_mesh_snapshot());
                 let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
                 let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
@@ -344,7 +352,7 @@ pub mod derived_composition {
                 const FIXTURE_DSL: &str = include_str!("../📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio");
                 const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🧊️cube/🖼️assets/🎒️example.pack.semio");
 
-                let demo = crate::artifacts::semio::standards::v1::subsets::mesh::engine::demo_mesh_snapshot();
+                let demo = crate::artifacts::semio::standards::v1::engine::demo_mesh_snapshot();
 
                 let parsed = <snapshot::SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
                 assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_mesh_snapshot()");
@@ -383,23 +391,23 @@ pub mod derived_composition {
 
             fn parse_native(asset: &store::os_store::test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
                 let text = asset.text.ok_or_else(|| "mesh cube requires dsl text".to_string())?;
-                crate::artifacts::semio::standards::v1::subsets::mesh::engine::parse_mesh_dsl(text).map_err(|e| e.to_string())
+                crate::artifacts::semio::standards::v1::engine::parse_mesh_dsl(text).map_err(|e| e.to_string())
             }
 
             fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
-                Ok(crate::artifacts::semio::standards::v1::subsets::mesh::engine::print_mesh_dsl(snapshot).into_bytes())
+                Ok(crate::artifacts::semio::standards::v1::engine::print_mesh_dsl(snapshot).into_bytes())
             }
 
             fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
                 let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
-                crate::artifacts::semio::standards::v1::subsets::mesh::engine::parse_mesh_dsl(text).map_err(|e| e.to_string())
+                crate::artifacts::semio::standards::v1::engine::parse_mesh_dsl(text).map_err(|e| e.to_string())
             }
 
             fn infer(_snapshot: &Self::Snapshot) -> Self::Inference {}
 
             fn sample_mutations(_snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
                 // 🔧️ Mechanical fallout from DKM's mesh mutation-vocabulary rewrite: the banned
-                // `NoMutation` sentinel no longer exists (a mutation with nothing to undo returns
+                // no-op sentinel no longer exists (a mutation with nothing to undo returns
                 // `Vec::new()` from `inverse`, no sentinel variant needed — taxonomy.md), so every
                 // `demo_mutation_cases()` entry is now a genuine mutation; the filter that used to
                 // skip the no-op is no longer expressible (and no longer necessary).

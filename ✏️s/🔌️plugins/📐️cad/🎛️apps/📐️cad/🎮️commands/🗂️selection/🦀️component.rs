@@ -8,7 +8,7 @@ use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{apply_component_selection, cad_pane_id_from_suffix, cad_pane_id_from_surface_id, clear_component_selection, resolve_active_object_id, runtime_of, snapshot_of};
 use crate::apps::cad::config::CadHoverTarget;
-use crate::artifacts::cad::engine::primary_primitive_kind;
+use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::primary_primitive_kind;
 use crate::artifacts::cad::{cad_all_objects, cad_pane_objects, CadPaneId};
 use semio_framework_plugin::{merge_world_selection_ids, SelectionSet};
 

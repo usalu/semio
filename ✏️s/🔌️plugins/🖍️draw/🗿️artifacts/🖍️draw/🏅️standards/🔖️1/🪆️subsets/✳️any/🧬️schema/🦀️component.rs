@@ -59,8 +59,8 @@ impl Default for DrawArtifact {
 
 impl DrawArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::draw::DrawSnapshot {
-        crate::artifacts::draw::DrawSnapshot {
+    pub fn to_snapshot(&self) -> DrawSnapshot {
+        DrawSnapshot {
             schema: self.schema.clone(),
             id: self.id.clone(),
             title: self.title.clone(),
@@ -71,7 +71,7 @@ impl DrawArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::draw::DrawSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: DrawSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             id: snapshot.id,
@@ -84,7 +84,7 @@ impl DrawArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::draw::DrawSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: DrawSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.title = snapshot.title;
@@ -1405,7 +1405,7 @@ mod tests {
         image::DynamicImage::ImageRgba8(image_buffer).write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png).expect("encode png");
         let mut doc = default_draw_document("trace-test", None);
         doc.layers.clear();
-        let mut assets = std::collections::BTreeMap::new();
+        let mut assets = BTreeMap::new();
         assets.insert("source".to_string(), DrawImageAsset { mime: "image/png".into(), data: BASE64.encode(&bytes), width: None, height: None });
         doc.assets = assets;
         doc.artboard = Some(DrawArtboard { width: 16.0, height: 16.0 });
@@ -1791,7 +1791,7 @@ mod tests {
         let trace_no_assets = DrawTraceBody { base: default_layer_base("T"), source_key: "missing".into(), params: default_draw_trace_params() };
         assert!(resolve_trace_layer_segments(&doc, &trace_no_assets).is_empty());
 
-        let mut assets = std::collections::BTreeMap::new();
+        let mut assets = BTreeMap::new();
         assets.insert("present".to_string(), DrawImageAsset { mime: "image/png".into(), data: "not-base64!!".into(), width: None, height: None });
         doc.assets = assets;
         let trace_missing_key = DrawTraceBody { base: default_layer_base("T"), source_key: "missing".into(), params: default_draw_trace_params() };

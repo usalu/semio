@@ -1,7 +1,7 @@
 //! 🔵️ Wires play app commands — adding an identity node to the board.
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
-use crate::artifacts::wires::engine::fixture_nodes;
+use crate::artifacts::wires::schema::fixture_nodes;
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -44,7 +44,7 @@ mod tests {
     use super::*;
     use crate::apps::wires::testkit::{dispatch, new_app};
     use crate::apps::wires::WiresCommand;
-    use crate::artifacts::wires::engine::find_board_node;
+    use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 
     #[test]
     fn add_node_appends_and_selects() {

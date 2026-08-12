@@ -1,0 +1,3 @@
+(* ebnf s.stdio.semio.brep.inference *)
+document = header, body ;
+header = 'schema', space, 's.stdio.semio.brep.inference', newline ;

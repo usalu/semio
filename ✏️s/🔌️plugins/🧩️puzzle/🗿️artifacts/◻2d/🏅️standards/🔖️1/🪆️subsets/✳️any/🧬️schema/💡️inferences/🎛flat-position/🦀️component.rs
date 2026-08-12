@@ -10,7 +10,7 @@
 //! (mirroring jack's `🧭topology`/`🎛flat-position` and puzzle3d's own sibling), no
 //! `InferredField`/incremental caching is needed here either.
 
-use super::fastened_layout_snapshot;
+use super::super::fastened_layout_snapshot;
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;

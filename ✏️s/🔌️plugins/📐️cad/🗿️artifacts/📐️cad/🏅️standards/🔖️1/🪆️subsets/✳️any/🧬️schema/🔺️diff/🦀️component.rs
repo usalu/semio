@@ -1,8 +1,8 @@
 //! 🧬️ Cad diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::cad::mutations::{CadNodePatch, CadObjectPatch};
+use crate::artifacts::cad::mutations::CadNodePatch;
 use crate::artifacts::cad::schema::{CadComponentSelection, CadDislocateOptions};
-use crate::artifacts::cad::{CadCamera, CadGeometry, CadNode, CadObject, CadReferenceList};
+use crate::artifacts::cad::{CadCamera, CadDrawingChild, CadModelChild, CadNode, CadReferenceList};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -16,16 +16,13 @@ pub struct CadDiff {
     #[state(persistent)] pub artifact: Option<Box<crate::artifacts::cad::schema::CadArtifact>>,
     #[state(persistent)] pub schema: Option<String>,
     #[state(persistent)] pub id: Option<String>,
-    #[state(persistent)] pub objects: Option<CadObjectsDelta>,
-    #[state(persistent)] pub building_objects: Option<CadObjectsDelta>,
-    #[state(persistent)] pub energy_objects: Option<CadObjectsDelta>,
-    #[state(persistent)] pub structure_classic_objects: Option<CadObjectsDelta>,
+    #[state(persistent)] pub shape_model: Option<Option<CadModelChild>>,
+    #[state(persistent)] pub building_model: Option<Option<CadModelChild>>,
+    #[state(persistent)] pub energy_model: Option<Option<CadModelChild>>,
+    #[state(persistent)] pub structure_classic_model: Option<Option<CadModelChild>>,
+    #[state(persistent)] pub drawings: Option<CadDrawingChildList>,
     #[state(persistent)] pub references_by_model_definition_id: Option<BTreeMap<String, CadReferenceList>>,
     #[state(persistent)] pub nodes: Option<CadNodesDelta>,
-    #[state(persistent)] pub shape_geometry: Option<Option<CadGeometry>>,
-    #[state(persistent)] pub building_geometry: Option<Option<CadGeometry>>,
-    #[state(persistent)] pub energy_geometry: Option<Option<CadGeometry>>,
-    #[state(persistent)] pub structure_classic_geometry: Option<Option<CadGeometry>>,
     #[state(persistent)] pub active_model_definition_id: Option<String>,
     #[state(shared_ui)] pub selected_object_ids: Option<CadStringList>,
     #[state(shared_ui)] pub selected_node_ids: Option<CadStringList>,
@@ -74,22 +71,13 @@ pub struct CadStringList {
     pub values: Vec<String>,
 }
 
-/// 🧩 Identified-collection delta for object panes.
+/// 🧩️ Whole-list wrapper for the `drawings` composed CHILD COLLECTION diff field — same `RunList`
+/// shape `✳️text`/`✳️kit` use for their own Vec-of-child diff fields (kit's own
+/// `SemioKitModelChildList` is the direct precedent for a `Vec<ArtifactChild<S>>` diff wrapper).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct CadObjectsDelta {
-    pub added: Vec<CadObject>,
-    pub removed: Vec<String>,
-    pub patched: Vec<CadObjectPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched object entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CadObjectPatchEntry {
-    pub id: String,
-    pub patch: CadObjectPatch,
+pub struct CadDrawingChildList {
+    pub values: Vec<CadDrawingChild>,
 }
 
 /// 🧩 Identified-collection delta for nodes.

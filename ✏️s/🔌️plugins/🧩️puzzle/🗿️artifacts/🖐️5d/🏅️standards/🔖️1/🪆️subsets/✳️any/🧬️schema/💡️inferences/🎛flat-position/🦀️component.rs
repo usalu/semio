@@ -1,5 +1,5 @@
 //! 🎛 `flat-position` — one named inference: absolute flatten pose (plane + center) per part.
-//! `FlattenPlane`/`FlattenPose` (the result types) stay owned by `puzzle3d::engine::geometry::flatten`
+//! `FlattenPlane`/`FlattenPose` (the result types) stay owned by `puzzle3d::schema::inferences::flatten`
 //! (that sibling artifact's own low-level pose math); this leaf owns the puzzle5d-side projection —
 //! mapping parts/grips/fasteners onto the 3d object/vortex/attraction graph and running puzzle3d's
 //! solver — directly, so `📦️glue.rs` has a `flat_position` mount matching puzzle3d's own shape.
@@ -12,7 +12,7 @@
 //! `Snapshot -> Value` manifest-projection pure fn living in `🧬️schema/💡️inferences/`), so the math
 //! belongs here beside its one real consumer instead of behind an engine facade.
 
-use crate::artifacts::puzzle3d::engine::geometry::flatten::{self, DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS, DIAGRAM_VERTICAL_V_EXTRA};
+use crate::artifacts::puzzle3d::schema::inferences::flatten::{self, DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS, DIAGRAM_VERTICAL_V_EXTRA};
 use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dVortex};
 use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dSnapshot, Puzzle5dScale};
 use std::collections::HashMap;
@@ -20,7 +20,7 @@ use std::collections::HashMap;
 // 🔗️ Kept public (the pre-relocation shim's own surface): the result TYPES stay owned by
 // puzzle3d's own low-level geometry, re-exported here so `flat_position::FlattenPose`/`FlattenPlane`
 // keep resolving for any caller reaching through this slug's own name.
-pub use crate::artifacts::puzzle3d::engine::geometry::flatten::{FlattenPlane, FlattenPose};
+pub use crate::artifacts::puzzle3d::schema::inferences::flatten::{FlattenPlane, FlattenPose};
 
 //#region 🔖️SnapshotToObjectGraph
 fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {

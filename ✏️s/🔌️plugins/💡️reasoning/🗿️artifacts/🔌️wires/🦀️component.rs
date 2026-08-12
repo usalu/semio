@@ -160,7 +160,7 @@ pub struct KindCatalogsDsl {
 }
 
 /// 🔒️ `board.meta.wires` — the fixed identity-id vocabulary this WIRES board is allowed to
-/// reference (mirrors `crate::artifacts::wires::engine::DefaultWiresExtension::allowed_identities`).
+/// reference (mirrors `crate::apps::wires::panels::inspection::DefaultWiresExtension::allowed_identities`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct MetaWiresDsl {
@@ -212,7 +212,7 @@ pub struct IdentityDsl {
 }
 
 /// 🔗️ One `wires_fixture.relationships` row — a semantic WIRES relationship between two identities,
-/// `kind` is one of `crate::artifacts::wires::engine::RelationshipKind::label()`'s four values
+/// `kind` is one of `crate::apps::wires::panels::inspection::RelationshipKind::label()`'s four values
 /// (`"owns"`/`"is"`/`"references"`/`"has"`), kept as a plain string here since that enum lives in the
 /// engine component — see the module doc above for why this component stays generic.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -281,7 +281,7 @@ mod tests {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::wires::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::wires::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

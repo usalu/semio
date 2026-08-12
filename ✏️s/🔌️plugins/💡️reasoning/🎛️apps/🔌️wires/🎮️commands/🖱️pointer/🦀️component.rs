@@ -1,7 +1,8 @@
 //! 🖱️ Wires play app commands — canvas pointer interactions (down/move/up) that drive node dragging.
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
-use crate::artifacts::wires::engine::{fixture_camera, find_board_node, node_position};
+use crate::artifacts::wires::schema::{fixture_camera, node_position};
+use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
@@ -84,7 +85,7 @@ mod tests {
     use crate::apps::wires::commands::node::add_node;
     use crate::apps::wires::testkit::{dispatch, new_app};
     use crate::apps::wires::WiresCommand;
-    use crate::artifacts::wires::engine::find_board_node;
+    use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
     use semio_framework_plugin::{testkit, PluginApp};
 
     #[test]

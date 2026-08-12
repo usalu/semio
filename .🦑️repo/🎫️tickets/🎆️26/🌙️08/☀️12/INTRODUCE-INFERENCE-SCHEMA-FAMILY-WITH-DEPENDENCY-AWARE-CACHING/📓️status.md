@@ -1,5 +1,38 @@
 # Status
 
+## ✅✅✅ TAXONOMY FLIP LANDED AND CLEAN — P3 COMPLETE
+
+Announced on all peer channels before and after, as committed.
+
+**The flip** (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json`, 9 insertions):
+`schemaChildDirs` += `💡️inferences` · `taxonomyLeafParentDirs` += `💡️inferences` ·
+`artifactSpecFilenames` += `🧬️schema/💡️inferences/📝️text` → `📖️component.grammar.semio` and
+`🧬️schema/💡️inferences/💾️binary` → `📡️component.protocol.semio` ·
+`artifactSchemaSpecFilenames` += `🧬️schema/💡️inferences` → `🔣️component.json`
+
+**Preconditions re-verified by me immediately before flipping** (not taken on report):
+112 families · 0 owning subsets missing one · **0 leaf gaps** (5 root + 8 text + 6 binary, every family) · **0 non-emoji strays repo-wide**.
+
+**Abort check — passed, no revert needed:**
+```
+high breaches:                       24802 → 24801   (DOWN 1)
+stdio-artifacts/schema-representation:   2 → 2       (unchanged)
+inference-migration in high tally:       0
+```
+`policySchemaRepresentationBreaches` is allowlist-free and hard-gating — it demanded the full tree on
+all 112 owning subsets the instant this landed, and **not one new representation breach appeared.**
+That is the strongest evidence the fan-out is genuinely complete: the repo's own hardest structural
+check now enforces the family and passes.
+
+**`verify gate`:** fails at the **pre-existing dependency-cruiser step** —
+`error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts`.
+Unrelated framework UI modules; APA independently demonstrated it is structurally prior and fails
+identically before and after their own change. **Zero inference or schema-representation failures in
+the gate output** — it never reaches our rules. Not ours, not chased.
+
+**Policy cluster** (`//#region 🔧️PolicyRuleInferenceFamily`, 6 rules): **24 breaches, 0 high**, all
+4/4 spot-checks confirmed true positives. SMO's entire ticket landed 2 highs; ours landed 0.
+
 ## 🏁 FINAL STATE — everything within our control is DONE. Two items remain, both gated on peers.
 
 **Closing summary is written** (`📓️summary.md`, session-2 section). Ticket is ready to close the moment

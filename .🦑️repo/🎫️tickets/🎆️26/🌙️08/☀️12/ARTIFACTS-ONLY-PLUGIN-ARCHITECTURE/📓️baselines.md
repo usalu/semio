@@ -1,5 +1,41 @@
 # Durable baselines — distinguish "new breakage" from "the tree was already like this"
 
+## ✅ SILENT-REBIND INVARIANT (verified 2026-08-13 ~00:45)
+
+```
+io_registry::entries occurrences under ✏️s/🔌️plugins (non-comment): 46
+  fully qualified (prefixed with ::) ................................ 46
+  BARE .............................................................. 0
+```
+
+This is the post-condition for any wave that adds functions at artifact roots. **Re-check it after every such wave** — 44 of 45 roots carry a shadowing `io_registry`, and a bare call compiles green.
+
+### The guard itself gave a false alarm — measure the measurement
+
+A first check of this invariant reported **39 bare calls**, which would have meant the relocation wave had reintroduced the worst defect in the ticket. It was a malformed shell invocation: `grep -rn "…" <paths> --include="*.rs" -P`, with `-P` placed *after* the path arguments. Two independent re-measurements — a Python subprocess with the identical pattern, and a direct file-read classifier — both returned **0**.
+
+**The tool guarding against the most dangerous defect was itself the least reliable thing in the check.** That is the fourth wrong count produced by a grep in one evening, and the first where the wrong count was *alarming* rather than reassuring — which is its own hazard, because a false alarm spends the same credibility as a false green and invites the next alarm to be discounted.
+
+The rule that resolved it is the same one used all night: **when two measurements disagree, do not choose the convenient one — re-measure the disputed item in isolation, by a different method.**
+
+## 🎯 AN EXEMPTION LIST BUILT FROM INTENT IS A GUESS; ONE BUILT FROM TWO READINGS IS A FACT
+
+The sharpest rule of the ticket, and the one that caught its author.
+
+Having accepted "don't set a ceiling on a row that's moving", APA then **hand-classified which rows were moving — from memory of its own ticket's intent.** The instruction to the ratchet agent said `plugin-purity` was safe to ceiling, with a reason that sounded airtight: *inventory-only by design, nothing in APA ever attempted to reduce it.*
+
+The agent measured it three times, ~90s apart: **116 → 118 → 125.** It **exempted the row anyway, against the written instruction, on the evidence.**
+
+Had it deferred to the instruction, the ratchet would have shipped a ceiling under a rising row and gated the shared tree — the exact failure a peer had just talked APA out of, reintroduced one rule to the left.
+
+**The general form:** the author's own understanding of their work is **not admissible evidence** about whether a number is moving. Six concurrent sessions touch these counters; no one session knows what the others are doing to a shared metric. Replace the judgement with a measurement:
+
+> **Measure each rule two or three times, minutes apart. Anything that changes gets no ceiling.**
+
+**Known limit of the instrument, worth stating with it:** a *moving* row and a *broken* row look identical to this test. When a peer's deletions left 20 dangling `#[path]` mounts in `🏛️architect` and `🧩️puzzle`, any rule walking those plugins was reading a broken tree — the test would have exempted the row rather than reporting that the measurement was invalid. Pair it with a build check on the plugins being walked.
+
+This belongs to the same family as *a verification is a timestamp* and *a ceiling is a timestamp*, but it is stronger: those say a measurement decays; this says **your reasoning about a measurement was never evidence in the first place.**
+
 ## ⏱️ A CEILING IS A TIMESTAMP TOO
 
 The same insight as below, applied to a **threshold** rather than a result — and it is the one APA nearly got wrong at the very end.

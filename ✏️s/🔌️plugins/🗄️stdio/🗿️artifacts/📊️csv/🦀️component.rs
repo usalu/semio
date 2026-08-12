@@ -32,6 +32,100 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     }
 }
 //#endregion 🔖️ArtifactKind
+
+//#region 🔖️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6) — replaces
+/// stdio's plugin root calling `crate::artifacts::csv::engine::register()` imperatively before
+/// `Plugin::builder` was even constructed, mirroring the `🔋️energy`/`🗒️note` exemplars. `crate::
+/// artifacts::csv::standards::v_rfc4180::subsets::any::engine::register()` (stdio's own `⚙️engine` —
+/// UNTOUCHED, per this ticket's rule that stdio's engines stay a public surface other plugins reach
+/// into) called, in call order: `io_registry::register()` → `.composers(...)` below, the same
+/// `standards::v_rfc4180::subsets::any::engine::io_registry::entries()` this artifact's own root
+/// `io_registry` module already wraps; `register_artifact_schema()`/`register_artifact_inferences()`
+/// → `.schema(...)`/`.inferences(...)`; `register_pilot_languages()` → `.languages(...)`, replicated
+/// verbatim below (same `OnceLock`-leak shape `🔋️energy`'s own `pilot_languages()` uses, since
+/// `dsl::LanguageSpec` isn't `const fn`-constructible); `register_document_codec` →
+/// `.document_codec_bare::<CsvSnapshot, CsvMutation>(...)`. Unlike `📄txt`/`💾️binary`, this
+/// artifact's `register()` never calls `register_schema_specs` — `CsvSnapshot`/`CsvDiff` don't carry
+/// the `#[derive(dsl::DslRecord)]`/`#[derive(dsl::DslDiff)]` `register_schema_specs` needs, per txt's
+/// own engine doc ("unlike json/csv...") — so there is no uncovered call left behind here.
+/// `standards::v_rfc4180::subsets::any::engine::register()` itself is left in place, now
+/// orphaned/uncalled — deleting it means editing `⚙️engine/`, off-limits here.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder("s.stdio.csv")
+        .schema(crate::artifacts::csv::schema::csv_artifact_schema_descriptor())
+        .inferences([crate::artifacts::csv::standards::v_rfc4180::subsets::any::schema::inferences::csv_artifact_inference_descriptor()])
+        .composers(crate::artifacts::csv::standards::v_rfc4180::subsets::any::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec_bare::<CsvSnapshot, CsvMutation>(STDIO_CSV_DOCUMENT_SCHEMA)
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
+/// `🔋️energy` exemplar's helper of the same shape. Verbatim copy of `standards::v_rfc4180::subsets::
+/// any::engine::register_pilot_languages()`'s five `LanguageSpec`s.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "stdio.csv",
+                    extension: Some("csv"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::csv::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::csv::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::csv::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::csv::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.csv"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.csv.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::csv::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::csv::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::csv::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::csv::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.csv.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.csv.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::csv::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::csv::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::csv::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::csv::schema::diff::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.csv.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.csv.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::csv::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::csv::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.csv.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.csv.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::csv::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::csv::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.csv.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Declaration
+
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;

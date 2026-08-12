@@ -21,7 +21,17 @@ Peer session *names* rotate after session-limit restarts and I have misrouted me
 - **A merge, not a revert.** Blindly restoring 496 would have destroyed the peer's inference work; diffing per-subset mount counts made the merge safe.
 - Unicode normalisation defeats literal emoji filenames in scripts — detect files by listing a directory, never by comparing a hard-coded `"🦀️component.rs"`.
 
-## ⏸️ W3+ PAUSED — stdio is red from DKM's authorized in-flight work
+## ▶️ W3 RUNNING — stdio unblocked, plugin migration started
+
+DKM completed `✳️brep`/`✳️drawing`/`✳️mesh`. **stdio is green**: `cargo check --all-targets` clean; suite **2409 run / 2404 passed / 5 failed / 5 skipped**.
+
+Notable: 3 of those 5 failures are `💡️inferences` tests that had **never executed before** — their facets were on disk but unmounted, so mounting them turned dead tests live (`binary::extent`, `dxf::bounds`, `zip::entries` `inference_default_law`). The other 2 are the long-standing unowned `dwg`/`ifc` `fixture_honesty_law`. None are UCAS's; all belong to the inference-family ticket or nobody.
+
+**W3 exemplars dispatched** (parallel, disjoint plugin trees):
+- **lowpoly** — the worst offender: `mesh_json: String` (an opaque JSON string with a 15-line comment explaining the DSL gap that forced it) → `ArtifactChild<SemioMeshSnapshot>`; paint layers → image children if they carry raster bytes; plus removal of its duplicate `3d.mesh` kind declaration.
+- **cad** — deletes one of the repo's four independent B-Rep topologies (`CadEdge`/`CadWire`/`CadFace`/`CadShell`/`CadSolid`/`CadGeometry`) in favour of composed `model` + `drawing` children; retains genuinely cad-specific view/projection state. Its engine already consumes `SemioMeshSnapshot`/`SemioBrepSnapshot`, so the conversion path is reused rather than rewritten.
+
+Both briefed: consume stdio subsets, never edit `✳️brep`/`✳️drawing`/`✳️mesh` (DKM's), approved verbs only, `--all-targets` verification, foreground cargo.
 
 `semio-s-plugin-stdio` currently fails (14 errors) because DKM (#2550) is mid-replacement of the banned whole-document vocabulary in `✳️brep`/`✳️drawing` — subsets **we handed them**. Their dispatch enums now reference triad modules whose `#[path]` mounts are still being added. This is expected churn from an authorized handoff, **not a defect in our work**, and every plugin depends on stdio, so W3 exemplars cannot be verified until it clears.
 

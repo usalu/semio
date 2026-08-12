@@ -6,7 +6,7 @@
 
 use crate::apps::puzzle3d::terminology::Puzzle3dLabels;
 use crate::apps::puzzle3d::{puzzle3d_action, puzzle3d_distribution_group, Puzzle3dScene, PUZZLE3D_FILL_COUNT_MAX};
-use crate::artifacts::puzzle3d::engine::Puzzle3dPrecomputeSession;
+use crate::apps::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 use semio_framework_plugin::{LocalizedLabel, ToolDefinition, WindowMeasure};
 
 //#region 🔖️Constants

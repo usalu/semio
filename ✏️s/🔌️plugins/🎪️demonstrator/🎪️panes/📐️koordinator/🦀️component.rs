@@ -7,7 +7,7 @@
 use semio_framework_plugin::{GlbExporter, GlbImporter, Plugin};
 
 use cad::apps::cad::{create_cad_app, CadPlayApp};
-use cad::artifacts::cad::engine::{cad_document_from_dwg, cad_document_from_mesh, cad_mesh_from_document};
+use cad::artifacts::cad::io::{cad_document_from_dwg, cad_document_from_mesh, cad_mesh_from_document};
 use cad::artifacts::cad::CAD_DOCUMENT_SCHEMA;
 
 const CAD_KIND: &str = "3d.cad";

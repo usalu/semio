@@ -312,12 +312,15 @@
     "🧬️schema/🔺️diff/📝️text": "📖️component.grammar.semio",
     "🧬️schema/🔺️diff/💾️binary": "📡️component.protocol.semio",
     "🧬️schema/🧬️mutations/📝️text": "📖️component.grammar.semio",
-    "🧬️schema/🧬️mutations/💾️binary": "📡️component.protocol.semio"
+    "🧬️schema/🧬️mutations/💾️binary": "📡️component.protocol.semio",
+    "🧬️schema/💡️inferences/📝️text": "📖️component.grammar.semio",
+    "🧬️schema/💡️inferences/💾️binary": "📡️component.protocol.semio"
   },
   "artifactSchemaSpecFilenames": {
     "🧬️schema": "🔣️component.json",
     "🧬️schema/📸️snapshot": "🔣️component.json",
-    "🧬️schema/🔺️diff": "🔣️component.json"
+    "🧬️schema/🔺️diff": "🔣️component.json",
+    "🧬️schema/💡️inferences": "🔣️component.json"
   },
   "appSchemaSpecFilenames": {
     "🎚️config/🧬️schema": "🔣️component.json",
@@ -357,7 +360,8 @@
     "👥️presence",
     "📥️import",
     "📤️export",
-    "🚪️io"
+    "🚪️io",
+    "💡️inferences"
   ],
   "taxonomyLeafFilenames": {
     "🦀️rust": "🦀️component.rs",
@@ -448,7 +452,8 @@
   "schemaChildDirs": [
     "📸️snapshot",
     "🔺️diff",
-    "🧬️mutations"
+    "🧬️mutations",
+    "💡️inferences"
   ],
   "representationDirs": [
     "📝️text",

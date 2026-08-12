@@ -45,7 +45,7 @@ mod tests {
     use crate::apps::cad::testkit::*;
     use crate::apps::cad::config::CadConfig;
     use crate::apps::cad::CadPlayApp;
-    use crate::artifacts::cad::engine::default_document;
+    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
     use semio_framework_plugin::ArtifactView;
 
     #[test]

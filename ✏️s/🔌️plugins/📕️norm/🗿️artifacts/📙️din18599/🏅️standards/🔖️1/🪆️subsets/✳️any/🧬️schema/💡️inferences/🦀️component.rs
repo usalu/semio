@@ -84,3 +84,69 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ComplianceReport
+/// 📋️ Full DIN V 18599 compliance-report conformance law (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
+/// `⚙️engine`. `evaluate` is the `Din18599Snapshot -> CheckReport` projection; `balance_annual`
+/// composes every `part_N::check` (pure helpers living in the parent `🧬️schema`).
+use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, Quantity};
+use crate::artifacts::din18599::standards::v1::subsets::any::schema::{part_1, part_2, part_3, part_4, part_5, part_6, part_7, part_8, part_9, part_10, part_11, part_12, BalancingInputs};
+
+/// 📋️ Full annual balancing per DIN V 18599.
+pub fn balance_annual(inputs: &BalancingInputs) -> Result<CheckReport, NormError> {
+    let mut report = CheckReport::default();
+    report.push(part_1::check(inputs)?);
+    report.push(part_2::check(inputs)?);
+    report.push(part_3::check(inputs)?);
+    report.push(part_4::check(inputs)?);
+    report.push(part_5::check(inputs)?);
+    report.push(part_6::check(inputs)?);
+    report.push(part_7::check(inputs)?);
+    report.push(part_8::check(inputs)?);
+    report.push(part_9::check(inputs)?);
+    report.push(part_10::check(inputs)?);
+    report.push(part_11::check(inputs)?);
+    report.push(part_12::check(inputs)?);
+    Ok(report)
+}
+
+/// 📋️ `Din18599Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
+pub fn evaluate(document: &Din18599Snapshot) -> CheckReport {
+    balance_annual(document).unwrap_or_else(|err| {
+        let mut report = CheckReport::default();
+        report.push(CheckResult::from_utilization(ClauseId::new("DIN V 18599", "input", "1"), Quantity::new(crate::document::QuantityKind::Dimensionless, 2.0), Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0), err.to_string(), AnnexChoice::De));
+        report
+    })
+}
+//#endregion 🔖️ComplianceReport
+
+//#region 🧪️ComplianceReportTests
+#[cfg(test)]
+mod compliance_report_tests {
+    use super::*;
+    use crate::document::ClimateZoneDe;
+    use crate::artifacts::din18599::standards::v1::subsets::any::schema::{from_building, reference_wall_layers};
+
+    fn reference_100m2_inputs() -> BalancingInputs {
+        from_building(&reference_wall_layers(), 100.0, 4, ClimateZoneDe::Zone2, 0.0).unwrap()
+    }
+
+    #[test]
+    fn balance_annual_includes_all_parts() {
+        let inputs = reference_100m2_inputs();
+        let report = balance_annual(&inputs).unwrap();
+        assert_eq!(report.checks.len(), 12);
+    }
+
+    #[test]
+    fn part_1_check_reached_via_balance_annual() {
+        let inputs = reference_100m2_inputs();
+        let check = part_1::check(&inputs).unwrap();
+        assert_eq!(check.clause.family, "DIN V 18599-1");
+        let report = balance_annual(&inputs).unwrap();
+        assert!(report.checks.iter().any(|c| c.clause.family == "DIN V 18599-1" && c.clause.part == "§6"));
+    }
+}
+//#endregion 🧪️ComplianceReportTests
+

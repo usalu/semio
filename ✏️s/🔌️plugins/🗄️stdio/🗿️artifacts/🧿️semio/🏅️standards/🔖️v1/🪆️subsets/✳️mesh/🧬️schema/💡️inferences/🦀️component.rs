@@ -16,20 +16,21 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::Sem
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use super::aabb::{aabb_key, SemioAabb};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a mesh snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `aabb`, backed by the `📦aabb/` slug dir), keyed per
-/// `"{meshId}:{primitiveId}"`.
+/// `"{meshId}:{primitiveId}"`. `BTreeMap` (not `HashMap`) — `store::infer_field`'s own real
+/// return type, ordered/deterministic by key.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.mesh.inference")]
 pub struct SemioMeshInference {
     #[state(inferred)]
-    pub aabb: HashMap<String, SemioAabb>,
+    pub aabb: BTreeMap<String, SemioAabb>,
 }
 
 impl protocol::Inference<SemioMeshSnapshot> for SemioMeshInference {

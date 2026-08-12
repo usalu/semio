@@ -8,7 +8,7 @@ use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{reset_document_effect, runtime_of, snapshot_of, CadPlayRuntime};
-use crate::artifacts::cad::engine::{default_document, forest_play_camera, forest_play_scene, CAD_EXAMPLE_FOREST_LEFT};
+use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_camera, forest_play_scene, CAD_EXAMPLE_FOREST_LEFT};
 
 
 //#region 🔖️FocusModelDefinition

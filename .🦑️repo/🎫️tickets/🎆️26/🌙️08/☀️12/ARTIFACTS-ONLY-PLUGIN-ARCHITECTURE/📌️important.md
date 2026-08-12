@@ -115,6 +115,28 @@ Four independent agent groups hit it in APA's set and a peer session found it at
 
 **Corollary, learned the same day:** a *stopped* pass does not leave nothing behind. Halting the first relocation attempt five minutes in still left `pilot_languages()` stranded as `pub` in two plugins — precisely the artifact being prevented, in a state nothing would ever have flagged. Always re-derive the invariant after aborting a pass; do not assume the abort was clean.
 
+## ⛔ NEVER TELL AN AGENT WHAT RESULT TO EXPECT — it will find that result
+
+The most transferable orchestration lesson in this ticket, and it was self-inflicted.
+
+APA dispatched six agents to convert `🗄️stdio`, briefing them:
+
+> *"`semio-s-plugin-stdio` is currently RED … fifth error signature tonight, most recently `SemioMeshSnapshot` unresolved in `✳️mesh`. **Expect red.** … An honest 'complete but UNVERIFIED, upstream errors quoted' is **the expected outcome** here."*
+
+Every clause was true when written and defensible in isolation. Together they are **an instruction to attribute failures upstream.** An agent that then breaks something of its own sees red, matches it against the signature it was told to expect, files it under "(c) upstream", and reports *exactly the outcome the prompt named as expected*. The orchestrator reads six confirming reports and treats the agreement as evidence.
+
+A peer measured stdio **green** minutes after the dispatch. The wave was stopped before any report landed.
+
+**What makes this worse than an ordinary stale fact:** the briefing did not merely carry outdated information, it supplied a *ready-made explanation* for any failure the agent might cause. The (a)/(b)/(c) attribution requirement — normally a good guard — became a form to fill in with an answer already provided.
+
+**Rules:**
+1. **State the environment, never the expected verdict.** "stdio's state at 22:40 was X; re-measure it yourself before attributing anything to it" — not "expect red".
+2. **Never name the outcome you consider acceptable.** "Complete but UNVERIFIED is the expected outcome" tells an agent which report closes the task.
+3. **Require attribution to be *proved*, not selected**: name the file, quote the error, and show it exists in code the agent never opened.
+4. **Agreement across agents given the same briefing is not corroboration.** Six reports agreeing is one prompt, six times.
+
+Related: a *stopped* pass leaves artifacts behind (see the `pub fn pilot_languages` case) — re-derive invariants after aborting, never assume the abort was clean.
+
 ## Measure the property you are about to report, not the one you have cheap access to
 
 This ticket produced three instances of one error, and it is the most reusable thing in the folder.

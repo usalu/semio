@@ -3,14 +3,14 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `ð®ï¸commands/*`, the two surfaces
 //! in `ð­ï¸modes/âï¸edit/ðªï¸windows/*`, panel trees in `ðï¸panels/*`, compliance compute in
-//! `crate::artifacts::iso16757::engine`, and everything the fifteen norm apps share verbatim (config,
+//! `crate::apps::iso16757`, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
 use crate::apps::iso16757::commands::{evaluate, selected_check, set_snapshot};
 use crate::apps::iso16757::modes::edit as edit_mode;
 use crate::apps::iso16757::modes::edit::windows::{inputs, results};
 use crate::apps::iso16757::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::artifacts::iso16757::engine::Iso16757Family;
+use crate::apps::iso16757::Iso16757Family;
 use crate::artifacts::iso16757::op::Iso16757Mutation;
 use crate::artifacts::iso16757::Iso16757Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
@@ -116,6 +116,28 @@ impl ArtifactApp for Iso16757PlayApp {
     //#endregion ðï¸MediaPorts
 }
 //#endregion ðï¸Iso16757PlayApp
+
+//#region 🧩️ComplianceFamily
+/// 🧩️ Headless `NormFamily` binding (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
+/// relocated verbatim from the deleted `⚙️engine`. This is stateful/host-facing behaviour, so it
+/// belongs to the app that edits the artifact, not the artifact's own `🧬️schema`.
+pub struct Iso16757Family;
+
+impl crate::document::NormFamily for Iso16757Family {
+    type Document = Iso16757Snapshot;
+    type Mutation = crate::artifacts::iso16757::mutations::Iso16757Mutation;
+
+    fn family_id() -> crate::document::NormFamilyId {
+        crate::document::NormFamilyId::Iso16757
+    }
+
+    fn evaluate(document: &Iso16757Snapshot) -> crate::document::CheckReport {
+        crate::artifacts::iso16757::standards::v1::subsets::any::schema::inferences::evaluate(document)
+    }
+}
+
+pub type Host = crate::document::NormHost<Iso16757Family>;
+//#endregion 🧩️ComplianceFamily
 
 //#region ðï¸Manifest
 pub fn create_iso16757_app() -> App {
@@ -270,6 +292,16 @@ mod tests {
         testkit::dispatch(&mut app, Iso16757Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Iso16757Snapshot::default() }));
         let host = NormHost::<Iso16757Family>::from_document(app.snapshot().expect("projection"));
         assert!(!host.report().checks.is_empty());
+    }
+
+    /// ð§©ï¸ The `NormFamily` binding lives here now (it was in the constitutional `op` crate) it
+    /// names `evaluate`, so it belongs beside the compute it binds.
+    #[test]
+    fn norm_family_evaluate_matches_host() {
+        let doc = Iso16757Snapshot::default();
+        let host = Host::from_document(doc);
+        assert!(!host.report().checks.is_empty());
+        assert_eq!(<Iso16757Family as crate::document::NormFamily>::family_id(), crate::document::NormFamilyId::Iso16757);
     }
 
     #[test]

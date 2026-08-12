@@ -1,6 +1,6 @@
 //! 🧬️ Note artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteSnapshot, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
+use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -181,8 +181,8 @@ pub fn create_note_id(prefix: &str) -> String {
 /// 📄️ The `semio` example, parsed once from {@link SEMIO_NOTE_EXAMPLE_TEXT} — the source of truth for
 /// every "semio" example call site (`setActiveExample`, tests). Falls back to the empty document if the
 /// fixture ever fails to parse, matching the old JSON fixture's failure behavior.
-pub fn semio_example_snapshot() -> NoteSnapshot {
-    <NoteSnapshot as store::ArtifactDsl>::parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).unwrap_or_else(|_| empty_note_snapshot())
+pub fn semio_example_snapshot() -> crate::artifacts::note::NoteSnapshot {
+    <crate::artifacts::note::NoteSnapshot as store::ArtifactDsl>::parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).unwrap_or_else(|_| empty_note_snapshot())
 }
 
 /// 📄️ JSON re-serialization of {@link semio_example_snapshot}, for the framework-generic call sites that
@@ -192,8 +192,8 @@ pub fn semio_example_json() -> String {
     serde_json::to_string(&semio_example_snapshot()).expect("serialize semio example document")
 }
 
-pub fn empty_note_snapshot() -> NoteSnapshot {
-    NoteSnapshot {
+pub fn empty_note_snapshot() -> crate::artifacts::note::NoteSnapshot {
+    crate::artifacts::note::NoteSnapshot {
         schema: NOTE_DOCUMENT_SCHEMA.into(),
         id: "empty".into(),
         title: None,
@@ -479,7 +479,7 @@ pub fn block_bounds(block: &NoteBlockNode) -> (f64, f64, f64, f64) {
     }
 }
 
-pub fn patch_block_field(document: &NoteSnapshot, block_id: &str, field: &str, value: &Value) -> NoteSnapshot {
+pub fn patch_block_field(document: &crate::artifacts::note::NoteSnapshot, block_id: &str, field: &str, value: &Value) -> crate::artifacts::note::NoteSnapshot {
     let Some(block) = find_block(&document.blocks, block_id).cloned() else {
         return document.clone();
     };

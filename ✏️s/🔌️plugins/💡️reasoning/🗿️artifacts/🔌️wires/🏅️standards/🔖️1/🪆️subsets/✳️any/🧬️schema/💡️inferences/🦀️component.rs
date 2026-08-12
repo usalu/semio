@@ -5,6 +5,7 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
 use crate::artifacts::wires::WiresSnapshot;
+use dsl::DslValue;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
@@ -52,6 +53,24 @@ impl protocol::InferenceSpec<WiresSnapshot> for WiresInference {
     }
 }
 //#endregion 🔖️Inference
+
+//#region 🔖️LookupHelpers
+/// 🔎️ Reads of `&WiresSnapshot` — dissolved from the former `⚙️engine` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): each fn here takes the whole document
+/// snapshot (not just a `DslValue`), so it's derived compute over the artifact rather than a generic
+/// document helper — those instead live in `🧬️schema/🦀️component.rs`'s `🔖️DocumentHelpers` region.
+pub fn find_board_node<'a>(document: &'a WiresSnapshot, node_id: &str) -> Option<&'a DslValue> {
+    document.board_fixture.get("nodes").and_then(|value| value.as_array()).into_iter().flatten().find(|node| crate::artifacts::wires::standards::v1::subsets::any::schema::entity_id(node, "id") == Some(node_id))
+}
+
+pub fn find_board_edge<'a>(document: &'a WiresSnapshot, edge_id: &str) -> Option<&'a DslValue> {
+    document.board_fixture.get("edges").and_then(|value| value.as_array()).into_iter().flatten().find(|edge| crate::artifacts::wires::standards::v1::subsets::any::schema::entity_id(edge, "id") == Some(edge_id))
+}
+
+pub fn find_relationship<'a>(document: &'a WiresSnapshot, edge_id: &str) -> Option<&'a DslValue> {
+    document.wires_fixture.get("relationships").and_then(|value| value.as_array()).into_iter().flatten().find(|relationship| crate::artifacts::wires::standards::v1::subsets::any::schema::entity_id(relationship, "edgeId") == Some(edge_id))
+}
+//#endregion 🔖️LookupHelpers
 
 //#region 🔖️ArtifactInferrer
 impl ArtifactInferrer for crate::artifacts::wires::standards::v1::subsets::any::schema::WiresBuilder {

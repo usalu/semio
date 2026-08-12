@@ -27,7 +27,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Fem3dMutation, protocol::ProtocolError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::fem3d::engine;
+    use crate::artifacts::fem3d::schema;
     use crate::artifacts::fem3d::{FemAnalysisSettings, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
     use store::{create_document_envelope, ArtifactCommand};
 
@@ -60,7 +60,7 @@ mod tests {
     #[test]
     fn fem3d_document_text_round_trips_through_the_store() {
         let fixture = cantilever_fixture();
-        let mut store = crate::artifacts::fem3d::schema::mutations::Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", engine::empty_fem3d_snapshot(), None));
+        let mut store = crate::artifacts::fem3d::schema::mutations::Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None));
         let mutations = vec![
             Fem3dMutation::CreateMaterial(crate::artifacts::fem3d::schema::mutations::create_material::mutation::CreateMaterial { material: fixture.materials[0].clone() }),
             Fem3dMutation::CreateSection(crate::artifacts::fem3d::schema::mutations::create_section::mutation::CreateSection { section: fixture.sections[0].clone() }),

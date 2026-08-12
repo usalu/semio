@@ -11,6 +11,7 @@ use flow::forms_bridge::apply_generation_values_to_fixture;
 use flow::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowHost};
 use flow::render_scene_json;
 use serde_json::{json, Value};
+use store::ArtifactDsl;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Procedural2dArtifact

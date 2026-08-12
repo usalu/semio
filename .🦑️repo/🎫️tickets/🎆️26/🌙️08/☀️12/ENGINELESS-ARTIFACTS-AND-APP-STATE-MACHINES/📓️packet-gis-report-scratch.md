@@ -181,10 +181,66 @@ honestly rather than claiming a false zero.
 **Not touched:** `✏️s/🔌️plugins/🗄️stdio`, repo-root `📜️script.ts`, real `🔣️taxonomy.json`, `AGENTS.md`,
 any `fem`/`procedural` files, no other demonstrator files.
 
+## Concurrent-churn observations
+
+The tree churned under this packet while it ran. Recorded, not acted on.
+
+- **`semio-s-plugin-stdio` changed state three times during this packet.** Run 1 of the gis check:
+  red with a `SemioMeshSnapshot` E0425 in `✳️mesh/…/🧬️mutations/`. Run 2: that error gone, gis
+  compiled. The later demonstrator check: red again, this time a *dangling `#[path]` mount* —
+  `error: couldn't read …/✳️mesh/🧬️schema/💡️inferences/🦀️component.rs: No such file or directory
+  (os error 2)` at `🗄️stdio/…/📦️glue.rs:7017`. This is the manifest's documented recurring pattern
+  (mount wired before/after its target file exists during another session's live refactor).
+- **That dangling mount has since self-resolved.** Re-checked after the failure: the target file
+  `✳️mesh/🧬️schema/💡️inferences/🦀️component.rs` now exists on disk. `stat` on
+  `🗄️stdio/…/📦️glue.rs` → `Aug 13 00:36:32`, i.e. **later than** my last gis edit
+  (`🌍️gis/…/📦️glue.rs` → `Aug 13 00:11:41`). Another session was mid-write during my check.
+  The added leaves are all `💡️inferences/{📝️text,💾️binary}/…` across `✳️brep`/`✳️mesh`, matching
+  IIF's inference fan-out ticket.
+- **⚠️ Log-rendering artifact, do not chase.** The captured failure text renders the path segment as
+  `🏅️标准` (CJK) instead of `🏅️standards`. Reading `🗄️stdio/…/📦️glue.rs:7016` directly shows the
+  real, correct literal `🏅️standards`. The CJK is an artifact of the captured log's encoding, **not**
+  a real path and **not** a real rename. Anyone grepping the scratch log for `标准` will chase a ghost.
+- **Attribution of stdio changes: not mine.** This session issued zero writes to any
+  `✏️s/🔌️plugins/🗄️stdio` path. `git status` shows modified/added stdio files, but on this shared
+  auto-committing tree `git status` reflects all six sessions and is not an attribution oracle
+  (ticket rule 2). Settled instead by: (a) my own tool history contains no stdio write; (b) the
+  stdio mtime post-dates my last edit; (c) the added paths belong to IIF's inference fan-out.
+
+## `semio-s-plugin-demonstrator` — attempted, NOT verified
+
+The one cross-plugin line was checked twice; neither run produced a usable verdict.
+
+- **Attempt 1** (`scratch-demonstrator-cargo-check-1.txt`, exit 101): died upstream in stdio's
+  dangling `💡️inferences` mount. The compiler's own attribution line is
+  `error: could not compile \`semio-s-plugin-stdio\` (lib) due to 1 previous error`, and
+  `grep "Checking semio-s-plugin-demonstrator\|Checking semio-s-plugin-gis"` → **zero hits**: neither
+  crate was ever compiled. Not evidence about my change.
+- **Attempt 2** (`scratch-demonstrator-cargo-check-2.txt`): killed by the harness while still
+  `Blocking waiting for file lock on build directory`. No `exit:` line, no `Checking` line, no
+  errors — **no cargo verdict at all**. Not evidence either way.
+
+Stopping retries here rather than looping on a contended lock (ticket rule: the lock is normal, wait,
+don't kill — but repeated waits were consuming the window without producing signal). Status:
+**blocked-churn, unverified.**
+
+Static evidence the one-line change resolves (offered as reasoning, explicitly NOT as a green build):
+`pub mod artifacts` at the gis crate root (`📦️glue.rs:27`) → `pub mod gismap` → shim
+`pub mod schema { pub use super::standards::v1::subsets::any::schema::*; }` (`📦️glue.rs:759-761`),
+whose glob re-exports `pub fn gis2d_document_json_to_svg` (`🧬️schema/🦀️component.rs:496`) and
+`pub fn gis2d_document_json_from_dwg` (`:569`). Reinforced by run 2 of the **gis** check, in which
+`semio-s-plugin-gis` did compile past both definitions with only the 3 `crate::modules::terrain`
+errors — proving both functions exist and are public at the new path.
+
 ## Honest pass/fail
 
 Structural goals (both engine dirs gone, glue.rs mounts gone) are **met and verified**. The mandated
-compiler check is **not green** — blocked by the pre-existing, out-of-scope `crate::modules::terrain`
-issue, proven via git log to predate this ticket. Every other aspect of the relocation (both `lib` and
-`lib test` targets, all call sites, both `io_registry` shadow-hazard sites, assertion counts) checks
-out clean under that one known blocker.
+compiler check for `semio-s-plugin-gis` is **not green** — blocked solely by the pre-existing,
+out-of-scope `crate::modules::terrain` issue, proven via git log to predate this ticket. Every other
+aspect of the relocation (both `lib` and `lib test` targets, all call sites, both `io_registry`
+shadow-hazard sites, assertion counts) checks out clean under that one known blocker.
+
+`semio-s-plugin-demonstrator` is **unverified** — two attempts, neither yielding a verdict (one died
+upstream in stdio, one was killed on the build lock). The change there is a one-line import repoint
+with a statically-verified resolution chain, but it has **not** been compiler-confirmed and should be
+re-checked by whoever next gets a clean build window.

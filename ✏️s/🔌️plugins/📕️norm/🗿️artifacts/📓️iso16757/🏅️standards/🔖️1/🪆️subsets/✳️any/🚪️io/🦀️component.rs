@@ -45,3 +45,68 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+//#region 🚪️JsonSerializers
+/// 🚪️ Whole-artifact JSON serializers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
+/// relocated verbatim from the deleted `⚙️engine`; serialization is exactly what `🚪️io` is for.
+use crate::document::NormError;
+
+pub mod io {
+    use super::*;
+
+    pub fn catalogue_to_json(catalogue: &crate::artifacts::iso16757::part_1::Catalogue) -> Result<String, NormError> {
+        serde_json::to_string_pretty(catalogue).map_err(|e| NormError::InvalidValue { field: "catalogue".into(), reason: e.to_string() })
+    }
+
+    pub fn catalogue_from_json(json: &str) -> Result<crate::artifacts::iso16757::part_1::Catalogue, NormError> {
+        serde_json::from_str(json).map_err(|e| NormError::InvalidValue { field: "catalogue".into(), reason: e.to_string() })
+    }
+
+    pub fn dictionary_to_json(dictionary: &crate::artifacts::iso16757::part_4::Dictionary) -> Result<String, NormError> {
+        serde_json::to_string_pretty(dictionary).map_err(|e| NormError::InvalidValue { field: "dictionary".into(), reason: e.to_string() })
+    }
+}
+
+//#endregion 🚪️JsonSerializers
+
+//#region 🚪️IoRegistry
+/// 🚪️ Composer registry — relocated verbatim from the deleted `⚙️engine`; io is exactly where
+/// composer dispatch belongs.
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::iso16757::standards::v1::subsets::any::schema::Iso16757Composer as Iso16757AnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![
+            composer_entry_of::<Iso16757AnyComposer>(),
+        ]).as_slice()
+    }
+}
+//#endregion 🚪️IoRegistry
+
+//#region 🧪️JsonSerializersTests
+#[cfg(test)]
+mod json_serializers_tests {
+    use super::*;
+    use crate::artifacts::iso16757::Iso16757Snapshot;
+
+    #[test]
+    fn catalogue_json_round_trip() {
+        let doc = Iso16757Snapshot::default();
+        let json = io::catalogue_to_json(&doc.catalogue).expect("json");
+        let restored = io::catalogue_from_json(&json).expect("restore");
+        assert_eq!(restored.id, doc.catalogue.id);
+    }
+
+    #[test]
+    fn dictionary_json_round_trip() {
+        let doc = Iso16757Snapshot::default();
+        let json = io::dictionary_to_json(&doc.dictionary).expect("json");
+        assert!(json.contains("hvac-dict"));
+    }
+}
+//#endregion 🧪️JsonSerializersTests
+

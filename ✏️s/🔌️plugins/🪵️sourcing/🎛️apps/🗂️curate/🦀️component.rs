@@ -3,7 +3,7 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
 //! `🎭️modes/🗂️curate/🪟️windows/*`, labels in `🦀️terminology.rs`, view state in `🦀️config.rs`, shared
-//! compute in the artifact's `⚙️engine`. This file is a routing table: `handle` → `SourcingCurateCommand::
+//! compute in the artifact's `🧬️schema`. This file is a routing table: `handle` → `SourcingCurateCommand::
 //! dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::apps::curate::config::{SourcingCurateConfig, SourcingCurateConfigMutation};

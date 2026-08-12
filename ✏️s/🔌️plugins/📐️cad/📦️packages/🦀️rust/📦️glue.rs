@@ -52,20 +52,6 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                        mod engine_component;
-                        #[path = "."]
-                        pub mod engine {
-                            pub use super::engine_component::*;
-                            #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📥️geometry-import/🦀️component.rs"]
-                            pub mod geometry_import;
-                            #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔄️transformation/🦀️component.rs"]
-                            pub mod transformation;
-                            #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔍️construct/🦀️component.rs"]
-                            pub mod construct;
-                            #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🕹️interaction/🦀️component.rs"]
-                            pub mod interaction;
-                        }
                         #[path = "."]
                         pub mod examples {
                             #[path = "."]
@@ -126,132 +112,6 @@ pub mod artifacts {
                                 pub mod text;
                                 #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
                                 pub mod binary;
-                                #[path = "."]
-                                pub mod create_object {
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-object/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-object/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-object/↩️inverse/🦀️component.rs"]
-                                    pub mod inverse;
-                                }
-                                #[path = "."]
-                                pub mod delete_object {
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-object/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-object/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-object/↩️inverse/🦀️component.rs"]
-                                    pub mod inverse;
-                                }
-                                #[path = "."]
-                                pub mod rename_object {
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷rename-object/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷rename-object/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷rename-object/↩️inverse/🦀️component.rs"]
-                                    pub mod inverse;
-                                }
-                                #[path = "."]
-                                pub mod change_object_typology {
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗change-object-typology/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗change-object-typology/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗change-object-typology/↩️inverse/🦀️component.rs"]
-                                    pub mod inverse;
-                                }
-                                #[path = "."]
-                                pub mod change_object_visible {
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁change-object-visible/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁change-object-visible/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁change-object-visible/↩️inverse/🦀️component.rs"]
-                                    pub mod inverse;
-                                }
-                                #[path = "."]
-                                pub mod change_object_locked {
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-object-locked/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-object-locked/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-object-locked/↩️inverse/🦀️component.rs"]
-                                    pub mod inverse;
-                                }
-                                #[path = "."]
-                                pub mod move_object {
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-object/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-object/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-object/↩️inverse/🦀️component.rs"]
-                                    pub mod inverse;
-                                }
-                                #[path = "."]
-                                pub mod rotate_object {
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃rotate-object/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃rotate-object/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃rotate-object/↩️inverse/🦀️component.rs"]
-                                    pub mod inverse;
-                                }
-                                #[path = "."]
-                                pub mod scale_object {
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-object/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-object/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-object/↩️inverse/🦀️component.rs"]
-                                    pub mod inverse;
-                                }
-                                #[path = "."]
-                                pub mod replace_object_geometry {
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-object-geometry/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-object-geometry/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-object-geometry/↩️inverse/🦀️component.rs"]
-                                    pub mod inverse;
-                                }
-                                #[path = "."]
-                                pub mod drag_objects {
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳drag-objects/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳drag-objects/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳drag-objects/↩️inverse/🦀️component.rs"]
-                                    pub mod inverse;
-                                }
-                                #[path = "."]
-                                pub mod rotate_objects {
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄rotate-objects/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄rotate-objects/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄rotate-objects/↩️inverse/🦀️component.rs"]
-                                    pub mod inverse;
-                                }
-                                #[path = "."]
-                                pub mod scale_objects {
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔scale-objects/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔scale-objects/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔scale-objects/↩️inverse/🦀️component.rs"]
-                                    pub mod inverse;
-                                }
-                                #[path = "."]
-                                pub mod replace_pane_objects {
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼replace-pane-objects/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼replace-pane-objects/🔺️diff/🦀️component.rs"]
-                                    pub mod diff;
-                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼replace-pane-objects/↩️inverse/🦀️component.rs"]
-                                    pub mod inverse;
-                                }
                                 #[path = "."]
                                 pub mod create_node {
                                     #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-node/🦠️mutation/🦀️component.rs"]
@@ -334,6 +194,96 @@ pub mod artifacts {
                                     pub mod inverse;
                                 }
                                 #[path = "."]
+                                pub mod create_shape_model {
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-shape-model/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-shape-model/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-shape-model/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
+                                pub mod delete_shape_model {
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-shape-model/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-shape-model/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-shape-model/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
+                                pub mod create_building_model {
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢create-building-model/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢create-building-model/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢create-building-model/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
+                                pub mod delete_building_model {
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥delete-building-model/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥delete-building-model/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥delete-building-model/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
+                                pub mod create_energy_model {
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡create-energy-model/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡create-energy-model/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡create-energy-model/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
+                                pub mod delete_energy_model {
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌delete-energy-model/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌delete-energy-model/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌delete-energy-model/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
+                                pub mod create_structure_classic_model {
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛create-structure-classic-model/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛create-structure-classic-model/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛create-structure-classic-model/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
+                                pub mod delete_structure_classic_model {
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣delete-structure-classic-model/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣delete-structure-classic-model/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣delete-structure-classic-model/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
+                                pub mod create_drawing {
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐create-drawing/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐create-drawing/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐create-drawing/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
+                                pub mod delete_drawing {
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-drawing/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-drawing/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-drawing/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
                                 pub mod change_active_model_definition {
                                     #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯change-active-model-definition/🦠️mutation/🦀️component.rs"]
                                     pub mod mutation;
@@ -349,6 +299,8 @@ pub mod artifacts {
                             #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs"]
                             mod component;
                             pub use component::*;
+                            #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️geometry-import/🦀️component.rs"]
+                            pub mod geometry_import;
                             #[path = "."]
                             pub mod import {
                                 #[path = "."]
@@ -562,18 +514,12 @@ pub mod artifacts {
                         }
                     }
                 }
-                pub mod engine {
-                    pub use super::subsets::any::engine::*;
-                }
             }
         }
 
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod engine {
-            pub use super::standards::v1::subsets::any::engine::*;
         }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
@@ -630,6 +576,12 @@ pub mod apps {
         pub mod terminology;
         #[path = "../../🎛️apps/📐️cad/🌉️wasm/🦀️component.rs"]
         pub mod wasm;
+
+        #[path = "."]
+        pub mod engine {
+            #[path = "../../🎛️apps/📐️cad/⚙️engine/🕹️interaction/🦀️component.rs"]
+            pub mod interaction;
+        }
 
         #[path = "."]
         pub mod commands {

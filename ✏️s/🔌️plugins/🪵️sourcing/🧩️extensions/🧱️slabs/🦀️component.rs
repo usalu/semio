@@ -37,7 +37,7 @@ mod tests {
         let manifest = bundle().manifest;
         assert_eq!(manifest.extension_id, EXTENSION_ID);
         assert_eq!(manifest.extends, "sourcing");
-        assert_eq!(manifest.contributions.len(), 0);
+        assert_eq!(manifest.capabilities.len(), 0);
         assert_eq!(manifest.topic_contributions.len(), 1);
         let topic = &manifest.topic_contributions[0];
         assert_eq!(topic.topic, "sourcing.module");

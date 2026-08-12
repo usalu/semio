@@ -1,9 +1,9 @@
 //! 🔺️ CAD artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::cad::diff::schema::{CadDiff, CadNodesDelta, CadObjectsDelta};
-use crate::artifacts::cad::mutations::{CadObjectPatch, CadReferencePatch};
+use crate::artifacts::cad::diff::schema::{CadDiff, CadNodesDelta};
+use crate::artifacts::cad::mutations::CadReferencePatch;
 use crate::artifacts::cad::schema::CadArtifact;
-use crate::artifacts::cad::{CadNode, CadObject, CadReference, CadSnapshot};
+use crate::artifacts::cad::{CadNode, CadReference, CadSnapshot};
 use protocol::MutationDiff;
 use std::collections::BTreeMap;
 
@@ -23,20 +23,17 @@ impl CadDiff {
         let mut next = artifact.clone();
         if let Some(schema) = &self.schema { next.schema = schema.clone(); }
         if let Some(id) = &self.id { next.id = id.clone(); }
-        if let Some(delta) = &self.objects { next.objects = apply_objects_delta(&next.objects, delta); }
-        if let Some(delta) = &self.building_objects { next.building_objects = apply_objects_delta(&next.building_objects, delta); }
-        if let Some(delta) = &self.energy_objects { next.energy_objects = apply_objects_delta(&next.energy_objects, delta); }
-        if let Some(delta) = &self.structure_classic_objects { next.structure_classic_objects = apply_objects_delta(&next.structure_classic_objects, delta); }
+        if let Some(value) = &self.shape_model { next.shape_model = value.clone(); }
+        if let Some(value) = &self.building_model { next.building_model = value.clone(); }
+        if let Some(value) = &self.energy_model { next.energy_model = value.clone(); }
+        if let Some(value) = &self.structure_classic_model { next.structure_classic_model = value.clone(); }
+        if let Some(list) = &self.drawings { next.drawings = list.values.clone(); }
         if let Some(references) = &self.references_by_model_definition_id {
             for (key, rows) in references {
                 next.references_by_model_definition_id.insert(key.clone(), rows.clone());
             }
         }
         if let Some(delta) = &self.nodes { next.nodes = apply_nodes_delta(&next.nodes, delta); }
-        if let Some(value) = &self.shape_geometry { next.shape_geometry = value.clone(); }
-        if let Some(value) = &self.building_geometry { next.building_geometry = value.clone(); }
-        if let Some(value) = &self.energy_geometry { next.energy_geometry = value.clone(); }
-        if let Some(value) = &self.structure_classic_geometry { next.structure_classic_geometry = value.clone(); }
         if let Some(value) = &self.active_model_definition_id { next.active_model_definition_id = value.clone(); }
         if let Some(list) = &self.selected_object_ids { next.selected_object_ids = list.values.clone(); }
         if let Some(list) = &self.selected_node_ids { next.selected_node_ids = list.values.clone(); }
@@ -78,34 +75,6 @@ impl CadDiff {
     }
 }
 
-/// 🧩 Applies an identified-collection delta to an object list.
-pub fn apply_objects_delta(objects: &[CadObject], delta: &CadObjectsDelta) -> Vec<CadObject> {
-    let mut next = objects.to_vec();
-    for id in &delta.removed {
-        next.retain(|object| &object.id != id);
-    }
-    for item in &delta.added {
-        next.push(item.clone());
-    }
-    for entry in &delta.patched {
-        if let Some(object) = next.iter_mut().find(|object| object.id == entry.id) {
-            apply_object_patch(object, &entry.patch);
-        }
-    }
-    if let Some(order) = &delta.reordered {
-        let mut by_id: BTreeMap<_, _> = next.into_iter().map(|object| (object.id.clone(), object)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
-        for id in order {
-            if let Some(object) = by_id.remove(id) {
-                ordered.push(object);
-            }
-        }
-        ordered.extend(by_id.into_values());
-        next = ordered;
-    }
-    next
-}
-
 fn apply_nodes_delta(nodes: &[CadNode], delta: &CadNodesDelta) -> Vec<CadNode> {
     let mut next = nodes.to_vec();
     for id in &delta.removed {
@@ -135,19 +104,6 @@ fn apply_nodes_delta(nodes: &[CadNode], delta: &CadNodesDelta) -> Vec<CadNode> {
     next
 }
 
-pub fn apply_object_patch(object: &mut CadObject, patch: &CadObjectPatch) {
-    if let Some(label) = &patch.label { object.label = label.clone(); }
-    if let Some(typology) = &patch.typology { object.typology = typology.clone(); }
-    if let Some(visible) = patch.visible { object.visible = visible; }
-    if let Some(locked) = patch.locked { object.locked = locked; }
-    if let Some(origin) = patch.origin { object.origin = origin; }
-    if let Some(orientation) = patch.orientation { object.orientation = Some(orientation); }
-    if let Some(scale) = patch.scale { object.scale = Some(scale); }
-    if let Some(mesh_url) = &patch.mesh_url { object.mesh_url = Some(mesh_url.clone()); }
-    if let Some(extent) = patch.extent { object.extent = Some(extent); }
-    if let Some(solid_handle) = &patch.solid_handle { object.solid_handle = Some(solid_handle.clone()); }
-}
-
 pub fn apply_reference_patch(reference: &mut CadReference, patch: &CadReferencePatch) {
     if let Some(source_url) = &patch.source_url { reference.source_url = source_url.clone(); }
     if let Some(media_kind) = &patch.media_kind { reference.media_kind = media_kind.clone(); }
@@ -168,20 +124,17 @@ impl MutationDiff<CadSnapshot> for CadDiff {
         let mut next = snapshot.clone();
         if let Some(schema) = &self.schema { next.schema = schema.clone(); }
         if let Some(id) = &self.id { next.id = id.clone(); }
-        if let Some(delta) = &self.objects { next.objects = apply_objects_delta(&next.objects, delta); }
-        if let Some(delta) = &self.building_objects { next.building_objects = apply_objects_delta(&next.building_objects, delta); }
-        if let Some(delta) = &self.energy_objects { next.energy_objects = apply_objects_delta(&next.energy_objects, delta); }
-        if let Some(delta) = &self.structure_classic_objects { next.structure_classic_objects = apply_objects_delta(&next.structure_classic_objects, delta); }
+        if let Some(value) = &self.shape_model { next.shape_model = value.clone(); }
+        if let Some(value) = &self.building_model { next.building_model = value.clone(); }
+        if let Some(value) = &self.energy_model { next.energy_model = value.clone(); }
+        if let Some(value) = &self.structure_classic_model { next.structure_classic_model = value.clone(); }
+        if let Some(list) = &self.drawings { next.drawings = list.values.clone(); }
         if let Some(references) = &self.references_by_model_definition_id {
             for (key, rows) in references {
                 next.references_by_model_definition_id.insert(key.clone(), rows.clone());
             }
         }
         if let Some(delta) = &self.nodes { next.nodes = apply_nodes_delta(&next.nodes, delta); }
-        if let Some(value) = &self.shape_geometry { next.shape_geometry = value.clone(); }
-        if let Some(value) = &self.building_geometry { next.building_geometry = value.clone(); }
-        if let Some(value) = &self.energy_geometry { next.energy_geometry = value.clone(); }
-        if let Some(value) = &self.structure_classic_geometry { next.structure_classic_geometry = value.clone(); }
         if let Some(value) = &self.active_model_definition_id { next.active_model_definition_id = value.clone(); }
         next
     }
@@ -200,11 +153,12 @@ impl MutationDiff<CadSnapshot> for CadDiff {
         }
         take!(schema);
         take!(id);
+        take!(shape_model);
+        take!(building_model);
+        take!(energy_model);
+        take!(structure_classic_model);
+        take!(drawings);
         take!(references_by_model_definition_id);
-        take!(shape_geometry);
-        take!(building_geometry);
-        take!(energy_geometry);
-        take!(structure_classic_geometry);
         take!(active_model_definition_id);
         take!(selected_object_ids);
         take!(selected_node_ids);
@@ -242,10 +196,6 @@ impl MutationDiff<CadSnapshot> for CadDiff {
         take!(hovered_target_object_id);
         take!(hovered_target_mode);
         take!(hovered_target_id);
-        absorb_objects_delta(&mut self.objects, other.objects);
-        absorb_objects_delta(&mut self.building_objects, other.building_objects);
-        absorb_objects_delta(&mut self.energy_objects, other.energy_objects);
-        absorb_objects_delta(&mut self.structure_classic_objects, other.structure_classic_objects);
         match (&mut self.nodes, other.nodes) {
             (Some(dst), Some(src)) => {
                 dst.added.extend(src.added);
@@ -259,31 +209,17 @@ impl MutationDiff<CadSnapshot> for CadDiff {
     }
 }
 
-fn absorb_objects_delta(target: &mut Option<CadObjectsDelta>, incoming: Option<CadObjectsDelta>) {
-    if let Some(src) = incoming {
-        match target {
-            Some(dst) => {
-                dst.added.extend(src.added);
-                dst.removed.extend(src.removed);
-                dst.patched.extend(src.patched);
-                if src.reordered.is_some() { dst.reordered = src.reordered; }
-            }
-            None => *target = Some(src),
-        }
-    }
-}
 //#endregion 🔖️Apply
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::cad::mutations::create_object::mutation::CreateObject;
-    use crate::artifacts::cad::mutations::delete_object::mutation::DeleteObject;
-    use crate::artifacts::cad::mutations::rename_object::mutation::RenameObject;
+    use crate::artifacts::cad::mutations::create_node::mutation::CreateNode;
+    use crate::artifacts::cad::mutations::delete_node::mutation::DeleteNode;
+    use crate::artifacts::cad::mutations::rename_node::mutation::RenameNode;
     use crate::artifacts::cad::op::CadMutation;
-    use crate::artifacts::cad::testkit::{sample_object, sample_scene};
-    use crate::artifacts::cad::CadPaneId;
+    use crate::artifacts::cad::testkit::sample_scene;
     use protocol::Mutation;
 
     /// ⚖️ `CadDiff.artifact` (a whole-artifact replacement fragment) still exists as a `CadDiff`
@@ -292,20 +228,20 @@ mod tests {
     #[test]
     fn whole_artifact_diff_replaces_the_snapshot_and_absorbs_every_earlier_edit() {
         let base = sample_scene();
-        let mut diff = CadMutation::DeleteObject(DeleteObject { pane: CadPaneId::Shape, object_id: "object-1".into() }).diff(&base);
+        let mut diff = CadMutation::DeleteNode(DeleteNode { node_id: "node-1".into() }).diff(&base);
         let replacement = CadDiff { artifact: Some(Box::new(crate::artifacts::cad::schema::CadArtifact::from_snapshot(base.clone()))), ..Default::default() };
         diff.absorb(replacement);
         assert_eq!(diff.apply(&base), base, "a whole-artifact diff wins over anything absorbed before it");
     }
 
     #[test]
-    fn object_collection_diffs_absorb_into_one_apply() {
+    fn node_collection_diffs_absorb_into_one_apply() {
         let base = sample_scene();
-        let mut diff = CadMutation::CreateObject(CreateObject { pane: CadPaneId::Shape, object: sample_object("object-9") }).diff(&base);
-        diff.absorb(CadMutation::RenameObject(RenameObject { pane: CadPaneId::Shape, object_id: "object-1".into(), new_label: "Renamed".into() }).diff(&base));
+        let mut diff = CadMutation::CreateNode(CreateNode { node: crate::artifacts::cad::CadNode { id: "node-9".into(), label: "Fresh".into(), kind: "group".into() } }).diff(&base);
+        diff.absorb(CadMutation::RenameNode(RenameNode { node_id: "node-1".into(), new_label: "Renamed".into() }).diff(&base));
         let next = diff.apply(&base);
-        assert!(next.objects.iter().any(|object| object.id == "object-9"));
-        assert_eq!(next.objects.iter().find(|object| object.id == "object-1").expect("object-1").label, "Renamed");
+        assert!(next.nodes.iter().any(|node| node.id == "node-9"));
+        assert_eq!(next.nodes.iter().find(|node| node.id == "node-1").expect("node-1").label, "Renamed");
     }
 }
 //#endregion 🧪️Tests

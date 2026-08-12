@@ -539,9 +539,10 @@ pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 
 //#region 🔖️Declaration
 /// 🔖️ Puzzle3d's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1, relocated off
-/// `⚙️engine` to the artifact root — `declaration()` describes the artifact itself, not engine
-/// behaviour) — replaces the `ComposerEntry` half of the old `register_io()`. The `"3d.puzzle"`
-/// OS-host mesh export/import bridge (`engine::register_mesh_io()`) has NO `ArtifactDeclaration`
+/// the former `⚙️engine` to the artifact root — `declaration()` describes the artifact itself, never
+/// engine/app behaviour) — replaces the `ComposerEntry` half of the old `register_io()`. The
+/// `"3d.puzzle"` OS-host mesh export/import bridge (`crate::apps::puzzle3d::register_mesh_io()`, moved
+/// app-side by ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) has NO `ArtifactDeclaration`
 /// field — it belongs to the same OS media-host 14-function family flagged on puzzle2d's
 /// `declaration()` doc, a different mechanism from the nine §6 registrars this struct covers — so it
 /// stays wired through `🧩️puzzle/🦀️component.rs`'s own `.setup()`, not here.

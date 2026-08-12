@@ -7,7 +7,7 @@ use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{cad_pane_id_from_suffix, engagement_submit_mutations, runtime_of, snapshot_of, start_interaction_session, try_commit_session_mutations};
-use crate::artifacts::cad::engine::interaction::apply_event;
+use crate::apps::cad::engine::interaction::apply_event;
 use crate::artifacts::cad::CadPaneId;
 use serde_json::json;
 

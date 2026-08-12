@@ -1,5 +1,6 @@
 //! 🧬️ Raster artifact schema — every field of the artifact with its state class.
 
+use base64::Engine as _;
 use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode, RasterViewportSize, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};

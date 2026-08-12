@@ -50,7 +50,7 @@ pub fn plugin() -> Plugin {
 /// 🔧️ The OS media-host export/import bridges — see `plugin()`'s own doc for why these, and only
 /// these, still need a plugin-root callback.
 fn setup() {
-    crate::artifacts::puzzle2d::standards::v1::engine::register_media_io();
-    crate::artifacts::puzzle3d::standards::v1::engine::register_mesh_io();
-    crate::artifacts::puzzle5d::standards::v1::engine::register_mesh_io();
+    crate::apps::puzzle2d::register_media_io();
+    crate::apps::puzzle3d::register_mesh_io();
+    crate::apps::puzzle5d::register_mesh_io();
 }

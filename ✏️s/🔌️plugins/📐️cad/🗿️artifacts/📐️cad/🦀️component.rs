@@ -5,6 +5,8 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Domain
 pub const CAD_DOCUMENT_SCHEMA: &str = "cad.scene";
@@ -35,127 +37,16 @@ impl CadPaneId {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CadPrimitiveSlot {
-    pub slot: String,
-    pub primitive_id: String,
-    pub kind: String,
-}
+/// @emoji 🧩️ Fixed per-pane composed `s.stdio.semio.model` child slot — one of the four fields the
+/// derived `ArtifactSchema` on `CadSnapshot` classifies as a `#[child(...)]` slot. Kept as a plain
+/// helper alias so accessor functions below read uniformly across all four panes.
+pub type CadModelChild = store::ArtifactChild<SemioModelSnapshot>;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CadVertex {
-    pub id: String,
-    #[dsl(coord)]
-    pub position: [f64; 3],
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CadEdgeCurve {
-    pub kind: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CadEdge {
-    pub id: String,
-    pub vertex_ids: Vec<String>,
-    #[dsl(block)]
-    pub curve: CadEdgeCurve,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CadWire {
-    pub id: String,
-    pub edge_ids: Vec<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CadPlaneSurface {
-    pub kind: String,
-    #[dsl(coord)]
-    pub origin: [f64; 3],
-    #[dsl(dir)]
-    pub normal: [f64; 3],
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CadFace {
-    pub id: String,
-    pub wire_ids: Vec<String>,
-    #[dsl(block)]
-    pub surface: CadPlaneSurface,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CadShell {
-    pub id: String,
-    pub face_ids: Vec<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CadSolid {
-    pub id: String,
-    pub shell_ids: Vec<String>,
-}
-
-/// @emoji 🧱️ Authored brep topology carried alongside spatial model objects.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CadGeometry {
-    #[serde(default)]
-    pub anchors: Vec<dsl::DslValue>,
-    #[serde(default)]
-    pub vertices: Vec<CadVertex>,
-    #[serde(default)]
-    pub edges: Vec<CadEdge>,
-    #[serde(default)]
-    pub wires: Vec<CadWire>,
-    #[serde(default)]
-    pub faces: Vec<CadFace>,
-    #[serde(default)]
-    pub shells: Vec<CadShell>,
-    #[serde(default)]
-    pub solids: Vec<CadSolid>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CadObject {
-    pub id: String,
-    pub label: String,
-    pub typology: String,
-    #[serde(default = "default_true")]
-    pub visible: bool,
-    #[serde(default)]
-    pub locked: bool,
-    #[serde(default)]
-    #[dsl(coord)]
-    pub origin: [f64; 3],
-    #[serde(default)]
-    pub orientation: Option<[f64; 4]>,
-    #[serde(default)]
-    pub scale: Option<[f64; 3]>,
-    #[serde(default, rename = "meshUrl")]
-    pub mesh_url: Option<String>,
-    #[serde(default)]
-    pub extent: Option<[f64; 3]>,
-    #[serde(default, rename = "solidHandle")]
-    pub solid_handle: Option<String>,
-    #[serde(default)]
-    pub primitives: Vec<CadPrimitiveSlot>,
-}
-
-fn default_true() -> bool {
-    true
-}
+/// @emoji 📐️ Composed `s.stdio.semio.drawing` child — cad's forward-declared "engineering assembly"
+/// composition slot (design-full-plan.md §4: `cad | engineering assembly | model, drawing`). Empty
+/// today (cad carries no persisted 2D drawing content yet); real cardinality grows via
+/// `create-drawing`/`delete-drawing` once a caller actually attaches one.
+pub type CadDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
@@ -291,21 +182,25 @@ pub struct CadNode {
     pub kind: String,
 }
 
-pub fn cad_pane_geometry(scene: &CadSnapshot, pane: CadPaneId) -> Option<&CadGeometry> {
+/// @emoji 🧩️ Reads the fixed per-pane `s.stdio.semio.model` CHILD HANDLE (`child_id`/`target` only —
+/// never the resolved content; a child is its own document, resolving it is a host/composition
+/// concern, never something a pure `CadSnapshot` accessor can do — see `🔖️Composition` in
+/// `🏪️store/🦀️component.rs`).
+pub fn cad_pane_model(scene: &CadSnapshot, pane: CadPaneId) -> Option<&CadModelChild> {
     match pane {
-        CadPaneId::Shape => scene.shape_geometry.as_ref(),
-        CadPaneId::Building => scene.building_geometry.as_ref(),
-        CadPaneId::Energy => scene.energy_geometry.as_ref(),
-        CadPaneId::StructureClassic => scene.structure_classic_geometry.as_ref(),
+        CadPaneId::Shape => scene.shape_model.as_ref(),
+        CadPaneId::Building => scene.building_model.as_ref(),
+        CadPaneId::Energy => scene.energy_model.as_ref(),
+        CadPaneId::StructureClassic => scene.structure_classic_model.as_ref(),
     }
 }
 
-pub fn cad_pane_geometry_mut(scene: &mut CadSnapshot, pane: CadPaneId) -> &mut Option<CadGeometry> {
+pub fn cad_pane_model_mut(scene: &mut CadSnapshot, pane: CadPaneId) -> &mut Option<CadModelChild> {
     match pane {
-        CadPaneId::Shape => &mut scene.shape_geometry,
-        CadPaneId::Building => &mut scene.building_geometry,
-        CadPaneId::Energy => &mut scene.energy_geometry,
-        CadPaneId::StructureClassic => &mut scene.structure_classic_geometry,
+        CadPaneId::Shape => &mut scene.shape_model,
+        CadPaneId::Building => &mut scene.building_model,
+        CadPaneId::Energy => &mut scene.energy_model,
+        CadPaneId::StructureClassic => &mut scene.structure_classic_model,
     }
 }
 
@@ -317,44 +212,15 @@ pub fn empty_cad_snapshot() -> CadSnapshot {
     CadSnapshot {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: "cad".into(),
-        objects: Vec::new(),
-        building_objects: Vec::new(),
-        energy_objects: Vec::new(),
-        structure_classic_objects: Vec::new(),
+        shape_model: None,
+        building_model: None,
+        energy_model: None,
+        structure_classic_model: None,
+        drawings: Vec::new(),
         references_by_model_definition_id: BTreeMap::new(),
         nodes: Vec::new(),
-        shape_geometry: None,
-        building_geometry: None,
-        energy_geometry: None,
-        structure_classic_geometry: None,
         active_model_definition_id: default_model_definition_id(),
     }
-}
-
-pub fn cad_pane_objects(scene: &CadSnapshot, pane: CadPaneId) -> &[CadObject] {
-    match pane {
-        CadPaneId::Shape => &scene.objects,
-        CadPaneId::Building => &scene.building_objects,
-        CadPaneId::Energy => &scene.energy_objects,
-        CadPaneId::StructureClassic => &scene.structure_classic_objects,
-    }
-}
-
-pub fn cad_pane_objects_mut(scene: &mut CadSnapshot, pane: CadPaneId) -> &mut Vec<CadObject> {
-    match pane {
-        CadPaneId::Shape => &mut scene.objects,
-        CadPaneId::Building => &mut scene.building_objects,
-        CadPaneId::Energy => &mut scene.energy_objects,
-        CadPaneId::StructureClassic => &mut scene.structure_classic_objects,
-    }
-}
-
-pub fn cad_find_object_pane(scene: &CadSnapshot, object_id: &str) -> Option<CadPaneId> {
-    CadPaneId::all().into_iter().find(|&pane| cad_pane_objects(scene, pane).iter().any(|object| object.id == object_id))
-}
-
-pub fn cad_all_objects(scene: &CadSnapshot) -> impl Iterator<Item = (&CadObject, CadPaneId)> {
-    CadPaneId::all().into_iter().flat_map(|pane| cad_pane_objects(scene, pane).iter().map(move |object| (object, pane)))
 }
 
 pub fn cad_pane_from_model_definition_id(model_definition_id: &str) -> Option<CadPaneId> {
@@ -467,7 +333,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.cad")
         .schema(crate::artifacts::cad::schema::cad_artifact_schema_descriptor())
         .inferences([crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_artifact_inference_descriptor()])
-        .composers(crate::artifacts::cad::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::cad::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<crate::apps::cad::CadPlayApp>()
         .build()
@@ -481,38 +347,17 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
 pub(crate) mod testkit {
     use super::*;
 
-    pub fn sample_object(id: &str) -> CadObject {
-        CadObject {
-            id: id.into(),
-            label: "Box".into(),
-            typology: "spatial.shape.box".into(),
-            visible: true,
-            locked: false,
-            origin: [1.0, 2.0, 3.0],
-            orientation: Some([0.0, 0.0, 0.0, 1.0]),
-            scale: Some([1.0, 1.0, 1.0]),
-            mesh_url: Some("https://example.test/mesh.glb".into()),
-            extent: Some([2.0, 2.0, 2.0]),
-            solid_handle: Some("solid-1".into()),
-            primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }],
-        }
-    }
-
-    pub fn sample_geometry() -> CadGeometry {
-        CadGeometry {
-            anchors: vec![serde_json::from_value(serde_json::json!({ "id": "anchor-1", "position": [0.0, 0.0, 0.0] })).expect("dsl value")],
-            vertices: vec![CadVertex { id: "v1".into(), position: [0.0, 0.0, 0.0] }, CadVertex { id: "v2".into(), position: [1.0, 0.0, 0.0] }],
-            edges: vec![CadEdge { id: "e1".into(), vertex_ids: vec!["v1".into(), "v2".into()], curve: CadEdgeCurve { kind: "line".into() } }],
-            wires: vec![CadWire { id: "w1".into(), edge_ids: vec!["e1".into()] }],
-            faces: vec![CadFace { id: "f1".into(), wire_ids: vec!["w1".into()], surface: CadPlaneSurface { kind: "plane".into(), origin: [0.0, 0.0, 0.0], normal: [0.0, 0.0, 1.0] } }],
-            shells: vec![CadShell { id: "s1".into(), face_ids: vec!["f1".into()] }],
-            solids: vec![CadSolid { id: "sol1".into(), shell_ids: vec!["s1".into()] }],
-        }
-    }
-
-    /// 🧊️ `sample_geometry` without the `anchors` row — the shape the old `🎒️pack` module's copy used.
-    pub fn sample_geometry_without_anchors() -> CadGeometry {
-        CadGeometry { anchors: Vec::new(), ..sample_geometry() }
+    /// 🧩️ A sample composed `s.stdio.semio.model` CHILD HANDLE — `child_id` + `target` only, per
+    /// `🔖️Composition`'s "a child handle is two strings" rule; never the resolved model content
+    /// (that lives in the child's own document, out of `CadSnapshot`'s reach).
+    pub fn sample_model_child(child_id: &str) -> CadModelChild {
+        store::ArtifactChild::new(
+            child_id.into(),
+            store::os_io::ArtifactRef {
+                artifact_id: format!("crate-{child_id}"),
+                dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() },
+            },
+        )
     }
 
     pub fn sample_reference() -> CadReference {
@@ -531,15 +376,10 @@ pub(crate) mod testkit {
     }
 
     pub fn sample_scene() -> CadSnapshot {
-        sample_scene_with(sample_geometry())
-    }
-
-    pub fn sample_scene_with(geometry: CadGeometry) -> CadSnapshot {
         let mut scene = empty_cad_snapshot();
-        scene.objects.push(sample_object("object-1"));
-        scene.building_objects.push(sample_object("object-2"));
+        scene.shape_model = Some(sample_model_child("shape-model-1"));
+        scene.building_model = Some(sample_model_child("building-model-1"));
         scene.nodes.push(CadNode { id: "node-1".into(), label: "Root".into(), kind: "group".into() });
-        scene.shape_geometry = Some(geometry);
         scene.references_by_model_definition_id.insert(CadPaneId::Shape.model_definition_id().to_string(), vec![sample_reference()]);
         scene.active_model_definition_id = CadPaneId::Shape.model_definition_id().to_string();
         scene
@@ -550,7 +390,7 @@ pub(crate) mod testkit {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::cad::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::cad::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

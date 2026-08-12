@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ResizeNode` — captures the OLD extent from BASE for exactly the fields the
 //! payload touched (untouched fields stay `None`, meaning "leave alone"). Missing target ⇒
 //! `Vec::new()`.
-use crate::artifacts::wires::engine::find_board_node;
+use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::artifacts::wires::mutations::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 

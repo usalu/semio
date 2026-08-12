@@ -3,14 +3,14 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `ð®ï¸commands/*`, the two surfaces
 //! in `ð­ï¸modes/âï¸edit/ðªï¸windows/*`, panel trees in `ðï¸panels/*`, compliance compute in
-//! `crate::artifacts::vdi3805::engine`, and everything the fifteen norm apps share verbatim (config,
+//! `crate::apps::vdi3805`, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
 use crate::apps::vdi3805::commands::{evaluate, selected_check, set_snapshot};
 use crate::apps::vdi3805::modes::edit as edit_mode;
 use crate::apps::vdi3805::modes::edit::windows::{inputs, results};
 use crate::apps::vdi3805::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::artifacts::vdi3805::engine::Vdi3805Family;
+use crate::apps::vdi3805::Vdi3805Family;
 use crate::artifacts::vdi3805::op::Vdi3805Mutation;
 use crate::artifacts::vdi3805::Vdi3805Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
@@ -116,6 +116,28 @@ impl ArtifactApp for Vdi3805PlayApp {
     //#endregion ðï¸MediaPorts
 }
 //#endregion ðï¸Vdi3805PlayApp
+
+//#region 🧩️ComplianceFamily
+/// 🧩️ Headless `NormFamily` binding (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
+/// relocated verbatim from the deleted `⚙️engine`. This is stateful/host-facing behaviour, so it
+/// belongs to the app that edits the artifact, not the artifact's own `🧬️schema`.
+pub struct Vdi3805Family;
+
+impl crate::document::NormFamily for Vdi3805Family {
+    type Document = Vdi3805Snapshot;
+    type Mutation = Vdi3805Mutation;
+
+    fn family_id() -> crate::document::NormFamilyId {
+        crate::document::NormFamilyId::Vdi3805
+    }
+
+    fn evaluate(document: &Vdi3805Snapshot) -> crate::document::CheckReport {
+        crate::artifacts::vdi3805::standards::v1::subsets::any::schema::inferences::evaluate(document)
+    }
+}
+
+pub type Host = crate::document::NormHost<Vdi3805Family>;
+//#endregion 🧩️ComplianceFamily
 
 //#region ðï¸Manifest
 pub fn create_vdi3805_app() -> App {
@@ -270,6 +292,22 @@ mod tests {
         testkit::dispatch(&mut app, Vdi3805Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Vdi3805Snapshot::default() }));
         let host = NormHost::<Vdi3805Family>::from_document(app.snapshot().expect("projection"));
         assert!(!host.report().checks.is_empty());
+    }
+
+    /// ð§©ï¸ The `NormFamily` binding lives here now (it was in the constitutional `op` crate) it
+    /// names `evaluate`, so it belongs beside the compute it binds.
+    #[test]
+    fn norm_family_id() {
+        assert_eq!(<Vdi3805Family as crate::document::NormFamily>::family_id(), crate::document::NormFamilyId::Vdi3805);
+        assert_eq!(crate::document::NormFamilyId::Vdi3805.label(), "VDI 3805");
+    }
+
+    #[test]
+    fn norm_host_recomputes() {
+        let mut host = Host::from_document(Vdi3805Snapshot::default());
+        assert!(!host.report().checks.is_empty());
+        host.replace_document(Vdi3805Snapshot::default());
+        assert!(host.report().all_pass());
     }
 
     #[test]

@@ -450,3 +450,102 @@ ReferenceError: policyArtifactRootOfMutationsDir is not defined
   at policyMutationTriadCompletenessBreaches (📜️script.ts:6332)
 ```
 **Attributed, not assumed**: that identifier appears **0 times in `HEAD`** — both its three call sites *and* its definition are another session's **uncommitted, in-flight** work. DKM's region sits ~5,000 lines below it and cannot cause a `ReferenceError` at 6332. The module parses and executes as far as 6332, which also proves DKM's region is syntactically valid. **Not fixed** — it is another session's live edit, and the standing rule is to work on something else and say so rather than repair a file mid-edit.
+
+## Unblocking stdio — and a distinction the whole tree had been conflating
+
+A peer asked DKM to remove a premature `💡️inferences` glue mount at `📦️glue.rs:7017` whose target files did not exist yet. **Their argument was right and I acted on it**: four lines against six blocked sessions, with a trivial re-add once the files land, and I had honestly said I could not give a reliable ETA. Removing it surfaced a second layer — several mesh triad mounts pointing at unwritten leaves — so I swept the whole mesh block and unmounted every triad whose targets did not all exist. (All 17 triads proved complete; the inference block was the only real offender.)
+
+### 🔑 A dangling mount blocks everyone; a broken test blocks only its own crate
+
+Measured after the removal (`RUSTC_WRAPPER=""`, forced recheck):
+
+```
+cargo check -p semio-s-plugin-stdio                → 0 errors    ← what every other crate links
+cargo check -p semio-s-plugin-stdio --all-targets  → 1 error     ← stdio's OWN test target only
+```
+
+The residual is `no method named is_empty for SemioMeshDiff` at `✳️mesh/…/🧬️mutations/🦀️component.rs:417` — a **trait-in-scope problem inside a `#[cfg(test)]` assert** (`MutationDiff` is imported at :368-369; the failing assert sits outside that scope). Left alone: my agent is mid-authoring that exact file.
+
+**Other plugin crates link stdio's lib, not its tests, so a lib-test failure does not propagate.** Spot-checked `semio-s-plugin-space`: 6 errors, **all its own** (`no field 'document' on OsAppRegistration`, `no field 'headers'/'rows' on CsvSnapshot`) — nothing stdio-derived.
+
+So "six sessions behind one file" was **true while the mount dangled** — a dangling `#[path]` is a *lib* error and does propagate — and **stopped being true the moment it came out**. All night this tree treated those two as one category. They are not:
+
+| shape | scope of damage | visible to |
+|---|---|---|
+| dangling `#[path]` / workspace member | **every crate on the machine**, aborts before compilation | plain `cargo check` |
+| broken `#[cfg(test)]` code | **only the owning crate's test target** | only `--tests`/`--all-targets` |
+
+### Taxonomy-flip bar, corrected by the peer
+
+`policySchemaRepresentationBreaches` is allowlist-free and hard-gating, so the flip needs mesh's `💡️inferences/` **directory to exist with its leaves** — not a finished, wired, law-tested facet. A much lower bar than DKM had assumed when recommending "flip with mesh as a known breach". That directory currently does **not** exist (its mount was removed precisely because the files were missing). DKM will report when it lands, and will state plainly whether it is merely present or actually complete, since only the former gates the flip.
+
+## Inference representation leaves — 4 gaps closed, taxonomy flip unblocked repo-wide
+
+A peer's enumerator found the last 4 leaf gaps in the entire repo, all DKM's: `📝️text/` and `💾️binary/` missing from `✳️brep` and `✳️mesh`'s `💡️inferences` families (110 of 112 families complete). Those two representation dirs are what `🔣️taxonomy.json`'s `schemaChildDirs += 💡️inferences` flip gates on, via the **allowlist-free, hard-gating** `policySchemaRepresentationBreaches` — so four missing directories were holding a flip that six sessions were waiting on.
+
+**Closed.** 8 + 6 leaves per family, mirrored from `✳️cad`'s complete family with facet identity substituted throughout (`s.stdio.semio.{brep,mesh}.inference`, `Stdio_semio_{brep,mesh}_inference`, `Semio{Brep,Mesh}Inference{Text,Binary}`, JSON `$id` path, ksy `meta.id`, proto package). Verified no `cad`/`Cad` token leaked into either tree.
+
+**Verified with DKM's own independently-written enumerator, not the peer's**: `TOTAL LEAF GAPS: 0` across all inference families; `cargo check -p semio-s-plugin-stdio` → 0 errors.
+
+### Two judgement calls, recorded rather than buried
+
+1. **These leaves are minimal, and that is the designed convention — not a stub.** I checked `✳️cad`'s before copying, specifically because the inference-family ticket's own summary rejects placeholder grammar leaves as worse than honest incompleteness. Its `🦀️component.rs` explains itself: *"Inference values are never authored via DSL text (they are always computed from a snapshot, never a source of truth), so — unlike `📸️snapshot/📝️text`'s live `parse_dsl`/`print_dsl` pair — this leaf declares the wire grammar only."* Declaration-only is correct for this facet family. **Had cad's been a live parse/print pair, copying a scaffold would have been shipping stubs, and I would have said so instead.**
+2. **Copied the framing magic `0x8953f83f7d340d0b` rather than minting new ones** — measured first: 16 of 17 existing inference binary protocols share that value, 1 uses `…0c`. A shared magic is the convention; a fresh one would be the anomaly. Flagged to the peer that if the outlier is deliberate and magics are meant to be per-facet, DKM will mint distinct ones — better before their flip than after.
+
+### Honest state of the two facets
+
+Structurally complete, **not finished work**. brep carries a real `✅validation-report` slug with a genuine `DepHash` chain; mesh carries `📦aabb`. Both deliberately omit fields whose dependency chains could not be built honestly (brep omitted `tessellation` and `mass-properties`, with reasoning recorded) rather than faking them. stdio's **test** target still carries one DKM error — a `MutationDiff` trait-in-scope problem in a mesh `#[cfg(test)]` assert — which does not propagate to any other crate.
+
+## W4 CLOSED — all three stdio subsets complete, registered, and verified
+
+```
+cargo check -p semio-s-plugin-stdio --all-targets (RUSTC_WRAPPER="")  → 0 errors
+cargo test  -p semio-s-plugin-stdio --lib                             → 2415 passed, 5 failed
+failures in brep / drawing / mesh / semio::                            → 0
+```
+Baseline at W0 was **2168 passed / 6 failed**. Now **+247 tests and fewer failures**, with the 5 residuals owned elsewhere (`dwg`/`ifc` `fixture_honesty_law`, unowned; `dxf` bounds + `zip` entries, the inference-family session's).
+
+| subset | triads | inference | leaves | banned vocab | registered |
+|---|---|---|---|---|---|
+| `✳️brep` | 13 | `✅validation-report`, real `DepHash` chain | 8/6 | 0 | ✅ |
+| `✳️drawing` | 17 | `🎛flattened-scene`, honest per-entity chain | 8/6 | 0 | ✅ |
+| `✳️mesh` | 17 | `📦aabb` | 8/6 | 0 | ✅ |
+
+**Registration gap closed.** A peer's coverage scan (extract each family's descriptor fn name, then search for call sites *outside the defining file*) found exactly three unregistered families repo-wide — all DKM's. The facets compiled and passed their laws while being invisible to the registry the family exists to feed. Fixed by mirroring the 16 sibling subsets: a `register_artifact_inferences()` fn calling the fully-qualified descriptor, invoked from `register()` in each subset's `🚪️io/🦀️component.rs`. **All 112 families now register, not 109.**
+
+**The repo-wide taxonomy flip landed clean on the back of this work** — `💡️inferences` entered `schemaChildDirs`, and the allowlist-free, hard-gating `policySchemaRepresentationBreaches` began demanding the full inference tree on all 112 owning subsets **with zero new representation breaches** (high breaches 24802 → 24801). The repo's hardest structural check now enforces the family and passes.
+
+### 🔑 The instrument lesson — the most transferable thing learned tonight
+
+DKM's leaf enumerator asked *"does `📝️text/` exist?"* and reported **0 gaps**. A peer's asked *"how many files are in it?"* and found **10 missing** in `✳️drawing`. Same tree, minutes apart. Mine was not unlucky — it was **structurally incapable** of seeing the defect, because it was a **presence check labelled as a completeness check**.
+
+The sting: `📌️important.md` already carried *"grep to find, enumerate to count"*, written days-equivalent earlier after watching two peers inflate counts. **Knowing a rule and encoding it into the instrument you actually run are different acts.** That gap between written rule and shipped instrument bit DKM twice tonight — here, and in the dispatch briefs that omitted the mount rule.
+
+The peer's counterpart, which completes it: within the same hour their own scan produced *false* gaps across a dozen families from unquoted-`$VAR` word-splitting in zsh, and **they caught it only because the number looked implausible**. So:
+
+> **The instrument needs verifying as carefully as the tree** — and a *plausible-looking* wrong number gives you no signal at all, which is precisely why an under-reporting check is more dangerous than an over-reporting one.
+
+Neither session was ignorant of the principle at the moment it violated it.
+
+## `✳️mesh` DONE — final state of all three subsets, independently re-verified
+
+| subset | triads | mounts | leaves | banned vocab | registered | inference mount |
+|---|---|---|---|---|---|---|
+| `✳️brep` | 13 | 13 | 8/6 | **0** | ✅ | ✅ |
+| `✳️drawing` | 17 | 17 | 8/6 | **0** | ✅ | ✅ |
+| `✳️mesh` | 17 | 17 | 8/6 | **0** | ✅ | ✅ |
+
+`stdio glue.rs`: **3,209 `#[path]` mounts, 0 dangling.** `cargo check --all-targets` (`RUSTC_WRAPPER=""`) → **0 errors**. `cargo test --lib` → **2415 passed / 5 failed**, none in `brep`/`drawing`/`mesh`/`semio::`.
+
+### Two defects the final sweep caught that the agent's own report called clean
+
+The mesh report claimed completion, and the wave *was* substantially right — but a coordinator sweep found two things it had missed, both real:
+
+1. **2 files still carried banned vocabulary — in prose.** `✳️mesh/🚪️io:410` and `✳️mesh/🧬️schema/🔺️diff:2` named the banned identifiers inside comments *explaining that those identifiers no longer exist*. `📌️important.md` warns explicitly that **the policy greps raw file content including comments**, so a comment describing the removal trips the rule as surely as the code would have. Rewritten to describe the concept without naming it ("the banned no-op sentinel", "a whole-document replace"). This is a genuinely counter-intuitive failure mode: **the documentation of a fix can violate the rule the fix satisfies.**
+2. The agent's report listed the inference-registration `sharedFileRequests` item as still open; the coordinator had already closed it for all three subsets. Harmless, but a reminder that a report is a snapshot of its author's knowledge at write time, not of the tree.
+
+### Concurrent-churn incident worth preserving
+
+The mesh agent verified its inference mount complete at **76/76 paths resolving**, then found it had dropped to **74/76** on a later pass — **another session's commits had landed on the shared `📦️glue.rs` and silently dropped two of its mounts.** It re-applied and re-verified with a full recompile. This is the sharpest instance tonight of *"a verification is a timestamp, not a property"*: the agent's first measurement was correct **and** the tree later disagreed with it, through no error of its own.
+
+It also caught its own **unicode-normalization typo twice before shipping** — a corrupted CJK sequence where `🏅️standards` belonged — using the same path-resolution script. Exactly the trap that produced silently-empty modules and silently-empty searches elsewhere tonight, caught here by an instrument built for it.

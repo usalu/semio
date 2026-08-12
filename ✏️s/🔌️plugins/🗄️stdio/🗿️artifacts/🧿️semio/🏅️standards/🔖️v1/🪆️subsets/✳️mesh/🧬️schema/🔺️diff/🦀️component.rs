@@ -1,6 +1,6 @@
 //! 🔺️ SemioMeshDiff — handcrafted sparse diff over `SemioMeshSnapshot`. No
-//! `snapshot: Option<SemioMeshSnapshot>` full-replace slot — even `SetSnapshot`'s diff is the
-//! sparse field-by-field `SemioMeshDiff::between(base, next)`.
+//! `snapshot: Option<SemioMeshSnapshot>` full-replace slot — even a whole-document replace
+//! diffs as the sparse field-by-field `SemioMeshDiff::between(base, next)`.
 //!
 //! `meshes`/`materials`/`textures` (id-keyed) and, within a modified mesh, `primitives` (also
 //! id-keyed) are diffed via the shared generic `engine::triples::NamedTripleDiff<K, D, T>` —

@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ConnectNodes` — disconnects by the edge's own id (already carried on the
 //! payload, no BASE lookup needed). Missing id ⇒ `Vec::new()`.
-use crate::artifacts::wires::engine::entity_id;
+use crate::artifacts::wires::schema::entity_id;
 use crate::artifacts::wires::mutations::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 

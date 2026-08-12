@@ -2,7 +2,7 @@
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::artifacts::wires::empty_wires_snapshot;
-use crate::artifacts::wires::engine::metabolism_wires_example_snapshot;
+use crate::artifacts::wires::schema::metabolism_wires_example_snapshot;
 use crate::artifacts::wires::op::WiresMutation;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -42,7 +42,7 @@ mod tests {
     use super::*;
     use crate::apps::wires::testkit::{dispatch, metabolism_app, new_app};
     use crate::apps::wires::WiresCommand;
-    use crate::artifacts::wires::engine::fixture_nodes;
+    use crate::artifacts::wires::schema::fixture_nodes;
 
     /// 🧬️ Whole-document replace is not an in-history mutation (a whole-snapshot variant is banned
     /// outright), so `setActiveExample` now surfaces as a `HostEffect::LoadDocument` carrying the

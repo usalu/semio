@@ -13,6 +13,119 @@ pub const STDIO_PPTX_DOCUMENT_SCHEMA: &str = "stdio.pptx";
 /// 🧬️ Artifact schema descriptor id.
 pub const PPTX_ARTIFACT_SCHEMA_ID: &str = "s.stdio.pptx";
 
+//#region 🔖️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g2) —
+/// replaces the old side-effecting `crate::artifacts::pptx::engine::register()`. Mirrors `🔋️energy`'s
+/// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`
+/// stands in for the old `store::register_document_codec(store::ArtifactCodec::of::<PptxSnapshot,
+/// PptxMutation>(...))` call. `.composers(...)` reaches the engine's own `io_registry` (through the
+/// `engine` shim), whose `entries()` already aggregates the `✳️any`/`✳️strict`/`✳️transitional`
+/// `ComposerEntry` rows — NOT this file's own shadowing `io_registry` below, whose `entries()`
+/// returns `&'static [&'static ComposerEntry]` (references) and would silently rebind under a bare
+/// call (this ticket's "SILENT REBIND" hazard). `.subset_validators(...)` re-derives the two
+/// `SubsetValidatorEntry` rows the old `register()`'s `✳️strict`/`✳️transitional` `io::register()`
+/// calls used to install, via the same side-effect-free `subset_validator_entry_of::<V>()`
+/// constructor those (module-private) `validator_entry()` fns call — no visibility widening into
+/// `🚪️io/` needed.
+///
+/// **NOT covered by any field**: nothing — pptx's `register()` never called `register_schema_spec`
+/// (`PptxSnapshot`/`PptxDiff`/`PptxMutation` are hand-rolled, no derivable `RecordSpec` — see the
+/// deleted `register_pilot_languages`' own doc comment), so this artifact converts cleanly with
+/// zero residual `.setup()` calls.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder(PPTX_ARTIFACT_SCHEMA_ID)
+        .schema(crate::artifacts::pptx::schema::pptx_artifact_schema_descriptor())
+        .inferences([crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::inferences::pptx_artifact_inference_descriptor()])
+        .composers(crate::artifacts::pptx::engine::io_registry::entries())
+        .subset_validators(pptx_subset_validators())
+        .languages(pilot_languages())
+        .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA)
+        .build()
+}
+
+/// 🛡️ The `✳️strict`/`✳️transitional` subsets' `SubsetValidatorEntry` rows, re-derived (not moved)
+/// from the same side-effect-free `subset_validator_entry_of::<V>()` constructor each subset's own
+/// `🚪️io/🦀️component.rs` (module-private) `validator_entry()` calls.
+fn pptx_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+    ENTRIES
+        .get_or_init(|| {
+            vec![
+                semio_framework_plugin::subset_validator_entry_of::<
+                    crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::io::PptxStrictValidator,
+                >(),
+                semio_framework_plugin::subset_validator_entry_of::<
+                    crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::io::PptxTransitionalValidator,
+                >(),
+            ]
+        })
+        .as_slice()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary), copied verbatim (five
+/// `LanguageSpec` rows) from `crate::artifacts::pptx::engine::register_pilot_languages`'s own
+/// `dsl::register_language(...)` call bodies.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "stdio.pptx",
+                    extension: Some("pptx"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::pptx::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pptx::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::pptx::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pptx::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.pptx"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.pptx.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::pptx::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pptx::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::pptx::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pptx::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.pptx.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.pptx.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::pptx::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pptx::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("stdio.pptx.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.pptx.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::pptx::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pptx::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.pptx.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.pptx.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::pptx::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pptx::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.pptx.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Declaration
+
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 pub fn artifact_kind() -> ArtifactKindSpec {

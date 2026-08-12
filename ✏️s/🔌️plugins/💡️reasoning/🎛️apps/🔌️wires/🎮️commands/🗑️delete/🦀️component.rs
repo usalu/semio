@@ -1,7 +1,8 @@
 //! 🗑️ Wires play app commands — deleting the current selection (nodes and/or edges).
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
-use crate::artifacts::wires::engine::{fixture_edges, find_board_node};
+use crate::artifacts::wires::schema::fixture_edges;
+use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -40,7 +41,7 @@ mod tests {
     use crate::apps::wires::commands::selection::set_selection;
     use crate::apps::wires::testkit::{dispatch, new_app};
     use crate::apps::wires::WiresCommand;
-    use crate::artifacts::wires::engine::fixture_nodes;
+    use crate::artifacts::wires::schema::fixture_nodes;
 
     #[test]
     fn delete_selection_removes_node() {

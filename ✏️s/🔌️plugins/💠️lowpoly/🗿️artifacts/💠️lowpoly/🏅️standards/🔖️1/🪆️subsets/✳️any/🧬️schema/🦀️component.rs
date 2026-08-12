@@ -615,7 +615,7 @@ mod tests {
 //#region 🔖️ExportConcreteForestMeshTests
 #[cfg(all(test, feature = "cad-fixtures"))]
 mod export_concrete_forest_mesh_tests {
-    use cad_plugin::artifacts::cad::engine::geometry_import::{objects_from_fixture_model, parse_geometry};
+    use cad_plugin::artifacts::cad::io::geometry_import::{objects_from_fixture_model, parse_geometry};
     use semio_framework_3d::brep::kernel::Brep;
     use semio_framework_3d::brep::engine::GeometryHandle;
     use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};

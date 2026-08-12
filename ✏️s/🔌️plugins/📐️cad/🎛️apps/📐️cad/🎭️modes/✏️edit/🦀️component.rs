@@ -6,8 +6,8 @@ use crate::apps::cad::modes::edit::windows::{building, energy, shape, structure_
 use crate::apps::cad::terminology::CadLabels;
 use crate::apps::cad::{cad_action, cad_pane_camera_runtime, cad_pane_suffix, camera_json, resolve_active_object_id, CadPlayRuntime, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_PLAY_APP_ID};
 use crate::apps::cad::config::CadDislocateOptions;
-use crate::artifacts::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition, preview_display_items};
-use crate::artifacts::cad::engine::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
+use crate::apps::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition, preview_display_items};
+use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
 use crate::artifacts::cad::{cad_all_objects, cad_pane_geometry, cad_pane_objects, CadGeometry, CadObject, CadPaneId, CadSnapshot};
 use semio_framework_plugin::{
     build_world_3d_scene, mesh_from_kind, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, LocalizedLabel, ModeDefinition, UiNode, WindowEngagement,

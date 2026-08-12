@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.semio.mesh.inference
+extension semio.mesh.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.semio.mesh.inference" NL
+body = payload NL?
+payload = OCTET+

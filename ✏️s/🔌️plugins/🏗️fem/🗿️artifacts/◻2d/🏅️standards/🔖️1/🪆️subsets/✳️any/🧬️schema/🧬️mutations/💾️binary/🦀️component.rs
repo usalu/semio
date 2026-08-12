@@ -29,7 +29,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Fem2dMutation, protocol::ProtocolError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::fem2d::engine;
+    use crate::artifacts::fem2d::schema;
     use crate::artifacts::fem2d::{FemAnalysisSettings, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
     use store::{create_document_envelope, ArtifactCommand};
 
@@ -62,7 +62,7 @@ mod tests {
     #[test]
     fn fem2d_document_text_round_trips_through_the_store() {
         let fixture = simply_supported_beam_doc();
-        let mut store = crate::artifacts::fem2d::schema::mutations::Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", engine::empty_fem2d_snapshot(), None));
+        let mut store = crate::artifacts::fem2d::schema::mutations::Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", schema::empty_fem2d_snapshot(), None));
         let mutations = vec![
             Fem2dMutation::CreateMaterial(crate::artifacts::fem2d::schema::mutations::create_material::mutation::CreateMaterial { material: fixture.materials[0].clone() }),
             Fem2dMutation::CreateSection(crate::artifacts::fem2d::schema::mutations::create_section::mutation::CreateSection { section: fixture.sections[0].clone() }),

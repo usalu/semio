@@ -32,6 +32,95 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     }
 }
 //#endregion 🔖️ArtifactKind
+
+//#region 🔖️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6) —
+/// replaces the old side-effecting `crate::artifacts::png::engine::register()`, previously called
+/// unconditionally from `🗄️stdio`'s plugin root. Mirrors `🗒️note`/`🔋️model`'s own `declaration()`
+/// exemplars: `.composers(...)` reaches `⚙️engine`'s OWN `io_registry` (the real `ComposerEntry`
+/// row — png has no baseline/tiny/basic subset here, just the single ✳️any entry) by its FULLY
+/// QUALIFIED path, never the bare `io_registry::entries()` shortcut that would silently rebind to
+/// this file's own shadowing `io_registry` module below (repo-wide "silent rebind" hazard this
+/// ticket tracks — that module returns `&[&ComposerEntry]`, a different type, and is left in place
+/// as orphaned dead code, matching `🔋️model`'s own precedent for its orphaned wrapper). Unlike
+/// `🖼️tiff`/`📷️jpg`/`🎨️svg`, png's `register()` never registered a subset validator (no baseline
+/// subset here) and never called `register_schema_specs()` — nothing left uncovered. `⚙️engine`
+/// itself is untouched — this only REFERENCES what it already exposes.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder(PNG_ARTIFACT_SCHEMA_ID)
+        .schema(crate::artifacts::png::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor())
+        .inferences([crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor()])
+        .composers(crate::artifacts::png::standards::v1_2::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec_bare::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA)
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — moved
+/// here verbatim from `⚙️engine::register_pilot_languages` (same 5-role Document/Ops/Diff/Pack/Spr
+/// shape every stdio artifact uses), leaked to a `&'static` slice since `dsl::passthrough_hooks`
+/// isn't `const fn`, mirroring the `🗒️note`/`🔋️model` exemplars' own helper of the same shape.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "stdio.png",
+                    extension: Some("png"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::png::standards::v1_2::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::png::standards::v1_2::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::png::standards::v1_2::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::png::standards::v1_2::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.png"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.png.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::png::standards::v1_2::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::png::standards::v1_2::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::png::standards::v1_2::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::png::standards::v1_2::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.png.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.png.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::png::standards::v1_2::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::png::standards::v1_2::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("stdio.png.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.png.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::png::standards::v1_2::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::png::standards::v1_2::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.png.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.png.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::png::standards::v1_2::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::png::standards::v1_2::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.png.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Declaration
+
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;

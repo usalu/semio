@@ -9,7 +9,7 @@ use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{command_value_json, ids_or_selection, make_object_for_typology, patch_objects_mutations, runtime_of, snapshot_of};
-use crate::artifacts::cad::engine::next_cad_id;
+use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id;
 use crate::artifacts::cad::{cad_all_objects, cad_find_object_pane, cad_pane_from_model_definition_id, cad_pane_objects, CadPaneId};
 use semio_framework_plugin::SelectionSet;
 use serde_json::json;

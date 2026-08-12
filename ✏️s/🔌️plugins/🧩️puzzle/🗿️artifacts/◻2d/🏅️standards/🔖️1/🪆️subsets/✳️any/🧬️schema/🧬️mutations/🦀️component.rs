@@ -387,7 +387,7 @@ mod tests {
     //#region 🔖️MutationLaws
     #[test]
     fn create_delete_node_inverse_law() {
-        use crate::artifacts::puzzle2d::{engine::empty_puzzle2d_snapshot, Puzzle2dNode};
+        use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
         assert_mutation_inverse_law(&base, &create_node(node.clone(), None));
@@ -397,7 +397,7 @@ mod tests {
 
     #[test]
     fn move_node_inverse_and_absorb_law() {
-        use crate::artifacts::puzzle2d::{engine::empty_puzzle2d_snapshot, Puzzle2dNode};
+        use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
         let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(&create_node(node, None).diff(&base), &base);
@@ -410,7 +410,7 @@ mod tests {
 
     #[test]
     fn node_field_mutations_inverse_law() {
-        use crate::artifacts::puzzle2d::{engine::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
+        use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
         let base = empty_puzzle2d_snapshot();
         let node = Puzzle2dNode { id: "n1".into(), handles: vec![Puzzle2dHandle { id: "h1".into(), ..Default::default() }], ..Default::default() };
         let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(&create_node(node, None).diff(&base), &base);
@@ -430,7 +430,7 @@ mod tests {
 
     #[test]
     fn connect_disconnect_handles_inverse_law() {
-        use crate::artifacts::puzzle2d::{engine::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode};
+        use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
         let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }], ..Default::default() };
         let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }], ..Default::default() };
@@ -449,7 +449,7 @@ mod tests {
 
     #[test]
     fn delete_node_severs_and_reconnects_edges() {
-        use crate::artifacts::puzzle2d::{engine::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode};
+        use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
         let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }], ..Default::default() };
         let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }], ..Default::default() };
@@ -466,7 +466,7 @@ mod tests {
 
     #[test]
     fn meta_mutations_inverse_law() {
-        use crate::artifacts::puzzle2d::{engine::empty_puzzle2d_snapshot, Puzzle2dCompatSpecificity, Puzzle2dKindCatalogs};
+        use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dCompatSpecificity, Puzzle2dKindCatalogs};
         let base = empty_puzzle2d_snapshot();
         assert_mutation_inverse_law(&base, &change_manifest_id(Some("manifest-1".into())));
         assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle2dCompatSpecificity::Handle));

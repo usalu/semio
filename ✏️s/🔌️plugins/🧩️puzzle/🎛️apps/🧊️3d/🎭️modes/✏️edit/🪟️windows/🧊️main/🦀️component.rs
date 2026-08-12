@@ -17,7 +17,7 @@ use crate::apps::puzzle3d::{
     collect_mesh_urls, object_scale_json, puzzle3d_action, puzzle3d_brush_target_vortex, puzzle3d_vortex_full_id, quat_rotate_vector, resolve_object_mesh_url, target_volume_scale_json, Puzzle3dFixture,
     Puzzle3dFixtureMeta, Puzzle3dObject, Puzzle3dScene, Puzzle3dVortex, PUZZLE3D_FALLBACK_MESH_KIND, PUZZLE3D_VORTEX_SHOW_ALWAYS,
 };
-use crate::artifacts::puzzle3d::engine::Puzzle3dPrecomputeSession;
+use crate::apps::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 use semio_framework_plugin::{
     build_world_3d_scene, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene_extended, world3d_selection_json, SurfaceKind, UiNode,
     WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,

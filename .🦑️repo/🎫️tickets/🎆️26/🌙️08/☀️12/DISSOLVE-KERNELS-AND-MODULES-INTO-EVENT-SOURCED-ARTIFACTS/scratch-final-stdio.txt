@@ -1,0 +1,927 @@
+    Blocking waiting for file lock on build directory
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:47: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:533:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4: warning: function `print_edge_label` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2793:19: warning: method `set_envelope` is never used
+warning: `semio-framework-os-kernel` (lib) generated 8 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 4 suggestions)
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:7:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:210:164: warning: unused imports: `ChildGenesis`, `GroupReceipt`, and `OwnerRef`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:465:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:474:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:478:26: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:480:36: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:491:25: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:512:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:513:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:517:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:518:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:538:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:546:25: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:557:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:558:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:562:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:563:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:583:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:591:25: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:644:33: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:656:27: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:657:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1259:17: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1262:17: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5068:61: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7234:41: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7234:96: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:210:178: warning: unused import: `ChildStoreFactory`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7105:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2871:17: warning: unused variable: `app`: help: if this is intentional, prefix it with an underscore: `_app`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6766:38: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7024:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7055:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7066:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7080:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7090:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6802:38: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6682:42: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:968:9: warning: fields `child_slots` and `link_slots` are never read
+warning: `semio-framework-plugin` (lib) generated 40 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 33 suggestions)
+    Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:9:1: warning: unused extern crate: unused
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:202:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:203:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:47:13: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️component.rs:25:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:3:5: warning: unused import: `crate::artifacts::txt::schema::snapshot::LineEnding`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:256:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:257:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:42:13: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️component.rs:29:29: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:3:44: warning: unused import: `JsonDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:257:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:258:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:559:46: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:26:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:13:40: warning: unused import: `OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:4:42: warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🧬️schema/🦀️component.rs:375:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🧬️schema/🦀️component.rs:376:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:3:42: warning: unused import: `XmlDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:201:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:202:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:14:26: warning: unused import: `OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:3:42: warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧬️schema/🦀️component.rs:286:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧬️schema/🦀️component.rs:287:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:4:42: warning: unused import: `CsvDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:269:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:270:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:728:37: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:758:38: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:787:39: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:11:26: warning: unused import: `MutationDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:66:16: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:247:30: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:256:43: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:267:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:283:35: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:3:42: warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:8:40: warning: unused import: `MdDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:263:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:264:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:11:26: warning: unused import: `OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:3:42: warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:4:50: warning: unused import: `DeflateDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:226:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:227:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:55:13: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:5:42: warning: unused import: `ZipDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:259:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:260:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:107:18: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:25:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:330:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:331:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🚪️io/🦀️component.rs:53:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:211:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:212:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🧬️schema/🦀️component.rs:263:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🧬️schema/🦀️component.rs:264:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🧬️schema/🦀️component.rs:261:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🧬️schema/🦀️component.rs:262:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🧬️schema/🦀️component.rs:261:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🧬️schema/🦀️component.rs:262:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🧬️schema/🦀️component.rs:261:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🧬️schema/🦀️component.rs:262:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🧬️schema/🦀️component.rs:261:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🧬️schema/🦀️component.rs:262:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🧬️schema/🦀️component.rs:260:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🧬️schema/🦀️component.rs:261:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:3:42: warning: unused import: `IfcDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:215:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:216:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:17:26: warning: unused import: `OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:98:18: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:2:42: warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:238:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:239:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🧬️schema/🦀️component.rs:409:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🧬️schema/🦀️component.rs:410:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🚪️io/🦀️component.rs:32:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🧬️schema/🦀️component.rs:259:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🧬️schema/🦀️component.rs:260:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🧬️schema/🦀️component.rs:305:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🧬️schema/🦀️component.rs:306:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:16:42: warning: unused import: `LasDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:233:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:234:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:98:18: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:10:21: warning: unused imports: `GltfSparseAccessor`, `GltfSparseIndices`, and `GltfSparseValues`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:12:44: warning: unused import: `GltfDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:485:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:486:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:689:47: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:691:39: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:693:42: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:695:41: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:699:28: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:841:50: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1105:34: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1106:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1107:34: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1108:31: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2277:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2284:41: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2295:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2295:93: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2314:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2314:90: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2328:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2328:92: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2341:63: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2351:45: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2357:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2363:48: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2369:48: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2393:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2407:46: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2419:52: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2428:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2438:48: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2444:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2450:52: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2456:49: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2470:43: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2488:48: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2504:43: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2513:48: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2530:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2560:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2587:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2600:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2610:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2620:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2628:52: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2635:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2643:53: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2660:46: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2690:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2712:50: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2722:57: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2732:60: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2744:41: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2768:46: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2796:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2821:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2831:49: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2844:49: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2866:45: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2877:43: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2877:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2878:8: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2896:45: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2915:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2934:62: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2943:55: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2953:55: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2963:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2983:49: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2994:50: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3004:55: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3017:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3031:54: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3031:95: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3031:166: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3047:89: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3047:160: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3081:46: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3110:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:35:26: warning: unused imports: `OpBinary` and `OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:88:18: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:400:54: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:402:51: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:520:33: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:25:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:27:42: warning: unused import: `ObjDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:322:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:323:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:32:26: warning: unused import: `MutationDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:133:16: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:3:42: warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:14:42: warning: unused import: `PlyDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:232:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:233:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:928:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:935:41: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:945:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:945:92: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:960:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:960:93: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:970:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:984:49: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1008:43: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1030:46: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1040:41: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1049:45: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1065:46: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1089:43: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1095:35: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1103:36: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1113:39: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️component.rs:11:47: warning: unused import: `PlyElement`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:29:5: warning: unused import: `protocol::OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:55:16: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:3:42: warning: unused import: `DxfDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:253:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:254:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:653:89: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:28:5: warning: unused import: `header_var_diff_between`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:38:26: warning: unused imports: `MutationDiff` and `OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:99:16: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:3:42: warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:4:42: warning: unused import: `StlDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:258:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:259:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:69:18: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🦀️component.rs:25:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs:3:42: warning: unused import: `STDIO_TXT_DOCUMENT_SCHEMA`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:3:42: warning: unused import: `SvgDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:742:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:743:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:19:26: warning: unused import: `OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🧬️schema/🦀️component.rs:332:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🧬️schema/🦀️component.rs:333:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧬️schema/🦀️component.rs:380:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧬️schema/🦀️component.rs:381:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:294:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:295:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:10:26: warning: unused import: `MutationDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:87:16: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:6:5: warning: unused import: `diff::DwgDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:25:31: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:130:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:223:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:224:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:63:18: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:14:42: warning: unused import: `DwgDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:96:34: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:112:36: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:134:30: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:141:33: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:572:54: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:232:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:233:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:69:18: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:290:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:291:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1525:41: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1534:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1543:41: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1564:50: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1582:52: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1593:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1604:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1625:48: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1657:48: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1671:43: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1693:50: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1718:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1718:93: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1731:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1731:92: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1762:46: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1814:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1877:38: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1877:84: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:20:40: warning: unused import: `OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🦀️component.rs:25:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:182:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:183:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:26:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:34:18: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:25:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🧬️schema/🦀️component.rs:178:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🧬️schema/🦀️component.rs:179:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🚪️io/🦀️component.rs:34:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🧬️schema/🦀️component.rs:181:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🧬️schema/🦀️component.rs:182:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🚪️io/🦀️component.rs:34:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:18:74: warning: unused imports: `PdfDiff` and `PdfPathSegment`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:240:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:241:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:25:26: warning: unused import: `OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:145:18: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:171:39: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:180:47: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🦀️component.rs:631:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🦀️component.rs:632:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🚪️io/🦀️component.rs:34:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧬️schema/🦀️component.rs:480:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧬️schema/🦀️component.rs:481:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🚪️io/🦀️component.rs:34:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧬️schema/🦀️component.rs:412:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧬️schema/🦀️component.rs:413:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🚪️io/🦀️component.rs:34:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🦀️component.rs:394:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🦀️component.rs:395:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🚪️io/🦀️component.rs:34:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🦀️component.rs:362:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🦀️component.rs:363:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🚪️io/🦀️component.rs:37:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🦀️component.rs:331:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🦀️component.rs:332:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🚪️io/🦀️component.rs:36:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:14:18: warning: unused import: `JpgDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:314:26: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:1168:29: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:220:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:221:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:12:40: warning: unused import: `OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:460:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🧬️schema/🦀️component.rs:315:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🧬️schema/🦀️component.rs:316:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:216:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:217:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:701:30: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:708:38: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:717:31: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:730:32: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:745:36: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:745:82: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:758:33: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:758:81: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:778:38: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:778:84: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:807:37: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:277:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:278:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1036:30: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1043:38: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1052:31: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1059:30: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1066:35: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1080:37: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1101:32: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1119:40: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1131:36: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1131:82: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1144:33: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1144:81: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1163:38: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1163:84: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1197:37: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:25:44: warning: unused import: `TiffDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:216:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:217:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:22:87: warning: unused import: `TiffTag`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🧬️schema/🦀️component.rs:284:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🧬️schema/🦀️component.rs:285:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:252:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:253:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:17:26: warning: unused import: `OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:272:39: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:25:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs:434:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs:435:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs:325:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs:326:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:15:143: warning: unused import: `PptxDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:247:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:248:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:20:26: warning: unused import: `OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:25:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs:343:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs:344:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🦀️component.rs:34:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs:313:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs:314:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🦀️component.rs:34:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:9:114: warning: unused import: `XlsxDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:233:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:234:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:13:26: warning: unused import: `OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:25:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs:360:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs:361:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🦀️component.rs:34:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs:344:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs:345:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🦀️component.rs:34:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:278:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:279:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:27:26: warning: unused import: `OpText`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:25:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🚪️io/🦀️component.rs:45:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🦀️component.rs:171:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🦀️component.rs:172:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:45:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:168:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:169:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:341:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:281:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:290:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🚪️io/🦀️component.rs:41:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧬️schema/🦀️component.rs:289:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧬️schema/🦀️component.rs:290:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧬️schema/🔺️diff/🦀️component.rs:23:5: warning: unused import: `protocol::DiffCodec`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧬️schema/🧬️mutations/🦀️component.rs:16:26: warning: unused import: `OpBinary`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧬️schema/🧬️mutations/🦀️component.rs:176:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🚪️io/🦀️component.rs:29:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🦀️component.rs:196:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🦀️component.rs:197:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🦀️component.rs:181:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🦀️component.rs:182:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:10:24: warning: unused imports: `ArtifactDeserializer as _` and `ArtifactSerializer as _`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:34:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/🦀️component.rs:272:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/🦀️component.rs:273:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/🧬️mutations/🦀️component.rs:27:16: warning: unused import: `OpBinary`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/🧬️mutations/🦀️component.rs:621:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🚪️io/🦀️component.rs:31:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️component.rs:36:49: warning: unused import: `TransformOp`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️component.rs:38:56: warning: unused import: `XmlNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️component.rs:17:69: warning: unused import: `XmlNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🦀️component.rs:180:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🦀️component.rs:181:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/🦀️component.rs:35:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs:19:24: warning: unused imports: `PngChunkMarker` and `PngTextKind`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖼️bmp/🔖️v3/✳️any/🦀️component.rs:16:42: warning: unused import: `schema::snapshot::BmpRowOrder`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🦀️component.rs:264:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🦀️component.rs:265:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🔺️diff/🦀️component.rs:24:5: warning: unused import: `protocol::DiffCodec`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🦀️component.rs:18:16: warning: unused import: `OpBinary`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🦀️component.rs:263:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/🦀️component.rs:39:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🦀️component.rs:182:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🦀️component.rs:183:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/💡️inferences/🦀️component.rs:21:19: warning: unused import: `aabb_key`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:59:64: warning: unused imports: `SemioPoint3`, `SemioRgba`, and `SemioUv`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:65:79: warning: unused imports: `SemioMaterial`, `SemioMesh`, `SemioPrimitive`, `SemioTexture`, and `SemioTopology`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🚪️io/🦀️component.rs:26:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/🦀️component.rs:181:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/🦀️component.rs:182:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/🔺️diff/🦀️component.rs:18:16: warning: unused import: `DiffCodec`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🚪️io/🦀️component.rs:26:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/🦀️component.rs:173:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/🦀️component.rs:174:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🚪️io/🦀️component.rs:11:24: warning: unused imports: `ArtifactDeserializer as _` and `ArtifactSerializer as _`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🦀️component.rs:270:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🦀️component.rs:271:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🧬️mutations/🦀️component.rs:16:26: warning: unused import: `OpBinary`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🚪️io/🦀️component.rs:41:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🧬️schema/🦀️component.rs:169:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🧬️schema/🦀️component.rs:170:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🧬️schema/🧬️mutations/🦀️component.rs:233:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🚪️io/🦀️component.rs:10:24: warning: unused imports: `ArtifactDeserializer as _` and `ArtifactSerializer as _`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🚪️io/🦀️component.rs:28:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🧬️schema/🦀️component.rs:175:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🧬️schema/🦀️component.rs:176:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🧬️schema/🧬️mutations/🦀️component.rs:20:16: warning: unused import: `OpBinary`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🧬️schema/🧬️mutations/🦀️component.rs:253:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/🚪️io/🦀️component.rs:29:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🦀️component.rs:195:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🦀️component.rs:196:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🚪️io/🦀️component.rs:29:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🦀️component.rs:204:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🦀️component.rs:205:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🚪️io/🦀️component.rs:28:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🦀️component.rs:207:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🦀️component.rs:208:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🚪️io/🦀️component.rs:28:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🦀️component.rs:219:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🦀️component.rs:220:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🚚move-object/↩️inverse/🦀️component.rs:9:42: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🔄rotate-object/↩️inverse/🦀️component.rs:9:44: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/📏scale-object/↩️inverse/🦀️component.rs:9:43: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🦀️component.rs:225:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🦀️component.rs:226:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:119: warning: unused import: `IoPayload`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:179:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:180:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:119: warning: unused import: `IoPayload`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:177:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:178:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:119: warning: unused import: `IoPayload`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:189:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:190:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:119: warning: unused import: `IoPayload`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:187:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:188:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:119: warning: unused import: `IoPayload`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:224:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:225:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:119: warning: unused import: `IoPayload`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:188:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:189:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:119: warning: unused import: `IoPayload`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:182:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:183:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:26:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:108:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:131:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:9:16: warning: unused import: `DiffCodec`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:125:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:148:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:324:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:16:5: warning: unused import: `protocol::OpBinary`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:306:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs:27:34: warning: unused imports: `Dialect`, `StandardId`, and `SubsetId`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:813:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:67:17: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:297:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:218:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:100:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:122:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:265:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:441:94: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:442:80: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:443:84: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:461:56: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:491:66: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:492:52: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:493:56: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🧬️schema/🦀️component.rs:97:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🧬️schema/🦀️component.rs:97:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🧬️schema/🦀️component.rs:97:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🧬️schema/🦀️component.rs:97:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🧬️schema/🦀️component.rs:97:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🧬️schema/🦀️component.rs:99:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:262:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:309:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🧬️schema/🦀️component.rs:108:52: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🧬️schema/🦀️component.rs:108:115: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1528:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3397:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3410:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3412:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3427:50: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3431:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3433:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3455:36: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3458:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3459:30: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3460:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3461:29: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3491:31: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3492:33: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3492:109: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3514:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3541:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3634:42: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3651:33: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3652:9: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3714:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3715:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:436:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:454:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1706:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:134:17: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:269:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:290:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1158:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:223:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:259:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:100:17: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:306:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:322:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:212:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:257:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:373:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:546:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:782:21: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:88:17: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:298:27: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:302:28: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:130:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:153:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:158:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:181:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:315:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:340:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:426:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:442:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:1457:9: warning: duplicated attribute
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:304:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:380:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:862:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:203:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:224:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1291:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:311:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:332:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:461:5: warning: duplicated attribute
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🧪️tests/🦀️test.rs:53:28: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🧪️tests/🦀️test.rs:73:27: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs:114:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:232:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🚪️io/🦀️component.rs:130:31: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:656:21: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:676:21: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:701:21: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:362:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:520:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs:19:34: warning: unused imports: `Dialect`, `StandardId`, and `SubsetId`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2362:50: warning: unused imports: `OpcRelationship` and `OpcTargetMode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:282:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:404:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1726:13: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1727:13: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1728:13: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1729:13: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:280:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:406:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:891:9: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:892:9: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:895:9: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:897:9: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:905:9: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🚪️io/🦀️component.rs:219:17: warning: unused import: `super::*`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🔺️diff/🦀️component.rs:633:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs:170:17: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs:200:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs:341:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs:343:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs:361:9: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:200:17: warning: unused import: `super::*`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:535:33: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧬️schema/🔺️diff/🦀️component.rs:546:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧬️schema/🧬️mutations/🦀️component.rs:228:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🚪️io/🦀️component.rs:226:17: warning: unused import: `super::*`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/💡️inferences/✅validation-report/🦀️component.rs:105:55: warning: unused import: `InferredField`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🚪️io/🦀️component.rs:214:17: warning: unused import: `super::*`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🔺️diff/🦀️component.rs:863:9: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🔺️diff/🦀️component.rs:864:9: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🔺️diff/🦀️component.rs:867:9: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🔺️diff/🦀️component.rs:869:9: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🔺️diff/🦀️component.rs:877:9: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🧬️mutations/🦀️component.rs:332:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:374:17: warning: unused import: `super::*`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/🧬️mutations/🦀️component.rs:691:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🚪️io/🦀️component.rs:192:17: warning: unused import: `super::*`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/💡️inferences/🦀️component.rs:90:119: warning: unused import: `PathSegment`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/💡️inferences/🎛flattened-scene/🦀️component.rs:233:55: warning: unused import: `InferredField`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🔺️diff/🦀️component.rs:554:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/🦀️component.rs:246:17: warning: unused import: `super::*`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/💡️inferences/📦aabb/🦀️component.rs:121:55: warning: unused import: `InferredField`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🚪️io/🦀️component.rs:242:17: warning: unused import: `super::*`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/🔺️diff/🦀️component.rs:671:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🚪️io/🦀️component.rs:146:13: warning: unused import: `super::*`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🚪️io/🦀️component.rs:158:17: warning: unused import: `super::*`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🚪️io/🦀️component.rs:250:17: warning: unused import: `super::*`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🧬️mutations/🦀️component.rs:325:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🚪️io/🦀️component.rs:259:17: warning: unused import: `super::*`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🧬️schema/🧬️mutations/🦀️component.rs:284:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🚪️io/🦀️component.rs:216:17: warning: unused import: `super::*`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🧬️schema/🧬️mutations/🦀️component.rs:312:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:120:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:127:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:143:9: warning: unused import: `protocol::command::DiffAlgebra`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:110:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:117:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:133:9: warning: unused import: `protocol::command::DiffAlgebra`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:69:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:78:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:70:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:79:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:663:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:271:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:560:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:208:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:283:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:338:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:3684:5: warning: unused attribute: help: remove this attribute
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4118:5: warning: unused attribute: help: remove this attribute
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4287:5: warning: unused attribute: help: remove this attribute
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4583:5: warning: unused attribute: help: remove this attribute
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4760:5: warning: unused attribute: help: remove this attribute
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4958:5: warning: unused attribute: help: remove this attribute
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5166:5: warning: unused attribute: help: remove this attribute
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5372:5: warning: unused attribute: help: remove this attribute
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🚪️io/🦀️component.rs:9:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️component.rs:10:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🚪️io/🦀️component.rs:19:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:34:5: warning: unused import: `protocol::OpBinary`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/🚪️io/🦀️component.rs:13:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:10:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🚪️io/🦀️component.rs:11:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🚪️io/🦀️component.rs:11:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🚪️io/🦀️component.rs:12:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/🚪️io/🦀️component.rs:12:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🚪️io/🦀️component.rs:8:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🚪️io/🦀️component.rs:22:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🚪️io/🦀️component.rs:19:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🚪️io/🦀️component.rs:7:30: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:243:1: warning: trait `artifacts::gltf::standards::v2_0::subsets::any::schema::diff::component::ItemDiff<T>` is more private than the item `GltfCollectionDiff<T, D>`: implementation `GltfCollectionDiff<T, D>` is reachable at visibility `pub`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:59:4: warning: function `enc_ports` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:63:4: warning: function `enc_properties` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:124:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:121:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:144:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:151:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:215:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:918:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:794:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:81:4: warning: function `u64_le` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:754:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:435:4: warning: function `parse_u32` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:167:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:416:8: warning: method `absorb` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1316:15: warning: function `demo_diff_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:379:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:139:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1183:15: warning: function `demo_diff_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:423:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:182:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:531:15: warning: function `demo_diff_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:231:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:552:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:622:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:394:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:458:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:495:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:640:15: warning: function `encode_option` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:646:15: warning: function `decode_option` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:135:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:302:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:750:15: warning: function `demo_diff_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:334:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:165:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:467:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:146:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:588:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:949:24: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:173:24: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:1046:27: warning: field `0` is never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:1583:24: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:1134:24: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:1152:15: warning: function `demo_jpg_snapshot` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:98:8: warning: method `is_empty` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:293:8: warning: method `is_empty` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1715:15: warning: function `demo_diff_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:458:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:691:24: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:468:15: warning: function `demo_diff_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:67:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:459:24: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:696:15: warning: function `demo_diff_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:79:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:35:8: warning: associated function `of` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:651:5: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:567:25: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2503:15: warning: function `xml_node` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2507:15: warning: function `snapshot_a` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2541:15: warning: function `snapshot_b` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2572:15: warning: function `demo_diff_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:665:4: warning: function `fixture` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:675:4: warning: function `table_path` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:687:4: warning: function `sweep_a` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:729:4: warning: function `sweep_b` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:786:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:753:25: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2292:15: warning: function `demo_snapshot_a` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2323:15: warning: function `demo_snapshot_b` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2351:15: warning: function `demo_diff_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:513:15: warning: function `demo_fixture` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:522:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:707:25: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:310:4: warning: function `cell_with_diff_applied` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:338:4: warning: function `sheet_with_diff_applied` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs:523:4: warning: function `frame_with_diff_applied` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs:557:4: warning: function `image_with_diff_applied` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs:973:15: warning: function `enc_bool` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs:974:15: warning: function `dec_bool` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🔺️diff/🦀️component.rs:446:4: warning: function `parse_usize` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs:597:24: warning: fields `artifact_state` and `snapshot_state` are never read
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:606:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1335:15: warning: function `demo_snapshot_a` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1381:15: warning: function `demo_snapshot_b` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1425:15: warning: function `demo_diff_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1665:15: warning: function `snapshot_a` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1675:15: warning: function `snapshot_b` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1700:15: warning: function `demo_diff_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:515:15: warning: function `fixture` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:536:15: warning: function `sweep_a` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:591:15: warning: function `sweep_b` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:639:15: warning: function `demo_mutation_cases` is never used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🧪️tests/🦀️test.rs:8:45: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🌱️metabolism/🧪️tests/🦀️test.rs:13:45: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🔺️diff/🦀️component.rs:859:13: warning: unused variable: `mid2`: help: if this is intentional, prefix it with an underscore: `_mid2`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs:445:13: warning: unused variable: `base`: help: if this is intentional, prefix it with an underscore: `_base`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1095:8: warning: function `object_diff` is never used
+warning: `semio-s-plugin-stdio` (lib) generated 695 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 318 suggestions)
+warning: `semio-s-plugin-stdio` (lib test) generated 787 warnings (610 duplicates) (run `cargo fix --lib -p semio-s-plugin-stdio --tests` to apply 172 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 2m 49s

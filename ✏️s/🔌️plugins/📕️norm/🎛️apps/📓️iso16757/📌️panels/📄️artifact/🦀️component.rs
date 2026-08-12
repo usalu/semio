@@ -1,6 +1,6 @@
 //! 📄️ ISO 16757 play app panel — the document headline: family, check count, worst utilization, verdict.
 
-use crate::artifacts::iso16757::engine::Iso16757Family;
+use crate::apps::iso16757::Iso16757Family;
 use crate::document::NormHost;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, UiNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 

@@ -1,6 +1,6 @@
 //! 📄️ VDI 3805 play app panel — the document headline: family, check count, worst utilization, verdict.
 
-use crate::artifacts::vdi3805::engine::Vdi3805Family;
+use crate::apps::vdi3805::Vdi3805Family;
 use crate::document::NormHost;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, UiNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 

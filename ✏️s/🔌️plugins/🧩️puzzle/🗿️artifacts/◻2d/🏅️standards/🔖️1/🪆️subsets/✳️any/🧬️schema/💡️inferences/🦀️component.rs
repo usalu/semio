@@ -130,7 +130,7 @@ mod tests {
 /// compute over a `Puzzle2dSnapshot` — sole consumer is `🎛flat-position`'s own `compute_flat_position`
 /// (see that file's own `use super::fastened_layout_snapshot;`), so it lives at the inference family
 /// root rather than being duplicated into the slug dir.
-use crate::artifacts::puzzle3d::engine::geometry::flatten::{DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS, DIAGRAM_VERTICAL_V_EXTRA};
+use crate::artifacts::puzzle3d::schema::inferences::flatten::{DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS, DIAGRAM_VERTICAL_V_EXTRA};
 use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dNodeAnchor};
 use std::collections::{HashMap, HashSet, VecDeque};
 

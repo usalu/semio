@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `CreateNode` — deletes the just-created node by its own id (no BASE lookup
 //! needed: the id is already carried on the payload). Missing id ⇒ `Vec::new()`.
-use crate::artifacts::wires::engine::entity_id;
+use crate::artifacts::wires::schema::entity_id;
 use crate::artifacts::wires::mutations::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 

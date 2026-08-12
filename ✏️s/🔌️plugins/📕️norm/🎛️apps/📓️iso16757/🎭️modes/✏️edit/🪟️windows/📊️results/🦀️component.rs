@@ -1,6 +1,6 @@
 //! 📊️ ISO 16757 play app — the results window: every computed compliance check, one line each.
 
-use crate::artifacts::iso16757::engine::Iso16757Family;
+use crate::apps::iso16757::Iso16757Family;
 use crate::document::NormHost;
 use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
 

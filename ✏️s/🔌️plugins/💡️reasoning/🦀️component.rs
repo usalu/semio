@@ -7,7 +7,7 @@ pub fn plugin() -> Plugin {
     Plugin::builder("reasoning-mindmap")
         .label("Mindmap")
         .version("0.1.0")
-        .setup(crate::artifacts::wires::engine::register)
+        .setup(crate::apps::wires::register)
         .register_document_app::<crate::apps::wires::ReasoningWiresPlayApp>(crate::apps::wires::create_wires_app())
         .build()
 }

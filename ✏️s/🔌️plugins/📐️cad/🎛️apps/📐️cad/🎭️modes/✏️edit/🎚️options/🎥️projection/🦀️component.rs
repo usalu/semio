@@ -6,7 +6,7 @@
 //! at the mode level. See the plugin's migration ticket for the taxonomy note.
 
 use crate::apps::cad::{cad_action, cad_pane_camera_runtime, CadPlayRuntime};
-use crate::artifacts::cad::engine::cad_camera_projection_config;
+use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_camera_projection_config;
 use crate::artifacts::cad::CadPaneId;
 use semio_framework_plugin::{world3d_projection_measures, WindowMeasure};
 

@@ -1,7 +1,7 @@
 //! 🔺️ Wires artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::wires::schema::diff::{WiresDiff, WiresStringList};
-use crate::artifacts::wires::engine::{array_mut, entity_id};
+use crate::artifacts::wires::schema::{array_mut, entity_id};
 use crate::artifacts::wires::schema::WiresArtifact;
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;

@@ -12,7 +12,7 @@
 //! mounts were deleted as part of that same trueing pass.
 
 use crate::artifacts::wires::diff::WiresDiff;
-use crate::artifacts::wires::engine::{array_mut, entity_id};
+use crate::artifacts::wires::schema::{array_mut, entity_id};
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
 use serde::{Deserialize, Serialize};
@@ -87,7 +87,7 @@ pub use set_node_root::mutation::{set_node_root, SetNodeRoot};
 mod tests {
     use super::*;
     use crate::artifacts::wires::empty_wires_snapshot;
-    use crate::artifacts::wires::engine::find_board_node;
+    use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
     use protocol::{Mutation, SemanticMutation};
     use serde_json::json;
     use store::apply_mutation;

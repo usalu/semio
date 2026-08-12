@@ -1,0 +1,393 @@
+DRAW PLUGIN — ⚙️engine DISSOLUTION WORKLOG
+ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES (#2553)
+slice: ✏️s/🔌️plugins/🖍️draw  (package semio-s-plugin-draw)
+scope respected: 🔄️fsm/** NOT touched (verified: git status --porcelain on 🔄️fsm empty,
+both 🔄️fsm Cargo.toml files still present); no other plugin dir touched;
+semio-s-plugin-stdio never edited.
+
+================================================================================
+1. SOURCE
+================================================================================
+Dissolved + DELETED:
+  ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs
+  (2054 lines) and its containing ⚙️engine/ directory.
+
+Module nesting actually found in 📦️glue.rs (verified, NOT assumed): `engine` was
+mounted directly under `standards::v1` (i.e. `standards::v1::engine`), NOT under
+`subsets::any`. Both the `#[path]` mount and the
+`pub mod engine { pub use super::standards::v1::engine::*; }` shim were removed.
+No compatibility shim left behind.
+
+================================================================================
+2. DESTINATION OF EVERY SYMBOL
+================================================================================
+--- RULE 1: *Engine struct -> DELETED OUTRIGHT ---
+DrawEngine (struct + its inherent impl: new(), into_snapshot())
+  DELETED. Pre-delete check `grep -rn "DrawEngine\b" ✏️s/🔌️plugins/🖍️draw
+  --include="*.rs"` returned ONLY its own definition site (2 hits, both in the
+  engine file). Zero external references => no exception, deleted, not rehomed.
+  Post-delete grep returns 0 hits plugin-wide.
+
+--- RULE 3: pure helpers over document types -> 🧬️schema/🦀️component.rs ---
+appended as `//#region 🔖️DocumentHelpers` (with nested subregions
+🔖️SceneTypes / 🔖️Tree / 🔖️SegmentGeometry / 🔖️KernelResolve) + `//#region 🧪️Tests`.
+Destination file had NO pre-existing tests region, so a new one was added there.
+
+  types:   DrawSceneNode, DrawSceneText, DrawSceneImage, DrawCanvasLayerRecord,
+           DrawLayerLocation
+  pub fns: create_draw_id, semio_draw_example_document, semio_draw_example_json,
+           default_layer_base, create_draw_path_layer, create_draw_group_layer,
+           create_draw_boolean_layer, create_draw_trace_layer,
+           create_draw_shape_layer_rect, create_draw_text_layer,
+           create_draw_image_layer, default_draw_document, empty_draw_snapshot,
+           layer_id, layer_base, layer_kind_label, find_draw_layer,
+           flatten_draw_layers, draw_transform_to_matrix,
+           draw_matrix_to_transform, draw_play_layers_tree_row_id,
+           draw_play_boolean_child_row_id, draw_play_layer_id_from_tree_row_id,
+           layer_to_path_segments, draw_layer_world_bounds,
+           flatten_draw_document_to_scene_nodes, canvas_layer_records,
+           clone_draw_layer_node, layer_base_mut, mutate_draw_layer,
+           update_layer_in_tree, remove_layer_from_tree, extract_layer_node,
+           insert_layer, find_draw_layer_location, create_layer_by_kind,
+           hex_to_rgba, rgba_to_hex, transform_path_segments,
+           scale_path_segments, split_path_segments_by_contour,
+           path_segments_bounds, filter_path_segments_by_contour_area,
+           flatten_curve_segments, draw_layer_descendant_leaf_ids,
+           flatten_segments_to_lines, resolve_draw_artboard,
+           artifact_schema_registered
+  priv fns:draw_id_hex, find_draw_layer_in_node, ellipse_path_segments,
+           shape_to_path_segments, segment_to_point, transform_world_point,
+           scene_node_for_path, insert_layer_in_parent,
+           draw_map_point_by_matrix, arc_ellipse_point, arc_vector_angle,
+           arc_approx_unit_arc, arc_segment_to_cubics, sample_quad_points,
+           sample_cubic_points, to_kernel_segment, from_kernel_segment,
+           to_kernel_segments, from_kernel_segments,
+           resolve_boolean_layer_segments, decode_draw_image_asset_luma,
+           resolve_trace_layer_segments
+  consts:  SEMIO_DRAW_EXAMPLE_TEXT, CURVE_LINE_SAMPLE_STEPS
+
+  NOTE on rule 2 (💡️inferences/): nothing routed there. Draw's engine had no
+  pure `&Snapshot -> Value/projection/manifest-fragment` conformance/field-sweep
+  helper. `💡️inferences/` already owns draw's only such compute
+  (compute_draw_topology, in the 🧭topology/ slug dir) and was left untouched.
+  resolve_draw_artboard/canvas_layer_records ARE snapshot-derived but return
+  document-domain types consumed by the canvas/io, so they follow their callers
+  into 🧬️schema/ (same call the raster/lowpoly siblings made).
+
+--- RULE 5: io_registry / codec+bridge dispatch -> 🚪️io/🦀️component.rs ---
+appended as `//#region 🔖️SemioBridge`, `//#region 🚪️DerivedIoRegistry`
+(with nested `//#region 🔖️ExportEntries`) and `//#region 🧪️Tests`.
+The file's pre-existing `//#region 🎹️DerivedComposition` was left intact and
+the new regions were added ALONGSIDE it, not replacing it.
+
+  pub mod io_registry  (entries() -> &'static [ComposerEntry], the REAL one)
+    + its privates: rebuild_native_snapshot, compose_export_svg/pdf/png/json/
+      dwg/dxf and their EXPORT_*_DIALECT / DRAW_DIALECT /
+      DRAW_JSON_BRIDGE_DIALECT consts
+  pub fn draw_document_to_semio_drawing
+  pub fn draw_document_to_svg
+  pub fn draw_document_json_to_svg
+  priv:   ensure_semio_drawing_bridge_registered  <-- the ensure_*_registered()
+          bridge DID exist in draw's engine after all (w5b-verify-report.md had
+          flagged draw as possibly MISSING it; checked rather than assumed —
+          it was present and moved verbatim)
+          resolve_draw_document_artboard, matrix_to_semio_transform,
+          to_semio_path_segment, solid_fill_to_semio_rgba, intern_semio_style,
+          decode_data_uri_bytes, semio_draw_node_from_scene_node
+  consts: SEMIO_DRAWING_DIALECT, SVG_DIALECT
+
+--- RULE 4: AppIo / app-type-referencing -> 🎛️apps/🖍️draw/🦀️component.rs ---
+appended as `//#region 🔖️Io` (placed between 🔖️DrawPlayApp and 🔖️Manifest):
+  pub fn draw_io           (returns semio_framework::AppIo)
+  pub fn draw_vector_out_port
+  pub fn draw_vector_media (builds the app's vector:out media port payload)
+The empty 🎛️apps/🖍️draw/⚙️engine/ stub dir was LEFT ALONE as instructed
+(verified still empty, no files).
+
+--- RULE 6: register*() wiring ---
+No `register()` existed in draw's engine to move. `artifact_schema_registered()`
+(a read-only registry query, not wiring) went to 🧬️schema/ per rule 3, mirroring
+s.lowpoly.lowpoly / s.space.home which made the identical move.
+
+================================================================================
+3. THE SHADOWING io_registry TRAP — HANDLED
+================================================================================
+Confirmed the hazard was real: the artifact root
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🦀️component.rs already carried a
+SHADOWING `pub mod io_registry` whose `entries()` returns
+`&'static [&'static ComposerEntry]` (a `.iter().collect()` view) — a DIFFERENT
+type from the real engine `io_registry::entries() -> &'static [ComposerEntry]`.
+
+Every moved/affected path was FULLY QUALIFIED rather than pattern-substituted:
+  - root `declaration()`  `.composers(...)` re-qualified from
+      crate::artifacts::draw::standards::v1::engine::io_registry::entries()
+    to
+      crate::artifacts::draw::standards::v1::subsets::any::io::io_registry::entries()
+  - root shadow module's own alias re-qualified from
+      use crate::artifacts::draw::standards::v1::engine::io_registry as v1;
+    to
+      use crate::artifacts::draw::standards::v1::subsets::any::io::io_registry as v1;
+  - the real io_registry's internal `crate::artifacts::draw::engine::
+    draw_document_to_semio_drawing(...)` call re-qualified to
+    `crate::artifacts::draw::io::draw_document_to_semio_drawing(...)`.
+No unqualified `io_registry::entries()` call was left anywhere, so nothing could
+silently rebind to the shadow.
+
+================================================================================
+4. EXTERNAL CALL SITES REWIRED
+================================================================================
+33 files outside the engine referenced `crate::artifacts::draw::engine::X`.
+All rewritten to `crate::artifacts::draw::schema::X` (the artifact root's
+pre-existing `pub mod schema { pub use super::standards::v1::subsets::any::
+schema::*; }` shim keeps that path resolving), except the app root which now
+calls its own local `draw_io()` / `draw_vector_media()` directly.
+
+breakdown: 5 app files (📌️panels/🔍️properties, 📌️panels/🗂️layers,
+🎮️commands/🗂️layer, 🎮️commands/👁️view, 🎮️commands/🖱️canvas)
++ 🎮️commands/📄️artifact + 🎭️modes/✏️edit/🪟️windows/🖼️canvas
++ 6 🚪️io/📥️import deserializer leaves (svg/pdf/png/json/dwg/dxf)
++ 20 🧬️schema leaves (mutations root, 13 mutation ↩️inverse/🔺️diff/🦠️mutation
+  leaves, 📸️snapshot 📝️text + 💾️binary, 🧬️mutations 💾️binary, 🔺️diff/📝️text)
++ 🎛️apps/🖍️draw/🦀️component.rs itself.
+
+Each rewritten import was read, not blind-substituted; verified no duplicate
+`use` of the same symbol at the same scope was created (🔺️diff/📝️text carries
+three separate `use crate::artifacts::draw::schema::...` lines with disjoint
+item sets — legal, checked).
+
+================================================================================
+5. FILES TOUCHED
+================================================================================
+created: 0 source files (0 new test files, 0 example files — every relocation
+         went into an existing file under a //#region)
+deleted: 1  ⚙️engine/🦀️component.rs  (+ its now-empty ⚙️engine/ directory)
+edited:  37
+   1  📦️packages/🦀️rust/📦️glue.rs                      (engine mount + shim removed)
+   2  🗿️artifacts/🖍️draw/🦀️component.rs                 (declaration() + shadow re-qualified)
+   3  🗿️artifacts/.../✳️any/🧬️schema/🦀️component.rs      (rule-3 destination)
+   4  🗿️artifacts/.../✳️any/🚪️io/🦀️component.rs          (rule-5 destination)
+   5  🎛️apps/🖍️draw/🦀️component.rs                      (rule-4 destination + call sites)
+  6-37 the 32 remaining call-site files listed in §4
+
+================================================================================
+6. TEST COUNT — BEFORE vs AFTER (counted, not eyeballed)
+================================================================================
+BEFORE (verbatim):
+  $ git show "HEAD:✏️s/.../✳️any/⚙️engine/🦀️component.rs" | grep -c '#\[test\]'
+  34
+AFTER (verbatim):
+  schema/🦀️component.rs : 33
+  io/🦀️component.rs     : 1
+  ----------------------------
+  total                 : 34
+DELTA: 0  — every assertion survived, none dropped, none duplicated.
+
+Split rationale: the 33 that exercise document helpers / segment geometry /
+kernel resolve followed those fns into 🧬️schema/; the single test
+`draw_document_to_svg_bridges_shape_text_image_and_gradient_nodes_through_semio_drawing`
+(which also carries the `draw_document_json_to_svg` error-path assertion)
+followed the semio/drawing↔svg bridge into 🚪️io/.
+
+Cross-check, plugin-wide `grep -rh '#\[test\]' | wc -l`:
+  working tree now = 133.
+  `git grep HEAD` reports 167, which is 133 + 34 — HEAD still contains the
+  engine file (staged-deleted) alongside the already-auto-committed
+  relocations, i.e. it double-counts the same 34. True before = true after = 133.
+
+Also unchanged: 🎛️apps/🖍️draw/🦀️component.rs held 30 tests at HEAD and holds 30
+now (path-renames only, no test added/removed there).
+
+================================================================================
+7. STRUCTURAL VERIFICATION (verbatim)
+================================================================================
+$ grep -rn "::engine::\|standards::v1::engine\|subsets::any::engine" ✏️s/🔌️plugins/🖍️draw
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:13:use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+
+  => 1 hit, LEGITIMATE FALSE POSITIVE, justified: it is a path into
+     semio_s_plugin_stdio's OWN engine module — a different, explicitly
+     out-of-scope plugin. Not draw's engine. Moved verbatim, unchanged.
+     (base64's `base64::{engine::general_purpose::...}` does not match the
+     `::engine::` pattern because of the brace grouping, so it contributes 0.)
+  => draw-owned hits: 0.
+  => own new docstrings audited for the literal `::engine::` substring: 0
+     (they say "the `⚙️engine` directory", which does not match the check).
+
+$ find ✏️s/🔌️plugins/🖍️draw -path "*🗿️artifacts*" -name "⚙️engine" -type d
+  (no output — 0 hits, PASS)
+
+$ git status --porcelain -- ✏️s/🔌️plugins/🖍️draw/🔄️fsm
+  (no output — 🔄️fsm untouched, scope trap respected)
+$ find ✏️s/🔌️plugins/🖍️draw/🔄️fsm -name Cargo.toml
+  ✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml
+  (both crate manifests intact)
+
+================================================================================
+8. COMPILER (verbatim)
+================================================================================
+$ RUSTC_WRAPPER="" CARGO_TARGET_DIR=".../ENGINELESS-.../🎯️target" \
+    cargo check -p semio-s-plugin-draw --all-targets
+
+RUN 1 (scratch-draw-cargo-check-1 / task b00f97sy6) — RED, NOT MINE:
+    error: could not compile `semio-s-plugin-stdio` (lib) due to 2 previous
+    errors; 603 warnings emitted
+    (E0308 mismatched types, all inside ✏️s/🔌️plugins/🗄️stdio/**)
+  attribution: upstream, and specifically LIVE CHURN, not stale state —
+  `git status --porcelain -- ✏️s/🔌️plugins/🗄️stdio` at that moment showed an
+  uncommitted ` M .../🗄️stdio/📦️packages/🦀️rust/📦️glue.rs` plus a large batch of
+  newly added `A` semio-subset schema files, i.e. another session was mid-edit
+  in stdio. draw's own crate never got a chance to compile. Nothing in this
+  slice touches stdio (`git status --porcelain -- ✏️s/🔌️plugins/🖍️draw` shows
+  only `D ...⚙️engine/🦀️component.rs` from me). Not fixed, not worked around,
+  per the hard rule.
+
+RUN 2 (scratch-draw-cargo-check-3.txt) — GREEN, after stdio settled:
+    Checking semio-s-plugin-draw v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust)
+    warning: `semio-s-plugin-draw` (lib) generated 27 warnings (run `cargo fix --lib -p semio-s-plugin-draw` to apply 25 suggestions)
+    warning: `semio-s-plugin-draw` (lib test) generated 31 warnings (27 duplicates) (run `cargo fix --lib -p semio-s-plugin-draw --tests` to apply 3 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 2m 36s
+    CARGO_EXIT=0
+  `grep -c "^error"` on the full 8021-line log = 0.
+  Checked the `Finished` line and exit status, not merely absence of "error".
+
+  Two of those warnings were newly introduced BY the relocation and were then
+  fixed rather than left: `unnecessary qualification` at schema lines 1408/1794
+  — `std::collections::BTreeMap::new()` was necessary inside the old engine file
+  but redundant at the destination, which already imports BTreeMap at the top.
+  Rewritten to `BTreeMap::new()`.
+  Remaining draw warnings were audited and are pre-existing, not from this
+  slice: e.g. `unused variable: app_impl` at 🎛️apps/🖍️draw/🦀️component.rs:732 is
+  byte-identical at HEAD (`git show HEAD:... | grep -n "let app_impl"` -> 732),
+  and the 🚪️io hits at lines 187/190/211 sit inside the pre-existing
+  `derived_composition` module, which this slice did not modify.
+
+RUN 3 (scratch-draw-cargo-check-final.txt, 1st write) — GREEN, confirming the
+  two-line BTreeMap cleanup:
+    Checking semio-s-plugin-draw v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust)
+    warning: `semio-s-plugin-draw` (lib) generated 27 warnings (16 duplicates) (run `cargo fix --lib -p semio-s-plugin-draw` to apply 10 suggestions)
+    warning: `semio-s-plugin-draw` (lib test) generated 29 warnings (11 duplicates) (run `cargo fix --lib -p semio-s-plugin-draw --tests` to apply 16 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 8m 15s
+    CARGO_EXIT=0
+  `grep -c "^error"` = 0. The 1408/1794 warnings were gone, confirming the fix.
+
+  Auditing RUN 3's remaining draw warnings surfaced a SECOND set I had caused:
+  `unnecessary qualification` at schema 62/63/74/87 — the pre-existing
+  `impl DrawArtifact` Conversions region spells `crate::artifacts::draw::
+  DrawSnapshot`, which my new top-level `use crate::artifacts::draw::{... ,
+  DrawSnapshot, ...}` made redundant. Fixed (4 sites -> bare `DrawSnapshot`;
+  residual full quals in the file now 0). By contrast schema 226/227
+  (`derived_construction::` / `derived_analysis::`) were verified PRE-EXISTING —
+  byte-identical at HEAD — and left alone, as were the 🚪️io 187/190/211 warnings,
+  which sit inside the untouched `derived_composition` module.
+
+RUN 4 (scratch-draw-cargo-check-final.txt, overwritten) — RED, NOT MINE, and a
+  NEW regression distinct from RUN 1's:
+    error[E0433]: cannot find `engine` in `any`
+      --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📝️md/🦀️component.rs:57:81
+       |
+    57 |         .composers(crate::artifacts::md::standards::v_commonmark::subsets::any::engine::io_registry::entries())
+       |                                                                                 ^^^^^^ could not find `engine` in `any`
+    error: could not compile `semio-s-plugin-stdio` (lib) due to 1 previous error; 603 warnings emitted
+    CARGO_EXIT=101
+  attribution: upstream + LIVE CHURN. A peer session is performing the SAME
+  engine dissolution on stdio's `md` artifact and is mid-edit — it has dropped
+  the `engine` module from the mount but has not yet re-qualified
+  `declaration()`'s `.composers(...)`, the exact step this slice did for draw.
+  Evidence:
+    $ git status --porcelain -- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/
+     M ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🦀️component.rs     <- unstaged, in flight
+    $ find ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md -name "⚙️engine" -type d
+      ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/⚙️engine
+      (their engine dir still on disk while their declaration() already dropped it)
+    $ git log --oneline -3 -- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🦀️component.rs
+      16619a9699 / 4dc3c09081 / 449c584855   (all predate this session)
+    stdio-wide at that moment: 60+ dirty paths (M/A) under ✏️s/🔌️plugins/🗄️stdio.
+  This slice's own dirty set contains ZERO stdio paths:
+    D  ...🖍️draw/.../✳️any/⚙️engine/🦀️component.rs
+    MM ...🖍️draw/.../✳️any/🧬️schema/🦀️component.rs
+  (the rest of my edits were already picked up by the repo's background
+  auto-commit). Not fixed, not worked around, per the hard rule.
+  draw's own crate never reached "Checking" in this run.
+
+RUN 5 (scratch-draw-cargo-check-final2.txt) — RED, AND THIS ONE WAS **MINE**:
+    error[E0432]: unresolved import `DrawSnapshot`
+       --> ✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/././../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:177:9
+        |
+    177 |     use DrawSnapshot;
+        |         ^^^^^^^^^^^^ no external crate `DrawSnapshot`
+    error: could not compile `semio-s-plugin-draw` (lib) due to 1 previous error; 23 warnings emitted
+    error: could not compile `semio-s-plugin-draw` (lib test) due to 1 previous error; 26 warnings emitted
+    CARGO_EXIT=101
+  ROOT CAUSE (mine, not upstream): the RUN-3 follow-up fix for the schema
+  62/63/74/87 `unnecessary qualification` warnings was applied with a global
+  `s/crate::artifacts::draw::DrawSnapshot/DrawSnapshot/g`. That also rewrote
+  line 177 — a `use crate::artifacts::draw::DrawSnapshot;` sitting INSIDE the
+  `pub mod derived_analysis` submodule, where the qualification is REQUIRED, not
+  redundant — into a bare `use DrawSnapshot;`. Classic blind-substitution
+  fallout, the same failure mode the brief warns about for the io_registry
+  shadow; I avoided it there and then walked into it here on a cosmetic cleanup.
+  FIX: line 177 restored verbatim to its HEAD form
+  (`use crate::artifacts::draw::DrawSnapshot;`). Then audited for further
+  collateral:
+    $ grep -n "^\s*use [A-Z][A-Za-z]*;" <schema file>     -> no output
+    $ diff <(git show HEAD:<f> | sed -n 1,234p) <(sed -n 1,234p <f>)
+      -> exactly 3 hunks, all of them the 4 INTENDED unqualifications at
+         62/63/74/87; nothing else in the pre-existing region differs.
+  Note this run DID reach `Checking semio-s-plugin-draw` and its warning count
+  had dropped 27 -> 23, confirming the earlier BTreeMap/qualification fixes
+  landed as intended.
+
+  ⚠️ PROCESS NOTE FOR THE PACKET: a peer session read RUN 2/RUN 3 from an
+  earlier revision of this worklog and reported draw as finished/green. That was
+  premature — RUN 5 above post-dates it and was red on a defect of mine. Do not
+  treat any verdict earlier than RUN 6 as this slice's result.
+
+RUN 6 (scratch-draw-cargo-check-final3.txt) — GREEN. THIS IS THE AUTHORITATIVE
+  RESULT FOR THIS SLICE; it is the only run taken against the corrected final
+  tree state.
+    Checking semio-s-plugin-draw v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust)
+    warning: `semio-s-plugin-draw` (lib test) generated 25 warnings (18 duplicates) (run `cargo fix --lib -p semio-s-plugin-draw --tests` to apply 6 suggestions)
+    warning: `semio-s-plugin-draw` (lib) generated 23 warnings (5 duplicates) (run `cargo fix --lib -p semio-s-plugin-draw` to apply 16 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 35.33s
+    CARGO_EXIT=0
+  `grep -c "^error"` on the full log = 0. `could not compile` = 0 occurrences.
+  Verdict taken from the `Finished` line AND CARGO_EXIT, not from absence of the
+  word "error". Warning count 27 -> 23 vs RUN 2, i.e. the 4 relocation-induced
+  warnings I introduced are gone and no new ones were added.
+
+STRUCTURAL CHECKS RE-RUN AGAINST THIS EXACT (RUN-6) TREE — all still hold:
+  grep "::engine::|standards::v1::engine|subsets::any::engine" -> 1 hit, the
+    semio_s_plugin_stdio geometry import only (justified above); draw-owned 0
+  find ... -name "⚙️engine" -type d under draw artifacts -> 0
+  git status --porcelain -- .../🔄️fsm -> empty
+  tests: schema 33 + io 1 = 34 (= the 34 that were in the engine file)
+  plugin-wide tests: 133
+
+================================================================================
+9. HONEST ASSESSMENT
+================================================================================
+- The ⚙️engine directory is gone; no `pub mod engine { pub use ... }` shim was
+  left anywhere; the plugin compiles clean with 0 errors.
+- Every one of the 34 assertions survived the split; delta verified by counting.
+- The io_registry shadowing trap was real in this plugin and was defused by full
+  qualification at all three affected sites, not by pattern substitution.
+- Not verified by me: `cargo test` was NOT run (the brief asked for
+  `cargo check --all-targets`, and the shared target dir is under heavy
+  contention from ~30 concurrent agent builds). Type-level correctness of the
+  relocated tests is proven by `--all-targets`; runtime behaviour of the
+  relocated `ensure_semio_drawing_bridge_registered()` bridge test is NOT.
+- Not verified by me: nothing outside ✏️s/🔌️plugins/🖍️draw was compiled, so any
+  cross-plugin consumer of the old `crate::artifacts::draw::engine::*` path
+  (there should be none — that path was crate-internal) is unchecked.
+- Self-criticism worth carrying forward: the dissolution itself landed clean,
+  but the OPTIONAL cosmetic warning cleanup afterwards is what broke the build
+  (RUN 5). A blind `perl -pi -e s///g` on a symbol name hit a `use` inside a
+  submodule where the qualification was load-bearing. The brief's own warning
+  about never pattern-substituting paths applied just as much to this tidy-up as
+  to the io_registry shadow; the lesson is that "cosmetic" edits deserve the
+  same read-every-site discipline, and that a green build BEFORE the last edit
+  is not evidence about the tree AFTER it.
+- The verdict below rests on RUN 6 only. RUN 2/RUN 3 greens predate two later
+  edits and must not be used as this slice's result.
+
+STATUS: green

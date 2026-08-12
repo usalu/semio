@@ -22,7 +22,8 @@ use crate::apps::puzzle3d::modes::edit::windows::main;
 use crate::apps::puzzle3d::modes::edit::windows::main::utilities;
 use crate::apps::puzzle3d::panels::{catalogue, document, inspection, settings as settings_panel};
 use crate::apps::puzzle3d::terminology::{puzzle3d_labels, puzzle3d_localized, puzzle3d_localized_phrase, Puzzle3dLabels};
-use crate::artifacts::puzzle3d::engine::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome, Puzzle3dPrecomputeSession};
+use crate::apps::puzzle3d::precompute::Puzzle3dPrecomputeSession;
+use crate::artifacts::puzzle3d::schema::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
 use crate::artifacts::puzzle3d::op::{puzzle3d_document_delta_operations, Puzzle3dMutation, Puzzle3dPlaySnapshot};
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
@@ -974,7 +975,7 @@ fn scaled_mesh_positions(positions: &[f32], scale: f32) -> Vec<f32> {
 /// 🧊️ Pushes the current scene into the precompute session and seeds the box fallback for URLs with
 /// no mesh yet, so a real GLB registered earlier via `registerBrushMesh` survives every resync.
 pub fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
-    if let Ok(scene) = serde_json::from_str::<crate::artifacts::puzzle3d::engine::SceneConfig>(&scene_config_json(envelope)) {
+    if let Ok(scene) = serde_json::from_str::<crate::artifacts::puzzle3d::schema::SceneConfig>(&scene_config_json(envelope)) {
         let _ = session.dispatch(Puzzle3dEngineCommand::SetScene { scene });
     }
     let fallback = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
@@ -1000,13 +1001,14 @@ pub fn sync_precompute_weights(session: &mut Puzzle3dPrecomputeSession, envelope
 /// exactly what froze the UI: hundreds of Monte-Carlo collision task units, blocking, every tick.
 pub fn drive_precompute(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
     sync_precompute_session(session, envelope);
-    session.precompute_step_lane(crate::artifacts::puzzle3d::engine::PrecomputeLane::Brush, 8);
+    session.precompute_step_lane(crate::artifacts::puzzle3d::schema::PrecomputeLane::Brush, 8);
 }
 
-/// 🎯️ `dispatch`'s `Fixture` outcome is `⚙️engine`'s own typed fixture shape, distinct from this app's
-/// `Puzzle3dFixture` document model — bridged through one JSON round trip (schema translation between
-/// two independently-evolved Rust types) exactly like `scene_config_json` bridges the other direction.
-pub fn fixture_from_engine_fixture(envelope: &Puzzle3dScene, fixture: &crate::artifacts::puzzle3d::engine::Fixture) -> Option<Puzzle3dScene> {
+/// 🎯️ `dispatch`'s `Fixture` outcome is the precompute schema's own typed fixture shape, distinct from
+/// this app's `Puzzle3dFixture` document model — bridged through one JSON round trip (schema translation
+/// between two independently-evolved Rust types) exactly like `scene_config_json` bridges the other
+/// direction.
+pub fn fixture_from_engine_fixture(envelope: &Puzzle3dScene, fixture: &crate::artifacts::puzzle3d::schema::Fixture) -> Option<Puzzle3dScene> {
     let parsed = serde_json::to_value(fixture).ok()?;
     let mut next = envelope.clone();
     next.fixture.objects = serde_json::from_value(parsed.get("objects")?.clone()).ok()?;
@@ -1031,7 +1033,7 @@ struct FillDisplayMemo {
     payload: Puzzle3dFillDisplayPayload,
 }
 
-fn fill_display_payload_from_fixture(fixture: &crate::artifacts::puzzle3d::engine::Fixture) -> Option<Puzzle3dFillDisplayPayload> {
+fn fill_display_payload_from_fixture(fixture: &crate::artifacts::puzzle3d::schema::Fixture) -> Option<Puzzle3dFillDisplayPayload> {
     serde_json::to_value(fixture).ok().and_then(|value| serde_json::from_value(value).ok())
 }
 
@@ -2686,19 +2688,39 @@ pub(crate) fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshDa
 /// so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-3d play documents without
 /// depending on this crate's concrete `Projection`/`Mutation` types. Puzzle3d's own plugin load path
 /// no longer calls this (ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE` M1: superseded there by
-/// `.document_codec::<Puzzle3dPlayApp>()` on
-/// `crate::artifacts::puzzle3d::standards::v1::engine::declaration()`) — kept `pub` and unchanged
-/// SOLELY because `🎪️demonstrator/🎪️panes/🧩️aggregator/🦀️component.rs::register_exports()` imports
-/// and calls it directly as its one cross-plugin host-export entry point; deleting it would break
-/// that crate's compile. `register_document_codec_for_app` tolerates the resulting double
-/// registration when both plugins load in the same process — true before this conversion too,
-/// since the old umbrella `register()` and demonstrator's aggregator pane already called this same
-/// function independently. The 3d mesh export/import OS-host registration lives at
-/// `crate::artifacts::puzzle3d::standards::v1::engine::register_mesh_io`, wired through
-/// `🧩️puzzle/🦀️component.rs`'s own `.setup()` — APA: OS-host registration belongs to the owning
-/// artifact's own engine, never to an app file.
+/// `.document_codec::<Puzzle3dPlayApp>()` on `crate::artifacts::puzzle3d::schema::declaration()`) —
+/// kept `pub` and unchanged SOLELY because
+/// `🎪️demonstrator/🎪️panes/🧩️aggregator/🦀️component.rs::register_exports()` imports and calls it
+/// directly as its one cross-plugin host-export entry point; deleting it would break that crate's
+/// compile. `register_document_codec_for_app` tolerates the resulting double registration when both
+/// plugins load in the same process — true before this conversion too, since the old umbrella
+/// `register()` and demonstrator's aggregator pane already called this same function independently.
+/// The 3d mesh export/import OS-host registration is `register_mesh_io`, just below, wired through
+/// `🧩️puzzle/🦀️component.rs`'s own `.setup()`.
 pub fn register_puzzle3d_exports() {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle3dPlayApp>(PUZZLE3D_FIXTURE_SCHEMA);
+}
+
+/// 🖼️ Registers the `"3d.puzzle"` OS-host mesh export/import bridge. Rehomed from the former
+/// `⚙️engine`'s own `register_mesh_io` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES —
+/// APA's original relocation off `apps::puzzle3d::register_puzzle3d_exports` reasoned OS-host
+/// registration belongs to the owning artifact's own engine; ENGINELESS-ARTIFACTS supersedes that:
+/// there is no engine, and this registration calls straight into this app's own
+/// `puzzle3d_mesh_from_document`/`puzzle3d_document_from_mesh`, so it belongs here). No
+/// `ArtifactDeclaration` field covers this OS-host media registry (see `declaration()`'s own doc), so
+/// it stays wired through `🧩️puzzle/🦀️component.rs`'s `.setup()`.
+pub fn register_mesh_io() {
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    {
+        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
+        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
+        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
+        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
+        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
+        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
+        semio_framework_os::register_mesh_dwg_export_handler("3d.puzzle", "puzzle", puzzle3d_mesh_from_document);
+        semio_framework_os::register_mesh_dwg_import_handler("3d.puzzle", puzzle3d_document_from_mesh);
+    }
 }
 //#endregion 🔖️Manifest
 

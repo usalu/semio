@@ -3,7 +3,7 @@
 
 use crate::apps::cad::terminology::{typology_label, CadLabels};
 use crate::apps::cad::{cad_action, cad_pane_suffix, cad_tree_item, CadPlayRuntime, CadPlayView};
-use crate::artifacts::cad::engine::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
+use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
 use crate::artifacts::cad::{cad_find_object_pane, CadObject, CadPaneId, CadReference, CadSnapshot};
 use semio_framework_plugin::{
     Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
@@ -211,7 +211,7 @@ mod tests {
     use crate::apps::cad::testkit::*;
     use crate::apps::cad::config::CadConfig;
     use crate::apps::cad::{CadPlayApp, CadPlayRuntime};
-    use crate::artifacts::cad::engine::{default_document, forest_play_scene};
+    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene};
     use semio_framework_plugin::{ArtifactView, PluginApp, SelectionSet, UiNode, ViewModel};
 
     #[test]

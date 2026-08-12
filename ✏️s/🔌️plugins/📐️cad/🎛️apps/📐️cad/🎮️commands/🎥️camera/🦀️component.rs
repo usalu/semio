@@ -7,7 +7,7 @@ use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{cad_pane_camera_runtime, cad_pane_camera_runtime_mut, cad_pane_id_from_surface_id, cad_pane_suffix, runtime_of, snapshot_of};
-use crate::artifacts::cad::engine::{cad_camera_distance, cad_camera_projection_config, cad_camera_set_projection_config};
+use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{cad_camera_distance, cad_camera_projection_config, cad_camera_set_projection_config};
 use crate::artifacts::cad::{CadCamera, CadPaneId};
 use semio_framework_plugin::{apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
 use serde_json::{json, Value};

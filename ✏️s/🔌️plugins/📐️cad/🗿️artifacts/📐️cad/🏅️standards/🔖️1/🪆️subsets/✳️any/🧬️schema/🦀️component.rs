@@ -1,7 +1,7 @@
 //! 🧬️ Cad artifact schema — every field of the artifact with its state class.
 
 use crate::artifacts::cad::{
-    CadCamera, CadGeometry, CadNode, CadObject, CadReferenceList, CadSnapshot,
+    CadCamera, CadDrawingChild, CadModelChild, CadNode, CadReferenceList, CadSnapshot,
 };
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -62,16 +62,13 @@ impl Default for CadDislocateOptions {
 pub struct CadArtifact {
     #[state(persistent)] pub schema: String,
     #[state(persistent)] pub id: String,
-    #[state(persistent)] pub objects: Vec<CadObject>,
-    #[state(persistent)] pub building_objects: Vec<CadObject>,
-    #[state(persistent)] pub energy_objects: Vec<CadObject>,
-    #[state(persistent)] pub structure_classic_objects: Vec<CadObject>,
+    #[state(persistent)] #[child(kind = "s.stdio.semio.model")] pub shape_model: Option<CadModelChild>,
+    #[state(persistent)] #[child(kind = "s.stdio.semio.model")] pub building_model: Option<CadModelChild>,
+    #[state(persistent)] #[child(kind = "s.stdio.semio.model")] pub energy_model: Option<CadModelChild>,
+    #[state(persistent)] #[child(kind = "s.stdio.semio.model")] pub structure_classic_model: Option<CadModelChild>,
+    #[state(persistent)] #[child(kind = "s.stdio.semio.drawing")] pub drawings: Vec<CadDrawingChild>,
     #[state(persistent)] pub references_by_model_definition_id: BTreeMap<String, CadReferenceList>,
     #[state(persistent)] pub nodes: Vec<CadNode>,
-    #[state(persistent)] pub shape_geometry: Option<CadGeometry>,
-    #[state(persistent)] pub building_geometry: Option<CadGeometry>,
-    #[state(persistent)] pub energy_geometry: Option<CadGeometry>,
-    #[state(persistent)] pub structure_classic_geometry: Option<CadGeometry>,
     #[state(persistent)] pub active_model_definition_id: String,
     #[state(shared_ui)] pub selected_object_ids: Vec<String>,
     #[state(shared_ui)] pub selected_node_ids: Vec<String>,
@@ -125,16 +122,13 @@ impl CadArtifact {
         CadSnapshot {
             schema: self.schema.clone(),
             id: self.id.clone(),
-            objects: self.objects.clone(),
-            building_objects: self.building_objects.clone(),
-            energy_objects: self.energy_objects.clone(),
-            structure_classic_objects: self.structure_classic_objects.clone(),
+            shape_model: self.shape_model.clone(),
+            building_model: self.building_model.clone(),
+            energy_model: self.energy_model.clone(),
+            structure_classic_model: self.structure_classic_model.clone(),
+            drawings: self.drawings.clone(),
             references_by_model_definition_id: self.references_by_model_definition_id.clone(),
             nodes: self.nodes.clone(),
-            shape_geometry: self.shape_geometry.clone(),
-            building_geometry: self.building_geometry.clone(),
-            energy_geometry: self.energy_geometry.clone(),
-            structure_classic_geometry: self.structure_classic_geometry.clone(),
             active_model_definition_id: self.active_model_definition_id.clone(),
         }
     }
@@ -144,16 +138,13 @@ impl CadArtifact {
         Self {
             schema: snapshot.schema,
             id: snapshot.id,
-            objects: snapshot.objects,
-            building_objects: snapshot.building_objects,
-            energy_objects: snapshot.energy_objects,
-            structure_classic_objects: snapshot.structure_classic_objects,
+            shape_model: snapshot.shape_model,
+            building_model: snapshot.building_model,
+            energy_model: snapshot.energy_model,
+            structure_classic_model: snapshot.structure_classic_model,
+            drawings: snapshot.drawings,
             references_by_model_definition_id: snapshot.references_by_model_definition_id,
             nodes: snapshot.nodes,
-            shape_geometry: snapshot.shape_geometry,
-            building_geometry: snapshot.building_geometry,
-            energy_geometry: snapshot.energy_geometry,
-            structure_classic_geometry: snapshot.structure_classic_geometry,
             active_model_definition_id: snapshot.active_model_definition_id,
             selected_object_ids: Vec::new(),
             selected_node_ids: Vec::new(),
@@ -198,16 +189,13 @@ impl CadArtifact {
     pub fn set_snapshot(&mut self, snapshot: CadSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
-        self.objects = snapshot.objects;
-        self.building_objects = snapshot.building_objects;
-        self.energy_objects = snapshot.energy_objects;
-        self.structure_classic_objects = snapshot.structure_classic_objects;
+        self.shape_model = snapshot.shape_model;
+        self.building_model = snapshot.building_model;
+        self.energy_model = snapshot.energy_model;
+        self.structure_classic_model = snapshot.structure_classic_model;
+        self.drawings = snapshot.drawings;
         self.references_by_model_definition_id = snapshot.references_by_model_definition_id;
         self.nodes = snapshot.nodes;
-        self.shape_geometry = snapshot.shape_geometry;
-        self.building_geometry = snapshot.building_geometry;
-        self.energy_geometry = snapshot.energy_geometry;
-        self.structure_classic_geometry = snapshot.structure_classic_geometry;
         self.active_model_definition_id = snapshot.active_model_definition_id;
     }
 }
@@ -262,16 +250,13 @@ pub mod derived_construction {
         CadSnapshot {
             schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
             id: String::new(),
-            objects: Vec::new(),
-            building_objects: Vec::new(),
-            energy_objects: Vec::new(),
-            structure_classic_objects: Vec::new(),
+            shape_model: None,
+            building_model: None,
+            energy_model: None,
+            structure_classic_model: None,
+            drawings: Vec::new(),
             references_by_model_definition_id: BTreeMap::new(),
             nodes: Vec::new(),
-            shape_geometry: None,
-            building_geometry: None,
-            energy_geometry: None,
-            structure_classic_geometry: None,
             active_model_definition_id: String::new(),
         }
     }

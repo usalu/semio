@@ -13,6 +13,95 @@ pub const STDIO_BCF_DOCUMENT_SCHEMA: &str = "stdio.bcf";
 /// 🧬️ Artifact schema descriptor id.
 pub const BCF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.bcf";
 
+//#region 🔖️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g2) —
+/// replaces the old side-effecting `crate::artifacts::bcf::engine::register()`. Mirrors `🔋️energy`'s
+/// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`
+/// stands in for the old `store::register_document_codec(store::ArtifactCodec::of::<BcfSnapshot,
+/// BcfMutation>(...))` call. `.composers(...)` reaches the engine's own `io_registry` (through the
+/// `engine` shim), whose `entries()` returns `&'static [ComposerEntry]` (owned rows) — NOT this
+/// file's own shadowing `io_registry` below, whose `entries()` returns `&'static [&'static
+/// ComposerEntry]` (references) and would silently rebind under a bare call (this ticket's
+/// "SILENT REBIND" hazard).
+///
+/// **NOT covered by any field**: nothing — bcf's `register()` never called `register_schema_spec`
+/// (`BcfSnapshot`/`BcfDiff`/`BcfMutation` are all hand-rolled, no derivable `RecordSpec` — see the
+/// deleted `register_pilot_languages`' own doc comment), so this artifact converts cleanly with
+/// zero residual `.setup()` calls.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder(BCF_ARTIFACT_SCHEMA_ID)
+        .schema(crate::artifacts::bcf::schema::bcf_artifact_schema_descriptor())
+        .inferences([crate::artifacts::bcf::standards::v2_1::subsets::any::schema::inferences::bcf_artifact_inference_descriptor()])
+        .composers(crate::artifacts::bcf::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec_bare::<BcfSnapshot, BcfMutation>(STDIO_BCF_DOCUMENT_SCHEMA)
+        .build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary), copied verbatim (five
+/// `LanguageSpec` rows) from `crate::artifacts::bcf::engine::register_pilot_languages`'s own
+/// `dsl::register_language(...)` call bodies.
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                dsl::LanguageSpec {
+                    id: "stdio.bcf",
+                    extension: Some("bcf"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::bcf::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::bcf::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::bcf::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::bcf::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.bcf"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.bcf.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::bcf::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::bcf::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::bcf::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::bcf::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.bcf.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.bcf.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::bcf::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::bcf::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("stdio.bcf.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.bcf.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::bcf::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::bcf::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.bcf.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "stdio.bcf.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::bcf::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::bcf::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("stdio.bcf.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Declaration
+
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 pub fn artifact_kind() -> ArtifactKindSpec {

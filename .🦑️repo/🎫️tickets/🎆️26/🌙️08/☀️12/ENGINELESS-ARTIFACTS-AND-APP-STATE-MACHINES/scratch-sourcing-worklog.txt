@@ -1,0 +1,317 @@
+================================================================================
+SLICE WORKLOG — s/plugin/sourcing engine dissolution
+ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES (#2553)
+session baseline commit: 382ace1b27
+================================================================================
+
+GOAL
+An artifact is schema + io, never an engine. Dissolve
+  ✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs
+(950 lines) and delete the ⚙️engine directory outright.
+
+RESULT: done. Directory deleted. All four crates compile green.
+
+--------------------------------------------------------------------------------
+1. DESTINATION OF EVERY SYMBOL
+--------------------------------------------------------------------------------
+Rust module path for the schema destination is
+  crate::artifacts::curate::schema::*
+  (real path: artifacts::curate::standards::v1::subsets::any::schema,
+   reached through the existing `pub mod schema` shim in 📦️glue.rs)
+
+FROM engine region 🔖️Io
+  sourcing_curate_io() -> AppIo
+    -> 🎛️apps/🗂️curate/🦀️component.rs, new region //#region 🔖️Io
+       (app root, next to the ArtifactApp impl; the empty
+        🎛️apps/🗂️curate/⚙️engine stub was left untouched as instructed)
+    call sites now use the bare local fn `sourcing_curate_io()`.
+
+FROM engine region 🔖️PuzzleCatalogFragment
+  sourcing_catalog_fragment(&CurateSnapshot) -> Value
+    -> 🧬️schema/💡️inferences/🦀️component.rs, new region
+       //#region 🔖️PuzzleCatalogFragment
+       (matches the block-plugin precedent: puzzle3d_catalog_fragment lives in
+        that artifact's own 💡️inferences/🦀️component.rs root, not a sub-dir)
+
+FROM engine region 🔖️Typology  -> 🧬️schema/🦀️component.rs //#region 🔖️Typology
+  TypologyNode (struct + impl new)
+  typology_contains
+  typology_flatten
+
+FROM engine regions 🔖️Geometry + 🔖️World3d -> 🧬️schema/🦀️component.rs
+  //#region 🔖️Geometry :  MeshDataSpec, append_mesh_spec, box_mesh_spec (priv),
+                          frame_mesh_spec (priv), mesh_spec_for, bounding_extent
+  //#region 🔖️World3d  :  kind_mesh_json, instance_json
+
+FROM engine region 🔖️DocumentHelpers -> 🧬️schema/🦀️component.rs
+  //#region 🔖️DocumentHelpers : filtered_stock, curated_count,
+                                curate_delta, curate_set
+
+FROM engine region 🔖️CurationDecisions -> 🧬️schema/🦀️component.rs
+  //#region 🔖️CurationDecisions : CurationDecision, curation_decision_for_delta,
+                                  curation_decision_for_set,
+                                  apply_curation_decision (priv)
+
+FROM engine region 🔖️Modules -> 🧬️schema/🦀️component.rs //#region 🔖️Modules
+  SourcingModule (trait), pub mod beams / windows / slabs,
+  leak_str (priv), ContributedSourcingModule (priv),
+  SourcingModuleTopicPayload (priv, keeps its own nested subregion),
+  CONTRIBUTED_SOURCING_MODULES / LAST_SOURCING_CONTRIBUTIONS_JSON statics,
+  SOURCING_CURATE_APP_ID const (private to the module),
+  sync_sourcing_module_contributions, sourcing_modules, module_for
+
+FROM engine region 🔖️ModuleCatalogue -> 🧬️schema/🦀️component.rs
+  //#region 🔖️ModuleCatalogue : ModuleCatalogue, available_modules
+
+FROM engine region 🔖️GridLayout -> 🧬️schema/🦀️component.rs
+  //#region 🔖️GridLayout : grid_placement, grid_scale
+
+FROM engine region 🔖️Fixtures -> 🧬️schema/🦀️component.rs
+  //#region 🔖️Fixtures : default_document, empty_document
+
+FROM engine region 🚪️DerivedIoRegistry
+  mod io_registry (ComposerEntry rows, composer_entry_of, rebuild_native_snapshot,
+  compose_export_zip/png/json/stl/obj, all *_DIALECT consts, entries())
+    -> 🚪️io/🦀️component.rs, appended as //#region 🚪️DerivedIoRegistry
+       alongside the pre-existing `derived_composition` module (not replacing it).
+    Real path now: artifacts::curate::standards::v1::subsets::any::io::io_registry
+
+FROM engine region 🔖️ArtifactEngine
+  pub struct SourcingEngine { artifact, cached_snapshot } + impl ::new()
+    -> DELETED OUTRIGHT (not rehomed).
+    Verified fossil: repo-wide grep for `SourcingEngine` matched ONLY its own
+    definition + impl inside the engine file itself. Zero construction sites,
+    zero external references, and `trait ArtifactEngine` has zero defs/impls
+    anywhere in the plugin. Matches the ticket's repo-wide fossil ruling; this
+    is NOT the documented exception (no external refs exist).
+
+--------------------------------------------------------------------------------
+2. THE SHADOWING HAZARD — how it was handled
+--------------------------------------------------------------------------------
+The artifact root 🗿️artifacts/🗂️curate/🦀️component.rs carries its OWN
+`pub mod io_registry` whose entries() returns &'static [&'static ComposerEntry]
+(a .iter().collect() VIEW), while the relocated real one returns
+&'static [ComposerEntry] — different types, silently swappable.
+
+Handled by fully qualifying BOTH remaining references to the real registry:
+  declaration() .composers(...) ->
+    crate::artifacts::curate::standards::v1::subsets::any::io::io_registry::entries()
+  the shadow module's own alias ->
+    use crate::artifacts::curate::standards::v1::subsets::any::io::io_registry as v1;
+No unqualified `io_registry::entries()` call survives anywhere.
+(Module nesting was verified against 📦️glue.rs's #[path] mounts first — `engine`
+was mounted at standards::v1 level, NOT under subsets::any, so the naive
+"swap engine->io" substitution would have produced a wrong path. Checked, not assumed.)
+
+--------------------------------------------------------------------------------
+3. FILES TOUCHED
+--------------------------------------------------------------------------------
+CREATED: none (0)
+DELETED: 1 directory + its single file
+  ✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/
+    (contained only 🦀️component.rs — confirmed by find before rm)
+
+EDITED (14):
+ main crate — artifact side
+  1. 🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+       + imports, + 8 relocated regions, + 15 relocated tests
+  2. 🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs
+       + serde_json import, + 🔖️PuzzleCatalogFragment region, + 1 relocated test
+  3. 🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs
+       + 🚪️DerivedIoRegistry region (io_registry)
+  4. 🗿️artifacts/🗂️curate/🦀️component.rs
+       declaration() .composers(...) repointed; shadow's `use ... as v1` repointed
+  5. 🗿️artifacts/.../🧬️schema/🧬️mutations/🦀️component.rs        (docstring + test fixture)
+  6. 🗿️artifacts/.../🧬️schema/🧬️mutations/💾️binary/🦀️component.rs (test fixture)
+  7. 🗿️artifacts/.../🧬️schema/📸️snapshot/📝️text/🦀️component.rs   (test import)
+ main crate — app side
+  8. 🎛️apps/🗂️curate/🦀️component.rs
+       + 🔖️Io region, 5 call sites repointed, + 1 relocated test,
+       stale module docstring "artifact's ⚙️engine" -> "artifact's 🧬️schema"
+  9. 🎛️apps/🗂️curate/🎚️config/🦀️component.rs                     (1 call site)
+ 10. 🎛️apps/🗂️curate/🎮️commands/📄️artifact/🦀️component.rs        (import + 1 test call)
+ 11. 🎛️apps/🗂️curate/🎮️commands/🧺️curation/🦀️component.rs        (import + 1 test import)
+ 12. 🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/🏊️pool/🦀️component.rs   (import + 3 sites)
+ 13. 🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/👁️preview/🦀️component.rs (import + 2 sites)
+ 14. 🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/🔢️grid/🦀️component.rs    (import + 1 site)
+ wiring
+ 15. 📦️packages/🦀️rust/📦️glue.rs
+       removed the `pub mod engine;` #[path] mount at standards::v1
+       removed the `pub mod engine { pub use super::standards::v1::engine::*; }` shim
+       (NO compatibility shim left behind, per instructions)
+ extension crates (3)
+ 16. 🧩️extensions/🪵️beams/🦀️component.rs
+ 17. 🧩️extensions/🧱️slabs/🦀️component.rs
+ 18. 🧩️extensions/🪟️windows/🦀️component.rs
+       each: `use sourcing_curate::artifacts::curate::engine::{..}`
+              -> `...::artifacts::curate::schema::{..}`
+             `...::curate::engine::TypologyNode` -> `...::curate::schema::TypologyNode`
+             PLUS the pre-existing-red fix described in section 6.
+
+(Count note: 18 edited paths total; 15 in the main crate incl. glue, 3 extensions.)
+
+--------------------------------------------------------------------------------
+4. TEST ACCOUNTING — every assertion survived
+--------------------------------------------------------------------------------
+BEFORE (all counted at session baseline 382ace1b27, because the repo
+auto-commits and plain `git show HEAD:` already contains my own edits):
+
+  git show 382ace1b27:<engine>/🦀️component.rs            | grep -c '#\[test\]'  = 17
+  git show 382ace1b27:<schema>/🦀️component.rs            | grep -c '#\[test\]'  =  0
+  git show 382ace1b27:<schema/inferences>/🦀️component.rs | grep -c '#\[test\]'  =  3
+  git show 382ace1b27:<apps/curate>/🦀️component.rs       | grep -c '#\[test\]'  =  8
+
+AFTER (grep -c '#\[test\]' on the live files):
+  <engine>                     = FILE AND DIRECTORY DELETED
+  <schema>/🦀️component.rs            = 15   (+15)
+  <schema/inferences>/🦀️component.rs =  4   ( +1)
+  <apps/curate>/🦀️component.rs       =  9   ( +1)
+
+DELTA: 15 + 1 + 1 = 17 relocated == 17 that existed in the engine file.
+NET LOSS: 0. NET GAIN: 0. Every #[test] accounted for.
+
+Which test went where:
+  -> 🧬️schema (15): filtered_stock_matches_query, ..._matches_module,
+     ..._matches_typology_prefix, ..._matches_min_availability,
+     curate_delta_clamps_to_availability_and_zero_floor,
+     curate_delta_unknown_object_is_noop, curate_set_removes_entry_at_zero,
+     typology_contains_and_flatten, box_recipe_produces_valid_mesh,
+     frame_recipe_concatenates_four_pieces_into_a_valid_mesh,
+     grid_placement_centers_around_origin, grid_scale_normalizes_to_cell_size,
+     curate_document_dsl_round_trips_sample_and_empty,
+     available_modules_tracks_contributed_modules,
+     sync_sourcing_module_contributions_adds_hot_installed_modules
+     (+ the non-#[test] helpers sample_document / assert_mesh_spec_is_valid)
+  -> 💡️inferences (1):
+     sourcing_catalog_fragment_maps_stock_into_the_puzzle3d_kit_catalog_shape
+     (given its own sample_document() helper, since it needs sourcing_modules())
+  -> 🎛️apps/🗂️curate (1):
+     sourcing_curate_io_declares_the_catalog_out_port_alongside_the_implicit_document_ports
+     (follows sourcing_curate_io itself to the app root)
+
+No new test files created; every test landed inside an EXISTING #[cfg(test)] mod
+tests block (schema/component.rs got its first one, appended as //#region 🧪️Tests).
+
+--------------------------------------------------------------------------------
+5. STRUCTURAL VERIFICATION (final, after all edits)
+--------------------------------------------------------------------------------
+$ grep -rn "::engine::\|standards::v1::engine\|subsets::any::engine" ✏️s/🔌️plugins/🪵️sourcing
+<no output>
+grep exit = 1   (1 = no matches = PASS; 0 legitimate false positives to excuse —
+                 no base64::engine usage, no stdio-internal engine refs in this plugin)
+
+$ find ✏️s/🔌️plugins/🪵️sourcing -path "*🗿️artifacts*" -name "⚙️engine" -type d
+<no output>   PASS
+
+Residual `engine` word in plugin .rs (allowed form only, checked by hand):
+  🗿️artifacts/🗂️curate/🦀️component.rs:146-147 — historical prose
+    "Relocated from `⚙️engine` (ticket ...): declaration() describes the artifact
+     ..., which is not engine behaviour."
+  This is the sanctioned spelling (`⚙️engine` directory, not `::engine::`) and is
+  accurate history. The one STALE reference found — apps/🗂️curate/🦀️component.rs
+  line 6, "shared compute in the artifact's `⚙️engine`" — was reworded to
+  "the artifact's `🧬️schema`" because that directory no longer exists.
+  No `pub mod engine { pub use ... }` shim survives anywhere.
+
+--------------------------------------------------------------------------------
+6. A PRE-EXISTING RED FOUND INSIDE MY OWN SLICE (fixed, with evidence)
+--------------------------------------------------------------------------------
+First extension-crate run failed all three, identically:
+
+  error[E0609]: no field `contributions` on type `ExtensionManifest`
+    --> ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/../../🦀️component.rs:40:29
+     |
+  40 |         assert_eq!(manifest.contributions.len(), 0);
+     |                             ^^^^^^^^^^^^^ unknown field
+     |
+     = note: available fields are: `extension_id`, `label`, `version`, `extends`,
+             `capabilities`, `topic_contributions`
+  error: could not compile `semio-s-plugin-sourcing-beams` (lib test) due to 1 previous error
+
+NOT MINE — proof:
+  * my edits to these files were line 4 (the `use`) and line 48 (TypologyNode path).
+    Line 40 I never touched.
+  * the assertion existed verbatim at my baseline:
+      git show 382ace1b27:.../🧩️extensions/🪵️beams/🦀️component.rs | sed -n '38,42p'
+      -> "assert_eq!(manifest.contributions.len(), 0);"   ALREADY THERE
+  * the guest SDK struct ALREADY lacked the field at my baseline:
+      git show 382ace1b27:🧰️framework/.../🔌️plugin/🦀️component.rs
+        | grep -A12 "pub struct ExtensionManifest"
+      -> extension_id, label, version, extends, capabilities, topic_contributions
+         (no `contributions`)
+  * identical struct shape + identical assertion at baseline => identical error at
+    baseline. This was red before I started; the engine work did not cause it.
+  * note the LIBS compiled fine in that failing run — only `lib test` broke.
+
+Why I fixed it rather than only attributing it: rule 8 forbids touching stdio or
+ANOTHER plugin's files. These three extension crates ARE my assigned slice, and my
+slice's verification requires them green. The framework had consolidated the old
+`contributions` list into `capabilities`, so the faithful successor preserving the
+test's intent ("this extension contributes no capabilities, only one topic" — the
+very next line already asserts topic_contributions.len() == 1) is:
+
+  assert_eq!(manifest.contributions.len(), 0);   ->
+  assert_eq!(manifest.capabilities.len(), 0);
+
+Applied identically to beams, slabs and windows. No coverage deleted, no shim,
+no legacy support. Nothing outside my slice was modified.
+
+--------------------------------------------------------------------------------
+7. COMPILER OUTPUT — verbatim, all four crates
+--------------------------------------------------------------------------------
+Command shape used for every crate (RUSTC_WRAPPER="" is mandatory: .cargo/config.toml:2
+sets rustc-wrapper = "sccache" repo-wide and would otherwise serve stale cache):
+
+  RUSTC_WRAPPER="" CARGO_TARGET_DIR=".../ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES/🎯️target" \
+    cargo check -p <pkg> --all-targets
+
+--- [1/4] semio-s-plugin-sourcing --------------------------------------------
+warning: `semio-s-plugin-sourcing` (lib) generated 25 warnings (22 duplicates) (run `cargo fix --lib -p semio-s-plugin-sourcing` to apply 2 suggestions)
+warning: `semio-s-plugin-sourcing` (lib test) generated 28 warnings (2 duplicates) (run `cargo fix --lib -p semio-s-plugin-sourcing --tests` to apply 25 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 10m 21s
+
+  zero `error` / `error[E...]` / `could not compile` lines in the whole log.
+  All 25/28 warnings are style-only (unnecessary qualification, unused extern
+  crate `vcs`, unused import ArtifactAnalyzer) and pre-date this work, except one
+  I introduced by faithful relocation:
+    warning: unused variable: `item`
+      --> .../🧬️schema/🦀️component.rs:333:14
+    which is the `Some(item) if clamped == 0` arm copied verbatim out of the
+    engine file (identical warning existed there). Left byte-identical on purpose
+    — this slice relocates, it does not silently rewrite behaviour.
+
+--- [2/4] semio-s-plugin-sourcing-beams --------------------------------------
+    Checking semio-s-plugin-sourcing-beams v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 1m 13s
+EXIT_semio-s-plugin-sourcing-beams:0
+
+--- [3/4] semio-s-plugin-sourcing-slabs --------------------------------------
+    Finished `dev` profile [unoptimized] target(s) in 1m 02s
+EXIT_semio-s-plugin-sourcing-slabs:0
+
+--- [4/4] semio-s-plugin-sourcing-windows ------------------------------------
+    Finished `dev` profile [unoptimized] target(s) in 1m 38s
+EXIT_semio-s-plugin-sourcing-windows:0
+
+ALL_DONE
+
+Exit status checked explicitly (EXIT_*:0), not merely "absence of the word error".
+Raw logs kept at:
+  scratchpad ext-checks.txt  (first run, the pre-existing E0609 red)
+  scratchpad ext-checks2.txt (final run, all three green)
+
+--------------------------------------------------------------------------------
+8. HONEST ASSESSMENT / CAVEATS
+--------------------------------------------------------------------------------
+* `cargo check --all-targets` was run, NOT `cargo test`. Compilation of every test
+  target is proven; the 17 relocated assertions were NOT executed. I did not claim
+  they pass — only that they compile and are all present.
+* The `unused variable: item` warning at schema/🦀️component.rs:333 is inherited
+  verbatim from the engine file, deliberately not "fixed" during a relocation pass.
+* semio-s-plugin-stdio was never touched. It appeared only as a dependency in the
+  build logs (695 warnings, no errors) and compiled fine throughout.
+* Nothing outside ✏️s/🔌️plugins/🪵️sourcing was edited. No git-modifying command
+  was ever run. No ticket_* MCP tool was called. 📜️script.ts / 🔣️taxonomy.json /
+  AGENTS.md untouched.
+
+STATUS: green

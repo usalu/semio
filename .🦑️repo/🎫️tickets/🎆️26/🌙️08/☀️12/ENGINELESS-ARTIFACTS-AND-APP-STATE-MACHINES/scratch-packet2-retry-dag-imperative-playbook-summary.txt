@@ -1,0 +1,15 @@
+1:########## semio-s-plugin-dag ##########
+678:    Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+745:✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📝️md/🦀️component.rs:57:81: error[E0433]: cannot find `engine` in `any`: could not find `engine` in `any`
+1350:error: could not compile `semio-s-plugin-stdio` (lib) due to 1 previous error; 603 warnings emitted
+1351:EXIT_semio-s-plugin-dag:101
+1352:########## semio-s-plugin-imperative ##########
+1862:    Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+1896:✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📝️md/🦀️component.rs:57:81: error[E0433]: cannot find `engine` in `any`: could not find `engine` in `any`
+2501:error: could not compile `semio-s-plugin-stdio` (lib) due to 1 previous error; 603 warnings emitted
+2502:EXIT_semio-s-plugin-imperative:101
+2503:########## semio-s-plugin-playbook ##########
+3870:    Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+4697:    Checking semio-s-plugin-playbook v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust)
+4716:    Finished `dev` profile [unoptimized] target(s) in 1m 06s
+4719:EXIT_semio-s-plugin-playbook:0

@@ -32,6 +32,26 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     }
 }
 //#endregion 🔖️ArtifactKind
+//#region 🔖️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE g5) — replaces
+/// the side-effecting `crate::artifacts::mp3::standards::mpeg1_layer3::engine::register()` call the
+/// plugin root used to make imperatively. `.composers(...)` reaches this standard's ENGINE-level
+/// `io_registry` (below `⚙️engine`, distinct from this file's own `🚪️DerivedIoRegistry` shadow, whose
+/// `entries()` returns `&[&ComposerEntry]` — the wrong type for `.composers()`, which wants
+/// `&'static [ComposerEntry]`) by its fully qualified path, per the silent-rebind hazard this ticket
+/// calls out. `.document_codec_bare::<Mp3Snapshot, Mp3Mutation>(...)` folds in what
+/// `subsets::any::io::register()`'s `store::register_document_codec(store::ArtifactCodec::of::<..>())`
+/// call did — mp3 is a headless stdio artifact with no `ArtifactApp` to bind `.document_codec::<A>()`
+/// to.
+pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
+    semio_framework_plugin::ArtifactDeclaration::builder(MP3_ARTIFACT_SCHEMA_ID)
+        .schema(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor())
+        .inferences([crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor()])
+        .composers(crate::artifacts::mp3::standards::mpeg1_layer3::engine::io_registry::entries())
+        .document_codec_bare::<Mp3Snapshot, Mp3Mutation>(STDIO_MP3_DOCUMENT_SCHEMA)
+        .build()
+}
+//#endregion 🔖️Declaration
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;

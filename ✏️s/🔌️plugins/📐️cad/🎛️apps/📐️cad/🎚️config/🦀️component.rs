@@ -408,7 +408,7 @@ impl Mutation<CadConfig> for CadConfigMutation {
             CadConfigMutation::SetContributions { json } => {
                 let mut next = base.clone();
                 next.contributions_json = json.clone();
-                crate::artifacts::cad::engine::sync_cad_computer_contributions(json);
+                crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::sync_cad_computer_contributions(json);
                 next
             }
         }

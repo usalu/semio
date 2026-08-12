@@ -10,7 +10,7 @@ use std::collections::HashMap;
 /// 🗺️ One meshed region's cheap preview geometry — mesh points plus triangle vertex indices, WITHOUT
 /// building any `crate::model::Element`. Used purely for a mesh-edge preview overlay in the model window
 /// and to correlate `fem2d_solve_all`'s `Tri3Cst` results (ids `"{region_id}_t{tri_index}"`, see
-/// `crate::artifacts::fem2d::engine::meshing::build_nodes_and_elements`) back to screen-space triangles
+/// `crate::fem2d_engine::meshing::build_nodes_and_elements`) back to screen-space triangles
 /// for contour rendering.
 pub struct RegionMesh {
     pub region_id: String,
@@ -54,7 +54,7 @@ pub fn fem2d_nodal_von_mises(doc: &Fem2dSnapshot, case_id: &str) -> Result<HashM
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.iter().map(|d| (*d).into()).collect() }).collect();
     let model = crate::analyses::AnalysisModel { nodes, elements, supports };
-    let results = crate::artifacts::fem2d::engine::fem2d_solve_all(doc)?;
+    let results = crate::fem2d_engine::fem2d_solve_all(doc)?;
     let result = results.get(case_id).ok_or_else(|| Fem2dError::LoadCaseNotFound(case_id.to_string()))?;
     Ok(crate::analyses::nodal_averaged_scalar(&model, result, crate::analyses::StressScalar::VonMises))
 }

@@ -6,7 +6,7 @@ use crate::apps::puzzle3d::{
     apply_puzzle3d_fill_count, puzzle3d_ensure_catalog_kind_weights, puzzle3d_fill_build_scope, puzzle3d_fill_options_scope, puzzle3d_fill_tool_active, puzzle3d_kind_ids, puzzle3d_normalize_kind_weight_group, sync_precompute_weights,
     Puzzle3dActionCtx, PUZZLE3D_FILL_COUNT_MAX,
 };
-use crate::artifacts::puzzle3d::engine::PrecomputeLane;
+use crate::artifacts::puzzle3d::schema::PrecomputeLane;
 use semio_framework::kernel::UiDirtyScope;
 use serde_json::Value;
 

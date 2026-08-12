@@ -35,63 +35,6 @@ pub mod artifacts {
             #[path = "."]
             pub mod v1 {
                 #[path = "."]
-                pub mod engine {
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/⏱️rate/🦀️component.rs"]
-                    pub mod rate;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎛️config/🦀️component.rs"]
-                    pub mod config;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎞️animation/🦀️component.rs"]
-                    pub mod animation;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎥️camera/🦀️component.rs"]
-                    pub mod camera;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎥️video/🦀️component.rs"]
-                    pub mod video;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎬️scene/🦀️component.rs"]
-                    pub mod scene;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📐️geometry/🦀️component.rs"]
-                    pub mod geometry;
-                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔤️text/🦀️component.rs"]
-                    pub mod text;
-                    pub mod animate {
-                pub mod animation {
-                    pub use super::super::animation::animation::*;
-                    pub use super::super::animation::animations_catalog::*;
-                }
-                pub mod rate { pub use super::super::rate::rate::*; }
-                pub mod updater { pub use super::super::rate::updater::*; }
-                pub mod scene { pub use super::super::scene::scene::*; }
-                pub mod section { pub use super::super::scene::section::*; }
-                pub mod sobject { pub use super::super::scene::sobject::*; }
-                pub mod geometry {
-                    pub use super::super::geometry::geometry::*;
-                    pub use super::super::geometry::three_d::*;
-                    pub use super::super::geometry::axes::*;
-                }
-                pub mod camera {
-                    pub use super::super::camera::camera::*;
-                    pub use super::super::camera::matrix::*;
-                }
-                pub mod color { pub use super::super::text::color::*; }
-                pub mod text { pub use super::super::text::text::*; }
-                pub mod config {
-                    pub use super::super::config::config::*;
-                    pub use super::super::config::hash::*;
-                    pub use super::super::config::graph::*;
-                }
-                pub use super::config::config::{AnimateConfig, QualityPreset};
-                pub use super::scene::section::{Section, SectionList};
-                pub use super::camera::camera::Camera;
-                pub use super::scene::sobject::{Sobject, VSobject};
-                pub use super::text::color::Color;
-                pub use super::scene::scene::{BasicStage, Scene, SceneFrame, preview_scene_loop};
-                pub use super::animation::animation::{compile_animations, interpolate_at, Animation, Wait};
-            }
-                    pub use video as animate_video;
-                }
-                #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
@@ -430,9 +373,6 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v1::engine::*;
-        }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
@@ -467,6 +407,34 @@ pub mod apps {
         #[path = "../../🎛️apps/🎬️present/🦀️component.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod engine {
+            //! ⚙️ Relocated wholesale from the deleted artifact-tree `⚙️engine` (ticket
+            //! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — an artifact is a schema + io,
+            //! never an engine; this app's own stateful behaviour (compiler/slide/video-export at the
+            //! root, plus the Manim-class animation core and headless video renderer as sibling
+            //! `<topic>/🦀️component.rs` files) lives here instead.
+            #[path = "../../🎛️apps/🎬️present/⚙️engine/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+            #[path = "../../🎛️apps/🎬️present/⚙️engine/⏱️rate/🦀️component.rs"]
+            pub mod rate;
+            #[path = "../../🎛️apps/🎬️present/⚙️engine/🎛️config/🦀️component.rs"]
+            pub mod config;
+            #[path = "../../🎛️apps/🎬️present/⚙️engine/🎞️animation/🦀️component.rs"]
+            pub mod animation;
+            #[path = "../../🎛️apps/🎬️present/⚙️engine/🎥️camera/🦀️component.rs"]
+            pub mod camera;
+            #[path = "../../🎛️apps/🎬️present/⚙️engine/🎥️video/🦀️component.rs"]
+            pub mod video;
+            #[path = "../../🎛️apps/🎬️present/⚙️engine/🎬️scene/🦀️component.rs"]
+            pub mod scene;
+            #[path = "../../🎛️apps/🎬️present/⚙️engine/📐️geometry/🦀️component.rs"]
+            pub mod geometry;
+            #[path = "../../🎛️apps/🎬️present/⚙️engine/🔤️text/🦀️component.rs"]
+            pub mod text;
+        }
 
         #[path = "."]
         pub mod config {

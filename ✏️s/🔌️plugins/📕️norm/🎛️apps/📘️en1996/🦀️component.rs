@@ -3,7 +3,7 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `ð®ï¸commands/*`, the two surfaces
 //! in `ð­ï¸modes/âï¸edit/ðªï¸windows/*`, panel trees in `ðï¸panels/*`, compliance compute in
-//! `crate::artifacts::en1996::engine`, and everything the fifteen norm apps share verbatim (config,
+//! `crate::apps::en1996`, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
 use crate::apps::en1996::commands::{evaluate, selected_check, set_snapshot};
@@ -115,6 +115,28 @@ impl ArtifactApp for En1996PlayApp {
     //#endregion ðï¸MediaPorts
 }
 //#endregion ðï¸En1996PlayApp
+
+//#region 🧩️ComplianceFamily
+/// 🧩️ Headless `NormFamily` binding (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
+/// relocated verbatim from the deleted `⚙️engine`. This is stateful/host-facing behaviour, so it
+/// belongs to the app that edits the artifact, not the artifact's own `🧬️schema`.
+pub struct En1996Family;
+
+impl crate::document::NormFamily for En1996Family {
+    type Document = En1996Snapshot;
+    type Mutation = En1996Mutation;
+
+    fn family_id() -> crate::document::NormFamilyId {
+        crate::document::NormFamilyId::En1996
+    }
+
+    fn evaluate(document: &En1996Snapshot) -> crate::document::CheckReport {
+        crate::artifacts::en1996::standards::v1::subsets::any::schema::inferences::evaluate(document)
+    }
+}
+
+pub type Host = crate::document::NormHost<En1996Family>;
+//#endregion 🧩️ComplianceFamily
 
 //#region ðï¸Manifest
 pub fn create_en1996_app() -> App {

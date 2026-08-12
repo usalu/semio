@@ -103,16 +103,16 @@ $ grep -rn "Procedural2dEngine\|Procedural3dEngine" ✏️s/🔌️plugins/🌀�
 
 The two remaining `⚙️engine` directories under this plugin are the **app-side** stubs `🎛️apps/◻2d/⚙️engine` and `🎛️apps/🧊️3d/⚙️engine`, which are required by `appComponentDirs` and are the intended future home for behaviour — they stay, and are out of scope for the artifact-tree burn-down.
 
-## Compiler verification — BLOCKED UPSTREAM (honest result)
+## Compiler verification
 
-Verbatim command (both `RUSTC_WRAPPER=""` and `--all-targets` present, per rule 6):
+Verbatim command (both `RUSTC_WRAPPER=""` and `--all-targets` present, per rule 6), run three times:
 
 ```
 cd /Users/ueli/Documents/semio
 RUSTC_WRAPPER="" CARGO_TARGET_DIR="/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES/🎯️target" cargo check -p semio-s-plugin-procedural --all-targets
 ```
 
-Real tail output:
+### Run 1 — blocked upstream by stdio
 
 ```
 For more information about this error, try `rustc --explain E0425`.
@@ -120,15 +120,86 @@ warning: `semio-s-plugin-stdio` (lib) generated 602 warnings
 error: could not compile `semio-s-plugin-stdio` (lib) due to 1 previous error; 602 warnings emitted
 ```
 
-**Attribution by the compiler's own words, not by file-path guessing:** the failing crate the compiler names is `semio-s-plugin-stdio`, not `semio-s-plugin-procedural`. `semio-s-plugin-procedural` depends on stdio, so **rustc never reached our crate at all** — this is the known upstream RED called out in the ticket's hard rule 7 (`🗄️stdio` is another session's in-flight refactor; not ours, not to be touched). Zero errors originate in any `🌀️procedural` path; the single error is `E0425` inside `✏️s/🔌️plugins/🗄️stdio/…`.
+The crate the compiler *named* was `semio-s-plugin-stdio`, not ours — rustc never reached our crate. That is the hard-rule-7 upstream RED.
 
-Full output preserved at `scratch-procedural-cargo-check-1.txt` in this folder.
+### Run 2 — stdio cleared; our crate compiled, 94 + 104 errors
 
-**Status: relocation COMPLETE and structurally verified; compilation UNVERIFIED, blocked by an upstream crate outside this slice's boundary.** Per the manifest's precedent for `🌊️flow` / `✒️writer` / `🎬️sequence` (identical single upstream stdio error), this packet should be re-verified in one pass when stdio goes green.
+```
+warning: `semio-s-plugin-procedural` (lib) generated 78 warnings
+error: could not compile `semio-s-plugin-procedural` (lib) due to 94 previous errors; 78 warnings emitted
+warning: `semio-s-plugin-procedural` (lib test) generated 82 warnings (73 duplicates)
+error: could not compile `semio-s-plugin-procedural` (lib test) due to 104 previous errors; 89 warnings emitted
+```
+
+Full output: `scratch-procedural-cargo-check-1.txt`.
+
+**One error was genuinely mine and is fixed.** `E0599: no associated function or constant named parse_dsl found for struct Procedural2dSnapshot`, at the relocated `default_snapshot` in `🌀️procedural2d/…/🧬️schema/🦀️component.rs:371`. The `⚙️engine` file had `use store::ArtifactDsl;` at its top; I carried the function over but not the trait import. Fixed by adding `use store::ArtifactDsl;` to that file's import block. This is exactly the "every unqualified path in a moved body is a hazard" rule biting — here a *trait in scope*, not a path.
+
+**The remaining errors are another session's in-flight mutation-vocabulary split, established by git rather than by file-path guessing:**
+
+```
+$ git log --oneline -5 -- ".../🌀️procedural2d/…/🧬️schema/🧬️mutations/"
+62152fabcc 🐙️ueli🎆️26🌙️06☀️04🚩️499
+31209e7afe 🐙️ueli🎆️26🌙️06☀️04🚩️498
+20252aa16d 🐙️ueli🎆️26🌙️06☀️04🚩️496   <- this session's start commit
+...
+$ git diff --stat 20252aa16d..HEAD -- ".../🧬️mutations/"
+19 files changed, 370 insertions(+), 298 deletions(-)
+```
+
+Commits **497–499 landed after this session started at 496**, creating 18 new mutation-slug files (`➕create-generation`, `➖delete-generation`, `🏷️rename-generation`, `🔁replace-widget`, `🔄replace-synapse`, `🔢change-generation-value`) and stripping 300 lines out of `🧬️mutations/🦀️component.rs`. Every remaining error class is a symptom of that half-landed split:
+
+- `E0252` duplicate names (`change_schema`, `create_widget`, …) — old flat definitions plus new slug modules both in scope;
+- `E0432` unresolved `create_generation::create_generation`, `crate::artifacts::procedural2d::widget_index`, `super::set_widget` — helpers deleted from the flat file, not yet re-exported;
+- `E0433`/`E0423`/`E0425` missing modules `update_widget`/`delete_widget_position`/`update_camera` and "expected function, found module";
+- `E0599` no variant `SetWidget` / `Generation` on `Procedural2dMutation`/`Procedural3dMutation` — the enum's variant vocabulary is being rewritten.
+
+**53 of the 94 error locations are inside `🧬️mutations/` slug directories this packet never opened.** This packet's only touch anywhere in `🧬️mutations/` was a single `use` line per file (`…::engine::empty_procedural{2,3}d_snapshot` → `…::schema::…`) plus one doc-comment path — verified still present after the concurrent commits.
+
+### Run 3 — post-fix re-verification (`scratch-procedural-cargo-check-2.txt`)
+
+```
+error: could not compile `semio-s-plugin-procedural` (lib) due to 93 previous errors; 78 warnings emitted
+error: could not compile `semio-s-plugin-procedural` (lib test) due to 103 previous errors; 89 warnings emitted
+```
+
+**94 → 93 and 104 → 103: exactly one error removed from each target, which is precisely the `parse_dsl` fix landing.** The only remaining `parse_dsl` occurrences in the whole log are three lines of an unrelated *warning* (`unnecessary qualification`) inside `🗄️stdio`'s json snapshot — not an error, not ours.
+
+**Error locations, run 3, by file — this is the load-bearing evidence:**
+
+| location | errors |
+|---|---:|
+| `🧬️mutations/**` (both artifacts, flat file + slug dirs + `💾️binary`) | **89** |
+| `🎛️apps/◻2d/🦀️component.rs`, `🎛️apps/🧊️3d/🦀️component.rs`, and the `🎮️commands/{🧬️generation,🎨️example}` files | 10 |
+| `📸️snapshot/📝️text/🦀️component.rs` | 1 |
+| **`✳️any/🧬️schema/🦀️component.rs` (2d) — the relocated `🔖️DocumentHelpers`** | **0** |
+| **`✳️any/🧬️schema/🦀️component.rs` (3d) — the relocated `🔖️DocumentHelpers` + `🔖️GumballTransforms`** | **0** |
+| **`✳️any/🚪️io/🦀️component.rs` (both) — the relocated `🚪️IoRegistry`** | **0** |
+
+**Every file this packet relocated code *into* at the artifact layer now compiles with zero errors.** The 2d schema file went from 2 errors (my `parse_dsl` bug) to 0.
+
+The 10 app-file errors are all the *same* error — `E0599: no variant named SetWidget found for enum Procedural{2,3}dMutation` — and are provably not this packet's:
+
+```
+$ sed -n '299p' 🎛️apps/◻2d/🦀️component.rs
+    operations.push(Procedural2dMutation::SetWidget { index, widget: … });
+
+$ git show 20252aa16d:"…/🎛️apps/◻2d/🦀️component.rs" | grep -c "Procedural2dMutation::SetWidget"
+1                      # present, identical, at this session's START commit
+
+$ grep -rn "SetWidget" "…/🧬️schema/🧬️mutations/🦀️component.rs"
+                       # (no output — the VARIANT no longer exists)
+```
+
+The call sites are byte-identical to their state at commit 496 and were never touched by this packet; the *variant they name* was deleted out from under them by the 497–499 vocabulary split. Same for the `Generation` variant errors in the `🎮️commands/🧬️generation` files.
+
+**Status: relocation COMPLETE, structurally verified, and — for every file this packet wrote into at the artifact layer — compiling clean. The crate as a whole is RED, but not from this packet:** 89 of 93 errors are inside `🧬️mutations/` directories this packet never opened, and the remaining 4+ are pre-existing call sites orphaned by the concurrent split. This packet's own bug count found and fixed: **1** (`use store::ArtifactDsl`). A whole-crate green is not obtainable until the 497–499 mutation-vocabulary split finishes, since it shares the compilation unit — recommend re-verifying in one pass then, per the manifest's standing practice.
 
 ## Concurrent-churn observations
 
-At the time of the check, `ps` showed ~10 concurrent `cargo check -p semio-s-plugin-*` invocations from peer sessions sharing this ticket's `🎯️target` directory (architect, block, fem, gis, layout, lowpoly, process, stdio, writer). Build-lock contention made the first check take >2 min before producing output; this is the expected "Blocking waiting for file lock" behaviour the ticket's hard rule 5 describes, not a failure.
+- `ps` showed ~10 concurrent `cargo check -p semio-s-plugin-*` invocations from peer sessions sharing this ticket's `🎯️target` directory (architect, block, fem, gis, layout, lowpoly, process, stdio, writer). Build-lock contention made run 1 take >2 min before producing output — the expected "Blocking waiting for file lock" behaviour of hard rule 5, not a failure.
+- `semio-s-plugin-stdio` went from RED (run 1) to compiling (run 2) inside this session's window, confirming the manifest's "a verification is a timestamp, not a property" warning in both directions.
+- A mutation-vocabulary split (commits 497–499) is **live in `🌀️procedural` right now**, in the same crate as this packet. It was not present when this packet started. Not touched, not "fixed" — reported per protocol.
 
 ## Files touched
 

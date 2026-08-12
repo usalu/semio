@@ -792,6 +792,7 @@ export class VerifyScript extends Script {
         ...policyPluginRootShapeBreaches(this.root),
         ...policyPluginBuilderBreaches(this.root, policyDiscoverCrateDirs(this.root)),
         ...policyApaBreaches(this.root),
+        ...policyInferenceFamilyBreaches(this.root),
       ].filter((b) => b.priority === "high");
       if (dissolveBreaches.length > 0) {
         for (const b of dissolveBreaches) {
@@ -4645,56 +4646,136 @@ function policyBannedNameStemBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/**
- * ✅️ Taxonomy directories under plugin/framework/hub areas must carry an emoji prefix that includes U+FE0F.
- */
-function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
+/** 🧷️Names whose exact spelling is owned by an ecosystem or taxonomy contract. */
+function policyEmojiFixedFilenames(): ReadonlySet<string> {
+  const taxonomy = loadTaxonomy();
+  const names = new Set<string>([
+    ...taxonomy.packagingFileNames,
+    ...taxonomy.rootDataFileNames,
+    ...taxonomy.rootDocFileNames,
+    ...Object.values(taxonomy.taxonomyLeafFilenames),
+    ...Object.values(taxonomy.entryFilenames),
+    ...Object.values(taxonomy.exampleLeafFilenames),
+    ...Object.values(taxonomy.exampleTestLeafFilenames),
+    "Cargo.lock",
+    "bun.lock",
+    "bun.lockb",
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "yarn.lock",
+    "rust-toolchain.toml",
+    "rustfmt.toml",
+    "clippy.toml",
+    "go.work",
+    "go.work.sum",
+    "next-env.d.ts",
+    "vite-env.d.ts",
+    "components.json",
+    "post-checkout",
+    "post-commit",
+    "post-merge",
+    "post-rewrite",
+    "prepare-commit-msg",
+  ]);
+  const visit = (value: unknown): void => {
+    if (typeof value === "string" && /\.[a-z0-9]+$/i.test(value)) names.add(value);
+    else if (Array.isArray(value)) value.forEach(visit);
+    else if (value && typeof value === "object") Object.values(value).forEach(visit);
+  };
+  visit(taxonomy);
+  return names;
+}
+
+/** 🏭️Generated and framework-owned trees whose entry names are not repository taxonomy. */
+function policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir: string, name: string): boolean {
+  const rel = `${relDir}/${name}`;
+  const segments = rel.split("/");
+  return name.startsWith(".") || name === "pkg" || name === "coverage" || name === "partial_movie_files" || name === "__pycache__" || name === "client" || name === "client_bin" || segments.includes("app");
+}
+
+/** 🪪️Whether an entry is free to adopt the repository's emoji-prefixed identity. */
+function policyEmojiEntryIsRenamable(relDir: string, name: string, isDirectory: boolean, fixedFilenames: ReadonlySet<string>): boolean {
+  if (!name || name.startsWith(".") || policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir, name)) return false;
+  if (isDirectory) return true;
+  const taxonomy = loadTaxonomy();
+  return !fixedFilenames.has(name) && !taxonomy.packagingFileSuffixes.some((suffix) => name.endsWith(suffix));
+}
+
+/** 🎭️Families whose shared leading emoji is a structural kind marker rather than a sibling identity. */
+function policyEmojiSiblingIdentityIsStructural(relDir: string): boolean {
+  const parent = relDir.split("/").pop() ?? "";
+  return parent === "🏅️standards" || parent === "🪆️subsets" || parent === "💡️inferences";
+}
+
+/** ✨️Whether a name starts with an actual emoji sequence rather than arbitrary non-ASCII text. */
+function policyHasLeadingEmoji(name: string): boolean {
+  const prefix = policyLeadingEmojiPrefix(name);
+  return prefix.length > 0 && /[^\x00-\x7f]/u.test(prefix);
+}
+
+/** 🎨️Whether a Latin-stemmed emoji identity is missing the required emoji presentation selector. */
+function policyEmojiPrefixNeedsVs16(name: string): boolean {
+  const prefix = policyLeadingEmojiPrefix(name);
+  const first = [...prefix][0] ?? "";
+  return policyHasLeadingEmoji(name) && /^[A-Za-z]/.test(name.slice(prefix.length)) && !/\p{Emoji_Presentation}/u.test(first) && !prefix.includes(POLICY_VS16);
+}
+
+/** ✅️Every renamable entry in a clean taxonomy area has a VS16 emoji identity unique among its siblings. */
+export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   if (taxonomy.requireEmojiPrefixWithVs16 !== true) return [];
+  const fixedFilenames = policyEmojiFixedFilenames();
   const breaches: BreachRecord[] = [];
-  const hasEmojiPrefix = (name: string): boolean => {
-    if (!name) return false;
-    const first = [...name][0];
-    if (!first || first === "." || first === "_") return true;
-    const cp = first.codePointAt(0) ?? 0;
-    const isEmoji = cp > 0x7f;
-    if (!isEmoji) return false;
-    return name.includes(POLICY_VS16) || /[\u{1F300}-\u{1FAFF}]/u.test(first);
-  };
-  const needsVs16 = (name: string): boolean => {
-    const chars = [...name];
-    if (chars.length < 2) return false;
-    const first = chars[0]!;
-    const cp = first.codePointAt(0) ?? 0;
-    if (cp <= 0x7f) return false;
-    // Allow ASCII-only tooling dirs
-    if (name.startsWith(".")) return false;
-    // Require VS16 when the stem after emoji is latin (e.g. 🧩core, 🔌️Ports)
-    const rest = name.slice(first.length);
-    if (/^[A-Za-z]/.test(rest) && !name.includes(POLICY_VS16)) return true;
-    return false;
-  };
+  const cleanRoots = Object.entries(taxonomy.areas)
+    .filter(([, state]) => state === "clean")
+    .map(([root]) => root)
+    .filter((root, index, roots) => !roots.some((candidate, candidateIndex) => candidateIndex !== index && root.startsWith(`${candidate}/`)));
   const walk = (relDir: string): void => {
+    const seen = new Map<string, string>();
     for (const entry of policyReaddirSafe(repoRoot, relDir)) {
-      if (!entry.isDirectory) continue;
-      if (entry.name === "node_modules" || entry.name === "target" || entry.name === "dist" || entry.name === "pkg") continue;
       const childRel = `${relDir}/${entry.name}`;
-      if (needsVs16(entry.name)) {
+      const renamable = policyEmojiEntryIsRenamable(relDir, entry.name, entry.isDirectory, fixedFilenames);
+      const hasPrefix = policyHasLeadingEmoji(entry.name);
+      if (renamable && !hasPrefix) {
         breaches.push({
-          id: `emoji-vs16-${childRel}`,
-          summary: `"${childRel}" is missing U+FE0F variation selector on its emoji prefix`,
+          id: `emoji-prefix-missing-${childRel}`,
+          summary: `"${childRel}" is renamable but has no leading emoji prefix`,
           kind: "taxonomy/emoji-prefix",
           scope: childRel,
           priority: "high",
-          reason: "taxonomy.requireEmojiPrefixWithVs16: emoji-prefixed taxonomy dirs must include U+FE0F.",
-          solution: `Rename so the emoji prefix includes ${POLICY_VS16} (e.g. 🧩${POLICY_VS16}core → dissolve; 🔌️Ports → 🔌${POLICY_VS16}Ports).`,
+          reason: "Every renamable file and directory in a clean taxonomy area must start with an emoji identity.",
+          solution: `Rename "${entry.name}" with a sibling-unique emoji prefix and update every reference.`,
+        });
+      } else if (renamable && policyEmojiPrefixNeedsVs16(entry.name)) {
+        breaches.push({
+          id: `emoji-vs16-${childRel}`,
+          summary: `"${childRel}" is missing U+FE0F on its emoji prefix`,
+          kind: "taxonomy/emoji-prefix",
+          scope: childRel,
+          priority: "high",
+          reason: "taxonomy.requireEmojiPrefixWithVs16 requires emoji presentation on Latin-stemmed renamable entries.",
+          solution: `Rename the leading emoji so it includes U+FE0F, preserving the stem and references.`,
         });
       }
-      walk(childRel);
+      if (renamable && hasPrefix && !policyEmojiSiblingIdentityIsStructural(relDir)) {
+        const prefix = policyLeadingEmojiPrefix(entry.name).replaceAll(POLICY_VS16, "");
+        const previous = seen.get(prefix);
+        if (previous) {
+          breaches.push({
+            id: `emoji-prefix-duplicate-${relDir}-${prefix.codePointAt(0)?.toString(16) ?? "unknown"}-${entry.name}`,
+            summary: `"${relDir}" reuses emoji prefix "${prefix}" for siblings "${previous}" and "${entry.name}"`,
+            kind: "taxonomy/emoji-prefix-uniqueness",
+            scope: childRel,
+            priority: "high",
+            reason: "A leading emoji is the local visual identity of an entry and must be unique among siblings.",
+            solution: `Rename either sibling with a distinct emoji prefix and update every reference.`,
+          });
+        } else seen.set(prefix, entry.name);
+      }
+      if (entry.isDirectory && !policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir, entry.name)) walk(childRel);
     }
   };
-  for (const root of POLICY_BANNED_STEM_SCAN_ROOTS) walk(root);
-  void hasEmojiPrefix;
+  cleanRoots.forEach(walk);
   return breaches;
 }
 
@@ -7161,6 +7242,377 @@ function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] 
   ];
 }
 //#endregion 🔧️PolicyRuleMutationArtifactEngines
+
+//#region 🔧️PolicyRuleInferenceFamily
+/**
+ * 💡️ Wave P3 inference-family scanners (INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+ * Mirrors 🔧️PolicyRuleMutationArtifactEngines's structure and idioms one region up: `💡️inferences` is the
+ * fourth schema family (alongside `📸️snapshot` / `🔺️diff` / `🧬️mutations`), same slug-dir shape, same
+ * `📝️text`/`💾️binary` codec-dir reservation, same report-mode discipline. REPORT MODE IS LOAD-BEARING:
+ * every breach below carries `priority: "medium"` or `"low"`, never `"high"` — registered only at
+ * `VerifyScript.runGate`'s `dissolveBreaches` block (which filters to `priority === "high"` before
+ * throwing), never the earlier `osBreaches` block (which throws on ANY breach regardless of priority).
+ * All 112 owning subsets carry `💡️inferences/`; per-family completeness (root leaves, `📝️text`/`💾️binary`
+ * spec leaves, emoji hygiene) still varies wave to wave as fan-out continues. None of that can gate:
+ * every rule here walks only `💡️inferences` dirs that already exist on disk
+ * (`policyFindAllInferencesDirs`), never requires the facet's presence, so an unauthored subset — were
+ * one to exist — would produce zero breaches rather than a hard block; real incompleteness reports
+ * honestly at `medium`/`low` instead.
+ */
+const POLICY_INFERENCES_FACET = "💡️inferences";
+
+/** 🔎️Inference-specific slug dirs under `💡️inferences/` (skips leaf files and reserved codec/example dirs — same reservation `policyListMutationDirs` uses for `🧬️mutations/`, minus the mutation triad names since inferences have no triad). */
+function policyListInferenceDirs(repoRoot: string, inferencesRel: string): string[] {
+  const reserved = new Set<string>(["📚️examples", "💾️binary", "📝️text"]);
+  return policyReaddirSafe(repoRoot, inferencesRel)
+    .filter((e) => e.isDirectory && !reserved.has(e.name) && !e.name.startsWith("."))
+    .map((e) => e.name)
+    .sort();
+}
+
+/**
+ * 🔍️Every `💡️inferences` facet dir anywhere under `✏️s` — same deep-taxonomy walk
+ * `policyFindAllMutationsDirs` uses for `🧬️mutations`, so a subset that has not fanned out yet is simply
+ * absent from the result rather than reported missing.
+ */
+function policyFindAllInferencesDirs(repoRoot: string): string[] {
+  const found: string[] = [];
+  const walk = (relDir: string): void => {
+    for (const ent of policyReaddirSafe(repoRoot, relDir)) {
+      if (!ent.isDirectory || ent.name.startsWith(".")) continue;
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (ent.name === POLICY_INFERENCES_FACET) {
+        found.push(childRel);
+        continue;
+      }
+      walk(childRel);
+    }
+  };
+  walk("✏️s");
+  return found.sort();
+}
+
+/** 🗿️Owning artifact root for a `💡️inferences` facet dir — same marker-based derivation `policyArtifactRootOfMutationsDir` uses, reused directly since the logic is generic to any `🧬️schema` child, not mutation-specific. */
+function policyArtifactRootOfInferencesDir(inferencesRel: string): string {
+  return policyArtifactRootOfMutationsDir(inferencesRel);
+}
+
+/**
+ * 📏️Family-root leaf completeness: every existing `💡️inferences/` must carry the 5 `schemaFormats`
+ * root leaves (`🔣️taxonomy.json`'s `schemaFormats` — same SSOT `policyArtifactSchemaFacetCompletenessBreaches`
+ * reads for `🧬️schema`/`📸️snapshot`/`🔺️diff`) plus the 8 `textSpecFilenames` under `📝️text/` and the 6
+ * `binarySpecFilenames` under `💾️binary/` — never a hardcoded list, so a taxonomy change (adding a sixth
+ * schema format, say) updates this rule for free.
+ */
+function policyInferenceFamilyRootCompletenessBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const rootLeaves = Object.values(taxonomy.schemaFormats ?? {}).map((f) => f.leafFilename);
+  const textLeaves = taxonomy.textSpecFilenames ?? [];
+  const binaryLeaves = taxonomy.binarySpecFilenames ?? [];
+  const breaches: BreachRecord[] = [];
+  for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
+    const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
+    for (const leaf of rootLeaves) {
+      const rel = `${inferencesRel}/${leaf}`;
+      if (existsSync(join(repoRoot, rel))) continue;
+      breaches.push({
+        id: `inference-family-root-leaf-missing-${rel}`,
+        summary: `"${inferencesRel}" is missing family-root leaf ${leaf}`,
+        kind: "inference-migration/family-root-completeness",
+        scope: artRel,
+        priority: "medium",
+        reason: "Every 💡️inferences facet root must carry all five schemaFormats leaves (🔣️taxonomy.json), same as 🧬️schema/📸️snapshot/🔺️diff.",
+        solution: `Add handcrafted ${rel}.`,
+      });
+    }
+    for (const leaf of textLeaves) {
+      const rel = `${inferencesRel}/📝️text/${leaf}`;
+      if (existsSync(join(repoRoot, rel))) continue;
+      breaches.push({
+        id: `inference-family-text-leaf-missing-${rel}`,
+        summary: `"${inferencesRel}/📝️text" is missing spec leaf ${leaf}`,
+        kind: "inference-migration/family-root-completeness",
+        scope: artRel,
+        priority: "medium",
+        reason: "Every 💡️inferences/📝️text/ must carry all textSpecFilenames leaves (🔣️taxonomy.json), same as every other representation node.",
+        solution: `Add handcrafted ${rel}.`,
+      });
+    }
+    for (const leaf of binaryLeaves) {
+      const rel = `${inferencesRel}/💾️binary/${leaf}`;
+      if (existsSync(join(repoRoot, rel))) continue;
+      breaches.push({
+        id: `inference-family-binary-leaf-missing-${rel}`,
+        summary: `"${inferencesRel}/💾️binary" is missing spec leaf ${leaf}`,
+        kind: "inference-migration/family-root-completeness",
+        scope: artRel,
+        priority: "medium",
+        reason: "Every 💡️inferences/💾️binary/ must carry all binarySpecFilenames leaves (🔣️taxonomy.json), same as every other representation node.",
+        solution: `Add handcrafted ${rel}.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Slug-dir leaf presence: every concrete inference slug dir must carry a real `🦀️component.rs`, and a
+ * `🟦️component.ts` that is present AND real — not a trivial `export {};`/empty stub (same bar
+ * `policyMutationTsMirrorBreaches` holds triad `.ts` leaves to).
+ */
+function policyInferenceSlugLeafPresenceBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
+    const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
+    for (const slug of policyListInferenceDirs(repoRoot, inferencesRel)) {
+      const slugRel = `${inferencesRel}/${slug}`;
+      const rsRel = `${slugRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+      if (!existsSync(join(repoRoot, rsRel))) {
+        breaches.push({
+          id: `inference-slug-rs-missing-${slugRel}`,
+          summary: `"${slugRel}" has no 🦀️component.rs`,
+          kind: "inference-migration/slug-leaf-presence",
+          scope: artRel,
+          priority: "medium",
+          reason: "Every 💡️inferences/<slug> dir must carry a real Rust derivation leaf.",
+          solution: `Add ${rsRel} with the derivation (impl …InferredField< or a plain pub fn reading the snapshot).`,
+        });
+      }
+      const tsRel = `${slugRel}/${POLICY_TS_COMPONENT_LEAF}`;
+      const tsAbs = join(repoRoot, tsRel);
+      if (!existsSync(tsAbs)) {
+        breaches.push({
+          id: `inference-slug-ts-missing-${slugRel}`,
+          summary: `"${slugRel}" has no 🟦️component.ts mirror at all`,
+          kind: "inference-migration/slug-leaf-presence",
+          scope: artRel,
+          priority: "medium",
+          reason: "Every 💡️inferences/<slug> dir must carry a 🟦️component.ts mirror beside its 🦀️component.rs.",
+          solution: `Create ${tsRel} mirroring its 🦀️component.rs sibling.`,
+        });
+        continue;
+      }
+      const stripped = policyReadFileSafe(repoRoot, tsRel)
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/\/\/.*$/gm, "")
+        .trim();
+      if (stripped === "" || stripped === "export {};") {
+        breaches.push({
+          id: `inference-slug-ts-stub-${slugRel}`,
+          summary: `"${tsRel}" is a trivial "export {};" stub, not a real mirror`,
+          kind: "inference-migration/slug-leaf-presence",
+          scope: artRel,
+          priority: "medium",
+          reason: "A slug leaf's TS mirror must be real, not an empty export {} stub — unlike constitutional facet stubs, 💡️inferences carries no structural stub exemption.",
+          solution: `Give ${tsRel} real content mirroring its 🦀️component.rs sibling.`,
+        });
+      }
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Impl presence: each slug's `🦀️component.rs` must carry a real derivation — either
+ * `impl …InferredField<` or a plain `pub fn` reading the snapshot. **Binding coordinator ruling: only
+ * 4 of 112 families use `InferredField`; the other 108 are pure-fn folds and are correct** — a merkle
+ * dep-chain over a flat whole-snapshot record costs more than the fold it caches, so `InferredField` is
+ * required only where the derivation is genuinely per-entity and DAG-shaped (see the puzzle3d
+ * `🎛flat-position/` pilot and trinity `🔌️jack/🎛flat-position/`), while a whole-snapshot scalar (e.g.
+ * architect's `🧭topology/`) is the sanctioned pure-fn exemplar. Demanding `InferredField` universally
+ * would flag 108 correct families — this rule accepts either shape deliberately.
+ */
+function policyInferenceImplPresenceBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const inferredFieldPattern = /\bimpl\b[^\n{]*\bInferredField\s*</;
+  const pubFnPattern = /\bpub\s+fn\s+\w+/;
+  for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
+    const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
+    for (const slug of policyListInferenceDirs(repoRoot, inferencesRel)) {
+      const rsRel = `${inferencesRel}/${slug}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+      const abs = join(repoRoot, rsRel);
+      if (!existsSync(abs)) continue; // reported by policyInferenceSlugLeafPresenceBreaches
+      const content = policyReadFileSafe(repoRoot, rsRel);
+      if (inferredFieldPattern.test(content) || pubFnPattern.test(content)) continue;
+      breaches.push({
+        id: `inference-impl-missing-${rsRel}`,
+        summary: `"${rsRel}" has neither an InferredField impl nor a plain pub fn derivation`,
+        kind: "inference-migration/impl-presence",
+        scope: artRel,
+        priority: "medium",
+        reason: "Each concrete inference slug must implement InferredField<…> (per-entity DAG-shaped derivations) or expose a plain pub fn reading the snapshot (whole-snapshot pure-fn folds — the sanctioned shape for 108 of 112 families).",
+        solution: `Add impl …InferredField<…> for a per-entity derivation, or a plain pub fn compute_${policyStripEmoji(slug).replaceAll("-", "_")}(&Snapshot) -> … for a whole-snapshot fold, in ${rsRel}.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Emoji uniqueness (within one family tree only — inference slugs legitimately repeat the SAME emoji
+ * across DIFFERENT families by design, e.g. `⏱duration` on animation/audio/mp3/wav/mp4/avi and
+ * `🧭topology` on flow/graph/raster/jack; only a collision inside a single `💡️inferences/` tree is a
+ * defect) and bare-emoji shape (no U+FE0F): inference slugs are bare by convention (see
+ * `isEmojiPrefixedSlugDir`'s own docstring in 🔍️discovery/🟦️component.ts, which cites `📦bounds`,
+ * `🧭topology`, `⏱duration`, `🧾outline` as bare exemplars) — unlike most taxonomy dirs, which
+ * `requireEmojiPrefixWithVs16`.
+ */
+function policyInferenceEmojiUniquenessBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
+    const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
+    const seen = new Map<string, string>();
+    for (const slug of policyListInferenceDirs(repoRoot, inferencesRel)) {
+      const emoji = policyLeadingEmojiPrefix(slug);
+      if (!emoji) {
+        breaches.push({
+          id: `inference-emoji-missing-${inferencesRel}/${slug}`,
+          summary: `"${inferencesRel}/${slug}" has no leading emoji prefix`,
+          kind: "inference-migration/emoji-uniqueness",
+          scope: artRel,
+          priority: "medium",
+          reason: "Each concrete inference slug directory must pick a unique (within its family) emoji prefix.",
+          solution: `Rename ${slug} to include a leading emoji prefix (e.g. 🧭topology).`,
+        });
+        continue;
+      }
+      if (emoji.includes("️")) {
+        breaches.push({
+          id: `inference-emoji-vs16-${inferencesRel}/${slug}`,
+          summary: `"${inferencesRel}/${slug}" carries U+FE0F on its emoji prefix — inference slugs are bare by convention`,
+          kind: "inference-migration/emoji-uniqueness",
+          scope: artRel,
+          priority: "low",
+          reason: "Inference slug dirs are bare-emoji by established convention (📦bounds, 🧭topology, ⏱duration, 🧾outline all lack U+FE0F) — unlike most taxonomy dirs, which require it.",
+          solution: `Rename ${slug} to drop the U+FE0F variation selector after its leading emoji.`,
+        });
+      }
+      const prev = seen.get(emoji);
+      if (prev) {
+        breaches.push({
+          id: `inference-emoji-dup-${artRel}-${emoji}-${slug}`,
+          summary: `"${inferencesRel}/${slug}" reuses emoji "${emoji}" already used by "${prev}" within the same family`,
+          kind: "inference-migration/emoji-uniqueness",
+          scope: artRel,
+          priority: "medium",
+          reason: "Inference slug emojis must be unique WITHIN one artifact's 💡️inferences/ tree — reuse across different families/artifacts is fine and common by design.",
+          solution: `Give ${slug} a different emoji than ${prev} (scoped to this family only).`,
+        });
+        continue;
+      }
+      seen.set(emoji, slug);
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️kebab→camel assembly coverage: every `💡️inferences/<slug>` dir must correspond to a field on the
+ * family-root `<Prefix>Inference` struct, and every field on that struct must correspond to a real slug
+ * dir. Matching normalizes both the slug stem and the Rust field name/type by stripping separators and
+ * casing (so `flat-position` ↔ `flat_position`/`FlatPosition`/`flatPosition` all collapse to the same
+ * key) — real families mix snake_case field names, PascalCase field types, and camelCase serde/id output
+ * for the same concept (see trinity `🔌️jack`'s `flat_position: JackFlatPosition` field, whose
+ * `InferenceFieldSpec` id ends `...flatPosition`), so a single casing convention would false-positive.
+ * Structurally mirrors `policyMutationDispatchCoverageBreaches` one region up (orphan/uncovered
+ * diffing between a directory set and a Rust declaration), reuses `policyStripEmoji` from the same
+ * mutation cluster, and reuses `policyExtractRustSchemaFields` from the artifact-schema cluster to
+ * read the struct's real fields instead of re-deriving a Rust field parser.
+ */
+function policyInferenceNormalizeToken(raw: string): string {
+  return raw.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function policyInferenceAssemblyCoverageBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
+    const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
+    const rootRsRel = `${inferencesRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+    if (!existsSync(join(repoRoot, rootRsRel))) continue; // reported by policyInferenceFamilyRootCompletenessBreaches
+    const content = policyReadFileSafe(repoRoot, rootRsRel);
+    const structMatch = /\bpub\s+struct\s+(\w+Inference)\b/.exec(content);
+    if (!structMatch) continue; // no XInference struct yet — family-root completeness already flags the missing/incomplete root
+    const structName = structMatch[1]!;
+    const extract = policyExtractRustSchemaFields(content, structName);
+    if (extract.typeName !== structName) continue; // extractor could not isolate the struct body — avoid a false coverage report
+    const slugDirs = policyListInferenceDirs(repoRoot, inferencesRel);
+    const slugTokens = new Map(slugDirs.map((s) => [s, policyInferenceNormalizeToken(policyStripEmoji(s))]));
+    const fieldTokens = extract.fields.map((f) => ({ field: f, nameToken: policyInferenceNormalizeToken(f.name), scalarToken: policyInferenceNormalizeToken(f.scalar) }));
+    for (const slug of slugDirs) {
+      const token = slugTokens.get(slug)!;
+      const covered = fieldTokens.some((f) => f.nameToken === token || f.scalarToken.endsWith(token));
+      if (covered) continue;
+      breaches.push({
+        id: `inference-orphan-slug-${inferencesRel}/${slug}`,
+        summary: `"${inferencesRel}/${slug}" has no matching field on ${structName}`,
+        kind: "inference-migration/assembly-coverage",
+        scope: artRel,
+        priority: "medium",
+        reason: `Every 💡️inferences/<slug> dir must be assembled into a #[state(inferred)] field of ${structName} — a slug dir the family root never references is dead weight.`,
+        solution: `Add a field on ${structName} named or typed after "${policyStripEmoji(slug)}", or delete ${inferencesRel}/${slug} if it is stale.`,
+      });
+    }
+    for (const f of fieldTokens) {
+      const hasSlug = [...slugTokens.values()].some((token) => f.nameToken === token || f.scalarToken.endsWith(token));
+      if (hasSlug) continue;
+      breaches.push({
+        id: `inference-uncovered-field-${inferencesRel}-${f.field.name}`,
+        summary: `"${structName}.${f.field.name}" has no matching 💡️inferences/<slug> dir`,
+        kind: "inference-migration/assembly-coverage",
+        scope: artRel,
+        priority: "medium",
+        reason: `Every ${structName} field should be backed by a real 💡️inferences/<slug>/ derivation dir — a field with no matching dir is unassembled or the naming has drifted.`,
+        solution: `Rename a slug dir to match "${f.field.name}", or add the missing 💡️inferences/<slug>/ if the field is new.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️`POLICY_INFERENCE_STATE`: `#[state(inferred)]` may appear only inside `💡️inferences/`, never in a
+ * `📸️snapshot` facet — a snapshot field is persisted input; marking it `inferred` would blur derived
+ * compute into stored state, which is exactly the escape hatch the dep-hash cache design closes.
+ */
+const POLICY_INFERENCE_STATE = "#[state(inferred)]";
+
+function policyInferenceStateLeakBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const files = policyWalkRelFiles(repoRoot, ["✏️s"], (relPath, name) => {
+    if (name !== POLICY_RS_COMPONENT_LEAF_NAME) return false;
+    const norm = relPath.replaceAll("\\", "/");
+    return norm.includes("/📸️snapshot/") && !norm.includes(`/${POLICY_INFERENCES_FACET}/`);
+  });
+  for (const relPath of files) {
+    const content = policyReadFileSafe(repoRoot, relPath);
+    const idx = content.indexOf(POLICY_INFERENCE_STATE);
+    if (idx < 0) continue;
+    breaches.push({
+      id: `inference-state-leak-${relPath}`,
+      summary: `"${relPath}" declares ${POLICY_INFERENCE_STATE} inside a 📸️snapshot facet`,
+      kind: "inference-migration/state-leak",
+      scope: relPath,
+      line: policyLineOfIndex(content, idx),
+      priority: "medium",
+      reason: "#[state(inferred)] marks a field as derived-and-cached; that contract belongs exclusively to 💡️inferences/ — a snapshot facet field is persisted input and must never carry it.",
+      solution: `Move the inferred field out of ${relPath} into a 💡️inferences/<slug>/${POLICY_RS_COMPONENT_LEAF_NAME} sibling.`,
+    });
+  }
+  return breaches;
+}
+
+/** ⚖️Aggregates the P3 inference-family scanners. */
+function policyInferenceFamilyBreaches(repoRoot: string): BreachRecord[] {
+  return [
+    ...policyInferenceFamilyRootCompletenessBreaches(repoRoot),
+    ...policyInferenceSlugLeafPresenceBreaches(repoRoot),
+    ...policyInferenceImplPresenceBreaches(repoRoot),
+    ...policyInferenceEmojiUniquenessBreaches(repoRoot),
+    ...policyInferenceAssemblyCoverageBreaches(repoRoot),
+    ...policyInferenceStateLeakBreaches(repoRoot),
+  ];
+}
+//#endregion 🔧️PolicyRuleInferenceFamily
 
 //#region 🔧️PolicyRuleArtifactSchemas
 /**
@@ -11836,6 +12288,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyProtocolFileBreaches(repoRoot));
   breaches.push(...policyTsFacadeBreaches(repoRoot));
   breaches.push(...policyMutationArtifactEngineBreaches(repoRoot));
+  breaches.push(...policyInferenceFamilyBreaches(repoRoot));
   breaches.push(...policySchemaOverhaulS2Breaches(repoRoot));
   breaches.push(...policySchemaOverhaulPCBreaches(repoRoot));
   breaches.push(...policyDissolvedKernelsBreaches(repoRoot));

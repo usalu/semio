@@ -23,12 +23,13 @@ use crate::apps::cad::modes::edit;
 use crate::apps::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::apps::cad::panels::{catalogue, document, inspection};
 use crate::apps::cad::terminology::{cad_is_de_locale, cad_labels};
-use crate::artifacts::cad::engine::interaction::{apply_event, can_commit, commit_object, keyed_transitions, parse_repl_line, resolve_interaction_key, start_session, CadEngagementScratch};
-use crate::artifacts::cad::engine::transformation::{apply_from_building, apply_typology_fallback, run_derive_from_geometry, solid_for_object};
-use crate::artifacts::cad::engine::{
-    cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, export_solids_as, forest_play_scene, interaction, next_cad_id, CadSolidExport, CAD_EXAMPLE_FOREST_LEFT, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY,
-    CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC, CAD_SOLID_EXPORT_DIALECT_STEP,
+use crate::apps::cad::engine::interaction::{self, apply_event, can_commit, commit_object, keyed_transitions, parse_repl_line, resolve_interaction_key, start_session, CadEngagementScratch};
+use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{apply_from_building, apply_typology_fallback, run_derive_from_geometry, solid_for_object};
+use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{
+    cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, forest_play_scene, next_cad_id, CAD_EXAMPLE_FOREST_LEFT, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY,
+    CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
 };
+use crate::artifacts::cad::standards::v1::subsets::any::io::{export_solids_as, CadSolidExport, CAD_SOLID_EXPORT_DIALECT_STEP};
 use crate::artifacts::cad::mutations::change_active_model_definition::mutation::ChangeActiveModelDefinition;
 use crate::artifacts::cad::mutations::change_object_locked::mutation::ChangeObjectLocked;
 use crate::artifacts::cad::mutations::change_object_typology::mutation::ChangeObjectTypology;
@@ -1023,7 +1024,7 @@ impl ArtifactApp for CadPlayApp {
             MediaPayload::Structured { json, .. } => Value::String(json.clone()),
             MediaPayload::Binary { .. } => return Err(MediaError::Payload(port.to_string(), "geometry:in only accepts a Structured payload today".into())),
         };
-        match crate::artifacts::cad::engine::import_cad_object_by_extension(name, &payload) {
+        match crate::artifacts::cad::standards::v1::subsets::any::io::import_cad_object_by_extension(name, &payload) {
             Some(object) => Ok(Emit::mutations(vec![CadMutation::CreateObject(CreateObject { pane: CadPaneId::Shape, object })])),
             None => Err(MediaError::Payload(port.to_string(), "unrecognized geometry payload".into())),
         }
@@ -1071,7 +1072,7 @@ impl ArtifactApp for CadPlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> UiNode {
-        crate::artifacts::cad::engine::sync_cad_computer_contributions(&cfg.snapshot.contributions_json);
+        crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::sync_cad_computer_contributions(&cfg.snapshot.contributions_json);
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: cad_runtime_from_config(cfg.snapshot) };
         let labels = cad_labels(cfg.snapshot);
         let window_kind_id = match body_key {
@@ -1443,7 +1444,8 @@ mod tests {
     use semio_framework_plugin::ArtifactApp;
     use super::testkit::*;
     use super::*;
-    use crate::artifacts::cad::engine::{align_mesh_to_fixture_centroid, cad_document_from_dwg, default_document, object_mesh_data, primary_primitive_kind, scene_from_spatial_payload, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z, CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO};
+    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{align_mesh_to_fixture_centroid, default_document, object_mesh_data, primary_primitive_kind, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z, CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO};
+    use crate::artifacts::cad::standards::v1::subsets::any::io::{cad_document_from_dwg, scene_from_spatial_payload};
     use crate::artifacts::cad::{empty_cad_snapshot, CAD_PLAY_DOCUMENT_SCHEMA};
     use semio_framework_plugin::{ActionKind, AppActionRegistry, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
     use store::{Backbone, BackboneMessage, MemoryBackbone};

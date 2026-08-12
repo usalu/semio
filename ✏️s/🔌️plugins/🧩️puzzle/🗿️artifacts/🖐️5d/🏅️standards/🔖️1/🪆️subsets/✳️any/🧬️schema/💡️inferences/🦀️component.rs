@@ -13,7 +13,7 @@
 //! that sibling slug's function directly; `ArtifactInferrer::infer_cached`'s default passthrough
 //! (just calls `infer`) is used as-is, uncached.
 
-use crate::artifacts::puzzle3d::engine::geometry::flatten::FlattenPose;
+use crate::artifacts::puzzle3d::schema::inferences::flatten::FlattenPose;
 use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot;
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 use artifact_schema::ArtifactSchema;

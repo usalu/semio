@@ -163,3 +163,40 @@ missing mount.
 `✳️brep`, `✳️drawing`, `✳️mesh` under `🧿️semio` were **authored by DKM**, not by us, by agreement — their
 derived fields are by-products of that session's engine-dissolution work. All three now exist;
 `✳️mesh`/`✳️brep` still lack their `📝️text`/`💾️binary` leaves, which is DKM's to finish.
+
+---
+
+## Addendum — post-close verification (2026-08-13)
+
+Written immediately after `ticket_close`. Two figures in the closing summary above were measured
+before a peer finished their work and are now **stale in the favourable direction**. Correcting them
+here rather than leaving the record understating the outcome.
+
+**1. stdio compiles clean.** The summary states the final `--all-targets` gate "last measured 9 errors,
+all in a peer session's `🧿️semio/✳️mesh` mutation vocabulary". DKM has since completed that work.
+Re-measured directly after closing:
+
+```
+RUSTC_WRAPPER="" cargo check -p semio-s-plugin-stdio --all-targets
+EXIT=0 · errors: 0
+```
+
+So stdio is **fully green**, not blocked. The ticket's largest plugin surface — 57 inference families
+mounted into one shared `📦️glue.rs` — compiles with zero errors on both lib and test targets. Peer's
+test baseline: **2415 passed / 5 failed**, those 5 pre-existing stdio failures unrelated to inference,
+**zero failures in any inference facet**.
+
+**2. Registration is 112/112.** DKM registered brep, drawing and mesh using the same coverage method
+used here. Verified: 112 families on disk, 145 `register_artifact_inferences` call sites (≥1 per
+family; multi-artifact plugins register several from one shared `register()`). **There is no
+registration gap and it should not be read as an open item anywhere.**
+
+**Net effect on the honest verified-vs-ungated split:** everything that was "authored and structurally
+verified, gate blocked on others' in-flight work" is now **compiler-verified green**. The three
+deferrals in the closing summary (compose `flat_positions_cache`, the db-kernel projection adapter, the
+mixed binary-magic convention) stand unchanged — those were deliberate, not blocked.
+
+`verify gate` still fails at the pre-existing `dependency-cruiser` step
+(`ui-no-framework-packages`, unrelated framework UI modules), which is structurally prior to every
+policy rule and fails identically before and after this ticket's changes. It never reaches the
+inference cluster. Not ours, not chased.

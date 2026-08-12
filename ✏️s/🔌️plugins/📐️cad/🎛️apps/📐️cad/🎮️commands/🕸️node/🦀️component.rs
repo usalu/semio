@@ -9,7 +9,7 @@ use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{runtime_of, snapshot_of};
-use crate::artifacts::cad::engine::next_cad_id;
+use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id;
 use crate::artifacts::cad::CadNode;
 
 

@@ -44,15 +44,18 @@ impl MonthlyClimate {
 // BalancingInputs remains the nested persistent payload type; snapshot is Din18599Snapshot.
 
 // 📌️ Deviation from the original monolith: `BalancingInputs::reference_residential(..)` (the
-// physically-computed reference-building constructor, needing `norm_din4108_engine`'s
-// `total_resistance`/`u_value_from_resistance` and `norm_din16798_engine`'s
-// `residential_ventilation_rate`) moved to `crate::artifacts::din18599::engine::reference_residential` — an inherent
-// impl here would need those crates, but inherent impls must live in the crate that defines the
-// type (orphan rule), and `rs` must not depend on `engine` (the reverse of every other
-// constitutional dependency edge). `Default` has the same orphan-rule constraint, so — matching
-// the plain-literal `Default` style `din4108`/`din16798` already use — this is the numeric result
-// of `reference_residential(ClimateZoneDe::Zone2, 100.0)`, precomputed once and inlined; use
-// `crate::artifacts::din18599::engine::reference_residential` directly for a live-computed reference building.
+// physically-computed reference-building constructor, needing `din4108`'s relocated
+// `total_resistance`/`u_value_from_resistance` and `din16798`'s relocated
+// `residential_ventilation_rate`) moved to
+// `crate::artifacts::din18599::standards::v1::subsets::any::schema::reference_residential` — an
+// inherent impl here would need those crates, but inherent impls must live in the crate that
+// defines the type (orphan rule), and `rs` must not depend on `schema`'s compliance helpers (the
+// reverse of every other constitutional dependency edge). `Default` has the same orphan-rule
+// constraint, so — matching the plain-literal `Default` style `din4108`/`din16798` already use —
+// this is the numeric result of `reference_residential(ClimateZoneDe::Zone2, 100.0)`, precomputed
+// once and inlined; use
+// `crate::artifacts::din18599::standards::v1::subsets::any::schema::reference_residential`
+// directly for a live-computed reference building.
 
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 
@@ -69,7 +72,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::din18599::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::din18599::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -100,7 +103,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.din18599")
         .schema(crate::artifacts::din18599::schema::din18599_artifact_schema_descriptor())
         .inferences([crate::artifacts::din18599::standards::v1::subsets::any::schema::inferences::din18599_artifact_inference_descriptor()])
-        .composers(crate::artifacts::din18599::standards::v1::engine::io_registry::entries())
+        .composers(crate::artifacts::din18599::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .build()
 }

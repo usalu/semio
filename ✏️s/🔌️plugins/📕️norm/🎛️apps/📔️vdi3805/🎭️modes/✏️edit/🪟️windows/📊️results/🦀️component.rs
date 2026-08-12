@@ -1,6 +1,6 @@
 //! 📊️ VDI 3805 play app — the results window: every computed compliance check, one line each.
 
-use crate::artifacts::vdi3805::engine::Vdi3805Family;
+use crate::apps::vdi3805::Vdi3805Family;
 use crate::document::NormHost;
 use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
 

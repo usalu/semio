@@ -1,7 +1,7 @@
 //! 🚪️ IO s.note (1/✳️any) — registration now flows through 🎹️composer::register, called once from
 //! this plugin's `.setup()` (see the artifact root's `declaration()`), not per-leaf register().
 
-use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
+use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
 use semio_framework::{DwgDrawing, DwgGeometry};
 use semio_framework_plugin::{io_dispatch, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};

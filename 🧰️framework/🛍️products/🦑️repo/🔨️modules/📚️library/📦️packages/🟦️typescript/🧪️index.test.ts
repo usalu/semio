@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv } from "../../../../../../../📜️script.ts";
+import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyEmojiPrefixBreaches } from "../../../../../../../📜️script.ts";
 import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { defineLint, type FileLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
@@ -21,6 +21,52 @@ import { areaOf, clearDiscoveryCache, discoverBurndown, discoverOwners, discover
 import { computeWorkspaces, diffWorkspaces } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+
+//#region 🧪️EmojiPrefixPolicy
+describe("emoji-prefix policy", () => {
+  test("requires prefixes on renamable files and directories but exempts ecosystem filenames", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-emoji-policy-"));
+    const owner = join(root, "✏️s", "🔌️plugins", "🧪️probe");
+    try {
+      mkdirSync(join(owner, "plain-dir"), { recursive: true });
+      writeFileSync(join(owner, "plain.ts"), "");
+      writeFileSync(join(owner, "Cargo.toml"), "");
+      const scopes = policyEmojiPrefixBreaches(root).map((breach) => breach.scope);
+      expect(scopes).toContain("✏️s/🔌️plugins/🧪️probe/plain-dir");
+      expect(scopes).toContain("✏️s/🔌️plugins/🧪️probe/plain.ts");
+      expect(scopes).not.toContain("✏️s/🔌️plugins/🧪️probe/Cargo.toml");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects duplicate sibling emoji identities after VS16 normalization", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-emoji-policy-"));
+    const owner = join(root, "✏️s", "🔌️plugins", "🧪️probe");
+    try {
+      mkdirSync(owner, { recursive: true });
+      writeFileSync(join(owner, "🧭️first.ts"), "");
+      writeFileSync(join(owner, "🧭️second.ts"), "");
+      expect(policyEmojiPrefixBreaches(root).some((breach) => breach.kind === "taxonomy/emoji-prefix-uniqueness")).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("accepts distinct VS16 emoji identities", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-emoji-policy-"));
+    const owner = join(root, "✏️s", "🔌️plugins", "🧪️probe");
+    try {
+      mkdirSync(join(owner, "🧭️first"), { recursive: true });
+      writeFileSync(join(owner, "📄️second.ts"), "");
+      expect(policyEmojiPrefixBreaches(root)).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+//#endregion 🧪️EmojiPrefixPolicy
+
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
     expect(joinNeo4jGraphDatabaseName(["compose", "kit"])).toBe("compose-kit");

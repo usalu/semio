@@ -1,0 +1,7 @@
+2178:    Checking semio-s-plugin-layout v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust)
+2179:✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️component.rs:3:5: error[E0432]: unresolved import `semio_s_plugin_stdio::artifacts::pdf::schema::snapshot::PageDoc`
+2195:✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️component.rs:11:9: error[E0560]: struct `semio_s_plugin_stdio::artifacts::pdf::PdfSnapshot` has no field named `page`: unknown field
+2196:✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️component.rs:9:61: error[E0609]: no field `page` on type `&semio_s_plugin_stdio::artifacts::pdf::PdfSnapshot`: unknown field
+2201:error: could not compile `semio-s-plugin-layout` (lib) due to 3 previous errors; 14 warnings emitted
+2204:error: could not compile `semio-s-plugin-layout` (lib test) due to 3 previous errors; 18 warnings emitted
+2205:EXIT:101

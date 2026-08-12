@@ -81,6 +81,33 @@ against that population**; the old, broken scope was hiding the gap rather than 
 6. **Emoji-uniqueness collisions** in 4 facets (fem×2, cad, flow) — rule held at `medium` with a
    documented graduation condition rather than an allowlist.
 
+## Why the law sweep could not be completed — structural, not incidental
+
+Attempted **five times**. Every plugin crate in the repo depends on `semio-s-plugin-stdio`
+(verified: zero plugin `Cargo.toml`s omit it), and stdio was rewritten continuously tonight by
+three other tickets. Distinct blocking signatures observed, in order:
+
+1. 4 unresolved `include_str!` targets in UCAS's new `✳️table` subset
+2. deleted `✳️brep/📄set-snapshot` still `#[path]`-mounted (DKM's brep vocabulary)
+3. `E0432 unresolved import super::create_layer / delete_layer`
+4. missing `📐️step` `inferences` glue mount (IIF)
+5. `✳️mesh/💡️inferences/🦀️component.rs` mounted before authoring — file absent
+6. same file authored with `HashMap`/`BTreeMap` type mismatch
+7. `📝️md` `E0433 cannot find engine in any`
+
+Each was fixed by its owner within minutes and replaced by the next. The window between a green
+stdio reading and the next breakage was repeatedly shorter than one 32-crate sweep.
+
+**A cache subtlety worth recording**: `🔋️energy` returned real results (257/0, later 256/0) even
+while stdio was red, because dependent crates link stdio's *cached rlib* from an earlier green
+state. So a passing result during a red window is not necessarily wrong — but it is not
+reproducible either, and it means "which crates passed" partly reflects build-cache state rather
+than code state.
+
+**Conclusion**: completing this sweep requires a quiet stdio, not more attempts. It is one command
+(`for c in …; do cargo test -p semio-s-plugin-$c --lib; done`, with `RUSTC_WRAPPER=""`) and should
+be the first thing the next session runs.
+
 ## The finding that matters most
 
 **The triad law harness had never executed, anywhere, in the entire program.** 28 facets were

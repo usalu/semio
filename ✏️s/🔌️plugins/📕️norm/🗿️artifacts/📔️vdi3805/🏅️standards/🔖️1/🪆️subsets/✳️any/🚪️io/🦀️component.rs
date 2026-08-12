@@ -45,3 +45,68 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+//#region 🚪️JsonSerializers
+/// 🚪️ Whole-artifact JSON (de)serializers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
+/// — relocated verbatim from the deleted `⚙️engine`; serialization is exactly what `🚪️io` is for.
+use crate::artifacts::vdi3805::{ManufacturerCatalog, Vdi3805Snapshot};
+use crate::document::NormError;
+
+/// 📤️ JSON round-trip for manufacturer catalogues.
+pub fn catalog_to_json(catalog: &ManufacturerCatalog) -> Result<String, NormError> {
+    serde_json::to_string_pretty(catalog).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
+}
+
+pub fn catalog_from_json(json: &str) -> Result<ManufacturerCatalog, NormError> {
+    serde_json::from_str(json).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
+}
+
+pub fn document_to_json(document: &Vdi3805Snapshot) -> Result<String, NormError> {
+    serde_json::to_string_pretty(document).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
+}
+
+pub fn document_from_json(json: &str) -> Result<Vdi3805Snapshot, NormError> {
+    serde_json::from_str(json).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
+}
+
+//#endregion 🚪️JsonSerializers
+
+//#region 🚪️IoRegistry
+/// 🚪️ Composer registry — relocated verbatim from the deleted `⚙️engine`; io is exactly where
+/// composer dispatch belongs.
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::vdi3805::standards::v1::subsets::any::schema::Vdi3805Composer as Vdi3805AnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![
+            composer_entry_of::<Vdi3805AnyComposer>(),
+        ]).as_slice()
+    }
+}
+//#endregion 🚪️IoRegistry
+
+//#region 🧪️JsonSerializersTests
+#[cfg(test)]
+mod json_serializers_tests {
+    use super::*;
+
+    #[test]
+    fn catalog_and_document_json_round_trip() {
+        let doc = Vdi3805Snapshot::default();
+        let json = catalog_to_json(&doc.catalog).expect("to_json");
+        let restored = catalog_from_json(&json).expect("from_json");
+        assert_eq!(restored.products.len(), doc.catalog.products.len());
+        assert!(catalog_from_json("not json").is_err());
+
+        let doc_json = document_to_json(&doc).expect("doc to_json");
+        let restored_doc = document_from_json(&doc_json).expect("doc from_json");
+        assert_eq!(restored_doc.strict_mode, doc.strict_mode);
+        assert!(document_from_json("not json").is_err());
+    }
+}
+//#endregion 🧪️JsonSerializersTests
+

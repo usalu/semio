@@ -2,7 +2,7 @@
 //! exact same effect, mirroring the old `WiresCommand::ForceLayout | WiresCommand::Reorganize` match arm).
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
-use crate::artifacts::wires::engine::{fixture_nodes, force_layout_board, node_position};
+use crate::artifacts::wires::schema::{fixture_nodes, force_layout_board, node_position};
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
@@ -20,7 +20,7 @@ fn force_layout_operations(document: &WiresSnapshot) -> Vec<WiresMutation> {
         .filter_map(|node| {
             let id = node.get("id").and_then(|value| value.as_str())?;
             let (nx, ny) = node_position(node);
-            let (ox, oy) = crate::artifacts::wires::engine::find_board_node(document, id).map_or((nx, ny), node_position);
+            let (ox, oy) = crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node(document, id).map_or((nx, ny), node_position);
             if nx == ox && ny == oy {
                 return None;
             }

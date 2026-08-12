@@ -271,7 +271,7 @@ mod tests {
     use crate::apps::cad::config::CadConfig;
     use crate::apps::cad::terminology::cad_labels;
     use crate::apps::cad::{make_object_for_typology, CadPlayRuntime};
-    use crate::artifacts::cad::engine::default_document;
+    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
     use crate::artifacts::cad::CadPaneId;
     use semio_framework_plugin::SelectionSet;
     fn selected_box_panel(config: &CadConfig) -> String {

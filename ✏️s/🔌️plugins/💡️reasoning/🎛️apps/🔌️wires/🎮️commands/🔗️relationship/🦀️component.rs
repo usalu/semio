@@ -1,7 +1,7 @@
 //! 🔗️ Wires play app commands — adding a relationship edge between two identities.
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
-use crate::artifacts::wires::engine::fixture_edges;
+use crate::artifacts::wires::schema::fixture_edges;
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
