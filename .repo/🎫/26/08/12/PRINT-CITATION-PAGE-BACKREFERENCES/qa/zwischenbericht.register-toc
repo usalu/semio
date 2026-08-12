@@ -1,0 +1,266 @@
+\SemioTocAuxLine {1}{Ergebnisse}{semio-toc-part-1-1}
+\SemioTocAuxLine {1.1}{Forschungsfragen und Vorgehen}{semio-toc-section-1.1-2}
+\SemioTocAuxLine {1.1.1}{Systematisierung}{semio-toc-subsection-1.1.1-3}
+\SemioTocAuxLine {1.1.2}{Aufwandsminimierung}{semio-toc-subsection-1.1.2-4}
+\SemioTocAuxLine {1.1.3}{Synchronisierung}{semio-toc-subsection-1.1.3-5}
+\SemioTocAuxLine {1.1.4}{Assistenz}{semio-toc-subsection-1.1.4-6}
+\SemioTocAuxLine {1.1.5}{Praxistauglichkeit}{semio-toc-subsection-1.1.5-7}
+\SemioTocAuxLine {1.1.6}{Zielsetzung}{semio-toc-subsection-1.1.6-8}
+\SemioTocAuxLine {1.2}{Arbeitspakete}{semio-toc-section-1.2-9}
+\SemioTocAuxLine {1.2.1}{AP-Erfahrung}{semio-toc-subsection-1.2.1-10}
+\SemioTocAuxLine {1.2.1.1}{Recherche}{semio-toc-subsubsection-1.2.1.1-11}
+\SemioTocAuxLine {1.2.1.1.1}{Bauteilbörsen und Angebotskanäle}{semio-toc-paragraph-1.2.1.1.1-12}
+\SemioTocAuxLine {1.2.1.1.1.1}{Depot-Shop}{semio-toc-paragraph-1.2.1.1.1.1-13}
+\SemioTocAuxLine {1.2.1.1.1.2}{Marktplatz}{semio-toc-paragraph-1.2.1.1.1.2-14}
+\SemioTocAuxLine {1.2.1.1.1.3}{Ressourcenkatalog}{semio-toc-paragraph-1.2.1.1.1.3-15}
+\SemioTocAuxLine {1.2.1.1.1.4}{Vermittlungsplattform}{semio-toc-paragraph-1.2.1.1.1.4-16}
+\SemioTocAuxLine {1.2.1.1.1.5}{Anforderungen}{semio-toc-paragraph-1.2.1.1.1.5-17}
+\SemioTocAuxLine {1.2.1.1.2}{Wiederverwendungsprozesse}{semio-toc-paragraph-1.2.1.1.2-18}
+\SemioTocAuxLine {1.2.1.1.2.1}{Gestaltung}{semio-toc-paragraph-1.2.1.1.2.1-19}
+\SemioTocAuxLine {1.2.1.1.2.2}{Nachweise}{semio-toc-paragraph-1.2.1.1.2.2-20}
+\SemioTocAuxLine {1.2.1.1.3}{Typologiefamilien und Entwurfsrollen}{semio-toc-paragraph-1.2.1.1.3-21}
+\SemioTocAuxLine {1.2.1.2}{Interviews und externe Befunde}{semio-toc-subsubsection-1.2.1.2-22}
+\SemioTocAuxLine {1.2.1.2.1}{Sekundärbefund: Interview- und Umfragestudie}{semio-toc-paragraph-1.2.1.2.1-23}
+\SemioTocAuxLine {1.2.1.2.2}{Ergänzende Fachperspektiven}{semio-toc-paragraph-1.2.1.2.2-24}
+\SemioTocAuxLine {1.2.1.2.2.1}{Computergestütztes Entwerfen}{semio-toc-paragraph-1.2.1.2.2.1-25}
+\SemioTocAuxLine {1.2.1.2.2.2}{Kreislaufwirtschaft}{semio-toc-paragraph-1.2.1.2.2.2-26}
+\SemioTocAuxLine {1.2.1.2.2.3}{Tragwerksplanung}{semio-toc-paragraph-1.2.1.2.2.3-27}
+\SemioTocAuxLine {1.2.1.3}{User Stories und Anforderungen}{semio-toc-subsubsection-1.2.1.3-28}
+\SemioTocAuxLine {1.2.2}{AP-Plattform}{semio-toc-subsection-1.2.2-29}
+\SemioTocAuxLine {1.2.2.1}{Generatoren}{semio-toc-subsubsection-1.2.2.1-30}
+\SemioTocAuxLine {1.2.2.2}{Bauteileinspeisung}{semio-toc-subsubsection-1.2.2.2-31}
+\SemioTocAuxLine {1.2.2.2.1}{Bauteilportal}{semio-toc-paragraph-1.2.2.2.1-32}
+\SemioTocAuxLine {1.2.2.2.2}{REST-Schnittstelle}{semio-toc-paragraph-1.2.2.2.2-33}
+\SemioTocAuxLine {1.2.3}{AP-Tool}{semio-toc-subsection-1.2.3-34}
+\SemioTocAuxLine {1.2.3.1}{semio und Integration}{semio-toc-subsubsection-1.2.3.1-35}
+\SemioTocAuxLine {1.2.3.2}{Human-Interface-Design}{semio-toc-subsubsection-1.2.3.2-36}
+\SemioTocAuxLine {1.2.3.3}{Lebenszyklusanalyse}{semio-toc-subsubsection-1.2.3.3-37}
+\SemioTocAuxLine {1.2.3.4}{Tragwerksanalyse}{semio-toc-subsubsection-1.2.3.4-38}
+\SemioTocAuxLine {1.2.3.5}{KI-Assistenz}{semio-toc-subsubsection-1.2.3.5-39}
+\SemioTocAuxLine {1.2.4}{AP-Validierung}{semio-toc-subsection-1.2.4-40}
+\SemioTocAuxLine {1.2.4.1}{Test-Case und Entwicklung}{semio-toc-subsubsection-1.2.4.1-41}
+\SemioTocAuxLine {1.2.4.2}{Entwurfsgrammatik und Stand der Validierung}{semio-toc-subsubsection-1.2.4.2-42}
+\SemioTocAuxLine {2}{Projektstand}{semio-toc-part-2-43}
+\SemioTocAuxLine {2.1}{Soll-Ist-Vergleich}{semio-toc-section-2.1-44}
+\SemioTocAuxLine {2.2}{Arbeitspakete}{semio-toc-section-2.2-45}
+\SemioTocAuxLine {2.2.1}{AP-Erfahrung}{semio-toc-subsection-2.2.1-46}
+\SemioTocAuxLine {2.2.2}{AP-Plattform}{semio-toc-subsection-2.2.2-47}
+\SemioTocAuxLine {2.2.2.1}{Eingabe und Objektbildung}{semio-toc-subsubsection-2.2.2.1-48}
+\SemioTocAuxLine {2.2.2.2}{Schnittstelle}{semio-toc-subsubsection-2.2.2.2-49}
+\SemioTocAuxLine {2.2.3}{AP-Tool}{semio-toc-subsection-2.2.3-50}
+\SemioTocAuxLine {2.2.3.1}{Human-Interface-Design}{semio-toc-subsubsection-2.2.3.1-51}
+\SemioTocAuxLine {2.2.3.2}{Lebenszyklusanalyse}{semio-toc-subsubsection-2.2.3.2-52}
+\SemioTocAuxLine {2.2.3.3}{Tragwerksanalyse}{semio-toc-subsubsection-2.2.3.3-53}
+\SemioTocAuxLine {2.2.3.4}{KI-Assistenz}{semio-toc-subsubsection-2.2.3.4-54}
+\SemioTocAuxLine {2.2.3.5}{Konfigurator}{semio-toc-subsubsection-2.2.3.5-55}
+\SemioTocAuxLine {2.2.4}{AP-Validierung}{semio-toc-subsection-2.2.4-56}
+\SemioTocAuxLine {2.2.4.1}{Test-Case und Entwurfsgrammatik}{semio-toc-subsubsection-2.2.4.1-57}
+\SemioTocAuxLine {2.2.4.2}{Workshop}{semio-toc-subsubsection-2.2.4.2-58}
+\SemioTocAuxLine {3}{Mittelverwendung}{semio-toc-part-3-59}
+\SemioTocAuxLine {3.1}{Personalkosten}{semio-toc-section-3.1-60}
+\SemioTocAuxLine {3.1.1}{Leibniz Universität Hannover}{semio-toc-subsection-3.1.1-61}
+\SemioTocAuxLine {3.1.1.1}{Ueli Saluz}{semio-toc-subsubsection-3.1.1.1-62}
+\SemioTocAuxLine {3.1.1.2}{Nikolaus Möllenhof}{semio-toc-subsubsection-3.1.1.2-63}
+\SemioTocAuxLine {3.1.2}{Universität der Künste Berlin}{semio-toc-subsection-3.1.2-64}
+\SemioTocAuxLine {3.1.2.1}{Kinan Sarakbi}{semio-toc-subsubsection-3.1.2.1-65}
+\SemioTocAuxLine {3.2}{Material}{semio-toc-section-3.2-66}
+\SemioTocAuxLine {3.3}{Leistungen Dritter}{semio-toc-section-3.3-67}
+\SemioTocAuxLine {3.3.1}{Softwarelizenzen}{semio-toc-subsection-3.3.1-68}
+\SemioTocAuxLine {3.3.2}{Dienstleistungen}{semio-toc-subsection-3.3.2-69}
+\SemioTocAuxLine {3.3.2.1}{Cloud - Infrastructure-as-a-Service}{semio-toc-subsubsection-3.3.2.1-70}
+\SemioTocAuxLine {3.3.2.2}{Nutzung vortrainierter KI-Modelle}{semio-toc-subsubsection-3.3.2.2-71}
+\SemioTocAuxLine {3.3.2.3}{Externe Softwareentwicklung}{semio-toc-subsubsection-3.3.2.3-72}
+\SemioTocAuxLine {3.3.2.3.1}{Server}{semio-toc-paragraph-3.3.2.3.1-73}
+\SemioTocAuxLine {3.3.2.3.2}{Fotogrammetrie}{semio-toc-paragraph-3.3.2.3.2-74}
+\SemioTocAuxLine {3.3.2.3.3}{User-Interface}{semio-toc-paragraph-3.3.2.3.3-75}
+\SemioTocAuxLine {3.3.2.3.4}{Anbindungen Bauteilbörsen}{semio-toc-paragraph-3.3.2.3.4-76}
+\SemioTocAuxLine {3.4}{Reisekosten}{semio-toc-section-3.4-77}
+\SemioTocAuxLine {4}{Ergebnisverwertung}{semio-toc-part-4-78}
+\SemioTocAuxLine {4.1}{Formale Erfolgsindikatoren}{semio-toc-section-4.1-79}
+\SemioTocAuxLine {4.2}{Zusätzliche Verwertungsperspektiven}{semio-toc-section-4.2-80}
+\SemioTocAuxLine {P}{Projekte}{semio-toc-part-P-81}
+\SemioTocAuxLine {P.K}{Katalog}{semio-toc-section-P.K-82}
+\SemioTocAuxLine {P.K.1}{Kopfbau Halle 118}{semio-toc-subsection-P.K.1-83}
+\SemioTocAuxLine {P.K.2}{Upcycle Studios}{semio-toc-subsection-P.K.2-84}
+\SemioTocAuxLine {P.K.3}{Kristian Augusts gate 13}{semio-toc-subsection-P.K.3-85}
+\SemioTocAuxLine {P.K.4}{Zinneke}{semio-toc-subsection-P.K.4-86}
+\SemioTocAuxLine {P.K.5}{Big Dig House}{semio-toc-subsection-P.K.5-87}
+\SemioTocAuxLine {P.K.6}{Lycée Michel Lucius Conversion}{semio-toc-subsection-P.K.6-88}
+\SemioTocAuxLine {P.K.7}{Woongroep Boschgaard}{semio-toc-subsection-P.K.7-89}
+\SemioTocAuxLine {P.K.8}{TRÆ High-Rise}{semio-toc-subsection-P.K.8-90}
+\SemioTocAuxLine {P.K.9}{La Ferme du Rail}{semio-toc-subsection-P.K.9-91}
+\SemioTocAuxLine {P.K.10}{Villa Welpeloo}{semio-toc-subsection-P.K.10-92}
+\SemioTocAuxLine {P.K.11}{BioPartner 5}{semio-toc-subsection-P.K.11-93}
+\SemioTocAuxLine {P.K.12}{Brighton Waste House}{semio-toc-subsection-P.K.12-94}
+\SemioTocAuxLine {P.K.13}{The Green House}{semio-toc-subsection-P.K.13-95}
+\SemioTocAuxLine {P.K.14}{Grande Halle de Colombelles}{semio-toc-subsection-P.K.14-96}
+\SemioTocAuxLine {P.K.15}{Thoravej 29}{semio-toc-subsection-P.K.15-97}
+\SemioTocAuxLine {P.K.16}{Recyclinghaus Hannover}{semio-toc-subsection-P.K.16-98}
+\SemioTocAuxLine {P.K.17}{Kindergarten Mööslistrasse}{semio-toc-subsection-P.K.17-99}
+\SemioTocAuxLine {P.K.18}{People’s Pavilion}{semio-toc-subsection-P.K.18-100}
+\SemioTocAuxLine {P.K.19}{ELYS Kultur- & Gewerbehaus}{semio-toc-subsection-P.K.19-101}
+\SemioTocAuxLine {P.K.20}{Holbein Gardens}{semio-toc-subsection-P.K.20-102}
+\SemioTocAuxLine {P.K.21}{Pavillon Circulaire}{semio-toc-subsection-P.K.21-103}
+\SemioTocAuxLine {P.K.22}{Alliander HQ}{semio-toc-subsection-P.K.22-104}
+\SemioTocAuxLine {P.K.23}{Werkhof 29}{semio-toc-subsection-P.K.23-105}
+\SemioTocAuxLine {P.K.24}{CRCLR House}{semio-toc-subsection-P.K.24-106}
+\SemioTocAuxLine {P.K.25}{Maison Vignette}{semio-toc-subsection-P.K.25-107}
+\SemioTocAuxLine {P.K.26}{Vergleichscluster Verbiest / Karreveld}{semio-toc-subsection-P.K.26-108}
+\SemioTocAuxLine {P.K.27}{Chiro d’Itterbeek – Sanitärgebäude}{semio-toc-subsection-P.K.27-109}
+\SemioTocAuxLine {P.K.28}{Plattenvereinigung}{semio-toc-subsection-P.K.28-110}
+\SemioTocAuxLine {P.K.29}{Juch-Areal Recyclingzentrum}{semio-toc-subsection-P.K.29-111}
+\SemioTocAuxLine {P.K.30}{Jeugdkliniek Ithaka}{semio-toc-subsection-P.K.30-112}
+\SemioTocAuxLine {P.K.31}{The Swan Kindergarten}{semio-toc-subsection-P.K.31-113}
+\SemioTocAuxLine {P.K.32}{BedZED (Beddington Zero Energy Development)}{semio-toc-subsection-P.K.32-114}
+\SemioTocAuxLine {P.K.33}{Timber Square}{semio-toc-subsection-P.K.33-115}
+\SemioTocAuxLine {P.K.34}{Brent Cross Town Substation}{semio-toc-subsection-P.K.34-116}
+\SemioTocAuxLine {P.K.35}{MULTI Brussels}{semio-toc-subsection-P.K.35-117}
+\SemioTocAuxLine {P.K.36}{Resource Rows}{semio-toc-subsection-P.K.36-118}
+\SemioTocAuxLine {P.K.37}{gjG House}{semio-toc-subsection-P.K.37-119}
+\SemioTocAuxLine {P.K.38}{Association House Plauen}{semio-toc-subsection-P.K.38-120}
+\SemioTocAuxLine {P.K.39}{Haus HOS}{semio-toc-subsection-P.K.39-121}
+\SemioTocAuxLine {P.K.40}{Europa Building (Résidence Palace)}{semio-toc-subsection-P.K.40-122}
+\SemioTocAuxLine {P.K.41}{CascadeUp Glulam Demonstrator}{semio-toc-subsection-P.K.41-123}
+\SemioTocAuxLine {P.K.42}{Mehrow Pilot House}{semio-toc-subsection-P.K.42-124}
+\SemioTocAuxLine {P.K.43}{Berlin-Schildow Pilot House}{semio-toc-subsection-P.K.43-125}
+\SemioTocAuxLine {P.K.44}{Institut de Botanique ULg}{semio-toc-subsection-P.K.44-126}
+\SemioTocAuxLine {P.K.45}{Kamikatsu Zero Waste Center}{semio-toc-subsection-P.K.45-127}
+\SemioTocAuxLine {P.K.46}{Hastings Pier Visitor Centre}{semio-toc-subsection-P.K.46-128}
+\SemioTocAuxLine {P.K.47}{Plattenpalast}{semio-toc-subsection-P.K.47-129}
+\SemioTocAuxLine {P.K.48}{Circular Centre Nederland}{semio-toc-subsection-P.K.48-130}
+\SemioTocAuxLine {P.K.49}{Montessori Maassluis}{semio-toc-subsection-P.K.49-131}
+\SemioTocAuxLine {P.K.50}{Bröthen Twin-House}{semio-toc-subsection-P.K.50-132}
+\SemioTocAuxLine {P.K.51}{Association House Gröditz}{semio-toc-subsection-P.K.51-133}
+\SemioTocAuxLine {P.K.52}{Härmälänranta (A-Kruunu / ReCreate)}{semio-toc-subsection-P.K.52-134}
+\SemioTocAuxLine {P.K.53}{Melkinlaituri School & Day-care}{semio-toc-subsection-P.K.53-135}
+\SemioTocAuxLine {P.K.54}{Lokomotion Technology Centre}{semio-toc-subsection-P.K.54-136}
+\SemioTocAuxLine {P.K.55}{Lo-Reninge Town Hall Façade}{semio-toc-subsection-P.K.55-137}
+\SemioTocAuxLine {P.K.56}{Recypark Demets}{semio-toc-subsection-P.K.56-138}
+\SemioTocAuxLine {P.K.57}{Résilience}{semio-toc-subsection-P.K.57-139}
+\SemioTocAuxLine {P.K.58}{Boulder Fire Station 3}{semio-toc-subsection-P.K.58-140}
+\SemioTocAuxLine {P.K.59}{Saxum Vineyard Equipment Barn}{semio-toc-subsection-P.K.59-141}
+\SemioTocAuxLine {P.K.60}{Re:Crete Footbridge}{semio-toc-subsection-P.K.60-142}
+\SemioTocAuxLine {P.K.61}{Bestandsverpflanzung Pavillon}{semio-toc-subsection-P.K.61-143}
+\SemioTocAuxLine {P.K.62}{SUPERLOCAL Expogebouw}{semio-toc-subsection-P.K.62-144}
+\SemioTocAuxLine {P.K.63}{Musée de Folklore et de la Vie frontalière}{semio-toc-subsection-P.K.63-145}
+\SemioTocAuxLine {P.K.64}{Maison DnA}{semio-toc-subsection-P.K.64-146}
+\SemioTocAuxLine {P.K.65}{Christ Pavilion}{semio-toc-subsection-P.K.65-147}
+\SemioTocAuxLine {P.K.66}{55 Great Suffolk Street}{semio-toc-subsection-P.K.66-148}
+\SemioTocAuxLine {P.K.67}{TBC.London}{semio-toc-subsection-P.K.67-149}
+\SemioTocAuxLine {P.L}{Leseschlüssel}{semio-toc-section-P.L-150}
+\SemioTocAuxLine {H}{Hürden der Wiederverwendung}{semio-toc-part-H-151}
+\SemioTocAuxLine {BB}{Bauteilbörsen}{semio-toc-part-BB-152}
+\SemioTocAuxLine {BB.M}{Marktplätze}{semio-toc-section-BB.M-153}
+\SemioTocAuxLine {BB.D}{Depot-Shops}{semio-toc-section-BB.D-154}
+\SemioTocAuxLine {BB.V}{Vermittlungsplattformen}{semio-toc-section-BB.V-155}
+\SemioTocAuxLine {BB.R}{Ressourcenkataloge}{semio-toc-section-BB.R-156}
+\SemioTocAuxLine {BB.L}{Leseschlüssel}{semio-toc-section-BB.L-157}
+\SemioTocAuxLine {TZ}{Typologische Zuordnung und Wiederverwendungsrollen}{semio-toc-part-TZ-158}
+\SemioTocAuxLine {TZ.0.1}{Lineare Elemente}{semio-toc-subsection-TZ.0.1-159}
+\SemioTocAuxLine {TZ.0.2}{Flächige Elemente}{semio-toc-subsection-TZ.0.2-160}
+\SemioTocAuxLine {TZ.0.3}{Knoten- und Übergangselemente}{semio-toc-subsection-TZ.0.3-161}
+\SemioTocAuxLine {TZ.0.4}{Rahmen- und Systemelemente}{semio-toc-subsection-TZ.0.4-162}
+\SemioTocAuxLine {TZ.L}{Leseschlüssel}{semio-toc-section-TZ.L-163}
+\SemioTocAuxLine {EM}{Eingangsmodell für Vorbemessung und Ökobilanz}{semio-toc-part-EM-164}
+\SemioTocAuxLine {EM.0.1}{Abgrenzung Vorplanung gegen Nachweisebene}{semio-toc-subsection-EM.0.1-165}
+\SemioTocAuxLine {EM.0.2}{Nachweiszustand, Mindestzustand und Fallback}{semio-toc-subsection-EM.0.2-166}
+\SemioTocAuxLine {EM.0.3}{Normative Verankerung}{semio-toc-subsection-EM.0.3-167}
+\SemioTocAuxLine {EM.0.4}{Gemeinsame Eingangsgrößen}{semio-toc-subsection-EM.0.4-168}
+\SemioTocAuxLine {EM.0.5}{Tragwerksgrößen}{semio-toc-subsection-EM.0.5-169}
+\SemioTocAuxLine {EM.0.6}{Lineare Elemente}{semio-toc-subsection-EM.0.6-170}
+\SemioTocAuxLine {EM.0.7}{Flächige Elemente}{semio-toc-subsection-EM.0.7-171}
+\SemioTocAuxLine {EM.0.8}{Knoten- und Übergangselemente}{semio-toc-subsection-EM.0.8-172}
+\SemioTocAuxLine {EM.0.9}{Rahmen- und Systemelemente}{semio-toc-subsection-EM.0.9-173}
+\SemioTocAuxLine {EM.0.10}{Ökobilanz-Eingangsgrößen}{semio-toc-subsection-EM.0.10-174}
+\SemioTocAuxLine {EM.U}{Umsetzungsspezifikation}{semio-toc-section-EM.U-175}
+\SemioTocAuxLine {EM.Q}{Quellenregister}{semio-toc-section-EM.Q-176}
+\SemioTocAuxLine {EM.L}{Lückenliste}{semio-toc-section-EM.L-177}
+\SemioTocAuxLine {SB}{Sekundärbefunde BaselCircular/Cirkla}{semio-toc-part-SB-178}
+\SemioTocAuxLine {SB.B}{Relevante Befunde}{semio-toc-section-SB.B-179}
+\SemioTocAuxLine {SB.B.1}{Frühe Berücksichtigung von ReUse}{semio-toc-subsection-SB.B.1-180}
+\SemioTocAuxLine {SB.B.2}{Verfügbarkeit von Bauteilinformationen}{semio-toc-subsection-SB.B.2-181}
+\SemioTocAuxLine {SB.B.3}{Digitale Inventare und standardisierte Daten}{semio-toc-subsection-SB.B.3-182}
+\SemioTocAuxLine {SB.B.4}{Ökologische Bewertung in frühen Planungsphasen}{semio-toc-subsection-SB.B.4-183}
+\SemioTocAuxLine {SK}{Systemkarte Skalierung der Wiederverwendung}{semio-toc-part-SK-184}
+\SemioTocAuxLine {SK.SM}{Systemkarte}{semio-toc-section-SK.SM-185}
+\SemioTocAuxLine {SK.LS}{Leseschlüssel}{semio-toc-section-SK.LS-186}
+\SemioTocAuxLine {NM}{Nachweismatrix dokumentierter Plattformfunktionen}{semio-toc-part-NM-187}
+\SemioTocAuxLine {NM.L}{Leseschlüssel}{semio-toc-section-NM.L-188}
+\SemioTocAuxLine {IR}{Integrationsreife der Wiederverwendungsplattformen}{semio-toc-part-IR-189}
+\SemioTocAuxLine {IR.L}{Leseschlüssel}{semio-toc-section-IR.L-190}
+\SemioTocAuxLine {I}{Interviews}{semio-toc-part-I-191}
+\SemioTocAuxLine {I.DG}{Auswertung Digitale Gestaltung (Tom Svilans)}{semio-toc-section-I.DG-192}
+\SemioTocAuxLine {I.DG.1}{Material als Ausgangspunkt des Entwurfs}{semio-toc-subsection-I.DG.1-193}
+\SemioTocAuxLine {I.DG.2}{Vom Materiallesen zum digitalen Materialobjekt}{semio-toc-subsection-I.DG.2-194}
+\SemioTocAuxLine {I.DG.3}{Unregelmäßigkeit und architektonische Qualität erhalten}{semio-toc-subsection-I.DG.3-195}
+\SemioTocAuxLine {I.DG.4}{Entscheidungen unter Unsicherheit ermöglichen}{semio-toc-subsection-I.DG.4-196}
+\SemioTocAuxLine {I.DG.5}{Materialzuordnung statt reiner Materialverwaltung}{semio-toc-subsection-I.DG.5-197}
+\SemioTocAuxLine {I.DG.6}{Wiederverwendung für den nächsten Lebenszyklus vorbereiten}{semio-toc-subsection-I.DG.6-198}
+\SemioTocAuxLine {I.DG.7}{Kritische Einordnung}{semio-toc-subsection-I.DG.7-199}
+\SemioTocAuxLine {I.KW}{Auswertung Kreislaufwirtschaft (Raoul Bunschoten)}{semio-toc-section-I.KW-200}
+\SemioTocAuxLine {I.KW.1}{Fehlende Kontinuität als zentrales Problem}{semio-toc-subsection-I.KW.1-201}
+\SemioTocAuxLine {I.KW.2}{Ein Tool als Teil eines größeren Ökosystems}{semio-toc-subsection-I.KW.2-202}
+\SemioTocAuxLine {I.KW.3}{Wiederverwendung als Verhandlungsprozess}{semio-toc-subsection-I.KW.3-203}
+\SemioTocAuxLine {I.KW.4}{Szenarien statt automatischer Lösungen}{semio-toc-subsection-I.KW.4-204}
+\SemioTocAuxLine {I.KW.5}{Arbeiten mit unvollständigem Wissen}{semio-toc-subsection-I.KW.5-205}
+\SemioTocAuxLine {I.KW.6}{Planung als dynamischer Prozess}{semio-toc-subsection-I.KW.6-206}
+\SemioTocAuxLine {I.KW.7}{Anpassungsfähigkeit als zentrale Anforderung}{semio-toc-subsection-I.KW.7-207}
+\SemioTocAuxLine {I.T}{Transkript Raoul Bunschoten}{semio-toc-section-I.T-208}
+\SemioTocAuxLine {I.T.1}{Fragmentierte Wertschöpfungsketten und digitale Kontinuität}{semio-toc-subsection-I.T.1-209}
+\SemioTocAuxLine {I.T.2}{Akteure, Kommunikation und Aushandlung}{semio-toc-subsection-I.T.2-210}
+\SemioTocAuxLine {I.T.3}{Planungsunterstützung, Szenarien und Werkzeugökosystem}{semio-toc-subsection-I.T.3-211}
+\SemioTocAuxLine {I.T.4}{Dynamische Planung und unvollständige Daten}{semio-toc-subsection-I.T.4-212}
+\SemioTocAuxLine {I.T.5}{Baukastensysteme und Skalierung}{semio-toc-subsection-I.T.5-213}
+\SemioTocAuxLine {I.T.6}{Regulierung, Szenariotechniken und synthetische Daten}{semio-toc-subsection-I.T.6-214}
+\SemioTocAuxLine {I.T.7}{Vom akademischen Prototyp zur Planungsinfrastruktur}{semio-toc-subsection-I.T.7-215}
+\SemioTocAuxLine {I.TW}{Auswertung Tragwerksplanung (Eike Schling)}{semio-toc-section-I.TW-216}
+\SemioTocAuxLine {I.TW.1}{Das Bauteil muss sein Tragwerkswissen behalten}{semio-toc-subsection-I.TW.1-217}
+\SemioTocAuxLine {I.TW.2}{Bauteile ihrem Potenzial gemäß zuordnen}{semio-toc-subsection-I.TW.2-218}
+\SemioTocAuxLine {I.TW.3}{Das eigentliche Hindernis ist häufig die Nachweisbarkeit}{semio-toc-subsection-I.TW.3-219}
+\SemioTocAuxLine {I.TW.4}{Der Entwurf soll sich an den vorhandenen Bauteilen orientieren}{semio-toc-subsection-I.TW.4-220}
+\SemioTocAuxLine {I.TW.5}{Standardisierte Systeme statt Einzellösungen}{semio-toc-subsection-I.TW.5-221}
+\SemioTocAuxLine {I.TW.6}{Anpassbare, kontrollierte Anschlüsse}{semio-toc-subsection-I.TW.6-222}
+\SemioTocAuxLine {US}{User Stories und Anforderungsmapping}{semio-toc-part-US-223}
+\SemioTocAuxLine {US.BB}{Mitarbeiter:in einer Bauteilbörse}{semio-toc-section-US.BB-224}
+\SemioTocAuxLine {US.BB.1}{Baukomponentendaten erfassen}{semio-toc-subsection-US.BB.1-225}
+\SemioTocAuxLine {US.BB.2}{Baukomponenten zu planungsrelevanten Einheiten bündeln}{semio-toc-subsection-US.BB.2-226}
+\SemioTocAuxLine {US.BB.3}{Verfügbarkeit transparent machen}{semio-toc-subsection-US.BB.3-227}
+\SemioTocAuxLine {US.BB.4}{Status von Baukomponenten verwalten}{semio-toc-subsection-US.BB.4-228}
+\SemioTocAuxLine {US.BB.5}{Bestandsdaten standardisieren}{semio-toc-subsection-US.BB.5-229}
+\SemioTocAuxLine {US.BB.6}{Kontextinformationen dokumentieren}{semio-toc-subsection-US.BB.6-230}
+\SemioTocAuxLine {US.BB.7}{Baukomponentenhistorie nachvollziehbar machen}{semio-toc-subsection-US.BB.7-231}
+\SemioTocAuxLine {US.BB.8}{Informationslücken sichtbar machen}{semio-toc-subsection-US.BB.8-232}
+\SemioTocAuxLine {US.BB.9}{Kostenstruktur transparent darstellen}{semio-toc-subsection-US.BB.9-233}
+\SemioTocAuxLine {US.BB.10}{Zusatzleistungen modular anbieten}{semio-toc-subsection-US.BB.10-234}
+\SemioTocAuxLine {US.A}{Architekt:in}{semio-toc-section-US.A-235}
+\SemioTocAuxLine {US.A.1}{Verfügbare Baukomponenten frühzeitig einsehen}{semio-toc-subsection-US.A.1-236}
+\SemioTocAuxLine {US.A.2}{Mit Baukomponenten entwerfen}{semio-toc-subsection-US.A.2-237}
+\SemioTocAuxLine {US.A.3}{Baukomponenten für Entwurfsvarianten sichern}{semio-toc-subsection-US.A.3-238}
+\SemioTocAuxLine {US.A.4}{Entwurfsvarianten vergleichen}{semio-toc-subsection-US.A.4-239}
+\SemioTocAuxLine {US.A.5}{Baukomponenten digital in den Entwurf integrieren}{semio-toc-subsection-US.A.5-240}
+\SemioTocAuxLine {US.A.6}{Entwurfsrelevante Risiken erkennen}{semio-toc-subsection-US.A.6-241}
+\SemioTocAuxLine {US.A.7}{Änderungen an geplanten Baukomponenten nachvollziehen}{semio-toc-subsection-US.A.7-242}
+\SemioTocAuxLine {US.A.8}{Gestalterische Eigenschaften berücksichtigen}{semio-toc-subsection-US.A.8-243}
+\SemioTocAuxLine {US.A.9}{Aufgaben zur Wiederverwendung phasenbezogen steuern}{semio-toc-subsection-US.A.9-244}
+\SemioTocAuxLine {US.A.10}{Risiken systematisch bewerten}{semio-toc-subsection-US.A.10-245}
+\SemioTocAuxLine {US.A.11}{Baukomponenten flexibel filtern}{semio-toc-subsection-US.A.11-246}
+\SemioTocAuxLine {US.A.12}{Wiederverwendungsprozesse den Planungsphasen zuordnen}{semio-toc-subsection-US.A.12-247}
+\SemioTocAuxLine {US.T}{Tragwerksplaner:in}{semio-toc-section-US.T-248}
+\SemioTocAuxLine {US.T.1}{Tragwerksrelevante Baukomponenten identifizieren}{semio-toc-subsection-US.T.1-249}
+\SemioTocAuxLine {US.T.2}{Fehlende Tragwerksinformationen erkennen}{semio-toc-subsection-US.T.2-250}
+\SemioTocAuxLine {US.T.3}{Frühes fachliches Feedback geben}{semio-toc-subsection-US.T.3-251}
+\SemioTocAuxLine {US.T.4}{Konstruktive Lösungsprinzipien dokumentieren}{semio-toc-subsection-US.T.4-252}
+\SemioTocAuxLine {US.T.5}{Tragwerksvarianten vergleichen}{semio-toc-subsection-US.T.5-253}
+\SemioTocAuxLine {US.T.6}{Nachweisfähige Informationen exportieren}{semio-toc-subsection-US.T.6-254}
+\SemioTocAuxLine {US.E}{Energieberater:in}{semio-toc-section-US.E-255}
+\SemioTocAuxLine {US.E.1}{Frühe Umweltwirkung abschätzen}{semio-toc-subsection-US.E.1-256}
+\SemioTocAuxLine {US.E.2}{Wiederverwendbare Baukomponenten in Bewertungen integrieren}{semio-toc-subsection-US.E.2-257}
+\SemioTocAuxLine {US.E.3}{Ökologische Wirkung von Varianten vergleichen}{semio-toc-subsection-US.E.3-258}
+\SemioTocAuxLine {US.E.4}{Varianten energetisch prüfen}{semio-toc-subsection-US.E.4-259}
+\SemioTocAuxLine {US.E.5}{Grenzwerte und Zielwerte prüfen}{semio-toc-subsection-US.E.5-260}
+\SemioTocAuxLine {US.E.6}{Optimierungsmöglichkeiten aufzeigen}{semio-toc-subsection-US.E.6-261}
+\SemioTocAuxLine {US.E.7}{Bewertungsergebnisse exportieren}{semio-toc-subsection-US.E.7-262}
+\SemioTocAuxLine {US.SA}{Systemarchitektur für das Anforderungsmapping}{semio-toc-section-US.SA-263}
+\SemioTocAuxLine {US.AM}{Anforderungsmapping der User Stories}{semio-toc-section-US.AM-264}
+\SemioTocAuxLine {BK}{Entwicklungsstände des Bauteilkatalogs}{semio-toc-part-BK-265}
+\SemioTocAuxLine {V}{Verzeichnisse}{semio-toc-part-V-266}

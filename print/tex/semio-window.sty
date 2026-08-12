@@ -2235,11 +2235,11 @@
 
 %endregion WindowBreakParts chrome
 
-% LR-2.8: deliver the running-header section name via the marks mechanism, not a
+% LR-2.8: deliver the running-header heading name via the marks mechanism, not a
 % bare \gdef. A \gdef takes effect when the heading is tokenised in the main
 % vertical list, while TeX's page builder breaks asynchronously (reading ahead),
 % so a page whose break lands before a heading could ship carrying the NEXT
-% section's name. A mark travels with the heading box. Classic \markright/
+% heading's name. A mark travels with the heading box. Classic \markright/
 % \rightmark is used (this build's kernel predates the ltmarks \NewMarkClass API;
 % fancyhdr, already loaded, provides \rightmark). The \gdef is kept as a harmless
 % legacy value; the navbar reads the mark.
@@ -2248,7 +2248,7 @@
 % shorter form so long sentence-titles render at the flat 7.2pt chip size
 % instead of auto-shrinking — while the FULL title stays verbatim in the body.
 % The pending short is consumed (and cleared) by the next marking heading, so it
-% never leaks onto a following section. \markright stores a copy of the tokens,
+% never leaks onto a following heading. \markright stores a copy of the tokens,
 % and \let copies the meaning into the fallback macro, so both stay stable even
 % after the pending is redefined by the next heading.
 \let\semio@nav@short@pending\relax
@@ -2265,29 +2265,7 @@
 }
 
 \newcommand{\semio@chrome@heading@track}[2]{%
-  \def\semio@chrome@track@level{#1}%
-  \def\semio@chrome@track@part{part}%
-  \def\semio@chrome@track@chapter{chapter}%
-  \def\semio@chrome@track@section{section}%
-  \ifx\semio@chrome@track@level\semio@chrome@track@part
-    \semio@chrome@heading@set{#2}%
-  \else\ifx\semio@chrome@track@level\semio@chrome@track@chapter
-    \semio@chrome@heading@set{#2}%
-  \else\ifx\semio@chrome@track@level\semio@chrome@track@section
-    \ifcsname c@chapter\endcsname
-      \ifnum\value{chapter}>0 \else \semio@chrome@heading@set{#2}\fi
-    \else
-      \semio@chrome@heading@set{#2}%
-    \fi
-  \fi\fi\fi
-  % LR-navshort (any level): part/chapter/section already consumed a pending
-  % label above (which clears it), so this is a no-op for them. Deeper levels
-  % (subsection…) get no custom mark and fall back to KOMA's full-title mark — so
-  % if a short label is pending, force it through here to override that with the
-  % short form in the running header. \semio@chrome@heading@set clears the pending.
-  \ifx\semio@nav@short@pending\relax\else
-    \semio@chrome@heading@set{#2}%
-  \fi
+  \semio@chrome@heading@set{#2}%
 }
 
 \newsavebox{\semio@window@cap@slot}
@@ -3641,13 +3619,13 @@
     }{%
       \SemioChromeNavbarCenterChip
     }{%
-      % LR-2.8: read the section in effect on THIS page from the mark, not the
+      % LR-2.8: read the heading in effect on THIS page from the mark, not the
       % read-ahead \gdef. \protected@edef keeps robust tokens (e.g. \& in project
       % names) unexpanded.
       \protected@edef\semio@chrome@heading@now{\rightmark}%
       % LR-hdrfix: \rightmark is empty on pages that start no new heading —
       % continuation pages and the register/bibliography sections, which issue no
-      % section mark — leaving those pages with a blank header slot. Fall back to
+      % heading mark — leaving those pages with a blank header slot. Fall back to
       % the persistent \gdef global (last heading set), which never empties, so
       % every page carries a section label.
       \ifx\semio@chrome@heading@now\@empty
@@ -3655,7 +3633,7 @@
       \fi
       \ifx\semio@chrome@heading@now\@empty
       \else
-        % LR-2.9: cap the running-section chip below half the free width so it
+        % LR-2.9: cap the running-heading chip below half the free width so it
         % cannot reach the centred report-type chip; long titles scale down.
         \semio@chrome@fit@width{0.34\headwidth}{%
           \semio@chrome@navbar@chip@text{\semio@chrome@font@chip}{\semio@chrome@heading@now}%

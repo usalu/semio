@@ -1,0 +1,14 @@
+{
+  "title": "Print Citation Page Backreferences",
+  "emoji": "🔗",
+  "status": "closed",
+  "description": "Add a page-number list at the end of every bibliography citation entry showing all pages where it is cited. Make citation links bidirectional: in-text citation to bibliography entry, bibliography page number back to the corresponding cited page. Verify on the Entwerfen mit Bestand Zwischenbericht in light and dark output.",
+  "summary": "Enabled native biblatex back-reference tracking for the shared print class so every bibliography entry ends with a deduplicated list of pages where it is cited. Existing in-text citation links continue to jump to bibliography entries, while each listed page number links back to the cited page. Added a source-level regression assertion. Verified the Entwerfen mit Bestand Zwischenbericht in light and dark: 148 forward citation links, 143 bibliography page backlinks, and zero unresolved destinations in each 127-page PDF; visually inspected the first bibliography page in both themes. The print long test rebuilt all 12 shared template PDFs successfully.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2551"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪161a683a31494d1db63a60b16eab19b2"
+  ]
+}

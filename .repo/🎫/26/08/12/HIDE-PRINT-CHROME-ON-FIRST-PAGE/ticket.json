@@ -1,0 +1,13 @@
+{
+  "title": "Hide Print Chrome on First Page",
+  "emoji": "🫥",
+  "status": "open",
+  "description": "The first page of printed documents must not show the shared header or footer chrome, including report labels such as Zwischenbericht and Mit Bestand. Preserve header and footer behavior on subsequent pages and verify the Zwischenbericht output.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2552"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪23919db952b044ffabb0353f07bd6526"
+  ]
+}

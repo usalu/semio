@@ -686,6 +686,11 @@ class TestScript extends BundleScript {
     //#region Window layout
     const windowSource = readFileSync(join(texDir, "semio-window.sty"), "utf8");
     const tableSource = readFileSync(join(texDir, "semio-table.sty"), "utf8");
+    const componentsSource = readFileSync(join(texDir, "semio-components.sty"), "utf8");
+    const classSource = readFileSync(join(texDir, "semio.cls"), "utf8");
+    assert.match(classSource, /\\RequirePackage\[style=\\semio@citestyle,backend=bibtex,sorting=nyt,backref=true\]\{biblatex\}/);
+    assert.match(componentsSource, /\\NewDocumentCommand\{\\makecoverpages\}\{\}\{%[\s\S]*?\\newgeometry\{[^}]+\}\s*\\thispagestyle\{empty\}/);
+    assert.match(windowSource, /\\newcommand\{\\semio@chrome@heading@track\}\[2\]\{%\s*\\semio@chrome@heading@set\{#2\}%\s*\}/);
     assert.match(windowSource, /\\semio_window_vskip_stroke_hairline: \{[\s\S]*?\\vskip\\dimexpr-\\semio@stroke@hairline-5\.75pt\\relax/);
     assert.match(windowSource, /overlay~unbroken=\{\\semio@window@break@record\{1\}/);
     assert.match(windowSource, /overlay~first=\{\\semio@window@frame@bottom@stroke\}/);

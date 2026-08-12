@@ -229,16 +229,55 @@ Ressourcenkataloge machen Baukomponenten besonders früh sichtbar, da diese bere
 Vermittlungsplattformen stellen vor allem Kontakte zwischen Besitzenden, Suchenden und beteiligten Fachakteur:innen her. Häufig liegen zunächst nur Kurzbeschreibungen oder Kontaktdaten vor. Für die weitere planerische und digitale Nutzung müssen die betreffenden Baukomponenten daher i.d.R genauer erfasst und qualifiziert werden. Für kleine Projekte kann die frühzeitige Vernetzung von Vorteil sein, allerdings wenn die Komponenten nicht wiederverwendet werden, besteht die Gefahr, dass Informationen mehrfach intern erfasst/modelliert/qualifiziert werden.
   
 \paragraph{Anforderungen}
-Aus der Auswertung ergeben sich drei zentrale Anforderungen. Erstens muss die Datenstruktur unterschiedliche Grade der Vollständigkeit und Belastbarkeit abbilden. Zweitens muss sie Veränderungen von Verfügbarkeit und Status im Zeitverlauf erfassen. Drittens muss der Eingabeweg an die Form der vorhandenen Daten angepasst werden. Unvollständige oder frei formulierte Angebote erfordern eine geführte Erfassung, während strukturierte Bestandsdaten über Schnittstellen übernommen werden können. Unabhängig vom Eingabeweg müssen Herkunft, Änderungen und fehlende Informationen nachvollziehbar sein.
-  
+Aus der Auswertung ergeben sich drei zentrale Anforderungen.
+
+\begin{SemioNest}
+\paragraph{Unterschiedliche Reifegrade}
+Die Datenstruktur muss unterschiedliche Grade der Vollständigkeit und Belastbarkeit abbilden. Frühe Angebote können zunächst nur grundlegende Angaben enthalten, während im weiteren Prozess geprüfte Geometrie-, Material- und Zustandsdaten hinzukommen. Die Datenstruktur muss diese Entwicklung sichtbar machen, ohne vorläufige und verifizierte Informationen gleichzusetzen.
+
+\paragraph{Zeitbedingte Veränderungen}
+Die Datenstruktur muss Veränderungen von Verfügbarkeit und Status im Zeitverlauf erfassen. Insbesondere bei noch nicht ausgebauten Baukomponenten können sich Mengen, Zustand und geplanter Bereitstellungszeitpunkt ändern. Solche Änderungen müssen versioniert und mit ihrem Erfassungszeitpunkt dokumentiert werden, damit Planungsentscheidungen auf dem jeweils gültigen Stand beruhen.
+
+\paragraph{Adaptive Eingabe}
+Der Eingabeweg muss an die Form der vorhandenen Daten angepasst werden. Unvollständige oder frei formulierte Angebote erfordern eine geführte Erfassung, während strukturierte Bestandsdaten über Schnittstellen übernommen werden können.
+\end{SemioNest}
+
+\paragraph{Einordnung}
 Diese Ergebnisse bestätigen Beobachtungen aus der Literatur zur eingeschränkten Rückverfolgbarkeit insbesondere tragender Baukomponenten \cite{densley-tingley-cooper-cullen-structural-steel-reuse-2017,sivers-fivet-reuse-market-dynamics-2025}. Bestehende Inventaransätze wie Swiss-Inv zeigen zugleich, dass einheitlich strukturierte Bestandsdaten die spätere Übernahme und Weiterverarbeitung wesentlich erleichtern können \cite{cirkla-swiss-inv}.
 \end{SemioNest}
   
 \paragraph{Wiederverwendungsprozesse}
-Die Auswertung der dokumentierten Projekte ergab eine wiederkehrende Abfolge von Arbeitsschritten: Bestandserkundung und Auswahl, Rückbauplanung, Ausbau und Sicherung, Aufbereitung oder Vermittlung, Zuordnung zu einem neuen Projekt, Entwurf und Variantenbildung, fachliche Prüfung sowie Wiedereinbau (vgl.\ \appendixref{anlage:projekte}). Dabei zeigte sich, dass Wiederverwendungsprozesse selten linear verlaufen. Änderungen der Verfügbarkeit, des Zustands, der Mengen oder der Projektanforderungen führen häufig zu Rücksprüngen zwischen Auswahl, Entwurf und Prüfung. Die tatsächliche Eignung einer Baukomponente ergibt sich daher erst aus dem Zusammenspiel ihrer physischen Eigenschaften, ihrer vorgesehenen Funktion und den Rahmenbedingungen des neuen Projekts. Als besonders wichtig erwies sich eine frühzeitige Abstimmung zwischen Rückbau, Vermittlung, Planung und fachlicher Prüfung. Der Vergleich mit bestehenden digitalen Wiederverwendungsprozessen bestätigte diese Prozessstruktur. Der D5-Workflow bildet wesentliche Schritte von der Bestandserfassung bis zum Wiedereinbau ab, während der buildingSMART-Use-Case insbesondere den Übergang vom Rückbau in die weitere Vermittlung beschreibt \cite{de-wolf-d5-digital-circular-workflow-2024,buildingsmart-benelux-decommissioning-to-reuse-2024}.
+Die Auswertung der gefundenen Projekte ergab eine wiederkehrende Abfolge von acht Arbeitsschritten (vgl.\ \appendixref{anlage:projekte}).
   
 
 \begin{SemioNest}
+\paragraph{Bestandserkundung und Auswahl}
+Der Bestand wird erkundet und dokumentiert, bevor potenziell wiederverwendbare Baukomponenten für die weitere Bearbeitung ausgewählt werden.
+
+\paragraph{Rückbauplanung}
+Die Rückbauplanung legt Reihenfolge, Verfahren und Randbedingungen für einen möglichst schadensarmen Ausbau der ausgewählten Baukomponenten fest.
+
+\paragraph{Ausbau und Sicherung}
+Die Baukomponenten werden ausgebaut, gekennzeichnet und für den Transport oder die Zwischenlagerung gesichert.
+
+\paragraph{Aufbereitung oder Vermittlung}
+Je nach Zustand und Nachfrage werden die Baukomponenten aufbereitet oder über geeignete Akteur:innen und Plattformen vermittelt.
+
+\paragraph{Zuordnung zu einem neuen Projekt}
+Verfügbare Baukomponenten werden einem neuen Projekt zugeordnet, dessen Anforderungen mit ihren dokumentierten Eigenschaften abgeglichen werden.
+
+\paragraph{Entwurf und Variantenbildung}
+Im Entwurf werden die Baukomponenten in Varianten angeordnet und an räumliche, konstruktive und gestalterische Anforderungen angepasst.
+
+\paragraph{Fachliche Prüfung}
+Die fachliche Prüfung bewertet, ob die vorgesehenen Baukomponenten für ihre geplante Funktion und Einbausituation geeignet sind.
+
+\paragraph{Wiedereinbau}
+Nach Abschluss der Planung und Prüfung werden die Baukomponenten in das neue Projekt eingebaut und in die neue Konstruktion integriert.
+
+\paragraph{Einordnung}
+Dabei zeigte sich, dass Wiederverwendungsprozesse selten linear verlaufen. Änderungen der Verfügbarkeit, des Zustands, der Mengen oder der Projektanforderungen führen häufig zu Rücksprüngen zwischen Auswahl, Entwurf und Prüfung. Die tatsächliche Eignung einer Baukomponente ergibt sich daher erst aus dem Zusammenspiel ihrer physischen Eigenschaften, ihrer vorgesehenen Funktion und den Rahmenbedingungen des neuen Projekts. Als besonders wichtig erwies sich eine frühzeitige Abstimmung zwischen Rückbau, Vermittlung, Planung und fachlicher Prüfung. Der Vergleich mit bestehenden digitalen Wiederverwendungsprozessen bestätigte diese Prozessstruktur. Der D5-Workflow bildet wesentliche Schritte von der Bestandserfassung bis zum Wiedereinbau ab, während der buildingSMART-Use-Case insbesondere den Übergang vom Rückbau in die weitere Vermittlung beschreibt \cite{de-wolf-d5-digital-circular-workflow-2024,buildingsmart-benelux-decommissioning-to-reuse-2024}.
+
 \paragraph{Gestaltung}
 Die untersuchten Projekte zeigen, dass verfügbare Baukomponenten die frühe Formfindung unmittelbar prägen. Abmessungen, Querschnitte, Mengen, Zustand, Anschlussmöglichkeiten und zeitliche Verfügbarkeit bilden Randbedingungen des Entwurfs und wirken auf Geometrie, Tragstruktur und konstruktive Ausbildung zurück. Dieser Zusammenhang wird als „form follows availability“ beschrieben \cite{bruetting-senatore-fivet-form-follows-availability-2019}.
 

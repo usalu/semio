@@ -74,7 +74,7 @@
 \emergencystretch=3em
 %endregion Justification Safety
 
-\RequirePackage[style=\semio@citestyle,backend=bibtex,sorting=nyt]{biblatex}
+\RequirePackage[style=\semio@citestyle,backend=bibtex,sorting=nyt,backref=true]{biblatex}
 \RequirePackage{semio-window}
 \RequirePackage{semio-components}
 \RequirePackage{semio-graph}
