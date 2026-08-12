@@ -157,8 +157,13 @@
     \bool_set_false:N \l_semio_cover@institution@row_bool
     \tl_if_empty:NF \l_semio_antragstellendeinstitution_tl { \bool_set_true:N \l_semio_cover@institution@row_bool }
     \tl_if_empty:NF \l_semio_kooperationspartner_tl { \bool_set_true:N \l_semio_cover@institution@row_bool }
-    \tl_set:Nn \l_semio_cover_institution_weight_tl { 3.3 }
-    \tl_set:Nn \l_semio_cover_logo_weight_tl { 5.2 }
+    % 🏛️ Institution and logo weights. The address block holds the same four to
+    % six lines in every report kind, but the default cover carries two rows the
+    % zwischenbericht cover omits (DOI, Beschreibung), so it needs a larger share
+    % to give those lines the same absolute height. At the previous default of
+    % 3.3 the address block ran into the logo row.
+    \tl_set:Nn \l_semio_cover_institution_weight_tl { 7 }
+    \tl_set:Nn \l_semio_cover_logo_weight_tl { 5 }
     \begin{WindowArrangement}[height=\dimexpr\textheight-1.2cm\relax]
       \begin{WindowColumn}
         \cs_if_exist:cTF { zukunftbau@type } {
@@ -193,7 +198,8 @@
             }
           } {
             \bool_set_false:N \l_semio_is_zwischenbericht_bool
-            \WindowItem[1.8]{
+            % 🏷️ Siehe unten: 1.8 schnitt die dritte Untertitelzeile ab.
+            \WindowItem[2.4]{
               \begin{Window}[title={Titel}, anchor=center, text-size=fit]
                 \SemioSans \@title
                 \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
@@ -204,7 +210,9 @@
           }
         } {
           \bool_set_false:N \l_semio_is_zwischenbericht_bool
-          \WindowItem[1.8]{
+          % 🏷️ Holds title plus a subtitle that runs to three lines; at 1.8 the
+          % last line was clipped by the window frame.
+          \WindowItem[2.4]{
             \begin{Window}[title={Titel}, anchor=center, text-size=fit]
               \SemioSans \@title
               \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
@@ -232,21 +240,29 @@
         }
         \bool_if:NT \l_semio_cover@meta@row_bool {
           \WindowItem[1.05]{
+            % 🪟 Each meta window is tied to its own field: a Forschungsbericht has no
+            % Berichtszeitraum, and an unconditional row left an empty titled panel.
             \begin{WindowRow}
-              \WindowItem{
-                \begin{Window}[title=Aktenzeichen, anchor=center, text-size=fit]
-                  \SemioSans \tl_use:N \l_semio_aktenzeichen_tl
-                \end{Window}
+              \tl_if_empty:NF \l_semio_aktenzeichen_tl {
+                \WindowItem{
+                  \begin{Window}[title=Aktenzeichen, anchor=center, text-size=fit]
+                    \SemioSans \tl_use:N \l_semio_aktenzeichen_tl
+                  \end{Window}
+                }
               }
-              \WindowItem{
-                \begin{Window}[title=Förderzeitraum, anchor=center, text-size=fit]
-                  \SemioSans \tl_use:N \l_semio_foerderzeitraum_tl
-                \end{Window}
+              \tl_if_empty:NF \l_semio_foerderzeitraum_tl {
+                \WindowItem{
+                  \begin{Window}[title=Förderzeitraum, anchor=center, text-size=fit]
+                    \SemioSans \tl_use:N \l_semio_foerderzeitraum_tl
+                  \end{Window}
+                }
               }
-              \WindowItem{
-                \begin{Window}[title=Berichtszeitraum, anchor=center, text-size=fit]
-                  \SemioSans \tl_use:N \l_semio_berichtszeitraum_tl
-                \end{Window}
+              \tl_if_empty:NF \l_semio_berichtszeitraum_tl {
+                \WindowItem{
+                  \begin{Window}[title=Berichtszeitraum, anchor=center, text-size=fit]
+                    \SemioSans \tl_use:N \l_semio_berichtszeitraum_tl
+                  \end{Window}
+                }
               }
             \end{WindowRow}
           }
@@ -318,15 +334,21 @@
   \tableofcontents
 }
 
+% 🏛️ Förderhinweis im von Anlage 8 „Berichtswesen" wörtlich vorgeschriebenen
+% Wortlaut. Definiert unter \ExplSyntaxOff, weil dort der Leerzeichen-Catcode 9
+% jedes Wort zusammenkleben würde ("DiesesProjektwurdegefördert…").
+% @see https://www.zukunftbau.de/programme/forschungsfoerderung
+\ExplSyntaxOff
 \NewDocumentCommand{\makefundingacknowledgement}{}{%
-  \chapter*{Förderhinweis}
+  \@ifundefined{chapter}{\section*{Förderhinweis}}{\chapter*{Förderhinweis}}%
   \begin{Blockquote}
-    Dieses Projekt wurde gefördert vom Bundesinstitut für Bau-, Stadt- und Raumforschung (BBSR) im Rahmen des Forschungsprogramms Zukunft Bau
+    Dieses Projekt wurde gefördert vom Bundesinstitut für Bau-, Stadt- und Raumforschung im Auftrag des Bundesministeriums für Wohnen, Stadtentwicklung und Bauwesen aus Mitteln der Zukunft Bau Forschungsförderung.
   \end{Blockquote}
   \begin{Blockquote}
-    The project was funded by the German Federal Institute for Research on Building, Urban Affairs and Spatial Development (BBSR) within the research programme Zukunft Bau
+    The project was funded by the German Federal Institute for Research on Building, Urban Affairs, and Spatial Development on behalf of the Federal Ministry for Housing, Urban Development, and Building through the research funding programme Zukunft Bau Forschungsförderung.
   \end{Blockquote}
 }
+\ExplSyntaxOn
 
 \NewDocumentCommand{\makeworkpackages}{m}{%
   \section*{Arbeitspaketzuordnung}

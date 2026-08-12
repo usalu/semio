@@ -1256,11 +1256,33 @@
       "name": "🛠️dev🏚️mitbestand📄zwischenbericht",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/mit-bestand-bericht:watch",
+      "command": "bun nx run @semio-tech/mit-bestand-bericht:watch -- zwischenbericht",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
         "order": 211
+      }
+    },
+    {
+      "name": "🛠️dev🏚️mitbestand📕forschungsbericht",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/mit-bestand-bericht:watch -- forschungsbericht",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 212
+      }
+    },
+    {
+      "name": "🛠️dev🏚️mitbestand📗kompaktbericht",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/mit-bestand-bericht:watch -- kompaktbericht",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213
       }
     },
     {
@@ -1275,7 +1297,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 212
+        "order": 214
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -3191,6 +3213,28 @@
       }
     },
     {
+      "name": "📦build🏚️mitbestand📕forschungsbericht",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:mit-bestand:forschungsbericht",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 132
+      }
+    },
+    {
+      "name": "📦build🏚️mitbestand📗kompaktbericht",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:mit-bestand:kompaktbericht",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 133
+      }
+    },
+    {
       "name": "📦build🏚️mitbestand🧱aggregator",
       "type": "node-terminal",
       "request": "launch",
@@ -3198,7 +3242,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 132
+        "order": 134
       }
     },
     {

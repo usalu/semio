@@ -1,0 +1,218 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-tree}[2026/08/12 v0.1.0 semio hierarchical tree tables]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-core}
+\RequirePackage{semio-fonts}
+\RequirePackage{semio-table}
+% array/colortbl/longtable arrive with semio-table.sty; nothing extra to load.
+
+% 🌳 A phylogenetic/outline tree is a hierarchy that must PAGINATE (a real
+% tree can run to hundreds of leaves), so it cannot be a tikzpicture (one
+% unbreakable box -- see semio-graph.sty's GraphSpread comment). It is built
+% on the SAME longtable substrate as \SemioTableLong: every row's height comes
+% from real `array` text measurement, not an estimate, and pagination is
+% native, not precomputed. This package does not reimplement that substrate --
+% it opens \SemioTableLong exactly as GraphFigure opens the existing Figure
+% window, and adds only the tree-specific vocabulary: row kinds, indentation
+% and mark formatting.
+\providecommand{\semio@tree@indent}{4mm}
+\providecommand{\semio@tree@text@size}{7.2pt}
+\providecommand{\semio@tree@marks@size}{7pt}
+\providecommand{\semio@tree@marks@sep}{;}
+% Colspec/header are NOT indirected through a macro: \SemioTableLong is a
+% plain \newcommand (not expl3-aware) that reads its 3rd/4th arguments as
+% literal text -- every other call site in this codebase (register, glossary,
+% the D-set appendices) passes that text inline for the same reason. A macro
+% reference there is read as ONE unexpanded token, not split on its commas.
+
+\ExplSyntaxOn
+
+%region Diagnostics
+\msg_new:nnn { semio-tree } { unknown-kind }
+  { Unknown~semio~tree~row~kind~'#1'.~Known~kinds:~
+    \seq_use:Nn \g_semio_tree_kinds_seq { ,~ } . }
+\msg_new:nnn { semio-tree } { kind-exists }
+  { Semio~tree~row~kind~'#1'~is~already~defined. }
+%endregion
+
+%region KindRegistry
+% 🧬 A row KIND is a delta on the plain leaf row: which band fill it uses (or
+% none, for an ordinary leaf), which font it sets, and how many indent units
+% it steps in. Mirrors \semio_graph_state_define:nnn in semio-graph.sty: kinds
+% never overwrite each other, and a new kind is added with \SemioTreeKind,
+% never by editing the defaults below. `leaf` is the base (unstyled, deepest)
+% member; `group` is a spanning band one level shallower.
+\seq_new:N \g_semio_tree_kinds_seq
+
+\cs_new_protected:Npn \semio_tree_kind_define:nnnn #1#2#3#4 {
+  \seq_if_in:NnTF \g_semio_tree_kinds_seq {#1}
+    { \msg_error:nnn { semio-tree } { kind-exists } {#1} }
+    {
+      \seq_gput_right:Nn \g_semio_tree_kinds_seq {#1}
+      \tl_const:cn { c_semio_tree_kind_#1_fill_tl }   {#2}
+      \tl_const:cn { c_semio_tree_kind_#1_font_tl }   {#3}
+      \tl_const:cn { c_semio_tree_kind_#1_indent_tl } {#4}
+    }
+}
+\cs_new_protected:Npn \semio_tree_kind_require:n #1 {
+  \seq_if_in:NnF \g_semio_tree_kinds_seq {#1}
+    { \msg_error:nnn { semio-tree } { unknown-kind } {#1} }
+}
+\NewDocumentCommand \SemioTreeKind { m m m m }
+  { \semio_tree_kind_define:nnnn {#1}{#2}{#3}{#4} }
+
+% 🌱 Defaults. `group` bands one step above the base; a caller building a
+% deeper hierarchy (e.g. a 4-level hürden/klade/familie/taxon tree) adds a new
+% kind rather than edit these two.
+\semio_tree_kind_define:nnnn { group } { semio-chrome-window } { \SemioSans } { 0 }
+\semio_tree_kind_define:nnnn { leaf }  {}                       { \SemioSans } { 1 }
+%endregion
+
+%region Marks
+% 🏷 A leaf's marks column is a delimited list of already-formatted segments
+% (the caller's data layer knows what "R$\times$6" means, this package only
+% owns the join). Mirrors \SemioCellList's O{sep} m signature and its
+% seq_set_split:Nnn technique, styled for a compact right-reading metadata
+% line instead of a bulleted block.
+\seq_new:N \l_semio_tree_marks_seq
+\cs_new_protected:Npn \semio_tree_marks_format:nn #1#2 {
+  \seq_set_split:Nnn \l_semio_tree_marks_seq {#1} {#2}
+  \int_zero:N \l_tmpa_int
+  \seq_map_inline:Nn \l_semio_tree_marks_seq {
+    \int_compare:nNnF \l_tmpa_int = \c_zero_int
+      { \nobreak\ \textperiodcentered\ }
+    \tl_trim_spaces:n {##1}
+    \int_incr:N \l_tmpa_int
+  }
+}
+\NewDocumentCommand \SemioTreeMarks { O{\semio@tree@marks@sep} m }
+  {
+    {\SemioMono\fontsize{\semio@tree@marks@size}{\dimexpr1.2\semio@tree@marks@size\relax}\selectfont
+     \color{semio-chrome-text-normal}\semio_tree_marks_format:nn {#1}{#2}}
+  }
+%endregion
+
+%region Rows
+% 🪟 A GROUP row spans the full inner width as one filled band -- the exact
+% \multicolumn{N}{@{}>{...}p{\semio@table@long@inner@w}@{}}{...} idiom
+% \SemioTableBandRow already uses for the same purpose in the projects table,
+% here with tree content (code, name, leaf count) instead of an image caption.
+% Passed through \SemioTableRow (not hand-rolled) so the long/short mode
+% switch and the row separator stay owned by semio-table.sty, not duplicated.
+\cs_new_protected:Npn \semio_tree_group_row:nnn #1#2#3 { % code, label, count
+  \SemioTableRow{
+    \multicolumn{3}{@{}>{\raggedright\arraybackslash
+        \cellcolor{\tl_use:c{c_semio_tree_kind_group_fill_tl}}}
+      p{\semio@table@long@inner@w}@{}}{%
+      {\SemioMono\fontsize{\semio@tree@marks@size}{\dimexpr1.2\semio@tree@marks@size\relax}\selectfont #1}%
+      ~~{\tl_use:c{c_semio_tree_kind_group_font_tl} #2}%
+      \tl_if_blank:nF {#3} { ~\textperiodcentered~ {\SemioMono\fontsize{\semio@tree@marks@size}{\dimexpr1.2\semio@tree@marks@size\relax}\selectfont #3}}%
+    }
+  }
+}
+
+% 🍃 A LEAF row is three ordinary cells from \SemioTableLong's own
+% fraction-driven colspec (real `array` p{} measurement -- no estimated line
+% count anywhere). Hierarchy reads through indentation (a leading \hspace* on
+% the code cell, sized from the kind's registered indent) under the group
+% band directly above it, not through a drawn connector -- connectors cannot
+% survive a longtable page break; a repeated left inset does, by construction.
+\tl_new:N \l_semio_tree_row_indent_tl
+\cs_new_protected:Npn \semio_tree_leaf_row:nnnn #1#2#3#4 { % kind, code, label, marks
+  \semio_tree_kind_require:n {#1}
+  % Same doubly-indirect \tl_use:c pitfall as the legend swatch: \dimexpr's
+  % number scanner does not reliably resolve a csname-lookup-of-a-lookup
+  % inline. Materialise the indent multiplier first (:x, fully expanding),
+  % then use that plain, already-resolved value inside \dimexpr.
+  \tl_set:Nx \l_semio_tree_row_indent_tl { \tl_use:c{c_semio_tree_kind_#1_indent_tl} }
+  \SemioTableRow{
+    \hspace*{\dimexpr \l_semio_tree_row_indent_tl \semio@tree@indent\relax}%
+    {\SemioMono\fontsize{\semio@tree@text@size}{\dimexpr1.2\semio@tree@text@size\relax}\selectfont
+     \color{semio-chrome-text-normal}#2}
+    &
+    {\tl_use:c{c_semio_tree_kind_#1_font_tl}#3}
+    &
+    #4
+  }
+}
+
+% 🩹 Plain \newcommand, not xparse, and every argument mandatory (pass {}
+% when a leaf has no marks, or a group no count). Matches the documented
+% precedent in \SemioTableBandRow above: an xparse-generated command whose
+% expansion reaches a \multicolumn inside a longtable row breaks with
+% "Misplaced \omit"; plain argument grabbing does not have that problem. Leaf
+% carries no \multicolumn but is kept in the same mandatory-args shape for
+% one consistent authoring idiom across both row kinds.
+\newcommand{\SemioTreeGroup}[3]{\semio_tree_group_row:nnn{#1}{#2}{#3}}
+\newcommand{\SemioTreeLeaf}[3]{\semio_tree_leaf_row:nnnn{leaf}{#1}{#2}{#3}}
+%endregion
+
+%region Tree
+% 🌲 SemioTree does NOT reimplement the long-table substrate -- it opens the
+% existing \SemioTableLong exactly as GraphFigure opens the existing Figure
+% window, supplying only the tree-shaped colspec/header. Body content is a
+% brace-delimited sequence of \SemioTreeGroup/\SemioTreeLeaf calls, matching
+% how \SemioTableLong's own body is already a sequence of \SemioTableRow
+% calls everywhere else in this codebase -- no new authoring idiom introduced.
+\NewDocumentCommand \SemioTree { m m }
+  {
+    \SemioTableLong
+      [ text-size = 7.2pt ]
+      {#1}
+      {0.16,0.58,0.26}
+      {Code & Bezeichnung & Merkmale}
+      {#2}
+  }
+%endregion
+
+%region Legend
+% 🔖 Draws the vocabulary instead of describing it: each entry is a real
+% swatch in that kind's own fill, so a token change updates the legend
+% automatically -- mirrors \SemioGraphLegend exactly (split on the first `=`,
+% look the key up in the registry, let the registry supply the visual).
+\seq_new:N \l_semio_tree_legend_pair_seq
+\tl_new:N \l_semio_tree_legend_key_tl
+\tl_new:N \l_semio_tree_legend_value_tl
+\int_new:N \l_semio_tree_legend_int
+
+\tl_new:N \l_semio_tree_swatch_fill_tl
+\cs_new_protected:Npn \semio_tree_legend_swatch:n #1 {
+  % \tl_use:c{...} is a csname lookup wrapped in a further token-list lookup
+  % -- more than one expansion step from its stored content, so a direct
+  % tl_if_blank:n/:o test on it is unreliable (it tests the accessor call's
+  % raw tokens, never blank, not what it resolves to). Materialise it into a
+  % scratch variable with a fully expanding (:x) assignment first, then test
+  % THAT variable with tl_if_empty:N (an :N signature genuinely exists for
+  % "empty", unlike "blank"; kind fills are registered as {} with no stray
+  % space, so empty and blank coincide here).
+  \tl_set:Nx \l_semio_tree_swatch_fill_tl { \tl_use:c{c_semio_tree_kind_#1_fill_tl} }
+  \tl_if_empty:NTF \l_semio_tree_swatch_fill_tl
+    { \rule[-0.15em]{1.6em}{0.68em} }
+    { {\color{\l_semio_tree_swatch_fill_tl}\rule[-0.15em]{1.6em}{0.68em}} }
+}
+\cs_new_protected:Npn \semio_tree_legend_item:nn #1#2 {
+  \semio_tree_kind_require:n {#1}
+  \int_incr:N \l_semio_tree_legend_int
+  \int_compare:nNnT \l_semio_tree_legend_int > 1
+    { \textcolor{semio-chrome-border-normal}{~\textperiodcentered}~ }
+  \semio_tree_legend_swatch:n {#1} \nobreakspace #2
+}
+\cs_new_protected:Npn \semio_tree_legend_entry:n #1 {
+  \seq_set_split:Nnn \l_semio_tree_legend_pair_seq { = } {#1}
+  \tl_set:Nx \l_semio_tree_legend_key_tl   { \seq_item:Nn \l_semio_tree_legend_pair_seq {1} }
+  \tl_set:Nx \l_semio_tree_legend_value_tl { \seq_item:Nn \l_semio_tree_legend_pair_seq {2} }
+  \exp_args:NVV \semio_tree_legend_item:nn
+    \l_semio_tree_legend_key_tl \l_semio_tree_legend_value_tl
+}
+\NewDocumentCommand \SemioTreeLegend { m }
+  {
+    \int_zero:N \l_semio_tree_legend_int
+    {\SemioSans\fontsize{\semio@tree@marks@size}{\dimexpr1.2\semio@tree@marks@size\relax}\selectfont
+     \color{semio-chrome-text-normal}
+     \clist_map_inline:nn {#1} { \semio_tree_legend_entry:n {##1} }}
+  }
+%endregion
+
+\ExplSyntaxOff

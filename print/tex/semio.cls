@@ -78,5 +78,6 @@
 \RequirePackage{semio-window}
 \RequirePackage{semio-components}
 \RequirePackage{semio-graph}
+\RequirePackage{semio-tree}
 \RequirePackage{hyperref}
 \hypersetup{colorlinks,linkcolor=semio-primary,citecolor=semio-primary,urlcolor=semio-primary,filecolor=semio-primary}

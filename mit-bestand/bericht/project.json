@@ -3,19 +3,42 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {
+      "executor": "nx:noop",
+      "dependsOn": ["build-zwischenbericht", "build-forschungsbericht", "build-kompaktbericht"]
+    },
+    "build-zwischenbericht": {
       "executor": "nx:run-commands",
       "inputs": ["production", "^production", "print"],
       "outputs": ["{projectRoot}/zwischenbericht/dist"],
       "options": {
         "cwd": "mit-bestand/bericht",
-        "command": "bun ./script.ts build"
+        "command": "bun ./script.ts build zwischenbericht"
+      }
+    },
+    "build-forschungsbericht": {
+      "executor": "nx:run-commands",
+      "inputs": ["production", "^production", "print"],
+      "outputs": ["{projectRoot}/forschungsbericht/dist"],
+      "options": {
+        "cwd": "mit-bestand/bericht",
+        "command": "bun ./script.ts build forschungsbericht"
+      }
+    },
+    "build-kompaktbericht": {
+      "executor": "nx:run-commands",
+      "inputs": ["production", "^production", "print"],
+      "outputs": ["{projectRoot}/kompaktbericht/dist"],
+      "options": {
+        "cwd": "mit-bestand/bericht",
+        "command": "bun ./script.ts build kompaktbericht"
       }
     },
     "watch": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "mit-bestand/bericht",
-        "command": "bun ./script.ts watch"
+        "command": "bun ./script.ts watch",
+        "forwardAllArgs": true
       }
     },
     "latex": {

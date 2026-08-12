@@ -1,0 +1,142 @@
+% !TEX program = tectonic
+% !TEX root = kompaktbericht.tex
+%
+% Zukunft Bau — Forschung KOMPAKT. Anlage 8 „Berichtswesen", Version 2.3 vom
+% 12.02.2025: 12 bis 16 Seiten, Deutsch, Harvard-Zitierweise, allgemein
+% verständlich für die Planungs- und Baupraxis. Satz und Layout verantwortet das
+% BBSR; Texte und Abbildungen werden über das Zukunft-Bau-Tool eingereicht.
+% Dieses Dokument ist deshalb ein Schreib- und Umfangscontainer, kein
+% Gestaltungsziel — der kompakt-draft-Zähler meldet Seiten und Zeichen am
+% Ende des Builds.
+\documentclass[type=kompaktbericht]{zukunftbau}
+
+\usepackage{xurl}
+% LR-019: siehe Forschungsbericht — biblatex streckt sonst jeden URL-Umbruch.
+\usepackage{etoolbox}
+\appto\biburlsetup{\Urlmuskip=0mu\relax}
+\addbibresource{references.bib}
+
+\SemioSignaturePadding{false}
+\SemioOpenAny{true}
+
+\title{Entwerfen mit Bestand}
+\subtitle{Eine offene Plattform für einen KI-unterstützten, performance-optimierten und integrativen Entwurfsprozess mit wiederverwendeten Baukomponenten}
+\antragstellendeinstitution{%
+  \AddressOrg{%
+    Leibniz Universität Hannover\\
+    Fakultät für Architektur und Landschaft\\
+    Institut für Entwerfen und Konstruieren\\
+    Abteilung Nachhaltige Gebäudesysteme%
+  }%
+  \AddressPeople{%
+    Institutsleitung: Prof. Dr.-Ing. Philipp Geyer\\
+    Projektleitung: Ueli Saluz\\
+    Weitere Bearbeitung: Nikolaus Möllenhof%
+  }%
+}
+\kooperationspartner{%
+  \AddressOrg{%
+    Universität der Künste Berlin\\
+    Fakultät für Architektur\\
+    Institut für Architektur und Städtebau\\
+    Konstruktives Entwerfen und Tragwerksplanung%
+  }%
+  \AddressPeople{%
+    Institutsleitung: Prof. Dr.-Ing. Christoph Gengnagel\\
+    Bearbeitung: Kinan Sarakbi%
+  }%
+}
+\aktenzeichen{10.08.18.7-25.06}
+\foerderzeitraum{03.11.2025-02.05.2027}
+\footerauthors{Ueli Saluz, Kinan Sarakbi}
+\footerlogos{asset/logo/luh.png, asset/logo/udk.png}
+\makeatletter
+\renewcommand{\semio@cover@zukunftbau@logo}{asset/logo/zukunft-bau.png}
+\renewcommand{\semio@cover@bbsr@logo}{asset/logo/bbsr.png}
+\renewcommand{\semio@cover@bundesministerium@logo}{asset/logo/gefördert-durch-bmwsb.png}
+\makeatother
+
+% Registriert dieselben Begriffe wie Zwischen- und Forschungsbericht, damit
+% \Gls{}/\Abbr{} im Fließtext ohne weiteren Aufwand nutzbar sind — \Gls/\Abbr
+% brechen sonst auf nicht registrierten Begriffen ab. Anlage 8 sieht für den
+% Kompaktbericht kein Glossar-/Abkürzungsverzeichnis vor (einfache, praxis-
+% gerechte Sprache), daher werden die Register hier nur geführt, nicht gedruckt
+% — kein \listofglossaries/\listofabbreviations.
+\GlossaryDefine{Baukomponente}{Physisches Bauteil oder zusammengehörige Gruppe von Bauteilen, die im Entwurf als eine Einheit betrachtet und wiederverwendet wird, etwa eine Stütze, eine Decke oder ein Rahmenelement.}
+\GlossaryDefine{Entwurfsrolle}{Funktion, die eine Baukomponente in einem neuen Entwurf übernehmen soll. Sie kann von der ursprünglichen Verwendung abweichen, etwa wenn ein Träger als Stütze eingesetzt wird.}
+\GlossaryDefine{Bestandsquelle}{Ort oder Kanal, aus dem wiederverwendbare Baukomponenten stammen, etwa eine Bauteilbörse, ein Rückbauinventar oder eine direkte Bestandsaufnahme vor Ort.}
+\GlossaryDefine{Bauteilbörse}{Organisation, Lager oder digitaler Angebotskanal, über den wiederverwendbare Baukomponenten dokumentiert, vermittelt oder verkauft werden.}
+\GlossaryDefine{Qualifizierung}{Schrittweise Erfassung, Prüfung und nachvollziehbare Ergänzung von Bauteilinformationen, bis sie für Entwurf und Bewertung nutzbar sind.}
+\GlossaryDefine{Typologiefamilie}{Ordnung von Baukomponenten nach ihrer geometrisch-konstruktiven Grundform: lineare und flächige Elemente, Knoten- und Übergangselemente sowie Rahmen- und Systemelemente.}
+\GlossaryDefine{Nachweiszustände}{Kennzeichnung, wie belastbar eine einzelne Angabe ist: vorhanden, abgeleitet, angenommen oder noch offen.}
+\GlossaryDefine{Leistungsbewertung}{Einschätzung ausgewählter Eigenschaften oder Auswirkungen einer Entwurfsvariante auf Grundlage der verfügbaren Informationen, etwa zu Energie oder Tragwerk.}
+\GlossaryDefine{Vorbewertung}{Frühe, vereinfachte Leistungsbewertung, die im Entwurf der Orientierung dient und keine vollständige fachliche Prüfung ersetzt.}
+\GlossaryDefine{Bauteilobjekt}{Digitales Modell einer Baukomponente, das Geometrie und zugehörige fachliche Angaben in einer gemeinsamen Struktur bündelt.}
+\GlossaryDefine{Generator}{Automatisches Verfahren, das aus erfassten Bauteilangaben ein digitales Bauteilobjekt mit den benötigten geometrischen Darstellungen erzeugt.}
+\GlossaryDefine{Einspeiseplattform}{Digitaler Eingangsbereich der Plattform aus Bauteilportal und Wizard, in dem Bestandsdaten erfasst, übernommen und aufbereitet werden.}
+\GlossaryDefine{Entwurfswerkzeug}{Digitaler Arbeitsbereich aus Bauteilkatalog, Entwurfsumgebung und Konfigurator zur Auswahl, Kombination und Bewertung von Baukomponenten.}
+\GlossaryDefine{Bauteilportal}{Weboberfläche zur manuellen Erfassung, Übernahme und Qualifizierung von Bestandsdaten als Grundlage für digitale Bauteilobjekte.}
+\GlossaryDefine{Wizard}{Benutzeroberfläche für einen geleiteten Abfrageprozess, mit der unvollständige oder unstrukturierte Bauteildaten Schritt für Schritt erfasst und ergänzt werden.}
+\GlossaryDefine{Bauteilkatalog}{Übersichts- und Suchbereich des Entwurfswerkzeugs, in dem verfügbare Baukomponenten und ihre Angaben gefunden und ausgewählt werden.}
+\GlossaryDefine{Entwurfsumgebung}{Arbeitsbereich des Entwurfswerkzeugs, in dem Baukomponenten räumlich angeordnet, kombiniert und zu Entwurfsvarianten weiterentwickelt werden.}
+\GlossaryDefine{Konfigurator}{Austauschbereich des Entwurfswerkzeugs für den Kontakt mit Bauteilbörsen, etwa für Anfragen, Reservierungen, Statusänderungen und projektspezifische Angaben.}
+\GlossaryDefine{semio}{Quelloffenes Software-Toolkit zur Beschreibung, Verknüpfung und räumlichen Anordnung digitaler Baukomponenten; technische Grundlage des Entwurfswerkzeugs.}
+\GlossaryDefine{Human-Interface-Design}{Gestaltung der Bedienoberflächen und Interaktionsabläufe zwischen Nutzenden und der digitalen Arbeitsumgebung.}
+\GlossaryDefine{User-Experience}{Wahrnehmung und Einbindung der digitalen Arbeitsumgebung in den tatsächlichen Arbeitsablauf der Nutzenden.}
+\GlossaryDefine{Entwurfsgrammatik}{Regelwerk des Projekts dafür, wie Entwurfsvarianten gebildet, verändert und auf Zulässigkeit geprüft werden.}
+\GlossaryDefine{Test-Case}{Realer oder realitätsnaher Anwendungsfall, an dem die digitale Werkzeugkette schrittweise entwickelt und geprüft wird.}
+
+\AbbreviationDefine{AP}{Arbeitspaket}{Klar abgegrenzter Teilbereich des Projekts mit eigenen Zielen und Aufgaben.}
+\AbbreviationDefine{API}{Application Programming Interface}{Festgelegte Programmierschnittstelle, über die zwei Computerprogramme Daten austauschen.}
+\AbbreviationDefine{KI}{Künstliche Intelligenz}{Oberbegriff für Computerprogramme, die Aufgaben lösen, für die normalerweise menschliches Denken nötig ist.}
+\AbbreviationDefine{LLM}{Large-Language-Model}{Mit sehr großen Textmengen trainiertes Computerprogramm, das Texte verstehen, beantworten und formulieren kann.}
+\AbbreviationDefine{HID}{Human Interface Design}{Gestaltung, wie Menschen ein Computerprogramm bedienen und mit ihm interagieren.}
+\AbbreviationDefine{REST}{Representational State Transfer}{Verbreitetes technisches Verfahren, mit dem Computerprogramme über das Internet standardisiert Daten austauschen.}
+\AbbreviationDefine{NGS}{Nachhaltige Gebäudesysteme}{Am Projekt beteiligte Abteilung der Leibniz Universität Hannover.}
+\AbbreviationDefine{KET}{Konstruktives Entwerfen und Tragwerksplanung}{Am Projekt beteiligte Abteilung der Universität der Künste Berlin.}
+\AbbreviationDefine{BBSR}{Bundesinstitut für Bau-, Stadt- und Raumforschung}{Bundesbehörde, die dieses Forschungsvorhaben fördert.}
+
+\makeatletter
+\renewfontfamily\SemioSansBold[Path=\semio@font@root anta/]{Anta-Regular.ttf}
+\makeatother
+
+\begin{document}
+
+\makecoverpages
+
+\makefundingacknowledgement
+
+% Stellt die Seitengeometrie nach dem Deckblatt wieder her; ohne diesen Aufruf
+% bleibt die Cover-Geometrie aktiv und der Fließtext fällt aus dem Satzspiegel.
+\makemainmatter
+
+% Gliederung nach Anlage 8, Abschnitt „Zukunft Bau Kompaktbericht". Jeder
+% Abschnitt trägt vorerst den BBSR-Auftrag als Platzhalter.
+
+\section*{Kurzfassung}
+Problemstellung, Forschungslücke und praktische Relevanz in einfacher, praxisgerechter Sprache.
+
+\section{Ergebnisse}
+\label{kompakt:ergebnisse}
+Die wesentlichen Ergebnisse allgemein verständlich und kompakt darstellen.
+
+\section{Nutzen für die Praxis}
+\label{kompakt:nutzen}
+Konkreten Nutzen für die Planungs- und Baupraxis aufzeigen; Schwerpunkt der Gewichtung nach Anlage 8.
+
+\section{Methodik und Projektverlauf}
+\label{kompakt:methodik}
+Methodischen Ansatz und Projektverlauf zusammenfassen.
+
+\makeappendices
+
+\appendixchapter[PB]{Projektbeteiligte}
+Beteiligte Forschungsstellen, Personen und Kooperationspartner.
+
+\appendixchapter[LI]{Literatur}
+\SemioReferences
+
+\appendixchapter[IM]{Impressum}
+Satz und Layout verantwortet das BBSR. Veröffentlichung unter der Lizenz CC BY-SA 4.0.
+
+\end{document}

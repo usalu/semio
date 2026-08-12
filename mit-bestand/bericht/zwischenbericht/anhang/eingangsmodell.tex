@@ -2,9 +2,9 @@
 
 %#region 🧭 Einordnung
 
-Der Anhang bestimmt das minimale, unsicherheitsbewusste Eingangsmodell, mit dem eine strukturelle Vorbemessung und eine orientierende Ökobilanz wiederverwendeter Baukomponenten in der Vorplanung (Leistungsphase~2 nach HOAI) automatisch rechnen. Er deckt alle zwölf Typologien der vier Familien aus \appendixref{anlage:typologie} ab und übersetzt deren typologiespezifische Zusatzparameter in Rechengrößen.
+Der Anhang bestimmt das minimale, unsicherheitsbewusste Eingangsmodell, mit dem eine strukturelle Vorbemessung und eine orientierende Ökobilanz wiederverwendeter Baukomponenten in der Vorplanung (Leistungsphase~2 nach HOAI) automatisch rechnen -- für alle zwölf Typologien aus \appendixref{anlage:typologie}.
 
-Jede Eingangsgröße trägt einen Nachweiszustand mit Mindestzustand (ab wann die Analyse rechnen darf) und Fallback (Regel darunter). Die Gliederung folgt der Kette Regel, gemeinsamer Eingang, Tragwerk je Typologie, Ökobilanz, Umsetzung, Beleg, Lücke. Größen, die beide Analysen lesen, stehen einmal in \tableref{tab:em-gemeinsam} und bilden den Synchronisationspunkt, an dem eine Änderung gleichzeitig auf Tragwerks- und Lebenszyklusmodell wirkt.
+Jede Eingangsgröße trägt einen Nachweiszustand mit Mindestzustand (ab wann die Analyse rechnen darf) und Fallback (Regel darunter). Größen, die beide Analysen lesen, stehen einmal in \tableref{tab:em-gemeinsam} und bilden den Synchronisationspunkt, an dem eine Änderung gleichzeitig auf Tragwerks- und Lebenszyklusmodell wirkt.
 
 Nicht jede Typologie lässt in der Vorplanung eine rechnerische Aussage zu. Lineare und flächige Elemente werden bemessen (Stufe~1); Knoten-, Übergangs- und Systemelemente werden nur erfasst (Stufe~2). Die Begründung steht in \tableref{tab:em-typ-knoten} und \tableref{tab:em-typ-system}.
 
@@ -48,7 +48,6 @@ Maßgeblich ist die Eingangsobergrenze: Verlangt werden dürfen nur Daten, die v
   \SemioTableRow{Informationsbedarfstiefe je Datum und Mindestinformationsmenge (LOIN-Facetten, fünf Geometriedimensionen) & fehlende Facette wird offen; unterhalb der Mindestmenge nur orientierende Aussage mit Bandbreite & 17412; 19650}
   \SemioTableRow{Nachweiszustand-Logik (prior = angenommen; bestätigt = vorhanden\SemioSlash{}abgeleitet; nicht erhebbar = offen) & steuert Mindestzustand und Fallback je Größe & ISO13822}
   \SemioTableRow{Zweistufige Bauteilerfassung (Vor-\SemioSlash{}Detailstufe) & Voruntersuchung genügt fürs Screening; Detailstufe hebt auf vorhanden & SPEC91484}
-  \SemioTableRow{Maschinenlesbare Feldbezeichner (IfcColumn, Psets, Qtos) -- deskriptiv & liefert Feldnamen, definiert keinen fachlichen Pflichtbedarf & IFC}
   \SemioTableRow{Bauteilbezogene Substitution statt Gebäude-Szenariovergleich & Vorgängerprojekt bilanzierte Gebäude gegen Gebäude mit Cut-off (A1--A3~=~0 für Altbauteile); dieses Modell verfeinert bauteilweise mit Substitutionsreferenz und Modul~D gemäß Auflage~h & AbbauAufbau}
 }
 
@@ -127,7 +126,7 @@ Das Register definiert jede Tragwerksgröße einmal. Die Typologietabellen refer
 }
 
 \noindent{\SemioSans\fontsize{7.2pt}{9pt}\selectfont\color{semio-chrome-text-normal}%
-Stufe~2 bedeutet nicht, dass diese Typologien für die Wiederverwendung ungeeignet sind. Sie bedeutet, dass die Vorplanung keine rechnerische Aussage trifft: Erfasst werden Geometrie, Zustand und Vollständigkeit, bewertet wird in der Tragwerksplanung. Die Erfassung ist deshalb kein Zwischenschritt zur Bemessung, sondern die vollständige Leistung dieser Stufe.\par}
+Stufe~2 heißt nicht ungeeignet für Wiederverwendung, sondern: keine rechnerische Aussage in der Vorplanung. Die Erfassung selbst ist die vollständige Leistung dieser Stufe, kein Zwischenschritt zur Bemessung.\par}
 
 %#endregion
 
@@ -148,9 +147,9 @@ Stufe~2 bedeutet nicht, dass diese Typologien für die Wiederverwendung ungeeign
 }
 
 \noindent{\SemioSans\fontsize{7.2pt}{9pt}\selectfont\color{semio-chrome-text-normal}%
-Typologieabhängig ist allein die Herleitung der Masse (Ö1): bei linearen Elementen aus Querschnittsfläche mal Länge, bei flächigen aus Fläche mal Dicke, bei Knoten- und Systemelementen aus der Summe der erfassten Teilbereiche. Alle übrigen Größen sind typologieunabhängig.\par
+Typologieabhängig ist allein die Herleitung der Masse (Ö1): bei linearen Elementen aus Querschnittsfläche mal Länge, bei flächigen aus Fläche mal Dicke, bei Knoten- und Systemelementen aus der Summe der erfassten Teilbereiche.\par
 \vspace{1mm}%
-Ob eine Bauteilbörse diese Größen liefern kann, ist plattformweise in \appendixref{anlage:integrationsreife} bewertet. Zwei Befunde sind bindend: Kein untersuchtes Schema führt die Werkstofffestigkeit (V1); sie erscheint erst als Fachgutachten in der SPEC-91484-Detailstufe und bleibt im Screening angenommen. Und die Umweltfelder liefern nur Screening-Werte, keine verifizierte EPD -- die Ergebnisgröße der Ökobilanz bleibt auf den Variantenvergleich begrenzt.\par}
+Ob eine Bauteilbörse diese Größen liefern kann, ist plattformweise in \appendixref{anlage:integrationsreife} bewertet. Zwei Befunde sind bindend: Kein untersuchtes Schema führt die Werkstofffestigkeit (V1); sie erscheint erst als Fachgutachten in der SPEC-91484-Detailstufe und bleibt im Screening angenommen. Die Umweltfelder liefern zudem nur Screening-Werte, keine verifizierte EPD -- die Ergebnisgröße bleibt auf den Variantenvergleich begrenzt.\par}
 
 %#endregion
 
@@ -174,7 +173,7 @@ Die Spezifikation benennt je Typologie die maßgebende Nachweisform und die Grö
 }
 
 \noindent{\SemioSans\fontsize{7.2pt}{9pt}\selectfont\color{semio-chrome-text-normal}%
-Zwei Zuordnungen sind Voraussetzung jeder Nachweisform und in keinem Bauteildatensatz enthalten: von der Werkstoffgüte auf $f_\mathrm{y}$ bzw.\ $f_\mathrm{ck}$ und $E$, und von der Profilbezeichnung auf $A$, $I$, $i$, $W$ und $A_\mathrm{v}$. Sie sind bereitzustellen, bevor eine Vorbemessung rechnen kann. Nicht Gegenstand der Vorplanung sind Biegedrillknicken und die N-M-Interaktion; beide setzen ein Nachweisverfahren voraus, das die Eingangsobergrenze überschreitet.\par}
+Zwei Zuordnungen sind Voraussetzung jeder Nachweisform und in keinem Bauteildatensatz enthalten: von der Werkstoffgüte auf $f_\mathrm{y}$ bzw.\ $f_\mathrm{ck}$ und $E$, und von der Profilbezeichnung auf $A$, $I$, $i$, $W$ und $A_\mathrm{v}$. Nicht Gegenstand der Vorplanung sind Biegedrillknicken und die N-M-Interaktion; beide setzen ein Nachweisverfahren voraus, das die Eingangsobergrenze überschreitet.\par}
 
 %#endregion
 
@@ -211,7 +210,6 @@ Kurzzeichen der Eingangstabellen werden hier aufgelöst. Tier~1 (normativ) und T
   \SemioTableRow{Mah26 & T2 & Mahdavipour et al.\ 2026, JCSR 236(B):110046 (10.1016/j.jcsr.2025.110046)}
   \SemioTableRow{VM24 & T2 & Van Marcke et al.\ 2024, J~Build~Eng (10.1016/j.jobe.2024.108518)}
   \SemioTableRow{AbbauAufbau & T2 & BBSR-Online-Publikation 61/2024, Gengnagel\SemioSlash{}Henschel -- Cradle-to-Cradle-Prozess für Ortbetonelemente (Vorgängerprojekt, Az.~10.08.18.7-22.20)}
-  \SemioTableRow{IFC & T3 & IFC~4.3.2 / ISO~16739-1:2024 und bSDD}
   \SemioTableRow{Madaster & T3 & Madaster Common Property Set}
   \SemioTableRow{Typ & T3 & Anhang Typologische Zuordnung (\appendixref{anlage:typologie})}
 }

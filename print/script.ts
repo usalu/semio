@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { arch, platform } from "node:os";
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, TEST_LEVELS } from "../repo/lib/js/index.ts";
@@ -377,7 +377,19 @@ export function emitSemioTokensSty(): void {
   }
   lines.push("");
   mkdirSync(texDir, { recursive: true });
-  writeFileSync(tokensOut, lines.join("\n"), "utf8");
+  const content = lines.join("\n");
+  // 🔒 Only rewrite when the tokens actually changed — keeps watchers from
+  // retriggering and skips the write entirely on the common no-op call.
+  if (existsSync(tokensOut) && readFileSync(tokensOut, "utf8") === content) return;
+  // 🔒 Concurrent document builds all call this. A direct writeFileSync let a
+  // tectonic process reading semio-tokens.sty observe a torn write from another
+  // build still in progress — surfaced as "semio.cls: Missing \begin{document}"
+  // deep in an unrelated document's log. Write to a per-process temp file first,
+  // then rename over the target: renameSync replaces the destination in one
+  // filesystem operation, so a concurrent reader always sees a complete file.
+  const tmpOut = `${tokensOut}.${process.pid}.tmp`;
+  writeFileSync(tmpOut, content, "utf8");
+  renameSync(tmpOut, tokensOut);
 }
 
 /** @emoji ⬇️ Downloads token TTF files into `asset/font`. */

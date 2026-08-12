@@ -6,11 +6,26 @@ import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/
 import { buildPrintDocument, fetchPrintFonts } from "../../print/script.ts";
 
 const berichtRoot = import.meta.dir;
-const defaultTex = join(berichtRoot, "zwischenbericht/zwischenbericht.tex");
+
+//#region Documents
+/** 📚 The Zukunft Bau report family of `Entwerfen mit Bestand`, keyed by document name.
+ * @see https://www.zukunftbau.de/programme/forschungsfoerderung */
+const DOCUMENTS = {
+  zwischenbericht: "zwischenbericht/zwischenbericht.tex",
+  forschungsbericht: "forschungsbericht/forschungsbericht.tex",
+  kompaktbericht: "kompaktbericht/kompaktbericht.tex",
+} as const;
+
+function documentTexPath(name: string): string | undefined {
+  const relative = DOCUMENTS[name as keyof typeof DOCUMENTS];
+  return relative ? join(berichtRoot, relative) : undefined;
+}
+//#endregion
 
 function resolveTexPath(segments: string[]): string {
-  const raw = segments[0] ?? defaultTex;
-  const abs = resolve(raw.endsWith(".tex") ? raw : `${raw}.tex`);
+  const raw = segments[0];
+  if (raw === undefined) throw new Error(`missing document: pass one of ${Object.keys(DOCUMENTS).join(", ")} or a .tex path`);
+  const abs = documentTexPath(raw) ?? resolve(raw.endsWith(".tex") ? raw : `${raw}.tex`);
   if (!existsSync(abs)) throw new Error(`missing tex file: ${abs}`);
   return abs;
 }
@@ -25,6 +40,11 @@ async function buildDocument(segments: string[]): Promise<void> {
   const texAbs = resolveTexPath(segments);
   const outDir = resolveOutDir(texAbs, segments);
   await buildPrintDocument(texAbs, outDir);
+}
+
+async function buildDocuments(segments: string[]): Promise<void> {
+  if (segments.length > 0) return buildDocument(segments);
+  for (const name of Object.keys(DOCUMENTS)) await buildDocument([name]);
 }
 
 async function watchDocument(segments: string[]): Promise<void> {
@@ -62,7 +82,7 @@ async function watchDocument(segments: string[]): Promise<void> {
 
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await buildDocument(segments);
+    await buildDocuments(segments);
   }
 }
 
