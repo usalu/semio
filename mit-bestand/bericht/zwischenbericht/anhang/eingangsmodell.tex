@@ -2,12 +2,12 @@
 
 %#region 🧭 Einordnung
 
-Der Anhang bestimmt das minimale, unsicherheitsbewusste Eingangsmodell, mit dem eine strukturelle Vorbemessung und eine orientierende Ökobilanz wiederverwendeter Baukomponenten in der Vorplanung (Leistungsphase~2 nach HOAI) automatisch rechnen. Die Herleitung erfolgt am linearen Element, der Stütze; Divergenzen anderer Typologiefamilien sind vermerkt. Er schließt an Typologie und Entwurfsrollen an (vgl.\ \appendixref{anlage:typologie}).
+Der Anhang bestimmt das minimale, unsicherheitsbewusste Eingangsmodell, mit dem eine strukturelle Vorbemessung und eine orientierende Ökobilanz wiederverwendeter Baukomponenten in der Vorplanung (Leistungsphase~2 nach HOAI) automatisch rechnen. Die Herleitung erfolgt am linearen Element, der Stütze; Divergenzen anderer Typologiefamilien sind vermerkt. Sie schließt an Typologie und Entwurfsrollen an (vgl.\ \appendixref{anlage:typologie}).
 
-Jede Eingangsgröße trägt genau einen Nachweiszustand (vorhanden, abgeleitet, angenommen, offen). Der \emph{Mindestzustand} gibt an, ab welchem Zustand die jeweilige Analyse für diese Größe fortfahren darf; darunter gilt die Größe als offen und die Bewertung läuft mit Bandbreite statt Einzelwert weiter. Quellen sind über Kurzzeichen an das Quellenregister (\tableref{tab:em-q-t1}) gebunden. Kurzzeichen und Zustände sind im Leseschlüssel erläutert. Die Darstellung ist eine Arbeitsstruktur und stellt keinen fachlichen Nachweis dar.
+Die Gliederung folgt der Kette Ergebnis, Regel, Eingang, Beleg, Lücke. Eingangsgrößen, die beide Analysen lesen, stehen genau einmal in \tableref{tab:em-gemeinsam}: Sie bilden den Synchronisationspunkt, an dem eine Änderung gleichzeitig auf Tragwerks- und Lebenszyklusmodell wirkt. Erst danach folgt, was jede Analyse zusätzlich benötigt.
 
 \begin{Window}[title=Hinweis zur Vorplanung (Leistungsphase 2 nach HOAI)]
-Die ausgewiesenen Kennwerte und die daraus erzeugten GWP- und Tragwerksaussagen sind orientierende Überschlagswerte zum Variantenvergleich. Sie beruhen teils auf abgeleiteten, angenommenen oder offenen Eingangsdaten und ersetzen weder einen prüfbaren Standsicherheitsnachweis nach §~66 MBO/LBO noch eine verifizierte Ökobilanz nach DIN~EN~15978 / DIN~EN~15804. Eine Aussage zur bauaufsichtlichen Verwendbarkeit wird nicht getroffen; diese ist gegebenenfalls über Verwendbarkeitsnachweis (CE/CPR), Zustimmung im Einzelfall (ZiE) oder Bauartgenehmigung des DIBt sowie eine Bestandsbewertung (u.\,a.\ DIN~SPEC~91484, ISO~13822) gesondert zu führen. Verantwortung für Bemessung, Nachweis und Verwendbarkeit verbleibt bei der Tragwerksplanung beziehungsweise den prüfenden Stellen. Alle Werte ohne Gewähr.
+Die ausgewiesenen Kennwerte und die daraus erzeugten GWP- und Tragwerksaussagen sind orientierende Überschlagswerte zum Variantenvergleich. Sie beruhen teils auf abgeleiteten, angenommenen oder offenen Eingangsdaten und ersetzen weder einen prüfbaren Standsicherheitsnachweis nach §~66 MBO/LBO noch eine verifizierte Ökobilanz nach DIN~EN~15978 / DIN~EN~15804. Eine Aussage zur bauaufsichtlichen Verwendbarkeit wird nicht getroffen; die dafür erforderlichen Wege sind in \tableref{tab:em-scope} benannt. Verantwortung für Bemessung, Nachweis und Verwendbarkeit verbleibt bei der Tragwerksplanung beziehungsweise den prüfenden Stellen. Alle Werte ohne Gewähr.
 \end{Window}
 
 %#endregion
@@ -16,81 +16,36 @@ Die ausgewiesenen Kennwerte und die daraus erzeugten GWP- und Tragwerksaussagen 
 
 \subsection{Abgrenzung Vorplanung gegen Nachweisebene}
 
-\tableref{tab:em-scope} stellt zulässige gegen unzulässige Aussagen. Maßgeblich ist das Prinzip der Eingangsobergrenze: Es dürfen nur Daten verlangt werden, die verhältnismäßig und ohne formale Nachweishandlung beschaffbar sind (Metadaten, zerstörungsfreie oder visuelle Erfassung, begründete Annahme). Kein Pflichtfeld darf eine Handlung erzwingen, die bereits den Nachweis konstituiert -- Materialprüfung, prüfbare Berechnung mit vollständigen Teilsicherheitsbeiwerten, Absenken von $\gamma_\mathrm{M}$ über Stichprobe und $k_\mathrm{n}$, verifizierte EPD oder Zulassungsverfahren. Wo eine belastbare Aussage nur noch so erreichbar wäre, endet die Vorplanung.
+Maßgeblich ist die Eingangsobergrenze: Verlangt werden dürfen nur Daten, die verhältnismäßig und ohne formale Nachweishandlung beschaffbar sind, also aus Metadaten, zerstörungsfreier oder visueller Erfassung und begründeter Annahme. Kein Pflichtfeld darf eine Handlung erzwingen, die bereits den Nachweis konstituiert -- Materialprüfung, prüfbare Berechnung mit vollständigen Teilsicherheitsbeiwerten, Absenken von $\gamma_\mathrm{M}$ über Stichprobe und $k_\mathrm{n}$, verifizierte EPD oder Zulassungsverfahren. Geprüft und verworfen wurde SIA~269 und 269/3 als Pflichtquelle; ein daraus abgeleitetes Pflichtfeld läge bereits auf der Nachweisebene.
 
 \SemioTableLong[text-size=8pt, key=tab:em-scope]{Zulässige und unzulässige Aussagen}{0.44,0.44,0.12}{Zulässig (Vorplanung) & Unzulässig (Nachweisebene) & Bezug}{%
   \SemioTableRow{Orientierende GWP-Schätzung als Größenordnung und Variantenvergleich (Screening) & Belastbarer, zertifizierungsfähiger Ökobilanz-Nachweis (EPD, DGNB/BNB/QNG) & EN15978; EN15804; Levels}
   \SemioTableRow{Strukturelle Vorbemessung und Plausibilitätscheck als Machbarkeitsaussage & Standsicherheitsnachweis; vollständige Eurocode-Bemessung; GEG/VV~TB-Konformität & HOAI; MBO; EC0}
   \SemioTableRow{Ausweis des Nachweiszustands je Größe samt Unsicherheit und Bandbreite & Feststellung von Restnutzungsdauer, Dauerhaftigkeit oder Schadensfreiheit & ISO13822; 17412}
-  \SemioTableRow{Verweis auf erforderliche Folgeschritte (Audit, Bestandsbewertung, ZiE) & Feststellung der bauaufsichtlichen Verwendbarkeit (CE/CPR, ZiE/aBG/vBG) & MBO; CPR; SPEC91484}
-  \SemioTableRow{Ranking Wiederverwendung gegen Neubau auf Screening-Basis & Freigabe für Genehmigung oder Ausführung; Ersatz der Tragwerksplanung & HOAI; MBO}
+  \SemioTableRow{Verweis auf erforderliche Folgeschritte (Audit, Bestandsbewertung, ZiE) und Ranking Wiederverwendung gegen Neubau auf Screening-Basis & Feststellung der bauaufsichtlichen Verwendbarkeit (CE/CPR, ZiE/aBG/vBG); Freigabe für Genehmigung oder Ausführung; Ersatz der Tragwerksplanung & MBO; CPR; HOAI; SPEC91484}
 }
 
 %#endregion
 
-%#region 📋 Anforderungsmatrix
+%#region 🧮 Rechenregel
 
-\subsection{Eingangsgrößen nach Kategorie}
+\subsection{Nachweiszustand, Mindestzustand und Fallback}
 
-Eine Zeile je Eingangsgröße, klassifiziert nach Kategorie. Analyse: T~=~Tragwerk, L~=~Lebenszyklus, T+L~=~beide.
+Jede Eingangsgröße trägt genau einen Nachweiszustand. Der Mindestzustand legt fest, ab wann die Analyse für diese Größe rechnen darf; der Fallback regelt den Fall darunter. \tableref{tab:em-nachweiszustaende} ist damit die vollständige Rechenregel des Modells.
 
-\SemioTableLong[text-size=7.2pt, key=tab:em-geometrie]{Geometrie}{0.26,0.08,0.14,0.36,0.16}{Eingangsgröße & Analyse & Mindestzustand & Fallback bei „offen“ & Quelle}{%
-  \SemioTableRow{Querschnitt (Profil bzw.\ Ist-Maße, liefert A, I, i) & T+L & abgeleitet & keine Rechnung; zerstörungsfreie Vermessung nötig & EC3; EC2}
-  \SemioTableRow{Länge, Achsverlauf, Aufmaß (Orientierung, Toleranzen, Schnittpunkte) & T+L & abgeleitet & Toleranzen offen, konservative Grenzmaße & EC3; Typ}
-  \SemioTableRow{Masse/Menge des Bauteils & L & abgeleitet & Volumen mal generische Dichte & EN15804; ÖKB}
+\SemioTableLong[key=tab:em-nachweiszustaende]{Nachweiszustand, Mindestzustand und Fallback}{0.22,0.78}{Begriff & Bedeutung}{%
+  \SemioTableRow{vorhanden & Angabe belegt (Bestandsunterlage, Messung, Kennzeichnung).}
+  \SemioTableRow{abgeleitet & aus anderen Daten hergeleitet (Norm-, Baualters- oder Geometriebezug), mit Bandbreite.}
+  \SemioTableRow{angenommen & vorläufig, konservativ, mit Bandbreite; als Annahme dokumentiert.}
+  \SemioTableRow{offen & ohne formale Nachweishandlung nicht erhebbar; Prüfbedarf ausgewiesen.}
+  \SemioTableRow{Mindestzustand & geringster Zustand, mit dem die Analyse für diese Größe fortfahren darf; darunter gilt sie als offen.}
+  \SemioTableRow{Fallback bei „offen“ & verbindliche Ersatzregel, wenn der Mindestzustand nicht erreicht wird; erzeugt eine Bandbreite statt eines Einzelwerts und wird als Annahme mitgeführt. Kein Fallback darf eine Nachweishandlung verlangen; ist auch das nicht möglich, endet die Aussage.}
 }
 
-\SemioTableLong[text-size=7.2pt, key=tab:em-werkstoff]{Werkstoff}{0.26,0.08,0.14,0.36,0.16}{Eingangsgröße & Analyse & Mindestzustand & Fallback bei „offen“ & Quelle}{%
-  \SemioTableRow{Materialart und Güteklasse & T+L & angenommen & konservativ aus Baualter/Typ; generischer Datensatz & EC3; ISO13822}
-  \SemioTableRow{Repräsentativer Festigkeitskennwert (kein geprüfter char.\ Wert) & T & angenommen & konservativer Default mit Bandbreite; Probenahme nie Pflicht & EC3; ISO13822; Sar26}
-  \SemioTableRow{Elastizitätsmodul E & T & angenommen & Normwert & B20a}
-  \SemioTableRow{Bewehrung, Vorspannung, Betondeckung (nur Stahlbeton; kein Pflichtfeld) & T & offen zulässig & Verweis auf Pre-Demolition-Audit & SPEC91484; ISO13822}
-}
+\subsection{Normative Verankerung}
 
-\SemioTableLong[text-size=7.2pt, key=tab:em-zustand]{Zustand}{0.26,0.08,0.14,0.36,0.16}{Eingangsgröße & Analyse & Mindestzustand & Fallback bei „offen“ & Quelle}{%
-  \SemioTableRow{Schädigungsgrad (Korrosion, Querschnittsverlust) & T+L & angenommen & pauschaler Abtrag; bei Brand/Vorüberlastung ausschließen & ISO13822; P427; Mah26}
-  \SemioTableRow{Geradheit, Vorverformung, Exzentrizitäten (zerstörungsfrei) & T & angenommen & über Toleranz: Hinweis „ungeeignet“/offen & EC3; P427}
-  \SemioTableRow{Vorgeschichte (Exposition, frühere Anschlüsse, Lastgeschichte) & T+L & angenommen & Risiko „nicht bewertet“, Prüfbedarf ausweisen & ISO13822}
-}
-
-\SemioTableLong[text-size=7.2pt, key=tab:em-einwirkung]{Einwirkung und Randbedingung}{0.26,0.08,0.14,0.36,0.16}{Eingangsgröße & Analyse & Mindestzustand & Fallback bei „offen“ & Quelle}{%
-  \SemioTableRow{Bemessungs-Normalkraft $N_\mathrm{Ed}$ (bei Exzentrizität $M_\mathrm{Ed}$) & T & abgeleitet & Einzugsfläche mal Standardnutzlast; sonst Größenordnung & EC0; EC1}
-  \SemioTableRow{Knick-/Systemlänge $L_\mathrm{cr}$ beziehungsweise $\beta$ & T & abgeleitet & konservativ $\beta=1{,}0$ & EC3; EC2}
-  \SemioTableRow{Knicklinie/Imperfektionsbeiwert $\alpha$ & T & abgeleitet & ungünstige Linie & EC3}
-  \SemioTableRow{\textit{(unsicher)} Anschluss-/Auflagerdetail Kopf/Fuß & T & offen & konservativ gelenkig und zentrisch; kein Verbindungsnachweis in LPH~2. Praxisbeleg: nachträglicher Bewehrungsanschluss an neue Unterzüge & Madaster (T3); AbbauAufbau}
-}
-
-\SemioTableLong[text-size=7.2pt, key=tab:em-verfuegbarkeit]{Verfügbarkeit und Zuordnung}{0.26,0.08,0.14,0.36,0.16}{Eingangsgröße & Analyse & Mindestzustand & Fallback bei „offen“ & Quelle}{%
-  \SemioTableRow{Verfügbare Stückzahl je Element-/Profilgruppe & T+L & abgeleitet & nur qualitativer Vergleich & B19; B20b}
-  \SemioTableRow{Zulässiges Übermaß / Oversizing-Ratio & T+L & angenommen & Schwellenwert & Mah26}
-  \SemioTableRow{Nachfrage-/Zielvorgabe je Position (erf.\ Maße, $N_\mathrm{Ed}$, Randbedingung) & T & vorhanden (Entwurf) & — & VM24}
-}
-
-\SemioTableLong[text-size=7.2pt, key=tab:em-oekobilanz]{Ökobilanz-Szenario}{0.26,0.08,0.14,0.36,0.16}{Eingangsgröße & Analyse & Mindestzustand & Fallback bei „offen“ & Quelle}{%
-  \SemioTableRow{Referenzprodukt der Substitution (Neubauteil) & L & angenommen & generisches Referenzprodukt & EN15978; EN15804}
-  \SemioTableRow{Referenzmenge (funktional äquivalente Masse) & L & abgeleitet & Größenordnung mit Bandbreite & EN15978; ISO14044}
-  \SemioTableRow{ÖKOBAUDAT-Datensatz (UUID plus Version) & L & abgeleitet & generischer Datensatz & ÖKB}
-  \SemioTableRow{GWP-Indikator und Module A1--A3 & L & abgeleitet & Standardmodul & EN15804; Levels}
-  \SemioTableRow{Allokationsregel (polluter pays vs.\ Modul~D) & L & angenommen & Vorgänger-Default (Cut-off: A1--A3~=~0, nur A4) als Untergrenze, Modul-D-Gutschrift als Bandbreite & EN15804; ISO14044; AbbauAufbau}
-  \SemioTableRow{Transportszenario (Modul~A4) & L & angenommen & Default-Distanz mit Sensitivität & EN15978}
-  \SemioTableRow{Aufbereitungs-/Reconditioning-Aufwand & L & angenommen & pauschaler Ansatz & EN15804}
-  \SemioTableRow{End-of-Life-Szenario (Module C1--C4) & L & angenommen & Standardszenario & EN15978}
-  \SemioTableRow{Referenznutzungsdauer und funktionale Äquivalenz & L & angenommen & Standard-RSP & EN15978}
-  \SemioTableRow{Modul~D (Substitutionsgutschrift) & L & angenommen & als Bandbreite/Sensitivität & EN15978; EN15804}
-  \SemioTableRow{Sekundärindikator Primärressourcenverbrauch (optional, außerhalb GWP-Scope) & L & angenommen & MIT-Kennwerte je Tonne Baustoff; entfällt ohne separate Erhebung & AbbauAufbau}
-}
-
-\SemioTableLong[text-size=7.2pt, key=tab:em-herkunft]{Herkunft}{0.26,0.08,0.14,0.36,0.16}{Eingangsgröße & Analyse & Mindestzustand & Fallback bei „offen“ & Quelle}{%
-  \SemioTableRow{Quellbauwerk, Einbauort, Baualter & T+L & angenommen & generischer Default; speist Material- und Risikoableitung & SPEC91484; Typ}
-}
-
-\subsection{Methodische Grundlage}
-
-Querschnittsregeln, die für alle Kategorien gelten und den Aufbau des Modells normativ verankern.
-
-\SemioTableLong[text-size=7.5pt, key=tab:em-methodik]{Methodische Grundlage}{0.42,0.42,0.16}{Regel & Wirkung im Modell & Quelle}{%
-  \SemioTableRow{Informationsbedarfstiefe je Datum (LOIN-Facetten, fünf Geometriedimensionen) & fehlende Facette wird offen; Rechnung läuft mit vorhandenen, fehlende als Unsicherheit & 17412}
-  \SemioTableRow{Level of Information Need als Mindestinformationsmenge & unter Mindestmenge nur orientierende Aussage mit Unsicherheit & 19650}
+\SemioTableLong[text-size=7.5pt, key=tab:em-methodik]{Normative Verankerung der Rechenregel}{0.42,0.42,0.16}{Regel & Wirkung im Modell & Quelle}{%
+  \SemioTableRow{Informationsbedarfstiefe je Datum und Mindestinformationsmenge (LOIN-Facetten, fünf Geometriedimensionen) & fehlende Facette wird offen; unterhalb der Mindestmenge nur orientierende Aussage mit Bandbreite & 17412; 19650}
   \SemioTableRow{Nachweiszustand-Logik (prior = angenommen; bestätigt = vorhanden/abgeleitet; nicht erhebbar = offen) & steuert Mindestzustand und Fallback je Größe & ISO13822}
   \SemioTableRow{Zweistufige Bauteilerfassung (Vor-/Detailstufe) & Voruntersuchung genügt fürs Screening; Detailstufe hebt auf vorhanden & SPEC91484}
   \SemioTableRow{Maschinenlesbare Feldbezeichner (IfcColumn, Psets, Qtos) -- deskriptiv & liefert Feldnamen, definiert keinen fachlichen Pflichtbedarf & IFC}
@@ -99,43 +54,55 @@ Querschnittsregeln, die für alle Kategorien gelten und den Aufbau des Modells n
 
 %#endregion
 
-%#region 🔗 Datenherkunft und Umsetzung
+%#region 📋 Eingangsgrößen
 
-\clearpage
+\subsection{Ergebnisgrößen}
 
-\appendixsection[D]{Datenherkunft und Umsetzungsstand}
-
-\subsection{Herkunft aus Börsen- und Passport-Schemata}
-
-Deskriptive Angebotsseite (Tier~3): welche Kategorie durch welches externe Schemafeld belegt werden \emph{kann}. Diese Quellen beschreiben nur vorhandene Felder und definieren keinen fachlichen Pflichtbedarf.
-
-\SemioTableLong[text-size=7.5pt, key=tab:em-schemata]{Belegung der Kategorien durch externe Schemata}{0.24,0.42,0.34}{Kategorie & Externes Schemafeld & Hinweis}{%
-  \SemioTableRow{Identität/Klassifikation & Madaster CPset; eCCC/eBKP & Kostengliederung, nicht Tragwerkstypologie}
-  \SemioTableRow{Geometrie & Madaster; DISCS & bestätigt}
-  \SemioTableRow{Menge & DIN~SPEC~91484; Madaster & bestätigt}
-  \SemioTableRow{Werkstoff (Art) & Madaster; bSDD~DOR & bestätigt}
-  \SemioTableRow{Werkstoff (Festigkeit) & fehlt im CPset; SPEC91484 Detailstufe & bestätigte Lücke, scope-kritisch}
-  \SemioTableRow{Zustand & Madaster (Technical-/AestheticCondition) & bestätigt}
-  \SemioTableRow{Verbindung/Rückbaubarkeit & Madaster (Detachability); bSDD~DOR & bestätigt}
-  \SemioTableRow{Schadstoffe & DIN~SPEC~91484; Swiss-Inv & bestätigt}
-  \SemioTableRow{Herkunft/Lebensdauer & Madaster; SPEC91484 St.~1 & bestätigt}
-  \SemioTableRow{Ökobilanz/Umwelt & CPR Digital Product Passport; Madaster & nur Screening-GWP, keine EPD}
+\SemioTableLong[text-size=7.5pt, key=tab:em-ergebnis]{Ergebnisgrößen und zugehöriger Eingang}{0.18,0.46,0.36}{Analyse & Ergebnisgröße (orientierend) & Eingang}{%
+  \SemioTableRow{Vorbemessung (V) & Ausnutzungsgrad $N_\mathrm{Ed}/N_\mathrm{b,Rd}$ am Knicknachweis, daraus Eignungs- beziehungsweise Ausschlussaussage je Entwurfsposition & G1, G2, G4 und V1--V6}
+  \SemioTableRow{Ökobilanz (Ö) & GWP-Differenz Wiederverwendung gegen Referenzprodukt, als Bandbreite zwischen Cut-off-Untergrenze und Modul-D-Obergrenze & G1--G5 und Ö1--Ö7}
 }
 
-\subsection{Abbildung im Generator-Schema}
+G kennzeichnet den gemeinsamen Eingang beider Analysen, V den nur für die Vorbemessung, Ö den nur für die Ökobilanz. Der Annahmeschwellenwert für den Ausnutzungsgrad ist eine Projektentscheidung und keine Eingangsgröße.
 
-Stand der Abbildung im curate-Schema (Tier~3). Der Stützenzweig liegt nur als Prototyp vor und ist noch nicht als eigener Zweig abgebildet.
+\subsection{Gemeinsame Eingangsgrößen}
 
-\SemioTableLong[text-size=7.5pt, key=tab:em-umsetzung]{Kategorie gegen Schemaabbildung}{0.30,0.40,0.30}{Kategorie & Abbildung (curate) & Status}{%
-  \SemioTableRow{Geometrie & GeometryRecipe (Box: width/height/depth) & teilweise, ohne Profilquerschnitt}
-  \SemioTableRow{Verfügbarkeit & availability (u32) & vorhanden}
-  \SemioTableRow{Typologie & typology\_path & vorhanden; Stützenzweig offen}
-  \SemioTableRow{Werkstoff & — & fehlt}
-  \SemioTableRow{Zustand & — & fehlt}
-  \SemioTableRow{Einwirkung/Randbedingung & — & fehlt}
-  \SemioTableRow{Ökobilanz-Szenario & — & fehlt}
-  \SemioTableRow{Nachweiszustand je Größe & — & fehlt (Kernlücke der Umsetzung)}
+\SemioTableLong[text-size=7.2pt, key=tab:em-gemeinsam]{Gemeinsame Eingangsgrößen beider Analysen}{0.05,0.29,0.12,0.37,0.17}{ID & Eingangsgröße & Mindestzustand & Fallback bei „offen“ & Quelle}{%
+  \SemioTableRow{G1 & Querschnitt (Profil bzw.\ Ist-Maße, liefert $A$, $I$, $i$) & abgeleitet & keine Rechnung; zerstörungsfreie Vermessung nötig & EC3; EC2}
+  \SemioTableRow{G2 & Länge, Achsverlauf, Aufmaß (Orientierung, Toleranzen, Schnittpunkte) & abgeleitet & Toleranzen offen, konservative Grenzmaße & EC3; Typ}
+  \SemioTableRow{G3 & Materialart und Güteklasse & angenommen & konservativ aus Baualter oder Typ; generischer Datensatz & EC3; ISO13822}
+  \SemioTableRow{G4 & Schädigungsgrad und Vorgeschichte (Korrosion, Querschnittsverlust, Exposition, frühere Anschlüsse, Lastgeschichte) & angenommen & pauschaler Abtrag; Brand oder Vorüberlastung führt zum Ausschluss; sonst Risiko „nicht bewertet“ mit Prüfbedarf & ISO13822; P427; Mah26}
+  \SemioTableRow{G5 & Herkunft (Quellbauwerk, Einbauort, Baualter) & angenommen & generischer Default; speist Material- und Risikoableitung & SPEC91484; Typ}
 }
+
+\subsection{Zusätzlich für die Vorbemessung}
+
+G1, G2 und V1--V6 bilden zusammen den vollständigen Eingangsvektor des Knicknachweises: $A$, $I$, $i$, $L_\mathrm{cr}$, $f_\mathrm{y}$, $E$, $\alpha$ und $N_\mathrm{Ed}$.
+
+\SemioTableLong[text-size=7.2pt, key=tab:em-tragwerk]{Zusätzliche Eingangsgrößen der Vorbemessung}{0.05,0.29,0.12,0.37,0.17}{ID & Eingangsgröße & Mindestzustand & Fallback bei „offen“ & Quelle}{%
+  \SemioTableRow{V1 & Repräsentative Werkstoffkennwerte $f_\mathrm{y}$ bzw.\ $f_\mathrm{c}$ und $E$ (keine geprüften charakteristischen Werte) & angenommen & konservativer Default mit Bandbreite, $E$ als Normwert; Probenahme nie Pflicht & EC3; ISO13822; Sar26; B20a}
+  \SemioTableRow{V2 & Bewehrung, Vorspannung, Betondeckung (nur Stahlbeton; kein Pflichtfeld) & offen zulässig & Verweis auf Pre-Demolition-Audit & SPEC91484; ISO13822}
+  \SemioTableRow{V3 & Geradheit, Vorverformung, Exzentrizitäten (zerstörungsfrei) & angenommen & über Toleranz: Hinweis „ungeeignet“ beziehungsweise offen & EC3; P427}
+  \SemioTableRow{V4 & Bemessungs-Normalkraft $N_\mathrm{Ed}$ (mit $M_\mathrm{Ed}$ bei Exzentrizität) aus der Entwurfsposition & abgeleitet & Einzugsfläche mal Standardnutzlast; sonst nur Größenordnung & EC0; EC1; VM24}
+  \SemioTableRow{V5 & Knick-/Systemlänge $L_\mathrm{cr}$ bzw.\ $\beta$ aus Anschluss- und Auflagerdetail Kopf/Fuß & abgeleitet & Detail offen: konservativ gelenkig, zentrisch, $\beta=1{,}0$; die Ableitbarkeit aus Metadaten ist unbelegt (L5); kein Verbindungsnachweis in LPH~2 & EC3; EC2; Madaster}
+  \SemioTableRow{V6 & Knicklinie und Imperfektionsbeiwert $\alpha$ & abgeleitet & ungünstige Linie & EC3}
+}
+
+\subsection{Zusätzlich für die Ökobilanz}
+
+\SemioTableLong[text-size=7.2pt, key=tab:em-oekobilanz]{Zusätzliche Eingangsgrößen der Ökobilanz}{0.05,0.29,0.12,0.37,0.17}{ID & Eingangsgröße & Mindestzustand & Fallback bei „offen“ & Quelle}{%
+  \SemioTableRow{Ö1 & Masse und Menge des Bauteils & abgeleitet & Volumen mal generische Dichte & EN15804; ÖKB}
+  \SemioTableRow{Ö2 & ÖKOBAUDAT-Datensatz (UUID und Version) & abgeleitet & generischer Datensatz & ÖKB}
+  \SemioTableRow{Ö3 & GWP-Indikator und Module A1--A3 & abgeleitet & Standardmodul & EN15804; Levels}
+  \SemioTableRow{Ö4 & Substitutionsreferenz: Referenzprodukt, funktional äquivalente Referenzmenge und Referenznutzungsdauer & angenommen & generisches Referenzprodukt, Größenordnung mit Bandbreite, Standard-RSP & EN15978; EN15804; ISO14044}
+  \SemioTableRow{Ö5 & Allokationsregel und Modul~D (Substitutionsgutschrift) & angenommen & Vorgänger-Default (Cut-off: A1--A3~=~0, nur A4) als Untergrenze, Modul-D-Gutschrift als Obergrenze der Bandbreite & EN15804; ISO14044; AbbauAufbau}
+  \SemioTableRow{Ö6 & Wiederverwendungsaufwand: Transport (Modul~A4) und Aufbereitung & angenommen & Default-Distanz mit Sensitivität, pauschaler Aufbereitungsansatz; keine belastbare Datenlage für Deutschland (L3) & EN15978; EN15804}
+  \SemioTableRow{Ö7 & End-of-Life-Szenario (Module C1--C4) & angenommen & Standardszenario & EN15978}
+}
+
+\subsection{Datenherkunft}
+
+Ob eine Bauteilbörse die genannten Größen überhaupt liefern kann, ist plattformweise in \appendixref{anlage:integrationsreife} bewertet; die dortige Spalte der Objektdaten beschreibt denselben Eingang aus Sicht der Datenquelle. Für das Eingangsmodell sind daraus zwei Befunde bindend. Erstens wird die Werkstofffestigkeit (V1) von keinem der untersuchten Börsen- und Passport-Schemata geführt; sie erscheint erst in der Detailstufe nach DIN~SPEC~91484 als Fachgutachten und bleibt damit im Screening dauerhaft eine angenommene Größe. Zweitens liefern die Umweltfelder der Schemata ausschließlich Screening-Werte und keine verifizierte EPD, was die Ergebnisgröße der Ökobilanz auf den Variantenvergleich begrenzt.
 
 %#endregion
 
@@ -145,51 +112,37 @@ Stand der Abbildung im curate-Schema (Tier~3). Der Stützenzweig liegt nur als P
 
 \appendixsection[Q]{Quellenregister}
 
-Einzige Quelle der Wahrheit für die Kurzzeichen der Anforderungsmatrix. Tier: T1 normativ/primär (darf Pflichtbedarf definieren); T2 fachlich sekundär (darf Pflichtbedarf definieren); T3 deskriptiv (beschreibt nur vorhandene Felder).
+Einzige Quelle der Wahrheit für die Kurzzeichen der Eingangstabellen. Tier~1 (normativ, primär) und Tier~2 (fachlich sekundär) dürfen einen Pflichtbedarf definieren; Tier~3 ist deskriptiv und beschreibt nur vorhandene Felder.
 
-\SemioTableLong[text-size=7.5pt, key=tab:em-q-t1]{Tier 1 -- normativ / primär}{0.10,0.56,0.34}{Kürzel & Quelle & Verifikation}{%
-  \SemioTableRow{EC0 & DIN~EN~1990:2021-10 (6.4.3.2, Tab.~A1.2(B)) & bestätigt; Klausel korrigiert}
-  \SemioTableRow{EC1 & DIN~EN~1991-1-1:2010-12, Abschn.~6 & bestätigt}
-  \SemioTableRow{EC2 & DIN~EN~1992-1-1:2011-01 (5.8.3) & bestätigt}
-  \SemioTableRow{EC3 & DIN~EN~1993-1-1:2010-12 (3.2, 6.3.1, Tab.~6.1/6.2) & bestätigt}
-  \SemioTableRow{ISO13822 & ISO~13822:2010 (4.5/4.6, 5.3, Anh.~C/D/F) & bestätigt}
-  \SemioTableRow{EN15978 & DIN~EN~15978:2012-10 (7.2/7.3, Abschn.~8) & bestätigt; Klausel korrigiert}
-  \SemioTableRow{EN15804 & DIN~EN~15804+A2:2019-11 (6.2--6.5, Anh.~C.2.2/D.3.4) & bestätigt; Klauseln geschärft}
-  \SemioTableRow{ISO14044 & DIN~EN~ISO~14044:2006 (4.2.3.2, 4.3.4.2) & bestätigt; Klausel korrigiert}
-  \SemioTableRow{ÖKB & ÖKOBAUDAT plus Handbuch v2.1 (2021-11-29) & bestätigt}
-  \SemioTableRow{17412 & DIN~EN~17412-1:2021-06 ($\to$ ISO~7817-1:2024) & bestätigt}
-  \SemioTableRow{19650 & ISO~19650-1:2018 (11.2, 5.3) & bestätigt}
-  \SemioTableRow{HOAI & HOAI~2021, Anlage~10 u.\ 14 (LPH~2/LPH~4) & bestätigt}
-  \SemioTableRow{MBO & Musterbauordnung §~66; §§~16a\,ff. & bestätigt}
-  \SemioTableRow{VVTB & Muster-VV~TB; DIBt ZiE/aBG/vBG & referenziert}
-  \SemioTableRow{CPR & Verordnung~(EU)~2024/3110 (Art.~75--77, 79) & Existenz bestätigt; Klauseln korrigiert}
+\SemioTableLong[text-size=7.5pt, key=tab:em-quellen]{Quellenregister}{0.10,0.07,0.83}{Kürzel & Tier & Quelle (Ausgabe, maßgebliche Klausel)}{%
+  \SemioTableRow{EC0 & T1 & DIN~EN~1990:2021-10 (6.4.3.2, Tab.~A1.2(B))}
+  \SemioTableRow{EC1 & T1 & DIN~EN~1991-1-1:2010-12, Abschn.~6}
+  \SemioTableRow{EC2 & T1 & DIN~EN~1992-1-1:2011-01 (5.8.3)}
+  \SemioTableRow{EC3 & T1 & DIN~EN~1993-1-1:2010-12 (3.2, 6.3.1, Tab.~6.1/6.2)}
+  \SemioTableRow{ISO13822 & T1 & ISO~13822:2010 (4.5/4.6, 5.3, Anh.~C/D/F)}
+  \SemioTableRow{EN15978 & T1 & DIN~EN~15978:2012-10 (7.2/7.3, Abschn.~8)}
+  \SemioTableRow{EN15804 & T1 & DIN~EN~15804+A2:2019-11 (6.2--6.5, Anh.~C.2.2/D.3.4)}
+  \SemioTableRow{ISO14044 & T1 & DIN~EN~ISO~14044:2006 (4.2.3.2, 4.3.4.2)}
+  \SemioTableRow{ÖKB & T1 & ÖKOBAUDAT und Handbuch v2.1 (2021-11-29)}
+  \SemioTableRow{17412 & T1 & DIN~EN~17412-1:2021-06 ($\to$ ISO~7817-1:2024)}
+  \SemioTableRow{19650 & T1 & ISO~19650-1:2018 (11.2, 5.3)}
+  \SemioTableRow{HOAI & T1 & HOAI~2021, Anlage~10 und 14 (LPH~2/LPH~4)}
+  \SemioTableRow{MBO & T1 & Musterbauordnung §~66 und §§~16a\,ff.; Muster-VV~TB; DIBt ZiE/aBG/vBG}
+  \SemioTableRow{CPR & T1 & Verordnung~(EU)~2024/3110 (Art.~75--77, 79)}
+  \SemioTableRow{SPEC91484 & T2 & DIN~SPEC~91484:2023-09}
+  \SemioTableRow{P427 & T2 & SCI~P427:2019 -- Structural Steel Reuse}
+  \SemioTableRow{Levels & T2 & EU/JRC Level(s), Indikator~1.2}
+  \SemioTableRow{B20a & T2 & Brütting et al.\ 2020, Frontiers in Built Environment 6:57 (10.3389/fbuil.2020.00057)}
+  \SemioTableRow{Sar26 & T2 & Sarfarazi et al.\ 2026, Metals 16(2):171 (10.3390/met16020171)}
+  \SemioTableRow{Mah26 & T2 & Mahdavipour et al.\ 2026, JCSR 236(B):110046 (10.1016/j.jcsr.2025.110046)}
+  \SemioTableRow{VM24 & T2 & Van Marcke et al.\ 2024, J~Build~Eng (10.1016/j.jobe.2024.108518)}
+  \SemioTableRow{AbbauAufbau & T2 & BBSR-Online-Publikation 61/2024, Gengnagel/Henschel -- Cradle-to-Cradle-Prozess für Ortbetonelemente (Vorgängerprojekt, Az.~10.08.18.7-22.20)}
+  \SemioTableRow{IFC & T3 & IFC~4.3.2 / ISO~16739-1:2024 und bSDD}
+  \SemioTableRow{Madaster & T3 & Madaster Common Property Set}
+  \SemioTableRow{Typ & T3 & Anhang Typologische Zuordnung (\appendixref{anlage:typologie})}
 }
 
-\SemioTableLong[text-size=7.5pt, key=tab:em-q-t2]{Tier 2 -- fachlich sekundär}{0.10,0.56,0.34}{Kürzel & Quelle & Verifikation}{%
-  \SemioTableRow{SPEC91484 & DIN~SPEC~91484:2023-09 & bestätigt}
-  \SemioTableRow{P427 & SCI~P427:2019 -- Structural Steel Reuse & bestätigt}
-  \SemioTableRow{Levels & EU/JRC Level(s), Indikator~1.2 & bestätigt}
-  \SemioTableRow{SIA269 & SIA~269:2011 u.\ 269/3:2011 & bestätigt; Pflichtfeld entfernt (Scope)}
-  \SemioTableRow{DISCS & Nature Sci.~Data 2025 (10.1038/s41597-025-06101-6) & bestätigt}
-  \SemioTableRow{B19 & Brütting et al.\ 2019, Structures 18 (10.1016/j.istruc.2018.11.006) & bestätigt}
-  \SemioTableRow{B20a & Brütting et al.\ 2020, Frontiers 6:57 (10.3389/fbuil.2020.00057) & bestätigt}
-  \SemioTableRow{B20b & Brütting et al.\ 2020, Energy \& Buildings 215:109827 (10.1016/j.enbuild.2020.109827) & bestätigt}
-  \SemioTableRow{Sar26 & Sarfarazi et al.\ 2026, Metals 16(2):171 (10.3390/met16020171) & bestätigt}
-  \SemioTableRow{Mah26 & Mahdavipour et al.\ 2026, JCSR 236(B):110046 (10.1016/j.jcsr.2025.110046) & bestätigt}
-  \SemioTableRow{VM24 & Van Marcke et al.\ 2024, J~Build~Eng (10.1016/j.jobe.2024.108518) & bestätigt}
-  \SemioTableRow{SwissInv & Swiss-Inv/Cirkla „Mode d'emploi“ & bestätigt}
-  \SemioTableRow{AbbauAufbau & BBSR-Online-Publikation 61/2024, Gengnagel/Henschel -- Cradle-to-Cradle-Prozess für Ortbetonelemente & bestätigt (Vorgängerprojekt, Az.~10.08.18.7-22.20)}
-}
-
-\SemioTableLong[text-size=7.5pt, key=tab:em-q-t3]{Tier 3 -- deskriptiv}{0.10,0.56,0.34}{Kürzel & Quelle & Verifikation}{%
-  \SemioTableRow{IFC & IFC~4.3.2 / ISO~16739-1:2024 plus bSDD & bestätigt}
-  \SemioTableRow{DOR & bSDD~DOR (Decommissioning and Reuse) & bestätigt}
-  \SemioTableRow{Madaster & Madaster Common Property Set & bestätigt}
-  \SemioTableRow{curate & sourcing/curate (Generator-Schema) & bestätigt (Codelesung)}
-  \SemioTableRow{Typ & Anhang Typologische Zuordnung (\appendixref{anlage:typologie}) & bestätigt}
-}
-
-Nicht verifiziert und daher ausgeschlossen: Warmuth et al., Structures~2026 -- vor einer Verwendung zu prüfen oder zu streichen.
+Alle Einträge wurden gegen Originalnorm beziehungsweise Originalpublikation geprüft. Klausel- und Abschnittsangaben bei EC0, EN15978, EN15804, ISO14044 und CPR wurden gegenüber der Vorfassung korrigiert oder geschärft. Nicht verifiziert und daher ausgeschlossen: Warmuth et al., Structures~2026.
 
 %#endregion
 
@@ -199,33 +152,15 @@ Nicht verifiziert und daher ausgeschlossen: Warmuth et al., Structures~2026 -- v
 
 \appendixsection[L]{Lückenliste}
 
-Punkte, die keine belastbare Tier-1/2-Quelle so beantwortet, dass ein verlässlicher, vorplanungskonformer Default folgt. Sie bilden die empirischen Fragen für das Referenzbauteil-Experiment.
+Punkte, die keine belastbare Tier-1/2-Quelle so beantwortet, dass ein verlässlicher, vorplanungskonformer Default folgt. Sie bilden die empirischen Fragen für das Referenzbauteil-Experiment. Die letzte Spalte nennt die betroffenen Eingangsgrößen.
 
-\SemioTableLong[text-size=8pt, key=tab:em-luecken]{Offene Fragen}{0.20,0.62,0.18}{Nr.\ & Offene Frage und empirischer Bezug & Kategorie}{%
-  \SemioTableRow{L1 & Belastbare konservative Default-Festigkeiten je Baualter/Profilreihe fehlen; prior am Referenzbauteil kalibrieren; Trefferquote der Güte-Ableitung aus Metadaten prüfen (Madaster ohne Festigkeitsgrad) & Werkstoff}
-  \SemioTableRow{L2 & Realistischer Korrosions-/Querschnittsabtrag je Exposition unklar; Ist- gegen Nennmaß messen; Eignungsschwelle für Vorverformung festlegen & Zustand}
-  \SemioTableRow{L3 & Reconditioning-Aufwand fehlt in ÖKOBAUDAT; keine belastbare Reuse-Transportdistanz (DE); Vorgänger-Cut-off (A1--A3~=~0, nur A4) ist Ausgangspunkt, verbindliche Allokations-/Modul-D-Regel für die bauteilbezogene Substitution bleibt offen & Ökobilanz}
-  \SemioTableRow{L4 & Ausreichende Mindest-LOIN-Tiefe je Feld empirisch bestimmen; Bandbreitenregel je Nachweiszustand festlegen & Methodik}
-  \SemioTableRow{L5 & Reale Ableitbarkeit von $L_\mathrm{cr}$/$\beta$ aus Anschlussmetadaten klären; Anschlusszeile mangels Quelle demotiert & Randbedingung}
-  \SemioTableRow{L6 & Mindestinput-Sätze für flächige, Knoten- und Rahmenelemente ableiten; Stützenzweig im curate-Schema nur Prototyp & Übertragbarkeit}
-}
-
-%#endregion
-
-%#region 🔑 Leseschlüssel
-
-\SemioTableLong[key=tab:em-nachweiszustaende]{Nachweiszustände und Mindestzustand}{0.22,0.78}{Begriff & Bedeutung}{%
-  \SemioTableRow{vorhanden & Angabe belegt (Bestandsunterlage, Messung, Kennzeichnung).}
-  \SemioTableRow{abgeleitet & aus anderen Daten hergeleitet (Norm-, Baualters- oder Geometriebezug), mit Bandbreite.}
-  \SemioTableRow{angenommen & vorläufig, konservativ, mit Bandbreite; als Annahme dokumentiert.}
-  \SemioTableRow{offen & ohne formale Nachweishandlung nicht erhebbar; Prüfbedarf ausgewiesen.}
-  \SemioTableRow{Mindestzustand & geringster Zustand, mit dem die Analyse für diese Größe fortfahren darf; darunter gilt sie als offen.}
-}
-
-\SemioTableLong[key=tab:em-legende]{Kürzel}{0.22,0.78}{Kürzel & Bedeutung}{%
-  \SemioTableRow{T \textbar{} L \textbar{} T+L & Analyse: Tragwerk \textbar{} Lebenszyklus \textbar{} beide.}
-  \SemioTableRow{T1 \textbar{} T2 \textbar{} T3 & Quellen-Tier: normativ \textbar{} fachlich sekundär \textbar{} deskriptiv (siehe Quellenregister).}
-  \SemioTableRow{Quellen-Kürzel & aufgelöst im Quellenregister (\tableref{tab:em-q-t1}--\tableref{tab:em-q-t3}).}
+\SemioTableLong[text-size=8pt, key=tab:em-luecken]{Offene Fragen}{0.07,0.71,0.22}{Nr.\ & Offene Frage und empirischer Bezug & Bezug}{%
+  \SemioTableRow{L1 & Belastbare konservative Default-Festigkeiten je Baualter und Profilreihe fehlen; prior am Referenzbauteil kalibrieren; Trefferquote der Güte-Ableitung aus Metadaten prüfen & G3, V1}
+  \SemioTableRow{L2 & Realistischer Korrosions- und Querschnittsabtrag je Exposition unklar; Ist- gegen Nennmaß messen; Eignungsschwelle für Vorverformung festlegen & G4, V3}
+  \SemioTableRow{L3 & Reconditioning-Aufwand fehlt in ÖKOBAUDAT; keine belastbare Reuse-Transportdistanz für Deutschland; Vorgänger-Cut-off ist Ausgangspunkt, die verbindliche Allokations- und Modul-D-Regel für die bauteilbezogene Substitution bleibt offen & Ö5, Ö6}
+  \SemioTableRow{L4 & Ausreichende Mindest-Informationsbedarfstiefe je Feld empirisch bestimmen; Bandbreitenregel je Nachweiszustand festlegen & Rechenregel}
+  \SemioTableRow{L5 & Reale Ableitbarkeit von $L_\mathrm{cr}$ und $\beta$ aus Anschlussmetadaten klären; belegt ist bisher nur die Praxis des nachträglichen Bewehrungsanschlusses an neue Unterzüge, nicht die Ableitung aus Börsendaten & V5}
+  \SemioTableRow{L6 & Mindestinput-Sätze für flächige, Knoten- und Rahmenelemente ableiten; bisher nur am linearen Element hergeleitet & Übertragbarkeit}
 }
 
 %#endregion

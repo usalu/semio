@@ -1,0 +1,197 @@
+% !TEX program = tectonic
+% !TEX root = zwischenbericht.tex
+\documentclass[type=zwischenbericht]{zukunftbau}
+
+\usepackage{xurl}
+% LR-019: biblatex justifies bibliography entries; its \biburlsetup sets
+% \Urlmuskip=0mu plus 3mu, so every URL breakpoint stretches to fill the line
+% and URLs render with visible gaps ("www . baunetzwissen . de"). Reset the
+% muskip after biblatex's setup so URLs stay continuous (xurl still allows the
+% breaks, just without stretch).
+\usepackage{etoolbox}
+\appto\biburlsetup{\Urlmuskip=0mu\relax}
+\addbibresource{references.bib}
+
+% LR-020: this is a digital deliverable; drop the print-signature padding so
+% the PDF ends right after the bibliography instead of on trailing blank pages.
+\SemioSignaturePadding{false}
+% Digital deliverable: no recto-forcing blank versos before appendix chapters.
+\SemioOpenAny{true}
+
+\counterwithin{section}{part}
+\renewcommand{\thepart}{\arabic{part}}
+
+\title{Entwerfen mit Bestand}
+\subtitle{Eine offene Plattform für einen KI-unterstützten, performance-optimierten und integrativen Entwurfsprozess mit wiederverwendeten Baukomponenten}
+\antragstellendeinstitution{%
+  \AddressOrg{%
+    Leibniz Universität Hannover\\
+    Fakultät für Architektur und Landschaft\\
+    Institut für Entwerfen und Konstruieren\\
+    Abteilung Nachhaltige Gebäudesysteme%
+  }%
+  \AddressPeople{%
+    Institutsleitung: Prof. Dr.-Ing. Philipp Geyer\\
+    Projektleitung: Ueli Saluz\\
+    Weitere Bearbeitung: Nikolaus Möllenhof%
+  }%
+}
+\kooperationspartner{%
+  \AddressOrg{%
+    Universität der Künste Berlin\\
+    Fakultät für Architektur\\
+    Institut für Architektur und Städtebau\\
+    Konstruktives Entwerfen und Tragwerksplanung%
+  }%
+  \AddressPeople{%
+    Institutsleitung: Prof. Dr.-Ing. Christoph Gengnagel\\
+    Bearbeitung: Kinan Sarakbi%
+  }%
+}
+\aktenzeichen{10.08.18.7-25.06}
+\berichtszeitraum{01.01.2026-10.07.2026}
+\foerderzeitraum{03.11.2025-02.05.2027}
+\footerauthors{Ueli Saluz, Kinan Sarakbi}
+\footerlogos{asset/logo/luh.png, asset/logo/udk.png}
+\makeatletter
+\renewcommand{\semio@cover@zukunftbau@logo}{asset/logo/zukunft-bau.png}
+\renewcommand{\semio@cover@bbsr@logo}{asset/logo/bbsr.png}
+\renewcommand{\semio@cover@bundesministerium@logo}{asset/logo/gefördert-durch-bmwsb.png}
+\renewcommand{\semio@cover@arbeitsprobe@image}{asset/demonstrator/aggegator.png}
+\makeatother
+\kurzfassung{%
+  Entwerfen mit wiederverwendeten Baukomponenten ist ästhetisch, historisch und ökologisch reizvoll, aber entwurfstechnisch anspruchsvoll und komplex, da funktionale, konstruktive und qualitative Abhängigkeiten direkt beim Entwerfen berücksichtigt werden müssen.
+  Die im Projekt entwickelte End-To-End-Plattform, welche gleichzeitig Katalog-, Entwurfs- und Leistungsbewertungs-Tool beinhaltet, ermöglicht es, in dieser Situation effektiv Lösungen zu entwickeln.
+  Das Performance-Assessment hinsichtlich Energie und Tragwerk erlaubt frühe multidisziplinäre Optimierung.
+  Mithilfe einer KI-Assistenz können auch große Bestandspools, in welchen es explosionsartig viele Kombinationsmöglichkeiten gibt, im Entwurfsprozess berücksichtigt werden.
+  Die Assistenz schlägt für die jeweilige Entwurfssituation passende Baukomponenten und Verknüpfungen vor.
+  Basierend auf einer semantischen Repräsentation der Baukomponenten und des komponentenbasierten Entwurfes wird die generative Stärke der vortrainierten Large-Language-Models direkt für den Entwurf genutzt.
+  Über eine Framework-unabhängige Schnittstellendefinition wird es bestehenden Bauteilbörsen ermöglicht, ihre Baukomponenten nahtlos maschinenlesbar zu veröffentlichen, sodass die Integrierbarkeit in die Plattform gewährleistet ist.
+  Das Schema dieser Schnittstellendefinition beinhaltet neben Fotos und den üblichen Metadaten wie Ort und Preis auch 3D-Modelle und Performance-Kennwerte wie das Treibhauspotential, welche direkt von den Tools verwendet werden.
+  Ein Modellierungstool, welches moderne Bild-zu-3D-KI-Modelle benutzt, reduziert den Aufbereitungsaufwand der Bauteilbörsen.
+  Durch die open-source Veröffentlichung der gesamten Plattform, deren Dokumentation und den Aufbau einer Community werden die Langlebigkeit und das Vertrauen gestärkt.
+  Das Self-Hosting ermöglicht einerseits eine Breitenwirkung, wodurch der zukünftige Unterhalt und neue Featureentwicklung effizient geteilt wird.
+  Andererseits bleibt die Datensouveränität gewährleistet.%
+}
+
+\ExplSyntaxOn
+% LR-2.16: runs under \ExplSyntaxOn where the space char is catcode 9 (ignored),
+% so plain spaces are eaten and the header renders "VerwendungimBericht". Use
+% explicit ~ space tokens so the words stay separated.
+\cs_set:Npn \semio_glossary_header_definition: { Verwendung~im~Bericht }
+\ExplSyntaxOff
+
+\GlossaryDefine{Baukomponente}{Physisches Bauteil oder zusammengehörige Gruppe von Bauteilen, die im Entwurf als eine Einheit betrachtet und wiederverwendet wird, etwa eine Stütze, eine Decke oder ein Rahmenelement.}
+\GlossaryDefine{Entwurfsrolle}{Funktion, die eine Baukomponente in einem neuen Entwurf übernehmen soll. Sie kann von der ursprünglichen Verwendung abweichen, etwa wenn ein Träger als Stütze eingesetzt wird.}
+\GlossaryDefine{Bestandsquelle}{Ort oder Kanal, aus dem wiederverwendbare Baukomponenten stammen, etwa eine Bauteilbörse, ein Rückbauinventar oder eine direkte Bestandsaufnahme vor Ort.}
+\GlossaryDefine{Bauteilbörse}{Organisation, Lager oder digitaler Angebotskanal, über den wiederverwendbare Baukomponenten dokumentiert, vermittelt oder verkauft werden.}
+\GlossaryDefine{Qualifizierung}{Schrittweise Erfassung, Prüfung und nachvollziehbare Ergänzung von Bauteilinformationen, bis sie für Entwurf und Bewertung nutzbar sind.}
+\GlossaryDefine{Typologiefamilie}{Ordnung von Baukomponenten nach ihrer geometrisch-konstruktiven Grundform: lineare und flächige Elemente, Knoten- und Übergangselemente sowie Rahmen- und Systemelemente.}
+\GlossaryDefine{Nachweiszustände}{Kennzeichnung, wie belastbar eine einzelne Angabe ist: vorhanden, abgeleitet, angenommen oder noch offen.}
+\GlossaryDefine{Leistungsbewertung}{Einschätzung ausgewählter Eigenschaften oder Auswirkungen einer Entwurfsvariante auf Grundlage der verfügbaren Informationen, etwa zu Energie oder Tragwerk.}
+\GlossaryDefine{Vorbewertung}{Frühe, vereinfachte Leistungsbewertung, die im Entwurf der Orientierung dient und keine vollständige fachliche Prüfung ersetzt.}
+\GlossaryDefine{Bauteilobjekt}{Digitales Modell einer Baukomponente, das Geometrie und zugehörige fachliche Angaben in einer gemeinsamen Struktur bündelt.}
+\GlossaryDefine{Generator}{Automatisches Verfahren, das aus erfassten Bauteilangaben ein digitales Bauteilobjekt mit den benötigten geometrischen Darstellungen erzeugt.}
+\GlossaryDefine{Einspeiseplattform}{Digitaler Eingangsbereich der Plattform aus Bauteilportal und Wizard, in dem Bestandsdaten erfasst, übernommen und aufbereitet werden.}
+\GlossaryDefine{Entwurfswerkzeug}{Digitaler Arbeitsbereich aus Bauteilkatalog, Entwurfsumgebung und Konfigurator zur Auswahl, Kombination und Bewertung von Baukomponenten.}
+\GlossaryDefine{Bauteilportal}{Weboberfläche zur manuellen Erfassung, Übernahme und Qualifizierung von Bestandsdaten als Grundlage für digitale Bauteilobjekte.}
+\GlossaryDefine{Wizard}{Benutzeroberfläche für einen geleiteten Abfrageprozess, mit der unvollständige oder unstrukturierte Bauteildaten Schritt für Schritt erfasst und ergänzt werden.}
+\GlossaryDefine{Bauteilkatalog}{Übersichts- und Suchbereich des Entwurfswerkzeugs, in dem verfügbare Baukomponenten und ihre Angaben gefunden und ausgewählt werden.}
+\GlossaryDefine{Entwurfsumgebung}{Arbeitsbereich des Entwurfswerkzeugs, in dem Baukomponenten räumlich angeordnet, kombiniert und zu Entwurfsvarianten weiterentwickelt werden.}
+\GlossaryDefine{Konfigurator}{Austauschbereich des Entwurfswerkzeugs für den Kontakt mit Bauteilbörsen, etwa für Anfragen, Reservierungen, Statusänderungen und projektspezifische Angaben.}
+\GlossaryDefine{semio}{Quelloffenes Software-Toolkit zur Beschreibung, Verknüpfung und räumlichen Anordnung digitaler Baukomponenten; technische Grundlage des Entwurfswerkzeugs.}
+\GlossaryDefine{Human-Interface-Design}{Gestaltung der Bedienoberflächen und Interaktionsabläufe zwischen Nutzenden und der digitalen Arbeitsumgebung.}
+\GlossaryDefine{User-Experience}{Wahrnehmung und Einbindung der digitalen Arbeitsumgebung in den tatsächlichen Arbeitsablauf der Nutzenden.}
+\GlossaryDefine{Entwurfsgrammatik}{Regelwerk des Projekts dafür, wie Entwurfsvarianten gebildet, verändert und auf Zulässigkeit geprüft werden.}
+\GlossaryDefine{Test-Case}{Realer oder realitätsnaher Anwendungsfall, an dem die digitale Werkzeugkette schrittweise entwickelt und geprüft wird.}
+
+\AbbreviationDefine{AP}{Arbeitspaket}{Klar abgegrenzter Teilbereich des Projekts mit eigenen Zielen und Aufgaben.}
+\AbbreviationDefine{API}{Application Programming Interface}{Festgelegte Programmierschnittstelle, über die zwei Computerprogramme Daten austauschen.}
+\AbbreviationDefine{KI}{Künstliche Intelligenz}{Oberbegriff für Computerprogramme, die Aufgaben lösen, für die normalerweise menschliches Denken nötig ist.}
+\AbbreviationDefine{LLM}{Large-Language-Model}{Mit sehr großen Textmengen trainiertes Computerprogramm, das Texte verstehen, beantworten und formulieren kann.}
+\AbbreviationDefine{HID}{Human Interface Design}{Gestaltung, wie Menschen ein Computerprogramm bedienen und mit ihm interagieren.}
+\AbbreviationDefine{REST}{Representational State Transfer}{Verbreitetes technisches Verfahren, mit dem Computerprogramme über das Internet standardisiert Daten austauschen.}
+\AbbreviationDefine{NGS}{Nachhaltige Gebäudesysteme}{Am Projekt beteiligte Abteilung der Leibniz Universität Hannover.}
+\AbbreviationDefine{KET}{Konstruktives Entwerfen und Tragwerksplanung}{Am Projekt beteiligte Abteilung der Universität der Künste Berlin.}
+\AbbreviationDefine{BBSR}{Bundesinstitut für Bau-, Stadt- und Raumforschung}{Bundesbehörde, die dieses Forschungsvorhaben fördert.}
+
+% Reset bold to normal (scoped to this document): the table header cells get a
+% synthetic FakeBold via \SemioSansBold (defined in semio-window.sty). Redefine it
+% here — after the class/window.sty have loaded — to the plain Regular face so
+% header rows (Plattform, Land, …) render at normal weight without touching the
+% shared style files or any other report.
+\makeatletter
+\renewfontfamily\SemioSansBold[Path=\semio@font@root anta/]{Anta-Regular.ttf}
+\makeatother
+
+\usetikzlibrary{matrix,positioning,fit,calc}
+\makeatletter
+\tikzset{
+  semio/.style={every node/.append style={outer sep=0pt}},
+  semio cell/.style={
+    draw=semio-chrome-border-normal, line width=\semio@stroke@hairline,
+    fill=semio-chrome-canvas, align=left, anchor=center,
+    inner xsep=0.55em, inner ysep=0.34em,
+    font=\SemioSans\fontsize{7.2pt}{9.4pt}\selectfont,
+    text=semio-chrome-text-normal},
+  semio module/.style={semio cell, fill=semio-chrome-window, text=semio-chrome-foreground},
+  semio planned/.style={semio cell, fill=semio-chrome-panel},
+  semio band/.style={draw=semio-chrome-border-emphasized,
+    line width=\semio@stroke@default, fill=none},
+  semio chip/.style={draw=semio-chrome-border-normal,
+    line width=\semio@stroke@hairline, fill=semio-chrome-panel,
+    text=semio-chrome-foreground,
+    font=\SemioMono\fontsize{7.2pt}{8.4pt}\selectfont,
+    inner xsep=0.4em, inner ysep=0.2em},
+  semio edge/.style={draw=semio-chrome-border-emphasized,
+    line width=\semio@stroke@hairline, -latex},
+  semio edge synth/.style={semio edge, dash pattern=on 2.25pt off 1.5pt},
+  semio edge hypo/.style={semio edge, dash pattern=on 0.3pt off 1.2pt},
+  semio bar/.style={draw=semio-chrome-border-normal,
+    line width=\semio@stroke@hairline, fill=semio-chrome-panel},
+  semio rule/.style={draw=semio-chrome-border-emphasized,
+    line width=\semio@stroke@hairline},
+}
+\makeatother
+\makeatletter
+% Font-size tokens expand to a bare "<n>pt" STRING, not a length, so they cannot
+% be multiplied (1.15\semio@chrome@font@body -> "1.159.6pt", illegal unit). Route
+% each through a length register, scale the register for the baselineskip.
+\newlength{\SemioFontBodySize}\newlength{\SemioFontChipSize}
+\setlength{\SemioFontBodySize}{\semio@chrome@font@body}
+\setlength{\SemioFontChipSize}{\semio@chrome@font@chip}
+\newcommand{\SemioFontBody}{\SemioSans\fontsize{\SemioFontBodySize}{1.15\SemioFontBodySize}\selectfont}
+\newcommand{\SemioFontChip}{\SemioSans\fontsize{\SemioFontChipSize}{1.20\SemioFontChipSize}\selectfont}
+\newcommand{\SemioFontMono}{\SemioMono\fontsize{\SemioFontChipSize}{1.17\SemioFontChipSize}\selectfont}
+\makeatother
+\begin{document}
+\makemainmatter
+\part{Anlage SK}
+\begin{Figure}[title={Label fit probe}, break=false]
+\begin{tikzpicture}[semio, x=1mm, y=-1mm]
+\draw[fill=semio-chrome-canvas, draw=semio-chrome-border-normal, line width=0.75pt] (10.00,10) circle (1.75mm);
+\node[font=\SemioMono\fontsize{5.2pt}{5.4pt}\selectfont, text=semio-chrome-text-normal, inner sep=0] at (10.00,10) {M07};
+\draw[draw=semio-chrome-border-emphasized, line width=0.2pt, dash pattern=on 0.5pt off 0.5pt] (8.25,8.25) rectangle (11.75,11.75);
+\draw[fill=semio-chrome-canvas, draw=semio-chrome-border-normal, line width=0.75pt] (25.00,10) circle (1.75mm);
+\node[font=\SemioMono\fontsize{5.2pt}{5.4pt}\selectfont, text=semio-chrome-text-normal, inner sep=0] at (25.00,10) {U46};
+\draw[draw=semio-chrome-border-emphasized, line width=0.2pt, dash pattern=on 0.5pt off 0.5pt] (23.25,8.25) rectangle (26.75,11.75);
+\draw[fill=semio-chrome-canvas, draw=semio-chrome-border-normal, line width=0.75pt] (40.00,10) circle (1.75mm);
+\node[font=\SemioMono\fontsize{5.2pt}{5.4pt}\selectfont, text=semio-chrome-text-normal, inner sep=0] at (40.00,10) {F03};
+\draw[draw=semio-chrome-border-emphasized, line width=0.2pt, dash pattern=on 0.5pt off 0.5pt] (38.25,8.25) rectangle (41.75,11.75);
+\draw[fill=semio-chrome-canvas, draw=semio-chrome-border-normal, line width=0.75pt] (55.00,10) circle (1.75mm);
+\node[font=\SemioMono\fontsize{5.2pt}{5.4pt}\selectfont, text=semio-chrome-text-normal, inner sep=0] at (55.00,10) {P10};
+\draw[draw=semio-chrome-border-emphasized, line width=0.2pt, dash pattern=on 0.5pt off 0.5pt] (53.25,8.25) rectangle (56.75,11.75);
+\draw[fill=semio-chrome-canvas, draw=semio-chrome-border-normal, line width=0.75pt] (70.00,10) circle (1.75mm);
+\node[font=\SemioMono\fontsize{5.2pt}{5.4pt}\selectfont, text=semio-chrome-text-normal, inner sep=0] at (70.00,10) {7};
+\draw[draw=semio-chrome-border-emphasized, line width=0.2pt, dash pattern=on 0.5pt off 0.5pt] (68.25,8.25) rectangle (71.75,11.75);
+\draw[fill=semio-chrome-canvas, draw=semio-chrome-border-normal, line width=0.75pt] (85.00,10) circle (1.75mm);
+\node[font=\SemioMono\fontsize{5.2pt}{5.4pt}\selectfont, text=semio-chrome-text-normal, inner sep=0] at (85.00,10) {U01};
+\draw[draw=semio-chrome-border-emphasized, line width=0.2pt, dash pattern=on 0.5pt off 0.5pt] (83.25,8.25) rectangle (86.75,11.75);
+\draw[fill=semio-chrome-canvas, draw=semio-chrome-border-normal, line width=0.75pt] (100.00,10) circle (1.75mm);
+\node[font=\SemioMono\fontsize{5.2pt}{5.4pt}\selectfont, text=semio-chrome-text-normal, inner sep=0] at (100.00,10) {M7};
+\draw[draw=semio-chrome-border-emphasized, line width=0.2pt, dash pattern=on 0.5pt off 0.5pt] (98.25,8.25) rectangle (101.75,11.75);
+\draw[fill=semio-chrome-canvas, draw=semio-chrome-border-normal, line width=0.75pt] (115.00,10) circle (1.75mm);
+\node[font=\SemioMono\fontsize{5.2pt}{5.4pt}\selectfont, text=semio-chrome-text-normal, inner sep=0] at (115.00,10) {23};
+\draw[draw=semio-chrome-border-emphasized, line width=0.2pt, dash pattern=on 0.5pt off 0.5pt] (113.25,8.25) rectangle (116.75,11.75);
+\end{tikzpicture}
+\end{Figure}\end{document}
